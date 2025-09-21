@@ -1,0 +1,21 @@
+{
+  "name": "banterblogs",
+  "version": "1.0.0",
+  "description": "Banterpacks Development Story Universe - Automated Episode Generation",
+  "main": "scripts/cursor-agent.js",
+  "scripts": {
+    "start": "node scripts/cursor-agent.js",
+    "generate": "node scripts/generate-episode.js",
+    "test": "node scripts/test-episode.js",
+    "test-ultra": "node scripts/test-ultra-verbose.js",
+    "ci-generate": "node scripts/generate-episode-from-ci.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  },
+  "keywords": ["banterpacks", "ai", "story", "development", "blog"],
+  "author": "Sahil Kadadekar",
+  "license": "MIT"
+}
