@@ -39,6 +39,7 @@ This is a monumental shift. The project is no longer just a system that follows 
 - **Lines Added**: 1,286
 - **Lines Removed**: 56
 - **Net Change**: +1,230
+- **Change Mix**: A:10, M:14
 - **Commit Type**: feature (architecture)
 - **Complexity Score**: 92 (very high — new architectural paradigm)
 

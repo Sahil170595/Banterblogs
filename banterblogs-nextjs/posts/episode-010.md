@@ -39,6 +39,7 @@ This is a major turning point. The project is no longer just a set of pre-writte
 - **Lines Added**: 2,727
 - **Lines Removed**: 784
 - **Net Change**: +1,943
+- **Change Mix**: A:29, M:7
 - **Commit Type**: feature
 - **Complexity Score**: 85 (high — new language stack and core functionality)
 

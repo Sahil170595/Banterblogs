@@ -41,6 +41,7 @@ This commit is like an architect drawing the first lines of a blueprint. Nothing
 - **Lines Added**: 0 (all new placeholders)
 - **Lines Removed**: 0
 - **Net Change**: 0
+- **Change Mix**: A:4
 - **Commit Type**: documentation scaffolding
 - **Complexity Score**: 10 (low — trivial scaffolding, empty placeholders)
 

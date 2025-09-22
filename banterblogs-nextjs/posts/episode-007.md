@@ -35,6 +35,7 @@ After six episodes of planning, organizing, and writing rulebooks, this is the m
 - **Lines Added**: 14,929
 - **Lines Removed**: 0
 - **Net Change**: +14,929
+- **Change Mix**: A:33
 - **Commit Type**: feature (foundational)
 - **Complexity Score**: 98 (very high — initial system implementation)
 

@@ -39,6 +39,7 @@ This commit is the smallest in the project's history—a single line change in a
 - **Lines Added**: 9
 - **Lines Removed**: 1
 - **Net Change**: +8
+- **Change Mix**: M:1
 - **Commit Type**: testing
 - **Complexity Score**: 2 (minimal — surgical script tweak)
 

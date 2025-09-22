@@ -41,6 +41,7 @@ After buying the empty notebooks in Episode 1, Sahil just filled the first one w
 - **Lines Added**: 122
 - **Lines Removed**: 0
 - **Net Change**: +122
+- **Change Mix**: A:1
 - **Commit Type**: documentation
 - **Complexity Score**: 25 (low — content addition)
 
