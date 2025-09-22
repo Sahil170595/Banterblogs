@@ -1,8 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { remark } from 'remark';
-import html from 'remark-html';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import remarkRehype from 'remark-rehype';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeStringify from 'rehype-stringify';
 
 export interface Episode {
   id: number;
@@ -35,9 +39,17 @@ export async function getAllEpisodes(): Promise<Episode[]> {
         // Parse markdown
         const { content } = matter(fileContents);
         
-        // Process content with remark
-        const processedContent = await remark()
-          .use(html)
+        // Process content with enhanced markdown pipeline
+        const processedContent = await unified()
+          .use(remarkParse)
+          .use(remarkGfm)
+          .use(remarkRehype)
+          .use(rehypeHighlight, { 
+            detect: true,
+            subset: false,
+            ignoreMissing: true
+          })
+          .use(rehypeStringify)
           .process(content);
         
         const htmlContent = processedContent.toString();
