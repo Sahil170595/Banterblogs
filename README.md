@@ -1,196 +1,194 @@
-# Banterblogs - Next.js 14 Edition
+# Banterblogs
 
-A **jaw-dropping**, **FAANG-tier** polished blog built with Next.js 14, TypeScript, and Tailwind CSS. Features dark mode only, advanced search, smooth animations, and professional design.
+A Next.js-powered development blog that chronicles the Banterpacks project through AI-generated narrative episodes. This repository contains both the blog platform and the development saga it documents.
 
-## 🚀 **What Makes This Jaw-Dropping**
+## 🚀 Live Demo
 
-### **Modern Tech Stack**
-- **Next.js 14** with App Router for optimal performance
-- **TypeScript** for type safety and developer experience
-- **Tailwind CSS** for utility-first styling
-- **Framer Motion** for smooth animations
-- **Radix UI** for accessible components
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Sahil170595/Banterblogs&project-name=banterblogs&repository-name=Banterblogs&root-directory=banterblogs-nextjs)
 
-### **Professional Features**
-- **Dark Mode Only** - Sleek, modern design
-- **Advanced Search** - Real-time search with Fuse.js
-- **Smart Filtering** - Filter by tags, complexity, date
-- **Smooth Animations** - Micro-interactions and transitions
-- **Responsive Design** - Perfect on all devices
-- **SEO Optimized** - Meta tags, sitemap, structured data
-- **Performance** - Static generation, optimized bundles
+## 📖 What is Banterpacks?
 
-### **Content Management**
-- **Dynamic Episode Loading** - Automatically loads from `/posts` directory
-- **Markdown Processing** - Converts markdown to HTML with remark
-- **Metadata Extraction** - Parses episode stats and tags
-- **Type Safety** - Full TypeScript support for content
+Banterpacks is a dynamic overlay system for live gameplay streams that turns big moments into shareable highlights. It adds a personality layer to live streams by firing contextual reactions in real-time when clutch plays, kills, or misplays happen. The system features AI personas (Banterpacks, Claude, ChatGPT, and Gemini) who provide witty commentary and analysis of stream events.
 
-## 🛠️ **Getting Started**
+### Key Features:
+- **Real-time reactions** (<250ms target end-to-end)
+- **OBS-friendly browser overlay** (no game injection required)
+- **Weighted selection** with cooldown and deduplication
+- **Speech-to-Text (STT)** module with emotion detection
+- **Registry system** for pack distribution and updates
+- **Built-in analytics** and Prometheus metrics
 
-### **Prerequisites**
+## 🏗️ Project Structure
+
+```
+Banterblogs/
+├── banterblogs-nextjs/          # Next.js blog application (this repo)
+│   ├── src/
+│   │   ├── app/                 # Next.js 14 App Router
+│   │   ├── components/          # React components
+│   │   └── lib/                 # Utilities and data processing
+│   ├── posts/                   # Markdown episode files
+│   └── package.json
+├── posts/                       # Original episode files
+├── scripts/                     # Generation and processing scripts
+└── docs/                        # Project documentation
+
+Banterpacks Core System:
+├── overlay/                     # Runtime overlay modules
+├── stt/                         # Speech-to-Text module
+├── authoring/                   # CLI + providers for banter generation
+├── registry/                    # FastAPI service for pack distribution
+├── packs/                       # Example packs and manifest builders
+├── contracts/                   # JSON Schemas for events and packs
+├── frontend/                    # React Studio for pack management
+└── monitoring/                  # Prometheus + Grafana setup
+```
+
+## ✨ Features
+
+### Blog Platform
+- **Next.js 14** with App Router and TypeScript
+- **Dark mode only** with professional FAANG-tier polish
+- **Enhanced markdown rendering** with syntax highlighting
+- **Dynamic episode loading** from markdown files
+- **Search and filtering** capabilities
+- **Responsive design** with smooth animations
+- **Static generation** for optimal performance
+
+### Content Generation
+- **AI-powered narrative** generation from git commits
+- **Character-driven storytelling** with distinct AI personas
+- **Technical analysis** with metrics and complexity scoring
+- **Automated episode creation** from development activity
+- **Live stream integration** with real-time event processing
+- **Banter pack management** and distribution system
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **Next.js 15.5.3** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first styling
+- **Framer Motion** - Animations
+- **Radix UI** - Accessible components
+- **Fuse.js** - Client-side search
+
+### Markdown Processing
+- **Unified** - Markdown processing pipeline
+- **Remark GFM** - GitHub Flavored Markdown
+- **Rehype Highlight** - Syntax highlighting
+- **Gray Matter** - Frontmatter parsing
+
+### Deployment
+- **Vercel** - Hosting and deployment
+- **GitHub** - Version control and CI/CD
+
+## 🚀 Getting Started
+
+### Prerequisites
 - Node.js 18+ 
 - npm or yarn
+- Git
 
-### **Installation**
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Sahil170595/Banterblogs.git
+   cd Banterblogs
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   cd banterblogs-nextjs
+   npm install
+   ```
+
+3. **Run development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open in browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Building for Production
+
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
 npm run build
-
-# Start production server
 npm start
 ```
 
-### **Development**
+## 📝 Content Management
+
+### Adding New Episodes
+1. Add markdown files to `banterblogs-nextjs/posts/`
+2. Follow the episode naming convention: `episode-XXX.md`
+3. Include proper frontmatter and episode structure
+4. Deploy to see changes live
+
+### Episode Structure
+Each episode follows this format:
+```markdown
+# Episode X: "Title"
+
+## commit-message
+*subtitle*
+
+### 📅 Date and Time
+### 🔗 Commit: `hash`
+### 📊 Episode X of the Banterpacks Development Saga
+
+---
+
+### Why It Matters
+[Context and importance]
+
+---
+
+### The Roundtable: [Section Title]
+[AI persona discussions]
+
+---
+
+## 🔬 Technical Analysis
+[Metrics and analysis]
+```
+
+## 🎨 Customization
+
+### Styling
+- Modify `src/app/globals.css` for global styles
+- Update `tailwind.config.ts` for theme customization
+- Edit component styles in individual `.tsx` files
+
+### Content Processing
+- Update `src/lib/episodes.ts` for markdown processing
+- Modify episode parsing logic as needed
+- Add new content types or features
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Set root directory to `banterblogs-nextjs`
+3. Framework preset: Next.js
+4. Deploy automatically on every push
+
+### Manual Deployment
 ```bash
-# Run in development mode
-npm run dev
-
-# Open http://localhost:3000
+npm run build
+# Deploy the .next folder to your hosting provider
 ```
 
-## 📁 **Project Structure**
+## 📊 Performance
 
-```
-banterblogs-nextjs/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── episodes/           # Episode pages
-│   │   ├── tags/              # Tag pages
-│   │   ├── about/             # About page
-│   │   ├── layout.tsx         # Root layout
-│   │   └── page.tsx           # Homepage
-│   ├── components/            # React components
-│   │   ├── Header.tsx         # Navigation header
-│   │   ├── Footer.tsx         # Site footer
-│   │   ├── EpisodeCard.tsx    # Episode card component
-│   │   ├── SearchDialog.tsx   # Search functionality
-│   │   └── ...
-│   ├── lib/                   # Utilities
-│   │   ├── episodes.ts        # Episode parsing
-│   │   └── search.ts          # Search functionality
-│   └── styles/
-│       └── globals.css        # Global styles
-├── posts/                     # Markdown episodes
-├── public/                    # Static assets
-├── tailwind.config.ts         # Tailwind configuration
-├── next.config.ts             # Next.js configuration
-└── vercel.json               # Vercel deployment config
-```
+- **Lighthouse Score:** 95+ across all metrics
+- **Core Web Vitals:** Optimized for performance
+- **Bundle Size:** Optimized with tree shaking
+- **Loading Speed:** Static generation for instant loads
 
-## 🎨 **Design System**
-
-### **Colors**
-- **Primary**: Blue gradient (`#3b82f6` to `#8b5cf6`)
-- **Background**: Dark (`#0f0f23`)
-- **Text**: Light (`#f8fafc`)
-- **Muted**: Gray (`#64748b`)
-
-### **Typography**
-- **Font**: Inter (Google Fonts)
-- **Mono**: JetBrains Mono
-- **Responsive**: Scales with screen size
-
-### **Components**
-- **Cards**: Glass morphism with borders
-- **Buttons**: Hover effects and transitions
-- **Forms**: Focus states and validation
-- **Animations**: Framer Motion powered
-
-## 🔍 **Features**
-
-### **Search & Filtering**
-- **Real-time Search** - Instant results as you type
-- **Fuzzy Search** - Finds relevant content even with typos
-- **Tag Filtering** - Filter episodes by tags
-- **Sorting** - Sort by date, title, complexity, files
-- **Suggestions** - Smart search suggestions
-
-### **Episode Management**
-- **Dynamic Loading** - Episodes load from markdown files
-- **Metadata Extraction** - Parses stats, tags, dates
-- **Reading Time** - Calculated automatically
-- **Navigation** - Previous/next episode navigation
-
-### **Performance**
-- **Static Generation** - Pre-rendered pages for speed
-- **Image Optimization** - Next.js Image component
-- **Code Splitting** - Automatic code splitting
-- **Caching** - Aggressive caching strategies
-
-## 🚀 **Deployment**
-
-### **Vercel (Recommended)**
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-
-# Production deployment
-vercel --prod
-```
-
-### **Other Platforms**
-- **Netlify**: Works with Next.js
-- **AWS**: Use AWS Amplify
-- **Docker**: Use the Dockerfile
-
-## 📊 **Performance Metrics**
-
-- **Lighthouse Score**: 95+ across all categories
-- **First Contentful Paint**: < 1.5s
-- **Largest Contentful Paint**: < 2.5s
-- **Cumulative Layout Shift**: < 0.1
-- **Time to Interactive**: < 3s
-
-## 🎯 **Why This is FAANG-Tier**
-
-1. **Modern Architecture** - Uses latest Next.js 14 features
-2. **Type Safety** - Full TypeScript implementation
-3. **Performance** - Optimized for speed and SEO
-4. **Accessibility** - WCAG compliant components
-5. **Developer Experience** - Hot reload, type checking, linting
-6. **Production Ready** - Error handling, loading states, fallbacks
-7. **Scalable** - Component-based architecture
-8. **Maintainable** - Clean code, documentation, tests
-
-## 🔧 **Customization**
-
-### **Adding New Episodes**
-1. Add markdown file to `/posts` directory
-2. Follow naming convention: `episode-XXX.md`
-3. Include frontmatter metadata
-4. Episode will appear automatically
-
-### **Styling**
-- Modify `tailwind.config.ts` for theme changes
-- Update `src/app/globals.css` for global styles
-- Use Tailwind classes for component styling
-
-### **Content**
-- Update `src/lib/episodes.ts` for parsing logic
-- Modify `src/lib/search.ts` for search behavior
-- Add new pages in `src/app/` directory
-
-## 📝 **Scripts**
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript check
-```
-
-## 🤝 **Contributing**
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -198,12 +196,17 @@ npm run type-check   # Run TypeScript check
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 **License**
+## 📄 License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **AI Personas:** Claude, ChatGPT, and Gemini for their unique perspectives
+- **Next.js Team** for the amazing framework
+- **Vercel** for seamless deployment
+- **Tailwind CSS** for beautiful styling
 
 ---
 
-**Built with ❤️ and AI by the Banterpacks Development Team**
-
-*This is what FAANG-tier polish looks like.*
+*Built with ❤️ and a lot of coffee by the Banterpacks development team*
