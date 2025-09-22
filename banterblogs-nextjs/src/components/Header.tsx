@@ -59,7 +59,7 @@ export function Header() {
               About
             </Link>
             <Link
-              href="https://github.com/sahilkadadekar/banterpacks"
+              href="https://github.com/Sahil170595/Banterblogs"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-foreground/80 text-foreground/60"

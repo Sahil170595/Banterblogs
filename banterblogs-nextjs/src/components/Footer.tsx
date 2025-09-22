@@ -18,7 +18,7 @@ export function Footer() {
             </p>
             <div className="flex space-x-4">
               <Link
-                href="https://github.com/sahilkadadekar/banterpacks"
+                href="https://github.com/Sahil170595/Banterblogs"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -26,7 +26,7 @@ export function Footer() {
                 <Github className="h-5 w-5" />
               </Link>
               <Link
-                href="https://twitter.com/sahilkadadekar"
+                href="https://twitter.com/KadadekarSahil"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -34,7 +34,7 @@ export function Footer() {
                 <Twitter className="h-5 w-5" />
               </Link>
               <Link
-                href="mailto:sahil@example.com"
+                href="mailto:sahilkadadekar@gmail.com"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Mail className="h-5 w-5" />
@@ -114,7 +114,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/sahilkadadekar/banterpacks-blog" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link href="https://github.com/Sahil170595/Banterblogs" className="text-muted-foreground hover:text-foreground transition-colors">
                   Source Code
                 </Link>
               </li>
