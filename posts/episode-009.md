@@ -39,6 +39,7 @@ The system now works perfectly, but it's a machine only an engineer could love. 
 - **Lines Added**: 667
 - **Lines Removed**: 41
 - **Net Change**: +626
+- **Change Mix**: A:3, M:3
 - **Commit Type**: feature (UI/UX)
 - **Complexity Score**: 38 (medium — new UI component and styling)
 

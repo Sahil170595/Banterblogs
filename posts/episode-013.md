@@ -37,6 +37,7 @@ After building the factory (the CI pipeline), this commit adds more specialized 
 - **Lines Added**: 395
 - **Lines Removed**: 40
 - **Net Change**: +355
+- **Change Mix**: A:14, M:4, R:1
 - **Commit Type**: testing
 - **Complexity Score**: 45 (medium — new tests and data fixtures)
 

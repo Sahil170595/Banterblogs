@@ -41,6 +41,7 @@ After adding a complex new AI authoring system in the last episode, this commit 
 - **Lines Added**: 118
 - **Lines Removed**: 4
 - **Net Change**: +114
+- **Change Mix**: A:2, M:2
 - **Commit Type**: documentation
 - **Complexity Score**: 15 (low — documentation and minor edits)
 

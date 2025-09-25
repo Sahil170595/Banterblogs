@@ -35,6 +35,7 @@ After building the entire house in one day, this commit is the essential follow-
 - **Lines Added**: 588
 - **Lines Removed**: 241
 - **Net Change**: +347
+- **Change Mix**: A:6, M:7
 - **Commit Type**: refactor
 - **Complexity Score**: 35 (medium — stabilization and refinement)
 

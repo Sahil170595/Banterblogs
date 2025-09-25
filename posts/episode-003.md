@@ -41,6 +41,7 @@ Imagine staking out the property lines for three different buildings. No foundat
 - **Lines Added**: 0 (new empty scaffolds)
 - **Lines Removed**: 0
 - **Net Change**: 0
+- **Change Mix**: A:3
 - **Commit Type**: scaffolding
 - **Complexity Score**: 18 (low churn, high architectural impact)
 
