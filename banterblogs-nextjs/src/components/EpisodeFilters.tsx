@@ -15,7 +15,7 @@ type SortKey = 'date' | 'title' | 'complexity' | 'files';
 export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedTag, setSelectedTag] = useState<string>('');
 
   const searchInstance = useMemo(() => new EpisodeSearch(episodes), [episodes]);

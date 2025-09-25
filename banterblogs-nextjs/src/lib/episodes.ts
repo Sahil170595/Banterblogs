@@ -59,9 +59,12 @@ export async function getAllEpisodes(): Promise<Episode[]> {
         const subtitleMatch = content.match(/^## (.+)$/m);
         const dateMatch = content.match(/### 📅 (.+?) at/);
         const commitMatch = content.match(/### 🔗 Commit: `(.+?)`/);
-        const filesChangedMatch = content.match(/- \*\*Files Changed\*\*: (\d+)/);
-        const linesAddedMatch = content.match(/- \*\*Lines Added\*\*: ([\d,]+)/);
-        const complexityMatch = content.match(/- \*\*Complexity Score\*\*: (\d+)/);
+        const filesChangedMatch = content.match(/- \*\*Files Changed\*\*: (\d+)/) || content.match(/- Files Changed: (\d+)/);
+        const linesAddedMatch = content.match(/- \*\*Lines Added\*\*: ([\d,]+)/) || content.match(/- Lines Added: ([\d,]+)/);
+        const linesRemovedMatch = content.match(/- \*\*Lines Removed\*\*: ([\d,]+)/) || content.match(/- Lines Removed: ([\d,]+)/);
+        const netChangeMatch = content.match(/- \*\*Net Change\*\*: ([+-][\d,]+)/) || content.match(/- Net Change: ([+-][\d,]+)/);
+        const changeMixMatch = content.match(/- \*\*Change Mix\*\*: (.+)/) || content.match(/- Change Mix: (.+)/);
+        const complexityMatch = content.match(/- \*\*Complexity Score\*\*: (\d+)/) || content.match(/- Complexity Score: (\d+)/);
         
         // Extract preview text
         const whyItMattersIndex = content.indexOf('### Why It Matters');
@@ -105,7 +108,7 @@ export async function getAllEpisodes(): Promise<Episode[]> {
       })
   );
   
-  return episodes.sort((a, b) => b.id - a.id);
+  return episodes.sort((a, b) => a.id - b.id);
 }
 
 export async function getEpisode(slug: string): Promise<Episode | null> {

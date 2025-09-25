@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { SearchDialog } from './SearchDialog';
+import { GITHUB_URLS } from '@/lib/constants';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,22 +36,16 @@ export function Header() {
               Episodes
             </Link>
             <Link
-              href="/episodes-dynamic"
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-            >
-              Dynamic
-            </Link>
-            <Link
-              href="/episodes-live"
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-            >
-              Live
-            </Link>
-            <Link
               href="/tags"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
               Tags
+            </Link>
+            <Link
+              href="/technology"
+              className="transition-colors hover:text-foreground/80 text-foreground/60"
+            >
+              Technology
             </Link>
             <Link
               href="/about"
@@ -59,7 +54,7 @@ export function Header() {
               About
             </Link>
             <Link
-              href="https://github.com/Sahil170595/Banterblogs"
+              href={GITHUB_URLS.BANTERBLOGS}
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
@@ -97,6 +92,13 @@ export function Header() {
                 Tags
               </Link>
               <Link
+                href="/technology"
+                className="transition-colors hover:text-foreground/80 text-foreground/60"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Technology
+              </Link>
+              <Link
                 href="/about"
                 className="transition-colors hover:text-foreground/80 text-foreground/60"
                 onClick={() => setIsMenuOpen(false)}
@@ -104,7 +106,7 @@ export function Header() {
                 About
               </Link>
               <Link
-                href="https://github.com/sahilkadadekar/banterpacks"
+                href={GITHUB_URLS.BANTERBLOGS}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors hover:text-foreground/80 text-foreground/60"

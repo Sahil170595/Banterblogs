@@ -60,6 +60,57 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
           {episode.preview}
         </p>
 
+        {/* Episode Context */}
+        <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-muted/20 to-muted/10 border border-border/50">
+          <div className="flex items-center space-x-2 mb-3">
+            <span className="text-xs font-medium text-primary">🚀 Development Milestone</span>
+            <span className="text-xs text-muted-foreground">• Episode {episode.id}</span>
+          </div>
+          
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              This episode documents a critical decision in building Banterpacks&apos; 
+              {episode.tags.includes('ai') && ' AI-powered'} 
+              {episode.tags.includes('architecture') && ' architectural'} 
+              {episode.tags.includes('testing') && ' testing'} 
+              {episode.tags.includes('deployment') && ' deployment'} 
+              {' '}capabilities.
+            </p>
+            
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-3">
+                <span className="text-muted-foreground">
+                  {episode.filesChanged} files changed
+                </span>
+                <span className="text-muted-foreground">
+                  {episode.linesAdded.toLocaleString()} lines added
+                </span>
+              </div>
+              <span className="text-primary font-medium">
+                Complexity: {episode.complexity}/100
+              </span>
+            </div>
+            
+            {episode.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {episode.tags.slice(0, 3).map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs text-primary font-medium"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {episode.tags.length > 3 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{episode.tags.length - 3} more
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
