@@ -11,8 +11,8 @@ export const metadata: Metadata = {
     default: "Banterblogs",
     template: "%s | Banterblogs",
   },
-  description: "AI-powered development blog following the epic journey of building Banterpacks. Watch as Claude, ChatGPT, Gemini, and Banterpacks discuss code, challenges, and victories.",
-  keywords: ["banterpacks", "development", "AI", "coding", "blog", "software development", "programming"],
+  description: "Autonomous devlog covering Banterpacks overlay, Banterhearts (Chimera Heart) ML platform, and the Banterblogs automation loop with Claude, ChatGPT, Gemini, and Banterpacks narrating the trade-offs.",
+  keywords: ["banterpacks", "banterhearts", "chimera heart", "banterblogs", "rlhf", "ai overlay", "development", "automation"],
   authors: [{ name: "Sahil Kadadekar" }],
   creator: "Sahil Kadadekar",
   openGraph: {
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://banterblogs.vercel.app",
     title: "Banterblogs - AI-Powered Development Story",
-    description: "Follow the epic development journey of Banterpacks through AI-powered storytelling",
+    description: "Track the Banter Platform: Banterpacks overlay, Banterhearts ML infrastructure, and Banterblogs automation through AI-powered storytelling",
     siteName: "Banterblogs",
   },
   twitter: {
     card: "summary_large_image",
     title: "Banterblogs - AI-Powered Development Story",
-    description: "Follow the epic development journey of Banterpacks through AI-powered storytelling",
+    description: "Track the Banter Platform: Banterpacks overlay, Banterhearts ML infrastructure, and Banterblogs automation through AI-powered storytelling",
     creator: "@sahilkadadekar",
   },
   robots: {
