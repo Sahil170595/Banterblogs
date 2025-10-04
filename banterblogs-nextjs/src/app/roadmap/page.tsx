@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from 'framer-motion';
 import { CheckCircle2, Clock, Target, Rocket } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
