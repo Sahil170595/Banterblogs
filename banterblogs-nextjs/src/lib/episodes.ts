@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { cache } from 'react';
+// Simplified processing - no external markdown libs
 
 export interface Episode {
   id: number;
@@ -149,7 +149,7 @@ function parseEpisodeMetadata(content: string) {
   return metadata;
 }
 
-export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
+export async function getAllEpisodes(): Promise<Episode[]> {
   const fileNames = fs.readdirSync(postsDirectory);
   const episodes = await Promise.all(
     fileNames
@@ -227,7 +227,7 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
   );
   
   return episodes.sort((a, b) => a.id - b.id);
-});
+}
 
 export async function getEpisode(slug: string): Promise<Episode | null> {
   const episodes = await getAllEpisodes();

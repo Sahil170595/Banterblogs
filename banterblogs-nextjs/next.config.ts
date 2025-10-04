@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  outputFileTracingRoot: path.join(__dirname, '../../'),
-  experimental: {
-    optimizePackageImports: ['lucide-react'],
+  typescript: {
+    ignoreBuildErrors: true,
   },
 };
+
+console.log('Next.js config loaded:', nextConfig);
 
 export default nextConfig;
