@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Episode } from '@/lib/episodes';
+import type { Episode } from '@/lib/episodes';
 
 interface EpisodeNavigationProps {
   prevEpisode: Episode | null;

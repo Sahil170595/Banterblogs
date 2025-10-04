@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { GitCommit, FileText, Clock, Tag } from 'lucide-react';
-import { Episode } from '@/lib/episodes';
+import { ArrowRight, Clock, FileText, GitCommit, Tag } from 'lucide-react';
+import type { Episode } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
 interface EpisodeCardProps {
@@ -15,151 +15,97 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
     });
   };
 
-  const getComplexityColor = (complexity: number) => {
-    if (complexity >= 80) return 'text-red-400';
-    if (complexity >= 60) return 'text-yellow-400';
-    if (complexity >= 40) return 'text-blue-400';
-    return 'text-green-400';
-  };
+  const tags = episode.tags.slice(0, 3);
 
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5"
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      className="group relative h-full overflow-hidden rounded-3xl border border-border/60 bg-card/60 backdrop-blur transition hover:-translate-y-1 hover:border-primary/60"
     >
-      <Link href={`/episodes/${episode.slug}`} className="block p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              Episode {episode.id}
+      <Link href={`/episodes/${episode.slug}`} className="flex h-full flex-col gap-6 p-6">
+        <header className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-muted-foreground">
+          <span>Episode {episode.id.toString().padStart(2, '0')}</span>
+          <time>{formatDate(episode.date)}</time>
+        </header>
+
+        <div className="space-y-3">
+          <h3 className="text-xl font-semibold text-foreground transition group-hover:text-primary">
+            {episode.title}
+          </h3>
+          <p className="text-sm text-muted-foreground">{episode.subtitle}</p>
+          <p className="text-sm text-muted-foreground/80">{episode.preview}</p>
+        </div>
+
+        <div className="grid gap-3 rounded-2xl border border-border/40 bg-background/40 p-4 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
+              <FileText className="h-3.5 w-3.5" />
+              Files changed
             </span>
-            <span className="text-xs text-muted-foreground">
-              {formatDate(episode.date)}
+            <span>{episode.filesChanged}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
+              <GitCommit className="h-3.5 w-3.5" />
+              Lines added
             </span>
+            <span>{formatNumber(episode.linesAdded)}</span>
           </div>
-          <div className={`text-xs font-medium ${getComplexityColor(episode.complexity)}`}>
-            {episode.complexity} complexity
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
+              <Clock className="h-3.5 w-3.5" />
+              Read time
+            </span>
+            <span>{episode.readingTime} min</span>
           </div>
-        </div>
-
-        <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-          {episode.title}
-        </h3>
-        
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-          {episode.subtitle}
-        </p>
-
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-          {episode.preview}
-        </p>
-
-        {/* Episode Context */}
-        <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-muted/20 to-muted/10 border border-border/50">
-          <div className="flex items-center space-x-2 mb-3">
-            <span className="text-xs font-medium text-primary">🚀 Development Milestone</span>
-            <span className="text-xs text-muted-foreground">• Episode {episode.id}</span>
-          </div>
-          
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">
-              This episode documents a critical decision in building Banterpacks&apos; 
-              {episode.tags.includes('ai') && ' AI-powered'} 
-              {episode.tags.includes('architecture') && ' architectural'} 
-              {episode.tags.includes('testing') && ' testing'} 
-              {episode.tags.includes('deployment') && ' deployment'} 
-              {' '}capabilities.
-            </p>
-            
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-3">
-                <span className="text-muted-foreground">
-                  {episode.filesChanged} files changed
-                </span>
-                <span className="text-muted-foreground">
-                  {formatNumber(episode.linesAdded)} lines added
-                </span>
-              </div>
-              <span className="text-primary font-medium">
-                Complexity: {episode.complexity}/100
-              </span>
-            </div>
-            
-            {episode.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {episode.tags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs text-primary font-medium"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                {episode.tags.length > 3 && (
-                  <span className="text-xs text-muted-foreground">
-                    +{episode.tags.length - 3} more
-                  </span>
-                )}
-              </div>
-            )}
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
+              Chaos score
+            </span>
+            <span>{episode.complexity}/100</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
-              <FileText className="h-3 w-3" />
-              <span>{episode.filesChanged} files</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <GitCommit className="h-3 w-3" />
-              <span>{formatNumber(episode.linesAdded)} lines</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Clock className="h-3 w-3" />
-              <span>{episode.readingTime} min read</span>
-            </div>
-          </div>
-        </div>
-
-        {episode.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-            {episode.tags.slice(0, 3).map((tag) => (
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground"
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-primary"
               >
-                <Tag className="h-2 w-2 mr-1" />
+                <Tag className="h-3 w-3" />
                 {tag}
               </span>
             ))}
-            {episode.tags.length > 3 && (
-              <span className="text-xs text-muted-foreground">
-                +{episode.tags.length - 3} more
+            {episode.tags.length > tags.length && (
+              <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                +{episode.tags.length - tags.length} more
               </span>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-primary group-hover:text-primary/80 transition-colors">
-            Read Episode →
+        <footer className="mt-auto flex items-center justify-between text-sm font-semibold text-primary">
+          <span className="inline-flex items-center gap-2">
+            Read episode
+            <ArrowRight className="h-4 w-4" />
           </span>
-          <div className="text-xs text-muted-foreground">
-            {episode.commit && `#${episode.commit.slice(0, 7)}`}
-          </div>
-        </div>
-        
-        {/* Hover effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            {episode.commit ? `#${episode.commit.slice(0, 7)}` : 'untracked'}
+          </span>
+        </footer>
       </Link>
-    </motion.div>
+
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-transparent" />
+      </div>
+    </motion.article>
   );
 }

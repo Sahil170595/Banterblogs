@@ -2,18 +2,24 @@ import { getAllEpisodes } from '@/lib/episodes';
 import { EpisodeCard } from '@/components/EpisodeCard';
 import { notFound } from 'next/navigation';
 
-export async function generateStaticParams() {
-  const episodes = await getAllEpisodes();
-  const tags = new Set<string>();
+// Static generation for build - temporarily disabled for testing
+// export async function generateStaticParams() {
+//   try {
+//     const episodes = await getAllEpisodes();
+//     const tags = new Set<string>();
 
-  episodes.forEach((episode) => {
-    episode.tags.forEach((tag) => tags.add(tag));
-  });
+//     episodes.forEach((episode) => {
+//       episode.tags.forEach((tag) => tags.add(tag));
+//     });
 
-  return Array.from(tags).map((tag) => ({
-    tag: encodeURIComponent(tag),
-  }));
-}
+//     return Array.from(tags).map((tag) => ({
+//       tag: encodeURIComponent(tag),
+//     }));
+//   } catch (error) {
+//     console.error('Error generating static params for tags:', error);
+//     return [];
+//   }
+// }
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params;

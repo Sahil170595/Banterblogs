@@ -76,6 +76,29 @@ body {
   @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
 }
 
+/* Enhanced focus for accessibility */
+.focus-visible {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+}
+
+/* Skip link for accessibility */
+.skip-link {
+  @apply absolute top-4 left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium opacity-0 pointer-events-none transition-all duration-200;
+}
+
+.skip-link:focus {
+  @apply opacity-100 pointer-events-auto;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+.scroll-m-20 {
+  scroll-margin-top: 5rem;
+}
+
 /* Gradient text */
 .gradient-text {
   @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
@@ -284,8 +307,32 @@ body {
   50% { transform: translateY(-10px); }
 }
 
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .float {
   animation: float 6s ease-in-out infinite;
+}
+
+.pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
 }
 
 /* Responsive text */

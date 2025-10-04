@@ -3,31 +3,31 @@
 import { useState, useEffect } from 'react';
 import { OnboardingModal } from './OnboardingModal';
 
+import Cookie from 'js-cookie';
+
 export function OnboardingWrapper() {
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [shouldShowModal, setShouldShowModal] = useState(false);
 
   useEffect(() => {
-    // Check if user has completed onboarding
-    const hasCompletedOnboarding = localStorage.getItem('banterblogs-onboarding-completed');
-    
-    if (!hasCompletedOnboarding) {
-      // Show onboarding after a short delay
+    // Check if user has seen onboarding before
+    const hasSeenOnboarding = Cookie.get('seen-onboarding') === 'true';
+    if (!hasSeenOnboarding) {
+      // Show modal after a short delay for better UX
       const timer = setTimeout(() => {
-        setShowOnboarding(true);
+        setShouldShowModal(true);
       }, 1000);
       
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const handleCloseOnboarding = () => {
-    setShowOnboarding(false);
+  const handleClose = () => {
+    setShouldShowModal(false);
+    // Set cookie to remember user has seen onboarding
+    Cookie.set('seen-onboarding', 'true', { expires: 365 }); // Expires in 1 year
   };
 
-  return (
-    <OnboardingModal 
-      isOpen={showOnboarding} 
-      onClose={handleCloseOnboarding} 
-    />
-  );
+  if (!shouldShowModal) return null;
+
+  return <OnboardingModal onClose={handleClose} />;
 }

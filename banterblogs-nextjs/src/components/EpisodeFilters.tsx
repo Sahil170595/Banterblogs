@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Search, SortAsc, SortDesc } from 'lucide-react';
-import { Episode } from '@/lib/episodes';
+import type { Episode } from '@/lib/episodes';
 import { EpisodeSearch } from '@/lib/search';
 import { EpisodeCard } from './EpisodeCard';
 

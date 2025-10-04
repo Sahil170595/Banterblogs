@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Episode } from '@/lib/episodes';
+import type { Episode } from '@/lib/episodes';
 
 interface EpisodeContentProps {
   episode: Episode;

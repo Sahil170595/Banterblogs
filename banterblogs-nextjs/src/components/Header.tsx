@@ -6,129 +6,89 @@ import { useState } from 'react';
 import { SearchDialog } from './SearchDialog';
 import { GITHUB_URLS } from '@/lib/constants';
 
+const NAV_ITEMS = [
+  { href: '/platform', label: 'Platform' },
+  { href: '/episodes', label: 'Episodes' },
+  { href: '/technology', label: 'Technology' },
+  { href: '/about', label: 'About' },
+  { href: '/tags', label: 'Tags' },
+];
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg shadow-primary/5">
-      <div className="container flex h-18 max-w-screen-2xl items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2 group">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-              <span className="text-lg font-bold text-primary-foreground">🤖</span>
-            </div>
-            <span className="hidden display font-bold sm:inline-block gradient-text text-lg">
-              Banterblogs
-            </span>
-          </Link>
-        </div>
-        
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <div className="w-full flex-1 md:w-auto md:flex-none">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-[72px] items-center justify-between gap-6">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3">
+          <span className="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-accent text-sm sm:text-base font-bold text-primary-foreground shadow-lg shadow-primary/30">
+            BB
+          </span>
+          <span className="text-base sm:text-lg font-semibold tracking-tight text-foreground display">
+            Building Jarvis
+          </span>
+        </Link>
+
+        <div className="flex flex-1 items-center justify-end gap-4">
+          <div className="hidden flex-1 md:block max-w-sm">
             <SearchDialog />
           </div>
-          
-          <nav className="flex items-center space-x-2 text-sm font-medium">
-            <Link
-              href="/platform"
-              className="px-3 py-2 rounded-lg transition-all hover:text-foreground hover:bg-accent/10 text-foreground/60 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5"
-            >
-              Platform
-            </Link>
-            <Link
-              href="/episodes"
-              className="px-3 py-2 rounded-lg transition-all hover:text-foreground hover:bg-primary/10 text-foreground/60 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5"
-            >
-              Episodes
-            </Link>
-            <Link
-              href="/technology"
-              className="px-3 py-2 rounded-lg transition-all hover:text-foreground hover:bg-chart-3/10 text-foreground/60 hover:shadow-lg hover:shadow-chart-3/10 hover:-translate-y-0.5"
-            >
-              Technology
-            </Link>
-            <Link
-              href="/about"
-              className="px-3 py-2 rounded-lg transition-all hover:text-foreground hover:bg-chart-4/10 text-foreground/60 hover:shadow-lg hover:shadow-chart-4/10 hover:-translate-y-0.5"
-            >
-              About
-            </Link>
-            <Link
-              href="/tags"
-              className="px-3 py-2 rounded-lg transition-all hover:text-foreground hover:bg-chart-5/10 text-foreground/60 hover:shadow-lg hover:shadow-chart-5/10 hover:-translate-y-0.5"
-            >
-              Tags
-            </Link>
+
+          <nav className="hidden items-center gap-1 text-sm font-semibold text-muted-foreground lg:flex">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-full px-3 py-2 transition hover:bg-primary/10 hover:text-primary"
+              >
+                {item.label}
+              </Link>
+            ))}
             <Link
               href={GITHUB_URLS.BANTERBLOGS}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-2 rounded-lg transition-all hover:text-foreground hover:bg-primary/10 text-foreground/60 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 flex items-center space-x-1 group"
+              className="rounded-full border border-border/60 px-4 py-2 text-foreground transition hover:border-primary/60 hover:text-primary"
             >
-              <span>GitHub</span>
-              <span className="text-xs opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">↗</span>
+              GitHub
             </Link>
           </nav>
-          
+
           <button
-            className="inline-flex items-center justify-center rounded-md p-2 text-foreground/60 hover:text-foreground/80 md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition hover:text-foreground hover:bg-accent/10 lg:hidden"
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            aria-label="Toggle navigation"
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
-      
-      {/* Mobile menu */}
+
       {isMenuOpen && (
-        <div className="border-t border-border/40 bg-background/95 backdrop-blur md:hidden">
-          <div className="container py-4">
-            <nav className="flex flex-col space-y-4">
+        <div className="border-t border-border/60 bg-background/95 backdrop-blur lg:hidden">
+          <div className="container space-y-1 py-6">
+            <div className="mb-4">
+              <SearchDialog />
+            </div>
+            {NAV_ITEMS.map((item) => (
               <Link
-                href="/platform"
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
+                key={item.label}
+                href={item.href}
+                className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Platform
+                {item.label}
               </Link>
-              <Link
-                href="/episodes"
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Episodes
-              </Link>
-              <Link
-                href="/technology"
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Technology
-              </Link>
-              <Link
-                href="/about"
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link
-                href="/tags"
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Tags
-              </Link>
-              <Link
-                href={GITHUB_URLS.BANTERBLOGS}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                GitHub
-              </Link>
-            </nav>
+            ))}
+            <Link
+              href={GITHUB_URLS.BANTERBLOGS}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              GitHub
+            </Link>
           </div>
         </div>
       )}

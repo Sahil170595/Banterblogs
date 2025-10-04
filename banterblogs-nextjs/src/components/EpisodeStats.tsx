@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { FileText, GitCommit, Clock, Activity } from 'lucide-react';
-import { Episode } from '@/lib/episodes';
+import type { Episode } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
 interface EpisodeStatsProps {

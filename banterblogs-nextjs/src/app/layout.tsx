@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,8 +41,8 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "your-google-verification-code",
+  icons: {
+    icon: '/favicon.ico',
   },
 };
 
@@ -53,13 +54,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
-        <div className="relative flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <ErrorBoundary>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </ErrorBoundary>
       </body>
     </html>
   );

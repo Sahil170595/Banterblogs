@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Search, Tag, FileText } from 'lucide-react';
+import { Search, Tag, FileText, X } from 'lucide-react';
 import { EpisodeSearch } from '@/lib/search';
-import { Episode } from '@/lib/episodes';
+import type { Episode } from '@/lib/episodes';
 import Link from 'next/link';
 
 interface SearchDialogProps {
@@ -33,23 +33,29 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
 
   useEffect(() => {
     if (episodes.length === 0 && episodeData.length === 0 && !fetchInFlightRef.current) {
+      const ac = new AbortController();
+      
       const fetchEpisodes = async () => {
         try {
           fetchInFlightRef.current = true;
-          const response = await fetch('/api/episodes');
-          if (!response.ok) {
+          const res = await fetch('/api/episodes', { signal: ac.signal });
+          if (!res.ok) {
             throw new Error('Failed to load episodes for search');
           }
-          const data: Episode[] = await response.json();
+          const data: Episode[] = await res.json();
           setEpisodeData(data);
-        } catch (error) {
-          console.error(error);
+        } catch (e) {
+          if ((e as any).name !== 'AbortError') {
+            console.error(e);
+          }
         } finally {
           fetchInFlightRef.current = false;
         }
       };
 
       fetchEpisodes();
+      
+      return () => ac.abort();
     }
   }, [episodes, episodeData.length]);
 
@@ -75,9 +81,9 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
   };
 
   return (
-    <div className="relative w-full max-w-lg">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="relative w-full max-w-md">
+      <div className="relative group">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
         <input
           type="text"
           placeholder="Search episodes..."
@@ -85,12 +91,21 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          className="w-full rounded-lg border border-input bg-background px-10 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="w-full rounded-xl border border-input bg-background px-10 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary hover:border-ring"
         />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {isOpen && (query || results.length > 0 || suggestions.length > 0) && (
-        <div className="absolute top-full z-50 mt-2 w-full rounded-lg border border-border bg-background shadow-lg">
+        <div className="absolute top-full z-50 mt-2 w-full rounded-xl border border-border bg-background shadow-xl backdrop-blur-sm">
           <div className="max-h-96 overflow-y-auto p-2">
             {query && results.length > 0 && (
               <div className="space-y-1">

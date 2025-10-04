@@ -16,6 +16,108 @@ export default async function TechnologyPage() {
           </p>
         </div>
 
+        {/* Real-time Streaming Overlay */}
+        <section id="overlay" className="mb-16 scroll-m-20">
+          <h2 className="text-3xl font-bold mb-8 text-center">🎯 Real-time Streaming Overlay</h2>
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="p-8 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+              <h3 className="text-xl font-semibold mb-4">Banterpacks Core</h3>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">B</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">Real-time Processing</div>
+                    <div className="text-sm text-muted-foreground">Low-latency overlay generation</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">P</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">Privacy-First</div>
+                    <div className="text-sm text-muted-foreground">Local processing only</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-8 rounded-xl border border-border/60 bg-gradient-to-br from-primary/5 to-accent/5">
+              <h3 className="text-xl font-semibold mb-4">Technical Specs</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="font-medium text-muted-foreground">Latency</div>
+                  <div className="text-2xl font-bold text-primary">&lt;100ms</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Supported Formats</div>
+                  <div className="font-medium">RTMP, HLS, WebRTC</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Resolution</div>
+                  <div className="font-medium">Up to 4K</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Platforms</div>
+                  <div className="font-medium">OBS, Streamlabs</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Chimera Heart ML Platform */}
+        <section id="chimera-heart" className="mb-16 scroll-m-20">
+          <h2 className="text-3xl font-bold mb-8 text-center">❤️ Chimera Heart ML Platform</h2>
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="p-8 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+              <h3 className="text-xl font-semibold mb-4">Banterhearts Core</h3>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-pink-500 flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">❤</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">Neural Architecture</div>
+                    <div className="text-sm text-muted-foreground">Custom ML pipelines</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">M</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">Model Orchestration</div>
+                    <div className="text-sm text-muted-foreground">Multi-model inference</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-8 rounded-xl border border-border/60 bg-gradient-to-br from-pink-500/5 to-purple-500/5">
+              <h3 className="text-xl font-semibold mb-4">AI Capabilities</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="font-medium text-muted-foreground">RLHF Training</div>
+                  <div className="font-medium">Continuous</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Inference Speed</div>
+                  <div className="font-medium">&lt;50ms</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Context Window</div>
+                  <div className="font-medium">128K tokens</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Fine-tuned Models</div>
+                  <div className="font-medium">3+ variants</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Multi-LLM Architecture */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-8 text-center">🤖 Multi-LLM Architecture</h2>

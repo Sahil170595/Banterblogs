@@ -1,12 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkGfm from 'remark-gfm';
-import remarkRehype from 'remark-rehype';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeStringify from 'rehype-stringify';
+import { cache } from 'react';
 
 export interface Episode {
   id: number;
@@ -154,7 +149,7 @@ function parseEpisodeMetadata(content: string) {
   return metadata;
 }
 
-export async function getAllEpisodes(): Promise<Episode[]> {
+export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
   const fileNames = fs.readdirSync(postsDirectory);
   const episodes = await Promise.all(
     fileNames
@@ -167,20 +162,24 @@ export async function getAllEpisodes(): Promise<Episode[]> {
         // Parse markdown
         const { content } = matter(fileContents);
         
-        // Process content with enhanced markdown pipeline
-        const processedContent = await unified()
-          .use(remarkParse)
-          .use(remarkGfm)
-          .use(remarkRehype)
-          .use(rehypeHighlight, { 
-            detect: true,
-            subset: false,
-            ignoreMissing: true
-          })
-          .use(rehypeStringify)
-          .process(content);
-        
-        const htmlContent = processedContent.toString();
+        // Simple markdown-to-HTML conversion for build stability
+        let htmlContent = '';
+        try {
+          // Basic markdown conversion using simple regex rules
+          htmlContent = content
+            .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/`(.+?)`/g, '<code>$1</code>')
+            .replace(/^\- (.+)$/gm, '<li>$1</li>')
+            .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+            .replace(/\n/g, '<br/>');
+        } catch (error) {
+          console.warn(`Content processing failed for ${fileName}:`, error);
+          htmlContent = `<pre>${content}</pre>`;
+        }
         
         // Extract metadata using robust multi-format parser
         const metadata = parseEpisodeMetadata(content);
@@ -228,7 +227,7 @@ export async function getAllEpisodes(): Promise<Episode[]> {
   );
   
   return episodes.sort((a, b) => a.id - b.id);
-}
+});
 
 export async function getEpisode(slug: string): Promise<Episode | null> {
   const episodes = await getAllEpisodes();

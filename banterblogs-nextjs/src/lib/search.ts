@@ -19,8 +19,9 @@ export class EpisodeSearch {
         { name: 'preview', weight: 0.2 },
         { name: 'tags', weight: 0.1 },
       ],
-      threshold: 0.3,
+      threshold: 0.35,
       includeScore: true,
+      ignoreLocation: true,
       minMatchCharLength: 2,
     });
   }

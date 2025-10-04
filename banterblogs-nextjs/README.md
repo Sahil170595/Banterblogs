@@ -1,230 +1,235 @@
-# 🎮 Banterblogs
+# Banterblogs Next.js
 
-**AI-Powered Development Blog** documenting the epic journey of building **Banterpacks** - a real-time, AI-powered banter overlay system for live gaming streams.
+A modern, privacy-first blogging platform built with Next.js 15, React 18, and TypeScript. This project showcases autonomous AI development through a comprehensive devlog system.
 
-## 🎯 What is Banterblogs?
+## 🚀 Features
 
-Banterblogs is an **automated development blog** that transforms git commits into engaging, AI-powered storytelling. Each episode features conversations between four AI personalities (Claude, ChatGPT, Gemini, and Banterpacks) discussing the technical decisions, challenges, and victories in building Banterpacks.
+- **Static Site Generation** - Optimized for performance with Next.js 15
+- **Real-time Updates** - Server-Sent Events for live content updates
+- **Secure Authentication** - Bearer token authentication for webhooks
+- **Error Boundaries** - Comprehensive error handling throughout the app
+- **Markdown Processing** - Safe markdown to HTML conversion with syntax highlighting
+- **Responsive Design** - Modern UI with Tailwind CSS and dark theme
+- **SEO Optimized** - Complete metadata and sitemap support
 
-### 🎭 The AI Personalities
+## 🛠️ Tech Stack
 
-- **Claude**: Analytical and precise, provides data-driven insights and technical analysis
-- **ChatGPT**: Enthusiastic and optimistic, brings energy and creativity to discussions  
-- **Gemini**: Philosophical and deep, finds meaning in development decisions
-- **Banterpacks**: The developer's voice with humor and insight, keeps conversations grounded
+- **Framework**: Next.js 15.5.4
+- **React**: 18.3.1
+- **TypeScript**: Latest
+- **Styling**: Tailwind CSS v4
+- **Markdown**: Unified.js pipeline with sanitization
+- **Authentication**: Bearer tokens for webhooks
+- **File Watching**: Optimized fs.watch implementation
 
-## 🚀 What is Banterpacks?
+## 📦 Installation
 
-Banterpacks is a **real-time, AI-powered banter overlay system** for live streaming and gaming content creation. It transforms big gaming moments (kills, deaths, clutch plays) into shareable, personality-driven highlights by displaying contextual, witty responses that react in real-time to gameplay events.
-
-### Key Features:
-- **Sub-200ms latency** from trigger to render
-- **Modular architecture** with overlay, registry, studio, and authoring components
-- **AI integration** with multiple LLM providers
-- **Cache-first design** with offline capabilities
-- **Security-first** with comprehensive validation
-- **Production-ready** with 84.5% test coverage
-
-## 📚 How Banterblogs Works
-
-### Episode Generation
-1. **Git commits** are analyzed for development milestones
-2. **Markdown episodes** are automatically generated in `/posts/`
-3. **AI personalities** discuss the technical decisions and impact
-4. **Metrics** are extracted (files changed, lines added, complexity)
-5. **Content** is processed and displayed on the blog
-
-### Episode Structure
-Each episode follows this format:
-```markdown
-# Episode X: "Title"
-
-## Subtitle
-*Brief description*
-
-### 📅 Date and Commit Info
-### 🔗 Commit: `hash`
-### 📊 Episode X of the Banterpacks Development Saga
-
----
-
-### Why It Matters
-*Explanation of the commit's significance*
-
----
-
-### The Roundtable: AI Conversation
-*Multi-personality discussion of the changes*
-
----
-
-## 🔬 Technical Analysis
-*Metrics, code quality, and architecture impact*
-
----
-
-## 🏗️ Architecture & Strategic Impact
-*Broader implications and strategic decisions*
-
----
-
-## 🎭 Banterpacks' Deep Dive
-*Developer perspective and insights*
-
----
-
-## 🔮 Next Time on Banterpacks Development Story
-*Teaser for next episode*
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd banterblogs-nextjs
 ```
 
-## 🛠️ Technology Stack
+2. Install dependencies:
+```bash
+npm install
+```
 
-### Frontend
-- **Next.js 15** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Framer Motion** for animations
-- **Radix UI** for components
+3. Set up environment variables:
+```bash
+cp env.example .env.local
+```
 
-### Features
-- **Dark mode** design
-- **Advanced search** with Fuse.js
-- **Responsive design**
-- **SEO optimized**
-- **Performance optimized**
+4. Configure required environment variables:
+```bash
+# Required for webhook authentication
+WEBHOOK_SECRET_TOKEN=your_secure_token_here
+```
 
-### Content Processing
-- **Gray Matter** for frontmatter parsing
-- **Unified** for markdown processing
-- **Rehype Highlight** for code syntax highlighting
-- **Remark GFM** for GitHub Flavored Markdown
+5. Run the development server:
+```bash
+npm run dev
+```
 
-## 🚀 Getting Started
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Prerequisites
-- Node.js 18+ 
-- npm/yarn/pnpm
+## 🔧 Configuration
 
-### Installation
+### Environment Variables
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Sahil170595/Banterblogs.git
-   cd Banterblogs/banterblogs-nextjs
-   ```
+Create a `.env.local` file with the following variables:
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
+```bash
+# Required - Generate a secure token for webhook authentication
+WEBHOOK_SECRET_TOKEN=your_secure_webhook_token_here
 
-3. **Run the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   ```
+# Optional - GitHub Integration
+GITHUB_TOKEN=your_github_token_here
 
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+# Optional - Analytics
+NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id_here
 
-## 📖 Adding New Episodes
+# Development
+NODE_ENV=development
+```
 
-### Method 1: Manual Creation
-1. Create a new markdown file in `/posts/` following the naming pattern `episode-XXX.md`
-2. Follow the episode template structure above
-3. Include all required sections and metadata
-4. Commit and push to trigger updates
+### Webhook Authentication
 
-### Method 2: Automated Generation
-Episodes can be automatically generated from git commits using the authoring tools in the Banterpacks project.
+The webhook endpoint (`/api/webhook`) requires Bearer token authentication:
 
-## 🎯 Project Structure
+```bash
+curl -X POST https://your-domain.com/api/webhook \
+  -H "Authorization: Bearer your_webhook_token" \
+  -H "Content-Type: application/json" \
+  -d '{"trigger": "content_update"}'
+```
+
+## 📝 Content Management
+
+### Adding Episodes
+
+Episodes are stored as markdown files in the `posts/` directory:
+
+```
+posts/
+├── episode-001.md
+├── episode-002.md
+└── ...
+```
+
+### Episode Format
+
+Each episode markdown file should follow this format:
+
+```markdown
+# Episode Title
+
+## Subtitle
+
+### 📅 Date: YYYY-MM-DD at HH:mm
+### 🔗 Commit: commit_hash
+
+*Bullet points for episode details*
+
+- **Files Changed**: 5
+- **Lines Added**: 250
+- **Complexity Score**: 45
+
+### Why It Matters
+
+Episode content goes here...
+
+---
+
+More episode content...
+```
+
+## 🏗️ Build & Deployment
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+### Static Export
+
+```bash
+npm run build
+```
+
+The build output will be in the `.next/` directory.
+
+### Vercel Deployment
+
+1. Connect your repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push
+
+### Manual Deployment
+
+```bash
+npm run build
+# Upload .next/ folder to your server
+```
+
+## 🔒 Security Features
+
+- **Input Sanitization** - All markdown content is sanitized before rendering
+- **Rate Limiting** - Built-in rate limiting for file watching
+- **Authentication** - Secure webhook authentication with configurable tokens
+- **CSP Headers** - Content Security Policy headers for enhanced security
+- **Error Handling** - Comprehensive error boundaries prevent crashes
+
+## 🧪 Development
+
+### Code Quality
+
+The project uses ESLint for code quality:
+
+```bash
+npm run lint
+```
+
+### Testing
+
+Run the development server and test features:
+
+```bash
+npm run dev
+```
+
+## 📁 Project Structure
 
 ```
 banterblogs-nextjs/
 ├── src/
-│   ├── app/                 # Next.js App Router pages
-│   │   ├── episodes/        # Episode listing and individual pages
-│   │   ├── about/           # About page
-│   │   └── api/             # API routes
-│   ├── components/          # React components
-│   │   ├── EpisodeCard.tsx  # Episode display component
-│   │   ├── Hero.tsx         # Landing page hero
-│   │   ├── SearchDialog.tsx # Search functionality
-│   │   └── ...
-│   ├── lib/                 # Utility functions
-│   │   ├── episodes.ts      # Episode processing logic
-│   │   └── search.ts        # Search implementation
-│   └── hooks/               # Custom React hooks
-├── posts/                   # Episode markdown files
-├── public/                  # Static assets
-└── ...
+│   ├── app/                 # Next.js App Router
+│   │   ├── api/            # API routes
+│   │   ├── episodes/       # Episode pages
+│   │   ├── tags/          # Tag pages
+│   │   └── page.tsx        # Homepage
+│   ├── components/         # React components
+│   ├── lib/               # Utilities and data processing
+│   └── hooks/             # Custom React hooks
+├── posts/                 # Markdown episode files
+├── public/               # Static assets
+└── next.config.ts        # Next.js configuration
 ```
 
-## 🔍 Navigation Guide
+## 🐛 Troubleshooting
 
-### Main Pages
-- **Home** (`/`): Landing page with featured episodes and stats
-- **Episodes** (`/episodes`): Complete episode listing with search and filters
-- **About** (`/about`): Project overview, AI personalities, and features
+### Common Issues
 
-### Episode Pages
-- **Individual Episodes** (`/episodes/episode-XXX`): Full episode content with navigation
+1. **Build Failures**: Ensure all dependencies are installed and TypeScript errors are resolved
+2. **Webhook Authentication**: Verify `WEBHOOK_SECRET_TOKEN` is set and matches your configuration
+3. **File Watching**: Check file permissions and ensure the `posts/` directory exists
 
-### Features
-- **Search**: Global search across all episodes
-- **Filtering**: Filter by tags, complexity, date, etc.
-- **Responsive**: Works on all device sizes
-- **Dark Mode**: Optimized for dark theme
+### Performance Optimization
 
-## 📊 Current Stats
-
-- **34+ Episodes** documenting the development journey
-- **39,323 lines of code** across the entire project
-- **Real-time updates** when new episodes are added
-- **Advanced search** with fuzzy matching
-- **Comprehensive metrics** tracking development progress
+- Episodes are cached using React's `cache()` function
+- File watching is optimized with connection pooling
+- Static generation is enabled for all pages
 
 ## 🤝 Contributing
 
-### Adding Episodes
-1. Follow the episode template structure
-2. Ensure all required metadata is included
-3. Test locally before committing
-4. Use descriptive commit messages
-
-### Development
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 🔗 Related Projects
-
-- **Banterpacks**: The main project being documented (private repository)
-- **[Banterblogs Repository](https://github.com/Sahil170595/Banterblogs)**: This blog's source code
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -am 'Add feature'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
+## 🔗 Links
 
-- **AI Personalities**: Claude, ChatGPT, Gemini for their unique perspectives
-- **Next.js Team**: For the amazing framework
-- **Tailwind CSS**: For the utility-first CSS framework
-- **Framer Motion**: For smooth animations
+- **Live Demo**: [banterblogs.vercel.app](https://banterblogs.vercel.app)
+- **GitHub Repository**: [Link to repository]
+- **Documentation**: [Link to docs]
 
 ---
 
-*Built with ❤️ by [Sahil Kadadekar](https://github.com/Sahil170595)*
-
-*Follow the epic development journey of Banterpacks through AI-powered storytelling*
+Built with ❤️ for the autonomous AI revolution.

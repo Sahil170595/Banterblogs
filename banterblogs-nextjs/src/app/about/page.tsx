@@ -19,6 +19,40 @@ export default async function AboutPage() {
           </p>
         </div>
 
+        {/* Automation Loop */}
+        <section id="automation-loop" className="scroll-m-20">
+          <div className="bg-gradient-to-br from-emerald-50/10 to-blue-50/10 gradient-border rounded-2xl p-8 mb-12">
+            <h2 className="text-3xl font-bold mb-6">🔄 Banterblogs Automation Loop</h2>
+            <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+              The automation engine that ties everything together—from code commits to episode generation, 
+              creating a seamless development narrative powered by AI.
+            </p>
+            <div className="grid gap-6 md:grid-cols-3">
+              <div className="text-center p-6 rounded-xl border border-border/60 bg-background/50">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📝</span>
+                </div>
+                <h3 className="font-semibold mb-2">Auto Episodes</h3>
+                <p className="text-sm text-muted-foreground">Commits trigger episode generation</p>
+              </div>
+              <div className="text-center p-6 rounded-xl border border-border/60 bg-background/50">
+                <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <h3 className="font-semibold mb-2">AI Processing</h3>
+                <p className="text-sm text-muted-foreground">Multi-LLM content generation</p>
+              </div>
+              <div className="text-center p-6 rounded-xl border border-border/60 bg-background/50">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🌐</span>
+                </div>
+                <h3 className="font-semibold mb-2">Live Updates</h3>
+                <p className="text-sm text-muted-foreground">Real-time site revalidation</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="border-t border-border pt-8">
           <h2 className="text-3xl font-bold mb-8">Development Metrics</h2>
           

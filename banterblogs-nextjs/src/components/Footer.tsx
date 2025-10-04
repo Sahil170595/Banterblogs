@@ -1,27 +1,44 @@
 import Link from 'next/link';
-import { Github, Twitter, Mail, Rss } from 'lucide-react';
+import { Github, Mail, Rss, Twitter } from 'lucide-react';
+
+const FOOTER_LINKS = {
+  Episodes: [
+    { href: '/episodes', label: 'All Episodes' },
+    { href: '/episodes?filter=latest', label: 'Latest' },
+    { href: '/episodes?filter=featured', label: 'Featured' },
+  ],
+  Platform: [
+    { href: '/platform', label: 'Platform Overview' },
+    { href: '/technology', label: 'Technology' },
+    { href: '/about', label: 'About' },
+  ],
+  Resources: [
+    { href: '/tags', label: 'Tags' },
+    { href: '/rss.xml', label: 'RSS Feed' },
+    { href: '/sitemap.xml', label: 'Sitemap' },
+    { href: 'https://github.com/Sahil170595/Banterblogs', label: 'Source Code' },
+  ],
+} as const;
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-background/95 backdrop-blur">
-      <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-sm font-bold text-primary-foreground">🤖</span>
-              </div>
-              <span className="font-bold gradient-text">Banterblogs</span>
+    <footer className="border-t border-border/60 bg-background/80">
+      <div className="container py-14">
+        <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] md:gap-6">
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground">BB</span>
+              <span className="text-lg font-semibold text-foreground">Banterblogs</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              AI-powered development blog following the epic journey of building Banterpacks.
+            <p className="max-w-sm text-sm text-muted-foreground">
+              A polished chaos log documenting how the Banterpacks overlay evolves into Jarvis—a fully local, privacy-first assistant.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex items-center gap-4 text-muted-foreground">
               <Link
                 href="https://github.com/Sahil170595/Banterblogs"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="transition hover:text-primary"
               >
                 <Github className="h-5 w-5" />
               </Link>
@@ -29,113 +46,43 @@ export function Footer() {
                 href="https://twitter.com/KadadekarSahil"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="transition hover:text-primary"
               >
                 <Twitter className="h-5 w-5" />
               </Link>
-              <Link
-                href="mailto:sahilkadadekar@gmail.com"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <Link href="mailto:sahilkadadekar@gmail.com" className="transition hover:text-primary">
                 <Mail className="h-5 w-5" />
               </Link>
-              <Link
-                href="/rss.xml"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <Link href="/rss.xml" className="transition hover:text-primary">
                 <Rss className="h-5 w-5" />
               </Link>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Episodes</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/episodes" className="text-muted-foreground hover:text-foreground transition-colors">
-                  All Episodes
-                </Link>
-              </li>
-              <li>
-                <Link href="/episodes?filter=latest" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Latest
-                </Link>
-              </li>
-              <li>
-                <Link href="/episodes?filter=featured" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Featured
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Tags</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/tags/banterpacks" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Banterpacks
-                </Link>
-              </li>
-              <li>
-                <Link href="/tags/ai" className="text-muted-foreground hover:text-foreground transition-colors">
-                  AI
-                </Link>
-              </li>
-              <li>
-                <Link href="/tags/development" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Development
-                </Link>
-              </li>
-              <li>
-                <Link href="/tags/architecture" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Architecture
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Resources</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/platform" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Platform
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/rss.xml" className="text-muted-foreground hover:text-foreground transition-colors">
-                  RSS Feed
-                </Link>
-              </li>
-              <li>
-                <Link href="/sitemap.xml" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Sitemap
-                </Link>
-              </li>
-              <li>
-                <Link href="https://github.com/Sahil170595/Banterblogs" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Source Code
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {Object.entries(FOOTER_LINKS).map(([section, links]) => (
+            <div key={section} className="space-y-4">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">{section}</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="transition hover:text-primary"
+                      target={link.href.startsWith('http') ? '_blank' : undefined}
+                      rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-8 border-t border-border/40 pt-8">
-          <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Banterblogs. Built with Next.js and deployed on Vercel.
-            </p>
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-              <span>Made with ❤️ and AI</span>
-            </div>
-          </div>
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-sm text-muted-foreground md:flex-row">
+          <span>© {new Date().getFullYear()} Banterblogs. Crafted in public, powered by local AI.</span>
+          <span>Banterpacks • Banterhearts • Automation Plane</span>
         </div>
       </div>
     </footer>
