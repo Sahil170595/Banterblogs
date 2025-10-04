@@ -118,7 +118,7 @@ export default function Roadmap() {
           <div className="rounded-xl border border-border/50 bg-card/50 p-6 lg:p-8 backdrop-blur-sm border-l-4 border-l-primary/60">
             <h2 className="text-xl font-semibold text-foreground mb-2">Current Development Focus</h2>
             <p className="text-muted-foreground">
-              We're actively working on enhanced developer tooling and automation systems to streamline 
+              We&apos;re actively working on enhanced developer tooling and automation systems to streamline 
               the Banterblogs development experience while maintaining security and reliability standards.
             </p>
           </div>

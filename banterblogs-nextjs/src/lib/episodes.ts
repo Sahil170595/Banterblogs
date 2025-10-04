@@ -173,7 +173,7 @@ export async function getAllEpisodes(): Promise<Episode[]> {
             .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.+?)\*/g, '<em>$1</em>')
             .replace(/`(.+?)`/g, '<code>$1</code>')
-            .replace(/^\- (.+)$/gm, '<li>$1</li>')
+            .replace(/^- (.+)$/gm, '<li>$1</li>')
             .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
             .replace(/\n/g, '<br/>');
         } catch (error) {

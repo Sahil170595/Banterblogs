@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bot, Shield, Zap, ExternalLink } from 'lucide-react';
+import { X, Bot, Shield, Zap } from 'lucide-react';
 
 interface OnboardingModalProps {
   onClose: () => void;

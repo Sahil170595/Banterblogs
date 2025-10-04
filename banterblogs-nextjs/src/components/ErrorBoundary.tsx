@@ -12,7 +12,9 @@ interface ErrorBoundaryState {
 interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  onError?: (_error: Error, _errorInfo: React.ErrorInfo) => void;
+  resetKeys?: Array<string | number>; // Auto-reset when these keys change
+  resetOnPropsChange?: boolean; // Auto-reset on any prop change
 }
 
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -22,8 +24,29 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+    const { resetKeys, resetOnPropsChange } = this.props;
+    const { hasError } = this.state;
+
+    if (!hasError) return;
+
+    // Auto-reset when resetKeys change
+    if (resetKeys) {
+      const hasResetKeyChanged = resetKeys.some(
+        (key, index) => key !== prevProps.resetKeys?.[index]
+      );
+      if (hasResetKeyChanged) {
+        this.reset();
+      }
+    }
+
+    // Auto-reset on any prop change (useful for route changes)
+    if (resetOnPropsChange && prevProps.children !== this.props.children) {
+      this.reset();
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -54,34 +77,47 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       }
 
       return (
-        <div className="flex min-h-[400px] items-center justify-center">
-          <div className="text-center">
+        <div className="flex min-h-[400px] items-center justify-center p-4">
+          <div className="text-center max-w-md">
             <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Something went wrong</h2>
             <p className="text-muted-foreground mb-6">
-              We encountered an unexpected error. Please try refreshing the page.
+              We encountered an unexpected error. Please try again.
             </p>
             <button
               onClick={this.reset}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <RefreshCw className="h-4 w-4" />
               Try Again
             </button>
             
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-4 text-left">
-                <summary className="cursor-pointer text-sm text-muted-foreground">
-                  Error Details (Development)
+              <details className="mt-6 text-left">
+                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Error Details (Development Only)
                 </summary>
-                <pre className="mt-2 rounded bg-muted p-4 text-xs text-left overflow-auto">
-                  <div className="font-semibold mb-2">Error:</div>
-                  <div className="mb-4">{this.state.error.toString()}</div>
+                <pre className="mt-2 rounded bg-muted p-4 text-xs text-left overflow-auto max-h-96">
+                  <div className="font-semibold mb-2 text-destructive">Error:</div>
+                  <div className="mb-4 text-destructive-foreground">
+                    {this.state.error.name}: {this.state.error.message}
+                  </div>
+                  
+                  {this.state.error.stack && (
+                    <>
+                      <div className="font-semibold mb-2">Stack Trace:</div>
+                      <div className="mb-4 text-muted-foreground">
+                        {this.state.error.stack}
+                      </div>
+                    </>
+                  )}
                   
                   {this.state.errorInfo && (
                     <>
                       <div className="font-semibold mb-2">Component Stack:</div>
-                      <div>{this.state.errorInfo.componentStack}</div>
+                      <div className="text-muted-foreground">
+                        {this.state.errorInfo.componentStack}
+                      </div>
                     </>
                   )}
                 </pre>
@@ -96,16 +132,35 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 }
 
-// Hook-based error boundary for functional components
+// Hook-based error handler for functional components
 export function useErrorHandler() {
-  return React.useCallback((error: Error, errorInfo?: React.ErrorInfo) => {
-    // Log error to console
-    console.error('Error caught by useErrorHandler:', error, errorInfo);
-    
-    // You could send error to an error reporting service here
-    
-    throw error; // Re-throw to trigger nearest error boundary
+  const [error, setError] = React.useState<Error | null>(null);
+
+  React.useEffect(() => {
+    if (error) {
+      throw error; // Trigger nearest error boundary
+    }
+  }, [error]);
+
+  return React.useCallback((err: Error) => {
+    console.error('Error caught by useErrorHandler:', err);
+    setError(err);
   }, []);
+}
+
+// Utility to wrap async functions with error handling
+export function withErrorHandler<T extends (..._args: any[]) => Promise<any>>(
+  fn: T,
+  errorHandler: (_error: Error) => void
+): T {
+  return (async (...args: Parameters<T>) => {
+    try {
+      return await fn(...args);
+    } catch (err) {
+      errorHandler(err instanceof Error ? err : new Error(String(err)));
+      throw err;
+    }
+  }) as T;
 }
 
 export default ErrorBoundary;
