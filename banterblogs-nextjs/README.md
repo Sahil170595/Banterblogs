@@ -1,235 +1,331 @@
 # Banterblogs Next.js
 
-A modern, privacy-first blogging platform built with Next.js 15, React 18, and TypeScript. This project showcases autonomous AI development through a comprehensive devlog system.
+A modern, privacy-first blogging platform showcasing autonomous AI development through comprehensive devlogs. Built with cutting-edge web technologies and designed for real-time content publishing.
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Static Site Generation** - Optimized for performance with Next.js 15
-- **Real-time Updates** - Server-Sent Events for live content updates
-- **Secure Authentication** - Bearer token authentication for webhooks
-- **Error Boundaries** - Comprehensive error handling throughout the app
-- **Markdown Processing** - Safe markdown to HTML conversion with syntax highlighting
+### 🎯 **Core Functionality**
+- **Static Site Generation** - Optimized performance with Next.js 15
+- **Real-time Episodes** - Live content updates via Server-Sent Events
+- **Episode Management** - Dynamic episode generation and metadata parsing
+- **Advanced Search** - Intelligent search with fuzzy matching (Fuse.js)
+- **Tag System** - Dynamic tag-based content organization
+
+### 🎨 **User Experience**
 - **Responsive Design** - Modern UI with Tailwind CSS and dark theme
-- **SEO Optimized** - Complete metadata and sitemap support
+- **Enhanced Error Handling** - Auto-resetting error boundaries with development debugging
+- **Loading States** - Smooth transitions and skeleton loading
+- **Accessibility** - WCAG compliant with keyboard navigation
+- **SEO Optimized** - Complete metadata, sitemap, and RSS support
+
+### 🔒 **Security & Performance**
+- **Bearer Token Authentication** - Secure webhook endpoints
+- **Input Sanitization** - Safe markdown processing with Rehype
+- **CSP Headers** - Content Security Policy implementation
+- **Caching Strategy** - React cache() and optimized revalidation
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 15.5.4
-- **React**: 18.3.1
-- **TypeScript**: Latest
-- **Styling**: Tailwind CSS v4
-- **Markdown**: Unified.js pipeline with sanitization
-- **Authentication**: Bearer tokens for webhooks
-- **File Watching**: Optimized fs.watch implementation
+| Category | Technology | Version |
+|----------|------------|---------|
+| **Framework** | Next.js | 15.5.3 |
+| **Runtime** | React | 19.1.0 |
+| **Language** | TypeScript | 5.x |
+| **Styling** | Tailwind CSS | 4.x |
+| **Markdown** | Unified.js pipeline | Latest |
+| **Search** | Fuse.js | 7.1.0 |
+| **Animations** | Framer Motion | 12.23.16 |
+| **Icons** | Lucide React | Latest |
+| **Database** | File System | Node.js FS |
 
-## 📦 Installation
+## 📦 Quick Start
 
-1. Clone the repository:
+### Prerequisites
+- Node.js 18.x or 20.x (avoid Node.js 22.x due to Next.js compatibility)
+- npm or yarn package manager
+
+### Installation
+
+1. **Clone the repository:**
 ```bash
 git clone <repository-url>
 cd banterblogs-nextjs
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-3. Set up environment variables:
+3. **Environment setup:**
 ```bash
 cp env.example .env.local
 ```
 
-4. Configure required environment variables:
+#### Required Environment Variables
+
+Create `.env.local` with these variables:
+
 ```bash
-# Required for webhook authentication
+# 🚨 Required: Webhook authentication
 WEBHOOK_SECRET_TOKEN=your_secure_token_here
+
+# 🔧 Optional: GitHub integration
+GITHUB_TOKEN=your_github_token_here
+
+# 📊 Optional: Analytics
+NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id_here
+
+# 🌍 Environment
+NODE_ENV=development
 ```
 
-5. Run the development server:
+4. **Start development server:**
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
-## 🔧 Configuration
+## 🏗️ Project Structure
 
-### Environment Variables
+```
+banterblogs-nextjs/
+├── 📁 src/
+│   ├── 🗂️ app/                    # Next.js App Router
+│   │   ├── 📄 page.tsx            # Homepage with stats
+│   │   ├── 📁 episodes/          # Episode pages & navigation
+│   │   ├── 📁 tags/              # Dynamic tag pages
+│   │   ├── 📁 api/               # API routes
+│   │   │   ├── webhook/          # Content revalidation
+│   │   │   └── episodes/         # Episode data & SSE
+│   │   ├── 📁 roadmap/           # Development roadmap
+│   │   └── 📁 technology/        # Tech stack showcase
+│   ├── 🧩 components/            # Reusable React components
+│   │   ├── 🎯 ErrorBoundary.tsx  # Enhanced error handling
+│   │   ├── 🔍 SearchDialog.tsx   # Search functionality
+│   │   ├── 📱 EpisodeCard.tsx    # Episode display cards
+│   │   ├── 📊 Hero.tsx           # Landing page hero
+│   │   └── 🧭 Navigation components
+│   ├── 🛠️ lib/                  # Utilities & data processing
+│   │   ├── episodes.ts          # Episode parsing & utilities
+│   │   ├── search.ts            # Fuse.js search configuration
+│   │   ├── formatUtils.ts       # Number & time formatting
+│   │   └── constants.ts         # Application constants
+│   └── 🎣 hooks/                # Custom React hooks
+│       └── useEpisodes.ts       # Episode data management
+├── 📝 posts/                   # Markdown episode files
+├── 🎨 public/                  # Static assets
+├── 📋 eslint.config.mjs        # ESLint flat config
+├── ⚙️ next.config.ts          # Next.js configuration
+└── 📚 README.md              # This file
+```
 
-Create a `.env.local` file with the following variables:
+## 🎨 Key Components
+
+### ErrorBoundary Component
+Enhanced error boundary with auto-reset functionality:
+
+```tsx
+<ErrorBoundary
+  resetKeys={[router.pathname]}  // Auto-reset on route change
+  resetOnPropsChange={true}      // Reset on prop changes
+  fallback={CustomErrorComponent} // Custom error UI
+>
+  <YourComponent />
+</ErrorBoundary>
+```
+
+### Episode Processing
+Multi-format metadata parser supporting various episode formats:
+
+```tsx
+const episodes = await getAllEpisodes();
+// Automatically parses metadata, calculates complexity, generates previews
+```
+
+### Search System
+Intelligent search with fuzzy matching:
+
+```tsx
+import { EpisodeSearch } from '@/lib/search';
+
+const searchInstance = new EpisodeSearch(episodes);
+const results = searchInstance.search('query', options);
+```
+
+## 🔧 Development
+
+### Code Quality
+ESLint configuration with TypeScript support:
 
 ```bash
-# Required - Generate a secure token for webhook authentication
-WEBHOOK_SECRET_TOKEN=your_secure_webhook_token_here
-
-# Optional - GitHub Integration
-GITHUB_TOKEN=your_github_token_here
-
-# Optional - Analytics
-NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id_here
-
-# Development
-NODE_ENV=development
+npm run lint
 ```
 
-### Webhook Authentication
+**Features:**
+- Custom rules for unused variables with `_` prefix
+- Next.js core web vitals rules
+- TypeScript-specific linting
 
-The webhook endpoint (`/api/webhook`) requires Bearer token authentication:
+### Building
 
 ```bash
-curl -X POST https://your-domain.com/api/webhook \
-  -H "Authorization: Bearer your_webhook_token" \
-  -H "Content-Type: application/json" \
-  -d '{"trigger": "content_update"}'
-```
+# Development build
+npm run dev
 
-## 📝 Content Management
-
-### Adding Episodes
-
-Episodes are stored as markdown files in the `posts/` directory:
-
-```
-posts/
-├── episode-001.md
-├── episode-002.md
-└── ...
-```
-
-### Episode Format
-
-Each episode markdown file should follow this format:
-
-```markdown
-# Episode Title
-
-## Subtitle
-
-### 📅 Date: YYYY-MM-DD at HH:mm
-### 🔗 Commit: commit_hash
-
-*Bullet points for episode details*
-
-- **Files Changed**: 5
-- **Lines Added**: 250
-- **Complexity Score**: 45
-
-### Why It Matters
-
-Episode content goes here...
-
----
-
-More episode content...
-```
-
-## 🏗️ Build & Deployment
-
-### Production Build
-
-```bash
+# Production build
 npm run build
+
+# Start production server
 npm start
 ```
 
-### Static Export
+## 🚀 Deployment
 
-```bash
-npm run build
-```
+### Vercel (Recommended)
 
-The build output will be in the `.next/` directory.
+1. **Connect Repository** to Vercel
+2. **Set Node.js version** to `18.x` (important!)
+3. **Configure Environment Variables**
+4. **Deploy** automatically on push
 
-### Vercel Deployment
-
-1. Connect your repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push
+⚠️ **Important**: Set Node.js version to 18.x in Vercel project settings to avoid `TypeError: generate is not a function` errors.
 
 ### Manual Deployment
 
 ```bash
 npm run build
 # Upload .next/ folder to your server
+npm start
 ```
+
+## 📝 Content Management
+
+### Episode Format
+
+Episodes are markdown files in `posts/` directory:
+
+```markdown
+# Episode Title
+## Brief Subtitle
+
+### 📅 2025-10-03
+### 🔗 commit_hash_here
+
+**Files Changed**: 12
+**Lines Added**: 340
+**Complexity Score**: 67
+
+### Why It Matters
+
+Episode content explaining the development changes...
+
+---
+
+## Episode Details
+
+Detailed description of what was changed...
+```
+
+### Automated Features
+
+- **Metadata Parsing** - Extracts dates, commits, stats automatically
+- **Preview Generation** - Creates content previews from "Why It Matters" section
+- **Tag Detection** - Automatically assigns tags based on content
+- **Reading Time** - Calculates estimated reading time
+- **Complexity Scoring** - Analyzes code changes for complexity metrics
 
 ## 🔒 Security Features
 
-- **Input Sanitization** - All markdown content is sanitized before rendering
-- **Rate Limiting** - Built-in rate limiting for file watching
-- **Authentication** - Secure webhook authentication with configurable tokens
-- **CSP Headers** - Content Security Policy headers for enhanced security
-- **Error Handling** - Comprehensive error boundaries prevent crashes
+- **Authentication**: Bearer token system for webhooks
+- **Sanitization**: All markdown undergoes XSS sanitization
+- **CSP**: Content Security Policy headers
+- **Rate Limiting**: Built-in request throttling
+- **Error Boundaries**: Graceful error handling throughout
 
-## 🧪 Development
+## 🧪 Roadmap & Development
 
-### Code Quality
+### Current Focus (Q4 2025)
+- ✅ Enhanced error handling and recovery
+- ✅ Advanced search and filtering
+- ✅ Responsive design improvements
+- ✅ Performance optimizations
 
-The project uses ESLint for code quality:
+### Upcoming (Q1 2026)
+- 🔄 CI/CD orchestration improvements
+- 🔄 Multi-repository dashboard
+- 🔄 AI-driven code insights
+- 🔄 Smart refactoring suggestions
 
-```bash
-npm run lint
-```
-
-### Testing
-
-Run the development server and test features:
-
-```bash
-npm run dev
-```
-
-## 📁 Project Structure
-
-```
-banterblogs-nextjs/
-├── src/
-│   ├── app/                 # Next.js App Router
-│   │   ├── api/            # API routes
-│   │   ├── episodes/       # Episode pages
-│   │   ├── tags/          # Tag pages
-│   │   └── page.tsx        # Homepage
-│   ├── components/         # React components
-│   ├── lib/               # Utilities and data processing
-│   └── hooks/             # Custom React hooks
-├── posts/                 # Markdown episode files
-├── public/               # Static assets
-└── next.config.ts        # Next.js configuration
-```
+Track development progress at `/roadmap`.
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Build Failures**: Ensure all dependencies are installed and TypeScript errors are resolved
-2. **Webhook Authentication**: Verify `WEBHOOK_SECRET_TOKEN` is set and matches your configuration
-3. **File Watching**: Check file permissions and ensure the `posts/` directory exists
+**Build Error: `TypeError: generate is not a function`**
+- **Solution**: Use Node.js 18.x (not 22.x)
+- **Vercel Fix**: Set Node.js version to 18.x in project settings
 
-### Performance Optimization
+**ESLint Errors for unused variables**
+- **Solution**: Prefix unused variables with `_` (e.g., `_error`)
+- **Configuration**: Already configured in `eslint.config.mjs`
+
+**Webhook Authentication Failures**
+- Verify `WEBHOOK_SECRET_TOKEN` is correct
+- Check Authorization header format: `Bearer your_token`
+
+### Performance Tips
 
 - Episodes are cached using React's `cache()` function
-- File watching is optimized with connection pooling
-- Static generation is enabled for all pages
+- File watching uses optimized connection pooling
+- Static generation enabled for all pages
+- Image optimization configured in Next.js
 
-## 🤝 Contributing
+## 📄 Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature-name`
-5. Submit a Pull Request
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push branch: `git push origin feature/amazing-feature`
+5. Open Pull Request
 
-## 📄 License
+### Development Guidelines
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Follow TypeScript best practices
+- Use ESLint configuration (configured for `_` prefixed unused variables)
+- Test error boundaries in development
+- Add episode metadata in consistent format
 
-## 🔗 Links
+## 📊 Monitoring
 
-- **Live Demo**: [banterblogs.vercel.app](https://banterblogs.vercel.app)
-- **GitHub Repository**: [Link to repository]
-- **Documentation**: [Link to docs]
+### Analytics Integration
+Configure `NEXT_PUBLIC_ANALYTICS_ID` for:
+- Page views and user behavior
+- Performance metrics
+- Error tracking
+- Search analytics
+
+### Error Monitoring
+Development mode includes enhanced error details:
+- Stack traces
+- Component tree information
+- Error boundaries with auto-reset functionality
+
+## 🔗 Resources
+
+- **Live Application**: [banterblogs.vercel.app](https://banterblogs.vercel.app)
+- **Technology Stack**: `/technology`
+- **Development Roadmap**: `/roadmap`
+- **Episode Archive**: `/episodes`
 
 ---
 
-Built with ❤️ for the autonomous AI revolution.
+## 📋 Version History
+
+- **v2.1.0** - Enhanced error boundaries with auto-reset
+- **v2.0.0** - Next.js 15 upgrade with TypeScript improvements
+- **v1.0.0** - Initial release with core episode functionality
+
+Built with ❤️ for the autonomous AI revolution - showcasing every commit, every optimization, every breakthrough.
