@@ -108,4 +108,5 @@ export function useErrorHandler() {
   }, []);
 }
 
+// ErrorBoundary component for handling React errors gracefully
 export default ErrorBoundary;
