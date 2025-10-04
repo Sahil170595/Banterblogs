@@ -15,7 +15,16 @@
     "fs": "^0.0.1-security",
     "path": "^0.12.7"
   },
-  "keywords": ["banterpacks", "ai", "story", "development", "blog"],
+  "keywords": [
+    "banterpacks",
+    "ai",
+    "story",
+    "development",
+    "blog"
+  ],
   "author": "Sahil Kadadekar",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }
