@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 
 import { motion } from 'framer-motion';
 import { CheckCircle2, Clock, Target, Rocket } from 'lucide-react';
@@ -162,12 +161,16 @@ export default function RoadmapPage() {
                 Stay updated with every development milestone and breakthrough.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
+                <a
                   href="/episodes"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.assign('/episodes');
+                  }}
                 >
                   View Episodes
-                </Link>
+                </a>
                 <a
                   href="https://github.com/Sahil170595/Banterblogs"
                   target="_blank"

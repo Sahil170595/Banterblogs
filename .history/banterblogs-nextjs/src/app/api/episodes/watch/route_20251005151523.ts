@@ -16,7 +16,7 @@ export async function GET() {
       send('connected', { message: 'SSE connected' });
 
       // keep alive ping (prevents proxies from closing the connection)
-      setInterval(() => send('ping', { t: Date.now() }), 25000);
+      const id = setInterval(() => send('ping', { t: Date.now() }), 25000);
 
       // We can't access the controller signal, so we'll handle cleanup differently
       // The client will handle connection cleanup with eventSource.close()

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Search, Tag, FileText, X } from 'lucide-react';
 import { EpisodeSearch } from '@/lib/search';
 import type { Episode } from '@/lib/episodes';
