@@ -70,7 +70,6 @@ body {
   background: hsl(var(--primary) / 0.3);
   color: hsl(var(--primary-foreground));
 }
-
 /* Focus styles */
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
@@ -107,9 +106,7 @@ html {
 /* Display font utility */
 .display {
   font-family: "Sora", Inter, system-ui;
-}
-
-/* Glass morphism */
+}/* Glass morphism */
 .glass {
   @apply bg-background/80 backdrop-blur-xl border border-border/50;
 }
@@ -344,3 +341,6 @@ html {
 .interactive {
   @apply transition-all duration-200 ease-out hover:scale-105 active:scale-95;
 }
+
+
+

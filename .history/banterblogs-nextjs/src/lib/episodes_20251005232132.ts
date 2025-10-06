@@ -166,7 +166,7 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
           const fullPath = path.join(banterpacksDir, fileName);
           const fileContents = fs.readFileSync(fullPath, 'utf8');
           
-          const episode = await processEpisodeFile(fileContents, id, 'banterpacks', id);
+          const episode = await processEpisodeFile(fileContents, id, 'banterpacks');
           return episode;
         })
     );
@@ -197,7 +197,7 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
   return episodes.sort((a, b) => a.id - b.id);
 });
 
-async function processEpisodeFile(fileContents: string, id: number, platform: 'banterpacks' | 'chimera', originalId?: number): Promise<Episode> {
+async function processEpisodeFile(fileContents: string, id: number, platform: 'banterpacks' | 'chimera'): Promise<Episode> {
   // Parse markdown
   const { content } = matter(fileContents);
   
@@ -253,13 +253,10 @@ async function processEpisodeFile(fileContents: string, id: number, platform: 'b
     ? `chimera-episode-${id.toString().padStart(3, '0')}`
     : `episode-${id.toString().padStart(3, '0')}`;
   
-  // Use originalId for display if available, otherwise use id
-  const displayId = originalId || id;
-  
   return {
     id,
     slug,
-    title: metadata.title || `Episode ${displayId}`,
+    title: metadata.title || `Episode ${id}`,
     subtitle: metadata.subtitle || 'Development Update',
     date: metadata.date || new Date().toISOString(),
     commit: metadata.commit || '',

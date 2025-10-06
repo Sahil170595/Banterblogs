@@ -36,16 +36,7 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
     >
       <Link href={`/episodes/${episode.slug}`} className="flex h-full flex-col gap-6 p-6">
         <header className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span>Episode {episode.id.toString().padStart(2, '0')}</span>
-            <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
-              platformColor === 'accent' 
-                ? 'bg-accent/10 text-accent' 
-                : 'bg-primary/10 text-primary'
-            }`}>
-              {platform}
-            </span>
-          </div>
+          <span>Episode {episode.id.toString().padStart(2, '0')}</span>
           <time>{formatDate(episode.date)}</time>
         </header>
 

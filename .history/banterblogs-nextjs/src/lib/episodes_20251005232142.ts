@@ -166,7 +166,7 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
           const fullPath = path.join(banterpacksDir, fileName);
           const fileContents = fs.readFileSync(fullPath, 'utf8');
           
-          const episode = await processEpisodeFile(fileContents, id, 'banterpacks', id);
+          const episode = await processEpisodeFile(fileContents, id, 'banterpacks');
           return episode;
         })
     );
