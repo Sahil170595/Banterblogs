@@ -20,7 +20,7 @@ export function EpisodeSpotlight({ episodes }: EpisodeSpotlightProps) {
             Every episode is an internal postmortem—just with better jokes.
           </h2>
           <p className="text-sm text-muted-foreground sm:text-base">
-            We do not sand off details. Each drop shows the commits, telemetry, and emotional damage required to get Jarvis closer to a fully local assistant that behaves.
+            We do not sand off details. Each drop shows the commits, telemetry, and emotional damage required to get Chimera closer to a fully local assistant that behaves.
           </p>
         </div>
         <Link

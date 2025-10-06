@@ -31,7 +31,7 @@ export function Footer() {
               <span className="text-lg font-semibold text-foreground">Banterblogs</span>
             </div>
             <p className="max-w-sm text-sm text-muted-foreground">
-              A polished chaos log documenting how the Banterpacks overlay evolves into Jarvis—a fully local, privacy-first assistant.
+              A polished chaos log documenting how the Banterpacks overlay evolves into Chimera—a fully local, privacy-first assistant.
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link

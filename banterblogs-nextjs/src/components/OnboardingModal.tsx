@@ -24,7 +24,7 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
     },
     {
       title: 'Live Development',
-      content: 'Follow the journey in real-time as we build Jarvis from the ground up.',
+      content: 'Follow the journey in real-time as we build Chimera from the ground up.',
       icon: <Zap className="h-8 w-8" />,
     },
   ];

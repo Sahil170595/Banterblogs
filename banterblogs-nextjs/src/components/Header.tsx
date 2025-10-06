@@ -25,7 +25,7 @@ export function Header() {
             BB
           </span>
           <span className="text-base sm:text-lg font-semibold tracking-tight text-foreground display">
-            Building Jarvis
+            Building Chimera
           </span>
         </Link>
 

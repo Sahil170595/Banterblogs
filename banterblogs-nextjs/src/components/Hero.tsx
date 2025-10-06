@@ -36,7 +36,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
             <div className="space-y-6">
               <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-[12px] uppercase tracking-[0.2em] text-primary font-semibold">
                 <Bot className="w-3 h-3 mr-2" />
-                Building Jarvis: Fully Local AI Evolution
+                Building Chimera: Fully Local AI Evolution
               </span>
               <h1 className="display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight">
                 The World&apos;s First{" "}
@@ -56,7 +56,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 href="/roadmap"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-blue-600 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-white shadow-xl shadow-primary/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary/40 active:scale-95"
               >
-                View Jarvis Roadmap
+                View Chimera Roadmap
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
               <Link
@@ -129,7 +129,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 </div>
               ) : (
                 <div className="space-y-4 text-sm text-muted-foreground">
-                  <p>No episodes yet. Jarvis is booting up.</p>
+                  <p>No episodes yet. Chimera is booting up.</p>
                   <Link
                     href="/episodes"
                     className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border/60 px-6 py-3 text-sm font-semibold text-foreground transition hover:border-primary/50 hover:text-primary"

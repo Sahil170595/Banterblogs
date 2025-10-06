@@ -76,7 +76,7 @@ export default function RoadmapPage() {
             className="text-center mb-16"
           >
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-              Jarvis Development{' '}
+              Chimera Development{' '}
               <span className="gradient-text">Roadmap</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

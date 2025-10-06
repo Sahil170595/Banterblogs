@@ -45,7 +45,7 @@ export function SystemsShowcase() {
         <h2 className="mt-3 text-4xl md:text-5xl font-bold leading-tight display">
           Three Production Systems.
           <br />
-          <span className="gradient-text">One Mission: Jarvis</span>
+          <span className="gradient-text">One Mission: Chimera</span>
         </h2>
         <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
           Real-time overlay proving demand. ML optimization spine scaling performance. Automation plane documenting every breakthrough.

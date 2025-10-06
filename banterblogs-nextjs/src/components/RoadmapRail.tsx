@@ -24,7 +24,7 @@ const phases = [
   {
     name: 'Phase 03: Multi-Device Intelligence',
     status: 'Queued',
-    description: 'Device-agnostic Jarvis deployment with encrypted sync, cross-platform compatibility, and unified personal AI workspace.',
+    description: 'Device-agnostic Chimera deployment with encrypted sync, cross-platform compatibility, and unified personal AI workspace.',
     signals: ['Edge deployment architecture', 'Encrypted mesh networking', 'Cross-platform compatibility layer', 'Unified workspace integration'],
     cta: { label: 'Join Early Access Program', href: '/roadmap#access' },
     done: false,
@@ -35,7 +35,7 @@ export function RoadmapRail() {
   return (
     <section className="container pb-20 pt-10 md:pb-28">
       <div className="mx-auto max-w-3xl text-center">
-        <p className="text-xs uppercase tracking-[0.24em] text-primary/80 font-semibold">Jarvis Evolution Path</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-primary/80 font-semibold">Chimera Evolution Path</p>
         <h2 className="mt-3 text-4xl md:text-5xl font-bold leading-tight display">
           From Streaming Overlay to{" "}
           <span className="gradient-text">Personal AI Platform</span>
