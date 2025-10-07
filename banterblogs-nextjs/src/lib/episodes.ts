@@ -67,9 +67,11 @@ function parseEpisodeMetadata(content: string) {
   // Try multiple date formats
   const dateFormats = [
     /### 📅 (.+?) at/m,
+    /### 📅 (.+)$/m,
     /### Date: (.+?) at/m,
     /## Date: (.+?) at/m,
-    /📅 (.+?) at/m
+    /📅 (.+?) at/m,
+    /📅 (.+)$/m
   ];
   
   for (const format of dateFormats) {
