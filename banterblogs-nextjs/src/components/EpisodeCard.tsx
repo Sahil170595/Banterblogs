@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Clock, FileText, GitCommit, Tag } from 'lucide-react';
-import type { Episode } from '@/lib/episodes';
+import type { Episode, EpisodePlatform } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
 interface EpisodeCardProps {
@@ -11,21 +11,41 @@ interface EpisodeCardProps {
   index?: number;
 }
 
+function formatEpisodeNumber(value: number): string {
+  if (value >= 100) {
+    return value.toString().padStart(3, '0');
+  }
+  return value.toString().padStart(2, '0');
+}
+
+function resolvePlatform(
+  episode: Episode,
+): { label: string; colorClass: 'accent' | 'primary'; key: EpisodePlatform } {
+  const inferred = episode.platform ?? (episode.slug.startsWith('chimera-episode-') ? 'chimera' : 'banterpacks');
+
+  switch (inferred) {
+    case 'chimera':
+      return { label: 'Chimera', colorClass: 'accent', key: 'chimera' };
+    case 'benchmark':
+      return { label: 'Benchmarks', colorClass: 'primary', key: 'benchmark' };
+    case 'banterpacks':
+    default:
+      return { label: 'Banterpacks', colorClass: 'primary', key: 'banterpacks' };
+  }
+}
+
 export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const displayId = episode.displayId ?? episode.id;
+  const formattedEpisodeNumber = formatEpisodeNumber(displayId);
+  const { label: platformLabel, colorClass } = resolvePlatform(episode);
+  const tags = episode.tags.slice(0, 3);
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
-  };
-
-  const tags = episode.tags.slice(0, 3);
-  
-  // Determine platform based on slug
-  const isChimera = episode.slug.startsWith('chimera-episode-');
-  const platform = isChimera ? 'Chimera' : 'Banterpacks';
-  const platformColor = isChimera ? 'accent' : 'primary';
 
   return (
     <motion.article
@@ -37,13 +57,15 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
       <Link href={`/episodes/${episode.slug}`} className="flex h-full flex-col gap-6 p-6">
         <header className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span>Episode {episode.id.toString().padStart(2, '0')}</span>
-            <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
-              platformColor === 'accent' 
-                ? 'bg-accent/10 text-accent' 
-                : 'bg-primary/10 text-primary'
-            }`}>
-              {platform}
+            <span>Episode {formattedEpisodeNumber}</span>
+            <span
+              className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+                colorClass === 'accent'
+                  ? 'bg-accent/10 text-accent'
+                  : 'bg-primary/10 text-primary'
+              }`}
+            >
+              {platformLabel}
             </span>
           </div>
           <time>{formatDate(episode.date)}</time>
@@ -117,9 +139,13 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
         </footer>
       </Link>
 
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden>
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        aria-hidden
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-transparent" />
       </div>
     </motion.article>
   );
 }
+
