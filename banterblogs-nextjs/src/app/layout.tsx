@@ -5,6 +5,8 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { AccessibilityPanel, KeyboardNavigation, FocusIndicator } from "@/components/AccessibilityPanel";
+import { OnboardingTrigger } from "@/components/OnboardingModal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -56,13 +58,20 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
         <ErrorBoundary>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <KeyboardNavigation>
+            <FocusIndicator />
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+              
+              {/* Global UI Components */}
+              <AccessibilityPanel />
+              <OnboardingTrigger className="fixed bottom-6 left-6 z-40" />
+            </div>
+          </KeyboardNavigation>
         </ErrorBoundary>
       </body>
     </html>

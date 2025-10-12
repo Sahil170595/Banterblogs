@@ -1,4 +1,4 @@
-﻿import fs from "fs";
+import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { cache } from "react";
@@ -102,11 +102,11 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
       banterpacksFiles
         .filter((name) => name.endsWith(".md"))
         .map(async (fileName) => {
-          const id = parseInt(fileName.replace(/[^\d]/g, ""), 10);
+          const parsedId = parseInt(fileName.replace(/[^\d]/g, ""), 10);
           const fullPath = path.join(banterpacksDir, fileName);
           const fileContents = fs.readFileSync(fullPath, "utf8");
 
-          return processEpisodeFile(fileContents, id, "banterpacks", id);
+          return processEpisodeFile(fileContents, parsedId, "banterpacks", parsedId);
         }),
     );
     episodes.push(...banterpacksEpisodes);
@@ -120,7 +120,7 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
         .filter((name) => name.endsWith(".md"))
         .map(async (fileName) => {
           const originalId = parseInt(fileName.replace(/[^\d]/g, ""), 10);
-          const id = originalId + 1000;
+          const id = Number.isFinite(originalId) ? originalId + 1000 : Number.NaN;
           const fullPath = path.join(chimeraDir, fileName);
           const fileContents = fs.readFileSync(fullPath, "utf8");
 
@@ -130,7 +130,10 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
     episodes.push(...chimeraEpisodes);
   }
 
-  return episodes.sort((a, b) => a.id - b.id);
+  ensureUniqueEpisodeSlugs(episodes);
+  assignStableEpisodeIds(episodes);
+
+  return episodes.sort((a, b) => a.id - b.id || a.slug.localeCompare(b.slug));
 });
 
 async function processEpisodeFile(
@@ -151,11 +154,8 @@ async function processEpisodeFile(
   const wordCount = content.split(/\s+/).filter(Boolean).length;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  const slug =
-    metadata.slug ??
-    (metadata.platform === "chimera"
-      ? `chimera-episode-${metadata.displayId.toString().padStart(3, "0")}`
-      : `episode-${metadata.displayId.toString().padStart(3, "0")}`);
+  const defaultSlug = createDefaultSlug(metadata.platform, metadata.displayId);
+  const slug = sanitizeSlugCandidate(metadata.slug, defaultSlug);
 
   return {
     id,
@@ -196,6 +196,15 @@ function resolveEpisodeMetadata(
     const title = coerceString((data as Frontmatter).title);
     if (title) {
       frontmatterMeta.title = title;
+    }
+
+    const displayIdOverride = coerceNumber(
+      (data as Frontmatter).displayId ??
+        (data as Frontmatter).episodeNumber ??
+        (data as Frontmatter).number,
+    );
+    if (displayIdOverride !== undefined) {
+      frontmatterMeta.displayId = displayIdOverride;
     }
 
     const subtitle = coerceString((data as Frontmatter).subtitle);
@@ -345,6 +354,88 @@ function mergeTags(primary?: string[], secondary?: string[]): string[] {
   primary?.forEach((tag) => tagSet.add(tag));
   secondary?.forEach((tag) => tagSet.add(tag));
   return Array.from(tagSet);
+}
+
+function createDefaultSlug(platform: EpisodePlatform, displayId: number): string {
+  const prefix = platform === "chimera" ? "chimera-episode" : "episode";
+  return `${prefix}-${displayId.toString().padStart(3, "0")}`;
+}
+
+function sanitizeSlugCandidate(rawSlug: unknown, fallback: string): string {
+  const base =
+    typeof rawSlug === "string" && rawSlug.trim().length > 0 ? rawSlug : fallback;
+
+  const normalized = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+
+  const sanitized = normalized.length > 0 ? normalized : fallback;
+  return sanitized;
+}
+
+function ensureUniqueEpisodeSlugs(episodes: Episode[]): void {
+  const used = new Set<string>();
+  const slugCounts = new Map<string, number>();
+
+  for (const episode of episodes) {
+    const baseSlug = episode.slug;
+    let candidate = baseSlug;
+    let suffix = slugCounts.get(baseSlug) ?? 0;
+
+    while (used.has(candidate)) {
+      suffix += 1;
+      candidate = `${baseSlug}-${suffix}`;
+    }
+
+    slugCounts.set(baseSlug, suffix);
+    used.add(candidate);
+
+    episode.slug = candidate;
+  }
+}
+
+function assignStableEpisodeIds(episodes: Episode[]): void {
+  const platformOffsets: Record<EpisodePlatform, number> = {
+    banterpacks: 0,
+    chimera: 10_000,
+    benchmark: 20_000,
+    unknown: 30_000,
+  };
+
+  const usedIds = new Set<number>();
+
+  for (const episode of episodes) {
+    const platform = episode.platform ?? "unknown";
+    const offset = platformOffsets[platform] ?? platformOffsets.unknown;
+
+    const displayBase =
+      typeof episode.displayId === "number" && Number.isFinite(episode.displayId)
+        ? episode.displayId
+        : undefined;
+
+    let candidate = offset + (displayBase ?? hashStringToInt(episode.slug));
+
+    while (usedIds.has(candidate)) {
+      candidate += 1;
+    }
+
+    usedIds.add(candidate);
+    episode.id = candidate;
+
+    if (typeof episode.displayId !== "number" || !Number.isFinite(episode.displayId)) {
+      episode.displayId = displayBase ?? candidate;
+    }
+  }
+}
+
+function hashStringToInt(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash || value.length;
 }
 
 function buildTags(content: string, existing?: string[]): string[] {
@@ -506,3 +597,5 @@ export function getEpisodeStats(episodes: Episode[]) {
     totalReadingTime,
   };
 }
+
+
