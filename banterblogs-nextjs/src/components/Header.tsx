@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/chimera', label: 'Chimera' },
   { href: '/episodes', label: 'Episodes' },
   { href: '/benchmarks', label: 'Benchmarks' },
+  { href: '/reports', label: 'Reports' },
   { href: '/about', label: 'About' },
 ];
 

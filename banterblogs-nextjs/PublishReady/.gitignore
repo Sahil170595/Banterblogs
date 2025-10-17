@@ -1,0 +1,32 @@
+# Ignore heavy artifacts and local cruft
+*.map
+*.psd
+*.ai
+*.sketch
+*.fig
+*.zip
+*.tar
+*.gz
+.DS_Store
+Thumbs.db
+
+# Node/build caches if any
+node_modules/
+dist/
+.cache/
+.tmp/
+
+# Raw data and large exports (keep curated samples only)
+raw-data/
+exports/
+**/*.csv
+**/*.parquet
+**/*.arrow
+
+# Preview/screenshot dumps
+previews/
+screenshots/
+
+# Local config
+.env*
+

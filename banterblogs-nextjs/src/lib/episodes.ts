@@ -44,6 +44,48 @@ const markdownProcessor = remark()
   .use(rehypeHighlight)
   .use(rehypeStringify);
 
+export async function renderMarkdownToHtml(markdown: string): Promise<string> {
+  const processed = await markdownProcessor.process(markdown);
+  return processed.toString();
+}
+
+export function extractPrimaryHeading(markdown: string): string | undefined {
+  const match = markdown.match(/^#\s+(.+)$/m);
+  return match ? match[1].trim() : undefined;
+}
+
+export function summarizeMarkdown(markdown: string, fallbackTitle?: string) {
+  const lines = markdown.split(/\r?\n/);
+  let title = fallbackTitle ?? extractPrimaryHeading(markdown);
+  let seenHeading = Boolean(title);
+  const summary: string[] = [];
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!seenHeading) {
+      const match = /^#\s+(.+)$/.exec(line);
+      if (match) {
+        title = match[1].trim();
+        seenHeading = true;
+      }
+      continue;
+    }
+
+    if (!line) {
+      if (summary.length) break;
+      continue;
+    }
+    if (line.startsWith('#')) break;
+    summary.push(line);
+    if (summary.join(' ').length > 240) break;
+  }
+
+  return {
+    title,
+    description: summary.join(' '),
+  };
+}
+
 type Frontmatter = Record<string, unknown>;
 
 interface ResolvedEpisodeMetadata {
@@ -145,8 +187,7 @@ async function processEpisodeFile(
   const { content, data } = matter(fileContents);
   const metadata = resolveEpisodeMetadata(data ?? {}, content, id, platform, originalId);
 
-  const processedMarkdown = await markdownProcessor.process(content);
-  const htmlContent = processedMarkdown.toString();
+  const htmlContent = await renderMarkdownToHtml(content);
 
   const preview = metadata.preview ?? extractPreview(content);
   const tags = buildTags(content, metadata.tags);

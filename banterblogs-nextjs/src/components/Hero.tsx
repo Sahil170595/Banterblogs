@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Bot, Zap, Shield, Target } from 'lucide-react';
+import { ArrowRight, Bot, Zap, Shield, Target, BarChart3 } from 'lucide-react';
 import type { Episode } from '@/lib/episodes';
 import { StatsCard } from '@/components/StatsCard';
 import { formatNumber, formatReadingTime } from '@/lib/formatUtils';
@@ -146,6 +146,19 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                   >
                     Latest Development Log
                     <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </Link>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Link
+                    href="/reports"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-primary transition-all duration-200 hover:border-accent/60 hover:bg-accent/20 active:scale-95 hover-lift"
+                  >
+                    Explore Live Reports
+                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Link>
                 </motion.div>
               </motion.div>

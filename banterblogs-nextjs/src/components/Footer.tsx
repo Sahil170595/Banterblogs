@@ -13,6 +13,7 @@ const FOOTER_LINKS = {
     { href: '/about', label: 'About' },
   ],
   Resources: [
+    { href: '/reports', label: 'Live Reports' },
     { href: '/tags', label: 'Tags' },
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
