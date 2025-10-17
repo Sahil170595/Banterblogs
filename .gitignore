@@ -33,6 +33,12 @@ node_modules/
 tmp/
 temp/
 
+# Jupyter notebooks and checkpoints
+*.ipynb
+.ipynb_checkpoints/
+PublishReady/**/exports/**/*.html
+PublishReady/**/exports/**/*.png
+
 # Build outputs
 dist/
 build/
