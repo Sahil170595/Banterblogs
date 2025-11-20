@@ -250,6 +250,37 @@ All benchmarks follow standardized methodology:
 
 ---
 
-**Last Updated:** 2025-10-10  
+---
+
+## 🌐 Interactive Reports in Web Application
+
+Reports in this directory are automatically discovered and displayed in the Banterblogs web application:
+
+- **Auto-Discovery**: Reports are automatically indexed from `reports/` and `PublishReady/reports/` directories
+- **Interactive Charts**: Reports with structured JSON data display interactive visualizations
+- **Chart Types**: Timeseries, distribution histograms, and correlation matrices
+- **Export**: Charts can be exported as PNG or CSV
+- **Metadata**: Add `meta.json` files for custom titles and descriptions
+- **Access**: View reports at `/reports/[slug]` in the web application
+
+### Adding Interactive Charts to Reports
+
+To enable interactive charts for a report, create a `charts/` subdirectory with:
+
+```
+reports/your-report/
+├── meta.json              # Optional: Custom metadata
+├── SUMMARY.md             # Report content
+└── charts/                # Structured chart data
+    ├── timeseries.json    # Time-based data series
+    ├── distribution.json  # Histogram/bucket data
+    └── correlation.json   # Correlation matrix
+```
+
+See `src/lib/reports/schemas.ts` for the complete schema definitions.
+
+---
+
+**Last Updated:** 2025-01-XX  
 **Maintainer:** Chimera Heart Development Team
 

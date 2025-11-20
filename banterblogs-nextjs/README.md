@@ -5,12 +5,14 @@ A modern, privacy-first blogging platform built with Next.js 15, React 18, and T
 ## 🚀 Features
 
 - **Static Site Generation** - Optimized for performance with Next.js 15
+- **Interactive Reports System** - Technical reports with interactive data visualizations
+- **Chart Components** - Timeseries, distribution, correlation, and KPI charts
 - **Real-time Updates** - Server-Sent Events for live content updates
 - **Secure Authentication** - Bearer token authentication for webhooks
 - **Error Boundaries** - Comprehensive error handling throughout the app
 - **Markdown Processing** - Safe markdown to HTML conversion with syntax highlighting
 - **Responsive Design** - Modern UI with Tailwind CSS and dark theme
-- **SEO Optimized** - Complete metadata and sitemap support
+- **SEO Optimized** - Complete metadata, sitemap, and Schema.org JSON-LD support
 
 ## 🛠️ Tech Stack
 
@@ -63,6 +65,10 @@ Create a `.env.local` file with the following variables:
 # Required - Generate a secure token for webhook authentication
 WEBHOOK_SECRET_TOKEN=your_secure_webhook_token_here
 
+# Optional - Reports System (default: enabled)
+# Set to 'false' to disable the reports feature
+REPORTS_ENABLED=true
+
 # Optional - GitHub Integration
 GITHUB_TOKEN=your_github_token_here
 
@@ -96,6 +102,46 @@ posts/
 ├── episode-002.md
 └── ...
 ```
+
+### Adding Technical Reports
+
+The reports system automatically discovers and displays technical reports from multiple sources:
+
+**Report Sources:**
+- `reports/` - Main reports directory
+- `PublishReady/reports/` - Publication-ready reports with structured data
+
+**Report Structure:**
+```
+reports/
+├── Technical_Report_108.md          # Simple markdown report
+├── gemma3/                          # Directory-based report
+│   ├── meta.json                    # Optional: Custom metadata
+│   ├── SUMMARY.md                   # Optional: Summary file
+│   └── charts/                      # Optional: Structured chart data
+│       ├── timeseries.json
+│       ├── distribution.json
+│       └── correlation.json
+└── ...
+```
+
+**Metadata File (`meta.json`):**
+```json
+{
+  "title": "Custom Report Title",
+  "description": "Report description for SEO and listings",
+  "tags": ["performance", "benchmark"],
+  "source": "publishready"
+}
+```
+
+**Chart Data Format:**
+Reports can include structured JSON data for interactive visualizations:
+- **Timeseries**: Time-based data with multiple series
+- **Distribution**: Histogram/bucket data with percentiles
+- **Correlation**: Correlation matrices between variables
+
+See `src/lib/reports/schemas.ts` for the complete schema definitions.
 
 ### Episode Format
 
@@ -188,12 +234,30 @@ banterblogs-nextjs/
 │   ├── app/                 # Next.js App Router
 │   │   ├── api/            # API routes
 │   │   ├── episodes/       # Episode pages
+│   │   ├── reports/        # Reports pages
+│   │   │   ├── page.tsx    # Reports index
+│   │   │   └── [id]/       # Individual report pages
 │   │   ├── tags/          # Tag pages
 │   │   └── page.tsx        # Homepage
 │   ├── components/         # React components
+│   │   ├── charts/        # Chart components
+│   │   │   ├── Timeseries.tsx
+│   │   │   ├── Distribution.tsx
+│   │   │   ├── Correlation.tsx
+│   │   │   └── ...
+│   │   └── reports/       # Report-specific components
 │   ├── lib/               # Utilities and data processing
+│   │   └── reports/       # Reports system
+│   │       ├── schemas.ts      # Zod schemas
+│   │       ├── locator.ts      # Report discovery
+│   │       ├── meta.ts         # Metadata handling
+│   │       ├── adapters.ts     # Data adapters
+│   │       └── derive.ts       # Data derivation
 │   └── hooks/             # Custom React hooks
 ├── posts/                 # Markdown episode files
+├── reports/               # Technical reports
+├── PublishReady/          # Publication-ready reports
+│   └── reports/          # Reports with structured data
 ├── public/               # Static assets
 └── next.config.ts        # Next.js configuration
 ```

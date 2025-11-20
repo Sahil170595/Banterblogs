@@ -47,13 +47,22 @@ Banterpacks Core System:
 ## ✨ Features
 
 ### Blog Platform
-- **Next.js 14** with App Router and TypeScript
+- **Next.js 15** with App Router and TypeScript
 - **Dark mode only** with professional FAANG-tier polish
 - **Enhanced markdown rendering** with syntax highlighting
 - **Dynamic episode loading** from markdown files
 - **Search and filtering** capabilities
 - **Responsive design** with smooth animations
 - **Static generation** for optimal performance
+
+### Interactive Reports System
+- **Technical Reports** with interactive data visualizations
+- **Chart Components** including timeseries, distribution, and correlation charts
+- **PublishReady Integration** for structured report data
+- **Interactive Charts** with zoom, pan, and series filtering
+- **Export Capabilities** for charts and data tables
+- **Schema.org JSON-LD** for SEO and structured data
+- **Auto-discovery** of reports from markdown files and directories
 
 ### Content Generation
 - **AI-powered narrative** generation from git commits
@@ -66,12 +75,20 @@ Banterpacks Core System:
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **Next.js 15.5.3** - React framework
+- **Next.js 15.5.4** - React framework
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Utility-first styling
 - **Framer Motion** - Animations
 - **Radix UI** - Accessible components
 - **Fuse.js** - Client-side search
+- **Zod** - Schema validation for reports
+
+### Data Visualization
+- **Custom SVG Charts** - Timeseries, distribution, and correlation visualizations
+- **Interactive Charts** - Zoom, pan, and series filtering capabilities
+- **Export Capabilities** - CSV and PNG export for charts and data tables
+- **Responsive Design** - Charts adapt to screen size and device type
+- **Schema Validation** - Zod schemas ensure data integrity
 
 ### Markdown Processing
 - **Unified** - Markdown processing pipeline
@@ -126,6 +143,13 @@ npm start
 2. Follow the episode naming convention: `episode-XXX.md`
 3. Include proper frontmatter and episode structure
 4. Deploy to see changes live
+
+### Adding Technical Reports
+1. Add markdown files or directories to `banterblogs-nextjs/reports/` or `banterblogs-nextjs/PublishReady/reports/`
+2. Reports are auto-discovered and indexed
+3. For interactive charts, include structured JSON data in a `charts/` subdirectory
+4. Add `meta.json` for custom titles and descriptions
+5. Reports are accessible at `/reports/[slug]`
 
 ### Episode Structure
 Each episode follows this format:

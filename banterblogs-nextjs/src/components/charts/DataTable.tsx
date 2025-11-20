@@ -35,3 +35,4 @@ export function DataTable({ rows, columns, caption }: DataTableProps) {
 }
 
 
+

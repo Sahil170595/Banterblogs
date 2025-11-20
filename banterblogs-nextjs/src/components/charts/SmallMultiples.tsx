@@ -42,3 +42,4 @@ export function SmallMultiples({ data, columns = 2 }: SmallMultiplesProps) {
 }
 
 
+

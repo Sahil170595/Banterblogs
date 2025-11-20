@@ -42,3 +42,4 @@ export function SparklineKPI({ label, value, delta, trend, colorIndex = 0 }: Spa
 }
 
 
+
