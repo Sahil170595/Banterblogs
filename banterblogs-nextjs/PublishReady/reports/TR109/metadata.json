@@ -1,0 +1,31 @@
+{
+    "id": "TR109",
+    "type": "technical_report",
+    "title": "Agent Workflow Optimization",
+    "subtitle": "Process Isolation & Statistical Validation",
+    "date": "2025-10-09",
+    "authors": [
+        "Chimera Heart Team"
+    ],
+    "tags": [
+        "agent",
+        "workflow",
+        "optimization",
+        "process-isolation",
+        "statistical-validation"
+    ],
+    "status": "published",
+    "version": "1.0.0",
+    "summary": "Analysis of agent workflow performance vs single-inference optimization, demonstrating that agent tasks require different optimization strategies than single-inference workloads.",
+    "key_findings": [
+        "Agent tasks require different optimization than single-inference",
+        "Optimal config for agents: GPU=60, CTX=512, TEMP=0.8",
+        "Process isolation critical for accurate benchmarking",
+        "Automated scoring methodology validates report quality"
+    ],
+    "methodology": {
+        "approach": "process_isolation",
+        "cold_starts": "forced",
+        "validation": "statistical"
+    }
+}

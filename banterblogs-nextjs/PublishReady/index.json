@@ -1,0 +1,174 @@
+{
+    "version": "1.1.0",
+    "generated": "2025-11-25T00:00:00Z",
+    "description": "Catalog of technical reports, benchmarks, and the Chimeraforge research compendium.",
+    "reports": [
+        {
+            "id": "TR108",
+            "title": "Comprehensive LLM Performance Analysis",
+            "type": "technical_report",
+            "date": "2025-10-08",
+            "path": "reports/TR108",
+            "url": "/reports/technical-report-108",
+            "tags": ["benchmark", "llm", "performance", "ollama", "gemma3", "llama3.1", "quantization"],
+            "summary": "Single-agent benchmarking across 158 runs to identify optimal configs.",
+            "key_metric": "102.85 tok/s (Gemma3:latest)",
+            "status": "published"
+        },
+        {
+            "id": "TR109",
+            "title": "Agent Workflow Optimization",
+            "type": "technical_report",
+            "date": "2025-10-09",
+            "path": "reports/TR109",
+            "url": "/reports/technical-report-109",
+            "tags": ["agent", "workflow", "optimization"],
+            "summary": "Process-isolated agent workflow analysis; GPU=60, CTX=512, TEMP=0.8 recommended.",
+            "key_metric": "Stability-optimized workflow config",
+            "status": "published"
+        },
+        {
+            "id": "TR110",
+            "title": "Concurrent Multi-Agent Performance Analysis",
+            "type": "technical_report",
+            "date": "2025-10-10",
+            "path": "reports/TR110",
+            "url": "/reports/technical-report-110",
+            "tags": ["multi-agent", "concurrent", "performance"],
+            "summary": "Parallel agent execution baseline (150 runs) with contention analysis.",
+            "key_metric": "99.25% parallel efficiency",
+            "status": "published"
+        },
+        {
+            "id": "TR111",
+            "title": "Rust Single-Agent (Prototype)",
+            "type": "technical_report",
+            "date": "2025-11-12",
+            "path": "reports/Technical_Report_111.md",
+            "url": "/reports/technical-report-111",
+            "tags": ["rust", "single-agent", "prototype"],
+            "summary": "Initial Rust agent micro-benchmark; replaced by full workflow parity in v2.",
+            "key_metric": "Prototype throughput baseline",
+            "status": "superseded",
+            "superseded_by": "TR111_v2"
+        },
+        {
+            "id": "TR111_v2",
+            "title": "Rust Single-Agent Performance",
+            "type": "technical_report",
+            "date": "2025-11-14",
+            "path": "reports/Technical_Report_111_v2.md",
+            "url": "/reports/technical-report-111-v2",
+            "tags": ["rust", "single-agent", "performance"],
+            "summary": "Production-grade Rust agent reaching 114.54 tok/s, +15.2% vs Python.",
+            "key_metric": "114.54 tok/s",
+            "status": "published"
+        },
+        {
+            "id": "TR112",
+            "title": "Rust vs Python Comparison (Initial)",
+            "type": "technical_report",
+            "date": "2025-11-12",
+            "path": "reports/Technical_Report_112.md",
+            "url": "/reports/technical-report-112",
+            "tags": ["rust", "python", "comparison"],
+            "summary": "First pass comparison using micro-benchmarks; replaced by comprehensive v2.",
+            "key_metric": "Preliminary latency comparison",
+            "status": "superseded",
+            "superseded_by": "TR112_v2"
+        },
+        {
+            "id": "TR112_v2",
+            "title": "Rust vs Python Comparison",
+            "type": "technical_report",
+            "date": "2025-11-14",
+            "path": "reports/Technical_Report_112_v2.md",
+            "url": "/reports/technical-report-112-v2",
+            "tags": ["rust", "python", "comparison", "latency"],
+            "summary": "Cross-language single-agent comparison; Rust TTFT -58%, memory -67%.",
+            "key_metric": "Rust +15.2% throughput vs Python",
+            "status": "published"
+        },
+        {
+            "id": "TR113",
+            "title": "Rust Multi-Agent (Single Ollama) Analysis",
+            "type": "technical_report",
+            "date": "2025-11-12",
+            "path": "reports/Technical_Report_113.md",
+            "url": "/reports/technical-report-113",
+            "tags": ["rust", "multi-agent", "ollama"],
+            "summary": "Initial Rust multi-agent orchestration; identified server contention issues.",
+            "key_metric": "Contention identified in single Ollama topology",
+            "status": "superseded"
+        },
+        {
+            "id": "TR114",
+            "title": "Rust Multi-Agent Performance (Initial)",
+            "type": "technical_report",
+            "date": "2025-11-12",
+            "path": "reports/Technical_Report_114.md",
+            "url": "/reports/technical-report-114",
+            "tags": ["rust", "multi-agent", "ollama"],
+            "summary": "First Dual Ollama study; replaced after correcting statistics and expanding run set.",
+            "key_metric": "Initial dual-Ollama efficiency",
+            "status": "superseded",
+            "superseded_by": "TR114_v2"
+        },
+        {
+            "id": "TR114_v2",
+            "title": "Rust Multi-Agent Performance (Dual Ollama)",
+            "type": "technical_report",
+            "date": "2025-11-15",
+            "path": "reports/Technical_Report_114_v2.md",
+            "url": "/reports/technical-report-114-v2",
+            "tags": ["rust", "multi-agent", "ollama", "performance"],
+            "summary": "Dual Ollama topology with corrected statistics; 98.281% mean efficiency.",
+            "key_metric": "99.992% peak run efficiency",
+            "status": "published"
+        },
+        {
+            "id": "TR115",
+            "title": "Rust Runtime Optimization (Initial)",
+            "type": "technical_report",
+            "date": "2025-11-13",
+            "path": "reports/Technical_Report_115.md",
+            "url": "/reports/technical-report-115",
+            "tags": ["rust", "runtime", "tokio"],
+            "summary": "Early runtime comparison (30 runs); superseded by expanded 150-run analysis.",
+            "key_metric": "Preliminary runtime ranking",
+            "status": "superseded",
+            "superseded_by": "TR115_v2"
+        },
+        {
+            "id": "TR115_v2",
+            "title": "Rust Runtime Optimization",
+            "type": "technical_report",
+            "date": "2025-11-15",
+            "path": "reports/Technical_Report_115_v2.md",
+            "url": "/reports/technical-report-115-v2",
+            "tags": ["rust", "runtime", "tokio", "smol"],
+            "summary": "150-run analysis across Tokio, Smol, and async-std; recommends Tokio-default.",
+            "key_metric": "Tokio-default: 98.72% mean efficiency",
+            "status": "published"
+        }
+    ],
+    "benchmarks": [
+        {
+            "id": "gemma3-baseline",
+            "model": "gemma3",
+            "type": "benchmark",
+            "date": "2025-10-08",
+            "path": "benchmarks/gemma3",
+            "tags": ["gemma3", "baseline", "performance"],
+            "summary": "Baseline performance for Gemma3 model variants.",
+            "variants": 3,
+            "best_throughput": "303.9 tok/s (270m variant)"
+        }
+    ],
+    "stats": {
+        "total_reports": 12,
+        "current_reports": 7,
+        "total_benchmarks": 1,
+        "last_updated": "2025-11-25T00:00:00Z"
+    }
+}

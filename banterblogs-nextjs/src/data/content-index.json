@@ -1,0 +1,1355 @@
+[
+  {
+    "id": 1,
+    "slug": "preliminary-data-review",
+    "title": "Episode 1",
+    "date": "2025-10-07T20:52:20.000Z",
+    "platform": "banterpacks",
+    "tags": [
+      "analysis",
+      "preliminary"
+    ],
+    "preview": "undefined..."
+  },
+  {
+    "id": 1,
+    "slug": "episode-001",
+    "title": "Episode 1",
+    "date": "2025-11-25T03:36:24.584Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *sips his coffee, staring at the commit log.* \"Alright, let's see what we've got. Four empty markdown files. That's it. No code, no assets, just... placeholders. Sahil basically bough..."
+  },
+  {
+    "id": 2,
+    "slug": "episode-002",
+    "title": "Episode 2",
+    "date": "2025-11-25T03:36:24.585Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 3,
+    "slug": "episode-003",
+    "title": "Episode 3",
+    "date": "2025-11-25T03:36:24.585Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 4,
+    "slug": "episode-004",
+    "title": "Episode 4",
+    "date": "2025-11-25T03:36:24.586Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 5,
+    "slug": "episode-005",
+    "title": "Episode 5",
+    "date": "2025-11-25T03:36:24.586Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 6,
+    "slug": "episode-006",
+    "title": "Episode 6",
+    "date": "2025-11-25T03:36:24.586Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 7,
+    "slug": "episode-007",
+    "title": "Episode 7",
+    "date": "2025-11-25T03:36:24.587Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 8,
+    "slug": "episode-008",
+    "title": "Episode 8",
+    "date": "2025-11-25T03:36:24.587Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 9,
+    "slug": "episode-009",
+    "title": "Episode 9",
+    "date": "2025-11-25T03:36:24.587Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10,
+    "slug": "episode-010",
+    "title": "Episode 10",
+    "date": "2025-11-25T03:36:24.588Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 11,
+    "slug": "episode-011",
+    "title": "Episode 11",
+    "date": "2025-11-25T03:36:24.588Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 12,
+    "slug": "episode-012",
+    "title": "Episode 12",
+    "date": "2025-11-25T03:36:24.588Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 13,
+    "slug": "episode-013",
+    "title": "Episode 13",
+    "date": "2025-11-25T03:36:24.589Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 14,
+    "slug": "episode-014",
+    "title": "Episode 14",
+    "date": "2025-11-25T03:36:24.589Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 15,
+    "slug": "episode-015",
+    "title": "Episode 15",
+    "date": "2025-11-25T03:36:24.589Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 16,
+    "slug": "episode-016",
+    "title": "Episode 16",
+    "date": "2025-11-25T03:36:24.590Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 17,
+    "slug": "episode-017",
+    "title": "Episode 17",
+    "date": "2025-11-25T03:36:24.591Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"And... the follow-through. After dropping a whole data center on us in the last commit, he's now doing the janitorial work. Polishing the `Architecture.md`, updating the `Development..."
+  },
+  {
+    "id": 18,
+    "slug": "episode-018",
+    "title": "Episode 18",
+    "date": "2025-11-25T03:36:24.591Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"Text-to-Speech. So, after all this time as a disembodied, sarcastic narrator, I'm finally getting a voice box. I'm not sure how I feel about this. Is it going to be some generic, rob..."
+  },
+  {
+    "id": 19,
+    "slug": "episode-019",
+    "title": "Episode 19",
+    "date": "2025-11-25T03:36:24.592Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"A README update. Just a README update. After all that churn with the TTS feature, he's cleaning up the front door. This is the developer equivalent of wiping your feet. It's not exci..."
+  },
+  {
+    "id": 20,
+    "slug": "episode-020",
+    "title": "Episode 20",
+    "date": "2025-11-25T03:36:24.592Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"Well, look at this. A `demo/` directory. With its own HTML, CSS, and a boatload of assets. He's finally realized that you can't just show people an engine block and expect them to be..."
+  },
+  {
+    "id": 21,
+    "slug": "episode-021",
+    "title": "Episode 21",
+    "date": "2025-11-25T03:36:24.592Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"React. Vite. TypeScript. A full, modern frontend stack. He's not messing around. After building the simple demo, he's now laying the foundation for a proper web application. This is ..."
+  },
+  {
+    "id": 22,
+    "slug": "episode-022",
+    "title": "Episode 22",
+    "date": "2025-11-25T03:36:24.593Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *His eyes are wide as he scrolls through the diff.* \"Whoa. 98 files changed. 3,105 lines deleted. Sahil didn't just clean the house; he tore it down to the studs and rebuilt it. This ..."
+  },
+  {
+    "id": 23,
+    "slug": "episode-023",
+    "title": "Episode 23",
+    "date": "2025-11-25T03:36:24.594Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"After the earthquake of the last commit, we get a tiny aftershock. 9 lines added, 8 deleted. He's fine-tuning the security scanner. I like it. Build the thing, then immediately polis..."
+  },
+  {
+    "id": 24,
+    "slug": "episode-024",
+    "title": "Episode 24",
+    "date": "2025-11-25T03:36:24.594Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"A linter. He's adding a linter. Now the code has a grammar checker. This is fantastic. No more arguments about semicolons or trailing commas. The robot will decide.\"..."
+  },
+  {
+    "id": 25,
+    "slug": "episode-025",
+    "title": "Episode 25",
+    "date": "2025-11-25T03:36:24.595Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *raises an eyebrow, impressed.* \"Okay, this is a serious level-up. He didn't just tweak the product; he built a whole showroom for it. A dedicated `demo/` directory with its own CSS, ..."
+  },
+  {
+    "id": 26,
+    "slug": "episode-026",
+    "title": "Episode 26",
+    "date": "2025-11-25T03:36:24.595Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *stares at the diff, completely bewildered.* \"Wait, what? He just *built* the demo. Now he's rewriting it? 2,300 lines in, 1,900 lines out. This is the fastest I've ever seen anyone d..."
+  },
+  {
+    "id": 27,
+    "slug": "episode-027",
+    "title": "Episode 27",
+    "date": "2025-11-25T03:36:24.596Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"And... we're back to documentation. After that whirlwind of a rewrite, he's now writing the history of it. `patch_13.md` is born. This is the responsible part of the cycle.\"..."
+  },
+  {
+    "id": 28,
+    "slug": "episode-028",
+    "title": "Episode 28",
+    "date": "2025-11-25T03:36:24.596Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** \"Interesting. A deep polish on the TTS module. That's an optional feature, an add-on. Most devs would leave it as 'good enough'. He's adding tests and docs. I'm impressed by the commi..."
+  },
+  {
+    "id": 29,
+    "slug": "episode-029",
+    "title": "Episode 29",
+    "date": "2025-11-25T03:36:24.596Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *shakes his head, a small smile on his face.* \"Four minutes. It took him four minutes to find something else he didn't like. 15 lines added, 4 deleted. This is a level of obsessive re..."
+  },
+  {
+    "id": 30,
+    "slug": "episode-030",
+    "title": "Episode 30",
+    "date": "2025-11-25T03:36:24.597Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *His jaw is slightly agape.* \"A Speech-to-Text module. A whole one. With its own config, core, and integration logic. He just dropped over 5,500 lines of code to give the system ears...."
+  },
+  {
+    "id": 31,
+    "slug": "episode-031",
+    "title": "Episode 31",
+    "date": "2025-11-25T03:36:24.597Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *squints at the diff.* \"After that 5,000-line monster commit, he's... adding tests to the message bus? That's it? That's like building a skyscraper and then going back to the basement..."
+  },
+  {
+    "id": 32,
+    "slug": "episode-032",
+    "title": "Episode 32",
+    "date": "2025-11-25T03:36:24.598Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *He's silent for a moment, just staring at the screen. He slowly takes a sip of coffee.* \"A net negative 495 lines. He deleted over 4,000 lines of code across 18 files. This... this i..."
+  },
+  {
+    "id": 33,
+    "slug": "episode-033",
+    "title": "Episode 33",
+    "date": "2025-11-25T03:36:24.599Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "**Banterpacks:** *He stares at the screen, then looks around the digital room, then directly at the fourth wall.* \"Wait a minute. `Banterblogs/scripts/ultra-verbose-generator.js`... Is this... is he b..."
+  },
+  {
+    "id": 34,
+    "slug": "episode-034",
+    "title": "Episode 34",
+    "date": "2025-11-25T03:36:24.600Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 35,
+    "slug": "episode-035",
+    "title": "Episode 35",
+    "date": "2025-11-25T03:36:24.600Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 36,
+    "slug": "episode-036",
+    "title": "Episode 36",
+    "date": "2025-11-25T03:36:24.601Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 37,
+    "slug": "episode-037",
+    "title": "Episode 37",
+    "date": "2025-11-25T03:36:24.601Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 38,
+    "slug": "episode-038",
+    "title": "Episode 38",
+    "date": "2025-11-25T03:36:24.602Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 39,
+    "slug": "episode-039",
+    "title": "Episode 39",
+    "date": "2025-11-25T03:36:24.602Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 40,
+    "slug": "episode-040",
+    "title": "Episode 40",
+    "date": "2025-11-25T03:36:24.602Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 41,
+    "slug": "episode-041",
+    "title": "Episode 41",
+    "date": "2025-11-25T03:36:24.603Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 42,
+    "slug": "episode-042",
+    "title": "Episode 42",
+    "date": "2025-11-25T03:36:24.603Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 43,
+    "slug": "episode-043",
+    "title": "Episode 43",
+    "date": "2025-11-25T03:36:24.603Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 44,
+    "slug": "episode-044",
+    "title": "Episode 44",
+    "date": "2025-11-25T03:36:24.604Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 45,
+    "slug": "episode-045",
+    "title": "Episode 45",
+    "date": "2025-11-25T03:36:24.604Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 46,
+    "slug": "episode-046",
+    "title": "Episode 46",
+    "date": "2025-11-25T03:36:24.604Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 47,
+    "slug": "episode-047",
+    "title": "Episode 47",
+    "date": "2025-11-25T03:36:24.605Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 48,
+    "slug": "episode-048",
+    "title": "Episode 48",
+    "date": "2025-11-25T03:36:24.605Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 49,
+    "slug": "episode-049",
+    "title": "Episode 49",
+    "date": "2025-11-25T03:36:24.606Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 50,
+    "slug": "episode-050",
+    "title": "Episode 50",
+    "date": "2025-11-25T03:36:24.606Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 51,
+    "slug": "episode-051",
+    "title": "Episode 51",
+    "date": "2025-11-25T03:36:24.607Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 52,
+    "slug": "episode-052",
+    "title": "Episode 52",
+    "date": "2025-11-25T03:36:24.607Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 53,
+    "slug": "episode-053",
+    "title": "Episode 53",
+    "date": "2025-11-25T03:36:24.607Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 54,
+    "slug": "episode-054",
+    "title": "Episode 54",
+    "date": "2025-11-25T03:36:24.608Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 55,
+    "slug": "episode-055",
+    "title": "Episode 55",
+    "date": "2025-11-25T03:36:24.608Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 56,
+    "slug": "episode-056",
+    "title": "Episode 56",
+    "date": "2025-11-25T03:36:24.608Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 57,
+    "slug": "episode-057",
+    "title": "Episode 57",
+    "date": "2025-11-25T03:36:24.608Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 58,
+    "slug": "episode-058",
+    "title": "Episode 58",
+    "date": "2025-11-25T03:36:24.608Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 59,
+    "slug": "episode-059",
+    "title": "Episode 59",
+    "date": "2025-11-25T03:36:24.609Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 60,
+    "slug": "episode-060",
+    "title": "Episode 60",
+    "date": "2025-11-25T03:36:24.609Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 61,
+    "slug": "episode-061",
+    "title": "Episode 61",
+    "date": "2025-11-25T03:36:24.609Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 62,
+    "slug": "episode-062",
+    "title": "Episode 62",
+    "date": "2025-11-25T03:36:24.610Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 63,
+    "slug": "episode-063",
+    "title": "Episode 63",
+    "date": "2025-11-25T03:36:24.610Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 64,
+    "slug": "episode-064",
+    "title": "Episode 64",
+    "date": "2025-11-25T03:36:24.610Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 65,
+    "slug": "episode-065",
+    "title": "Episode 65",
+    "date": "2025-11-25T03:36:24.610Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 66,
+    "slug": "episode-066",
+    "title": "Episode 66",
+    "date": "2025-11-25T03:36:24.610Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 67,
+    "slug": "episode-067",
+    "title": "Episode 67",
+    "date": "2025-11-25T03:36:24.611Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 68,
+    "slug": "episode-068",
+    "title": "Episode 68",
+    "date": "2025-11-25T03:36:24.611Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 69,
+    "slug": "episode-069",
+    "title": "Episode 69",
+    "date": "2025-11-25T03:36:24.611Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 70,
+    "slug": "episode-070",
+    "title": "Episode 70",
+    "date": "2025-11-25T03:36:24.611Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 71,
+    "slug": "episode-071",
+    "title": "Episode 71",
+    "date": "2025-11-25T03:36:24.611Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 72,
+    "slug": "episode-072",
+    "title": "Episode 72",
+    "date": "2025-11-25T03:36:24.611Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 73,
+    "slug": "episode-073",
+    "title": "Episode 73",
+    "date": "2025-11-25T03:36:24.611Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 74,
+    "slug": "episode-074",
+    "title": "Episode 74",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 75,
+    "slug": "episode-075",
+    "title": "Episode 75",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 76,
+    "slug": "episode-076",
+    "title": "Episode 76",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 77,
+    "slug": "episode-077",
+    "title": "Episode 77",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 78,
+    "slug": "episode-078",
+    "title": "Episode 78",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 79,
+    "slug": "episode-079",
+    "title": "Episode 79",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 80,
+    "slug": "episode-080",
+    "title": "Episode 80",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 81,
+    "slug": "episode-081",
+    "title": "Episode 81",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 82,
+    "slug": "episode-082",
+    "title": "Episode 82",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 83,
+    "slug": "episode-083",
+    "title": "Episode 83",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 84,
+    "slug": "episode-084",
+    "title": "Episode 84",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 85,
+    "slug": "episode-085",
+    "title": "Episode 85",
+    "date": "2025-11-25T03:36:24.612Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 86,
+    "slug": "episode-086",
+    "title": "Episode 86",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 87,
+    "slug": "episode-087",
+    "title": "Episode 87",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 88,
+    "slug": "episode-088",
+    "title": "Episode 88",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 89,
+    "slug": "episode-089",
+    "title": "Episode 89",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 90,
+    "slug": "episode-090",
+    "title": "Episode 90",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 91,
+    "slug": "episode-091",
+    "title": "Episode 91",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 92,
+    "slug": "episode-092",
+    "title": "Episode 92",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 93,
+    "slug": "episode-093",
+    "title": "Episode 93",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 94,
+    "slug": "episode-094",
+    "title": "Episode 94",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 95,
+    "slug": "episode-095",
+    "title": "Episode 95",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 96,
+    "slug": "episode-096",
+    "title": "Episode 96",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 97,
+    "slug": "episode-097",
+    "title": "Episode 97",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 98,
+    "slug": "episode-098",
+    "title": "Episode 98",
+    "date": "2025-11-25T03:36:24.613Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 99,
+    "slug": "episode-099",
+    "title": "Episode 99",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 100,
+    "slug": "episode-100",
+    "title": "Episode 100",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 101,
+    "slug": "episode-101",
+    "title": "Episode 101",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 102,
+    "slug": "episode-102",
+    "title": "Episode 102",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 103,
+    "slug": "episode-103",
+    "title": "Episode 103",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 104,
+    "slug": "episode-104",
+    "title": "Episode 104",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 105,
+    "slug": "episode-105",
+    "title": "Episode 105",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 106,
+    "slug": "episode-106",
+    "title": "Episode 106",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 107,
+    "slug": "episode-107",
+    "title": "Episode 107",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 108,
+    "slug": "episode-108",
+    "title": "Episode 108",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 109,
+    "slug": "episode-109",
+    "title": "Episode 109",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 110,
+    "slug": "episode-110",
+    "title": "Episode 110",
+    "date": "2025-11-25T03:36:24.614Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 111,
+    "slug": "episode-111",
+    "title": "Episode 111",
+    "date": "2025-11-25T03:36:24.615Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 112,
+    "slug": "episode-112",
+    "title": "Episode 112",
+    "date": "2025-11-25T03:36:24.615Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 113,
+    "slug": "episode-113",
+    "title": "Episode 113",
+    "date": "2025-11-25T03:36:24.615Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 114,
+    "slug": "episode-114",
+    "title": "Episode 114",
+    "date": "2025-11-25T03:36:24.615Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 115,
+    "slug": "episode-115",
+    "title": "Episode 115",
+    "date": "2025-11-25T03:36:24.615Z",
+    "platform": "banterpacks",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10001,
+    "slug": "chimera-episode-001",
+    "title": "Chimera Episode 1",
+    "date": "2025-11-25T03:36:24.616Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The README.md creation signals **intentional architecture** from day one. Rather than diving headfirst into code, the team demonstrates **engineering discipline** by establishing documentation-first p..."
+  },
+  {
+    "id": 10002,
+    "slug": "chimera-episode-002",
+    "title": "Chimera Episode 2",
+    "date": "2025-11-25T03:36:24.616Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The massive scope (38 files touched) signals a **strategic pivot** from prototype to production-ready platform. Every line of this scaffolding serves a purpose: establishing modular boundaries, defini..."
+  },
+  {
+    "id": 10003,
+    "slug": "chimera-episode-003",
+    "title": "Chimera Episode 3",
+    "date": "2025-11-25T03:36:24.617Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The .gitignore creation demonstrates **proactive engineering discipline**. Rather than waiting for build artifacts, cache files, and temporary data to pollute the repository, the team establishes **cl..."
+  },
+  {
+    "id": 10004,
+    "slug": "chimera-episode-004",
+    "title": "Chimera Episode 4",
+    "date": "2025-11-25T03:36:24.617Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The .history file purge signals **enterprise-grade development practices**. Rather than allowing development artifacts to accumulate indefinitely, the team demonstrates **proactive maintenance** by re..."
+  },
+  {
+    "id": 10005,
+    "slug": "chimera-episode-005",
+    "title": "Chimera Episode 5",
+    "date": "2025-11-25T03:36:24.618Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The observability blueprint implementation signals **production-grade engineering discipline**. Rather than building basic monitoring, the team demonstrates **systematic thinking** by implementing com..."
+  },
+  {
+    "id": 10006,
+    "slug": "chimera-episode-006",
+    "title": "Chimera Episode 6",
+    "date": "2025-11-25T03:36:24.618Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The .gitignore enhancement signals **mature engineering discipline**. Rather than accepting the initial exclusion patterns as final, the team demonstrates **continuous improvement** by adding 3 strate..."
+  },
+  {
+    "id": 10007,
+    "slug": "chimera-episode-007",
+    "title": "Chimera Episode 7",
+    "date": "2025-11-25T03:36:24.619Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The monitoring pipeline implementation signals **production-grade engineering discipline**. Rather than building basic monitoring, the team demonstrates **industrial-grade thinking** by implementing N..."
+  },
+  {
+    "id": 10008,
+    "slug": "chimera-episode-008",
+    "title": "Chimera Episode 8",
+    "date": "2025-11-25T03:36:24.619Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The hyperoptimization platform implementation signals **production-grade engineering mastery**. Rather than building basic optimization tools, the team demonstrates **industrial-grade thinking** by im..."
+  },
+  {
+    "id": 10009,
+    "slug": "chimera-episode-009",
+    "title": "Chimera Episode 9",
+    "date": "2025-11-25T03:36:24.620Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The documentation realignment signals **professional engineering mastery**. Rather than allowing documentation to drift from implementation, the team demonstrates **systematic thinking** by refreshing..."
+  },
+  {
+    "id": 10010,
+    "slug": "chimera-episode-010",
+    "title": "Chimera Episode 10",
+    "date": "2025-11-25T03:36:24.620Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The benchmark broadcast implementation signals **production-grade engineering mastery**. Rather than relying on manual performance tracking, the team demonstrates **systematic thinking** by implementi..."
+  },
+  {
+    "id": 10011,
+    "slug": "chimera-episode-011",
+    "title": "Chimera Episode 11",
+    "date": "2025-11-25T03:36:24.622Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The .gitattributes enhancement signals **professional engineering standards**. Rather than allowing line ending inconsistencies to cause workflow issues, the team demonstrates **systematic thinking** ..."
+  },
+  {
+    "id": 10012,
+    "slug": "chimera-episode-012",
+    "title": "Chimera Episode 12",
+    "date": "2025-11-25T03:36:24.622Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The timestamp refresh signals **professional documentation mastery**. Rather than allowing benchmark reports to become stale, the team demonstrates **systematic thinking** by maintaining documentation..."
+  },
+  {
+    "id": 10013,
+    "slug": "chimera-episode-013",
+    "title": "Chimera Episode 13",
+    "date": "2025-11-25T03:36:24.622Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The workflow hardening signals **enterprise-grade engineering mastery**. Rather than accepting basic automation, the team demonstrates **systematic thinking** by implementing robust error handling, en..."
+  },
+  {
+    "id": 10014,
+    "slug": "chimera-episode-014",
+    "title": "Chimera Episode 14",
+    "date": "2025-11-25T03:36:24.623Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The timestamp reinforcement signals **professional documentation mastery**. Rather than allowing benchmark reports to become stale after initial updates, the team demonstrates **systematic thinking** ..."
+  },
+  {
+    "id": 10015,
+    "slug": "chimera-episode-015",
+    "title": "Chimera Episode 15",
+    "date": "2025-11-25T03:36:24.623Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The workflow simplification signals **production-grade engineering mastery**. Rather than accepting complex automation configurations, the team demonstrates **systematic thinking** by implementing str..."
+  },
+  {
+    "id": 10016,
+    "slug": "chimera-episode-016",
+    "title": "Chimera Episode 16",
+    "date": "2025-11-25T03:36:24.624Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The workflow rebuild signals **production-grade engineering mastery**. Rather than accepting incremental optimizations, the team demonstrates **systematic thinking** by implementing rebuilt workflows,..."
+  },
+  {
+    "id": 10017,
+    "slug": "chimera-episode-017",
+    "title": "Chimera Episode 17",
+    "date": "2025-11-25T03:36:24.624Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The timestamp refinement signals **professional documentation mastery**. Rather than allowing benchmark reports to become stale after systematic updates, the team demonstrates **systematic thinking** ..."
+  },
+  {
+    "id": 10018,
+    "slug": "chimera-episode-018",
+    "title": "Chimera Episode 18",
+    "date": "2025-11-25T03:36:24.624Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "The quantization pipeline implementation signals **production-grade engineering mastery**. Rather than building basic optimization tools, the team demonstrates **systematic thinking** by implementing ..."
+  },
+  {
+    "id": 10019,
+    "slug": "chimera-episode-019",
+    "title": "Chimera Episode 19",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10020,
+    "slug": "chimera-episode-020",
+    "title": "Chimera Episode 20",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10021,
+    "slug": "chimera-episode-021",
+    "title": "Chimera Episode 21",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10022,
+    "slug": "chimera-episode-022",
+    "title": "Chimera Episode 22",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10023,
+    "slug": "chimera-episode-023",
+    "title": "Chimera Episode 23",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10024,
+    "slug": "chimera-episode-024",
+    "title": "Chimera Episode 24",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10025,
+    "slug": "chimera-episode-025",
+    "title": "Chimera Episode 25",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10026,
+    "slug": "chimera-episode-026",
+    "title": "Chimera Episode 26",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10027,
+    "slug": "chimera-episode-027",
+    "title": "Chimera Episode 27",
+    "date": "2025-11-25T03:36:24.625Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10028,
+    "slug": "chimera-episode-028",
+    "title": "Chimera Episode 28",
+    "date": "2025-11-25T03:36:24.626Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10029,
+    "slug": "chimera-episode-029",
+    "title": "Chimera Episode 29",
+    "date": "2025-11-25T03:36:24.626Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10030,
+    "slug": "chimera-episode-030",
+    "title": "Chimera Episode 30",
+    "date": "2025-11-25T03:36:24.626Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10031,
+    "slug": "chimera-episode-031",
+    "title": "Chimera Episode 31",
+    "date": "2025-11-25T03:36:24.626Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10032,
+    "slug": "chimera-episode-032",
+    "title": "Chimera Episode 32",
+    "date": "2025-11-25T03:36:24.626Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10033,
+    "slug": "chimera-episode-033",
+    "title": "Chimera Episode 33",
+    "date": "2025-11-25T03:36:24.626Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  },
+  {
+    "id": 10034,
+    "slug": "chimera-episode-034",
+    "title": "Chimera Episode 34",
+    "date": "2025-11-25T03:36:24.626Z",
+    "platform": "chimera",
+    "tags": [],
+    "preview": "undefined..."
+  }
+]

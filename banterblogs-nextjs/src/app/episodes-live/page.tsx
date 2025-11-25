@@ -13,11 +13,11 @@ export default function LiveEpisodesPage() {
   useEffect(() => {
     // Set up file watching via Server-Sent Events
     const eventSource = new EventSource('/api/episodes/watch');
-    
+
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log('File change detected:', data);
-      
+
+
       if (data.type === 'rename' || data.type === 'change') {
         // Refresh episodes when files change
         refetch();

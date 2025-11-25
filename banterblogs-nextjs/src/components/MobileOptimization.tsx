@@ -2,10 +2,10 @@
 
 import { useEffect, useState, type ReactNode, type TouchEvent as ReactTouchEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Smartphone, 
-  Tablet, 
-  Monitor, 
+import {
+  Smartphone,
+  Tablet,
+  Monitor,
   Wifi,
   WifiOff,
   Battery,
@@ -108,7 +108,7 @@ export function DeviceDetector({ className = '' }: DeviceDetectorProps) {
     const updateDeviceInfo = () => {
       const width = window.innerWidth;
       const type = width < 768 ? 'mobile' : width < 1024 ? 'tablet' : 'desktop';
-      
+
       setDeviceInfo(prev => ({
         ...prev,
         type,
@@ -127,22 +127,24 @@ export function DeviceDetector({ className = '' }: DeviceDetectorProps) {
           }));
         } catch (error) {
           console.error('Failed to fetch battery status', error);
-          console.log('Battery API not supported');
         }
       }
     };
+
+    const handleOnline = () => setDeviceInfo(prev => ({ ...prev, isOnline: true }));
+    const handleOffline = () => setDeviceInfo(prev => ({ ...prev, isOnline: false }));
 
     updateDeviceInfo();
     updateBattery();
 
     window.addEventListener('resize', updateDeviceInfo);
-    window.addEventListener('online', () => setDeviceInfo(prev => ({ ...prev, isOnline: true })));
-    window.addEventListener('offline', () => setDeviceInfo(prev => ({ ...prev, isOnline: false })));
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
       window.removeEventListener('resize', updateDeviceInfo);
-      window.removeEventListener('online', () => setDeviceInfo(prev => ({ ...prev, isOnline: true })));
-      window.removeEventListener('offline', () => setDeviceInfo(prev => ({ ...prev, isOnline: false })));
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
@@ -208,7 +210,7 @@ export function MobileNavigation({ prevEpisode, nextEpisode, className = '' }: M
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-      
+
       // Show navigation when scrolled past 20% and not at the very bottom
       setIsVisible(scrollTop > windowHeight * 0.2 && scrollTop < documentHeight - windowHeight * 0.8);
     };

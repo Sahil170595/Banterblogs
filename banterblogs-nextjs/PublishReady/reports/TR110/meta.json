@@ -1,0 +1,5 @@
+{
+  "title": "Concurrent Multi-Agent Performance Analysis",
+  "description": "Parallel agent execution study (150 runs) establishing Python multi-agent efficiency and contention baselines.",
+  "tags": ["multi-agent", "concurrency", "performance"]
+}

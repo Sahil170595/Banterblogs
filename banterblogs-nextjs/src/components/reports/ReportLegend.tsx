@@ -9,7 +9,6 @@ interface LegendEntry {
 interface ChartLegendProps {
   series: LegendEntry[];
   activeSeries?: string[];
-  // eslint-disable-next-line no-unused-vars
   onToggle?: (seriesName: string) => void;
 }
 

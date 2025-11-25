@@ -163,7 +163,7 @@ const magneticRef = useMagneticCursor({
 ## 🎨 **Design System**
 
 ### **Color Palette**
-- **Midnight Neon**: Dark theme with vibrant accents
+- **Obsidian & Gold**: Premium dark theme with metallic accents
 - **Dynamic Gradients**: Animated color transitions
 - **Semantic Colors**: Context-aware color usage
 - **Accessibility**: High contrast ratios

@@ -1,0 +1,62 @@
+{
+    "id": "gemma3-baseline",
+    "type": "benchmark",
+    "model": "gemma3:latest",
+    "date": "2025-10-08",
+    "summary": "Baseline performance benchmark for Gemma3 model variants",
+    "tags": [
+        "gemma3",
+        "baseline",
+        "performance",
+        "throughput",
+        "optimization"
+    ],
+    "hardware": {
+        "gpu": "NVIDIA GeForce RTX 4080 Laptop",
+        "vram_gb": 12
+    },
+    "results": {
+        "gemma3_latest": {
+            "throughput": {
+                "value": 102.85,
+                "unit": "tok/s"
+            },
+            "ttft": {
+                "value": 0.165,
+                "unit": "s"
+            },
+            "vram_usage": {
+                "value": 5.3,
+                "unit": "GB"
+            }
+        },
+        "gemma3_270m": {
+            "throughput": {
+                "value": 303.9,
+                "unit": "tok/s"
+            },
+            "ttft": {
+                "value": 0.06,
+                "unit": "s"
+            },
+            "vram_usage": {
+                "value": 1.5,
+                "unit": "GB"
+            }
+        },
+        "gemma3_1b_qat": {
+            "throughput": {
+                "value": 187.2,
+                "unit": "tok/s"
+            },
+            "ttft": {
+                "value": 0.10,
+                "unit": "s"
+            },
+            "vram_usage": {
+                "value": 2.5,
+                "unit": "GB"
+            }
+        }
+    }
+}

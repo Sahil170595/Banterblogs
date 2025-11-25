@@ -1,0 +1,5 @@
+{
+  "title": "Agent Workflow Optimization",
+  "description": "Process-isolated benchmarking of agent workflows; recommends GPU=60, CTX=512, TEMP=0.8 for stable output quality.",
+  "tags": ["agent", "workflow", "optimization", "process-isolation"]
+}

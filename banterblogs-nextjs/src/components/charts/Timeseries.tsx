@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatedReveal, Area, Grid, Line, SVGChart } from './Primitives';
+import { Axes } from './Axes';
 import type { Timeseries } from '@/lib/reports/schemas';
 import { lttb } from '@/visuals/utils/decimate';
 import { getSeriesColor } from '@/lib/reports/colors';
@@ -33,6 +34,22 @@ export function TimeseriesChart({ data, width = 800, height = 320 }: TimeseriesC
     <SVGChart width={width} height={height}>
       <g>
         <Grid xTicks={xTicks} yTicks={yTicks} width={width} height={height} />
+        <Axes
+          type="x"
+          scale={sx}
+          domain={[tMin, tMax]}
+          width={width}
+          height={height}
+          margin={margin}
+        />
+        <Axes
+          type="y"
+          scale={sy}
+          domain={[yMin, yMax]}
+          width={width}
+          height={height}
+          margin={margin}
+        />
         <g>
           {data.series.map((s, idx) => {
             const decimated = s.points.length > 2000 ? lttb(s.points as any, 2000) : s.points;
@@ -40,7 +57,7 @@ export function TimeseriesChart({ data, width = 800, height = 320 }: TimeseriesC
             const color = s.color ?? getSeriesColor(idx);
             return (
               <AnimatedReveal key={s.name + idx}>
-                <Area points={pts} color={color} opacity={0.2} />
+                <Area points={pts} color={color} opacity={0.08} />
                 <Line points={pts} color={color} />
               </AnimatedReveal>
             );

@@ -257,7 +257,7 @@ export function ContentHighlighter({ content, searchTerm, className = '' }: Cont
   );
 }
 
-type ContentSearchHandler = (value: string) => void; // eslint-disable-line no-unused-vars
+type ContentSearchHandler = (value: string) => void;
 
 interface ContentSearchProps {
   onSearch: ContentSearchHandler;

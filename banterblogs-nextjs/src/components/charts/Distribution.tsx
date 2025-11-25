@@ -1,6 +1,7 @@
 'use client';
 
 import { SVGChart, Grid, AnimatedReveal } from './Primitives';
+import { Axes } from './Axes';
 import type { Distribution } from '@/lib/reports/schemas';
 import { getSeriesColor } from '@/lib/reports/colors';
 
@@ -28,11 +29,30 @@ export function DistributionChart({ data, width = 800, height = 280 }: Distribut
   return (
     <SVGChart width={width} height={height}>
       <Grid xTicks={xTicks} yTicks={yTicks} width={width} height={height} />
+      <Axes
+        type="x"
+        scale={sx}
+        domain={[xMin, xMax]}
+        width={width}
+        height={height}
+        margin={margin}
+        label="Value"
+      />
+      <Axes
+        type="y"
+        scale={sy}
+        domain={[0, yMax]}
+        width={width}
+        height={height}
+        margin={margin}
+        label="Count"
+      />
       <AnimatedReveal>
         {data.buckets.map((b, i) => {
           const x0 = sx(b.x0);
           const x1 = sx(b.x1);
           const y = sy(b.count);
+          const color = getSeriesColor(0); // Use consistent primary color
           return (
             <rect
               key={i}
@@ -40,8 +60,8 @@ export function DistributionChart({ data, width = 800, height = 280 }: Distribut
               y={y}
               width={Math.max(1, x1 - x0 - 1)}
               height={margin.top + ih - y}
-              fill={getSeriesColor(i)}
-              opacity={0.55}
+              fill={color}
+              opacity={0.7}
               rx={2}
             />
           );

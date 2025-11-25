@@ -1,0 +1,5 @@
+{
+  "title": "Comprehensive LLM Performance Analysis",
+  "description": "Single-agent LLM benchmarking across 158 runs and 6 models; identifies optimal configs for real-time workloads.",
+  "tags": ["benchmark", "llm", "performance", "ollama", "gemma3", "llama3.1", "quantization"]
+}

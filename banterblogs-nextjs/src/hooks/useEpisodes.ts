@@ -1,46 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Episode } from '@/lib/episodes';
 
-export function useEpisodes() {
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useEpisodes(initialEpisodes: Episode[] = []) {
+  const [episodes, setEpisodes] = useState<Episode[]>(initialEpisodes);
+  const [loading, setLoading] = useState(initialEpisodes.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEpisodes = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/episodes');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch episodes');
-        }
-        
-        const data = await response.json();
-        setEpisodes(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching episodes:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setEpisodes(initialEpisodes);
+  }, [initialEpisodes]);
 
-    fetchEpisodes();
-  }, []);
-
-  const refetch = async () => {
+  const fetchEpisodes = useCallback(async (showSpinner = true) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
+
       const response = await fetch('/api/episodes');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch episodes');
       }
-      
+
       const data = await response.json();
       setEpisodes(data);
       setError(null);
@@ -50,7 +31,11 @@ export function useEpisodes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  return { episodes, loading, error, refetch };
+  useEffect(() => {
+    fetchEpisodes(initialEpisodes.length === 0);
+  }, [fetchEpisodes, initialEpisodes.length]);
+
+  return { episodes, loading, error, refetch: () => fetchEpisodes(true) };
 }

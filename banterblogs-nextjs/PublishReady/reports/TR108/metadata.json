@@ -1,0 +1,136 @@
+{
+    "id": "TR108",
+    "type": "technical_report",
+    "title": "Comprehensive LLM Performance Analysis",
+    "subtitle": "Ollama Model Benchmarking & Optimization Study",
+    "date": "2025-10-08",
+    "authors": [
+        "Chimera Heart Team"
+    ],
+    "tags": [
+        "benchmark",
+        "llm",
+        "performance",
+        "ollama",
+        "gemma3",
+        "llama3.1",
+        "optimization",
+        "quantization"
+    ],
+    "status": "published",
+    "version": "1.0.0",
+    "summary": "Systematic benchmarking of 6 model configurations across 158+ test runs to identify critical performance factors and provide actionable optimization strategies for real-time gaming applications.",
+    "metrics": {
+        "total_runs": 158,
+        "models_tested": 6,
+        "test_duration_weeks": 2,
+        "configurations_per_model": 36
+    },
+    "hardware": {
+        "gpu": "NVIDIA GeForce RTX 4080 Laptop",
+        "vram_gb": 12,
+        "cuda_cores": 9728,
+        "tensor_cores": 232,
+        "memory_bandwidth_gbs": 504,
+        "cpu": "Intel Core i9-13980HX",
+        "cpu_cores": 24,
+        "system_ram_gb": 16
+    },
+    "models_tested": [
+        {
+            "name": "llama3.1:8b-instruct-q4_0",
+            "size_gb": 4.7,
+            "peak_throughput_toks": 78.42
+        },
+        {
+            "name": "llama3.1:8b-instruct-q5_K_M",
+            "size_gb": 5.7,
+            "peak_throughput_toks": 65.18
+        },
+        {
+            "name": "llama3.1:8b-instruct-q8_0",
+            "size_gb": 8.5,
+            "peak_throughput_toks": 46.57
+        },
+        {
+            "name": "gemma3:latest",
+            "size_gb": 3.3,
+            "peak_throughput_toks": 102.31
+        },
+        {
+            "name": "gemma3:270m",
+            "size_gb": 0.29,
+            "peak_throughput_toks": 303.9
+        },
+        {
+            "name": "gemma3:1b-it-qat",
+            "size_gb": 1.0,
+            "peak_throughput_toks": 187.2
+        }
+    ],
+    "key_findings": [
+        "Gemma3:latest delivers 34% higher throughput than Llama3.1:q4_0 (102.85 vs 76.59 tok/s)",
+        "Model size and throughput exhibit inverse correlation (smaller models = higher throughput)",
+        "GPU layer allocation (num_gpu) is the single most critical performance parameter",
+        "Context size (num_ctx) optimization yields 15-20% throughput improvements",
+        "Temperature settings significantly impact Time-to-First-Token (TTFT) latency",
+        "Q4 quantization provides optimal speed-quality balance for real-time applications"
+    ],
+    "production_recommendations": {
+        "aaa_quality": {
+            "model": "llama3.1:8b-instruct-q4_0",
+            "config": {
+                "num_gpu": 40,
+                "num_ctx": 1024,
+                "temperature": 0.4
+            },
+            "performance": {
+                "throughput_toks": 78.42,
+                "ttft_s": 0.088
+            }
+        },
+        "balanced": {
+            "model": "gemma3:latest",
+            "config": {
+                "num_gpu": 999,
+                "num_ctx": 4096,
+                "temperature": 0.4
+            },
+            "performance": {
+                "throughput_toks": 102.31,
+                "ttft_s": 0.128
+            }
+        },
+        "speed_critical": {
+            "model": "gemma3:270m",
+            "config": {
+                "num_gpu": 999,
+                "num_ctx": 4096,
+                "temperature": 0.8
+            },
+            "performance": {
+                "throughput_toks": 303.9,
+                "ttft_s": 0.06
+            }
+        }
+    },
+    "sections": [
+        "Executive Summary",
+        "Introduction & Objectives",
+        "Methodology & Test Framework",
+        "Llama3.1 Benchmark Results",
+        "Gemma3 Benchmark Results",
+        "Critical Performance Factors",
+        "Cross-Model Performance Analysis",
+        "Optimization Strategies",
+        "Production Recommendations",
+        "Future Research Directions"
+    ],
+    "visualizations_available": [
+        "throughput_comparison",
+        "ttft_comparison",
+        "memory_efficiency",
+        "parameter_sweep_heatmaps",
+        "quantization_tradeoffs"
+    ]
+}

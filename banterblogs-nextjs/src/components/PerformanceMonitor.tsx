@@ -361,7 +361,6 @@ interface TouchGestureProps {
   onSwipeRight?: () => void;
   onSwipeUp?: () => void;
   onSwipeDown?: () => void;
-  // eslint-disable-next-line no-unused-vars
   onPinch?: (scale: number) => void;
   className?: string;
 }

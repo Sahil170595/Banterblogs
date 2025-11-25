@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banterpacks Development Story - AI-Powered Development Blog</title>
+    <meta name="description" content="Follow the epic development journey of Banterpacks through AI-powered storytelling. Watch as Claude, ChatGPT, Gemini, and Banterpacks discuss the code, the challenges, and the victories.">
+    <meta name="keywords" content="banterpacks, development, AI, coding, blog, software development, programming">
+    <meta name="author" content="Sahil Kadadekar">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://banterpacks-blog.vercel.app/">
+    <meta property="og:title" content="Banterpacks Development Story">
+    <meta property="og:description" content="AI-powered development blog following the epic journey of building Banterpacks">
+    <meta property="og:image" content="https://banterpacks-blog.vercel.app/assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://banterpacks-blog.vercel.app/">
+    <meta property="twitter:title" content="Banterpacks Development Story">
+    <meta property="twitter:description" content="AI-powered development blog following the epic journey of building Banterpacks">
+    <meta property="twitter:image" content="https://banterpacks-blog.vercel.app/assets/og-image.png">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%236366f1' rx='24'/><text x='96' y='120' text-anchor='middle' font-size='120' fill='white'>🤖</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Banterblogs">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="msapplication-TileColor" content="#6366f1">
+    <meta name="msapplication-config" content="browserconfig.xml">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🤖 Banterpacks Development Story</h1>
+                    <p class="tagline">Where AI meets code, and magic happens</p>
+                </div>
+                <nav class="nav">
+                    <a href="#episodes" class="nav-link">Episodes</a>
+                    <a href="#about" class="nav-link">About</a>
+                    <a href="https://github.com/sahilkadadekar/banterpacks" class="nav-link" target="_blank">Source</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="hero">
+                <div class="hero-content">
+                    <h2 class="hero-title">The Epic Saga of Building Banterpacks</h2>
+                    <p class="hero-description">
+                        Watch as four AI personalities (Claude, ChatGPT, Gemini, and Banterpacks) 
+                        discuss the daily development journey, technical decisions, and the wild 
+                        ride of building something amazing. This isn't just a blog—it's a serialized 
+                        story of code, creativity, and AI collaboration.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="episode-count">27</span>
+                            <span class="stat-label">Episodes</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">45K+</span>
+                            <span class="stat-label">Lines of Code</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">34</span>
+                            <span class="stat-label">Commits</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="episodes" class="episodes">
+                <div class="episodes-header">
+                    <h2 class="section-title">Latest Episodes</h2>
+                    <div class="episodes-controls">
+                        <div class="search-container">
+                            <input 
+                                type="text" 
+                                id="search-input" 
+                                placeholder="Search episodes..." 
+                                class="search-input"
+                                aria-label="Search episodes"
+                            >
+                            <span class="search-icon">🔍</span>
+                        </div>
+                        <select id="sort-select" class="sort-select" aria-label="Sort episodes">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="title-asc">Title A-Z</option>
+                            <option value="title-desc">Title Z-A</option>
+                            <option value="complexity-desc">Most Complex</option>
+                            <option value="complexity-asc">Least Complex</option>
+                        </select>
+                        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+                    </div>
+                </div>
+                <div class="episodes-grid" id="episodes-container">
+                    <!-- Episodes will be dynamically loaded here -->
+                </div>
+            </section>
+
+            <section id="about" class="about">
+                <h2 class="section-title">About This Project</h2>
+                <div class="about-content">
+                    <div class="about-text">
+                        <p>
+                            This blog is powered by AI and tells the real story of developing Banterpacks, 
+                            a revolutionary gaming overlay system. Each episode is generated automatically 
+                            from actual git commits, featuring conversations between different AI personalities 
+                            who discuss the technical decisions, challenges, and victories.
+                        </p>
+                        <p>
+                            The characters have distinct personalities: Claude is analytical and precise, 
+                            ChatGPT is enthusiastic and optimistic, Gemini finds deep meaning in everything, 
+                            and Banterpacks provides the developer's perspective with humor and insight.
+                        </p>
+                    </div>
+                    <div class="about-features">
+                        <h3>Features</h3>
+                        <ul>
+                            <li>🤖 AI-generated content from real commits</li>
+                            <li>📚 Serialized storytelling with character development</li>
+                            <li>💻 Technical deep-dives and architecture discussions</li>
+                            <li>🎭 Multi-personality AI conversations</li>
+                            <li>📈 Real development metrics and statistics</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2025 Banterpacks Development Story. Built with ❤️ and AI.</p>
+                <div class="footer-links">
+                    <a href="https://github.com/sahilkadadekar/banterpacks" target="_blank">GitHub</a>
+                    <a href="https://github.com/sahilkadadekar/banterpacks-blog" target="_blank">Blog Source</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Analytics and Performance Monitoring -->
+    <script>
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            // Core Web Vitals monitoring
+            if ('PerformanceObserver' in window) {
+                // Largest Contentful Paint
+                new PerformanceObserver((entryList) => {
+                    for (const entry of entryList.getEntries()) {
+                        console.log('LCP:', entry.startTime);
+                        // Send to analytics if needed
+                    }
+                }).observe({ entryTypes: ['largest-contentful-paint'] });
+
+                // First Input Delay
+                new PerformanceObserver((entryList) => {
+                    for (const entry of entryList.getEntries()) {
+                        console.log('FID:', entry.processingStart - entry.startTime);
+                        // Send to analytics if needed
+                    }
+                }).observe({ entryTypes: ['first-input'] });
+
+                // Cumulative Layout Shift
+                new PerformanceObserver((entryList) => {
+                    for (const entry of entryList.getEntries()) {
+                        if (!entry.hadRecentInput) {
+                            console.log('CLS:', entry.value);
+                            // Send to analytics if needed
+                        }
+                    }
+                }).observe({ entryTypes: ['layout-shift'] });
+            }
+
+            // Basic performance metrics
+            const navigation = performance.getEntriesByType('navigation')[0];
+            if (navigation) {
+                console.log('Page Load Time:', navigation.loadEventEnd - navigation.loadEventStart);
+                console.log('DOM Content Loaded:', navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart);
+            }
+        });
+
+        // Error tracking
+        window.addEventListener('error', (event) => {
+            console.error('JavaScript Error:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+            // Send to error tracking service if needed
+        });
+
+        // Unhandled promise rejection tracking
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled Promise Rejection:', event.reason);
+            // Send to error tracking service if needed
+        });
+
+        // User interaction tracking (privacy-friendly)
+        let interactionCount = 0;
+        const trackInteraction = () => {
+            interactionCount++;
+            if (interactionCount === 1) {
+                console.log('First user interaction detected');
+                // Track engagement
+            }
+        };
+
+        ['click', 'scroll', 'keydown'].forEach(event => {
+            document.addEventListener(event, trackInteraction, { once: true });
+        });
+    </script>
+
+    <!-- Google Analytics (replace with your tracking ID) -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+    -->
+
+    <!-- Vercel Analytics (if using Vercel) -->
+    <!--
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    -->
+
+    <script src="script.js"></script>
+</body>
+</html>
+

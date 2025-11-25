@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Share2, 
-  Bookmark, 
-  BookmarkCheck, 
-  Heart, 
+import {
+  Share2,
+  Bookmark,
+  BookmarkCheck,
+  Heart,
   HeartHandshake,
   Copy,
   Check,
@@ -79,7 +79,7 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
   const handleLike = () => {
     setLiked(!liked);
     // Here you would typically send analytics or update a database
-    console.log('Episode liked:', episode.slug);
+    // Here you would typically send analytics or update a database
   };
 
   const handleBookmark = () => {
@@ -109,11 +109,10 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleLike}
-          className={`p-2 rounded-full transition-colors ${
-            liked 
-              ? 'bg-red-500/20 text-red-400' 
+          className={`p-2 rounded-full transition-colors ${liked
+              ? 'bg-red-500/20 text-red-400'
               : 'bg-muted/50 text-muted-foreground hover:bg-red-500/10 hover:text-red-400'
-          }`}
+            }`}
           aria-label={liked ? 'Unlike episode' : 'Like episode'}
         >
           {liked ? <HeartHandshake className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}
@@ -123,11 +122,10 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleBookmark}
-          className={`p-2 rounded-full transition-colors ${
-            bookmarked 
-              ? 'bg-blue-500/20 text-blue-400' 
+          className={`p-2 rounded-full transition-colors ${bookmarked
+              ? 'bg-blue-500/20 text-blue-400'
               : 'bg-muted/50 text-muted-foreground hover:bg-blue-500/10 hover:text-blue-400'
-          }`}
+            }`}
           aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark episode'}
         >
           {bookmarked ? <BookmarkCheck className="h-4 w-4 fill-current" /> : <Bookmark className="h-4 w-4" />}
@@ -317,7 +315,7 @@ export function EngagementStats({ className = '' }: EngagementStatsProps) {
               <MessageCircle className="h-4 w-4 text-primary" />
               Engagement
             </h3>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center">
                 <div className="text-lg font-bold text-foreground">{stats.views}</div>
