@@ -54,8 +54,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui"],
-        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
+        display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in-out",
@@ -155,8 +156,8 @@ const config: Config = {
           "50%": { backgroundPosition: "100% 50%" },
         },
         glowPulse: {
-          "0%": { boxShadow: "0 0 20px rgba(34, 211, 238, 0.3)" },
-          "100%": { boxShadow: "0 0 40px rgba(34, 211, 238, 0.6)" },
+          "0%": { boxShadow: "0 0 20px hsl(var(--accent) / 0.3)" },
+          "100%": { boxShadow: "0 0 40px hsl(var(--accent) / 0.6)" },
         },
         shimmer: {
           "0%": { transform: "translateX(-100%)" },
@@ -223,8 +224,8 @@ const config: Config = {
           "50%": { transform: "translateY(-5px)" },
         },
         glowSubtle: {
-          "0%, 100%": { boxShadow: "0 0 10px rgba(34, 211, 238, 0.2)" },
-          "50%": { boxShadow: "0 0 20px rgba(34, 211, 238, 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 10px hsl(var(--accent) / 0.2)" },
+          "50%": { boxShadow: "0 0 20px hsl(var(--accent) / 0.4)" },
         },
         floatGentle: {
           "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
@@ -255,8 +256,8 @@ const config: Config = {
           "50%": { opacity: "0.9" },
         },
         glowIntense: {
-          "0%": { boxShadow: "0 0 30px rgba(34, 211, 238, 0.5)" },
-          "100%": { boxShadow: "0 0 60px rgba(34, 211, 238, 0.8)" },
+          "0%": { boxShadow: "0 0 30px hsl(var(--accent) / 0.5)" },
+          "100%": { boxShadow: "0 0 60px hsl(var(--accent) / 0.8)" },
         },
         morphComplex: {
           "0%, 100%": { borderRadius: "20px", transform: "scale(1)" },
@@ -344,10 +345,10 @@ const config: Config = {
           "75%": { opacity: "0.7", transform: "scale(0.95)" },
         },
         glowComplex: {
-          "0%": { boxShadow: "0 0 20px rgba(34, 211, 238, 0.3)", transform: "scale(1)" },
-          "25%": { boxShadow: "0 0 40px rgba(34, 211, 238, 0.5)", transform: "scale(1.02)" },
-          "50%": { boxShadow: "0 0 60px rgba(34, 211, 238, 0.7)", transform: "scale(1)" },
-          "75%": { boxShadow: "0 0 40px rgba(34, 211, 238, 0.5)", transform: "scale(0.98)" },
+          "0%": { boxShadow: "0 0 20px hsl(var(--accent) / 0.3)", transform: "scale(1)" },
+          "25%": { boxShadow: "0 0 40px hsl(var(--accent) / 0.5)", transform: "scale(1.02)" },
+          "50%": { boxShadow: "0 0 60px hsl(var(--accent) / 0.7)", transform: "scale(1)" },
+          "75%": { boxShadow: "0 0 40px hsl(var(--accent) / 0.5)", transform: "scale(0.98)" },
         },
       },
     },

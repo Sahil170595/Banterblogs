@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Keyboard, Eye, EyeOff, Volume2, VolumeX, Settings } from 'lucide-react';
+import { Keyboard, Eye, EyeOff, Volume2, VolumeX, Settings, X } from 'lucide-react';
 
 interface AccessibilitySettings {
   highContrast: boolean;
@@ -91,7 +91,7 @@ export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) 
                 className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Close accessibility panel"
               >
-                <span aria-hidden className="text-base leading-none">×</span>
+                <X className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
@@ -164,7 +164,7 @@ export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) 
               {/* Screen Reader */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <VolumeX className="h-4 w-4 text-blue-400" />
+                  <VolumeX className="h-4 w-4 text-accent" />
                   <span className="text-sm font-medium text-foreground">Screen Reader</span>
                 </div>
                 <button
@@ -190,8 +190,8 @@ export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) 
                 <div className="flex justify-between">
                   <span>Navigate sections</span>
                   <div className="flex gap-1">
-                    <kbd className="px-1 py-0.5 bg-muted rounded text-xs">↑</kbd>
-                    <kbd className="px-1 py-0.5 bg-muted rounded text-xs">↓</kbd>
+                    <kbd className="px-1 py-0.5 bg-muted rounded text-xs">ArrowUp</kbd>
+                    <kbd className="px-1 py-0.5 bg-muted rounded text-xs">ArrowDown</kbd>
                   </div>
                 </div>
                 <div className="flex justify-between">

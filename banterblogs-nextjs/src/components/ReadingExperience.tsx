@@ -115,8 +115,8 @@ export function ReadingExperience({
                 onClick={handleBookmark}
                 className={`p-2 rounded-full transition-colors ${
                   isBookmarked 
-                    ? 'bg-blue-500/20 text-blue-400' 
-                    : 'bg-muted/50 text-muted-foreground hover:bg-blue-500/10 hover:text-blue-400'
+                    ? 'bg-accent/20 text-accent' 
+                    : 'bg-muted/50 text-muted-foreground hover:bg-accent/10 hover:text-accent'
                 }`}
               >
                 <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -163,7 +163,7 @@ export function ReadingExperience({
               className="flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2">
-                <Eye className="h-3 w-3 text-blue-400" />
+                <Eye className="h-3 w-3 text-accent" />
                 <span className="text-muted-foreground">Views</span>
               </div>
               <span className="font-semibold text-foreground">{readingStats.views}</span>
@@ -185,7 +185,7 @@ export function ReadingExperience({
               className="flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2">
-                <Bookmark className="h-3 w-3 text-blue-400" />
+                <Bookmark className="h-3 w-3 text-accent" />
                 <span className="text-muted-foreground">Saves</span>
               </div>
               <span className="font-semibold text-foreground">{readingStats.bookmarks}</span>
@@ -276,7 +276,7 @@ export function ReadingExperience({
                 transition={{ delay: 0.3 }}
                 className="text-2xl font-bold text-foreground mb-2"
               >
-                🎉 Reading Complete!
+                Reading Complete!
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}

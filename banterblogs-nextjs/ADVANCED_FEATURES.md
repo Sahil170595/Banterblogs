@@ -163,13 +163,13 @@ const magneticRef = useMagneticCursor({
 ## 🎨 **Design System**
 
 ### **Color Palette**
-- **Obsidian & Gold**: Premium dark theme with metallic accents
+- **Obsidian & Aurora**: Premium dark theme with metallic accents and aurora highlights
 - **Dynamic Gradients**: Animated color transitions
 - **Semantic Colors**: Context-aware color usage
 - **Accessibility**: High contrast ratios
 
 ### **Typography**
-- **Geist Fonts**: Modern, readable typefaces
+- **Manrope + Space Grotesk**: Modern, readable typefaces
 - **Fluid Scaling**: Responsive text sizing
 - **Hierarchy**: Clear information architecture
 - **Readability**: Optimized line heights and spacing

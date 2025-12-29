@@ -33,7 +33,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           fontFamily: 'Inter, ui-sans-serif, system-ui',
         }}
       >
-        <div style={{ fontSize: 20, opacity: 0.7, marginBottom: 16 }}>Banterblogs · Report</div>
+        <div style={{ fontSize: 20, opacity: 0.7, marginBottom: 16 }}>Banterblogs - Report</div>
         <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: -1 }}>{title}</div>
         {svg && (
           <div style={{ marginTop: 24 }} dangerouslySetInnerHTML={{ __html: svg }} />

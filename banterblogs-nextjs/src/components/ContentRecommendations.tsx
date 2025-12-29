@@ -91,9 +91,9 @@ export function ContentRecommendations({ currentEpisode, allEpisodes, className 
       case 0:
         return <Star className="h-4 w-4 text-yellow-400" />;
       case 1:
-        return <TrendingUp className="h-4 w-4 text-blue-400" />;
+        return <TrendingUp className="h-4 w-4 text-accent" />;
       case 2:
-        return <Zap className="h-4 w-4 text-purple-400" />;
+        return <Zap className="h-4 w-4 text-primary" />;
       default:
         return <BookOpen className="h-4 w-4 text-primary" />;
     }
@@ -108,7 +108,7 @@ export function ContentRecommendations({ currentEpisode, allEpisodes, className 
           exit={{ opacity: 0, y: 20 }}
           className={`content-recommendations ${className}`}
         >
-          <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl p-6">
+          <div className="signal-panel p-6">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold text-foreground">Recommended Episodes</h3>
@@ -224,7 +224,7 @@ export function ReadingPath({ episodes, className = '' }: ReadingPathProps) {
           exit={{ opacity: 0, y: 20 }}
           className={`reading-path ${className}`}
         >
-          <div className="bg-gradient-to-r from-accent/5 to-primary/5 border border-accent/20 rounded-xl p-6">
+          <div className="signal-panel p-6">
             <div className="flex items-center gap-2 mb-4">
               <Target className="h-5 w-5 text-accent" />
               <h3 className="text-lg font-semibold text-foreground">Suggested Reading Path</h3>
@@ -257,7 +257,7 @@ export function ReadingPath({ episodes, className = '' }: ReadingPathProps) {
                           {episode.title}
                         </h4>
                         <p className="text-xs text-muted-foreground">
-                          Episode {episode.id} • {episode.readingTime} min read
+                          Episode {episode.id} - {episode.readingTime} min read
                         </p>
                       </div>
                       <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-accent transition-colors" />
@@ -337,7 +337,7 @@ export function TrendingEpisodes({ episodes, className = '' }: TrendingEpisodesP
           exit={{ opacity: 0, y: 20 }}
           className={`trending-episodes ${className}`}
         >
-          <div className="bg-gradient-to-r from-green-500/5 to-blue-500/5 border border-green-500/20 rounded-xl p-6">
+          <div className="signal-panel p-6">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="h-5 w-5 text-green-400" />
               <h3 className="text-lg font-semibold text-foreground">Trending Now</h3>
@@ -375,9 +375,9 @@ export function TrendingEpisodes({ episodes, className = '' }: TrendingEpisodesP
                       </p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>Episode {episode.id}</span>
-                        <span>•</span>
+                        <span>-</span>
                         <span>{episode.readingTime} min</span>
-                        <span>•</span>
+                        <span>-</span>
                         <span>{episode.complexity} complexity</span>
                       </div>
                     </div>

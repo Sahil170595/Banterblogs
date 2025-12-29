@@ -39,7 +39,7 @@ export function MetricTicker({
     {
       label: 'Daily Active',
       value: '24/7',
-      change: '±0',
+      change: '+0',
       icon: <TrendingUp className="h-4 w-4" />,
     },
   ];
@@ -100,7 +100,7 @@ export function MetricTicker({
           >
             <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-2 text-sm text-accent">
               <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse-fast" />
-              Latest: Episode {latestEpisode.id} • {latestEpisode.filesChanged} files changed
+              Latest: Episode {latestEpisode.id} - {latestEpisode.filesChanged} files changed
             </div>
           </motion.div>
         )}

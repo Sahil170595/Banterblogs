@@ -15,11 +15,13 @@ export default async function HomePage() {
   };
   
   let latestEpisode: Episode | undefined = undefined;
+  let spotlightEpisodes: Episode[] = [];
 
   try {
     const episodes = await getAllEpisodes();
     stats = getEpisodeStats(episodes);
     latestEpisode = episodes.length > 0 ? episodes[episodes.length - 1] : undefined;
+    spotlightEpisodes = episodes.slice(-6).reverse();
   } catch (error) {
     console.error('Error loading episodes for homepage:', error);
     // Fallback to static values if loading fails
@@ -37,7 +39,7 @@ export default async function HomePage() {
       <div className="flex flex-col">
         <Hero stats={stats} latestEpisode={latestEpisode} />
         <SystemsShowcase />
-        <EpisodeSpotlight episodes={[]} />
+        <EpisodeSpotlight episodes={spotlightEpisodes} />
         <RoadmapRail />
       </div>
     </ErrorBoundary>

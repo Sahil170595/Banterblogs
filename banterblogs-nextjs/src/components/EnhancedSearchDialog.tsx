@@ -143,7 +143,7 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
       case 'trending':
         return <TrendingUp className="h-4 w-4 text-orange-400" />;
       case 'concept':
-        return <Sparkles className="h-4 w-4 text-purple-400" />;
+        return <Sparkles className="h-4 w-4 text-primary" />;
       default:
         return <Tag className="h-4 w-4 text-muted-foreground" />;
     }

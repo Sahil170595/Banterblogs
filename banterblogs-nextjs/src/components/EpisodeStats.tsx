@@ -13,7 +13,7 @@ export function EpisodeStats({ episode }: EpisodeStatsProps) {
   const getComplexityColor = (complexity: number) => {
     if (complexity >= 80) return 'text-red-400';
     if (complexity >= 60) return 'text-yellow-400';
-    if (complexity >= 40) return 'text-blue-400';
+    if (complexity >= 40) return 'text-accent';
     return 'text-green-400';
   };
 

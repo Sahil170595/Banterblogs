@@ -14,7 +14,8 @@ import {
   Facebook,
   Linkedin,
   MessageCircle,
-  Link as LinkIcon
+  Link as LinkIcon,
+  X
 } from 'lucide-react';
 
 interface SocialShareProps {
@@ -40,19 +41,19 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
       name: 'Twitter',
       icon: <Twitter className="h-4 w-4" />,
       url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(episodeUrl)}`,
-      color: 'text-blue-400'
+      color: 'text-accent'
     },
     {
       name: 'Facebook',
       icon: <Facebook className="h-4 w-4" />,
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(episodeUrl)}`,
-      color: 'text-blue-600'
+      color: 'text-primary'
     },
     {
       name: 'LinkedIn',
       icon: <Linkedin className="h-4 w-4" />,
       url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(episodeUrl)}`,
-      color: 'text-blue-700'
+      color: 'text-accent'
     },
     {
       name: 'Copy Link',
@@ -123,8 +124,8 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
           whileTap={{ scale: 0.95 }}
           onClick={handleBookmark}
           className={`p-2 rounded-full transition-colors ${bookmarked
-              ? 'bg-blue-500/20 text-blue-400'
-              : 'bg-muted/50 text-muted-foreground hover:bg-blue-500/10 hover:text-blue-400'
+              ? 'bg-accent/20 text-accent'
+              : 'bg-muted/50 text-muted-foreground hover:bg-accent/10 hover:text-accent'
             }`}
           aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark episode'}
         >
@@ -223,7 +224,7 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
                 onClick={() => setIsOpen(false)}
                 className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
               >
-                ×
+                <X className="h-4 w-4" />
               </button>
             </div>
 
@@ -253,7 +254,7 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
                       className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
                       aria-label={`Remove bookmark for ${slug}`}
                     >
-                      ×
+                      <X className="h-3 w-3" />
                     </button>
                   </motion.div>
                 ))}
@@ -326,7 +327,7 @@ export function EngagementStats({ className = '' }: EngagementStatsProps) {
                 <div className="text-xs text-muted-foreground">Likes</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-blue-400">{stats.shares}</div>
+                <div className="text-lg font-bold text-accent">{stats.shares}</div>
                 <div className="text-xs text-muted-foreground">Shares</div>
               </div>
               <div className="text-center">

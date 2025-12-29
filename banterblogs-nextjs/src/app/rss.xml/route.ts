@@ -9,7 +9,7 @@ export async function GET() {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Banterblogs - Building Chimera</title>
-    <description>A polished chaos log documenting how the Banterpacks overlay evolves into Chimera—a fully local, privacy-first assistant.</description>
+    <description>A polished chaos log documenting how the Banterpacks overlay evolves into Chimera - a fully local, privacy-first assistant.</description>
     <link>https://banterblogs.vercel.app</link>
     <language>en-us</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

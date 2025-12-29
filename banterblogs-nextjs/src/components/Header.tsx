@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
 import { GITHUB_URLS } from '@/lib/constants';
 
@@ -17,16 +18,17 @@ const NAV_ITEMS = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/60 after:to-transparent">
       <div className="container flex h-[72px] items-center justify-between gap-6">
         <Link href="/" className="flex items-center gap-2 sm:gap-3">
-          <span className="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-accent text-sm sm:text-base font-bold text-primary-foreground shadow-lg shadow-primary/30">
+          <span className="inline-flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm sm:text-base font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">
             BB
           </span>
           <span className="text-base sm:text-lg font-semibold tracking-tight text-foreground display">
-            Building Chimera
+            Chimera Observatory
           </span>
         </Link>
 
@@ -40,7 +42,12 @@ export function Header() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-full px-3 py-2 transition hover:bg-primary/10 hover:text-primary"
+                aria-current={pathname === item.href ? 'page' : undefined}
+                className={`rounded-full px-3 py-2 transition ${
+                  pathname === item.href || pathname.startsWith(`${item.href}/`)
+                    ? 'bg-primary/15 text-primary'
+                    : 'hover:bg-primary/10 hover:text-primary'
+                }`}
               >
                 {item.label}
               </Link>

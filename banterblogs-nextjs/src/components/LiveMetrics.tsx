@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,7 +48,7 @@ export function LiveMetrics({ className = '' }: LiveMetricsProps) {
       previousValue: 1189,
       unit: '',
       icon: <Users className="h-4 w-4" />,
-      color: 'text-blue-400',
+      color: 'text-accent',
       trend: 'up'
     },
     {

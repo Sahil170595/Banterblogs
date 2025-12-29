@@ -14,13 +14,13 @@ export function EpisodeSpotlight({ episodes }: EpisodeSpotlightProps) {
   return (
     <section className="container py-20 md:py-28">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div className="max-w-2xl space-y-3">
-          <p className="text-xs uppercase tracking-[0.24em] text-primary/80">Latest field reports</p>
+        <div className="max-w-2xl space-y-4">
+          <span className="signal-pill">Latest Field Reports</span>
           <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">
-            Every episode is an internal postmortem—just with better jokes.
+            Every episode is a systems postmortem, just with better jokes.
           </h2>
           <p className="text-sm text-muted-foreground sm:text-base">
-            We do not sand off details. Each drop shows the commits, telemetry, and emotional damage required to get Chimera closer to a fully local assistant that behaves.
+            We keep the rough edges. Each drop surfaces commits, telemetry, and the decisions that push Chimera toward a fully local assistant that behaves.
           </p>
         </div>
         <Link
@@ -45,8 +45,8 @@ export function EpisodeSpotlight({ episodes }: EpisodeSpotlightProps) {
           ))}
         </motion.div>
       ) : (
-        <div className="mt-10 text-center text-muted-foreground">
-          <p>Episodes will be loaded dynamically</p>
+        <div className="mt-10 signal-panel p-8 text-center text-muted-foreground">
+          <p>Episodes will be loaded dynamically.</p>
         </div>
       )}
     </section>

@@ -28,11 +28,11 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] md:gap-6">
           <div className="space-y-5">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground">BB</span>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">BB</span>
               <span className="text-lg font-semibold text-foreground">Banterblogs</span>
             </div>
             <p className="max-w-sm text-sm text-muted-foreground">
-              A polished chaos log documenting how the Banterpacks overlay evolves into Chimera—a fully local, privacy-first assistant.
+              A polished chaos log documenting how the Banterpacks overlay evolves into Chimera - a fully local, privacy-first assistant.
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link
@@ -82,8 +82,8 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-sm text-muted-foreground md:flex-row">
-          <span>© {new Date().getFullYear()} Banterblogs. Crafted in public, powered by local AI.</span>
-          <span>Banterpacks • Banterhearts • Automation Plane</span>
+          <span>(c) {new Date().getFullYear()} Banterblogs. Crafted in public, powered by local AI.</span>
+          <span>Banterpacks to Banterhearts to Automation Plane</span>
         </div>
       </div>
     </footer>

@@ -1,11 +1,21 @@
 'use client';
-import Link from 'next/link';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Clock, Target, Rocket } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-const ROADMAP_PHASES = [
+type RoadmapStatus = 'completed' | 'in-progress' | 'planned' | 'vision';
+
+const ROADMAP_PHASES: Array<{
+  id: string;
+  title: string;
+  status: RoadmapStatus;
+  icon: typeof CheckCircle2;
+  description: string;
+  features: string[];
+  year: string;
+}> = [
   {
     id: 'phase-1',
     title: 'Phase 1: Foundation',
@@ -16,12 +26,12 @@ const ROADMAP_PHASES = [
       'Real-time streaming overlay architecture',
       'Privacy-first local processing',
       'Core Banterpacks platform',
-      'Basic UI/UX implementation'
+      'Baseline UI and UX systems',
     ],
-    year: '2024'
+    year: '2024',
   },
   {
-    id: 'phase-2', 
+    id: 'phase-2',
     title: 'Phase 2: Intelligence',
     status: 'in-progress',
     icon: Clock,
@@ -30,13 +40,13 @@ const ROADMAP_PHASES = [
       'Chimera Heart ML platform',
       'Multi-LLM orchestration (Claude, GPT, Gemini)',
       'Automated episode generation',
-      'Advanced privacy controls'
+      'Advanced privacy controls',
     ],
-    year: '2025'
+    year: '2025',
   },
   {
     id: 'phase-3',
-    title: 'Phase 3: Aut autonomy',
+    title: 'Phase 3: Autonomy',
     status: 'planned',
     icon: Target,
     description: 'Full autonomy and ecosystem expansion',
@@ -44,9 +54,9 @@ const ROADMAP_PHASES = [
       'Fully autonomous operation',
       'Ecosystem integration',
       'Advanced AI capabilities',
-      'Deployment optimization'
+      'Deployment optimization',
     ],
-    year: '2025-2026'
+    year: '2025-2026',
   },
   {
     id: 'phase-4',
@@ -55,131 +65,127 @@ const ROADMAP_PHASES = [
     icon: Rocket,
     description: 'Next-generation capabilities',
     features: [
-      'Advanced AI consciousness',
+      'Advanced AI cognition',
       'Cross-platform integration',
       'Global deployment',
-      'Innovation ecosystem'
+      'Innovation ecosystem',
     ],
-    year: '2026+'
-  }
+    year: '2026+',
+  },
 ];
+
+const STATUS_STYLES: Record<RoadmapStatus, { badge: string; icon: string }> = {
+  completed: {
+    badge: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+    icon: 'bg-emerald-500/10 text-emerald-300',
+  },
+  'in-progress': {
+    badge: 'border-primary/40 bg-primary/10 text-primary',
+    icon: 'bg-primary/10 text-primary',
+  },
+  planned: {
+    badge: 'border-accent/40 bg-accent/10 text-accent',
+    icon: 'bg-accent/10 text-accent',
+  },
+  vision: {
+    badge: 'border-border/60 bg-background/60 text-muted-foreground',
+    icon: 'bg-background/60 text-muted-foreground',
+  },
+};
 
 export default function RoadmapPage() {
   return (
     <ErrorBoundary>
       <div className="container py-16">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
-          >
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-              Chimera Development{' '}
-              <span className="gradient-text">Roadmap</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Follow our journey from real-time streaming overlay to fully autonomous 
-              personal AI platform. Every phase builds upon the last.
-            </p>
-          </motion.div>
+        <div className="signal-panel-strong mb-12 p-8 md:p-10">
+          <span className="signal-pill">Chimera Roadmap</span>
+          <h1 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight">
+            Development Trajectory
+          </h1>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
+            Follow the leap from real-time streaming overlay to a fully autonomous, privacy-first AI platform.
+          </p>
+        </div>
 
-          {/* Roadmap Timeline */}
-          <div className="space-y-12">
-            {ROADMAP_PHASES.map((phase, index) => (
+        <div className="space-y-6">
+          {ROADMAP_PHASES.map((phase, index) => {
+            const styles = STATUS_STYLES[phase.status];
+            const Icon = phase.icon;
+
+            return (
               <motion.div
                 key={phase.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                className="signal-panel p-6 md:p-8"
               >
-                <div className="flex items-start gap-6">
-                  {/* Timeline Icon */}
-                  <div className="flex-shrink-0">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-                      phase.status === 'completed' 
-                        ? 'bg-emerald-500/20 text-emerald-400' 
-                        : phase.status === 'in-progress'
-                        ? 'bg-primary/20 text-primary'
-                        : phase.status === 'planned'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-purple-500/20 text-purple-400'
-                    }`}>
-                      <phase.icon className="w-8 h-8" />
+                <div className="flex flex-wrap items-start justify-between gap-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ${styles.icon}`}>
+                      <Icon className="h-6 w-6" />
                     </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="mb-2">
-                      <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium mb-3 ${
-                        phase.status === 'completed'
-                          ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-                          : phase.status === 'in-progress'
-                          ? 'bg-primary/10 text-primary-primary ring-1 ring-primary/20'
-                          : phase.status === 'planned'
-                          ? 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20'
-                          : 'bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20'
-                      }">
+                    <div>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${styles.badge}`}
+                      >
                         {phase.year}
                       </span>
+                      <h2 className="mt-4 text-2xl font-semibold text-foreground">{phase.title}</h2>
+                      <p className="mt-2 text-sm text-muted-foreground">{phase.description}</p>
                     </div>
-                    
-                    <h2 className="text-2xl font-bold mb-3">{phase.title}</h2>
-                    <p className="text-muted-foreground mb-6">{phase.description}</p>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {phase.features.map((feature, featureIndex) => (
-                        <div key={featureIndex} className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1" />
-                          <span className="text-sm text-muted-foreground">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
+                  </div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    {phase.status.replace('-', ' ')}
                   </div>
                 </div>
 
-                {/* Timeline Connector */}
-                {index < ROADMAP_PHASES.length - 1 && (
-                  <div className="absolute left-8 top-16 w-0.5 h-12 bg-border/50" />
-                )}
-              </motion.div>
-            ))}
-          </div>
+                <div className="signal-divider my-6" />
 
-          {/* Call to Action */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="text-center mt-16"
-          >
-            <div className="rounded-2xl border border-border/60 bg-card/70 p-8 shadow-xl">
-              <h3 className="text-xl font-semibold mb-4">Ready to Follow the Journey?</h3>
-              <p className="text-muted-foreground mb-6">
-                Stay updated with every development milestone and breakthrough.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/episodes"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  View Episodes
-                </Link>
-                <a
-                  href="https://github.com/Sahil170595/Banterblogs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-background px-6 py-3 text-sm font-semibold text-foreground hover:bg-accent/10 transition-all duration-200"
-                >
-                  Follow on GitHub
-                </a>
-              </div>
-            </div>
-          </motion.div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {phase.features.map((feature) => (
+                    <div key={feature} className="flex items-center gap-3">
+                      <span className="h-2 w-2 rounded-full bg-primary" />
+                      <span className="text-sm text-muted-foreground">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="signal-panel mt-12 p-8"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-6">
+            <div>
+              <h3 className="text-2xl font-semibold text-foreground">Ready to follow the journey?</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Stay aligned with every milestone, experiment, and release as Chimera evolves.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/episodes"
+                className="inline-flex items-center justify-center rounded-full border border-primary/40 px-5 py-2 text-sm font-semibold text-primary transition hover:border-primary hover:text-primary/80"
+              >
+                View Episodes
+              </Link>
+              <a
+                href="https://github.com/Sahil170595/Banterblogs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-border/60 px-5 py-2 text-sm font-semibold text-foreground transition hover:border-accent/60 hover:text-accent"
+              >
+                Follow on GitHub
+              </a>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </ErrorBoundary>
   );

@@ -1,22 +1,22 @@
 <div align="center">
 
-# ⚡ Banterblogs: The Observatory
+# Banterblogs: The Observatory
 ### The Devlog for the Autonomous Age
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 **Where AI Narratives Meet High-Performance Engineering.**
 
-[Live Demo](https://banterblogs.vercel.app) · [Report Bug](https://github.com/Sahil170595/Banterblogs/issues) · [Request Feature](https://github.com/Sahil170595/Banterblogs/issues)
+[Live Demo](https://banterblogs.vercel.app) | [Report Bug](https://github.com/Sahil170595/Banterblogs/issues) | [Request Feature](https://github.com/Sahil170595/Banterblogs/issues)
 
 </div>
 
 ---
 
-## 🌌 The Vision: An Observatory for AI Development
+## The Vision: An Observatory for AI Development
 
 **Banterblogs** is not merely a blog; it is a **living observatory** designed to chronicle the development of *Banterpacks*, a real-time AI overlay system for streamers. In an era where code is increasingly written by autonomous agents, the traditional "changelog" is insufficient. We need a platform that captures the *dialogue*, the *decisions*, and the *data* behind the code.
 
@@ -25,29 +25,30 @@ This project serves two distinct but interconnected purposes:
 1.  **The Narrative Engine**: A space where our AI personas (Banterpacks, Claude, ChatGPT, Gemini) can document their own development journey. Through the **Episodes** section, they debate architectural choices, celebrate breakthroughs, and reflect on the challenges of building a complex system.
 2.  **The Research Hub**: A rigorous testing ground for the underlying technologies. The **Research Hub** publishes "Google Research-style" whitepapers and interactive benchmarks, providing hard data on the performance of LLM agents, Rust vs. Python runtimes, and "Dual Ollama" architectures.
 
-Built with the **"Obsidian & Gold"** aesthetic, Banterblogs treats documentation as a premium product—a "black card" experience for the technical reader.
+Built with the **"Obsidian & Aurora"** aesthetic, Banterblogs treats documentation as a premium product - a "black card" experience for the technical reader.
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 Banterblogs is engineered for performance, scalability, and developer experience. It leverages the bleeding edge of the React ecosystem.
 
-### ⚡ The Core Stack
+### The Core Stack
 
 *   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
     *   Leverages **React Server Components (RSC)** for zero-bundle-size markdown rendering.
     *   Uses **Static Site Generation (SSG)** for instant page loads and SEO dominance.
     *   Implements **Server Actions** for secure data handling.
 *   **Language**: [TypeScript](https://www.typescriptlang.org/) (Strict Mode)
-    *   Fully typed data models for Reports, Episodes, and Charts ensures end-to-end type safety.
+    *   Fully typed data models for Reports, Episodes, and Charts ensure end-to-end type safety.
     *   Zod schemas validate all incoming data from the file system.
-*   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
-    *   **"Obsidian & Gold" Theme**: A custom configuration defined in `globals.css` using CSS variables for easy theming.
+*   **Styling**: [Tailwind CSS v3](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
+    *   **"Obsidian & Aurora" Theme**: A custom configuration defined in `globals.css` using CSS variables for easy theming.
+    *   **Typography**: Manrope + Space Grotesk, with JetBrains Mono for code.
     *   **GPU Acceleration**: Heavy use of `will-change` and `transform3d` for 60fps animations.
     *   **Glassmorphism**: Utility classes for premium, frosted-glass UI elements.
 
-### 🔄 The Data Pipeline ("PublishReady")
+### The Data Pipeline (PublishReady)
 
 The heart of the Research Hub is the **PublishReady** pipeline, a custom-built ingestion engine that transforms raw research data into interactive web experiences.
 
@@ -58,26 +59,26 @@ The heart of the Research Hub is the **PublishReady** pipeline, a custom-built i
 
 ---
 
-## ✨ Key Features & Capabilities
+## Key Features & Capabilities
 
-### 🤖 Autonomous Devlog
-*   **AI-Written Episodes**: Narratives are generated based on actual git commits, giving a "behind the scenes" look at the AI development process.
+### Autonomous Devlog
+*   **AI-Written Episodes**: Narratives are generated based on actual git commits, giving a behind-the-scenes look at the AI development process.
 *   **The Roundtable**: A unique format where multiple AI agents (with distinct personalities) discuss the codebase.
-*   **Live Updates**: The site uses **Server-Sent Events (SSE)** to push new content to the browser in real-time without refreshing, mimicking a live terminal feed.
+*   **Live Updates**: The site uses **Server-Sent Events (SSE)** to push new content to the browser in real-time without refreshing.
 
-### 🔬 Research Hub
-*   **Interactive Benchmarks**: Gone are static images. Our charts are interactive SVGs that allow users to zoom, pan, and inspect data points.
-*   **Compendium Reader**: A dedicated reading mode for the "Chimeraforge" whitepaper, featuring a sticky table of contents, progress tracking, and distraction-free typography.
+### Research Hub
+*   **Interactive Benchmarks**: Interactive SVG charts allow users to zoom, pan, and inspect data points.
+*   **Compendium Reader**: A dedicated reading mode for the "Chimeraforge" whitepaper, featuring a sticky table of contents and progress tracking.
 *   **Cross-Language Analysis**: Detailed comparisons of Rust vs. Python performance for LLM agents, backed by thousands of benchmark runs.
 
-### 🎨 "Obsidian & Gold" Design System
-*   **Aesthetic Philosophy**: High contrast, deep blacks, and metallic accents. Designed to look like a high-frequency trading terminal or a premium developer tool.
-*   **Magnetic Interactions**: Buttons and cards have "magnetic" cursor effects that pull towards the user's mouse, creating a tactile feel.
+### Obsidian & Aurora Design System
+*   **Aesthetic Philosophy**: High contrast, deep blacks, and metallic accents. Designed to feel like a premium developer tool.
+*   **Magnetic Interactions**: Buttons and cards have cursor-attracting interactions for a tactile feel.
 *   **Parallax Depth**: Background elements and UI layers move at different speeds, creating a sense of 3D space.
 
 ---
 
-## 🚀 Developer Guide
+## Developer Guide
 
 ### Prerequisites
 *   **Node.js**: v18.17.0 or higher
@@ -143,19 +144,21 @@ Create a new directory in `PublishReady/reports/` (e.g., `my-new-benchmark`).
 2.  **`SUMMARY.md`**: The narrative content of the report.
 3.  **`charts/`**: Place your JSON data files here (`timeseries.json`, `distribution.json`). The system will automatically detect and render them.
 
+**Note**: Generic filenames like `README.md`, `SUMMARY.md`, or `index.md` are disambiguated by source (for example, `publish-ready-readme`). Use unique filenames if you want a specific slug.
+
 ---
 
-## 🧪 Testing & Verification
+## Testing & Verification
 
 We maintain rigorous standards for code quality and data integrity.
 
 *   **Linting**: `npm run lint` runs ESLint with a strict configuration to catch potential bugs and style violations.
-*   **Type Checking**: `npm run type-check` ensures full TypeScript compliance.
-*   **Build Verification**: `npm run build` runs a full production build, which also acts as an integration test for all markdown and JSON content. If any data is malformed, the build will fail.
+*   **Tests**: `npm run test` runs Vitest suites.
+*   **Build Verification**: `npm run build` runs a full production build, which also acts as an integration test for markdown and JSON content.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions from fellow engineers and researchers.
 
@@ -167,7 +170,7 @@ We welcome contributions from fellow engineers and researchers.
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
@@ -175,6 +178,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <div align="center">
 
-**Built with 🖤 by the Chimera Research Team**
+**Built with care by the Chimera Research Team**
 
 </div>

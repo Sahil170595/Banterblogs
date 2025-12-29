@@ -51,7 +51,9 @@ export function discoverReports(): ReportLocation[] {
       if (!isDirectory && !isMarkdownFile) continue;
 
       const label = isDirectory ? entry.name : entry.name.replace(/\.md$/i, '');
-      const slug = normalizeSlug(label);
+      const baseSlug = normalizeSlug(label);
+      const isGenericName = ['readme', 'summary', 'index'].includes(baseSlug);
+      const slug = isGenericName ? normalizeSlug(`${candidate.label}-${label}`) : baseSlug;
       if (!slug) continue;
       const entryPath = path.join(candidate.root, entry.name);
       results.push({

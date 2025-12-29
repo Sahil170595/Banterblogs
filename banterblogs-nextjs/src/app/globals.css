@@ -5,38 +5,34 @@
 /* Syntax highlighting styles */
 @import 'highlight.js/styles/github-dark.css';
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&display=swap');
-
 :root {
-  /* Obsidian & Gold palette */
-  --background: 0 0% 4%;           /* Obsidian Black */
-  --foreground: 45 20% 96%;        /* Warm White */
-  --card: 0 0% 7%;                 /* Dark Charcoal */
-  --card-foreground: 45 20% 96%;
-  --popover: 0 0% 7%;
-  --popover-foreground: 45 20% 96%;
-  --primary: 48 100% 50%;          /* Metallic Gold */
-  --primary-foreground: 0 0% 5%;   /* Black text on Gold */
-  --secondary: 0 0% 15%;           /* Dark Grey */
-  --secondary-foreground: 45 20% 96%;
-  --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 65%;
-  --accent: 37 91% 50%;            /* Warm Amber */
-  --accent-foreground: 0 0% 5%;
+  /* Obsidian & Aurora palette */
+  --background: 215 28% 4%;
+  --foreground: 36 20% 96%;
+  --card: 215 20% 9%;
+  --card-foreground: 36 20% 96%;
+  --popover: 215 20% 9%;
+  --popover-foreground: 36 20% 96%;
+  --primary: 16 90% 58%;
+  --primary-foreground: 210 20% 8%;
+  --secondary: 215 16% 14%;
+  --secondary-foreground: 36 20% 96%;
+  --muted: 215 16% 14%;
+  --muted-foreground: 215 12% 62%;
+  --accent: 190 90% 52%;
+  --accent-foreground: 210 20% 8%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 20%;
-  --input: 0 0% 20%;
-  --ring: 48 100% 50%;
+  --border: 215 14% 22%;
+  --input: 215 14% 22%;
+  --ring: 16 90% 58%;
   
-  /* Chart Colors - Precious Metals */
-  --chart-1: 48 100% 50%;          /* Gold */
-  --chart-2: 37 91% 50%;           /* Amber */
-  --chart-3: 20 90% 60%;           /* Bronze */
-  --chart-4: 0 0% 80%;             /* Silver */
-  --chart-5: 0 0% 40%;             /* Steel */
+  /* Chart Colors - Signal Palette */
+  --chart-1: 16 92% 60%;
+  --chart-2: 190 92% 52%;
+  --chart-3: 38 88% 50%;
+  --chart-4: 210 18% 78%;
+  --chart-5: 210 16% 52%;
 }
 
 * {
@@ -45,8 +41,17 @@
 
 body {
   color: hsl(var(--foreground));
-  background: hsl(var(--background));
+  background:
+    radial-gradient(circle at 15% 12%, hsl(var(--accent) / 0.28), transparent 40%),
+    radial-gradient(circle at 85% 8%, hsl(var(--primary) / 0.28), transparent 45%),
+    radial-gradient(circle at 60% 80%, hsl(var(--chart-3) / 0.18), transparent 50%),
+    hsl(var(--background));
   font-feature-settings: "rlig" 1, "calt" 1;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 /* Custom scrollbar */
@@ -107,8 +112,10 @@ html {
 
 /* Display font utility */
 .display {
-  font-family: "Sora", Inter, system-ui;
-}/* Glass morphism */
+  font-family: var(--font-display), var(--font-sans), system-ui;
+}
+
+/* Glass morphism */
 .glass {
   @apply bg-background/80 backdrop-blur-xl border border-border/50;
 }
@@ -119,11 +126,81 @@ html {
   box-shadow: 0 10px 30px -10px rgba(0,0,0,0.4), 0 0 0 1px hsl(var(--border)/0.3) inset;
 }
 
+.chimera-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.chimera-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.65) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.45) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 25% 10%, black 35%, transparent 75%);
+}
+
+.chimera-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.2;
+  background:
+    radial-gradient(circle at 20% 20%, hsl(var(--accent) / 0.3), transparent 45%),
+    radial-gradient(circle at 80% 15%, hsl(var(--primary) / 0.28), transparent 40%);
+  mix-blend-mode: screen;
+}
+
+.chimera-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.signal-panel {
+  @apply rounded-3xl border border-border/60 bg-card/70 backdrop-blur-md shadow-lg shadow-black/20;
+  box-shadow: 0 20px 45px -30px rgba(0,0,0,0.8), 0 0 0 1px hsl(var(--border)/0.4) inset;
+}
+
+.signal-panel-strong {
+  @apply rounded-3xl border border-border/70 bg-card/80 backdrop-blur-xl;
+  box-shadow: 0 25px 60px -35px rgba(0,0,0,0.9), 0 0 0 1px hsl(var(--primary)/0.15) inset;
+}
+
+.signal-pill {
+  @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground;
+}
+
+.signal-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.5), transparent);
+}
+
+.signal-grid {
+  position: relative;
+}
+
+.signal-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.2;
+  background-image:
+    radial-gradient(hsl(var(--primary) / 0.6) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: linear-gradient(to bottom, black 30%, transparent 85%);
+}
+
 .gradient-border {
   position: relative;
   border: 1px solid transparent;
   background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
-              linear-gradient(135deg, #22d3ee, #a78bfa, #f472b6) border-box;
+              linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)), hsl(var(--chart-3))) border-box;
 }
 
 .glow-orb {
@@ -134,9 +211,9 @@ html {
   pointer-events: none;
 }
 
-.glow-blue { background: radial-gradient(closest-side, rgba(59,130,246,0.8), transparent 70%); }
-.glow-purple { background: radial-gradient(closest-side, rgba(168,85,247,0.8), transparent 70%); }
-.glow-pink { background: radial-gradient(closest-side, rgba(236,72,153,0.8), transparent 70%); }
+.glow-blue { background: radial-gradient(closest-side, hsl(var(--accent) / 0.8), transparent 70%); }
+.glow-purple { background: radial-gradient(closest-side, hsl(var(--primary) / 0.8), transparent 70%); }
+.glow-pink { background: radial-gradient(closest-side, hsl(var(--chart-3) / 0.8), transparent 70%); }
 
 .noise-overlay {
   position: relative;
@@ -156,19 +233,19 @@ html {
 
 .cta-gradient {
   @apply rounded-lg text-sm font-medium transition-all duration-200;
-  background: linear-gradient(135deg, #3b82f6, #a855f7, #ec4899);
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   color: white;
 }
 .cta-gradient:hover { filter: brightness(1.05); transform: translateY(-1px); }
 .cta-outline {
   @apply rounded-lg text-sm font-medium border px-8 py-3 transition-all duration-200;
-  border-image: linear-gradient(135deg, #22d3ee, #a78bfa, #f472b6) 1;
+  border-image: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)), hsl(var(--chart-3))) 1;
 }
 .cta-outline:hover { @apply bg-accent text-accent-foreground; transform: translateY(-1px); }
 
 /* Animated gradient background */
 .animated-gradient {
-  background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #533483);
+  background: linear-gradient(-45deg, hsl(var(--background)), hsl(var(--secondary)), hsl(var(--card)), hsl(var(--background)));
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
 }
@@ -212,7 +289,7 @@ html {
 }
 
 .prose code {
-  @apply bg-gray-800 text-blue-400 px-2 py-1 rounded text-sm font-mono;
+  @apply bg-gray-800 text-accent px-2 py-1 rounded text-sm font-mono;
 }
 
 .prose pre code {
@@ -347,8 +424,8 @@ html {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.6); }
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--accent) / 0.3); }
+  50% { box-shadow: 0 0 40px hsl(var(--accent) / 0.6); }
 }
 
 @keyframes text-reveal {
@@ -727,6 +804,8 @@ html {
 
 .prose ul, .prose ol {
   @apply my-6;
+  list-style: none;
+  padding-left: 0;
 }
 
 .prose li {
@@ -850,7 +929,7 @@ html {
 .hljs-title,
 .hljs-section,
 .hljs-selector-id {
-  @apply text-blue-400 font-semibold;
+  @apply text-accent font-semibold;
 }
 
 .hljs-type,
@@ -866,7 +945,7 @@ html {
 
 .hljs-regexp,
 .hljs-link {
-  @apply text-purple-400;
+  @apply text-primary;
 }
 
 .hljs-symbol,
@@ -1226,6 +1305,7 @@ html {
 .enhanced-content .enhanced-list ul {
   margin: 0;
   padding: 1.5rem;
+  list-style: none;
 }
 
 .enhanced-content .enhanced-list li {

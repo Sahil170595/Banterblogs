@@ -145,7 +145,7 @@ export function TimeseriesInteractive({ data, width = 800, height = 320, timeIsE
         <div className="mt-2 inline-flex rounded-md border border-border/60 bg-card/60 px-2 py-1 text-xs text-foreground">
           <span className="font-medium mr-2">{hover.label}</span>
           <span>{hover.y.toFixed(3)}</span>
-          <span className="mx-1">·</span>
+          <span className="mx-1">-</span>
           <span>{timeIsEpoch ? new Date(hover.t).toLocaleString() : hover.t}</span>
         </div>
       )}

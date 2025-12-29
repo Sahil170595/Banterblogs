@@ -1,6 +1,8 @@
 # Chimeraforge Technical Reports
 ## LLM Performance Research & Cross-Language Analysis
 
+This publish-ready index summarizes the authoritative reports and benchmark artifacts that power the live Reports pages.
+
 This directory contains the full research journey for Chimeraforge: benchmarking LLM agents, comparing Rust vs. Python implementations, and optimizing multi-agent runtimes. Assets include markdown reports, structured data exports, and derived visualizations.
 
 ---
@@ -12,6 +14,27 @@ This directory contains the full research journey for Chimeraforge: benchmarking
 - **TR111_v2-TR112_v2:** Production-grade Rust single-agent and Rust vs. Python comparison.
 - **TR114_v2:** Rust multi-agent analysis (Dual Ollama) with corrected statistics.
 - **TR115_v2:** Runtime optimization across async runtimes (Tokio, Smol, async-std).
+- **TR116-TR122:** Extended series (see full index below).
+- **Conclusive 117-122:** Summary and whitepaper deliverables.
+
+---
+
+## Core Series File Index (TR108-TR115)
+
+| Report File |
+| --- |
+| Technical_Report_108.md |
+| Technical_Report_109.md |
+| Technical_Report_110.md |
+| Technical_Report_111.md |
+| Technical_Report_111_v2.md |
+| Technical_Report_112.md |
+| Technical_Report_112_v2.md |
+| Technical_Report_113.md |
+| Technical_Report_114.md |
+| Technical_Report_114_v2.md |
+| Technical_Report_115.md |
+| Technical_Report_115_v2.md |
 
 ---
 
@@ -35,6 +58,48 @@ This directory contains the full research journey for Chimeraforge: benchmarking
 | TR112 | TR112_v2 | Corrected comparison methodology |
 | TR114 | TR114_v2 | Corrected statistics and broader run set |
 | TR115 | TR115_v2 | Expanded runtime analysis (30 -> 150 runs) |
+
+---
+
+## Extended Series (TR113-TR122)
+
+| Report File |
+| --- |
+| Technical_Report_113.md |
+| Technical_Report_116.md |
+| Technical_Report_117.md |
+| Technical_Report_117_multi_agent.md |
+| Technical_Report_118.md |
+| Technical_Report_118_v2.md |
+| Technical_Report_118_v2.1.md |
+| Technical_Report_118_v2.2.md |
+| Technical_Report_119.md |
+| Technical_Report_119v1.md |
+| Technical_Report_120.md |
+| Technical_Report_121.md |
+| Technical_Report_121v1.md |
+| Technical_Report_122.md |
+
+### Versioned Variants
+
+- **TR111:** `Technical_Report_111.md`, `Technical_Report_111_v2.md`
+- **TR112:** `Technical_Report_112.md`, `Technical_Report_112_v2.md`
+- **TR114:** `Technical_Report_114.md`, `Technical_Report_114_v2.md`
+- **TR115:** `Technical_Report_115.md`, `Technical_Report_115_v2.md`
+- **TR117:** `Technical_Report_117.md`, `Technical_Report_117_multi_agent.md`
+- **TR118:** `Technical_Report_118.md`, `Technical_Report_118_v2.md`, `Technical_Report_118_v2.1.md`, `Technical_Report_118_v2.2.md`
+- **TR119:** `Technical_Report_119.md`, `Technical_Report_119v1.md`
+- **TR121:** `Technical_Report_121.md`, `Technical_Report_121v1.md`
+
+---
+
+## Conclusive Reports (TR117-TR122)
+
+| Report File |
+| --- |
+| Technical_Report_Conclusive_117-122.md |
+| Technical_Report_Conclusive_117-122_Extended_Appendices.md |
+| Technical_Report_Conclusive_117-122_Whitepaper.md |
 
 ---
 

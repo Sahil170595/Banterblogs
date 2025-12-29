@@ -49,25 +49,26 @@ export default async function BenchmarksPage() {
 
   return (
     <div className="container py-16">
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">Performance Benchmarks</h1>
-        <p className="text-xl text-muted-foreground mb-6">
-          Real-time performance metrics and optimization data for both platforms.
-        </p>
-        <div className="rounded-2xl border border-border/60 bg-card/60 px-6 py-5 sm:flex sm:items-center sm:justify-between">
-          <div className="max-w-2xl">
-            <h2 className="text-lg font-semibold text-foreground">Live optimization reports</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Dive into streaming CSVs, JSON benchmarks, and auto-derived charts pulled straight from Banterhearts. Each report page renders SVG-first visuals from the latest artifacts.
+      <div className="signal-panel-strong mb-12 p-8 md:p-10">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="max-w-2xl space-y-4">
+            <span className="signal-pill">Performance Benchmarks</span>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Optimization Telemetry</h1>
+            <p className="text-lg text-muted-foreground">
+              Real-time performance metrics and optimization data spanning the Banter Platform and Chimera Engine.
             </p>
           </div>
           <Link
             href="/reports"
-            className="mt-4 inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-sm font-semibold text-primary transition hover:border-primary hover:text-primary/80 sm:mt-0"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-sm font-semibold text-primary transition hover:border-primary hover:text-primary/80"
           >
             Open Live Reports
             <ArrowRight className="h-4 w-4" />
           </Link>
+        </div>
+        <div className="signal-divider mt-6" />
+        <div className="mt-6 max-w-3xl text-sm text-muted-foreground">
+          Dive into streaming CSVs, JSON benchmarks, and auto-derived charts pulled straight from Banterhearts. Each report page renders SVG-first visuals from the latest artifacts.
         </div>
       </div>
 
@@ -94,7 +95,7 @@ export default async function BenchmarksPage() {
                   <p className="mt-3 text-sm text-muted-foreground line-clamp-3">{report.description}</p>
                 )}
                 <div className="mt-4 text-xs uppercase tracking-[0.2em] text-muted-foreground/80 font-semibold">
-                  Source · {report.source}
+                  Source - {report.source}
                 </div>
               </Link>
             ))}
@@ -107,7 +108,7 @@ export default async function BenchmarksPage() {
         <div className="space-y-6">
           <h2 className="text-2xl font-bold tracking-tight">Banterpacks Performance</h2>
           
-          <div className="bg-card border border-border rounded-lg p-6">
+          <div className="signal-panel p-6">
             <h3 className="font-semibold text-primary mb-4">Rendering Performance</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -125,7 +126,7 @@ export default async function BenchmarksPage() {
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
+          <div className="signal-panel p-6">
             <h3 className="font-semibold text-primary mb-4">AI Processing</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -148,7 +149,7 @@ export default async function BenchmarksPage() {
         <div className="space-y-6">
           <h2 className="text-2xl font-bold tracking-tight">Chimera Engine Performance</h2>
           
-          <div className="bg-card border border-border rounded-lg p-6">
+          <div className="signal-panel p-6">
             <h3 className="font-semibold text-primary mb-4">LLM Response Times</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -166,7 +167,7 @@ export default async function BenchmarksPage() {
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
+          <div className="signal-panel p-6">
             <h3 className="font-semibold text-primary mb-4">Automation Metrics</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -189,10 +190,10 @@ export default async function BenchmarksPage() {
       {/* Historical Performance Chart Placeholder */}
       <div className="mt-12">
         <h2 className="text-2xl font-bold tracking-tight mb-6">Performance Trends</h2>
-        <div className="bg-card border border-border rounded-lg p-8 text-center">
-          <p className="text-muted-foreground mb-4">Performance charts coming soon</p>
-          <div className="h-64 bg-muted/20 rounded-lg flex items-center justify-center">
-            <span className="text-muted-foreground">📊 Interactive performance dashboard</span>
+        <div className="signal-panel p-8">
+          <p className="text-muted-foreground mb-4">Interactive performance dashboard is compiling fresh artifacts.</p>
+          <div className="h-64 w-full rounded-2xl border border-dashed border-border/60 bg-muted/10 flex items-center justify-center">
+            <span className="text-muted-foreground">Interactive performance dashboard</span>
           </div>
         </div>
       </div>

@@ -12,12 +12,12 @@ export function ReportMarkdown({ sections }: ReportMarkdownProps) {
       {sections.map((section) => (
         <article
           key={section.originKey}
-          className="rounded-3xl border border-border/60 bg-card/50 p-6 md:p-8 shadow-sm shadow-primary/5"
+          className="signal-panel p-6 md:p-8"
           id={section.id}
         >
           <header className="mb-6">
             <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80 font-semibold">
-              Source · {section.sourceLabel}
+              Source - {section.sourceLabel}
             </div>
             <h2 className="mt-2 text-2xl md:text-3xl font-bold text-foreground">{section.title}</h2>
           </header>

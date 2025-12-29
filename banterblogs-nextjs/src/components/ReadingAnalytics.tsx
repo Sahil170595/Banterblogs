@@ -160,7 +160,7 @@ export function ReadingTracker({ episode, className = "" }: ReadingTrackerProps)
 
   const getEngagementColor = (score: number): string => {
     if (score >= 80) return "text-green-400";
-    if (score >= 60) return "text-blue-400";
+    if (score >= 60) return "text-accent";
     if (score >= 40) return "text-yellow-400";
     return "text-red-400";
   };
@@ -192,7 +192,7 @@ export function ReadingTracker({ episode, className = "" }: ReadingTrackerProps)
                 value={`${analytics.engagementScore}%`}
               />
               <AnalyticsRow
-                icon={<Clock className="h-4 w-4 text-blue-400" />}
+                icon={<Clock className="h-4 w-4 text-accent" />}
                 label="Reading time"
                 value={`${Math.floor(analytics.readingTime / 60)}m ${analytics.readingTime % 60}s`}
               />
@@ -202,7 +202,7 @@ export function ReadingTracker({ episode, className = "" }: ReadingTrackerProps)
                 value={`${Math.round(analytics.scrollDepth)}%`}
               />
               <AnalyticsRow
-                icon={<Zap className="h-4 w-4 text-purple-400" />}
+                icon={<Zap className="h-4 w-4 text-primary" />}
                 label="Speed"
                 value={`${analytics.readingSpeed} wpm`}
               />

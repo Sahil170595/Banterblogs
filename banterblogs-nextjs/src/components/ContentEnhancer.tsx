@@ -33,7 +33,7 @@ export function ContentEnhancer({ content, className = '' }: ContentEnhancerProp
             <div class="section-header">
               <h2>${title}</h2>
               <button class="expand-button" data-section="${sectionIndex}" aria-expanded="false">
-                <span class="chevron-icon" aria-hidden="true">▼</span>
+                <span class="chevron-icon" aria-hidden="true">v</span>
               </button>
             </div>
             <div class="section-content" data-section="${sectionIndex}">
@@ -127,7 +127,7 @@ export function ContentEnhancer({ content, className = '' }: ContentEnhancerProp
         return `
           <div class="enhanced-list">
             <div class="list-header">
-              <List class="list-icon" />
+              <span class="list-icon" aria-hidden="true">+</span>
               <span>Key Points</span>
             </div>
             <ul>${listContent}</ul>
@@ -748,7 +748,7 @@ export function ContentStats({ content, className = '' }: ContentStatsProps) {
           whileHover={{ scale: 1.05 }}
           className="text-center p-4 rounded-xl border border-border/50 bg-card/50 backdrop-blur"
         >
-          <ImageIcon className="h-6 w-6 text-blue-400 mx-auto mb-2" />
+          <ImageIcon className="h-6 w-6 text-accent mx-auto mb-2" />
           <div className="text-2xl font-bold text-foreground">{stats.imageCount}</div>
           <div className="text-sm text-muted-foreground">Images</div>
         </motion.div>
@@ -757,7 +757,7 @@ export function ContentStats({ content, className = '' }: ContentStatsProps) {
           whileHover={{ scale: 1.05 }}
           className="text-center p-4 rounded-xl border border-border/50 bg-card/50 backdrop-blur"
         >
-          <Code className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+          <Code className="h-6 w-6 text-primary mx-auto mb-2" />
           <div className="text-2xl font-bold text-foreground">{stats.codeBlockCount}</div>
           <div className="text-sm text-muted-foreground">Code Blocks</div>
         </motion.div>

@@ -12,20 +12,6 @@ import { SocialShare, BookmarkManager, EngagementStats } from '@/components/Soci
 import { ContentRecommendations, ReadingPath, TrendingEpisodes } from '@/components/ContentRecommendations';
 import { ReadingTracker, EngagementHeatmap } from '@/components/ReadingAnalytics';
 
-// Static generation for build - temporarily disabled for testing
-// export async function generateStaticParams() {
-//   try {
-//     const episodes = await getAllEpisodes();
-//     return episodes.map((episode) => ({
-//       slug: episode.slug,
-//     }));
-//   } catch (error) {
-//     console.error('Error generating static params:', error);
-//     // Return empty array to avoid build failure
-//     return [];
-//   }
-// }
-
 export default async function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const slugParam = decodeURIComponent(slug).toLowerCase();
@@ -39,9 +25,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
     const banterMatch = slugParam.match(/^episode-(\d+)$/) ?? slugParam.match(/^(\d+)$/);
     if (banterMatch) {
       const displayId = parseInt(banterMatch[1], 10);
-      episode = allEpisodes.find(
-        (ep) => ep.platform !== 'chimera' && ep.displayId === displayId,
-      );
+      episode = allEpisodes.find((ep) => ep.platform !== 'chimera' && ep.displayId === displayId);
     }
   }
 
@@ -49,9 +33,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
     const chimeraMatch = slugParam.match(/^chimera(?:-episode)?-(\d+)$/);
     if (chimeraMatch) {
       const displayId = parseInt(chimeraMatch[1], 10);
-      episode = allEpisodes.find(
-        (ep) => ep.platform === 'chimera' && ep.displayId === displayId,
-      );
+      episode = allEpisodes.find((ep) => ep.platform === 'chimera' && ep.displayId === displayId);
     }
   }
 
@@ -66,19 +48,17 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
   const currentIndex = allEpisodes.findIndex((ep) => ep.id === episode?.id);
   const prevEpisode = currentIndex > 0 ? allEpisodes[currentIndex - 1] : null;
-  const nextEpisode =
-    currentIndex >= 0 && currentIndex < allEpisodes.length - 1
-      ? allEpisodes[currentIndex + 1]
-      : null;
+  const nextEpisode = currentIndex >= 0 && currentIndex < allEpisodes.length - 1 ? allEpisodes[currentIndex + 1] : null;
+
+  const displayId = episode.displayId ?? episode.id;
+  const platformLabel = episode.platform === 'chimera' ? 'Chimera' : episode.platform === 'benchmark' ? 'Benchmarks' : 'Banterpacks';
 
   return (
     <TouchInteraction>
-      {/* Global Components */}
       <PerformanceMonitor />
       <DeviceDetector />
       <EngagementHeatmap />
 
-      {/* Reading Experience Components */}
       <ReadingExperience
         episode={{
           id: episode.id,
@@ -88,30 +68,25 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
         }}
       />
 
-      {/* Reading Analytics */}
       <ReadingTracker episode={episode} />
-
-      {/* Table of Contents */}
       <TableOfContents content={episode.content} />
 
-      {/* Social Features */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-2">
         <SocialShare episode={episode} />
         <BookmarkManager />
       </div>
 
-      {/* Mobile Navigation */}
       <MobileNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
 
       <div className="container py-16">
-        <div className="max-w-4xl mx-auto">
-          {/* Episode Header */}
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                Episode {episode.displayId ?? episode.id}
+        <div className="max-w-5xl mx-auto">
+          <div className="signal-panel-strong mb-10 p-8 md:p-10">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <span className="signal-pill">Episode {displayId}</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                {platformLabel}
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span>
                 {new Date(episode.date).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -120,24 +95,20 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
               </span>
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight mb-4">
-              {episode.title}
-            </h1>
+            <h1 className="mt-5 text-4xl md:text-5xl font-bold tracking-tight">{episode.title}</h1>
+            <p className="mt-4 text-lg text-muted-foreground">{episode.subtitle}</p>
 
-            <p className="text-xl text-muted-foreground mb-6">
-              {episode.subtitle}
-            </p>
+            <div className="signal-divider my-6" />
 
             <EpisodeStats episode={episode} />
           </div>
 
-          {/* Content Statistics */}
-          <div className="mb-8">
+          <div className="signal-panel mb-10 p-6">
             <ContentStats content={episode.content} />
           </div>
 
-          {/* Enhanced Episode Content */}
-          <div className="prose prose-lg prose-zinc prose-invert max-w-none
+          <div
+            className="signal-panel p-8 prose prose-lg prose-zinc prose-invert max-w-none
             prose-headings:font-bold prose-headings:text-foreground
             prose-h1:text-4xl prose-h1:mb-8 prose-h1:mt-12
             prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-10
@@ -159,17 +130,14 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
             <ContentEnhancer content={episode.content} />
           </div>
 
-          {/* Episode Navigation */}
           <EpisodeNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
 
-          {/* Content Recommendations */}
           <div className="mt-16 space-y-8">
             <ContentRecommendations currentEpisode={episode} allEpisodes={allEpisodes} />
             <ReadingPath episodes={allEpisodes} />
             <TrendingEpisodes episodes={allEpisodes} />
           </div>
 
-          {/* Engagement Stats */}
           <div className="mt-16">
             <EngagementStats />
           </div>

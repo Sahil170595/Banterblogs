@@ -49,18 +49,18 @@ export function CodeBlock({
         return 'text-yellow-400';
       case 'typescript':
       case 'ts':
-        return 'text-blue-400';
+        return 'text-accent';
       case 'python':
         return 'text-green-400';
       case 'bash':
       case 'shell':
         return 'text-green-300';
       case 'css':
-        return 'text-blue-300';
+        return 'text-accent/80';
       case 'html':
         return 'text-orange-400';
       case 'json':
-        return 'text-purple-400';
+        return 'text-primary';
       case 'markdown':
         return 'text-gray-400';
       default:

@@ -2,217 +2,192 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { Database, WifiOff, Tag, Lock, Settings, Zap } from 'lucide-react';
+
+type IconType = typeof Database;
 
 interface ComparisonPoint {
   feature: string;
   cloudAI: string;
   localAI: string;
-  icon: string;
+  icon: IconType;
 }
 
 const comparisonData: ComparisonPoint[] = [
   {
-    feature: "Data Storage",
-    cloudAI: "❌ Sent to Big Tech servers",
-    localAI: "✅ Stays on your device",
-    icon: "🗄️"
+    feature: 'Data storage',
+    cloudAI: 'Sent to centralized servers',
+    localAI: 'Stays on your device',
+    icon: Database,
   },
   {
-    feature: "Internet Required",
-    cloudAI: "❌ Useless offline",
-    localAI: "✅ Works completely offline",
-    icon: "🌐"
+    feature: 'Internet required',
+    cloudAI: 'Useless offline',
+    localAI: 'Works completely offline',
+    icon: WifiOff,
   },
   {
-    feature: "Cost",
-    cloudAI: "💸 Subscription fees forever",
-    localAI: "✅ One-time setup cost",
-    icon: "💰"
+    feature: 'Cost profile',
+    cloudAI: 'Subscription fees forever',
+    localAI: 'One-time setup cost',
+    icon: Tag,
   },
   {
-    feature: "Privacy",
-    cloudAI: "❌ Every chat monitored",
-    localAI: "✅ Zero surveillance",
-    icon: "🔒"
+    feature: 'Privacy posture',
+    cloudAI: 'Every chat monitored',
+    localAI: 'Zero surveillance',
+    icon: Lock,
   },
   {
-    feature: "Customization",
-    cloudAI: "❌ Generic responses",
-    localAI: "✅ Learns your personality",
-    icon: "🎭"
+    feature: 'Customization',
+    cloudAI: 'Generic responses',
+    localAI: 'Learns your personality',
+    icon: Settings,
   },
   {
-    feature: "Speed",
-    cloudAI: "🐌 Depends on internet",
-    localAI: "⚡ Sub-200ms local processing",
-    icon: "⚡"
-  }
+    feature: 'Speed',
+    cloudAI: 'Depends on the internet',
+    localAI: 'Sub-200ms local processing',
+    icon: Zap,
+  },
 ];
 
 export function PrivacyComparison() {
   const [selectedPoint, setSelectedPoint] = useState(0);
 
   return (
-    <section className="py-24 bg-gradient-to-br from-background via-background to-muted/20 overflow-hidden">
-      {/* Holographic matrix background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.02) 25%,transparent 25%),linear-gradient(-45deg,rgba(255,255,255,0.02) 25%,transparent 25%)] bg-[length:20px 20px] opacity-30" />
-        
-        {/* Floating code snippets */}
-        {Array.from({ length: 15 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute font-mono text-xs text-green-400 opacity-20"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              x: [-20, 20],
-              y: [-10, 10],
-              opacity: [0.1, 0.3, 0.1],
-            }}
-            transition={{
-              duration: 6 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          >
-            {['local()', 'offline()', 'private()', 'secure()'][Math.floor(Math.random() * 4)]}
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="container relative z-10">
-        <div className="text-center mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl font-bold mb-4"
-          >
-            <span className="gradient-text">Cloud vs Local AI</span>
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl text-muted-foreground max-w-3xl mx-auto"
-          >
-            Why settle for surveillance when you can have complete digital sovereignty?
-          </motion.p>
+    <section className="relative py-24">
+      <div className="signal-grid absolute inset-0 opacity-30" aria-hidden />
+      <div className="container relative">
+        <div className="max-w-3xl">
+          <span className="signal-pill">Local Sovereignty</span>
+          <h2 className="mt-4 text-4xl font-bold tracking-tight">Cloud AI vs Chimera</h2>
+          <p className="mt-3 text-lg text-muted-foreground">
+            Stop trading ownership for convenience. Chimera keeps every signal in your control.
+          </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2 mb-16">
-          {/* Cloud AI Column */}
+        <div className="mt-12 grid gap-8 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="relative"
+            transition={{ duration: 0.6 }}
+            className="signal-panel p-8"
           >
-            <div className="relative p-8 rounded-xl bg-gradient-to-br from-red-900/20 to-red-800/10 backdrop-blur-xl border border-red-500/30">
-              {/* Warning effect */}
-              <div className="absolute inset-0 bg-red-500/5 rounded-xl animate-pulse" />
-              
-              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-6 text-red-400 flex items-center">
-                  <span className="mr-3">☁️</span>
-                  Traditional Cloud AI
-                </h3>
-                
-                <div className="space-y-4">
-                  {comparisonData.map((point, index) => (
-                    <motion.div
-                      key={point.feature}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className={`p-4 rounded-lg bg-red-900/20 border border-red-500/20 transition-all cursor-pointer ${
-                        selectedPoint === index ? 'ring-2 ring-red-400' : ''
-                      }`}
-                      onClick={() => setSelectedPoint(index)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center space-x-2">
-                          <span>{point.icon}</span>
-                          <span className="font-medium">{point.feature}</span>
+            <h3 className="text-2xl font-semibold text-foreground">Traditional Cloud AI</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Centralized platforms that trade convenience for surveillance and latency.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              {comparisonData.map((point, index) => {
+                const Icon = point.icon;
+                const isActive = selectedPoint === index;
+                return (
+                  <motion.button
+                    key={point.feature}
+                    type="button"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.06 }}
+                    onClick={() => setSelectedPoint(index)}
+                    className={`w-full rounded-2xl border p-4 text-left transition ${
+                      isActive
+                        ? 'border-red-400/60 bg-red-500/10'
+                        : 'border-border/60 bg-background/40 hover:border-red-400/40'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
+                          <Icon className="h-5 w-5" />
                         </span>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{point.feature}</p>
+                          <p className="mt-1 text-xs text-red-200/80">{point.cloudAI}</p>
+                        </div>
                       </div>
-                      <p className="text-red-300 mt-2 text-sm">{point.cloudAI}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
 
-          {/* Local AI Column */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="relative"
+            transition={{ duration: 0.6 }}
+            className="signal-panel p-8"
           >
-            <div className="relative p-8 rounded-xl bg-gradient-to-br from-green-900/20 to-green-800/10 backdrop-blur-xl border border-green-500/30">
-              {/* Success effect */}
-              <div className="absolute inset-0 bg-green-500/5 rounded-xl" />
-              
-              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-6 text-green-400 flex items-center">
-                  <span className="mr-3">🏠</span>
-                  Our Local AI Assistant
-                </h3>
-                
-                <div className="space-y-4">
-                  {comparisonData.map((point, index) => (
-                    <motion.div
-                      key={point.feature}
-                      initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className={`p-4 rounded-lg bg-green-900/20 border border-green-500/20 transition-all cursor-pointer ${
-                        selectedPoint === index ? 'ring-2 ring-green-400' : ''
-                      }`}
-                      onClick={() => setSelectedPoint(index)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center space-x-2">
-                          <span>{point.icon}</span>
-                          <span className="font-medium">{point.feature}</span>
+            <h3 className="text-2xl font-semibold text-foreground">Chimera Local AI</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              A private, local-first system that keeps every inference under your control.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              {comparisonData.map((point, index) => {
+                const Icon = point.icon;
+                const isActive = selectedPoint === index;
+                return (
+                  <motion.button
+                    key={point.feature}
+                    type="button"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.06 }}
+                    onClick={() => setSelectedPoint(index)}
+                    className={`w-full rounded-2xl border p-4 text-left transition ${
+                      isActive
+                        ? 'border-emerald-400/60 bg-emerald-500/10'
+                        : 'border-border/60 bg-background/40 hover:border-emerald-400/40'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300">
+                          <Icon className="h-5 w-5" />
                         </span>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{point.feature}</p>
+                          <p className="mt-1 text-xs text-emerald-200/80">{point.localAI}</p>
+                        </div>
                       </div>
-                      <p className="text-green-300 mt-2 text-sm">{point.localAI}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
         </div>
 
-        {/* Selected feature highlight */}
         <motion.div
           key={selectedPoint}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
+          transition={{ duration: 0.4 }}
+          className="signal-panel-strong mt-10 p-8"
         >
-          <div className="max-w-4xl mx-auto p-8 rounded-xl bg-gradient-to-r from-card/60 to-card/80 backdrop-blur-xl border border-border">
-            <h3 className="text-3xl font-bold mb-4 flex items-center justify-center">
-              <span className="mr-3 text-4xl">{comparisonData[selectedPoint].icon}</span>
-              {comparisonData[selectedPoint].feature}
-            </h3>
-            <div className="grid md:grid-cols-2 gap-8 mt-6">
-              <div className="text-left">
-                <h4 className="text-lg font-semibold text-red-400 mb-2">❌ Cloud AI Problem</h4>
-                <p className="text-muted-foreground">{comparisonData[selectedPoint].cloudAI}</p>
-              </div>
-              <div className="text-left">
-                <h4 className="text-lg font-semibold text-green-400 mb-2">✅ Local AI Solution</h4>
-                <p className="text-muted-foreground">{comparisonData[selectedPoint].localAI}</p>
-              </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Focus</p>
+              <h3 className="mt-2 text-2xl font-semibold text-foreground">
+                {comparisonData[selectedPoint].feature}
+              </h3>
+            </div>
+            <div className="text-sm text-muted-foreground">Chimera local advantage</div>
+          </div>
+
+          <div className="signal-divider my-6" />
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-red-300">Cloud risk</h4>
+              <p className="mt-2 text-sm text-muted-foreground">{comparisonData[selectedPoint].cloudAI}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-300">Local advantage</h4>
+              <p className="mt-2 text-sm text-muted-foreground">{comparisonData[selectedPoint].localAI}</p>
             </div>
           </div>
         </motion.div>

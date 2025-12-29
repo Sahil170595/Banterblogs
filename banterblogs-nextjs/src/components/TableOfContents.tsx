@@ -124,9 +124,9 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
       case 3:
         return 'text-green-400';
       case 4:
-        return 'text-blue-400';
+        return 'text-accent';
       case 5:
-        return 'text-purple-400';
+        return 'text-primary';
       default:
         return 'text-muted-foreground';
     }
@@ -306,7 +306,7 @@ export function ContentSearch({ onSearch, className = '' }: ContentSearchProps) 
             onClick={clearSearch}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
           >
-            ×
+            X
           </motion.button>
         )}
       </div>

@@ -33,7 +33,7 @@ export function ReportDetailClient({ id, timeseries, distribution, correlation, 
   const interactParam = search.get('interact');
   const defaultInteractive = useMemo(() => interactParam === '1' || interactParam === 'true', [interactParam]);
   const [interactive, setInteractive] = useState(defaultInteractive);
-  const sourceLabel = useMemo(() => source ?? `Derived · ${id}`, [source, id]);
+  const sourceLabel = useMemo(() => source ?? `Derived - ${id}`, [source, id]);
 
   useEffect(() => {
     setInteractive(defaultInteractive);
@@ -260,7 +260,7 @@ export function ReportDetailClient({ id, timeseries, distribution, correlation, 
             />
             <ChartCaption
               title="Correlation matrix"
-              description="Correlation heatmap (−1 to 1) in Banterblogs palette."
+              description="Correlation heatmap (-1 to 1) in Banterblogs palette."
               provenance={{ source: sourceLabel, notes: 'Preview' }}
             />
           </div>
@@ -280,5 +280,4 @@ export function ReportDetailClient({ id, timeseries, distribution, correlation, 
     </ReportThemeBridge>
   );
 }
-
 

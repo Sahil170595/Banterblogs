@@ -63,7 +63,7 @@ function listMarkdownFiles(location: ReportLocation): MarkdownEntry[] {
       {
         path: location.path,
         weight: 0,
-        displayLabel: `${location.source} · ${path.basename(location.path)}`,
+        displayLabel: `${location.source} - ${path.basename(location.path)}`,
         dedupeKey: `${location.source}:${path.basename(location.path)}`,
       },
     ];
@@ -85,7 +85,7 @@ function listMarkdownFiles(location: ReportLocation): MarkdownEntry[] {
       return {
         path: filePath,
         weight: sectionWeight(entry.name),
-        displayLabel: `${location.source} · ${normalized}`,
+        displayLabel: `${location.source} - ${normalized}`,
         dedupeKey: `${location.source}:${normalized}`,
       };
     })

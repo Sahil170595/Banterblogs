@@ -2,25 +2,6 @@ import { getAllEpisodes } from '@/lib/episodes';
 import { EpisodeCard } from '@/components/EpisodeCard';
 import { notFound } from 'next/navigation';
 
-// Static generation for build - temporarily disabled for testing
-// export async function generateStaticParams() {
-//   try {
-//     const episodes = await getAllEpisodes();
-//     const tags = new Set<string>();
-
-//     episodes.forEach((episode) => {
-//       episode.tags.forEach((tag) => tags.add(tag));
-//     });
-
-//     return Array.from(tags).map((tag) => ({
-//       tag: encodeURIComponent(tag),
-//     }));
-//   } catch (error) {
-//     console.error('Error generating static params for tags:', error);
-//     return [];
-//   }
-// }
-
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params;
   const decodedTag = decodeURIComponent(tag);
@@ -35,12 +16,11 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
 
   return (
     <div className="container py-16">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">
-          Tag: {decodedTag}
-        </h1>
-        <p className="text-xl text-muted-foreground">
-          {filteredEpisodes.length} episode{filteredEpisodes.length !== 1 ? 's' : ''} tagged with &ldquo;{decodedTag}&rdquo;
+      <div className="signal-panel-strong mb-10 p-8 md:p-10">
+        <span className="signal-pill">Topic Focus</span>
+        <h1 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight">{decodedTag}</h1>
+        <p className="mt-4 text-lg text-muted-foreground">
+          {filteredEpisodes.length} episode{filteredEpisodes.length !== 1 ? 's' : ''} tagged with &ldquo;{decodedTag}&rdquo;.
         </p>
       </div>
 

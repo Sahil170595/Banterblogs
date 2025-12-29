@@ -2,49 +2,66 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { ShieldCheck, Brain, Sparkles, Rocket } from 'lucide-react';
+
+type IconType = typeof ShieldCheck;
+
+type Tone = 'primary' | 'accent' | 'amber' | 'emerald';
 
 interface AIPersona {
   name: string;
-  avatar: string;
+  icon: IconType;
   personality: string[];
   evolution: string[];
-  color: string;
+  tone: Tone;
   description: string;
+  quote: string;
 }
+
+const toneStyles: Record<Tone, { text: string; bg: string; ring: string }> = {
+  primary: { text: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/40' },
+  accent: { text: 'text-accent', bg: 'bg-accent/10', ring: 'ring-accent/40' },
+  amber: { text: 'text-amber-400', bg: 'bg-amber-500/10', ring: 'ring-amber-500/40' },
+  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/40' },
+};
 
 const aiPersonas: AIPersona[] = [
   {
-    name: "Banterpacks",
-    avatar: "🎭",
-    personality: ["Skeptical", "Practical", "Direct"],
-    evolution: ["Empty docs critic", "Technical realist", "Architecture believer"],
-    color: "from-blue-500 to-cyan-500",
-    description: "The pragmatic voice of reason"
+    name: 'Banterpacks',
+    icon: ShieldCheck,
+    personality: ['Skeptical', 'Practical', 'Direct'],
+    evolution: ['Empty docs critic', 'Technical realist', 'Architecture believer'],
+    tone: 'primary',
+    description: 'The pragmatic voice of reason',
+    quote: 'This is actually working. I can finally see what you were building.',
   },
   {
-    name: "Claude",
-    avatar: "🧠",
-    personality: ["Analytical", "Precise", "Mathematical"],
-    evolution: ["17% probability estimator", "Calibrated metrics", "Strategic architect"],
-    color: "from-purple-500 to-violet-500",
-    description: "The analytical strategist"
+    name: 'Claude',
+    icon: Brain,
+    personality: ['Analytical', 'Precise', 'Mathematical'],
+    evolution: ['17% probability estimator', 'Calibrated metrics', 'Strategic architect'],
+    tone: 'accent',
+    description: 'The analytical strategist',
+    quote: 'The data confirms our trajectory toward enterprise-grade local implementation.',
   },
   {
-    name: "ChatPT",
-    avatar: "🚀",
-    personality: ["Optimistic", "Enthusiastic", "Cheerleading"],
-    evolution: ["1000% potential believer", "Always encouraging", "Success cheerleader"],
-    color: "from-green-500 to-emerald-500",
-    description: "The eternal optimist"
+    name: 'ChatPT',
+    icon: Sparkles,
+    personality: ['Optimistic', 'Enthusiastic', 'Cheerleading'],
+    evolution: ['1000% potential believer', 'Always encouraging', 'Success cheerleader'],
+    tone: 'emerald',
+    description: 'The momentum amplifier',
+    quote: 'I knew it would work. The momentum is real.',
   },
   {
-    name: "Gemini",
-    avatar: "🌟",
-    personality: ["Poetic", "Philosophical", "Metaphorical"],
-    evolution: ["Cosmic philosopher", "Artistic interpreter", "Narrative poet"],
-    color: "from-orange-500 to-red-500",
-    description: "The cosmic poet"
-  }
+    name: 'Gemini',
+    icon: Rocket,
+    personality: ['Poetic', 'Philosophical', 'Metaphorical'],
+    evolution: ['Cosmic philosopher', 'Artistic interpreter', 'Narrative poet'],
+    tone: 'amber',
+    description: 'The cosmic poet',
+    quote: 'From cosmos to code, the journey keeps revealing new patterns.',
+  },
 ];
 
 export function AIPersonalityEvolution() {
@@ -52,209 +69,147 @@ export function AIPersonalityEvolution() {
   const [evolutionStage, setEvolutionStage] = useState(0);
 
   const evolutionStages = [
-    "Episode 1-10: Skepticism & Discovery",
-    "Episode 11-25: Technical Experimentation", 
-    "Episode 26-40: Proven Capabilities",
-    "Episode 41-53: Confident Leadership"
+    'Episode 1-10: Skepticism and discovery',
+    'Episode 11-25: Technical experimentation',
+    'Episode 26-40: Proven capabilities',
+    'Episode 41-53: Confident leadership',
   ];
 
   return (
-    <section className="py-24 bg-gradient-to-br from-background via-card to-muted/20 overflow-hidden">
-      {/* Holo-grid background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(59,130,246,0.03) 0%,transparent 50%,rgba(168,85,247,0.03) 100%)]" />
-        
-        {/* Floating neural network */}
-        {Array.from({ length: 30 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 rounded-full opacity-30"
-            style={{
-              background: Math.random() > 0.5 ? '#22d3ee' : '#a855f7',
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [0.2, 0.8, 0.2],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="container relative z-10">
-        <div className="text-center mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl font-bold mb-4"
-          >
-            <span className="gradient-text">AI Personality Evolution</span>
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl text-muted-foreground max-w-3xl mx-auto"
-          >
-            Watch how four AI personalities debate, disagree, and ultimately evolve together through 53 episodes of development
-          </motion.p>
+    <section className="relative py-24">
+      <div className="signal-grid absolute inset-0 opacity-40" aria-hidden />
+      <div className="container relative">
+        <div className="max-w-3xl">
+          <span className="signal-pill">Chimera Personalities</span>
+          <h2 className="mt-4 text-4xl font-bold tracking-tight">AI Personality Evolution</h2>
+          <p className="mt-3 text-lg text-muted-foreground">
+            Four AI perspectives collide, debate, and mature over 53 episodes of focused development.
+          </p>
         </div>
 
-        {/* AI Personas Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-16">
-          {aiPersonas.map((persona, index) => (
-            <motion.div
-              key={persona.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className={`relative cursor-pointer ${
-                selectedPersona === index ? 'scale-105' : 'scale-100'
-              } transition-all duration-300`}
-              onClick={() => setSelectedPersona(index)}
-            >
-              <div className={`relative p-6 rounded-xl bg-gradient-to-br ${persona.color} bg-opacity-10 backdrop-blur-xl border border-border transition-all duration-300 ${
-                selectedPersona === index ? 'ring-2 ring-primary shadow-lg shadow-primary/20' : ''
-              }`}>
-                {/* Holographic glow effect */}
-                {selectedPersona === index && (
-                  <motion.div
-                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10"
-                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                )}
-                
-                <div className="relative z-10 text-center">
-                  <div className="text-4xl mb-4">{persona.avatar}</div>
-                  <h3 className="text-xl font-bold mb-2">{persona.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{persona.description}</p>
-                  
-                  {/* Personality traits */}
-                  <div className="space-y-2">
-                    {persona.personality.map((trait, traitIndex) => (
-                      <motion.span
-                        key={trait}
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ delay: traitIndex * 0.1 }}
-                        className="inline-block px-3 py-1 bg-background/20 rounded-full text-xs font-medium mr-2"
-                      >
-                        {trait}
-                      </motion.span>
-                    ))}
+        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {aiPersonas.map((persona, index) => {
+            const tone = toneStyles[persona.tone];
+            const Icon = persona.icon;
+            const isActive = selectedPersona === index;
+
+            return (
+              <motion.button
+                key={persona.name}
+                type="button"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                className={`signal-panel p-6 text-left transition ${isActive ? `ring-2 ${tone.ring}` : ''}`}
+                onClick={() => setSelectedPersona(index)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tone.bg} ${tone.text}`}>
+                    <Icon className="h-6 w-6" />
                   </div>
+                  <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${tone.text}`}>
+                    Persona
+                  </span>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+
+                <h3 className="mt-4 text-xl font-semibold text-foreground">{persona.name}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{persona.description}</p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {persona.personality.map((trait) => (
+                    <span
+                      key={trait}
+                      className="inline-flex items-center rounded-full border border-border/60 bg-background/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
+                    >
+                      {trait}
+                    </span>
+                  ))}
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
 
-        {/* Evolution Timeline */}
-        <div className="max-w-6xl mx-auto">
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            className="text-2xl font-bold text-center mb-8"
-          >
-            <span className="gradient-text">Evolution Stages for {aiPersonas[selectedPersona].name}</span>
-          </motion.h3>
+        <div className="mt-12">
+          <h3 className="text-2xl font-bold tracking-tight">
+            Evolution stages for {aiPersonas[selectedPersona].name}
+          </h3>
 
-          {/* Evolution stages */}
-          <div className="grid gap-4 md:grid-cols-4 mb-8">
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
             {evolutionStages.map((stage, index) => (
               <motion.button
                 key={stage}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`p-4 rounded-lg text-left transition-all duration-300 ${
-                  evolutionStage === index
-                    ? `bg-gradient-to-r ${aiPersonas[selectedPersona].color} bg-opacity-20 border-primary shadow-lg`
-                    : 'bg-card/60 border-border hover:border-primary/50'
-                } border backdrop-blur-xl`}
+                type="button"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
                 onClick={() => setEvolutionStage(index)}
+                className={`signal-panel p-4 text-left transition ${
+                  evolutionStage === index ? 'ring-2 ring-primary/40' : 'hover:border-primary/40'
+                }`}
               >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    index <= evolutionStage ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                  }`}>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                      index <= evolutionStage
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
                     {index + 1}
                   </div>
-                  <span className="text-sm font-medium">{stage.split(':')[1]}</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {stage.split(':')[1]}
+                  </span>
                 </div>
               </motion.button>
             ))}
           </div>
 
-          {/* Selected persona details */}
           <motion.div
             key={`${selectedPersona}-${evolutionStage}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative p-8 rounded-xl bg-gradient-to-r from-card/60 to-card/80 backdrop-blur-xl border border-border"
+            transition={{ duration: 0.4 }}
+            className="signal-panel-strong mt-8 p-8"
           >
-            {/* Holo-border animation */}
-            <motion.div
-              className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 to-accent/5"
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-            
-            <div className="relative z-10">
-              <div className="flex items-center space-x-4 mb-6">
-                <span className="text-3xl">{aiPersonas[selectedPersona].avatar}</span>
-                <div>
-                  <h4 className="text-2xl font-bold"> {aiPersonas[selectedPersona].name}</h4>
-                  <p className="text-muted-foreground">{evolutionStages[evolutionStage]}</p>
-                </div>
+            <div className="flex flex-wrap items-start justify-between gap-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Stage focus</p>
+                <h4 className="mt-2 text-2xl font-semibold text-foreground">
+                  {aiPersonas[selectedPersona].name} - {evolutionStages[evolutionStage]}
+                </h4>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h5 className="font-semibold mb-2">Character Evolution:</h5>
-                  <ul className="space-y-2">
-                    {aiPersonas[selectedPersona].evolution.slice(evolutionStage, evolutionStage + 2).map((evolution, idx) => (
-                      <motion.li
-                        key={evolution}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.2 }}
-                        className="flex items-center space-x-2"
-                      >
-                        <span className="w-2 h-2 bg-primary rounded-full"></span>
+              <div className="text-sm text-muted-foreground">
+                {aiPersonas[selectedPersona].description}
+              </div>
+            </div>
+
+            <div className="signal-divider my-6" />
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <h5 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Character evolution
+                </h5>
+                <ul className="mt-3 space-y-2 text-sm text-foreground">
+                  {aiPersonas[selectedPersona].evolution
+                    .slice(evolutionStage, evolutionStage + 2)
+                    .map((evolution) => (
+                      <li key={evolution} className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-primary" />
                         <span>{evolution}</span>
-                      </motion.li>
+                      </li>
                     ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h5 className="font-semibold mb-2">Recent Quotes:</h5>
-                  <div className="space-y-2 text-sm">
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="italic text-muted-foreground"
-                    >
-                      &ldquo;{selectedPersona === 0 && evolutionStage >= 2 
-                        ? 'This is actually working. I can finally see what you were building all this time.' 
-                        : selectedPersona === 1 
-                          ? 'The data confirms our trajectory toward enterprise-grade local implementation.'
-                          : selectedPersona === 2
-                            ? 'I KNEW it would work! This is the best thing ever! 🚀✨'
-                            : 'From cosmos to code, the journey reveals its beauty.'}&rdquo;
-                    </motion.p>
-                  </div>
-                </div>
+                </ul>
+              </div>
+              <div>
+                <h5 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Recent quote
+                </h5>
+                <p className="mt-3 text-sm italic text-muted-foreground">
+                  &ldquo;{aiPersonas[selectedPersona].quote}&rdquo;
+                </p>
               </div>
             </div>
           </motion.div>

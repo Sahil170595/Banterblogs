@@ -70,50 +70,55 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
   }, [episodes]);
 
   return (
-    <div className="mb-12 space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search episodes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-input bg-background px-10 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          />
-        </div>
+    <div className="mb-12 space-y-6">
+      <div className="signal-panel p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search episodes, tags, or systems..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-input bg-background/60 px-10 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              />
+            </div>
 
-        {/* Sort */}
-        <div className="flex gap-2">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortKey)}
-            className="rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            <option value="date">Date</option>
-            <option value="title">Title</option>
-            <option value="complexity">Complexity</option>
-            <option value="files">Files</option>
-          </select>
-          
-          <button
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-          </button>
+            <div className="flex gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortKey)}
+                className="rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="date">Date</option>
+                <option value="title">Title</option>
+                <option value="complexity">Complexity</option>
+                <option value="files">Files</option>
+              </select>
+
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="flex items-center justify-center rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredEpisodes.length} of {episodes.length} episodes
+          </div>
         </div>
       </div>
 
-      {/* Tags */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setSelectedTag('')}
-          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
             selectedTag === ''
               ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-accent/20 hover:text-accent'
           }`}
         >
           All
@@ -122,10 +127,10 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
           <button
             key={tag}
             onClick={() => setSelectedTag(tag)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
               selectedTag === tag
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-accent/20 hover:text-accent'
             }`}
           >
             {tag}
@@ -133,13 +138,8 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
         ))}
       </div>
 
-      {/* Results count */}
-      <div className="text-sm text-muted-foreground">
-        Showing {filteredEpisodes.length} of {episodes.length} episodes
-      </div>
-
       {filteredEpisodes.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
           No episodes match your filters yet. Try adjusting the search or tag selection.
         </div>
       ) : (
