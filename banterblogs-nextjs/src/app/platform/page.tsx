@@ -14,7 +14,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
-import { formatNumber, formatReadingTime } from '@/lib/formatUtils';
+import { formatReadingTime } from '@/lib/formatUtils';
 
 export default async function PlatformPage() {
   const episodes = await getAllEpisodes();
