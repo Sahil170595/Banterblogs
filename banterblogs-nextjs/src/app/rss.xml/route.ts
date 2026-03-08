@@ -1,42 +1,42 @@
 import { NextResponse } from 'next/server';
 import { getAllEpisodes } from '@/lib/episodes';
 
+const BASE = 'https://banterblogs.vercel.app';
+
 export async function GET() {
   try {
     const episodes = await getAllEpisodes();
-    
-    const rss = `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Banterblogs - Building Chimera</title>
-    <description>Development log and research archive for the Chimera ecosystem — 200K+ LOC across real-time streaming AI, ML research, multi-agent orchestration, and mobile deployment.</description>
-    <link>https://banterblogs.vercel.app</link>
-    <language>en-us</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <atom:link href="https://banterblogs.vercel.app/rss.xml" rel="self" type="application/rss+xml"/>
-    
-    ${episodes.slice(0, 20).map(episode => `
-    <item>
-      <title><![CDATA[${episode.title}]]></title>
-      <description><![CDATA[${episode.preview}]]></description>
-      <link>https://banterblogs.vercel.app/episodes/${episode.slug}</link>
-      <guid>https://banterblogs.vercel.app/episodes/${episode.slug}</guid>
-      <pubDate>${new Date(episode.date).toUTCString()}</pubDate>
-      <category>Development</category>
-    </item>`).join('')}
-  </channel>
-</rss>`;
+
+    const items = episodes.slice(0, 20).map(episode =>
+      `    <item>\n      <title><![CDATA[${episode.title}]]></title>\n      <description><![CDATA[${episode.preview}]]></description>\n      <link>${BASE}/episodes/${episode.slug}</link>\n      <guid isPermaLink="true">${BASE}/episodes/${episode.slug}</guid>\n      <pubDate>${new Date(episode.date).toUTCString()}</pubDate>\n      <category>Development</category>\n    </item>`
+    );
+
+    const rss = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+      '  <channel>',
+      '    <title>Banterblogs - Building Chimera</title>',
+      '    <description>Development log and research archive for the Chimera ecosystem — 200K+ LOC across real-time streaming AI, ML research, multi-agent orchestration, and mobile deployment.</description>',
+      `    <link>${BASE}</link>`,
+      '    <language>en-us</language>',
+      `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,
+      `    <atom:link href="${BASE}/rss.xml" rel="self" type="application/rss+xml"/>`,
+      ...items,
+      '  </channel>',
+      '</rss>',
+    ].join('\n');
 
     return new NextResponse(rss, {
       headers: {
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Content-Type': 'application/rss+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
       },
     });
   } catch (error) {
     console.error('RSS generation failed:', error);
-    return new NextResponse('RSS feed temporarily unavailable', { 
-      status: 500 
+    return new NextResponse('<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Error</title></channel></rss>', {
+      status: 500,
+      headers: { 'Content-Type': 'application/rss+xml; charset=utf-8' },
     });
   }
 }

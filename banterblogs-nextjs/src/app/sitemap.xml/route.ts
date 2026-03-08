@@ -2,98 +2,59 @@ import { NextResponse } from 'next/server';
 import { getAllEpisodes } from '@/lib/episodes';
 import { discoverReports } from '@/lib/reports/locator';
 
+const BASE = 'https://banterblogs.vercel.app';
+
+function urlEntry(loc: string, lastmod: string, changefreq: string, priority: number) {
+  return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+}
+
 export async function GET() {
   try {
     const episodes = await getAllEpisodes();
+    const now = new Date().toISOString();
 
     const reportSlugs = new Set<string>();
     for (const entry of discoverReports()) {
       reportSlugs.add(entry.slug);
     }
 
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://banterblogs.vercel.app</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://banterblogs.vercel.app/about</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://banterblogs.vercel.app/episodes</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://banterblogs.vercel.app/reports</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://banterblogs.vercel.app/reports/compendium</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://banterblogs.vercel.app/platform</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://banterblogs.vercel.app/tags</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://banterblogs.vercel.app/roadmap</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  ${Array.from(reportSlugs).map(slug => `
-  <url>
-    <loc>https://banterblogs.vercel.app/reports/${slug}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`).join('')}
-  ${episodes.map(episode => `
-  <url>
-    <loc>https://banterblogs.vercel.app/episodes/${episode.slug}</loc>
-    <lastmod>${new Date(episode.date).toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>`).join('')}
-  ${Array.from(new Set(episodes.flatMap(e => e.tags))).map(tag => `
-  <url>
-    <loc>https://banterblogs.vercel.app/tags/${encodeURIComponent(tag)}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>`).join('')}
-</urlset>`;
+    const urls: string[] = [
+      urlEntry(BASE, now, 'daily', 1.0),
+      urlEntry(`${BASE}/about`, now, 'monthly', 0.8),
+      urlEntry(`${BASE}/episodes`, now, 'daily', 0.9),
+      urlEntry(`${BASE}/reports`, now, 'weekly', 0.9),
+      urlEntry(`${BASE}/reports/compendium`, now, 'monthly', 0.85),
+      urlEntry(`${BASE}/platform`, now, 'weekly', 0.8),
+      urlEntry(`${BASE}/tags`, now, 'weekly', 0.7),
+      urlEntry(`${BASE}/roadmap`, now, 'monthly', 0.7),
+    ];
+
+    for (const slug of reportSlugs) {
+      urls.push(urlEntry(`${BASE}/reports/${slug}`, now, 'monthly', 0.7));
+    }
+
+    for (const episode of episodes) {
+      urls.push(urlEntry(`${BASE}/episodes/${episode.slug}`, new Date(episode.date).toISOString(), 'weekly', 0.6));
+    }
+
+    const tags = new Set(episodes.flatMap(e => e.tags));
+    for (const tag of tags) {
+      urls.push(urlEntry(`${BASE}/tags/${encodeURIComponent(tag)}`, now, 'weekly', 0.5));
+    }
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
 
     return new NextResponse(sitemap, {
       headers: {
-        'Content-Type': 'application/xml',
+        'Content-Type': 'application/xml; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',
       },
     });
   } catch (error) {
     console.error('Sitemap generation failed:', error);
-    return new NextResponse('Sitemap temporarily unavailable', {
-      status: 500
+    return new NextResponse('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>', {
+      status: 500,
+      headers: { 'Content-Type': 'application/xml; charset=utf-8' },
     });
   }
 }
