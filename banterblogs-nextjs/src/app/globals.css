@@ -1075,25 +1075,6 @@ html {
   box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
 }
 
-/* Accessibility Styles */
-.high-contrast {
-  --foreground: 0 0% 100%;
-  --background: 0 0% 0%;
-  --primary: 0 0% 100%;
-  --accent: 0 0% 100%;
-  --muted: 0 0% 20%;
-  --muted-foreground: 0 0% 80%;
-  --border: 0 0% 40%;
-  --card: 0 0% 10%;
-}
-
-.reduced-motion * {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
-}
-
 /* Reduced Motion Preferences */
 @media (prefers-reduced-motion: reduce) {
   * {
