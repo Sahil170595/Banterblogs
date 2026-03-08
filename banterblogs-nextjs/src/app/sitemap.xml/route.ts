@@ -50,12 +50,6 @@ export async function GET() {
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://banterblogs.vercel.app/technology</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://banterblogs.vercel.app/tags</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>

@@ -1,0 +1,5 @@
+{
+  "title": "Kernel Optimization Benchmarks",
+  "description": "Custom kernel performance benchmarks measuring optimization impact on inference latency.",
+  "tags": ["benchmark", "kernel", "optimization", "cuda"]
+}

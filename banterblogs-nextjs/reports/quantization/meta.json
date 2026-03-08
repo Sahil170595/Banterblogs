@@ -1,0 +1,5 @@
+{
+  "title": "Quantization Benchmark Results",
+  "description": "Quantization-aware training (QAT) benchmark comparing baseline accuracy and model size against quantized variants.",
+  "tags": ["benchmark", "quantization", "qat", "model-compression"]
+}
