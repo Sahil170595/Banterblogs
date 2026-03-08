@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { discoverReports, toHumanTitle, type ReportLocation } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
+import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs';
 
 export const metadata: Metadata = {
   title: 'Research Archive',
@@ -20,22 +21,18 @@ interface ReportEntry {
   source: string;
 }
 
-interface ReportGroup {
-  label: string;
-  description: string;
-  reports: ReportEntry[];
-}
-
 function extractTRNumber(slug: string): number | null {
   const match = slug.match(/(?:^|-)(?:tr|technical-report-)(\d+)/i);
   return match ? parseInt(match[1], 10) : null;
 }
 
-function classifyReport(slug: string): string {
+type ReportCategory = 'whitepaper' | 'conclusive' | 'appendix' | 'phase3' | 'phase2' | 'phase1.5' | 'phase1' | 'other';
+
+function classifyReport(slug: string): ReportCategory {
   const lower = slug.toLowerCase();
-  if (lower.includes('conclusive') || lower.includes('whitepaper') || lower.includes('appendix') || lower.includes('appendices')) {
-    return 'conclusive';
-  }
+  if (lower.includes('whitepaper')) return 'whitepaper';
+  if (lower.includes('appendix') || lower.includes('appendices')) return 'appendix';
+  if (lower.includes('conclusive')) return 'conclusive';
   const tr = extractTRNumber(slug);
   if (tr !== null) {
     if (tr <= 116) return 'phase1';
@@ -45,15 +42,6 @@ function classifyReport(slug: string): string {
   }
   return 'other';
 }
-
-const GROUP_ORDER: Record<string, { label: string; description: string; order: number }> = {
-  'conclusive': { label: 'Conclusive Reports & Whitepapers', description: 'Phase-level synthesis documents consolidating findings across multiple technical reports.', order: 0 },
-  'phase3': { label: 'Phase 3 — Safety (TR134–TR137)', description: 'Alignment under quantization, concurrency x safety, cross-backend safety consistency, safety tax synthesis.', order: 1 },
-  'phase2': { label: 'Phase 2 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 2 },
-  'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 3 },
-  'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 4 },
-  'other': { label: 'Additional Reports', description: 'Model-specific analyses and supplementary research.', order: 5 },
-};
 
 // Featured reports pinned to the top — executive-level entry points
 const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = [
@@ -109,25 +97,44 @@ export default async function ReportsIndex() {
     };
   });
 
-  const groupMap = new Map<string, ReportEntry[]>();
+  // Build three top-level tabs
+  const whitepapers: ReportEntry[] = [];
+  const conclusive: ReportEntry[] = [];
+  const technicalByPhase = new Map<string, ReportEntry[]>();
+
+  const PHASE_META: Record<string, { label: string; description: string; order: number }> = {
+    'phase3': { label: 'Phase 3 — Safety (TR134–TR137)', description: 'Alignment under quantization, concurrency x safety, cross-backend safety consistency.', order: 0 },
+    'phase2': { label: 'Phase 2 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 1 },
+    'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 2 },
+    'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 3 },
+    'other': { label: 'Additional Reports', description: 'Model-specific analyses and supplementary research.', order: 4 },
+  };
+
   for (const report of reports) {
-    const key = classifyReport(report.slug);
-    if (!groupMap.has(key)) groupMap.set(key, []);
-    groupMap.get(key)!.push(report);
+    const cat = classifyReport(report.slug);
+    if (cat === 'whitepaper') {
+      whitepapers.push(report);
+    } else if (cat === 'conclusive' || cat === 'appendix') {
+      conclusive.push(report);
+    } else {
+      if (!technicalByPhase.has(cat)) technicalByPhase.set(cat, []);
+      technicalByPhase.get(cat)!.push(report);
+    }
   }
 
-  const groups: ReportGroup[] = Array.from(groupMap.entries())
+  // Build tab groups for the technical reports section
+  const technicalGroups: ReportTabGroup[] = Array.from(technicalByPhase.entries())
     .map(([key, items]) => ({
-      label: GROUP_ORDER[key]?.label ?? key,
-      description: GROUP_ORDER[key]?.description ?? '',
-      reports: items,
-      _order: GROUP_ORDER[key]?.order ?? 99,
+      key,
+      label: PHASE_META[key]?.label ?? key,
+      description: PHASE_META[key]?.description ?? '',
+      reports: items.map((r) => ({ slug: r.slug, title: r.title, description: r.description })),
+      _order: PHASE_META[key]?.order ?? 99,
     }))
     .sort((a, b) => a._order - b._order)
     .map(({ _order, ...rest }) => rest);
 
-  // Resolve featured slugs against actual reports
-  const featuredSlugs = new Set(FEATURED_REPORTS.map((f) => f.slug));
+  const featuredSlugs = FEATURED_REPORTS.map((f) => f.slug);
 
   return (
     <div className="container py-16">
@@ -215,42 +222,86 @@ export default async function ReportsIndex() {
         </div>
       </section>
 
-      {/* ── Technical Archive ── */}
-      <div className="space-y-16">
-        {groups.map((group) => (
-          <section key={group.label}>
-            <div className="mb-8 border-b border-border/40 pb-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</h2>
-              {group.description && (
-                <p className="mt-2 text-sm text-muted-foreground/70">{group.description}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {group.reports
-                .filter((r) => !featuredSlugs.has(r.slug))
-                .map((r) => (
+      {/* ── Whitepapers ── */}
+      {whitepapers.length > 0 && (
+        <section className="mb-20">
+          <div className="mb-8 border-b border-border/40 pb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Whitepapers
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground/70">
+              Executive-level decision documents. Start here if you need the bottom line.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {whitepapers
+              .filter((r) => !featuredSlugs.includes(r.slug))
+              .map((r) => (
                 <Link
                   key={r.slug}
                   href={`/reports/${r.slug}`}
                   className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-all"
                 >
-                  <div className="mb-3">
-                    <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">
-                      {r.title}
-                    </div>
+                  <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
+                    {r.title}
                   </div>
                   {r.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>
                   )}
                   <span className="text-xs text-muted-foreground flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    View Report <span>&rarr;</span>
+                    Read <span>&rarr;</span>
                   </span>
                 </Link>
               ))}
-            </div>
-          </section>
-        ))}
-      </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Conclusive Reports ── */}
+      {conclusive.length > 0 && (
+        <section className="mb-20">
+          <div className="mb-8 border-b border-border/40 pb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Conclusive Reports &amp; Appendices
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground/70">
+              Dissertation-style synthesis documents consolidating findings across multiple technical reports.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {conclusive.map((r) => (
+              <Link
+                key={r.slug}
+                href={`/reports/${r.slug}`}
+                className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-all"
+              >
+                <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
+                  {r.title}
+                </div>
+                {r.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>
+                )}
+                <span className="text-xs text-muted-foreground flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Read <span>&rarr;</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Technical Reports (Tabbed by Phase) ── */}
+      <section>
+        <div className="mb-8 border-b border-border/40 pb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Technical Reports
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground/70">
+            Individual research reports with raw data, methodology, and findings.
+          </p>
+        </div>
+        <ReportTabs groups={technicalGroups} featuredSlugs={featuredSlugs} />
+      </section>
     </div>
   );
 }
