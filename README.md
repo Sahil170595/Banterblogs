@@ -1,32 +1,32 @@
 <div align="center">
 
-# Banterblogs
+# Chimeraforge
 
 **Development log and research archive for the Chimera ecosystem.**
 
-[![Live Site](https://img.shields.io/badge/Live-banterblogs.vercel.app-black?style=for-the-badge)](https://banterblogs.vercel.app)
+[![Live Site](https://img.shields.io/badge/Live-chimeraforge.vercel.app-black?style=for-the-badge)](https://chimeraforge.vercel.app)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-[Visit the site](https://banterblogs.vercel.app) · [Browse episodes](https://banterblogs.vercel.app/episodes) · [Read reports](https://banterblogs.vercel.app/reports)
+[Visit the site](https://chimeraforge.vercel.app) · [Browse episodes](https://chimeraforge.vercel.app/episodes) · [Read reports](https://chimeraforge.vercel.app/reports)
 
 </div>
 
 ---
 
-## What is Banterblogs
+## What is Chimeraforge
 
-Banterblogs is the public-facing site for the Chimera ecosystem — a group of repositories building real-time AI tools for streamers. The site publishes two things:
+Chimeraforge is the public-facing site for the Chimera ecosystem — a group of repositories building real-time AI tools for streamers. The site publishes two things:
 
 - **Episodes** — narrative write-ups generated from git commits across the ecosystem. Each episode is written as a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini), turning raw development activity into readable stories.
 - **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and multi-agent orchestration. Over 60 reports spanning 70,000+ measurements across 26 technical papers.
 
-The site is live at [banterblogs.vercel.app](https://banterblogs.vercel.app) with 266 episodes and counting.
+The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) with 266 episodes and counting.
 
 ---
 
 ## The Chimera Ecosystem
 
-Banterblogs documents work across six repositories:
+Chimeraforge documents work across six repositories:
 
 | Repository | Purpose |
 |---|---|
@@ -35,7 +35,7 @@ Banterblogs documents work across six repositories:
 | **Chimeraforge** | Capacity planning and infrastructure tooling. |
 | **Chimera Multi-Agent** | Pipeline orchestration across agents and backends. |
 | **Chimeradroid** | Mobile extension of the platform. |
-| **Banterblogs** | This repository. The documentation and research layer. |
+| **Chimeraforge** | This repository. The documentation and research layer. |
 
 ---
 

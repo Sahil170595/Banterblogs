@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAllEpisodes } from '@/lib/episodes';
 import { discoverReports } from '@/lib/reports/locator';
 
-const BASE = 'https://banterblogs.vercel.app';
+const BASE = 'https://chimeraforge.vercel.app';
 
 function urlEntry(loc: string, lastmod: string, changefreq: string, priority: number) {
   return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;

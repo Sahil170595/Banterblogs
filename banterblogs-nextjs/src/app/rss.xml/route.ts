@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAllEpisodes } from '@/lib/episodes';
 
-const BASE = 'https://banterblogs.vercel.app';
+const BASE = 'https://chimeraforge.vercel.app';
 
 export async function GET() {
   try {
@@ -16,7 +16,7 @@ export async function GET() {
       '<?xml-stylesheet type="text/xsl" href="/rss.xsl"?>',
       '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
       '  <channel>',
-      '    <title>Banterblogs - Building Chimera</title>',
+      '    <title>Chimeraforge - Building Chimera</title>',
       '    <description>Development log and research archive for the Chimera ecosystem — 200K+ LOC across real-time streaming AI, ML research, multi-agent orchestration, and mobile deployment.</description>',
       `    <link>${BASE}</link>`,
       '    <language>en-us</language>',

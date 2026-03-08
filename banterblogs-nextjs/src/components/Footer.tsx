@@ -17,7 +17,7 @@ const FOOTER_LINKS = {
     { href: '/tags', label: 'Tags' },
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
-    { href: 'https://github.com/Sahil170595/Banterblogs', label: 'Source Code' },
+    { href: 'https://github.com/Sahil170595/Chimeraforge', label: 'Source Code' },
   ],
 } as const;
 
@@ -28,15 +28,15 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] md:gap-6">
           <div className="space-y-5">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">BB</span>
-              <span className="text-lg font-semibold text-foreground">Banterblogs</span>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">CF</span>
+              <span className="text-lg font-semibold text-foreground">Chimeraforge</span>
             </div>
             <p className="max-w-sm text-sm text-muted-foreground">
               Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML benchmarking, multi-agent orchestration, and mobile deployment.
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link
-                href="https://github.com/Sahil170595/Banterblogs"
+                href="https://github.com/Sahil170595/Chimeraforge"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition hover:text-primary"
@@ -82,7 +82,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-sm text-muted-foreground md:flex-row">
-          <span>(c) {new Date().getFullYear()} Banterblogs. Crafted in public, powered by local AI.</span>
+          <span>(c) {new Date().getFullYear()} Chimeraforge. Crafted in public, powered by local AI.</span>
           <span>6 repos. 200K+ LOC. One ecosystem.</span>
         </div>
       </div>

@@ -34,7 +34,7 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
   const steps: OnboardingStep[] = [
     {
       id: 'welcome',
-      title: 'Welcome to Banterblogs!',
+      title: 'Welcome to Chimeraforge!',
       description: 'Discover the journey of building Banterpacks and Chimera Engine through interactive development episodes.',
       icon: <Sparkles className="h-8 w-8 text-primary" />,
       action: 'Get Started'

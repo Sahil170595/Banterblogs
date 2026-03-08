@@ -24,10 +24,10 @@ export function Header() {
       <div className="container flex h-[72px] items-center justify-between gap-6">
         <Link href="/" className="flex items-center gap-2 sm:gap-3">
           <span className="inline-flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm sm:text-base font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">
-            BB
+            CF
           </span>
           <span className="text-base sm:text-lg font-semibold tracking-tight text-foreground display">
-            Chimera Observatory
+            Chimeraforge
           </span>
         </Link>
 

@@ -14,24 +14,24 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 
 export const metadata: Metadata = {
   title: {
-    default: "Banterblogs",
-    template: "%s | Banterblogs",
+    default: "Chimeraforge",
+    template: "%s | Chimeraforge",
   },
-  description: "Development log and research archive for the Chimera ecosystem — 6 repositories, 200K+ LOC spanning real-time streaming AI, ML research with 70K+ measurements, multi-agent orchestration, and mobile deployment.",
+  description: "Development log and research archive for the Chimera ecosystem — 6 repositories, 200K+ LOC spanning personal AI platform, ML research with 126K+ measurements, multi-agent orchestration, and mobile deployment.",
   keywords: ["banterpacks", "banterhearts", "chimeraforge", "chimera", "banterblogs", "llm benchmarking", "multi-agent", "ai overlay", "ml research"],
   authors: [{ name: "Sahil Kadadekar" }],
   creator: "Sahil Kadadekar",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://banterblogs.vercel.app",
-    title: "Banterblogs — Chimera Ecosystem",
+    url: "https://chimeraforge.vercel.app",
+    title: "Chimeraforge — Chimera Ecosystem",
     description: "Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML benchmarking, multi-agent orchestration, and mobile deployment.",
-    siteName: "Banterblogs",
+    siteName: "Chimeraforge",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Banterblogs — Chimera Ecosystem",
+    title: "Chimeraforge — Chimera Ecosystem",
     description: "Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML benchmarking, multi-agent orchestration, and mobile deployment.",
     creator: "@sahilkadadekar",
   },

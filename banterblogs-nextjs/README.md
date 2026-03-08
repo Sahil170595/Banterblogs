@@ -1,12 +1,12 @@
 <div align="center">
 
-# Banterblogs
+# Chimeraforge
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-[Live Site](https://banterblogs.vercel.app) | [Issues](https://github.com/Sahil170595/Banterblogs/issues)
+[Live Site](https://chimeraforge.vercel.app) | [Issues](https://github.com/Sahil170595/Banterblogs/issues)
 
 </div>
 
@@ -14,7 +14,7 @@
 
 ## Overview
 
-This is the Next.js application that powers [banterblogs.vercel.app](https://banterblogs.vercel.app). It serves as the development log and research archive for the Chimera ecosystem — a suite of repositories building real-time AI tools for streamers.
+This is the Next.js application that powers [chimeraforge.vercel.app](https://chimeraforge.vercel.app). It serves as the development log and research archive for the Chimera ecosystem — a suite of repositories building real-time AI tools for streamers.
 
 The site publishes two types of content:
 
