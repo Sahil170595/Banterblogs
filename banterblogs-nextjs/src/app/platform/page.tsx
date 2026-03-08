@@ -16,7 +16,7 @@ export default async function PlatformPage() {
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Six repositories forming one ecosystem: <strong>Banterpacks</strong> delivers real-time banter on stream,
             <strong> Banterhearts</strong> benchmarks every model decision, <strong>Chimeraforge</strong> plans capacity, <strong>Chimera Multi-Agent</strong> orchestrates
-            the pipeline, <strong>Chimeradroid</strong> extends to mobile, and <strong>Banterblogs</strong> documents it all.
+            the pipeline, <strong>Chimeradroid</strong> extends to mobile, and <strong>Chimeraforge</strong> documents it all.
           </p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default async function PlatformPage() {
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary">
                 <BookOpen className="h-5 w-5" />
               </span>
-              <h3 className="text-xl font-semibold">Banterblogs Automation</h3>
+              <h3 className="text-xl font-semibold">Chimeraforge Automation</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Narrative engine that turns commits, CI artifacts, and telemetry into the four-person roundtable episodes published here.
@@ -99,7 +99,7 @@ export default async function PlatformPage() {
               },
               {
                 title: '4. Storytelling',
-                text: 'Banterblogs ingests commits and metrics to explain what changed and why.'
+                text: 'Chimeraforge ingests commits and metrics to explain what changed and why.'
               }
             ].map((step) => (
               <div key={step.title} className="rounded-2xl border border-border/60 bg-background/40 p-4">
@@ -120,7 +120,7 @@ export default async function PlatformPage() {
             { value: '24h', label: 'Commit to retrain to redeploy cycle for new pack intelligence' },
             { value: '4+', label: 'LLM providers managed simultaneously with health fallbacks' },
             { value: '90%+', label: 'Target satisfaction score from Banterhearts feedback loop' },
-            { value: formatNumber(stats.totalLinesAdded), label: 'Lines of code captured in Banterblogs episodes' },
+            { value: formatNumber(stats.totalLinesAdded), label: 'Lines of code captured in Chimeraforge episodes' },
           ].map((item) => (
             <div key={item.label} className="signal-panel p-6 text-center">
               <div className="text-3xl font-bold text-primary mb-2">{item.value}</div>
@@ -162,7 +162,7 @@ export default async function PlatformPage() {
           </div>
 
           <div className="signal-panel p-6">
-            <h3 className="text-lg font-semibold mb-3">Banterblogs Automation</h3>
+            <h3 className="text-lg font-semibold mb-3">Chimeraforge Automation</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>Episode generator consumes commits, PRDs, and patch notes</li>
               <li>Character templates keep roundtable voices consistent</li>

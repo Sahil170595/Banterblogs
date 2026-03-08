@@ -46,7 +46,7 @@ const systems = [
     icon: <Smartphone className="h-5 w-5" />,
   },
   {
-    name: 'Banterblogs',
+    name: 'Chimeraforge',
     label: 'This Site',
     description: 'Automated documentation engine that ingests commits from all repos, generates multi-persona episodes, and publishes the research archive.',
     bullets: ['Next.js with SSG + ISR', 'Multi-persona narration engine', '26-report research archive'],

@@ -1,8 +1,8 @@
 import path from "path";
 
 export const siteConfig = {
-  name: "Banterblogs",
-  description: "Autonomous devlog covering Banterpacks overlay, Banterhearts (Chimera Heart) ML platform, and the Banterblogs automation loop.",
+  name: "Chimeraforge",
+  description: "Autonomous devlog covering Banterpacks overlay, Banterhearts (Chimera Heart) ML platform, and the Chimeraforge automation loop.",
   paths: {
     posts: path.join(process.cwd(), "posts"),
     banterpacks: path.join(process.cwd(), "posts", "banterpacks"),

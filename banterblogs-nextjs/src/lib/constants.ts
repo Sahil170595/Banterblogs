@@ -20,7 +20,7 @@ export const EXTERNAL_LINKS = {
 } as const;
 
 export const SITE_CONFIG = {
-  NAME: 'Banterblogs',
+  NAME: 'Chimeraforge',
   DESCRIPTION: 'Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML research, multi-agent orchestration, and mobile deployment.',
   AUTHOR: 'Sahil Kadadekar',
   TWITTER_HANDLE: '@sahilkadadekar',

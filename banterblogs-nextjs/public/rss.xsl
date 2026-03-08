@@ -6,7 +6,7 @@
 <xsl:template match="/">
 <html lang="en">
 <head>
-  <title>RSS Feed — Banterblogs</title>
+  <title>RSS Feed — Chimeraforge</title>
   <meta name="robots" content="noindex,nofollow"/>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
@@ -74,7 +74,7 @@
       </xsl:for-each>
     </ul>
     <p class="footer">
-      <a href="/">Banterblogs</a>
+      <a href="/">Chimeraforge</a>
     </p>
   </div>
 </body>

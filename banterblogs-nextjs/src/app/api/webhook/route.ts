@@ -69,7 +69,7 @@ export async function OPTIONS() {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
-        ? 'https://banterblogs.vercel.app' 
+        ? 'https://chimeraforge.vercel.app' 
         : 'http://localhost:3000',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',

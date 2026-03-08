@@ -102,7 +102,7 @@ export default async function AboutPage() {
       ],
     },
     {
-      name: 'Banterblogs',
+      name: 'Chimeraforge',
       role: 'This Site',
       icon: <Layers className="h-5 w-5" />,
       tone: 'from-primary to-primary/60',
@@ -128,7 +128,7 @@ export default async function AboutPage() {
             Six Repos. One Mission.
           </h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Banterblogs is the public face of a 200K+ line-of-code ecosystem spanning real-time
+            Chimeraforge is the public face of a 200K+ line-of-code ecosystem spanning real-time
             streaming AI, production ML research, multi-agent orchestration, and mobile deployment.
             Everything documented here is backed by real infrastructure.
           </p>
@@ -189,7 +189,7 @@ export default async function AboutPage() {
               {
                 step: '4',
                 title: 'Document',
-                desc: 'Banterblogs ingests commits from all repos, generates episodes with multi-persona narration, and publishes the research archive you see here.',
+                desc: 'Chimeraforge ingests commits from all repos, generates episodes with multi-persona narration, and publishes the research archive you see here.',
               },
             ].map((item) => (
               <div key={item.step} className="space-y-3">

@@ -32,7 +32,7 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
-  const episodeUrl = `https://banterblogs.vercel.app/episodes/${episode.slug}`;
+  const episodeUrl = `https://chimeraforge.vercel.app/episodes/${episode.slug}`;
   const shareText = `Check out this episode: ${episode.title}`;
 
   const shareOptions = [

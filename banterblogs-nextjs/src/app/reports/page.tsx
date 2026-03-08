@@ -7,7 +7,7 @@ import { readReportMeta } from '@/lib/reports/meta';
 export const metadata: Metadata = {
   title: 'Research Archive',
   description:
-    '26 technical reports backed by 70,000+ benchmark measurements — model loading, quantization, TensorRT compilation, KV cache optimization, and multi-agent coordination.',
+    'Independent ML research: 126,000+ measurements across model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination, and cross-backend safety analysis.',
 };
 
 export const revalidate = 900;
@@ -40,18 +40,44 @@ function classifyReport(slug: string): string {
   if (tr !== null) {
     if (tr <= 116) return 'phase1';
     if (tr <= 122) return 'phase1.5';
-    return 'phase2';
+    if (tr <= 133) return 'phase2';
+    return 'phase3';
   }
   return 'other';
 }
 
 const GROUP_ORDER: Record<string, { label: string; description: string; order: number }> = {
   'conclusive': { label: 'Conclusive Reports & Whitepapers', description: 'Phase-level synthesis documents consolidating findings across multiple technical reports.', order: 0 },
-  'phase2': { label: 'Phase 2 — Optimization (TR123–TR134)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 1 },
-  'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 2 },
-  'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 3 },
-  'other': { label: 'Additional Reports', description: 'Model-specific analyses and supplementary research.', order: 4 },
+  'phase3': { label: 'Phase 3 — Safety (TR134–TR137)', description: 'Alignment under quantization, concurrency x safety, cross-backend safety consistency, safety tax synthesis.', order: 1 },
+  'phase2': { label: 'Phase 2 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 2 },
+  'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 3 },
+  'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 4 },
+  'other': { label: 'Additional Reports', description: 'Model-specific analyses and supplementary research.', order: 5 },
 };
+
+// Featured reports pinned to the top — executive-level entry points
+const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = [
+  {
+    slug: 'technical-report-conclusive-108-116-whitepaper',
+    label: 'Phase 1 Whitepaper',
+    summary: 'Foundation synthesis — model loading, ONNX conversion, quantization baselines, and security analysis across 9 technical reports.',
+  },
+  {
+    slug: 'technical-report-conclusive-117-122-whitepaper',
+    label: 'Phase 1.5 Whitepaper',
+    summary: 'Benchmarking synthesis — cross-backend inference parity, TensorRT compilation, and scaling laws across 6 reports.',
+  },
+  {
+    slug: 'technical-report-conclusive-123-133-whitepaper',
+    label: 'Phase 2 Whitepaper',
+    summary: 'Optimization synthesis — KV cache tuning, INT8/FP8 quantization, context scaling, and deployment pipeline across 11 reports.',
+  },
+  {
+    slug: 'technical-report-117',
+    label: 'TR117: Cross-Backend Frontier',
+    summary: 'Multi-agent inference parity benchmark — the report that established baseline performance across all backends.',
+  },
+];
 
 export default async function ReportsIndex() {
   const reportsEnabled = process.env.REPORTS_ENABLED !== 'false';
@@ -100,72 +126,96 @@ export default async function ReportsIndex() {
     .sort((a, b) => a._order - b._order)
     .map(({ _order, ...rest }) => rest);
 
-  const sourceCount = new Set(reports.map((r) => r.source)).size;
+  // Resolve featured slugs against actual reports
+  const featuredSlugs = new Set(FEATURED_REPORTS.map((f) => f.slug));
 
   return (
     <div className="container py-16">
-      <div className="signal-panel-strong mb-16 p-8 md:p-12">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,260px)]">
-          <div className="space-y-5">
-            <span className="signal-pill">Chimeraforge Observatory</span>
-            <h1 className="text-4xl md:text-5xl font-bold">High-Performance Research Archive</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              70,000+ real benchmark measurements across model loading, quantization, TensorRT compilation, KV cache optimization, and multi-agent coordination — all with CUDA event timing.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/reports/compendium"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
-              >
-                Read the whitepaper
-              </Link>
-            </div>
-          </div>
-          <div className="grid gap-4">
-            <div className="signal-panel p-5">
-              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total Reports</div>
-              <div className="mt-2 text-3xl font-bold text-foreground">{reports.length}</div>
-            </div>
-            <div className="signal-panel p-5">
-              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Measurements</div>
-              <div className="mt-2 text-3xl font-bold text-foreground">70K+</div>
-            </div>
-            <div className="signal-panel p-5">
-              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Sources</div>
-              <div className="mt-2 text-3xl font-bold text-foreground">{sourceCount}</div>
-            </div>
-          </div>
+      {/* ── Hero ── */}
+      <div className="signal-panel-strong mb-10 p-8 md:p-12">
+        <div className="space-y-5 max-w-3xl">
+          <span className="signal-pill">Independent Research</span>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            Edge LLM Inference Under Real-World Constraints
+          </h1>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            How fast can local inference get — and how safe is it at the edge? This research program
+            answers both questions with CUDA event timing and controlled safety evaluations across
+            model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination,
+            and cross-backend safety consistency.
+          </p>
+          <p className="text-sm text-muted-foreground/80">
+            Independent research by <span className="text-foreground font-medium">Sahil Kadadekar</span>
+          </p>
         </div>
       </div>
 
-      {/* Featured Compendium */}
-      <div className="mb-20">
-        <h2 className="text-sm font-semibold mb-6 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-          Latest Research
-        </h2>
-        <Link
-          href="/reports/compendium"
-          className="block group relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-card to-muted/20 p-8 md:p-12 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5"
-        >
-          <div className="relative z-10">
-            <div className="text-sm uppercase tracking-[0.2em] text-primary font-semibold mb-4">Whitepaper</div>
-            <h3 className="text-3xl md:text-5xl font-bold mb-6 group-hover:text-primary transition-colors">
-              Chimeraforge: High-Performance LLM Agent Orchestration
-            </h3>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-8 leading-relaxed">
-              A definitive comparison of Rust vs. Python for real-time gaming AI. This study reveals how a hybrid architecture and &quot;Dual Ollama&quot; pattern achieve a 58% reduction in latency and near-zero contention.
-            </p>
-            <div className="inline-flex items-center gap-2 text-primary font-medium text-lg">
-              Read the Whitepaper <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
-            </div>
+      {/* ── Stats Ribbon ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+        {[
+          { value: '126,000+', label: 'Research Measurements' },
+          { value: String(reports.length), label: 'Technical Reports' },
+          { value: '200K+', label: 'Lines of Code' },
+          { value: '<100ms', label: 'Inference Target' },
+        ].map((stat) => (
+          <div key={stat.label} className="signal-panel p-5 text-center">
+            <div className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</div>
+            <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</div>
           </div>
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
-        </Link>
+        ))}
       </div>
 
-      {/* Grouped Technical Archives */}
+      {/* ── Start Here: Featured Research ── */}
+      <section className="mb-20">
+        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          Start Here
+        </h2>
+
+        {/* Compendium — hero card */}
+        <Link
+          href="/reports/compendium"
+          className="block group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-muted/20 p-8 md:p-10 mb-6 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5"
+        >
+          <div className="relative z-10">
+            <div className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">Whitepaper</div>
+            <h3 className="text-2xl md:text-4xl font-bold mb-4 group-hover:text-primary transition-colors">
+              Chimeraforge: High-Performance LLM Agent Orchestration
+            </h3>
+            <p className="text-base md:text-lg text-muted-foreground max-w-3xl mb-6 leading-relaxed">
+              Rust vs. Python for real-time gaming AI. A hybrid architecture and &quot;Dual Ollama&quot; pattern
+              achieve 58% latency reduction and near-zero contention.
+            </p>
+            <span className="inline-flex items-center gap-2 text-primary font-medium">
+              Read the Whitepaper <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </span>
+          </div>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        </Link>
+
+        {/* Featured report cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {FEATURED_REPORTS.map((feat) => (
+            <Link
+              key={feat.slug}
+              href={`/reports/${feat.slug}`}
+              className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:border-primary/40 hover:bg-muted/20 transition-all"
+            >
+              <div className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-2">
+                {feat.label}
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                {feat.summary}
+              </p>
+              <span className="text-xs text-primary font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                Read report <span>&rarr;</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Technical Archive ── */}
       <div className="space-y-16">
         {groups.map((group) => (
           <section key={group.label}>
@@ -175,17 +225,29 @@ export default async function ReportsIndex() {
                 <p className="mt-2 text-sm text-muted-foreground/70">{group.description}</p>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {group.reports.map((r) => (
-                <Link key={r.slug} href={`/reports/${r.slug}`} className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-all">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div className="text-lg font-semibold group-hover:text-primary transition-colors">{r.title}</div>
-                    <span className="shrink-0 text-[10px] uppercase tracking-[0.24em] text-muted-foreground/60 border border-border/50 px-2 py-1 rounded-full">{r.source}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {group.reports
+                .filter((r) => !featuredSlugs.has(r.slug))
+                .map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/reports/${r.slug}`}
+                  className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-all"
+                >
+                  <div className="mb-3">
+                    <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">
+                      {r.title}
+                    </div>
+                    <span className="inline-block mt-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 border border-border/40 px-2 py-0.5 rounded-full">
+                      {r.source}
+                    </span>
                   </div>
-                  {r.description && <div className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{r.description}</div>}
-                  <div className="text-xs text-muted-foreground mt-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {r.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>
+                  )}
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     View Report <span>&rarr;</span>
-                  </div>
+                  </span>
                 </Link>
               ))}
             </div>

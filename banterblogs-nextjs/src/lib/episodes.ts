@@ -89,6 +89,7 @@ export function summarizeMarkdown(markdown: string, fallbackTitle?: string) {
   let title = fallbackTitle ?? extractPrimaryHeading(markdown);
   let seenHeading = Boolean(title);
   const summary: string[] = [];
+  let subtitle = '';
 
   for (const raw of lines) {
     const line = raw.trim();
@@ -105,14 +106,21 @@ export function summarizeMarkdown(markdown: string, fallbackTitle?: string) {
       if (summary.length) break;
       continue;
     }
+    // Capture H2 subtitle as fallback but keep scanning for body text
+    if (/^##\s+(.+)$/.test(line)) {
+      if (!subtitle) subtitle = line.replace(/^##\s+/, '').trim();
+      continue;
+    }
     if (line.startsWith('#')) break;
     summary.push(line);
     if (summary.join(' ').length > 240) break;
   }
 
+  const description = summary.join(' ') || subtitle;
+
   return {
     title,
-    description: summary.join(' '),
+    description,
   };
 }
 
