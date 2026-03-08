@@ -13,7 +13,6 @@ import {
   Twitter,
   Facebook,
   Linkedin,
-  MessageCircle,
   Link as LinkIcon,
   X
 } from 'lucide-react';
@@ -79,32 +78,28 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
 
   const handleLike = () => {
     setLiked(!liked);
-    // Here you would typically send analytics or update a database
-    // Here you would typically send analytics or update a database
   };
 
   const handleBookmark = () => {
-    setBookmarked(!bookmarked);
-    // Here you would typically save to localStorage or user preferences
+    const newBookmarked = !bookmarked;
+    setBookmarked(newBookmarked);
     const bookmarks = JSON.parse(localStorage.getItem('episode-bookmarks') || '[]');
-    if (bookmarked) {
-      const updated = bookmarks.filter((slug: string) => slug !== episode.slug);
-      localStorage.setItem('episode-bookmarks', JSON.stringify(updated));
-    } else {
+    if (newBookmarked) {
       bookmarks.push(episode.slug);
       localStorage.setItem('episode-bookmarks', JSON.stringify(bookmarks));
+    } else {
+      const updated = bookmarks.filter((slug: string) => slug !== episode.slug);
+      localStorage.setItem('episode-bookmarks', JSON.stringify(updated));
     }
   };
 
   useEffect(() => {
-    // Check if episode is bookmarked
     const bookmarks = JSON.parse(localStorage.getItem('episode-bookmarks') || '[]');
     setBookmarked(bookmarks.includes(episode.slug));
   }, [episode.slug]);
 
   return (
     <div className={`social-share ${className}`}>
-      {/* Action Buttons */}
       <div className="flex items-center gap-2">
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -143,7 +138,6 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
         </motion.button>
       </div>
 
-      {/* Share Options */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -264,80 +258,5 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-interface EngagementStatsProps {
-  className?: string;
-}
-
-export function EngagementStats({ className = '' }: EngagementStatsProps) {
-  const [stats, setStats] = useState({
-    views: Math.floor(Math.random() * 1000) + 100,
-    likes: Math.floor(Math.random() * 50) + 10,
-    shares: Math.floor(Math.random() * 20) + 5,
-    bookmarks: Math.floor(Math.random() * 15) + 3
-  });
-
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      setStats(prev => ({
-        ...prev,
-        views: prev.views + Math.floor(Math.random() * 3),
-        likes: prev.likes + (Math.random() > 0.9 ? 1 : 0),
-        shares: prev.shares + (Math.random() > 0.95 ? 1 : 0),
-        bookmarks: prev.bookmarks + (Math.random() > 0.98 ? 1 : 0)
-      }));
-    }, 5000);
-
-    // Show stats after a delay
-    const timer = setTimeout(() => setIsVisible(true), 2000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timer);
-    };
-  }, []);
-
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className={`engagement-stats ${className}`}
-        >
-          <div className="bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl p-4 shadow-lg">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-primary" />
-              Engagement
-            </h3>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center">
-                <div className="text-lg font-bold text-foreground">{stats.views}</div>
-                <div className="text-xs text-muted-foreground">Views</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-red-400">{stats.likes}</div>
-                <div className="text-xs text-muted-foreground">Likes</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-accent">{stats.shares}</div>
-                <div className="text-xs text-muted-foreground">Shares</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-green-400">{stats.bookmarks}</div>
-                <div className="text-xs text-muted-foreground">Saves</div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
   );
 }

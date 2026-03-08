@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
-import { discoverReports } from '@/lib/reports/locator';
+import { discoverReports, toHumanTitle } from '@/lib/reports/locator';
 import { extractHeadings } from '@/lib/episodes';
 import { reportJsonLd } from './schema.org.json';
 
@@ -39,6 +40,12 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
 
   const headings = report.sections.flatMap((s) => extractHeadings(s.markdown));
 
+  // Prev/next navigation
+  const allSlugs = [...new Set(discoverReports().map((r) => r.slug))];
+  const currentIndex = allSlugs.indexOf(id);
+  const prevReport = currentIndex > 0 ? allSlugs[currentIndex - 1] : null;
+  const nextReport = currentIndex >= 0 && currentIndex < allSlugs.length - 1 ? allSlugs[currentIndex + 1] : null;
+
   return (
     <div className="container py-16">
       <div className="signal-panel-strong mb-10 p-8 md:p-10">
@@ -67,6 +74,41 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
         <ReportMarkdown sections={report.sections} />
         <ReportTocSidebar headings={headings} />
       </div>
+
+      {(prevReport || nextReport) && (
+        <nav className="mt-16 grid gap-4 sm:grid-cols-2" aria-label="Report navigation">
+          {prevReport ? (
+            <Link
+              href={`/reports/${prevReport}`}
+              className="signal-panel p-5 group hover:border-primary/30 transition-colors"
+            >
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                <ArrowLeft className="h-3 w-3" />
+                Previous Report
+              </div>
+              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                {toHumanTitle(prevReport)}
+              </div>
+            </Link>
+          ) : (
+            <div />
+          )}
+          {nextReport && (
+            <Link
+              href={`/reports/${nextReport}`}
+              className="signal-panel p-5 group hover:border-primary/30 transition-colors text-right"
+            >
+              <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-1">
+                Next Report
+                <ArrowRight className="h-3 w-3" />
+              </div>
+              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                {toHumanTitle(nextReport)}
+              </div>
+            </Link>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

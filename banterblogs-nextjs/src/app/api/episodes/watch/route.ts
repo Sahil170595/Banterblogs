@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 export async function GET() {
+  let pingInterval: ReturnType<typeof setInterval> | undefined;
+
   const stream = new ReadableStream({
     start(controller) {
       const send = (evt?: string, data?: any) => {
@@ -16,10 +18,16 @@ export async function GET() {
       send('connected', { message: 'SSE connected' });
 
       // keep alive ping (prevents proxies from closing the connection)
-      setInterval(() => send('ping', { t: Date.now() }), 25000);
-
-      // We can't access the controller signal, so we'll handle cleanup differently
-      // The client will handle connection cleanup with eventSource.close()
+      pingInterval = setInterval(() => {
+        try {
+          send('ping', { t: Date.now() });
+        } catch {
+          clearInterval(pingInterval);
+        }
+      }, 25000);
+    },
+    cancel() {
+      clearInterval(pingInterval);
     },
   });
 

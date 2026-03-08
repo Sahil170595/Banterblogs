@@ -1,0 +1,5 @@
+{
+  "title": "Gemma3 Benchmark Report",
+  "description": "Performance benchmarks for Google Gemma3 models including baseline measurements, parameter tuning, and quantization analysis.",
+  "tags": ["benchmark", "gemma3", "performance", "quantization"]
+}

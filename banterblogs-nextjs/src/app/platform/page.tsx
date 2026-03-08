@@ -141,8 +141,8 @@ export default async function PlatformPage() {
               <li>Health panel exposing LLM, TTS, and STT adapter status</li>
               <li>Prometheus metrics and Grafana dashboards via registry</li>
             </ul>
-            <Link href="/technology#overlay" className="inline-flex items-center mt-4 text-sm font-medium text-primary hover:text-primary/80">
-              Explore Banterpacks details
+            <Link href="/reports" className="inline-flex items-center mt-4 text-sm font-medium text-primary hover:text-primary/80">
+              Explore benchmark reports
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </div>
@@ -155,8 +155,8 @@ export default async function PlatformPage() {
               <li>Data governance: anonymization, encryption, audit logging</li>
               <li>CI coverage across unit, integration, performance, and ops tests</li>
             </ul>
-            <Link href="/technology#chimera-heart" className="inline-flex items-center mt-4 text-sm font-medium text-primary hover:text-primary/80">
-              See Banterhearts internals
+            <Link href="/reports" className="inline-flex items-center mt-4 text-sm font-medium text-primary hover:text-primary/80">
+              See Banterhearts reports
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </div>
@@ -212,13 +212,13 @@ export default async function PlatformPage() {
             <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
               <div className="flex items-center gap-2 mb-2 text-primary">
                 <Gauge className="h-4 w-4" />
-                <h3 className="font-semibold">Technology Deep Dives</h3>
+                <h3 className="font-semibold">Research Reports</h3>
               </div>
               <p className="text-sm text-muted-foreground mb-2">
-                Breakdowns of the overlay architecture, Chimera Heart infrastructure, and automation tooling - no private repos required.
+                Benchmark results, model evaluations, and infrastructure deep dives from the Banterhearts research pipeline.
               </p>
-              <Link href="/technology" className="text-sm font-medium text-primary hover:text-primary/80">
-                Visit the Technology page
+              <Link href="/reports" className="text-sm font-medium text-primary hover:text-primary/80">
+                Browse reports
               </Link>
             </div>
             <div className="rounded-2xl border border-border/60 bg-card/60 p-4">

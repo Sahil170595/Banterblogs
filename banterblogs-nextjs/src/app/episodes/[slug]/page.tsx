@@ -4,13 +4,10 @@ import { getAllEpisodes } from '@/lib/episodes';
 import { EpisodeNavigation } from '@/components/EpisodeNavigation';
 import { EpisodeStats } from '@/components/EpisodeStats';
 import { TableOfContents } from '@/components/TableOfContents';
-import { ReadingExperience } from '@/components/ReadingExperience';
 import { ContentEnhancer, ContentStats } from '@/components/ContentEnhancer';
-import { PerformanceMonitor } from '@/components/PerformanceMonitor';
-import { TouchInteraction, DeviceDetector, MobileNavigation } from '@/components/MobileOptimization';
-import { SocialShare, BookmarkManager, EngagementStats } from '@/components/SocialFeatures';
-import { ContentRecommendations, ReadingPath, TrendingEpisodes } from '@/components/ContentRecommendations';
-import { ReadingTracker, EngagementHeatmap } from '@/components/ReadingAnalytics';
+import { MobileNavigation } from '@/components/MobileOptimization';
+import { SocialShare, BookmarkManager } from '@/components/SocialFeatures';
+import { ContentRecommendations } from '@/components/ContentRecommendations';
 
 export default async function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -54,21 +51,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
   const platformLabel = episode.platform === 'chimera' ? 'Chimera' : episode.platform === 'benchmark' ? 'Benchmarks' : 'Banterpacks';
 
   return (
-    <TouchInteraction>
-      <PerformanceMonitor />
-      <DeviceDetector />
-      <EngagementHeatmap />
-
-      <ReadingExperience
-        episode={{
-          id: episode.id,
-          title: episode.title,
-          readingTime: episode.readingTime,
-          date: episode.date,
-        }}
-      />
-
-      <ReadingTracker episode={episode} />
+    <>
       <TableOfContents content={episode.content} />
 
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-2">
@@ -132,17 +115,11 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
           <EpisodeNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
 
-          <div className="mt-16 space-y-8">
-            <ContentRecommendations currentEpisode={episode} allEpisodes={allEpisodes} />
-            <ReadingPath episodes={allEpisodes} />
-            <TrendingEpisodes episodes={allEpisodes} />
-          </div>
-
           <div className="mt-16">
-            <EngagementStats />
+            <ContentRecommendations currentEpisode={episode} allEpisodes={allEpisodes} />
           </div>
         </div>
       </div>
-    </TouchInteraction>
+    </>
   );
 }

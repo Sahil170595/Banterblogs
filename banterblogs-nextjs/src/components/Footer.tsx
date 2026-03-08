@@ -9,7 +9,7 @@ const FOOTER_LINKS = {
   ],
   Platform: [
     { href: '/platform', label: 'Platform Overview' },
-    { href: '/technology', label: 'Technology' },
+    { href: '/roadmap', label: 'Roadmap' },
     { href: '/about', label: 'About' },
   ],
   Resources: [

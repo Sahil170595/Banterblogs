@@ -1,0 +1,5 @@
+{
+  "title": "Cross-Backend Frontier Benchmark",
+  "description": "TR117: Cross-backend benchmark comparing eager, JIT, torch.compile, ONNX, and TensorRT across model architectures.",
+  "tags": ["benchmark", "compilation", "tensorrt", "onnx", "torch-compile"]
+}

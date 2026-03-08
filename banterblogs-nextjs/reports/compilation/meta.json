@@ -1,0 +1,5 @@
+{
+  "title": "Compilation Backend Benchmarks",
+  "description": "CPU and CUDA compilation benchmarks across eager, JIT, torch.compile, ONNX, and TensorRT backends for MLP, Conv, and Transformer models.",
+  "tags": ["benchmark", "compilation", "cuda", "tensorrt", "cpu"]
+}

@@ -1,0 +1,5 @@
+{
+  "title": "Gemma3 Raw Benchmark Data",
+  "description": "Complete Gemma3 benchmark datasets including baseline, parameter tuning, and QAT variant measurements across model sizes.",
+  "tags": ["benchmark", "gemma3", "raw-data", "parameter-tuning"]
+}
