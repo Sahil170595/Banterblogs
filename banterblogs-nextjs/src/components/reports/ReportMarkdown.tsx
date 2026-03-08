@@ -8,7 +8,7 @@ export function ReportMarkdown({ sections }: ReportMarkdownProps) {
   if (!sections.length) return null;
 
   return (
-    <div className="mt-12 space-y-12">
+    <div className="space-y-12">
       {sections.map((section) => (
         <article
           key={section.originKey}

@@ -14,8 +14,9 @@ export default async function PlatformPage() {
           <span className="signal-pill">Chimera Platform</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">The Banter Platform</h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Three tightly-linked systems working as a loop: <strong>Banterpacks</strong> delivers real-time banter on stream,
-            <strong> Banterhearts</strong> (Chimera Heart) learns from every reaction, and <strong>Banterblogs</strong> automates the running commentary so no decision is a black box.
+            Six repositories forming one ecosystem: <strong>Banterpacks</strong> delivers real-time banter on stream,
+            <strong> Banterhearts</strong> benchmarks every model decision, <strong>Chimeraforge</strong> plans capacity, <strong>Chimera Multi-Agent</strong> orchestrates
+            the pipeline, <strong>Chimeradroid</strong> extends to mobile, and <strong>Banterblogs</strong> documents it all.
           </p>
         </div>
       </div>
@@ -168,7 +169,7 @@ export default async function PlatformPage() {
               <li>Stats pipeline tracks files changed, lines added, and reading time</li>
               <li>Onboarding and search surfaces help readers follow the saga</li>
             </ul>
-            <Link href="/about#automation-loop" className="inline-flex items-center mt-4 text-sm font-medium text-primary hover:text-primary/80">
+            <Link href="/about#architecture" className="inline-flex items-center mt-4 text-sm font-medium text-primary hover:text-primary/80">
               Learn how episodes are produced
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

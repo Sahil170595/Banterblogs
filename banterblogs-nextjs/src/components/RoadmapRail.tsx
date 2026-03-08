@@ -10,7 +10,7 @@ const phases = [
     status: 'Live in production',
     description: 'Enterprise-grade streaming overlay demonstrating sub-200ms AI latency, rollout controls, and creator validation tools.',
     signals: ['Real-time WebRTC overlay', 'A/B testing with instant rollback', 'Provider health monitoring', 'Service Worker offline capabilities'],
-    cta: { label: 'Explore Banterpacks Platform', href: '/platform?view=banterpacks' },
+    cta: { label: 'Explore Banterpacks Platform', href: '/platform' },
     done: true,
   },
   {
@@ -18,7 +18,7 @@ const phases = [
     status: 'In development',
     description: 'Building fully local AI core with GPU quantization, TensorRT compilation, and automated RLHF training pipelines.',
     signals: ['Production ML infrastructure', 'Sub-100ms inference target', 'Multi-service FastAPI architecture', 'Enterprise observability stack'],
-    cta: { label: 'Track Banterhearts Progress', href: '/technology?system=banterhearts' },
+    cta: { label: 'Track Banterhearts Progress', href: '/reports' },
     done: false,
   },
   {

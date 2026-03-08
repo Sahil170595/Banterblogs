@@ -7,6 +7,7 @@ export interface ReportSection {
   id: string;
   title: string;
   html: string;
+  markdown: string;
   sourceLabel: string;
   originKey: string;
 }
@@ -45,6 +46,7 @@ async function buildSection(filePath: string, sourceLabel: string, originKey: st
     id: sanitizeId(title) || sanitizeId(fallback),
     title,
     html,
+    markdown: raw,
     sourceLabel,
     originKey,
   };

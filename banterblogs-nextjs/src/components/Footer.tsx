@@ -32,7 +32,7 @@ export function Footer() {
               <span className="text-lg font-semibold text-foreground">Banterblogs</span>
             </div>
             <p className="max-w-sm text-sm text-muted-foreground">
-              A polished chaos log documenting how the Banterpacks overlay evolves into Chimera - a fully local, privacy-first assistant.
+              Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML benchmarking, multi-agent orchestration, and mobile deployment.
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link
@@ -83,7 +83,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-sm text-muted-foreground md:flex-row">
           <span>(c) {new Date().getFullYear()} Banterblogs. Crafted in public, powered by local AI.</span>
-          <span>Banterpacks to Banterhearts to Automation Plane</span>
+          <span>6 repos. 200K+ LOC. One ecosystem.</span>
         </div>
       </div>
     </footer>

@@ -21,7 +21,7 @@ export const EXTERNAL_LINKS = {
 
 export const SITE_CONFIG = {
   NAME: 'Banterblogs',
-  DESCRIPTION: 'AI-powered development blog following the epic journey of building Banterpacks',
+  DESCRIPTION: 'Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML research, multi-agent orchestration, and mobile deployment.',
   AUTHOR: 'Sahil Kadadekar',
   TWITTER_HANDLE: '@sahilkadadekar',
 } as const;
