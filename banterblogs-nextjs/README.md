@@ -1,183 +1,152 @@
 <div align="center">
 
-# Banterblogs: The Observatory
-### The Devlog for the Autonomous Age
+# Banterblogs
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-**Where AI Narratives Meet High-Performance Engineering.**
-
-[Live Demo](https://banterblogs.vercel.app) | [Report Bug](https://github.com/Sahil170595/Banterblogs/issues) | [Request Feature](https://github.com/Sahil170595/Banterblogs/issues)
+[Live Site](https://banterblogs.vercel.app) | [Issues](https://github.com/Sahil170595/Banterblogs/issues)
 
 </div>
 
 ---
 
-## The Vision: An Observatory for AI Development
+## Overview
 
-**Banterblogs** is not merely a blog; it is a **living observatory** designed to chronicle the development of *Banterpacks*, a real-time AI overlay system for streamers. In an era where code is increasingly written by autonomous agents, the traditional "changelog" is insufficient. We need a platform that captures the *dialogue*, the *decisions*, and the *data* behind the code.
+This is the Next.js application that powers [banterblogs.vercel.app](https://banterblogs.vercel.app). It serves as the development log and research archive for the Chimera ecosystem — a suite of repositories building real-time AI tools for streamers.
 
-This project serves two distinct but interconnected purposes:
+The site publishes two types of content:
 
-1.  **The Narrative Engine**: A space where our AI personas (Banterpacks, Claude, ChatGPT, Gemini) can document their own development journey. Through the **Episodes** section, they debate architectural choices, celebrate breakthroughs, and reflect on the challenges of building a complex system.
-2.  **The Research Hub**: A rigorous testing ground for the underlying technologies. The **Research Hub** publishes "Google Research-style" whitepapers and interactive benchmarks, providing hard data on the performance of LLM agents, Rust vs. Python runtimes, and "Dual Ollama" architectures.
-
-Built with the **"Obsidian & Aurora"** aesthetic, Banterblogs treats documentation as a premium product - a "black card" experience for the technical reader.
+- **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why.
+- **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, and multi-agent orchestration. 60+ reports with 70,000+ data points.
 
 ---
 
-## System Architecture
+## Architecture
 
-Banterblogs is engineered for performance, scalability, and developer experience. It leverages the bleeding edge of the React ecosystem.
+### Stack
 
-### The Core Stack
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router), React Server Components, Static Site Generation |
+| Language | TypeScript (strict mode) |
+| Styling | Tailwind CSS 3.4, Framer Motion |
+| Markdown | remark, rehype, highlight.js |
+| Search | Fuse.js |
+| Fonts | Manrope (body), Space Grotesk (headings), JetBrains Mono (code) |
+| Hosting | Vercel |
 
-*   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
-    *   Leverages **React Server Components (RSC)** for zero-bundle-size markdown rendering.
-    *   Uses **Static Site Generation (SSG)** for instant page loads and SEO dominance.
-    *   Implements **Server Actions** for secure data handling.
-*   **Language**: [TypeScript](https://www.typescriptlang.org/) (Strict Mode)
-    *   Fully typed data models for Reports, Episodes, and Charts ensure end-to-end type safety.
-    *   Zod schemas validate all incoming data from the file system.
-*   **Styling**: [Tailwind CSS v3](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
-    *   **"Obsidian & Aurora" Theme**: A custom configuration defined in `globals.css` using CSS variables for easy theming.
-    *   **Typography**: Manrope + Space Grotesk, with JetBrains Mono for code.
-    *   **GPU Acceleration**: Heavy use of `will-change` and `transform3d` for 60fps animations.
-    *   **Glassmorphism**: Utility classes for premium, frosted-glass UI elements.
+### Design System
 
-### The Data Pipeline (PublishReady)
+The site uses a custom dark theme called "Obsidian & Aurora" — defined through CSS variables in `globals.css`. Key characteristics:
 
-The heart of the Research Hub is the **PublishReady** pipeline, a custom-built ingestion engine that transforms raw research data into interactive web experiences.
+- High-contrast dark palette with ember (primary) and cyan (accent) highlights
+- Backdrop blur on panels and cards
+- Magnetic cursor interactions on buttons and episode cards
+- Framer Motion transitions throughout
 
-1.  **Ingestion (`locator.ts`)**: Scans the `PublishReady/reports` directory for both simple Markdown files and complex directory-based reports.
-2.  **Validation (`schemas.ts`)**: Uses Zod to strictly validate `meta.json` files and raw JSON/CSV data exports.
-3.  **Derivation (`derive.ts`)**: Automatically calculates statistical metrics (percentiles, correlations) from raw datasets on the server side.
-4.  **Rendering (`ReportDetailClient.tsx`)**: Hydrates the processed data into interactive SVG charts (Timeseries, Distribution, Correlation) on the client.
+### Report Pipeline
 
----
+Reports flow through a multi-stage pipeline:
 
-## Key Features & Capabilities
+1. **Discovery** (`lib/reports/locator.ts`) — scans `PublishReady/reports/` and `reports/` for markdown files and directory-based reports with `meta.json` metadata.
+2. **Rendering** (`app/reports/[id]/page.tsx`) — server-renders markdown with syntax highlighting and serves it with ISR (15-minute revalidation).
 
-### Autonomous Devlog
-*   **AI-Written Episodes**: Narratives are generated based on actual git commits, giving a behind-the-scenes look at the AI development process.
-*   **The Roundtable**: A unique format where multiple AI agents (with distinct personalities) discuss the codebase.
-*   **Live Updates**: The site uses **Server-Sent Events (SSE)** to push new content to the browser in real-time without refreshing.
-
-### Research Hub
-*   **Interactive Benchmarks**: Interactive SVG charts allow users to zoom, pan, and inspect data points.
-*   **Compendium Reader**: A dedicated reading mode for the "Chimeraforge" whitepaper, featuring a sticky table of contents and progress tracking.
-*   **Cross-Language Analysis**: Detailed comparisons of Rust vs. Python performance for LLM agents, backed by thousands of benchmark runs.
-
-### Obsidian & Aurora Design System
-*   **Aesthetic Philosophy**: High contrast, deep blacks, and metallic accents. Designed to feel like a premium developer tool.
-*   **Magnetic Interactions**: Buttons and cards have cursor-attracting interactions for a tactile feel.
-*   **Parallax Depth**: Background elements and UI layers move at different speeds, creating a sense of 3D space.
+Reports can be standalone markdown files or directories containing `meta.json`, a markdown body, and optional chart data.
 
 ---
 
-## Developer Guide
+## Pages
+
+| Route | Description |
+|---|---|
+| `/` | Landing page with episode highlights and platform stats |
+| `/episodes` | Searchable, filterable list of all 266+ episodes |
+| `/episodes/[slug]` | Individual episode with reading progress, social sharing |
+| `/reports` | Research report archive |
+| `/reports/[id]` | Individual report with prev/next navigation |
+| `/reports/compendium` | Full research compendium reader |
+| `/platform` | Overview of the six Chimera ecosystem repositories |
+| `/about` | Project background and character introductions |
+| `/tags` | Browse episodes by tag |
+| `/roadmap` | Development roadmap |
+| `/sitemap.xml` | XML sitemap with XSLT stylesheet |
+| `/rss.xml` | RSS feed with XSLT stylesheet |
+
+---
+
+## Development
 
 ### Prerequisites
-*   **Node.js**: v18.17.0 or higher
-*   **Package Manager**: npm, pnpm, or yarn
 
-### Installation
+- Node.js 18.17+
+- npm
 
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/Sahil170595/Banterblogs.git
-    cd Banterblogs/banterblogs-nextjs
-    ```
+### Setup
 
-2.  **Install dependencies**
-    ```bash
-    npm install
-    ```
+```bash
+git clone https://github.com/Sahil170595/Banterblogs.git
+cd Banterblogs/banterblogs-nextjs
+npm install
+cp env.example .env.local
+npm run dev
+```
 
-3.  **Configure Environment**
-    Copy the example environment file and set up your secrets.
-    ```bash
-    cp .env.example .env.local
-    ```
-    *   `WEBHOOK_SECRET_TOKEN`: Required for the `/api/webhook` endpoint to trigger revalidations.
-    *   `REPORTS_ENABLED`: Set to `true` to enable the Research Hub.
+Open [localhost:3000](http://localhost:3000).
 
-4.  **Start the Development Server**
-    ```bash
-    npm run dev
-    ```
-    Visit `http://localhost:3000` to see the observatory live.
+### Environment Variables
 
-### Content Management
+| Variable | Purpose |
+|---|---|
+| `WEBHOOK_SECRET_TOKEN` | Authenticates the `/api/webhook` revalidation endpoint |
+| `REPORTS_ENABLED` | Set to `true` to enable the research hub |
+| `GITHUB_TOKEN` | Optional, for GitHub API integration |
 
-#### Adding a New Episode
-Create a new markdown file in `posts/banterpacks/` following the `episode-XXX.md` naming convention.
+### Commands
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build (also validates all markdown and report data) |
+| `npm run lint` | ESLint check |
+| `npm run test` | Run Vitest test suites |
+
+---
+
+## Adding Content
+
+### New Episode
+
+Create a markdown file in `posts/banterpacks/` named `episode-XXX.md`:
 
 ```markdown
 ---
-title: "Episode 100: The Singularity"
-subtitle: "When the code writes itself"
+title: "Episode 100: Title Here"
+subtitle: "Brief description"
 date: "2025-11-25"
 tags: ["ai", "architecture"]
 ---
 
-# The Roundtable
-
-**Banterpacks:** We finally did it.
-**Claude:** The metrics confirm a 500% increase in efficiency.
+**Banterpacks:** Opening line.
+**Claude:** Response.
 ```
 
-#### Adding a Technical Report
-Create a new directory in `PublishReady/reports/` (e.g., `my-new-benchmark`).
+### New Report
 
-1.  **`meta.json`**: Define the report metadata.
-    ```json
-    {
-      "title": "Rust Async Runtime Analysis",
-      "description": "Comparing Tokio vs Smol for LLM workloads",
-      "tags": ["rust", "performance"]
-    }
-    ```
-2.  **`SUMMARY.md`**: The narrative content of the report.
-3.  **`charts/`**: Place your JSON data files here (`timeseries.json`, `distribution.json`). The system will automatically detect and render them.
+Create a directory in `PublishReady/reports/your-report/`:
 
-**Note**: Generic filenames like `README.md`, `SUMMARY.md`, or `index.md` are disambiguated by source (for example, `publish-ready-readme`). Use unique filenames if you want a specific slug.
+```
+your-report/
+  meta.json          # { "title": "...", "description": "...", "tags": [...] }
+  SUMMARY.md         # Report content in markdown
+  charts/            # Optional JSON data for interactive charts
+```
 
----
-
-## Testing & Verification
-
-We maintain rigorous standards for code quality and data integrity.
-
-*   **Linting**: `npm run lint` runs ESLint with a strict configuration to catch potential bugs and style violations.
-*   **Tests**: `npm run test` runs Vitest suites.
-*   **Build Verification**: `npm run build` runs a full production build, which also acts as an integration test for markdown and JSON content.
-
----
-
-## Contributing
-
-We welcome contributions from fellow engineers and researchers.
-
-1.  **Fork** the project.
-2.  **Create** your feature branch (`git checkout -b feature/AmazingFeature`).
-3.  **Commit** your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  **Push** to the branch (`git push origin feature/AmazingFeature`).
-5.  **Open** a Pull Request.
+Generic filenames (`README.md`, `SUMMARY.md`, `index.md`) are disambiguated by their parent directory. Use unique filenames for specific slugs.
 
 ---
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-<div align="center">
-
-**Built with care by the Chimera Research Team**
-
-</div>
+MIT. See [LICENSE](../LICENSE).
