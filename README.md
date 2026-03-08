@@ -1,119 +1,93 @@
 <div align="center">
 
-# ⚡ Banterblogs
-### The Official Devlog of the Chimera Ecosystem
+# Banterblogs
 
-[![Chimera Ecosystem](https://img.shields.io/badge/Ecosystem-Chimera-blueviolet?style=for-the-badge)](https://github.com/Sahil170595)
+**Development log and research archive for the Chimera ecosystem.**
+
+[![Live Site](https://img.shields.io/badge/Live-banterblogs.vercel.app-black?style=for-the-badge)](https://banterblogs.vercel.app)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-**A Living Observatory for Autonomous AI Development.**
-
-[Enter the Observatory](banterblogs-nextjs/) · [View Legacy Archive](legacy_archive/)
+[Visit the site](https://banterblogs.vercel.app) · [Browse episodes](https://banterblogs.vercel.app/episodes) · [Read reports](https://banterblogs.vercel.app/reports)
 
 </div>
 
 ---
 
-## 🌌 The Chimera Visiong
+## What is Banterblogs
 
-**Banterblogs** serves as the central nervous system for the **Chimera Ecosystem**, a suite of projects dedicated to pushing the boundaries of autonomous AI agents. It is not merely a collection of blog posts; it is a **living observatory** where we chronicle the evolution of our AI personas—*Banterpacks*, *Claude*, *ChatGPT*, and *Gemini*—as they build, debate, and optimize real-time systems.
+Banterblogs is the public-facing site for the Chimera ecosystem — a group of repositories building real-time AI tools for streamers. The site publishes two things:
 
-This repository houses the complete history of this journey, from the early static prototypes to the current, high-performance Next.js application.
+- **Episodes** — narrative write-ups generated from git commits across the ecosystem. Each episode is written as a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini), turning raw development activity into readable stories.
+- **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and multi-agent orchestration. Over 60 reports spanning 70,000+ measurements across 26 technical papers.
 
-### The Dual Mandate
-
-1.  **Narrative Intelligence**: We believe that code without context is meaningless. Through our **Episodes**, we document the *conversations* between agents that lead to architectural decisions. This "Roundtable" format provides a unique window into the cognitive processes of advanced LLMs.
-2.  ** rigorous Science**: The **Research Hub** is our commitment to empirical validation. We publish "Google Research-style" whitepapers and interactive benchmarks that rigorously test the performance of our agents, runtimes, and architectures.
+The site is live at [banterblogs.vercel.app](https://banterblogs.vercel.app) with 266 episodes and counting.
 
 ---
 
-## 📂 Repository Architecture
+## The Chimera Ecosystem
 
-This repository is structured as a monorepo containing two distinct eras of the project's lifecycle.
+Banterblogs documents work across six repositories:
 
-### 🚀 `banterblogs-nextjs` (The Modern Era)
-**Status: Active | Production**
-
-This is the current, cutting-edge implementation of the platform. It is a high-performance web application engineered for speed, interactivity, and visual fidelity.
-
-*   **Core Technology**: Built on **Next.js 15 (App Router)**, leveraging React Server Components (RSC) and Static Site Generation (SSG) for instantaneous page loads.
-*   **Visual Identity**: Features the **"Obsidian & Gold"** design system—a premium, high-contrast dark theme inspired by high-frequency trading terminals.
-*   **Key Capabilities**:
-    *   **Research Hub**: A dedicated section for rendering complex technical reports with interactive SVG charts (Timeseries, Distributions, Correlations).
-    *   **Live Updates**: Uses Server-Sent Events (SSE) to push narrative updates to the client in real-time.
-    *   **PublishReady Pipeline**: A custom ingestion engine that transforms raw JSON/CSV data into rich, interactive visualizations.
-
-[**Explore the Next.js Application »**](banterblogs-nextjs/)
-
-### 🏛️ `legacy_archive` (The Fossil Record)
-**Status: Archived | Frozen**
-
-This directory contains the archaeological remains of the project's v1 era. It is preserved for historical context and data mining purposes.
-
-*   **Contents**:
-    *   The original static HTML/JS website.
-    *   Early Python automation scripts for content generation.
-    *   Prototype data structures and experimental markdown files.
-*   **Purpose**: To serve as a reference point for how far the system has evolved. It demonstrates the transition from simple static files to a dynamic, component-driven architecture.
-
-[**View the Archive »**](legacy_archive/)
+| Repository | Purpose |
+|---|---|
+| **Banterpacks** | Real-time AI overlay for streamers. Multi-LLM routing, speech interfaces, OBS rendering. |
+| **Banterhearts** | ML backbone. Feedback ingestion, RLHF pipelines, quantized model deployment. |
+| **Chimeraforge** | Capacity planning and infrastructure tooling. |
+| **Chimera Multi-Agent** | Pipeline orchestration across agents and backends. |
+| **Chimeradroid** | Mobile extension of the platform. |
+| **Banterblogs** | This repository. The documentation and research layer. |
 
 ---
 
-## 🔬 The Research Hub
+## Repository Structure
 
-One of the crown jewels of Banterblogs is the **Research Hub**. This is where the **Chimera Research Team** publishes its findings on LLM agent performance.
-
-*   **Interactive Benchmarks**: We don't just show static graphs. Our charts are fully interactive, allowing users to zoom in on specific data points, toggle series, and analyze performance metrics like Time-To-First-Token (TTFT) and Tokens-Per-Second (TPS).
-*   **Compendium Reader**: The "Chimeraforge" whitepaper is presented in a distraction-free reading mode, optimized for deep technical study.
-*   **Cross-Language Analysis**: We provide detailed comparisons between **Rust** and **Python** implementations of our agentic workflows, offering hard data to support architectural choices.
-
----
-
-## 🚀 Getting Started
-
-To begin exploring the active development environment:
-
-1.  **Navigate to the active project**:
-    ```bash
-    cd banterblogs-nextjs
-    ```
-
-2.  **Install the dependencies**:
-    ```bash
-    npm install
-    ```
-
-3.  **Launch the observatory**:
-    ```bash
-    npm run dev
-    ```
-
-4.  **Open your browser**:
-    Visit `http://localhost:3000` to enter the observatory.
+```
+Banterblogs/
+  banterblogs-nextjs/     # The active Next.js application
+    src/                  # App source (pages, components, lib)
+    posts/                # 266 episode markdown files
+    reports/              # Technical report data (benchmarks, analysis)
+    PublishReady/         # Processed reports ready for rendering
+  legacy_archive/         # Original static site (archived, read-only)
+```
 
 ---
 
-## 🤝 Contributing
+## Tech Stack
 
-The Chimera Ecosystem is an open initiative. We welcome contributions from engineers, researchers, and AI enthusiasts who share our passion for autonomous systems.
-
-1.  **Fork** the repository.
-2.  **Create** a feature branch (`git checkout -b feature/NewInsight`).
-3.  **Commit** your changes (`git commit -m 'Add New Insight'`).
-4.  **Push** to the branch (`git push origin feature/NewInsight`).
-5.  **Open** a Pull Request.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **Next.js 15** (App Router) with React Server Components and Static Site Generation
+- **TypeScript** in strict mode
+- **Tailwind CSS 3.4** with a custom dark theme ("Obsidian & Aurora")
+- **Framer Motion** for animations
+- Markdown pipeline: remark, rehype, highlight.js
+- Search: Fuse.js
+- Deployed on Vercel
 
 ---
 
-<div align="center">
+## Running Locally
 
-**Built with 🖤 by the Chimera Research Team**
+```bash
+cd banterblogs-nextjs
+npm install
+npm run dev
+```
 
-</div>
+Open [localhost:3000](http://localhost:3000).
+
+To enable the research hub, copy `env.example` to `.env.local` and set `REPORTS_ENABLED=true`.
+
+---
+
+## Contributing
+
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/your-change`).
+3. Commit your changes.
+4. Open a pull request.
+
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE) for details.
