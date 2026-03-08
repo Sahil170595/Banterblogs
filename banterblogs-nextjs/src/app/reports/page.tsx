@@ -238,9 +238,6 @@ export default async function ReportsIndex() {
                     <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">
                       {r.title}
                     </div>
-                    <span className="inline-block mt-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 border border-border/40 px-2 py-0.5 rounded-full">
-                      {r.source}
-                    </span>
                   </div>
                   {r.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>

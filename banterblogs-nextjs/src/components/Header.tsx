@@ -8,10 +8,9 @@ import { SearchDialog } from './SearchDialog';
 import { GITHUB_URLS } from '@/lib/constants';
 
 const NAV_ITEMS = [
-  { href: '/banterpacks', label: 'Banterpacks' },
-  { href: '/chimera', label: 'Chimera' },
+  { href: '/platform', label: 'Platform' },
   { href: '/episodes', label: 'Episodes' },
-  { href: '/reports', label: 'Reports' },
+  { href: '/reports', label: 'Research' },
   { href: '/about', label: 'About' },
 ];
 

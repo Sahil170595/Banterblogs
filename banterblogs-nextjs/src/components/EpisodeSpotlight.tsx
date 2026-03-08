@@ -15,12 +15,13 @@ export function EpisodeSpotlight({ episodes }: EpisodeSpotlightProps) {
     <section className="container py-20 md:py-28">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl space-y-4">
-          <span className="signal-pill">Latest Field Reports</span>
+          <span className="signal-pill">Latest from the build</span>
           <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">
-            Every episode is a systems postmortem, just with better jokes.
+            Every commit, documented.
           </h2>
           <p className="text-sm text-muted-foreground sm:text-base">
-            We keep the rough edges. Each drop surfaces commits, telemetry, and the decisions that push Chimera toward a fully local assistant that behaves.
+            Each episode surfaces commits, telemetry, and engineering decisions as they happen.
+            Four AI personas debate the work — keeping the rough edges in.
           </p>
         </div>
         <Link

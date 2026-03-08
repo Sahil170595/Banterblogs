@@ -1,55 +1,56 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, BarChart3, BookOpen, BrainCircuit, Cpu, Radio, Smartphone } from 'lucide-react';
+import { ArrowRight, Radio, Cpu, BrainCircuit, BarChart3, Smartphone, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const systems = [
+const coreEngines = [
   {
     name: 'Banterpacks',
-    label: '122K LOC Monorepo',
-    description: 'Real-time streaming overlay with JARVIS AI gateway, manifest registry, constitutional AI governance, and a Rust runtime that cut latency by 58%.',
-    bullets: ['Sub-200ms event-to-render pipeline', 'JARVIS gateway with 4 LLM providers', '305+ automated tests'],
+    role: 'Real-Time Interface Layer',
+    description:
+      'Sub-200ms streaming overlay with multi-LLM routing, JARVIS AI gateway, constitutional AI governance, and a Rust runtime that cut latency by 58%.',
+    stats: ['122K LOC', '9 Python services', '10 Rust crates'],
     href: '/platform',
-    icon: <Radio className="h-5 w-5" />,
+    icon: <Radio className="h-6 w-6" />,
   },
   {
     name: 'Banterhearts',
-    label: '70K+ Measurements',
-    description: 'Production ML research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning — feeding 26 technical reports.',
-    bullets: ['32K LOC Python research platform', 'INT8/FP8 quantization and KV cache analysis', 'FastAPI production services'],
+    role: 'ML Research Backbone',
+    description:
+      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 30 technical reports.',
+    stats: ['32K LOC', '126K+ measurements', '4 compilation backends'],
     href: '/reports',
-    icon: <Cpu className="h-5 w-5" />,
+    icon: <Cpu className="h-6 w-6" />,
   },
+];
+
+const supportingSystems = [
   {
     name: 'Chimera Multi-Agent',
-    label: '6-Agent Pipeline',
-    description: 'Production orchestration with ingestor, collector, watcher, council, publisher, and translator agents backed by ClickHouse and Datadog.',
-    bullets: ['18K LOC Python pipeline', 'MCP servers for tool orchestration', 'Time-series analytics'],
+    role: '6-agent content pipeline',
+    description: 'Ingestor, collector, watcher, council, publisher, and translator agents backed by ClickHouse and 8 MCP servers.',
     href: '/chimera',
     icon: <BrainCircuit className="h-5 w-5" />,
   },
   {
-    name: 'Chimeraforge',
-    label: '4.3 GB Experiment Data',
-    description: 'Research breakout with a 4-gate capacity planner CLI for inference optimization, context scaling, and concurrency profiling.',
-    bullets: ['13K LOC benchmarking infra', 'Capacity planning CLI', 'Model output analysis'],
+    name: 'Chimeraforge Tools',
+    role: 'Capacity planning CLI',
+    description: '4-gate planner searching model, quant, backend, and agent count across 15 GPUs. 4.3 GB of experiment data.',
     href: '/reports',
     icon: <BarChart3 className="h-5 w-5" />,
   },
   {
     name: 'Chimeradroid',
-    label: 'Mobile Deployment',
-    description: 'Unity Android client connecting to the JARVIS v2 gateway — real device deployment extending the AI ecosystem to mobile.',
-    bullets: ['3K LOC C# / Unity', 'JARVIS v2 gateway client', 'Android native'],
+    role: 'Mobile deployment',
+    description: 'Unity Android client connecting to JARVIS v2 gateway with real-time streaming, session handoff, and mesh networking.',
     href: '/about',
     icon: <Smartphone className="h-5 w-5" />,
   },
   {
-    name: 'Chimeraforge',
-    label: 'This Site',
-    description: 'Automated documentation engine that ingests commits from all repos, generates multi-persona episodes, and publishes the research archive.',
-    bullets: ['Next.js with SSG + ISR', 'Multi-persona narration engine', '26-report research archive'],
+    name: 'This Site',
+    role: 'Automated documentation',
+    description: 'Ingests commits from all repos, generates multi-persona episodes, and publishes the research archive.',
     href: '/about',
     icon: <BookOpen className="h-5 w-5" />,
   },
@@ -58,60 +59,92 @@ const systems = [
 export function SystemsShowcase() {
   return (
     <section className="container py-20 md:py-28">
-      <div className="mx-auto max-w-4xl text-center">
-        <p className="text-xs uppercase tracking-[0.24em] text-primary/80 font-semibold">200K+ lines of code across 6 repositories</p>
-        <h2 className="mt-3 text-4xl md:text-5xl font-bold leading-tight display">
-          The Full Ecosystem.
-          <br />
-          <span className="gradient-text">One Mission: Chimera</span>
+      <div className="mx-auto max-w-3xl text-center">
+        <p className="text-xs uppercase tracking-[0.24em] text-primary/80 font-semibold">
+          What powers the platform
+        </p>
+        <h2 className="mt-3 text-3xl md:text-4xl font-bold leading-tight display">
+          Two core engines. Four supporting systems.
         </h2>
-        <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-          Real-time overlay. ML research with 70K+ measurements. Multi-agent orchestration. Mobile deployment.
-          All building toward a <strong className="text-accent">fully autonomous, privacy-first AI platform</strong>.
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+          Everything runs on Banterpacks and Banterhearts. The rest of the ecosystem
+          feeds into them, extends them, or ships what they produce.
         </p>
       </div>
 
-      <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {systems.map((system, index) => (
+      {/* Core engines — two big cards */}
+      <div className="mt-14 grid gap-6 md:grid-cols-2">
+        {coreEngines.map((engine, index) => (
           <motion.article
-            key={system.name}
+            key={engine.name}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-            viewport={{ once: true, amount: 0.4 }}
-            className="group relative overflow-hidden rounded-3xl border border-border/60 bg-card/60 p-6 backdrop-blur"
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-8 backdrop-blur"
           >
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                {system.icon}
+
+            <div className="flex items-center gap-3 mb-5">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                {engine.icon}
               </span>
-              {system.label}
+              <div>
+                <h3 className="text-xl font-semibold text-foreground">{engine.name}</h3>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{engine.role}</p>
+              </div>
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-foreground">
-              {system.name}
-            </h3>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {system.description}
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-muted-foreground/90">
-              {system.bullets.map((bullet) => (
-                <li key={bullet} className="flex items-start gap-2">
-                  <span className="mt-1 inline-flex h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" aria-hidden="true" />
-                  <span>{bullet}</span>
-                </li>
+
+            <p className="text-sm text-muted-foreground leading-relaxed">{engine.description}</p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {engine.stats.map((stat) => (
+                <span
+                  key={stat}
+                  className="inline-flex rounded-full border border-border/40 bg-muted/30 px-3 py-1 text-xs text-muted-foreground"
+                >
+                  {stat}
+                </span>
               ))}
-            </ul>
+            </div>
+
             <Link
-              href={system.href}
-              aria-label={`Deep dive into ${system.name}`}
-              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary/80"
+              href={engine.href}
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary/80"
             >
-              Deep dive
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              Learn more
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </motion.article>
         ))}
+      </div>
+
+      {/* Supporting systems — four smaller cards */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {supportingSystems.map((system, index) => (
+          <motion.article
+            key={system.name}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.08 }}
+            viewport={{ once: true, amount: 0.3 }}
+            className="group rounded-xl border border-border/40 bg-card/40 p-5 backdrop-blur transition hover:border-border/60 hover:bg-card/60"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                {system.icon}
+              </span>
+              <h3 className="text-sm font-semibold text-foreground">{system.name}</h3>
+            </div>
+            <p className="text-xs text-muted-foreground/80 uppercase tracking-[0.16em] mb-2">{system.role}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{system.description}</p>
+          </motion.article>
+        ))}
+      </div>
+
+      {/* Subtle engineering depth strip */}
+      <div className="mt-10 text-center text-sm text-muted-foreground/60">
+        6 repositories &middot; 30+ services &middot; 200K+ lines of code &middot; Python, TypeScript, Rust, C#
       </div>
     </section>
   );
