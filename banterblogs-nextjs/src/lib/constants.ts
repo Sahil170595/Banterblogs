@@ -21,7 +21,7 @@ export const EXTERNAL_LINKS = {
 
 export const SITE_CONFIG = {
   NAME: 'Chimeraforge',
-  DESCRIPTION: 'Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML research, multi-agent orchestration, and mobile deployment.',
+  DESCRIPTION: 'Personal AI platform running on your hardware — local inference, constitutional AI governance, and 126K+ research measurements.',
   AUTHOR: 'Sahil Kadadekar',
   TWITTER_HANDLE: '@sahilkadadekar',
 } as const;

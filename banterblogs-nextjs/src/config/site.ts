@@ -2,7 +2,7 @@ import path from "path";
 
 export const siteConfig = {
   name: "Chimeraforge",
-  description: "Autonomous devlog covering Banterpacks overlay, Banterhearts (Chimera Heart) ML platform, and the Chimeraforge automation loop.",
+  description: "Personal AI platform — local inference, constitutional AI governance, and 126K+ research measurements across 30 technical reports.",
   paths: {
     posts: path.join(process.cwd(), "posts"),
     banterpacks: path.join(process.cwd(), "posts", "banterpacks"),

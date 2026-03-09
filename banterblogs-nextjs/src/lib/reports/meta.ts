@@ -143,6 +143,10 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     title: 'TR136: Cross-Backend Safety Consistency',
     description: 'Ollama vs vLLM vs TGI safety comparison across 3 models, 4 backends, and 6 benchmarks.',
   },
+  'technical-report-137': {
+    title: 'TR137: The Safety Tax of Inference Optimization',
+    description: 'Unified synthesis of quantization, concurrency, and backend effects on LLM safety — 74,254 samples.',
+  },
 
   // ── Conclusive Reports & Whitepapers ──
   'technical-report-conclusive-108-116': {
@@ -180,6 +184,19 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   'technical-report-conclusive-123-133-whitepaper': {
     title: 'Phase 2 Decision Whitepaper',
     description: 'Executive guidance for deployment leaders — optimization phase synthesis.',
+  },
+
+  'technical-report-conclusive-134-137': {
+    title: 'Conclusive Report: Phase 3 (TR134–TR137)',
+    description: 'Dissertation-style synthesis — quantization-induced alignment erosion, concurrency invariance, backend template divergence, and safety taxonomy.',
+  },
+  'technical-report-conclusive-134-137-extended-appendices': {
+    title: 'Phase 3 Extended Appendices',
+    description: 'Supplemental material for the safety-critical deployment synthesis.',
+  },
+  'technical-report-conclusive-134-137-whitepaper': {
+    title: 'Phase 3 Decision Whitepaper',
+    description: 'Executive guidance for safety-critical LLM deployment.',
   },
 
   // ── Other ──

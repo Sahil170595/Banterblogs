@@ -233,10 +233,8 @@ export default async function ReportsIndex() {
               Executive-level decision documents. Start here if you need the bottom line.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {whitepapers
-              .filter((r) => !featuredSlugs.includes(r.slug))
-              .map((r) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {whitepapers.map((r) => (
                 <Link
                   key={r.slug}
                   href={`/reports/${r.slug}`}

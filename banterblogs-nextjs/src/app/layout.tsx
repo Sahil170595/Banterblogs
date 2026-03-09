@@ -6,7 +6,6 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AccessibilityPanel, KeyboardNavigation, FocusIndicator } from "@/components/AccessibilityPanel";
-import { OnboardingTrigger } from "@/components/OnboardingModal";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -19,22 +18,22 @@ export const metadata: Metadata = {
     default: "Chimeraforge",
     template: "%s | Chimeraforge",
   },
-  description: "Development log and research archive for the Chimera ecosystem — 6 repositories, 200K+ LOC spanning personal AI platform, ML research with 126K+ measurements, multi-agent orchestration, and mobile deployment.",
-  keywords: ["banterpacks", "banterhearts", "chimeraforge", "chimera", "banterblogs", "llm benchmarking", "multi-agent", "ai overlay", "ml research"],
+  description: "Personal AI platform running on your hardware — 6 repositories, 200K+ LOC, 126K+ research measurements, local inference with constitutional AI governance.",
+  keywords: ["chimeraforge", "personal ai", "jarvis", "local inference", "llm benchmarking", "multi-agent", "ml research", "banterpacks", "banterhearts"],
   authors: [{ name: "Sahil Kadadekar" }],
   creator: "Sahil Kadadekar",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://chimeraforge.vercel.app",
-    title: "Chimeraforge — Chimera Ecosystem",
-    description: "Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML benchmarking, multi-agent orchestration, and mobile deployment.",
+    title: "Chimeraforge — Personal AI Platform",
+    description: "Personal AI platform running on your hardware — local inference, constitutional AI governance, and 126K+ research measurements backing every decision.",
     siteName: "Chimeraforge",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Chimeraforge — Chimera Ecosystem",
-    description: "Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML benchmarking, multi-agent orchestration, and mobile deployment.",
+    title: "Chimeraforge — Personal AI Platform",
+    description: "Personal AI platform running on your hardware — local inference, constitutional AI governance, and 126K+ research measurements backing every decision.",
     creator: "@sahilkadadekar",
   },
   robots: {
@@ -73,7 +72,6 @@ export default function RootLayout({
               
               {/* Global UI Components */}
               <AccessibilityPanel />
-              <OnboardingTrigger className="fixed bottom-6 left-6 z-40" />
             </div>
           </KeyboardNavigation>
         </ErrorBoundary>

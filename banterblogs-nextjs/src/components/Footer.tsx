@@ -30,7 +30,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link
-                href="https://github.com/Sahil170595/Chimeraforge"
+                href="https://github.com/Sahil170595/Banterblogs"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition hover:text-primary"
