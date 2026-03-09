@@ -4,8 +4,11 @@
 
 export const GITHUB_URLS = {
   BANTERBLOGS: 'https://github.com/Sahil170595/Banterblogs',
+  CHIMERAFORGE: 'https://github.com/Sahil170595/Chimeraforge',
   // Banterpacks repository is private
 } as const;
+
+export const PYPI_URL = 'https://pypi.org/project/chimeraforge/' as const;
 
 export const SITE_URLS = {
   HOME: '/',

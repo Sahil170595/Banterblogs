@@ -179,10 +179,19 @@ export default async function PlatformPage() {
               <h3 className="text-sm font-semibold">Chimeraforge Tools</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Capacity planner and bench runner. 4-gate selection (VRAM, Quality, Latency, Cost)
+              LLM deployment optimizer on PyPI. 4-gate capacity planner (VRAM, Quality, Latency, Cost)
               across model x quant x backend x agents, 15-GPU database.
             </p>
             <span className="text-[10px] text-muted-foreground/70">39K LOC &middot; Python + Rust &middot; 158 tests</span>
+            <Link
+              href="https://pypi.org/project/chimeraforge/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              pip install chimeraforge
+              <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
 
           <div className="signal-panel p-5">

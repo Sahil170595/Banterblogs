@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Zap, Package, Copy, Check } from 'lucide-react';
+import { useState } from 'react';
 import type { Episode } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
@@ -17,6 +18,20 @@ interface HeroStats {
 interface HeroProps {
   stats: HeroStats;
   latestEpisode?: Episode;
+}
+
+function CopyButton() {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText('pip install chimeraforge');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button onClick={handleCopy} className="text-muted-foreground hover:text-primary transition-colors" aria-label="Copy install command">
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+    </button>
+  );
 }
 
 export function Hero({ stats, latestEpisode }: HeroProps) {
@@ -48,6 +63,24 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 Multi-modal assistant with smart home, calendar, memory, and proactive intelligence
                 — powered by constitutional AI governance and local inference. No cloud dependency.
               </p>
+            </div>
+
+            {/* Install command */}
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
+                <Package className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-muted-foreground">$</span>
+                <code className="text-foreground">pip install chimeraforge</code>
+                <CopyButton />
+              </div>
+              <Link
+                href="https://pypi.org/project/chimeraforge/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                v0.2.0 on PyPI
+              </Link>
             </div>
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">

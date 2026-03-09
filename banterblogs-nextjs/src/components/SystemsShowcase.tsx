@@ -35,9 +35,9 @@ const supportingSystems = [
   },
   {
     name: 'Chimeraforge Tools',
-    role: 'Capacity planning CLI',
-    description: '4-gate planner searching model, quant, backend, and agent count across 15 GPUs. 4.3 GB of experiment data.',
-    href: '/reports',
+    role: 'On PyPI — pip install chimeraforge',
+    description: 'LLM deployment optimizer backed by 70K+ measurements. 4-gate capacity planner across model, quant, backend, and agent count for 15 GPUs.',
+    href: 'https://pypi.org/project/chimeraforge/',
     icon: <BarChart3 className="h-5 w-5" />,
   },
   {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Github, Mail, Rss, Twitter } from 'lucide-react';
+import { Github, Mail, Package, Rss, Twitter } from 'lucide-react';
 
 const FOOTER_LINKS = {
   Explore: [
@@ -9,6 +9,7 @@ const FOOTER_LINKS = {
     { href: '/about', label: 'About' },
   ],
   Resources: [
+    { href: 'https://pypi.org/project/chimeraforge/', label: 'PyPI Package' },
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
     { href: 'https://github.com/Sahil170595/Banterblogs', label: 'GitHub' },
@@ -47,6 +48,14 @@ export function Footer() {
               </Link>
               <Link href="mailto:sahilkadadekar@gmail.com" className="transition hover:text-primary">
                 <Mail className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://pypi.org/project/chimeraforge/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-primary"
+              >
+                <Package className="h-5 w-5" />
               </Link>
               <Link href="/rss.xml" className="transition hover:text-primary">
                 <Rss className="h-5 w-5" />
