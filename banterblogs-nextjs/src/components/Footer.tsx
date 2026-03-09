@@ -1,23 +1,18 @@
 import Link from 'next/link';
-import { Github, Mail, Rss, Twitter } from 'lucide-react';
+import { Github, Mail, Package, Rss, Twitter } from 'lucide-react';
 
 const FOOTER_LINKS = {
-  Episodes: [
-    { href: '/episodes', label: 'All Episodes' },
-    { href: '/episodes?filter=latest', label: 'Latest' },
-    { href: '/episodes?filter=featured', label: 'Featured' },
-  ],
-  Platform: [
-    { href: '/platform', label: 'Platform Overview' },
-    { href: '/roadmap', label: 'Roadmap' },
+  Explore: [
+    { href: '/platform', label: 'Platform' },
+    { href: '/episodes', label: 'Episodes' },
+    { href: '/reports', label: 'Research' },
     { href: '/about', label: 'About' },
   ],
   Resources: [
-    { href: '/reports', label: 'Live Reports' },
-    { href: '/tags', label: 'Tags' },
+    { href: 'https://pypi.org/project/chimeraforge/', label: 'PyPI Package' },
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
-    { href: 'https://github.com/Sahil170595/Chimeraforge', label: 'Source Code' },
+    { href: 'https://github.com/Sahil170595/Banterblogs', label: 'GitHub' },
   ],
 } as const;
 
@@ -25,18 +20,18 @@ export function Footer() {
   return (
     <footer className="border-t border-border/60 bg-background/80">
       <div className="container py-14">
-        <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] md:gap-6">
+        <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))] md:gap-6">
           <div className="space-y-5">
             <div className="flex items-center gap-3">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">CF</span>
               <span className="text-lg font-semibold text-foreground">Chimeraforge</span>
             </div>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Development log and research archive for the Chimera ecosystem — real-time streaming AI, ML benchmarking, multi-agent orchestration, and mobile deployment.
+              Personal AI platform running on your hardware — local inference, constitutional AI governance, and 126K+ research measurements backing every decision.
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link
-                href="https://github.com/Sahil170595/Chimeraforge"
+                href="https://github.com/Sahil170595/Banterblogs"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition hover:text-primary"
@@ -53,6 +48,14 @@ export function Footer() {
               </Link>
               <Link href="mailto:sahilkadadekar@gmail.com" className="transition hover:text-primary">
                 <Mail className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://pypi.org/project/chimeraforge/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-primary"
+              >
+                <Package className="h-5 w-5" />
               </Link>
               <Link href="/rss.xml" className="transition hover:text-primary">
                 <Rss className="h-5 w-5" />

@@ -23,6 +23,15 @@ export function generateStaticParams() {
     .map((entry) => ({ id: entry.slug }));
 }
 
+function getReportType(slug: string): { label: string; color: string } {
+  const lower = slug.toLowerCase();
+  if (lower.includes('whitepaper')) return { label: 'Whitepaper', color: 'text-primary border-primary/40 bg-primary/10' };
+  if (lower.includes('appendix') || lower.includes('appendices')) return { label: 'Appendices', color: 'text-muted-foreground border-border/60 bg-muted/30' };
+  if (lower.includes('conclusive')) return { label: 'Conclusive Report', color: 'text-accent border-accent/40 bg-accent/10' };
+  if (lower.includes('compendium')) return { label: 'Compendium', color: 'text-primary border-primary/40 bg-primary/10' };
+  return { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' };
+}
+
 export default async function ReportDetail({ params }: { params: Promise<{ id: string }> }) {
   const reportsEnabled = process.env.REPORTS_ENABLED !== 'false';
   if (!reportsEnabled) {
@@ -36,74 +45,83 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
   }
 
   const meta = readReportMeta(id) || { title: id.replace(/[-_]/g, ' ') };
-  const sourceLabel = meta.source ?? report.source;
-
   const headings = report.sections.flatMap((s) => extractHeadings(s.markdown));
+  const reportType = getReportType(id);
 
   // Prev/next navigation
   const allSlugs = [...new Set(discoverReports().map((r) => r.slug))];
   const currentIndex = allSlugs.indexOf(id);
-  const prevReport = currentIndex > 0 ? allSlugs[currentIndex - 1] : null;
-  const nextReport = currentIndex >= 0 && currentIndex < allSlugs.length - 1 ? allSlugs[currentIndex + 1] : null;
+  const prevSlug = currentIndex > 0 ? allSlugs[currentIndex - 1] : null;
+  const nextSlug = currentIndex >= 0 && currentIndex < allSlugs.length - 1 ? allSlugs[currentIndex + 1] : null;
+  const prevMeta = prevSlug ? readReportMeta(prevSlug) : null;
+  const nextMeta = nextSlug ? readReportMeta(nextSlug) : null;
 
   return (
     <div className="container py-16">
-      <div className="signal-panel-strong mb-10 p-8 md:p-10">
-        <div className="flex flex-wrap items-start justify-between gap-6">
-          <div className="space-y-4">
-            <span className="signal-pill">Chimeraforge Report</span>
-            <h1 className="text-3xl md:text-4xl font-bold">{meta.title}</h1>
-            {meta.description && <p className="text-muted-foreground max-w-2xl">{meta.description}</p>}
-          </div>
-          <div className="min-w-[200px] space-y-3 text-sm text-muted-foreground">
-            <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
-              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Source</div>
-              <div className="mt-1 text-sm font-semibold text-foreground">{sourceLabel}</div>
-            </div>
-            <Link href="/reports" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80">
-              Back to reports
-            </Link>
-          </div>
+      {/* ── Header ── */}
+      <div className="mb-8">
+        <Link
+          href="/reports"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Research Archive
+        </Link>
+
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] ${reportType.color}`}>
+            {reportType.label}
+          </span>
         </div>
+
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{meta.title}</h1>
+        {meta.description && (
+          <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">{meta.description}</p>
+        )}
+
+        <div className="mt-6 h-px bg-gradient-to-r from-border/60 via-border/30 to-transparent" />
       </div>
+
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportJsonLd({ id, title: meta.title!, description: meta.description })) }} />
 
       <ReportTocMobile headings={headings} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-10">
+      {/* ── Content + Sidebar ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-12">
         <ReportMarkdown sections={report.sections} />
         <ReportTocSidebar headings={headings} />
       </div>
 
-      {(prevReport || nextReport) && (
-        <nav className="mt-16 grid gap-4 sm:grid-cols-2" aria-label="Report navigation">
-          {prevReport ? (
+      {/* ── Navigation ── */}
+      {(prevSlug || nextSlug) && (
+        <nav className="mt-16 pt-8 border-t border-border/30 grid gap-4 sm:grid-cols-2" aria-label="Report navigation">
+          {prevSlug ? (
             <Link
-              href={`/reports/${prevReport}`}
-              className="signal-panel p-5 group hover:border-primary/30 transition-colors"
+              href={`/reports/${prevSlug}`}
+              className="group p-5 rounded-xl border border-border/40 hover:border-primary/30 transition-colors"
             >
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <ArrowLeft className="h-3 w-3" />
-                Previous Report
+                Previous
               </div>
-              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                {toHumanTitle(prevReport)}
+              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                {prevMeta?.title ?? toHumanTitle(prevSlug)}
               </div>
             </Link>
           ) : (
             <div />
           )}
-          {nextReport && (
+          {nextSlug && (
             <Link
-              href={`/reports/${nextReport}`}
-              className="signal-panel p-5 group hover:border-primary/30 transition-colors text-right"
+              href={`/reports/${nextSlug}`}
+              className="group p-5 rounded-xl border border-border/40 hover:border-primary/30 transition-colors text-right"
             >
-              <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-1">
-                Next Report
+              <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
+                Next
                 <ArrowRight className="h-3 w-3" />
               </div>
-              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                {toHumanTitle(nextReport)}
+              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                {nextMeta?.title ?? toHumanTitle(nextSlug)}
               </div>
             </Link>
           )}

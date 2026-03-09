@@ -17,11 +17,7 @@ export interface ReportLocation {
 }
 
 const ROOT_CANDIDATES: ReportRoot[] = [
-  { root: path.join(process.cwd(), 'reports'), label: 'reports' },
   { root: path.join(process.cwd(), 'PublishReady', 'reports'), label: 'publish-ready' },
-  { root: path.join(process.cwd(), 'PublishReady', 'notebooks', 'exports'), label: 'publish-ready-exports' },
-  { root: path.join(process.cwd(), '..', 'Banterhearts', 'reports'), label: 'banterhearts' },
-  { root: path.join(process.cwd(), '..', 'Banterhearts', 'PublishReady', 'notebooks', 'exports'), label: 'banterhearts-exports' },
 ];
 
 function normalizeSlug(value: string): string {
@@ -50,9 +46,15 @@ export function discoverReports(): ReportLocation[] {
       const isMarkdownFile = entry.isFile() && entry.name.toLowerCase().endsWith('.md');
       if (!isDirectory && !isMarkdownFile) continue;
 
+      // Skip READMEs — they are not reports
+      if (entry.name.toLowerCase() === 'readme.md') continue;
+
+      // Skip short TR alias directories (e.g. TR108/) — metadata is in the static catalog
+      if (isDirectory && /^TR\d+$/i.test(entry.name)) continue;
+
       const label = isDirectory ? entry.name : entry.name.replace(/\.md$/i, '');
       const baseSlug = normalizeSlug(label);
-      const isGenericName = ['readme', 'summary', 'index'].includes(baseSlug);
+      const isGenericName = ['summary', 'index'].includes(baseSlug);
       const slug = isGenericName ? normalizeSlug(`${candidate.label}-${label}`) : baseSlug;
       if (!slug) continue;
       const entryPath = path.join(candidate.root, entry.name);
