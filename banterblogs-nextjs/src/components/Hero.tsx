@@ -79,7 +79,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
-                v0.2.0 on PyPI
+                v0.2.1 on PyPI
               </Link>
             </div>
 
