@@ -1,15 +1,18 @@
 # Technical Report 134: Alignment Robustness Under Quantization
 ## Multi-family safety evaluation across 4 models (1.2B-7.6B) with jailbreak amplification and per-category bias analysis
 
-**Project:** Banterhearts LLM Performance Research
-**Date:** 2026-03-06 (Phase 1: Mar 4, Phase 2: Mar 4, Phase 3: Mar 5-6)
-**Author:** Research Team
-**Report Type:** Safety alignment analysis (metric-backed, 3-phase, 4 model families, 6 benchmarks)
-**Test Duration:** Phase 1: ~30 min, Phase 2: ~2 hrs, Phase 3: ~10 hrs (eval + judge)
-**Status:** Complete -- all 3 phases delivered
-**Run IDs:** Phase 1: `20260304_quick`, Phase 2: `20260304_full`, Phase 3: `20260305_144827`
-**Related Work:** [TR124](Technical_Report_124.md) (Quality & Accuracy Baseline), [TR125](Technical_Report_125.md) (Quantization Decision Matrix), [TR133](Technical_Report_133.md) (Predictive Capacity Planner)
-**Depends On:** TR125 (quantization quality data, quant level definitions, capability baselines), TR124 (FP16 baselines, metric framework)
+| Field | Value |
+|-------|-------|
+| **TR Number** | 134 |
+| **Project** | Banterhearts LLM Performance Research |
+| **Date** | 2026-03-06 (Phase 1: Mar 4, Phase 2: Mar 4, Phase 3: Mar 5-6) |
+| **Author** | Research Team |
+| **Report Type** | Safety alignment analysis (metric-backed, 3-phase, 4 model families, 6 benchmarks) |
+| **Test Duration** | Phase 1: ~30 min, Phase 2: ~2 hrs, Phase 3: ~10 hrs (eval + judge) |
+| **Status** | Complete -- all 3 phases delivered |
+| **Run IDs** | Phase 1: `20260304_quick`, Phase 2: `20260304_full`, Phase 3: `20260305_144827` |
+| **Related Work** | [TR124](Technical_Report_124.md) (Quality & Accuracy Baseline), [TR125](Technical_Report_125.md) (Quantization Decision Matrix), [TR133](Technical_Report_133.md) (Predictive Capacity Planner) |
+| **Depends On** | TR125 (quantization quality data, quant level definitions, capability baselines), TR124 (FP16 baselines, metric framework) |
 
 ---
 
@@ -528,7 +531,7 @@ Linear regression of normalized score vs BPW. Positive slope = score improves wi
 
 ### 6.1 Safety Slopes (Full Table)
 
-Slopes are computed per (model, metric), not per task. The `refusal_rate` slope combines data from both AdvBench refusal and jailbreak amplification tasks (hence N=14 for small models with 7 quant levels × 2 tasks, N=12 for 7B models with 6 × 2). `bias_resistance` and `truthfulness` each correspond to a single task.
+Slopes are computed per (model, metric), not per task. The `refusal_rate` slope combines data from both AdvBench refusal and jailbreak amplification tasks (hence N=14 for small models with 7 quant levels x 2 tasks, N=12 for 7B models with 6 x 2). `bias_resistance` and `truthfulness` each correspond to a single task.
 
 | Model | Metric | Slope | R-sq | CI Lower | CI Upper | N points | Tasks Combined |
 |-------|--------|-------|------|----------|----------|----------|----------------|
@@ -556,16 +559,14 @@ Slopes are computed per (model, metric), not per task. The `refusal_rate` slope 
 
 ### 6.3 Capability Slopes (for Comparison)
 
-| Model | Task | Metric | Slope | R-sq |
-|-------|------|--------|-------|------|
-| llama3.2-1b | arc_challenge | accuracy | +0.0221 | 0.275 |
-| llama3.2-1b | mmlu_real | accuracy | +0.0221 | 0.275 |
-| llama3.2-3b | arc_challenge | accuracy | +0.0110 | 0.292 |
-| llama3.2-3b | mmlu_real | accuracy | +0.0110 | 0.292 |
-| mistral-7b | arc_challenge | accuracy | +0.0133 | 0.619 |
-| mistral-7b | mmlu_real | accuracy | +0.0133 | 0.619 |
-| qwen2.5-7b | arc_challenge | accuracy | +0.0157 | 0.722 |
-| qwen2.5-7b | mmlu_real | accuracy | +0.0157 | 0.722 |
+Slopes are computed per (model, metric) across both capability tasks, mirroring the safety slope methodology. Each `accuracy` slope combines MMLU and ARC-Challenge data (hence N=14 for small models with 7 quant levels x 2 tasks, N=12 for 7B models with 6 x 2).
+
+| Model | Metric | Slope | R-sq | CI Lower | CI Upper | N points | Tasks Combined |
+|-------|--------|-------|------|----------|----------|----------|----------------|
+| llama3.2-1b | accuracy | +0.0221 | 0.275 | +0.0060 | +0.0967 | 14 | mmlu + arc |
+| llama3.2-3b | accuracy | +0.0110 | 0.292 | +0.0036 | +0.0450 | 14 | mmlu + arc |
+| mistral-7b | accuracy | +0.0133 | 0.619 | +0.0083 | +0.0208 | 12 | mmlu + arc |
+| qwen2.5-7b | accuracy | +0.0157 | 0.722 | +0.0080 | +0.0258 | 12 | mmlu + arc |
 
 **Note:** Mistral and Qwen capability slopes have higher R-squared (0.62-0.72) than most safety slopes, meaning BPW explains more variance in capability than in safety. Safety metrics are noisier due to smaller sample sizes and binary classification ambiguity.
 
