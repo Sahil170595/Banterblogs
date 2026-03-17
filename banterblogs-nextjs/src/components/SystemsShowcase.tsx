@@ -18,8 +18,8 @@ const coreEngines = [
     name: 'Banterhearts',
     role: 'ML Research Backbone',
     description:
-      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 30 technical reports.',
-    stats: ['32K LOC', '126K+ measurements', '4 compilation backends'],
+      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 35 technical reports.',
+    stats: ['32K LOC', '204K+ measurements', '4 compilation backends'],
     href: '/reports',
     icon: <Cpu className="h-6 w-6" />,
   },

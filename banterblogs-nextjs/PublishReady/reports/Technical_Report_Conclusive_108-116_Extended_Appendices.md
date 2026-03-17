@@ -1,7 +1,12 @@
 # Conclusive Report 108-116: Extended Appendices
 ## Supplemental material extracted from the main conclusive report
 
-This file mirrors the extended appendices for convenience. The main conclusive report is the canonical deep-dive document; the content here is supplemental and should be treated as supporting material.
+| Field | Value |
+|-------|-------|
+| **Report Type** | Extended appendices |
+| **Scope** | 108-116 |
+| **Status** | Supplemental |
+| **Main Report** | [Technical_Report_Conclusive_108-116.md](Technical_Report_Conclusive_108-116.md) |
 
 ---
 
@@ -978,7 +983,7 @@ annual_savings = (python_gpu_hours - rust_gpu_hours) * gpu_hourly_rate * 12
 
 1. **3+ Agent Scaling (TR117+):** Characterize performance beyond 2 concurrent agents. Expected challenges: VRAM pressure, increased coordination overhead, potential need for 3+ Ollama instances.
 2. **Linux Validation:** Reproduce key findings (TR112, TR114, TR116) on Linux to confirm OS independence.
-3. **Cloud GPU Validation:** Test on datacenter GPUs (A100, H100) to determine if consumer-GPU findings generalize.
+3. **Cloud GPU Validation:** Test on datacenter GPUs (A100, H_100) to determine if consumer-GPU findings generalize.
 4. **Quality Measurement Integration:** Add automated quality metrics (BLEU, coherence scores, structured output compliance) to the benchmark suite.
 5. **Long-Context Evaluation:** Extend benchmarks to 4096+ token contexts for document processing workloads.
 6. **Model Fine-Tuning Impact:** Evaluate whether fine-tuned models exhibit different scaling characteristics than base/instruct models.

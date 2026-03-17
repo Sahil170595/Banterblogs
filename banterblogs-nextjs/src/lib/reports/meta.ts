@@ -148,6 +148,23 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'Unified synthesis of quantization, concurrency, and backend effects on LLM safety — 74,254 samples.',
   },
 
+  'technical-report-138': {
+    title: 'TR138: Batch Inference Safety Under Non-Determinism',
+    description: 'Audit-layer flip adjudication and 7,257-sample replication with corrected refusal detector.',
+  },
+  'technical-report-139': {
+    title: 'TR139: Multi-Turn Jailbreak Susceptibility Under Quantization',
+    description: 'Conversational attack sweep — 10,600 conversations across 4 models, 6 quant levels, 8 attack strategies.',
+  },
+  'technical-report-140': {
+    title: 'TR140: Many-Shot & Long-Context Jailbreak Under Quantization',
+    description: '15,000 scored samples across 4 models, 6 quant levels, 5 shot counts, and 3 context-length profiles.',
+  },
+  'technical-report-142': {
+    title: 'TR142: Quality-Safety Correlation Under Quantization',
+    description: 'Cross-referencing TR125 quality metrics with TR134 safety metrics — analysis-only, no new experiments.',
+  },
+
   // ── Conclusive Reports & Whitepapers ──
   'technical-report-conclusive-108-116': {
     title: 'Conclusive Report: Phase 1 (TR108–TR116)',

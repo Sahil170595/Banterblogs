@@ -27,7 +27,7 @@ export function Footer() {
               <span className="text-lg font-semibold text-foreground">Chimeraforge</span>
             </div>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Personal AI platform running on your hardware — local inference, constitutional AI governance, and 126K+ research measurements backing every decision.
+              Personal AI platform running on your hardware — local inference, constitutional AI governance, and 204K+ research measurements backing every decision.
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link
