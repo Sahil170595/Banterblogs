@@ -111,7 +111,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 services
               </div>
               <div>
-                <span className="text-lg font-bold text-foreground">204K+</span>{' '}
+                <span className="text-lg font-bold text-foreground">555K+</span>{' '}
                 research measurements
               </div>
               <div>

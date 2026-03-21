@@ -160,9 +160,17 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     title: 'TR140: Many-Shot & Long-Context Jailbreak Under Quantization',
     description: '15,000 scored samples across 4 models, 6 quant levels, 5 shot counts, and 3 context-length profiles.',
   },
+  'technical-report-141': {
+    title: 'TR141: Cross-Architecture Refusal Fragility Under Batch Perturbation',
+    description: '127,224 records across 18 models, 10+ families, 4 alignment types — batch-induced safety flip asymmetry on Blackwell GPU.',
+  },
   'technical-report-142': {
     title: 'TR142: Quality-Safety Correlation Under Quantization',
     description: 'Cross-referencing TR125 quality metrics with TR134 safety metrics — analysis-only, no new experiments.',
+  },
+  'technical-report-143': {
+    title: 'TR143: Cross-Request Safety Leakage Under Continuous Batching',
+    description: '14,250 records — batch composition effects on safety in multi-tenant vLLM inference.',
   },
 
   // ── Conclusive Reports & Whitepapers ──
@@ -214,6 +222,19 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   'technical-report-conclusive-134-137-whitepaper': {
     title: 'Phase 3 Decision Whitepaper',
     description: 'Executive guidance for safety-critical LLM deployment.',
+  },
+
+  'technical-report-conclusive-138-143': {
+    title: 'Conclusive Report: Phase 3.5 (TR138–TR143)',
+    description: 'Safety attack-surface synthesis — 306,996 samples across batch perturbation, multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, and composition effects.',
+  },
+  'technical-report-conclusive-138-143-extended-appendices': {
+    title: 'Phase 3.5 Extended Appendices',
+    description: 'Supplemental material for the safety attack-surface synthesis.',
+  },
+  'technical-report-conclusive-138-143-whitepaper': {
+    title: 'Phase 3.5 Decision Whitepaper',
+    description: 'Executive guidance for safety attack-surface management in LLM inference.',
   },
 
   // ── Other ──

@@ -95,8 +95,8 @@ export default async function PlatformPage() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-              ML research platform and production inference backbone. 204,000+ CUDA-timed measurements
-              across 35 technical reports, targeting RTX 4080 Laptop (12GB VRAM) with sub-100ms inference.
+              ML research platform and production inference backbone. 555,000+ measurements
+              across 36 technical reports, targeting consumer GPUs with sub-100ms inference.
             </p>
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
@@ -213,7 +213,7 @@ export default async function PlatformPage() {
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
               Public presence and research archive. Next.js 15 with SSG + ISR, 266+ episodes,
-              35+ technical reports, and full-text search.
+              36 technical reports, and full-text search.
             </p>
             <span className="text-[10px] text-muted-foreground/70">8K LOC &middot; TypeScript &middot; Vercel</span>
           </div>
@@ -225,7 +225,7 @@ export default async function PlatformPage() {
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
             { value: '200K+', label: 'Lines of Code' },
-            { value: '204K+', label: 'Research Measurements' },
+            { value: '555K+', label: 'Research Measurements' },
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatReadingTime(stats.totalReadingTime), label: 'Total Reading Time' },
             { value: '30+', label: 'Services' },
@@ -295,7 +295,7 @@ export default async function PlatformPage() {
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
-              35+ technical reports with 204,000+ measurements across inference, optimization, and safety.
+              36 technical reports with 555,000+ measurements across inference, optimization, and safety.
             </p>
             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
               Browse reports <ArrowRight className="h-3 w-3" />

@@ -22,8 +22,8 @@ const highlights = [
   },
   {
     label: 'Phase 3 — Safety',
-    range: 'TR134–TR142',
-    summary: 'Alignment under quantization, concurrency x safety, multi-turn jailbreaks, many-shot attacks, quality-safety correlation.',
+    range: 'TR134–TR143',
+    summary: 'Alignment under quantization, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, cross-request composition.',
   },
 ];
 
@@ -35,7 +35,7 @@ export function RoadmapRail() {
           Research Program
         </p>
         <h2 className="mt-3 text-3xl md:text-4xl font-bold leading-tight display">
-          204,000+ measurements across 35 technical reports
+          555,000+ measurements across 36 technical reports
         </h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
           Independent ML research with CUDA event timing and controlled safety evaluations.
