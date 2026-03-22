@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Github, Mail, Package, Rss, Twitter } from 'lucide-react';
+import { BookOpen, Github, Mail, Package, Rss, Twitter } from 'lucide-react';
 
 const FOOTER_LINKS = {
   Explore: [
@@ -13,6 +13,7 @@ const FOOTER_LINKS = {
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
     { href: 'https://github.com/Sahil170595/Banterblogs', label: 'GitHub' },
+    { href: 'https://substack.com/@sahilkadadekar', label: 'Substack' },
   ],
 } as const;
 
@@ -56,6 +57,14 @@ export function Footer() {
                 className="transition hover:text-primary"
               >
                 <Package className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://substack.com/@sahilkadadekar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-primary"
+              >
+                <BookOpen className="h-5 w-5" />
               </Link>
               <Link href="/rss.xml" className="transition hover:text-primary">
                 <Rss className="h-5 w-5" />
