@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
+
+export const metadata: Metadata = {
+  title: 'Banterpacks Episodes',
+  description: 'Development episodes from the production monorepo — JARVIS gateway, intelligence pipeline, constitutional AI, and Rust runtime.',
+};
 
 export const runtime = 'nodejs';
 

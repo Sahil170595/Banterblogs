@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
 
 export const metadata: Metadata = {
     title: 'Chimeraforge Whitepaper: High-Performance LLM Agent Orchestration',
-    description: 'A definitive comparison of Rust vs. Python for real-time gaming AI, synthesizing findings from 8 technical reports.',
+    description: 'Rust vs. Python for production AI orchestration — hybrid architecture and Dual Ollama pattern achieving 58% latency reduction.',
 };
 
 export default async function CompendiumPage() {
@@ -27,7 +27,7 @@ export default async function CompendiumPage() {
         <div className="container py-16">
             <div className="mb-8">
                 <Link href="/reports" className="text-sm text-muted-foreground hover:text-primary transition-colors mb-4 inline-block">
-                    &larr; Back to Observatory
+                    &larr; Research Archive
                 </Link>
             </div>
 
@@ -41,17 +41,17 @@ export default async function CompendiumPage() {
                         <div className="rounded-xl border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
                             <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">About this Paper</h3>
                             <p className="text-sm text-muted-foreground mb-4">
-                                This whitepaper synthesizes findings from 8 technical reports (TR108-TR115) conducted by the Chimeraforge Research Team.
+                                This whitepaper synthesizes the foundational Phase 1 research (TR108-TR116) — the Rust vs. Python comparison that shaped the platform architecture.
                             </p>
                             <div className="text-xs text-muted-foreground/60">
-                                Published: November 2025
+                                Published: November 2025 &middot; Sahil Kadadekar
                             </div>
                         </div>
 
                         <div className="rounded-xl border border-border/50 bg-muted/20 p-6">
                             <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Source Data</h3>
                             <p className="text-sm text-muted-foreground mb-4">
-                                Access the raw technical reports, benchmarks, and configuration matrices used in this study.
+                                Access all 36 technical reports, 555K+ measurements, and phase whitepapers.
                             </p>
                             <Link href="/reports" className="text-sm text-primary hover:underline flex items-center gap-1">
                                 View Technical Archives <span>&rarr;</span>

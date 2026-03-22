@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
+
+export const metadata: Metadata = {
+  title: 'Chimera Engine Episodes',
+  description: 'Development episodes covering the multi-LLM orchestration engine — constitutional AI, multi-agent coordination, and intelligence pipeline.',
+};
 
 export const runtime = 'nodejs';
 
