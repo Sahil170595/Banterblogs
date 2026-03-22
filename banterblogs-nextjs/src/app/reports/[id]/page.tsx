@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -11,6 +12,25 @@ import { reportJsonLd } from './schema.org.json';
 
 export const runtime = 'nodejs';
 export const revalidate = 900;
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const meta = readReportMeta(id);
+  const title = meta?.title ?? toHumanTitle(id);
+  const description = meta?.description ?? `Technical report: ${title}`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | Chimeraforge`,
+      description,
+    },
+    twitter: {
+      title: `${title} | Chimeraforge`,
+      description,
+    },
+  };
+}
 
 export function generateStaticParams() {
   const seen = new Set<string>();
