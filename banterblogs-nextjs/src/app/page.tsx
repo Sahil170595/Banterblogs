@@ -26,11 +26,11 @@ export default async function HomePage() {
     console.error('Error loading episodes for homepage:', error);
     // Fallback to static values if loading fails
     stats = {
-      totalEpisodes: 87,
-      totalFilesChanged: 2500,
-      totalLinesAdded: 125000,
-      avgComplexity: 75,
-      totalReadingTime: 14400
+      totalEpisodes: 266,
+      totalFilesChanged: 18123,
+      totalLinesAdded: 1915908,
+      avgComplexity: 50,
+      totalReadingTime: 1533
     };
   }
 

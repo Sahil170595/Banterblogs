@@ -17,7 +17,7 @@ export async function GET() {
       '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
       '  <channel>',
       '    <title>Chimeraforge - Building Chimera</title>',
-      '    <description>Development log and research archive for the Chimera ecosystem — 200K+ LOC across real-time streaming AI, ML research, multi-agent orchestration, and mobile deployment.</description>',
+      '    <description>Development log and research archive for the Chimera ecosystem — 200K+ LOC, 555K+ research measurements across local inference, ML research, multi-agent orchestration, and safety alignment.</description>',
       `    <link>${BASE}</link>`,
       '    <language>en-us</language>',
       `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,

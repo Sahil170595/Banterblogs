@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Cpu, Radio, Sparkles } from 'lucide-react';
 import { getAllEpisodes } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
+
+export const metadata: Metadata = {
+  title: 'Episodes',
+  description: 'Full development timeline across Banterpacks and Chimera Engine — 266+ episodes from raw commits to benchmarked outcomes.',
+};
 
 export const runtime = 'nodejs';
 

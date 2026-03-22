@@ -26,7 +26,6 @@ export async function GET() {
       urlEntry(`${BASE}/reports/compendium`, now, 'monthly', 0.85),
       urlEntry(`${BASE}/platform`, now, 'weekly', 0.8),
       urlEntry(`${BASE}/tags`, now, 'weekly', 0.7),
-      urlEntry(`${BASE}/roadmap`, now, 'monthly', 0.7),
     ];
 
     for (const slug of reportSlugs) {

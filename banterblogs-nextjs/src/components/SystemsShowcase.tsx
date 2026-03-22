@@ -9,7 +9,7 @@ const coreEngines = [
     name: 'Banterpacks',
     role: 'Real-Time Interface Layer',
     description:
-      'Sub-200ms streaming overlay with multi-LLM routing, JARVIS AI gateway, constitutional AI governance, and a Rust runtime that cut latency by 58%.',
+      'Sub-200ms AI orchestration with multi-LLM routing, JARVIS gateway, constitutional AI governance, and a Rust runtime that cut latency by 58%.',
     stats: ['122K LOC', '9 Python services', '10 Rust crates'],
     href: '/platform',
     icon: <Radio className="h-6 w-6" />,
@@ -18,8 +18,8 @@ const coreEngines = [
     name: 'Banterhearts',
     role: 'ML Research Backbone',
     description:
-      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 35 technical reports.',
-    stats: ['32K LOC', '204K+ measurements', '4 compilation backends'],
+      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 36 technical reports.',
+    stats: ['32K LOC', '555K+ measurements', '4 compilation backends'],
     href: '/reports',
     icon: <Cpu className="h-6 w-6" />,
   },

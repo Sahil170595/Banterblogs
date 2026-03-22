@@ -8,7 +8,7 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 export const metadata: Metadata = {
   title: 'Research Archive',
   description:
-    'Independent ML research: 204,000+ measurements across model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination, and cross-backend safety analysis.',
+    'Independent ML research: 555,000+ measurements across model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination, and cross-backend safety analysis.',
 };
 
 export const revalidate = 900;
@@ -61,9 +61,14 @@ const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = [
     summary: 'Optimization synthesis — KV cache tuning, INT8/FP8 quantization, context scaling, and deployment pipeline across 11 reports.',
   },
   {
-    slug: 'technical-report-117',
-    label: 'TR117: Cross-Backend Frontier',
-    summary: 'Multi-agent inference parity benchmark — the report that established baseline performance across all backends.',
+    slug: 'technical-report-conclusive-134-137-whitepaper',
+    label: 'Phase 3 Whitepaper',
+    summary: 'Safety synthesis — alignment erosion under quantization, concurrency invariance, and backend template divergence across 4 reports.',
+  },
+  {
+    slug: 'technical-report-conclusive-138-143-whitepaper',
+    label: 'Phase 3.5 Whitepaper',
+    summary: 'Attack-surface synthesis — batch perturbation, multi-turn jailbreaks, cross-architecture fragility, and composition effects across 306K+ samples.',
   },
 ];
 
@@ -103,7 +108,7 @@ export default async function ReportsIndex() {
   const technicalByPhase = new Map<string, ReportEntry[]>();
 
   const PHASE_META: Record<string, { label: string; description: string; order: number }> = {
-    'phase3': { label: 'Phase 3 — Safety (TR134–TR142)', description: 'Alignment under quantization, concurrency x safety, multi-turn jailbreaks, many-shot attacks, quality-safety correlation.', order: 0 },
+    'phase3': { label: 'Phase 3 — Safety (TR134–TR143)', description: 'Alignment under quantization, batch perturbation, multi-turn jailbreaks, many-shot attacks, cross-architecture fragility, cross-request composition.', order: 0 },
     'phase2': { label: 'Phase 2 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 1 },
     'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 2 },
     'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 3 },
@@ -160,7 +165,7 @@ export default async function ReportsIndex() {
       {/* ── Stats Ribbon ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: '204,000+', label: 'Research Measurements' },
+          { value: '555,000+', label: 'Research Measurements' },
           { value: String(reports.length), label: 'Technical Reports' },
           { value: '200K+', label: 'Lines of Code' },
           { value: '<100ms', label: 'Inference Target' },
@@ -190,7 +195,7 @@ export default async function ReportsIndex() {
               Chimeraforge: High-Performance LLM Agent Orchestration
             </h3>
             <p className="text-base md:text-lg text-muted-foreground max-w-3xl mb-6 leading-relaxed">
-              Rust vs. Python for real-time gaming AI. A hybrid architecture and &quot;Dual Ollama&quot; pattern
+              Rust vs. Python for production AI orchestration. A hybrid architecture and &quot;Dual Ollama&quot; pattern
               achieve 58% latency reduction and near-zero contention.
             </p>
             <span className="inline-flex items-center gap-2 text-primary font-medium">
@@ -201,7 +206,7 @@ export default async function ReportsIndex() {
         </Link>
 
         {/* Featured report cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {FEATURED_REPORTS.map((feat) => (
             <Link
               key={feat.slug}
