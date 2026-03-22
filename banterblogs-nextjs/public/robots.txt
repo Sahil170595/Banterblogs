@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /episodes-dynamic
+Disallow: /episodes-live
+Disallow: /roadmap
+Disallow: /benchmarks
+Disallow: /technology
+
+Sitemap: https://chimeraforge.vercel.app/sitemap.xml
