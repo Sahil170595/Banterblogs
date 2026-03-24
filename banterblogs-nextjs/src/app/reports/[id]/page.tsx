@@ -96,7 +96,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
 
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{meta.title}</h1>
         {meta.description && (
-          <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">{meta.description}</p>
+          <p className="text-lg text-muted-foreground leading-relaxed">{meta.description}</p>
         )}
 
         <div className="mt-6 h-px bg-gradient-to-r from-border/60 via-border/30 to-transparent" />

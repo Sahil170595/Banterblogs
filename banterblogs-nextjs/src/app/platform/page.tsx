@@ -24,16 +24,15 @@ export default async function PlatformPage() {
     <div className="container py-16">
       {/* ── Hero ── */}
       <div className="signal-panel-strong mb-16 p-8 md:p-12">
-        <div className="space-y-5 max-w-3xl">
+        <div className="space-y-5">
           <span className="signal-pill">Platform Architecture</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
             What Powers Chimeraforge
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Six repositories, 30+ services, four languages. Two core engines —{' '}
-            <strong>Banterpacks</strong> (real-time AI orchestration) and{' '}
-            <strong>Banterhearts</strong> (ML research & inference) — power everything
-            from the JARVIS gateway to mobile clients to capacity planning tools.
+            Eight repositories across Python, Rust, TypeScript, and C#. Constitutional AI
+            enforcement with cryptographic provenance, multi-model debate, and a self-improving
+            alignment loop — from the JARVIS gateway to mobile clients to channel adapters.
           </p>
         </div>
       </div>
@@ -54,20 +53,20 @@ export default async function PlatformPage() {
               </span>
               <div>
                 <h3 className="text-xl font-semibold">Banterpacks</h3>
-                <span className="text-xs text-muted-foreground">122K LOC — TypeScript, Rust, Python</span>
+                <span className="text-xs text-muted-foreground">Python, Rust &middot; 6 subsystems + 7 Rust crates</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-              The production monorepo. 9 Python services, 4 Node.js apps, and 10 Rust crates
-              handling real-time AI orchestration, constitutional governance, and the JARVIS
-              multi-modal assistant.
+              The core monorepo. Six interconnected subsystems handling constitutional AI enforcement,
+              multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant.
+              All inter-service coupling is HTTP.
             </p>
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
-                { icon: Brain, label: 'JARVIS Gateway', detail: '7 modules — calendar, inbox, memory, smart home, proactive, tools, store' },
-                { icon: Shield, label: 'Constitutional AI', detail: 'Multi-model consensus debate platform with TDD validation' },
-                { icon: Cpu, label: 'Intelligence Pipeline', detail: 'Local-first orchestrator with provider selection and guardrails' },
-                { icon: Wrench, label: 'Rust Core', detail: '10 crates — FFI, P2P sync, checkpoints, provenance, sandbox' },
+                { icon: Brain, label: 'JARVIS Gateway', detail: 'AI agent layer — chat, voice, semantic memory, tools, proactive intelligence, smart home' },
+                { icon: Shield, label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), 99% fast-path routing' },
+                { icon: Cpu, label: 'Debate Engine', detail: 'Chimera — heat-based escalation, weighted voting, ranked choice, Condorcet consensus' },
+                { icon: Wrench, label: 'Rust Runtime', detail: 'TDD005 — Ed25519 provenance, BFT consensus, ZK proofs, cognitive agents with ELO' },
               ].map((item) => (
                 <div key={item.label} className="rounded-xl border border-border/40 bg-card/30 p-3">
                   <div className="flex items-center gap-2 mb-1">
@@ -79,7 +78,7 @@ export default async function PlatformPage() {
               ))}
             </div>
             <div className="text-xs text-muted-foreground/70">
-              829+ test files &middot; 5 OpenAPI contracts &middot; 14 Docker profiles
+              RLAIF self-improving loop &middot; 3-stage tool approval &middot; 89 patches shipped
             </div>
           </div>
 
@@ -91,7 +90,7 @@ export default async function PlatformPage() {
               </span>
               <div>
                 <h3 className="text-xl font-semibold">Banterhearts</h3>
-                <span className="text-xs text-muted-foreground">32K LOC — Python</span>
+                <span className="text-xs text-muted-foreground">Python &middot; 555K+ measurements</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
@@ -129,10 +128,10 @@ export default async function PlatformPage() {
         </h2>
 
         <div className="signal-panel p-6 md:p-8">
-          <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-            Multi-modal smart assistant that runs locally on your hardware. Seven modules work together
-            to handle daily tasks, control smart home devices, manage your calendar and inbox, and learn
-            your patterns over time.
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            Multi-modal AI gateway with multi-provider routing (Anthropic, OpenAI, Gemini, Ollama).
+            Every chat turn routes through the constitutional router. Tool execution uses a 3-stage
+            propose/approve/execute pipeline with cryptographic provenance on every action.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
@@ -142,7 +141,7 @@ export default async function PlatformPage() {
               { icon: Home, label: 'Smart Home' },
               { icon: Gauge, label: 'Proactive' },
               { icon: Wrench, label: 'Tools' },
-              { icon: Layers, label: 'Store' },
+              { icon: Layers, label: 'Voice' },
             ].map((mod) => (
               <div key={mod.label} className="flex flex-col items-center gap-2 rounded-xl border border-border/40 bg-card/30 p-4">
                 <mod.icon className="h-5 w-5 text-primary" />
@@ -160,34 +159,33 @@ export default async function PlatformPage() {
           Supporting Systems
         </h2>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
               <Brain className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-semibold">Chimera Multi-Agent</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              6-agent content pipeline (Muse Protocol). Ingests bench data and git commits,
-              generates episodes, publishes to GitHub/Vercel, translates to 3 languages.
+              Muse Protocol — 6-agent content pipeline with ClickHouse analytics.
+              Also the observability control plane (OTel tracing, Datadog metrics, DLQ).
             </p>
-            <span className="text-[10px] text-muted-foreground/70">12K LOC &middot; 8 MCP servers &middot; ClickHouse</span>
+            <span className="text-[10px] text-muted-foreground/70">Python &middot; ClickHouse &middot; OTel</span>
           </div>
 
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
               <Gauge className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold">Chimeraforge Tools</h3>
+              <h3 className="text-sm font-semibold">Chimeraforge</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
               LLM deployment optimizer on PyPI. 4-gate capacity planner (VRAM, Quality, Latency, Cost)
-              across model x quant x backend x agents, 15-GPU database.
+              across 15 GPU profiles.
             </p>
-            <span className="text-[10px] text-muted-foreground/70">39K LOC &middot; Python + Rust &middot; 158 tests</span>
             <Link
               href="https://pypi.org/project/chimeraforge/"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               pip install chimeraforge
               <ArrowRight className="h-3 w-3" />
@@ -200,22 +198,46 @@ export default async function PlatformPage() {
               <h3 className="text-sm font-semibold">Chimeradroid</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Android client for the JARVIS gateway. 8-tab GUI with voice, chat, session handoff,
-              tool approval, mesh networking, and proactive notifications.
+              Android companion for JARVIS — Unity/C# with voice, chat, session handoff,
+              tool approval, mesh networking, and offline-first support.
             </p>
-            <span className="text-[10px] text-muted-foreground/70">3.5K LOC &middot; C#/Unity &middot; WebSocket streaming</span>
+            <span className="text-[10px] text-muted-foreground/70">C# / Unity &middot; WebSocket streaming</span>
           </div>
 
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
               <Mail className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold">Echo</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              Messaging channel adapters — Slack and Discord bridges to JARVIS with
+              session tracking and device key auth.
+            </p>
+            <span className="text-[10px] text-muted-foreground/70">Python &middot; Slack Bolt &middot; discord.py</span>
+          </div>
+
+          <div className="signal-panel p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Layers className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold">JARVIS Console</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              Web console — chat with streaming, control room dashboard, cognitive agent ELO,
+              tool catalog, workflow management, memory browser.
+            </p>
+            <span className="text-[10px] text-muted-foreground/70">TypeScript / Next.js &middot; WebSocket</span>
+          </div>
+
+          <div className="signal-panel p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Gauge className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-semibold">This Site</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Public presence and research archive. Next.js 15 with SSG + ISR, 266+ episodes,
-              36 technical reports, and full-text search.
+              Auto-generated episodes from git commits across all repos. Research archive
+              with 36 technical reports. Next.js 15 with SSG + ISR.
             </p>
-            <span className="text-[10px] text-muted-foreground/70">8K LOC &middot; TypeScript &middot; Vercel</span>
+            <span className="text-[10px] text-muted-foreground/70">TypeScript &middot; Vercel</span>
           </div>
         </div>
       </section>
@@ -224,13 +246,13 @@ export default async function PlatformPage() {
       <section className="mb-20">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
-            { value: '200K+', label: 'Lines of Code' },
+            { value: '8', label: 'Repositories' },
             { value: '555K+', label: 'Research Measurements' },
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatReadingTime(stats.totalReadingTime), label: 'Total Reading Time' },
-            { value: '30+', label: 'Services' },
+            { value: '89', label: 'Patches Shipped' },
             { value: '4', label: 'Languages' },
-            { value: '829+', label: 'Test Files' },
+            { value: '99%', label: 'Fast-Path Routing' },
             { value: '<100ms', label: 'Inference Target' },
           ].map((item) => (
             <div key={item.label} className="signal-panel p-5 text-center">

@@ -27,7 +27,7 @@ export default async function TagsPage() {
       <div className="signal-panel-strong mb-10 p-8 md:p-10">
         <span className="signal-pill">Topic Map</span>
         <h1 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight">Chimera Tags</h1>
-        <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
+        <p className="mt-4 text-lg text-muted-foreground">
           Explore the full signal surface by topic, platform, and technology.
         </p>
       </div>

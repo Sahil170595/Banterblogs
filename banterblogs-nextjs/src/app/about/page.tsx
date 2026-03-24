@@ -5,9 +5,9 @@ import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
 export const metadata: Metadata = {
-  title: 'About Chimeraforge',
+  title: 'About Chimera',
   description:
-    'Personal AI platform built by Sahil Kadadekar — 6 repos, 200K+ LOC, 555K+ research measurements, running on your hardware.',
+    'Constitutional AI ecosystem built by Sahil Kadadekar — 8 repos across Python, Rust, TypeScript, and C#. Constitutional enforcement, cryptographic provenance, and self-improving alignment.',
 };
 
 export default async function AboutPage() {
@@ -18,19 +18,20 @@ export default async function AboutPage() {
     <div className="container py-16">
       {/* ── Hero ── */}
       <div className="signal-panel-strong mb-16 p-8 md:p-12">
-        <div className="space-y-5 max-w-3xl">
+        <div className="space-y-5 w-full">
           <span className="signal-pill">About</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Building a personal AI that actually works.
+            Constitutional AI that proves its reasoning.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Chimeraforge is a personal AI platform — think JARVIS, not chatbot. It runs on your
-            hardware, handles your calendar, inbox, smart home, memory, and proactive tasks, and
-            does it all with local inference and constitutional AI governance. No cloud dependency.
+            Chimera is a constitutional AI enforcement architecture. Every action routes through
+            an embedding-based safety classifier, escalates to multi-model debate when uncertain,
+            and produces cryptographically signed provenance chains with zero-knowledge proofs.
+            The system self-improves: debate outcomes train the alignment encoder through an RLAIF loop.
           </p>
           <p className="text-sm text-muted-foreground/80">
             Built by <span className="text-foreground font-medium">Sahil Kadadekar</span> &middot;
-            In active beta with select testers on Windows and Apple devices
+            Solo architect &middot; Sep 2025 &ndash; Present
           </p>
         </div>
       </div>
@@ -44,13 +45,15 @@ export default async function AboutPage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="signal-panel p-6">
-            <h3 className="font-semibold mb-3">The product</h3>
+            <h3 className="font-semibold mb-3">The architecture</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              A multi-modal smart assistant with 7 modules — calendar, inbox, memory, smart home,
-              proactive intelligence, tools, and a plugin store. Runs entirely on local hardware
-              with multi-LLM routing (GPT-4, Claude, Gemini, local Ollama). The Rust runtime
-              delivers 58% latency reduction over pure Python. The &quot;Dual Ollama&quot; pattern
-              achieves near-zero contention under concurrent agent load.
+              A constitutional AI enforcement system spanning Python and Rust. The fast-path router
+              classifies 99% of queries in &lt;10ms via embedding cosine similarity. Uncertain queries
+              escalate to a multi-model debate engine with heat-based escalation and three consensus
+              algorithms. The Rust runtime (7 crates) provides Ed25519 provenance chains, BFT consensus,
+              and zero-knowledge proofs for cross-trust-boundary communication. JARVIS is the agent layer —
+              multi-provider chat, voice (Whisper/Piper), semantic memory, tool execution with
+              human-in-the-loop approval, and proactive intelligence.
             </p>
           </div>
           <div className="signal-panel p-6">
@@ -76,46 +79,50 @@ export default async function AboutPage() {
           {[
             {
               name: 'Banterpacks',
-              loc: '122K LOC',
-              lang: 'TypeScript, Rust, Python',
-              what: 'Production monorepo — 9 Python services, 4 Node.js apps, 10 Rust crates. Hosts the JARVIS gateway, intelligence pipeline, and constitutional AI.',
+              lang: 'Python, Rust',
+              what: 'Core monorepo — 6 subsystems: JARVIS (AI gateway), TDD002 (constitutional router), Chimera (debate engine), TDD005 (Rust runtime with ZK proofs + BFT), RLAIF (self-improving alignment), and Authoring (LLM providers).',
             },
             {
               name: 'Banterhearts',
-              loc: '32K LOC',
               lang: 'Python',
-              what: 'ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of 555K+ measurements.',
+              what: 'ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of 555K+ measurements across 36 technical reports.',
             },
             {
-              name: 'Chimeraforge Tools',
-              loc: '39K LOC',
+              name: 'Chimeraforge',
               lang: 'Python, Rust',
-              what: 'Capacity planner and bench runner. 4-gate selection (VRAM, Quality, Latency, Cost) across 15 GPU profiles.',
+              what: 'LLM deployment optimizer on PyPI. 4-gate capacity planner (VRAM, Quality, Latency, Cost) across 15 GPU profiles.',
             },
             {
               name: 'Chimera Multi-Agent',
-              loc: '12K LOC',
               lang: 'Python',
-              what: '6-agent content pipeline. Ingests bench data + git commits, generates episodes, publishes to GitHub/Vercel, translates to 3 languages.',
+              what: 'Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the observability control plane (OTel, Datadog, DLQ).',
             },
             {
               name: 'Chimeradroid',
-              loc: '3.5K LOC',
               lang: 'C# / Unity',
-              what: 'Android client for the JARVIS gateway — 8-tab GUI, voice, session handoff, mesh networking.',
+              what: 'Android companion for JARVIS — voice, chat, session handoff, tool approval, mesh networking, offline-first.',
+            },
+            {
+              name: 'Echo',
+              lang: 'Python',
+              what: 'Messaging channel adapters — Slack and Discord bridges to JARVIS. Session tracking, device key auth.',
+            },
+            {
+              name: 'JARVIS Console',
+              lang: 'TypeScript / Next.js',
+              what: 'Web console for JARVIS — chat with streaming, control room dashboard, cognitive agent ELO, tool catalog, workflow management.',
             },
             {
               name: 'This Site',
-              loc: '8K LOC',
               lang: 'TypeScript / Next.js',
-              what: 'Public presence. Episodes, research archive, and platform documentation. SSG with ISR.',
+              what: 'Public presence. Episodes generated from git commits, research archive, platform documentation.',
             },
           ].map((repo) => (
             <div key={repo.name} className="signal-panel p-5 flex flex-col md:flex-row md:items-start gap-4">
               <div className="md:w-48 shrink-0">
                 <h3 className="font-semibold text-foreground">{repo.name}</h3>
                 <div className="text-xs text-muted-foreground">
-                  {repo.loc} &middot; {repo.lang}
+                  {repo.lang}
                 </div>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">{repo.what}</p>
@@ -124,7 +131,7 @@ export default async function AboutPage() {
         </div>
 
         <div className="mt-6 text-center text-sm text-muted-foreground/70">
-          6 repositories &middot; 200K+ lines of code &middot; Python, TypeScript, Rust, C#
+          8 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
         </div>
       </section>
 
@@ -152,9 +159,9 @@ export default async function AboutPage() {
           About This Site
         </h2>
 
-        <div className="signal-panel p-6 max-w-2xl">
+        <div className="signal-panel p-6 w-full">
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            Episodes are auto-generated from git commits across all six repositories. A multi-agent
+            Episodes are auto-generated from git commits across all eight repositories. A multi-agent
             pipeline (Chimera Multi-Agent) ingests commits and benchmark data, generates roundtable-style
             commentary with four AI personas, and publishes to this Next.js site via GitHub + Vercel.
           </p>

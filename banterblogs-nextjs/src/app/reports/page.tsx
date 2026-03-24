@@ -145,7 +145,7 @@ export default async function ReportsIndex() {
     <div className="container py-16">
       {/* ── Hero ── */}
       <div className="signal-panel-strong mb-10 p-8 md:p-12">
-        <div className="space-y-5 max-w-3xl">
+        <div className="space-y-5 w-full">
           <span className="signal-pill">Independent Research</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
             Edge LLM Inference Under Real-World Constraints
@@ -167,7 +167,7 @@ export default async function ReportsIndex() {
         {[
           { value: '555,000+', label: 'Research Measurements' },
           { value: String(reports.length), label: 'Technical Reports' },
-          { value: '200K+', label: 'Lines of Code' },
+          { value: '8', label: 'Repositories' },
           { value: '<100ms', label: 'Inference Target' },
         ].map((stat) => (
           <div key={stat.label} className="signal-panel p-5 text-center">
@@ -194,7 +194,7 @@ export default async function ReportsIndex() {
             <h3 className="text-2xl md:text-4xl font-bold mb-4 group-hover:text-primary transition-colors">
               Chimeraforge: High-Performance LLM Agent Orchestration
             </h3>
-            <p className="text-base md:text-lg text-muted-foreground max-w-3xl mb-6 leading-relaxed">
+            <p className="text-base md:text-lg text-muted-foreground w-full mb-6 leading-relaxed">
               Rust vs. Python for production AI orchestration. A hybrid architecture and &quot;Dual Ollama&quot; pattern
               achieve 58% latency reduction and near-zero contention.
             </p>
