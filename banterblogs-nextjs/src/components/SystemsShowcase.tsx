@@ -7,10 +7,10 @@ import { motion } from 'framer-motion';
 const coreEngines = [
   {
     name: 'Banterpacks',
-    role: 'Real-Time Interface Layer',
+    role: 'Constitutional AI Core',
     description:
-      'Sub-200ms AI orchestration with multi-LLM routing, JARVIS gateway, constitutional AI governance, and a Rust runtime that cut latency by 58%.',
-    stats: ['122K LOC', '9 Python services', '10 Rust crates'],
+      'Constitutional enforcement architecture — embedding-based safety routing (99% fast-path), multi-model debate engine, Rust runtime with Ed25519 provenance and ZK proofs, RLAIF self-improving alignment loop, and the JARVIS AI gateway.',
+    stats: ['6 subsystems', '7 Rust crates', '89 patches'],
     href: '/platform',
     icon: <Radio className="h-6 w-6" />,
   },
@@ -19,7 +19,7 @@ const coreEngines = [
     role: 'ML Research Backbone',
     description:
       'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 36 technical reports.',
-    stats: ['32K LOC', '555K+ measurements', '4 compilation backends'],
+    stats: ['555K+ measurements', '36 reports', '4 compilation backends'],
     href: '/reports',
     icon: <Cpu className="h-6 w-6" />,
   },
@@ -28,29 +28,43 @@ const coreEngines = [
 const supportingSystems = [
   {
     name: 'Chimera Multi-Agent',
-    role: '6-agent content pipeline',
-    description: 'Ingestor, collector, watcher, council, publisher, and translator agents backed by ClickHouse and 8 MCP servers.',
+    role: 'Muse Protocol — observability + content',
+    description: '6-agent pipeline with ClickHouse analytics. Also the ecosystem observability layer (OTel, Datadog, DLQ).',
     href: '/chimera',
     icon: <BrainCircuit className="h-5 w-5" />,
   },
   {
-    name: 'Chimeraforge Tools',
+    name: 'Chimeraforge',
     role: 'On PyPI — pip install chimeraforge',
-    description: 'LLM deployment optimizer backed by 70K+ measurements. 4-gate capacity planner across model, quant, backend, and agent count for 15 GPUs.',
+    description: 'LLM deployment optimizer. 4-gate capacity planner across model, quant, backend, and agent count for 15 GPUs.',
     href: 'https://pypi.org/project/chimeraforge/',
     icon: <BarChart3 className="h-5 w-5" />,
   },
   {
     name: 'Chimeradroid',
-    role: 'Mobile deployment',
-    description: 'Unity Android client connecting to JARVIS v2 gateway with real-time streaming, session handoff, and mesh networking.',
+    role: 'Mobile companion',
+    description: 'Unity Android client — voice, chat, tool approval, session handoff, mesh networking, offline-first.',
     href: '/about',
     icon: <Smartphone className="h-5 w-5" />,
   },
   {
+    name: 'Echo',
+    role: 'Channel adapters',
+    description: 'Slack and Discord bridges to JARVIS with session tracking and device key auth.',
+    href: '/about',
+    icon: <Radio className="h-5 w-5" />,
+  },
+  {
+    name: 'JARVIS Console',
+    role: 'Web dashboard',
+    description: 'Next.js console — chat with streaming, control room, cognitive ELO, tool catalog, workflows.',
+    href: '/about',
+    icon: <Cpu className="h-5 w-5" />,
+  },
+  {
     name: 'This Site',
     role: 'Automated documentation',
-    description: 'Ingests commits from all repos, generates multi-persona episodes, and publishes the research archive.',
+    description: 'Ingests commits from all repos, generates multi-persona episodes, publishes the research archive.',
     href: '/about',
     icon: <BookOpen className="h-5 w-5" />,
   },
@@ -64,11 +78,11 @@ export function SystemsShowcase() {
           What powers the platform
         </p>
         <h2 className="mt-3 text-3xl md:text-4xl font-bold leading-tight display">
-          Two core engines. Four supporting systems.
+          Two core engines. Six supporting systems.
         </h2>
-        <p className="mt-4 text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-          Everything runs on Banterpacks and Banterhearts. The rest of the ecosystem
-          feeds into them, extends them, or ships what they produce.
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed mx-auto">
+          Banterpacks is the constitutional AI core. Banterhearts provides the research backbone.
+          The rest of the ecosystem extends access — mobile, web, messaging, observability.
         </p>
       </div>
 
@@ -144,7 +158,7 @@ export function SystemsShowcase() {
 
       {/* Subtle engineering depth strip */}
       <div className="mt-10 text-center text-sm text-muted-foreground/60">
-        6 repositories &middot; 30+ services &middot; 200K+ lines of code &middot; Python, TypeScript, Rust, C#
+        8 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
       </div>
     </section>
   );

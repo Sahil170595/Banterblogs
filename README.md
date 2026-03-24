@@ -15,10 +15,10 @@
 
 ## What is Chimeraforge
 
-Chimeraforge is the public-facing site for the Chimera ecosystem — a group of repositories building real-time AI tools for streamers. The site publishes two things:
+Chimeraforge is the public-facing site for the Chimera ecosystem — a constitutional AI enforcement architecture spanning 8 repositories across Python, Rust, TypeScript, and C#. The site publishes two things:
 
-- **Episodes** — narrative write-ups generated from git commits across the ecosystem. Each episode is written as a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini), turning raw development activity into readable stories.
-- **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and multi-agent orchestration. Over 60 reports spanning 70,000+ measurements across 26 technical papers.
+- **Episodes** — narrative write-ups generated from git commits across the ecosystem. Each episode is written as a roundtable discussion between four AI personas, turning raw development activity into readable stories.
+- **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and safety alignment. 36 reports spanning 555,000+ measurements.
 
 The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) with 266 episodes and counting.
 
@@ -26,16 +26,18 @@ The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) w
 
 ## The Chimera Ecosystem
 
-Chimeraforge documents work across six repositories:
+Chimeraforge documents work across eight repositories:
 
 | Repository | Purpose |
 |---|---|
-| **Banterpacks** | Real-time AI overlay for streamers. Multi-LLM routing, speech interfaces, OBS rendering. |
-| **Banterhearts** | ML backbone. Feedback ingestion, RLHF pipelines, quantized model deployment. |
-| **Chimeraforge** | Capacity planning and infrastructure tooling. |
-| **Chimera Multi-Agent** | Pipeline orchestration across agents and backends. |
-| **Chimeradroid** | Mobile extension of the platform. |
-| **Chimeraforge** | This repository. The documentation and research layer. |
+| **Banterpacks** | Core monorepo — JARVIS gateway, constitutional router (TDD002), debate engine (Chimera), Rust runtime (TDD005) with ZK proofs + BFT, RLAIF alignment loop, authoring. |
+| **Banterhearts** | ML research platform — inference API, benchmarking, AutoOpt agent, safety evaluation. 555K+ measurements. |
+| **Chimeraforge** | LLM deployment optimizer on PyPI. Capacity planning across 15 GPU profiles. |
+| **Chimera Multi-Agent** | Muse Protocol — 6-agent content pipeline + observability control plane (OTel, ClickHouse, Datadog). |
+| **Chimeradroid** | Unity/C# Android companion — voice, chat, tool approval, session handoff, mesh networking. |
+| **Echo** | Messaging channel adapters — Slack and Discord bridges to JARVIS. |
+| **JARVIS Console** | Next.js web console — chat, control room, cognitive ELO dashboard, admin panels. |
+| **Banterblogs** | This repository. Development log and research archive. |
 
 ---
 

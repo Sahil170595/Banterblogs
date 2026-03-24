@@ -6,7 +6,7 @@ import { EpisodeFilters } from '@/components/EpisodeFilters';
 
 export const metadata: Metadata = {
   title: 'Chimera Engine Episodes',
-  description: 'Development episodes covering the multi-LLM orchestration engine — constitutional AI, multi-agent coordination, and intelligence pipeline.',
+  description: 'Development episodes covering the constitutional AI debate engine — heat-based escalation, multi-model consensus, and the RLAIF alignment loop.',
 };
 
 export const runtime = 'nodejs';
@@ -22,8 +22,8 @@ export default async function ChimeraPage() {
         <div className="space-y-4">
           <span className="signal-pill">Chimera Engine</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Chimera Episodes</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            {chimeraEpisodes.length} episodes covering development of the multi-LLM orchestration engine.
+          <p className="text-lg text-muted-foreground">
+            {chimeraEpisodes.length} episodes covering the constitutional AI debate engine and alignment architecture.
           </p>
           <Link
             href="/platform#overview"

@@ -55,13 +55,14 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
               </span>
 
               <h1 className="display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                A personal AI platform that runs on{' '}
-                <span className="gradient-text">your hardware</span>
+                Constitutional AI that{' '}
+                <span className="gradient-text">proves its reasoning</span>
               </h1>
 
-              <p className="max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed">
-                Multi-modal assistant with smart home, calendar, memory, and proactive intelligence
-                — powered by constitutional AI governance and local inference. No cloud dependency.
+              <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
+                An AI enforcement architecture with embedding-based safety routing, multi-model
+                debate, cryptographic provenance chains, and zero-knowledge proofs — built in
+                Python and Rust across 8 repositories.
               </p>
             </div>
 
@@ -107,8 +108,8 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 episodes shipped
               </div>
               <div>
-                <span className="text-lg font-bold text-foreground">30+</span>{' '}
-                services
+                <span className="text-lg font-bold text-foreground">89</span>{' '}
+                patches shipped
               </div>
               <div>
                 <span className="text-lg font-bold text-foreground">555K+</span>{' '}

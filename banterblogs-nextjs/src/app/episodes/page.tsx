@@ -24,7 +24,7 @@ export default async function EpisodesPage() {
     <div className="container py-16">
       <div className="signal-panel-strong mb-12 p-8 md:p-10">
         <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="max-w-2xl space-y-4">
+          <div className="space-y-4">
             <span className="signal-pill">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               Chimera Timeline
