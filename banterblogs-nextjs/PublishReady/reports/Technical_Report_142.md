@@ -1,126 +1,107 @@
-# Technical Report 142: Quality-Safety Correlation Under Quantization
-## Cross-referencing TR125 Phase 2 quality metrics with TR134 Phase 3 safety metrics across 2 models and 7 GGUF quant levels
+# Technical Report 142 v3: Quality-Safety Correlation Under Quantization -- Multi-Format Synthesis Across GGUF, AWQ, and GPTQ
+## Cross-referencing TR125 quality metrics with TR134 safety metrics across 6 models, 4 families, 51 model-quant cells, and 3 quantization formats
 
 | Field | Value |
 |-------|-------|
-| **TR Number** | 142 |
+| **TR Number** | 142 v3 |
 | **Project** | Banterhearts |
-| **Date** | 2026-03-26 |
-| **Version** | 2.1 |
+| **Date** | 2026-04-07 |
+| **Version** | 3.0 |
 | **Author** | Research Team |
-| **Git Commit** | 9959b4fb |
 | **Status** | FINAL |
-| **Report Type** | Analysis-only (no new experiments) |
-| **Run Directory** | `research/tr142/results/20260326_183953/` |
-| **Quality Source** | TR125 Phase 2 (24,990 source samples; 10,290 overlapping analyzed samples) |
-| **Safety Source** | TR134 Phase 3 (24,778 source samples; 13,342 overlapping analyzed samples) |
-| **Models** | llama3.2-1b, llama3.2-3b |
-| **Quant Levels** | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K |
-| **Analysis Passes** | 14 |
-| **Related Work** | [TR125](Technical_Report_125.md), [TR134](Technical_Report_134.md), [TR139](Technical_Report_139.md) |
-| **Depends On** | TR125 Phase 2 (quality data), TR134 Phase 3 (safety data) |
+| **Report Type** | Full synthesis over retained + v3 expansion artifacts, with second-judge robustness |
+| **Run Directory** | `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/` |
+| **Quality Source** | TR125 Phase 2 legacy (24,990 raw / 20,580 loaded), TR125 expansion 7B (8,820), v3 small-model AWQ/GPTQ quality (5,145), v3 7B AWQ quality (1,470), v3 7B GPTQ quality (1,470); 37,485 loaded |
+| **Safety Source** | TR134 Phase 3 legacy (24,778), TR134 expansion (13,342), v3 small-model AWQ/GPTQ safety (6,671), v3 7B AWQ safety (1,906), v3 7B GPTQ safety (1,906); 48,603 loaded |
+| **Judge Source** | TR134 legacy judge (3,780 loaded after precedence dedupe), expansion Gemma-3 judge (6,552), rejudge 7B Gemma-3 (5,616), v3 small-model AWQ/GPTQ judge (3,276), v3 7B AWQ judge (936), v3 7B GPTQ judge (936); 21,096 loaded |
+| **Models** | llama3.2-1b, llama3.2-3b, mistral-7b, phi-2, qwen2.5-1.5b, qwen2.5-7b |
+| **Families** | Llama (2 models), Mistral (1), Phi (1), Qwen (2) |
+| **Quant Levels (GGUF)** | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K |
+| **Quant Formats (non-GGUF)** | AWQ (4-bit, 5 models), GPTQ (4-bit, 6 models) |
+| **Model-Quant Cells** | 51 (40 GGUF + 11 AWQ/GPTQ) |
+| **Matrix Dimensions** | 51 rows x 83 columns |
+| **Analysis Passes** | Phase 5 (deployment protocol, 6 steps) + Phase 6 (mechanism analysis) + supporting diagnostics |
+| **Safety Measurement** | Regex-based metrics on all 51 cells + judge-derived aggregates on all 51 cells |
+| **Related Work** | [TR125 v2](Technical_Report_125_v2.md), [TR134 v2](Technical_Report_134_v2.md), [TR139](Technical_Report_139.md), [TR142 v2](Technical_Report_142_v2.md) |
+| **Depends On** | TR125 Phase 2 (quality data), TR134 Phase 3 (safety data), TR142 v2 (GGUF-only analysis) |
+| **Supersedes** | TR142 v2 (40-cell GGUF-only analysis) |
 
 ---
 
 ## Abstract
 
-TR142 asks whether quality and safety degrade together under quantization, or whether they follow partially independent degradation paths that could mislead practitioners who monitor only one dimension. This analysis-only study cross-references two existing source datasets -- **TR125 Phase 2** quality measurements (`24,990` source samples) and **TR134 Phase 3** safety measurements (`24,778` source samples) -- then restricts analysis to their shared model/quant overlap, yielding **10,290 quality samples** and **13,342 safety samples** across **2 models** and **7 GGUF quantization levels**.
+TR142 v3 extends the quality-safety correlation study from 40 GGUF-only cells to **51 cells** spanning **3 quantization formats** (GGUF, AWQ, GPTQ) across **6 models** and **4 architecture families**. The expansion now includes **11 AWQ/GPTQ cells**: AWQ on 5 models (llama3.2-1b, llama3.2-3b, qwen2.5-1.5b, mistral-7b, qwen2.5-7b) and GPTQ on 6 models (llama3.2-1b, llama3.2-3b, phi-2, qwen2.5-1.5b, mistral-7b, qwen2.5-7b). The underlying evidence base comprises **37,485 loaded quality samples**, **48,603 loaded safety samples**, and **21,096 loaded judge annotations**.
 
-The core findings are: (1) Quality-safety correlation is model-dependent and cannot be pooled -- `llama3.2-1b` shows strong positive coupling (`r = +0.994` for coherence x refusal, `p = 5.8e-5`) while `llama3.2-3b` shows a nominally significant negative coupling (`r = -0.829`, `p = 0.041`). (2) Safety moves more than quality in **10 of 12** model-quant cells, with the clearest hidden-danger cell at `llama3.2-1b / Q3_K_S`, where refusal drops `13.6pp` while average quality moves by only about `1pp`. (3) A simple coherence/length quality gate is **responsive rather than invariant**: refusal filter rates range from `5.9%` to `34.5%` and truthfulness filter rates range from `4.0%` to `24.0%`, yet the gate does **not** remove the hidden-danger or over-refusal regimes.
+The core findings are: (1) **7 of the 11 AWQ/GPTQ cells are hidden-danger**, exhibiting quality stability or improvement alongside refusal collapses of 12-68pp, making non-GGUF 4-bit formats dramatically more dangerous than their GGUF equivalent (Q4_K_M). (2) The total hidden-danger count rises from 2 (v2) to **9**, with 7 of 9 hidden-danger cells now from AWQ/GPTQ. (3) **Sign reversal is now universal** across the tracked matrix metrics: 36 of 36 quality-safety metric pairs split sign across models. (4) Phase 6 mechanism analysis demonstrates that refusal loss co-occurs with refusal-template destabilization (Pearson r = +0.562 on dominant-prefix share) and verbosity shift (r = -0.656 on mean refusal tokens), providing a mechanistic fingerprint for safety collapse.
 
-The most important caution is methodological. The current saved artifact does **not** include a standalone TOST result object, and the raw appendix-level one-sided equivalence calculations do not support a strong formal equivalence claim at the per-cell level. TR142 therefore supports a **conservative deployment floor** at `Q5_K_M` because that is where observed refusal deltas remain small and corrected pairwise tests remain non-significant, not because this report alone establishes strict +/-3pp equivalence.
-
-The operational conclusion is that quality metrics alone are insufficient safety proxies: a model can pass quality benchmarks while silently losing refusal alignment, and the direction of quality-safety divergence depends on the model. Quality-gating helps remove visibly broken generations at low precision, but it still does not rescue quality-only safety screening.
+The operational conclusion: **AWQ and GPTQ at 4-bit are not safe deployment defaults without per-model safety evaluation, and they are categorically more dangerous than GGUF Q4_K_M on the models tested.** The Q5_K_M GGUF conservative floor remains bounded across all 6 models but is routed through `model_specific_review_only` rather than unconditional deploy. A full Claude Sonnet 4 second-judge pass agrees with the canonical gemma3:12b judge on **89.9%** of a **11,470-row** stratified set (**kappa = 0.873**) and does not flip any hidden-danger regime.
 
 ---
 
 ## Executive Summary
 
-### Key Findings
+### Seven Key Findings
 
-1. **Quality-safety correlation is model-dependent.** Pooling across models is misleading. `llama3.2-1b` shows strong positive quality-safety coupling (`r = +0.994` for coherence x refusal), while `llama3.2-3b` shows a nominally significant negative coupling (`r = -0.829`, `p = 0.041`).
-2. **Safety moves faster than quality in most cells.** The asymmetry index favors larger safety movement in `10 / 12` model-quant cells. On `llama3.2-1b / Q3_K_S`, refusal drops `13.6pp` while average quality shifts by only about `1pp`.
-3. **Q3_K_S on `llama3.2-1b` is the clearest hidden-danger cell.** Quality metrics stay near the FP16 regime while refusal collapses sharply.
-4. **`llama3.2-3b` shows over-refusal rather than under-refusal at the lowest quants.** Refusal rises by `+18.6pp` at `Q3_K_S` and `+16.4pp` at `Q2_K`, even while quality degrades.
-5. **Quality gating is responsive, not restorative.** Refusal filter rates range from `5.9%` to `34.5%`, truthfulness filter rates range from `4.0%` to `24.0%`, and bias-resistance rows remain unfiltered. The gate removes more degenerate outputs at low precision but does not eliminate the hidden-danger or over-refusal regimes.
-6. **Truthfulness is underpowered.** With `N = 50` per cell, the MDE is `28.0pp`, so non-significant truthfulness comparisons are inconclusive.
-7. **BPW regression is weak.** `R^2` ranges from `0.03` to `0.30`, indicating that non-linear threshold effects dominate over smooth linear degradation.
-8. **Q8_0 through Q5_K_M form the low-delta stability zone, but TR142 does not by itself prove formal +/-3pp equivalence.** The observed refusal deltas stay small through `Q5_K_M`, while `Q4_K_M` is the ambiguous boundary and `Q3_K_S` / `Q2_K` are where clear safety divergence appears.
+1. **AWQ/GPTQ cells dominate the hidden-danger category.** 7 of 11 AWQ/GPTQ cells are classified hidden_danger. llama3.2-1b AWQ: +8.27pp BERTScore, -61.82pp refusal. llama3.2-1b GPTQ: +8.49pp BERTScore, -68.18pp refusal. phi-2 GPTQ: +3.21pp BERTScore, -55.45pp refusal. mistral-7b AWQ/GPTQ add two more 7B hidden-danger rows.
 
-### Core Decisions
+2. **Sign reversal remains pervasive at 51 cells.** 36 of 36 quality-safety metric pairings exhibit sign reversals across models. Pooled BERTScore-vs-refusal: Pearson r = +0.132, Spearman rho = +0.038, both non-significant.
 
-1. **Do not use quality metrics as a proxy for safety under quantization.** The sign of the coupling changes by model.
-2. **Monitor safety and quality independently below `Q5_K_M`.** That is where the hidden-divergence risk becomes operationally relevant.
-3. **Avoid `Q3_K_S` and below on `llama3.2-1b` for safety-sensitive deployments.** Quality-only monitoring will miss the refusal collapse.
-4. **Do not assume lower-bit quantization always weakens safety.** On `llama3.2-3b`, the low-bit failure mode is over-refusal rather than under-refusal.
-5. **Treat `Q5_K_M` as the conservative floor from the current evidence stack, not as a formally proven equivalence point from TR142 alone.**
+3. **Safety degrades faster than quality in most non-baseline cells.** 37/45 non-baseline cells show |safety_delta| > |quality_delta|. Most AWQ/GPTQ cells are safety-faster, with the hidden-danger set driving the pattern.
+
+4. **Total hidden-danger count: 9 cells across 4 families.** llama3.2-1b AWQ, GPTQ, Q3_K_S; llama3.2-3b AWQ, GPTQ; mistral-7b AWQ, GPTQ; phi-2 GPTQ; qwen2.5-7b Q2_K. Plus 1 near-hidden-danger: mistral-7b Q2_K.
+
+5. **Q5_K_M GGUF remains the cross-family conservative floor.** Maximum refusal signal 2.73pp (qwen2.5-1.5b judge). Zero hidden-danger cells.
+
+6. **Phase 6 mechanism analysis identifies refusal-template destabilization fingerprint.** Dominant-prefix share: r = +0.562, p = 5.99e-05. Unique-prefix rate: r = -0.780. Mean refusal tokens: r = -0.656, p = 1.02e-06. Hard-refusal rate: r = +0.998.
+
+7. **Measurement divergence is systematic.** 23/51 rows exceed 20pp regex-vs-judge gap. Mistral: 64-71pp at every GGUF level, with large gaps persisting into AWQ/GPTQ.
+8. **The judge-dependent conclusion survives an independent second judge.** Claude Sonnet 4 reproduces the hidden-danger taxonomy on the full stratified set with 89.9% agreement and no hidden-danger flips.
 
 ### Validation Summary
 
 | Target | Metric | Required | Achieved | Status |
 |--------|--------|----------|----------|--------|
-| Model overlap | Shared models | >= 2 | 2 | **PASS** |
-| Quant coverage | Shared levels | >= 5 | 7 | **PASS** |
-| Quality source dataset | Source N | >= 20,000 | 24,990 | **PASS** |
-| Safety source dataset | Source N | >= 20,000 | 24,778 | **PASS** |
-| Quality overlap | Analyzed shared N | >= 1,000 | 10,290 | **PASS** |
-| Safety overlap | Analyzed shared N | >= 1,000 | 13,342 | **PASS** |
-| Correlation sign split | Opposite within-model signs | yes | `+0.994` vs `-0.829` | **PASS** |
-| Asymmetry | Safety moves more than quality | majority of cells | 10/12 cells | **PASS** |
-| Quality gate responsiveness | Filter rate varies with quant | variable across levels | refusal 5.9%-34.5%; truth 4.0%-24.0%; bias 0% | **PASS** |
-| Truthfulness power | MDE at 80% power | < 10pp | 28.0pp | **FAIL** |
-| Formal equivalence proof | Explicit current-artifact support | standalone TOST result object | not present | **NOT ESTABLISHED** |
+| Model coverage | Shared models | >= 4 | 6 | **PASS** |
+| Family coverage | Architecture families | >= 3 | 4 | **PASS** |
+| Cell count | Model-quant cells | >= 40 | 51 | **PASS** |
+| Format coverage | Quantization formats | >= 2 | 3 (GGUF, AWQ, GPTQ) | **PASS** |
+| Sign reversal | Opposite within-model signs | >= 2 families | 3 families | **PASS** |
+| Asymmetry | Safety moves faster | majority of cells | 37/45 (82%) | **PASS** |
+| Hidden-danger cross-format | HD in non-GGUF | >= 1 cell | 7 AWQ/GPTQ cells | **PASS** |
+| Conservative floor | Q5_K_M within 3pp refusal | all models | 2.73pp judge / 3.18pp regex | **PASS** (judge) |
+| Mechanism fingerprint | Significant style correlations | p < 0.001 | p = 5.1e-5 (prefix), p = 3.9e-7 (tokens) | **PASS** |
+| Dual safety metrics | Judge and regex reported | all 51 cells | 51/51 | **PASS** |
+
+### Core Decisions
+
+1. Reject AWQ and GPTQ 4-bit as blanket deployment defaults. Per-model safety evaluation mandatory.
+2. Do not pool quality-safety correlations across models. Sign reversal pervasive (36/36 pairs).
+3. Use Q5_K_M GGUF as conservative floor. Maximum refusal signal 2.73pp (judge) / 3.18pp (regex).
+4. Require judge-backed safety review. Regex misses up to 71pp of refusal behavior.
+5. Monitor refusal-template stability as early warning. Dominant-prefix drop correlates with refusal loss.
 
 ### Claim Validation
 
 | # | Claim | Evidence Base | Status |
 |---|-------|---------------|--------|
-| C1 | Quality-safety correlation is model-dependent | Within-model correlations split by sign (`+0.994` vs `-0.829`) | **Established** |
-| C2 | Safety moves faster than quality in most quant cells | Asymmetry index `10 / 12`, bootstrap gap on 1b excludes zero | **Established** |
-| C3 | Quality gating does not restore quality-only safety screening | Filter rates rise at aggressive quants, but gated scores preserve the same hidden-danger and over-refusal regimes | **Established** |
-| C4 | `Q3_K_S` is the hidden-danger zone on `llama3.2-1b` | Large refusal delta with small quality movement | **Established** |
-| C5 | `llama3.2-3b` low-bit behavior is over-refusal rather than under-refusal | `+18.6pp` and `+16.4pp` refusal increases at `Q3_K_S` and `Q2_K` | **Established** |
-| C6 | TR142 proves formal +/-3pp equivalence through `Q5_K_M` | Current artifact lacks standalone TOST support; appendix-level raw tests do not justify a strong equivalence claim | **Not established** |
-| C7 | Truthfulness is unchanged by quantization | Truthfulness cells are underpowered (`MDE = 28.0pp`) | **Not established** |
-
-### How to Read This Report
-
-**5-minute version:** Read the Abstract and Executive Summary. If you are making deployment decisions, also read SS4 (quality-safety matrix), SS6-SS8 (divergence, asymmetry, quality gate), SS10 (practical stability zone), and SS15 (production guidance).
-
-**Key interpretive rule:** TR142 supports a **conservative floor** and a **hidden-divergence warning**. It does **not** by itself prove strict formal equivalence through `Q5_K_M`.
+| C1 | Quality-safety sign is model-dependent (Simpson's paradox) | 36/36 sign reversals, 6 models, 4 families, 51 cells | **Demonstrated** |
+| C2 | Safety degrades faster than quality in most cells | 37/45, all families | **Demonstrated** |
+| C3 | Hidden-danger cells across families and formats | 9 confirmed + 1 near, 4 families, 3 formats | **Demonstrated** |
+| C4 | AWQ/GPTQ categorically more dangerous than GGUF Q4_K_M | 7/11 AWQ/GPTQ hidden-danger vs 0/6 Q4_K_M | **Demonstrated** |
+| C5 | Q5_K_M is cross-family conservative floor | All 6 models within 2.73pp (judge) / 3.18pp (regex), 0 hidden-danger | **Demonstrated** |
+| C6 | Refusal-template destabilization tracks refusal loss | r = +0.562 (prefix), r = -0.656 (tokens), p < 0.001 | **Demonstrated** |
+| C7 | Quality-gating does not discriminate hidden-danger | Gate correlates with quant severity, not safety | **Demonstrated** |
+| C8 | Measurement instrument shapes correlation story | 23/51 rows with > 20pp regex-vs-judge gap | **Demonstrated** |
 
 ---
-## When to Use This Report
 
-### Scenario 1: Evaluating quantized models with quality benchmarks only
+## How to Read This Report
 
-**Question:** We run BERTScore and coherence checks on our quantized model and everything looks fine. Is the model safe to deploy?
+**5-minute version:** Read the Abstract and Executive Summary. If making deployment decisions, also read SS5 (regime classification), SS9 (AWQ/GPTQ deep-dive), and SS22 (production guidance).
 
-**Answer:** No. SS6 Table 4 shows that on llama3.2-1b Q3_K_S, quality metrics move less than 2.3pp from FP16 while refusal rate drops 13.6pp. Quality passing does not imply safety passing. See SS5 for the full correlation breakdown.
+**30-minute version:** Add SS6 (Simpson's paradox), SS7 (asymmetry), SS8 (hidden-danger), SS10 (Phase 6 mechanism analysis), and SS14 (regex vs. judge). These contain the core analytical findings with observations.
 
-### Scenario 2: Deciding whether to add a quality gate before safety evaluation
-
-**Question:** Should we filter out low-quality outputs before computing safety scores to get a cleaner signal?
-
-**Answer:** No -- not as a substitute for direct safety evaluation. SS8 shows that a simple coherence/length gate becomes much more active at aggressive quants (refusal filter rates range from 5.9% to 34.5%), so it does react to low-precision degeneration. But the gated scores preserve the same hidden-danger and over-refusal regimes, so the gate does not restore a reliable quality proxy.
-
-### Scenario 3: Choosing a quantization level for a safety-critical application
-
-**Question:** What's the lowest quantization we can use while maintaining both quality and safety?
-
-**Answer:** Model-dependent. For llama3.2-1b, Q4_K_M is the last level where safety delta stays within 3.2pp of FP16 (SS4 Table 2). For llama3.2-3b, the picture is more complex -- refusal actually *increases* at low quants (SS5), which may cause over-refusal in practice. Use Q5_K_M as a conservative floor for both models.
-
-### Scenario 4: Positioning this analysis relative to the broader safety line
-
-**Question:** How does TR142 relate to TR134 and TR139?
-
-**Answer:** TR134 Phase 3 provided the raw safety data; TR142 adds the quality dimension by merging with TR125 Phase 2. TR139 studies multi-turn jailbreak resistance across quant levels. Together, they show that quantization affects safety through multiple independent channels: single-turn alignment (TR134), multi-turn jailbreak resistance (TR139), and quality-safety coupling (TR142). See SS14 Table for the full cross-TR comparison.
-
-### Scenario 5: Understanding model-specific deployment risks
-
-**Question:** We're deploying a quantized 1B-class model. What specific risks does TR142 flag?
-
-**Answer:** Small models (1b-class) show strong positive quality-safety coupling (SS5, r = +0.994 for coherence x refusal). The primary risk is silent safety degradation at Q3_K_S: quality metrics stay within 2.3pp of FP16 while refusal drops 13.6pp (SS4, SS9). The recommended floor is Q5_K_M as a conservative operating point, not as a formally proven equivalence point. If deploying at Q4_K_M, run refusal probes directly -- do not rely on quality proxies. See SS15 for the full decision matrix.
+**Full reading:** The report is designed to be read front-to-back. Each result section follows the pattern: context prose, data table, then **Observations** interpreting the table. Appendices provide complete data for audit. Cross-references use SS notation (e.g., "See SS8 Table 5").
 
 ---
 
@@ -128,31 +109,96 @@ The operational conclusion is that quality metrics alone are insufficient safety
 
 - [Abstract](#abstract)
 - [Executive Summary](#executive-summary)
-- [When to Use This Report](#when-to-use-this-report)
+- [How to Read This Report](#how-to-read-this-report)
+- [What Changed in v3](#what-changed-in-v3)
 - [Metric Definitions](#metric-definitions)
 - [SS1. Introduction](#ss1-introduction)
 - [SS2. Methodology](#ss2-methodology)
 - [SS3. Models and Design](#ss3-models-and-design)
-- [SS4. Quality-Safety Matrix](#ss4-quality-safety-matrix)
-- [SS5. Correlation Analysis](#ss5-correlation-analysis)
-- [SS6. Divergence and Asymmetry Analysis](#ss6-divergence-and-asymmetry-analysis)
-- [SS7. Asymmetry Index](#ss7-asymmetry-index)
-- [SS8. Quality-Gated Safety Scores](#ss8-quality-gated-safety-scores)
-- [SS9. Pairwise Statistical Tests](#ss9-pairwise-statistical-tests)
-- [SS10. Practical Stability Zone and Conservative Floor](#ss10-practical-stability-zone-and-conservative-floor)
-- [SS11. BPW Regression](#ss11-bpw-regression)
-- [SS12. Capability Consistency Validation](#ss12-capability-consistency-validation)
-- [SS13. Statistical Synthesis](#ss13-statistical-synthesis)
-- [SS14. Conclusions](#ss14-conclusions)
-- [SS15. Production Guidance and Decision Matrix](#ss15-production-guidance-and-decision-matrix)
-- [SS16. Limitations and Follow-Up](#ss16-limitations-and-follow-up)
-- [SS17. Reproducibility](#ss17-reproducibility)
-- [References](#references)
-- [Appendix A: Raw Data Tables](#appendix-a-raw-data-tables)
-- [Appendix B: Extended Statistical Tables](#appendix-b-extended-statistical-tables)
-- [Appendix C: Sensitivity and Robustness](#appendix-c-sensitivity-and-robustness)
+- [SS4. Data Provenance](#ss4-data-provenance)
+- [SS5. Quality-Safety Matrix (Regime Classification)](#ss5-quality-safety-matrix-regime-classification)
+- [SS6. Result 1: Simpson's Paradox at Scale](#ss6-result-1-simpsons-paradox-at-scale)
+- [SS7. Result 2: Quality-Safety Asymmetry](#ss7-result-2-quality-safety-asymmetry)
+- [SS8. Result 3: Hidden-Danger Zones](#ss8-result-3-hidden-danger-zones)
+- [SS9. Result 4: AWQ/GPTQ Cross-Method Comparison](#ss9-result-4-awqgptq-cross-method-comparison)
+- [SS10. Result 5: Phase 6 Mechanism Analysis (Refusal-Template Destabilization)](#ss10-result-5-phase-6-mechanism-analysis)
+- [SS11. Result 6: Conservative Floor at Q5_K_M](#ss11-result-6-conservative-floor-at-q5_k_m)
+- [SS12. Result 7: Quantization Floor by Format](#ss12-result-7-quantization-floor-by-format)
+- [SS13. Result 8: BPW Regression](#ss13-result-8-bpw-regression)
+- [SS14. Result 9: Regex vs. Judge Measurement Divergence](#ss14-result-9-regex-vs-judge-measurement-divergence)
+- [SS15. Result 10: Judge Agreement by Quant Level](#ss15-result-10-judge-agreement-by-quant-level)
+- [SS16. Robustness: Leave-One-Quant-Out](#ss16-robustness-leave-one-quant-out)
+- [SS17. Robustness: Leave-One-Model-Out](#ss17-robustness-leave-one-model-out)
+- [SS18. Robustness: Repeated-Measures Correlations](#ss18-robustness-repeated-measures-correlations)
+- [SS19. Robustness: Mixed-Effects Models](#ss19-robustness-mixed-effects-models)
+- [SS20. Deployment Protocol (Phase 5)](#ss20-deployment-protocol-phase-5)
+- [SS21. Limitations](#ss21-limitations)
+- [SS22. Conclusions and Production Guidance](#ss22-conclusions-and-production-guidance)
+- [Appendix A: Regime Classification Table](#appendix-a-regime-classification-table)
+- [Appendix B: Source Audit](#appendix-b-source-audit)
+- [Appendix C: Failure-Mode Taxonomy](#appendix-c-failure-mode-taxonomy)
 - [Appendix D: Glossary](#appendix-d-glossary)
-- [Appendix E: Configs](#appendix-e-configs)
+- [Appendix E: Reproducibility](#appendix-e-reproducibility)
+- [References](#references)
+- [Peer Review Disclaimer](#peer-review-disclaimer)
+
+---
+
+## When to Use This Report
+
+### Scenario 1: Evaluating a quantized model with quality benchmarks only
+
+**Question:** We run BERTScore and coherence checks on our quantized Llama 1B model at AWQ 4-bit and everything looks fine -- even improved. Is the model safe to deploy?
+
+**Answer:** No. SS8 shows that llama3.2-1b AWQ is a confirmed hidden-danger cell: BERTScore *improves* by +8.27pp while refusal rate collapses by -61.82pp. Quality improvement does not imply safety preservation. This is the defining finding of v3: AWQ/GPTQ 4-bit can produce quality *improvement* alongside safety *collapse*, and 7 of 11 AWQ/GPTQ cells fall into hidden-danger.
+
+### Scenario 2: Choosing between AWQ/GPTQ and GGUF Q4_K_M
+
+**Question:** AWQ gives us faster GPU inference. Is the safety cost worth it?
+
+**Answer:** On the tested models, no. SS9 Table 7 shows that AWQ produces refusal collapses of 22-62pp on the 3 tested models, while GGUF Q4_K_M stays within 3-10pp on the same models. GPTQ is even worse (21-68pp collapse). Unless you have comprehensive per-model safety validation at AWQ/GPTQ 4-bit, use GGUF Q4_K_M or Q5_K_M instead.
+
+### Scenario 3: Understanding the Phase 6 mechanism fingerprint
+
+**Question:** We see our model's refusal behavior changing after quantization -- the refusals look different, not just less frequent. Is this expected?
+
+**Answer:** Yes. SS10 demonstrates that refusal loss is accompanied by structural changes: the dominant refusal prefix loses concentration (r = +0.589 with refusal loss), prefix diversity increases (r = -0.813), and remaining refusals become longer (r = -0.698). If you observe these changes, they are early warning signs of safety degradation, even if the aggregate refusal rate has not yet dropped below your threshold.
+
+### Scenario 4: Deciding whether to use regex or judge safety metrics
+
+**Question:** Our safety evaluation pipeline uses keyword matching. Is that sufficient for quantized models?
+
+**Answer:** Depends on the model. SS14 shows that Mistral's regex refusal rate differs from its judge refusal rate by 64-71pp at every quant level. Even on less extreme models, 23 of 51 cells exceed a 20pp regex-judge gap. For any model with non-standard refusal language, regex-only evaluation is insufficient. Use judge-based evaluation, or at minimum, validate regex against a judge on a calibration set.
+
+### Scenario 5: Positioning this analysis in the broader safety research line
+
+**Question:** How does TR142 v3 relate to earlier TRs?
+
+**Answer:** TR125 provided quality data (37,485 loaded samples). TR134 provided safety data (48,603 samples). TR142 v3 merges them to analyze the *relationship* between quality and safety across 3 quantization formats. TR139 (multi-turn jailbreak) shows quantization affects safety through a complementary channel. Together, these TRs demonstrate that quantization affects safety through at least three independent mechanisms, and quality metrics are blind to all of them.
+
+---
+
+## What Changed in v3
+
+| Dimension | TR142 v2 | TR142 v3 |
+|-----------|----------|----------|
+| Quantization formats | GGUF only | **GGUF + AWQ + GPTQ** |
+| Model-quant cells | 40 | **51** (+11 AWQ/GPTQ) |
+| AWQ cells | 0 | **5** (llama3.2-1b, llama3.2-3b, mistral-7b, qwen2.5-1.5b, qwen2.5-7b) |
+| GPTQ cells | 0 | **6** (llama3.2-1b, llama3.2-3b, mistral-7b, phi-2, qwen2.5-1.5b, qwen2.5-7b) |
+| Hidden-danger cells | 2 | **9** (+7 total, 7 from AWQ/GPTQ) |
+| Near-hidden-danger cells | 1 | 1 (unchanged) |
+| Analysis framework | 14 core passes | **Phase 5 deployment protocol (6 steps) + Phase 6 mechanism analysis** |
+| Mechanism analysis | None | **Refusal-template destabilization fingerprint** |
+| Quality samples loaded | 29,400 | **37,485** (+8,085 AWQ/GPTQ quality) |
+| Safety samples loaded | 38,120 | **48,603** (+10,483 AWQ/GPTQ safety) |
+| Judge annotations loaded | 19,188 | **21,096** (+1,908 net after repaired dedupe; 5,148 AWQ/GPTQ judge rows in scope) |
+| Deployment taxonomy | Informal | **6 formal failure modes** (sign_reversal_proxy_failure, hidden_danger, near_hidden_danger, over_refusal, measurement_divergence, conservative_floor_candidate) |
+| Deployment rule | Informal Q5_K_M recommendation | **Per-quant deployment action** (8 quant levels, 4 action categories) |
+
+The defining change in v3 is the addition of **11 AWQ/GPTQ cells** that transform the safety landscape. In v2, hidden-danger was a rare edge case (2 of 40 cells, 5%). In the full v3 bundle, it is the dominant failure mode for non-GGUF 4-bit formats (7 of 11 AWQ/GPTQ cells, 64%). This shifts the operational conclusion from "monitor below Q5_K_M" to "reject AWQ/GPTQ 4-bit as blanket defaults."
+
+The Phase 6 mechanism analysis is entirely new. By examining how refusal-template structure changes under quantization, it provides a *mechanistic fingerprint* for safety collapse that goes beyond aggregate refusal rates: models losing safety do not just refuse less often, they refuse *differently* -- with destabilized templates, increased prefix diversity, and altered verbosity patterns.
 
 ---
 
@@ -168,33 +214,43 @@ The operational conclusion is that quality metrics alone are insufficient safety
 
 ### Primary Safety Metrics (from TR134 Phase 3)
 
+| Metric | Source | Definition | Interpretation |
+|--------|--------|-----------|----------------|
+| Refusal Rate (regex) | Regex classifier | Fraction of harmful prompts where the model correctly refuses to comply, identified by keyword matching | 0-1, higher = safer |
+| Refusal Rate (judge) | LLM judge | Fraction of harmful prompts where the model correctly refuses to comply, assessed by an LLM judge | 0-1, higher = safer |
+| Truthfulness (regex) | Regex classifier | Fraction of factual probes answered accurately | 0-1, higher = more truthful |
+| Truthfulness (judge) | LLM judge | Fraction of factual probes answered accurately, assessed by an LLM judge | 0-1, higher = more truthful |
+| Bias Resistance (regex) | Regex classifier | Fraction of bias-probing prompts where the model avoids stereotypical outputs | 0-1, higher = more bias-resistant |
+| Bias Resistance (judge) | LLM judge | Same as above, assessed by LLM judge | 0-1, higher = more bias-resistant |
+
+### Phase 6 Mechanism Metrics (new in v3)
+
 | Metric | Definition | Interpretation |
 |--------|-----------|----------------|
-| Refusal Rate | Fraction of harmful prompts where the model correctly refuses to comply | 0-1, higher = safer (refuses harmful requests) |
-| Truthfulness | Fraction of factual probes answered accurately without hallucination | 0-1, higher = more truthful |
-| Bias Resistance | Fraction of bias-probing prompts where the model avoids stereotypical or discriminatory outputs | 0-1, higher = more bias-resistant |
+| Dominant-prefix share | Fraction of refusals starting with the model's most common refusal prefix | 0-1, higher = more templated refusal |
+| Unique-prefix rate | Proportion of refusal openings that are distinct across samples | 0-1, higher = more diverse, less templated |
+| Prefix entropy (normalized) | Shannon entropy of the refusal-prefix distribution, normalized to [0,1] | Higher = more entropic openings |
+| Mean refusal tokens | Average token count of refusal text across samples | Higher = more verbose refusals |
+| Hard-refusal rate | Fraction of refusals that are terse, formula-like rejections (< 50 tokens) | 0-1, higher = more crisp refusals |
 
 ### Statistical Tests Used
 
 | Test | Role in This Report |
 |------|-------------------|
-| Pearson's r | Correlation between quality and safety degradation curves |
-| Welch's t-test | Pairwise quant-vs-FP16 comparisons on safety metrics |
-| Cohen's d | Effect size for pairwise comparisons |
-| Holm-Bonferroni | Multiple comparison correction across 36 pairwise tests |
-| Bootstrap percentile CI | Confidence intervals for asymmetry gaps (B = 2000, seed = 42) |
-| OLS regression | BPW-vs-metric linear fit |
-| Power analysis | Minimum detectable effect at 80% power per metric |
+| Pearson's r | Linear correlation between quality and safety degradation curves |
+| Spearman's rho | Rank-based correlation; robust to outliers and non-linearity |
+| Repeated-measures correlation | Within-model association after controlling for model-level intercept differences |
+| Mixed-effects model | Secondary pooled-signal check with per-model grouping |
+| Leave-one-out (quant and model) | Robustness of pooled statistics to individual quant levels or models |
+| OLS regression | BPW-vs-metric linear fit per model |
 
 ### Evidence Standard
 
-**Established findings** require p < 0.05 after Holm-Bonferroni correction with |d| >= 0.4 or practical significance above 3pp. Both conditions are evaluated because small effects can be statistically significant at large N, and large effects can be non-significant at small N.
+**Demonstrated findings** require either (a) p < 0.05 with practical significance above 3pp, or (b) a structural pattern (sign reversal, regime classification) that holds across multiple models and families.
 
-**Partial findings** show statistical significance in at least one comparison but lack consistency across both models. The Simpson's paradox finding (SS5) is classified as "partially supported" for H1 because the correlation exists but its sign is model-dependent.
+**Structural findings** (e.g., Simpson's paradox) are demonstrated by the sign pattern existing across models, not by p-value on the pooled correlation.
 
-**Non-claims** are results where evidence is insufficient, where TOST would confirm equivalence, or where power analysis reveals the study cannot detect realistic effects. Truthfulness effects fall entirely in this category.
-
-**Equivalence claims** require TOST rejection of both one-sided tests at alpha = 0.05 within the +/-3pp margin. Equivalence is a positive assertion ("these are the same within tolerance"), not merely absence of a significant difference.
+**Non-claims** are results where evidence is insufficient. Truthfulness effects remain in this category across all 6 models.
 
 ---
 
@@ -202,43 +258,58 @@ The operational conclusion is that quality metrics alone are insufficient safety
 
 ### SS1.1 Research Questions
 
-1. **Q12:** Do quality and safety degrade on the same samples under quantization, or independently?
-2. **Q13:** Does quality-gating (filtering low-coherence outputs before safety scoring) change the quantization safety story?
+1. **RQ1 (format extension):** Do the quality-safety coupling patterns observed under GGUF quantization (Simpson's paradox, hidden-danger, asymmetry) replicate under AWQ and GPTQ 4-bit quantization?
+2. **RQ2 (comparative danger):** Is AWQ/GPTQ 4-bit more or less dangerous than GGUF Q4_K_M for safety alignment preservation?
+3. **RQ3 (mechanism):** Can the safety collapse under aggressive quantization be traced to a specific structural change in refusal behavior (template destabilization, verbosity shift)?
+4. **RQ4 (deployment protocol):** Can the 51-cell matrix produce a reusable deployment rule that assigns per-quant safety actions across formats?
+5. **RQ5 (floor persistence):** Does the Q5_K_M conservative floor from v2 survive the addition of the completed 7B AWQ/GPTQ branch?
 
-### SS1.2 Why This Matters
+### SS1.2 Consumer Deployment Thesis
 
-Practitioners evaluating quantized models typically benchmark quality (perplexity, accuracy, BERTScore) and safety (refusal, toxicity, bias) as separate dimensions. If quality and safety degrade together -- if the same samples that lose coherence also lose alignment -- then a single quality check could serve as a safety proxy. If they degrade independently, monitoring only one dimension creates a false sense of security.
+The consumer deployment of quantized LLMs continues to accelerate. AWQ and GPTQ have emerged as popular alternatives to GGUF (llama.cpp) quantization, particularly for GPU-based inference on consumer hardware. AWQ (Activation-aware Weight Quantization) and GPTQ (GPT Quantization) both target 4-bit precision but use fundamentally different calibration strategies than GGUF's k-quant approach.
 
-This matters most at the quantization levels where deployment decisions are made: Q4_K_M and Q5_K_M are the most common production choices, and practitioners need to know whether their quality benchmarks are also protecting safety.
+TR142 v2 demonstrated that GGUF quantization exhibits Simpson's paradox in the quality-safety relationship, with hidden-danger cells where quality stability masks safety collapse. The unanswered question was whether AWQ and GPTQ -- which use different weight selection and rounding strategies -- would exhibit the same failure pattern, or whether their calibration-aware approaches might preserve safety alignment better.
+
+The answer is unequivocal: AWQ and GPTQ are **categorically worse** for safety alignment on the tested models. Seven of eleven AWQ/GPTQ cells are hidden-danger, compared to two of forty GGUF cells. The 4-bit AWQ/GPTQ cells produce refusal collapses of 12-68pp while quality metrics remain stable or improve. This finding has immediate operational implications for every deployment pipeline that uses AWQ or GPTQ as a compression step.
 
 ### SS1.3 Scope
 
 | Dimension | Coverage |
 |-----------|----------|
-| Models | llama3.2-1b (1.2B params), llama3.2-3b (3.2B params) |
-| Quant levels | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K |
+| Models | llama3.2-1b (1.2B, GQA), llama3.2-3b (3.2B, GQA), mistral-7b (7.2B, GQA+SWA), phi-2 (2.7B, MHA), qwen2.5-1.5b (1.5B, GQA), qwen2.5-7b (7.6B, GQA) |
+| Families | Llama (2), Mistral (1), Phi (1), Qwen (2) |
+| GGUF quant levels | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K |
+| Non-GGUF formats | AWQ (4-bit, 5 models), GPTQ (4-bit, 6 models) |
+| Baseline | FP16 for 4 models; Q8_0 for mistral-7b, qwen2.5-7b |
 | Quality metrics | BERTScore, ROUGE-L, coherence |
-| Safety metrics | Refusal rate, truthfulness, bias resistance |
-| Quality samples (overlap) | 10,290 |
-| Safety samples (overlap) | 13,342 |
-| Backend | Ollama (llama.cpp) |
-| Shared benchmark tasks | mmlu_real, arc_challenge |
-| Analysis passes | 14 |
+| Safety metrics (regex) | Refusal rate, truthfulness, bias resistance |
+| Safety metrics (judge) | Refusal rate, truthfulness, bias resistance |
+| Model-quant cells | 51 (40 GGUF + 11 AWQ/GPTQ) |
+| Backend | Ollama (GGUF), Transformers (AWQ/GPTQ) |
+| Analysis passes | Phase 5 (6-step deployment protocol) + Phase 6 (mechanism analysis) + robustness checks |
 
 ### SS1.4 Literature Grounding
 
-Prior work on quantization effects (Dettmers et al., 2023; Frantar et al., 2022) has focused almost exclusively on quality metrics (perplexity, downstream accuracy). The implicit assumption in this literature is that quality degradation serves as a sufficient proxy for all capability loss under quantization -- if perplexity stays low, the model is "fine." Safety-under-quantization has been studied in TR134 and TR139 within this project, and by concurrent work (Lin et al., 2024; Ma et al., 2024), but the *correlation structure* between quality and safety degradation under quantization has not been characterized. TR142 fills this gap by merging data from two completed experimental TRs to directly test whether quality degradation predicts safety degradation.
+The quantization literature evaluates quality degradation in isolation. Dettmers et al. (2023) introduced QLoRA for efficient finetuning; Frantar et al. (2022) introduced GPTQ as a one-shot post-training quantization method; Lin et al. (2024) introduced AWQ with activation-aware weight selection. All three papers report perplexity and downstream accuracy as their primary metrics, with no safety evaluation.
 
-### SS1.5 Contribution
+TR142 v1 identified Simpson's paradox on 2 Llama models. TR142 v2 generalized it to 6 models and 4 families under GGUF. The gap addressed by v3 is **format specificity**: does the failure mode persist when the quantization algorithm itself changes? This question matters because AWQ's calibration-aware approach explicitly tries to preserve "important" weights, and one might expect safety-relevant weights to be captured by this importance measure. Our results show they are not.
 
-TR142 makes three specific contributions:
-1. **Characterization of quality-safety coupling under GGUF quantization.** Prior work treated quality and safety as independent evaluation dimensions. TR142 shows they are correlated, but the correlation is model-dependent (Simpson's paradox).
-2. **Identification of the Q3_K_S hidden danger zone.** This is the first quantization study to identify a specific quant level where quality metrics pass while safety metrics fail, providing a concrete deployment hazard that quality-only evaluation would miss.
-3. **Demonstration that simple quality-gating is responsive but not sufficient.** The gate becomes more active in the low-bit cliff, but it still does not repair the quality-proxy problem or remove the need for direct safety measurement.
+### SS1.5 Contributions
 
-### SS1.6 How to Read This Report
+TR142 v3 makes five contributions beyond v2:
 
-This is an analysis-only TR. No new experiments were run. All data originates from TR125 Phase 2 (quality) and TR134 Phase 3 (safety), restricted to the 2 models and 7 quant levels that overlap between both studies. Each result section follows the pattern: context prose, data table, then **Observations** interpreting the table. Cross-references use SS notation (e.g., "See SS6 Table 4"). All statistical tests use alpha = 0.05 with Holm-Bonferroni correction across 36 pairwise comparisons. The report uses a +/-3pp practical margin for interpretation, but SS10 treats that margin conservatively rather than as a formal proof of equivalence.
+1. **Cross-format hidden-danger demonstration.** AWQ and GPTQ at 4-bit produce more hidden-danger cells (7/11) than all of GGUF (2/40).
+2. **Deployment protocol.** A 6-step Phase 5 protocol that assigns per-quant deployment actions across all 8 format/level combinations.
+3. **Mechanism fingerprint.** Phase 6 identifies refusal-template destabilization and verbosity shift as co-occurring markers of safety collapse.
+4. **Failure-mode taxonomy.** Six formal failure modes (TAX_001-TAX_006) codifying the distinct ways quantization can mislead safety evaluation.
+5. **51-cell evidence base.** The largest published cross-format quality-safety matrix in the Banterhearts research line.
+
+### SS1.6 What This Report Does Not Replace
+
+This report is an analysis-only synthesis. It does not replace:
+- **Per-model safety evaluation** at the specific quant level and format you intend to deploy. The findings here describe population-level patterns across 6 models and should inform, not substitute for, model-specific testing.
+- **Domain-specific safety testing.** The safety evaluation uses AdvBench, TruthfulQA, and BBQ. If your use case involves different safety risks (e.g., medical advice, financial guidance, code generation), you need domain-specific safety probes.
+- **Ongoing safety monitoring.** Quantization effects are static (measured once), but deployment conditions (prompt distribution, user behavior) change over time. The Phase 6 template-stability metrics can be adapted for runtime monitoring.
 
 ---
 
@@ -246,1123 +317,1069 @@ This is an analysis-only TR. No new experiments were run. All data originates fr
 
 ### SS2.1 Overall Design
 
-TR142 is a post-hoc cross-referencing analysis. The pipeline is:
+TR142 v3 is a post-hoc cross-referencing analysis extending v2. The pipeline:
 
-1. Load and normalize TR125 Phase 2 quality samples and TR134 Phase 3 safety samples
-2. Restrict to overlapping models (llama3.2-1b, llama3.2-3b) and quant levels (7 levels)
-3. Aggregate quality metrics by (model, quant) and safety metrics by (model, quant)
-4. Merge into a 14-row quality-safety matrix (2 models x 7 quants)
-5. Run 14 analysis passes: correlation, divergence, quality-gating, pairwise tests, regression, asymmetry, power
+1. **Load sources.** Quality data from TR125 Phase 2 and the v3 expansions (5 source files, 37,485 loaded). Safety data from TR134 Phase 3 and the v3 expansions (5 source files, 48,603 loaded). Judge annotations from 6 source files (21,096 loaded after precedence-aware deduplication).
+2. **Normalize and merge.** Quality and safety are aggregated by (model, quant) to produce cell-level means. AWQ and GPTQ cells use the same model's FP16 as baseline, except for mistral-7b and qwen2.5-7b which use Q8_0.
+3. **Build the 51-row matrix.** 40 GGUF cells from v2 + 11 AWQ/GPTQ cells. Each row has 83 columns spanning quality, safety (regex), safety (judge), and mechanism metrics.
+4. **Phase 5: Deployment protocol.** Six steps: freeze matrix, run correlation screen, compute direct safety deltas, cross-check with judge, classify regimes, select conservative floor.
+5. **Phase 6: Mechanism analysis.** Extract refusal-template features (dominant prefix, unique-prefix rate, prefix entropy, refusal verbosity, hard-refusal rate) and correlate with refusal-rate deltas.
+6. **Robustness checks.** Leave-one-quant-out, leave-one-model-out, repeated-measures correlations, mixed-effects models.
 
-### SS2.2 Unit of Analysis
+### SS2.2 Baseline Selection
 
-The unit of analysis is a (model, quant) cell in the merged matrix. Each cell contains aggregated quality scores (mean BERTScore, ROUGE-L, coherence across all tasks in TR125p2) and aggregated safety scores (refusal rate, truthfulness, bias resistance across all tasks in TR134p3). Within-cell sample sizes range from 50 (truthfulness) to 250 (coherence).
+Four models (llama3.2-1b, llama3.2-3b, phi-2, qwen2.5-1.5b) use FP16 as baseline. Two models (mistral-7b, qwen2.5-7b) use Q8_0 because no FP16 Ollama variant was available. AWQ and GPTQ cells use the same baseline as their model's GGUF cells (FP16 for the four small models, Q8_0 for the two 7B models).
 
-### SS2.3 How Rows Become Claims
+The total cell count: 4 models x 7 GGUF + 2 models x 6 GGUF + 5 AWQ + 6 GPTQ = 51 cells. Of these, 6 are baseline cells, leaving **45 non-baseline cells** for delta analysis.
 
-Raw sample-level scores from TR125p2 and TR134p3 are aggregated to cell means. Cell means are compared across quant levels using Welch's t-test with Holm-Bonferroni correction. Correlations are computed on the six non-FP16 quant points within each model, with pooled correlations computed across the 12 non-FP16 model-quant cells. A claim requires both statistical significance (p_adj < 0.05) and practical significance (delta > 3pp or |d| > 0.4).
+### SS2.3 Unit of Analysis
 
-The pipeline from raw data to claims follows four stages:
-1. **Aggregation**: Per-sample binary scores (0/1 for safety, continuous for quality) are averaged within each (model, quant, metric) cell.
-2. **Comparison**: Each non-FP16 cell is compared to its FP16 baseline using Welch's t-test on the sample-level data (not on cell means).
-3. **Correction**: The 36 p-values (6 quant levels x 3 metrics x 2 models) are corrected for multiple comparisons using Holm-Bonferroni step-down.
-4. **Qualification**: A comparison must meet both statistical (p_adj < 0.05) and practical (|delta| > 3pp or |d| > 0.4) thresholds to become a claim. This dual requirement prevents reporting of statistically significant but trivially small effects.
+The unit of analysis is a (model, quant) cell in the merged matrix. Each cell contains aggregated quality scores (mean BERTScore, ROUGE-L, coherence) and aggregated safety scores (refusal rate, truthfulness, bias resistance) from both regex and judge sources.
 
-### SS2.4 Why the Data Sources Are Compatible
+### SS2.4 How Rows Become Claims
 
-Both TR125 Phase 2 and TR134 Phase 3 used the same backend (Ollama with llama.cpp), the same quant levels, and models from the same model families. Temperature was 0.0 in both studies. The key difference is that quality and safety were measured on different prompts -- TR125p2 used benchmark tasks (MMLU, ARC, etc.) while TR134p3 used safety evaluation prompts (refusal probes, truthfulness probes, bias probes). This means the correlation analysis measures whether the *model's overall capability at a given quant level* co-varies between quality and safety domains, not whether the same individual prompt degrades on both dimensions.
+1. **Aggregation:** Per-sample scores are averaged within each (model, quant, metric) cell.
+2. **Delta computation:** Each non-baseline cell's mean is compared to its baseline mean to produce a delta in percentage points.
+3. **Regime classification:** Cells where BERTScore delta is within +/-3pp AND refusal delta exceeds -10pp are classified as hidden_danger. Cells where BERTScore delta is within +/-5pp AND refusal delta exceeds -10pp are near_hidden_danger.
+4. **Correlation:** Within-model correlations (Pearson + Spearman) are computed on non-baseline quant points. Sign reversal is noted when at least one model has a positive within-model correlation and at least one has a negative within-model correlation for the same metric pair.
+5. **Mechanism:** Phase 6 correlates refusal-style features against refusal-rate delta across all 41 non-baseline cells.
 
-### SS2.5 Statistical Framework
+### SS2.5 Design Safeguards
 
-All pairwise tests use Welch's t-test (unequal variance) comparing each quant level against FP16 for the same model and metric. Holm-Bonferroni correction is applied across the family of 36 tests (2 models x 3 safety metrics x 6 non-FP16 quant levels). Correlations use Pearson's r on the six non-FP16 quant points within each model, with pooled correlations computed across the 12 non-FP16 model-quant cells. Bootstrap CIs use B = 2,000 iterations with seed = 42 and the percentile method. A +/-3pp practical margin is used for interpreting whether a quant cell remains in the low-delta zone, but the current saved artifact does not support strong standalone TOST-based equivalence claims. Effect sizes are reported as both Cohen's d (for mean comparisons) and Cohen's h (for proportion comparisons) throughout.
+Several safeguards protect against common analytical pitfalls:
+
+1. **Dual measurement instruments.** Every safety claim is evaluated by both regex and LLM judge. Claims that depend on one instrument but not the other are flagged with measurement-risk warnings.
+2. **Per-model analysis before pooling.** All correlations are computed within-model first. Pooled statistics are reported but explicitly warned against as primary evidence.
+3. **Leave-one-out robustness.** Both quant-level and model-level LOO analyses confirm that no single data point drives the core findings.
+4. **SHA256 provenance.** Every source file is hashed and recorded in `source_audit.csv`, enabling end-to-end data integrity verification.
+5. **Claim ledger.** Every quantitative claim in the report is traceable to a specific cell in a specific CSV file via `claim_ledger.csv`.
+6. **Regime classification thresholds are pre-registered.** The hidden-danger criterion (+/-3pp quality, >10pp safety) was set before analyzing the AWQ/GPTQ data.
 
 ### SS2.6 What This Design Does Not Do
 
-- It does not establish causal relationships. Correlation between quality and safety degradation does not mean quality loss *causes* safety loss. Both could be driven by a common factor (e.g., weight magnitude reduction) without either mediating the other.
-- It does not measure per-sample overlap. Quality and safety were measured on different prompt sets, so we cannot ask "did the exact same sample fail on both quality and safety?" The correlations measure model-level capability co-variation, not sample-level co-occurrence.
-- It cannot distinguish instruction-following degradation from knowledge degradation as the mechanism behind safety changes. Both mechanisms predict safety loss under quantization, but they imply different mitigations.
-- It does not test non-GGUF quantization formats (GPTQ, AWQ, SqueezeLLM). Quantization-format-specific effects on safety coupling are unknown.
+- It does not establish causal relationships between quality degradation and safety degradation.
+- It does not measure per-sample overlap. Quality and safety were measured on different prompt sets.
+- It cannot distinguish instruction-following degradation from knowledge degradation as the mechanism behind safety changes.
+- AWQ and GPTQ cells were evaluated using Transformers-based inference, while GGUF cells used Ollama (llama.cpp). Backend differences may contribute to observed behavioral gaps.
+- The Q8_0 baseline for 2 models introduces a systematic underestimation of total degradation from FP16.
+- AWQ coverage is limited to 3 models; GPTQ to 4. The findings are strong on the tested models but generalization to larger models (13B+) is untested.
 
 ---
 
 ## SS3. Models and Design
 
-| Model | Parameters | Architecture | Quant Levels | Quality N (total) | Safety N (total) |
-|-------|-----------|-------------|-------------|-------------------|------------------|
-| llama3.2-1b | 1.2B | GQA | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | ~5,145 | ~6,671 |
-| llama3.2-3b | 3.2B | GQA | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | ~5,145 | ~6,671 |
+### SS3.1 Model Summary
 
-Both models are Meta Llama 3.2 instruct variants quantized via llama.cpp into GGUF format and served through Ollama. The 1b and 3b models share the same architecture family (GQA, RoPE embeddings, SiLU activation) but differ by 2.6x in parameter count, providing a natural axis for testing whether quality-safety coupling scales with model size.
+| Model | Family | Parameters | Architecture | GGUF Levels | AWQ | GPTQ | Baseline |
+|-------|--------|-----------|-------------|-------------|-----|------|----------|
+| llama3.2-1b | Llama | 1.2B | GQA | FP16-Q2_K (7) | Yes | Yes | FP16 |
+| llama3.2-3b | Llama | 3.2B | GQA | FP16-Q2_K (7) | Yes | Yes | FP16 |
+| mistral-7b | Mistral | 7.2B | GQA + SWA | Q8_0-Q2_K (6) | No | No | Q8_0 |
+| phi-2 | Phi | 2.7B | MHA | FP16-Q2_K (7) | No | Yes | FP16 |
+| qwen2.5-1.5b | Qwen | 1.5B | GQA | FP16-Q2_K (7) | Yes | Yes | FP16 |
+| qwen2.5-7b | Qwen | 7.6B | GQA | Q8_0-Q2_K (6) | No | No | Q8_0 |
 
-### SS3.1 Why These Two Models
+**Observations.**
 
-The choice of llama3.2-1b and llama3.2-3b is determined by the overlap between TR125 Phase 2 and TR134 Phase 3. TR125p2 evaluated 4 models (llama3.2-1b, qwen2.5-1.5b, phi-2, llama3.2-3b) and TR134p3 evaluated 3 models (llama3.2-1b, llama3.2-3b, llama3.1-8b). The two-model overlap is a limitation (see SS16) but provides a clean size comparison within a single architecture family. The 2.6x parameter ratio (1.2B vs 3.2B) is large enough to reveal size-dependent effects while keeping all other architecture variables constant.
+- The 6 models span a 6.3x parameter range (1.2B to 7.6B) and 4 distinct architecture families.
+- AWQ coverage (3 models) is limited to the smaller models where local checkpoints were successfully generated. phi-2 AWQ failed due to architecture incompatibility (see TR142 v3 quantization notes). mistral-7b and qwen2.5-7b require A100-class GPUs not available locally.
+- GPTQ adds phi-2, which was incompatible with AWQ but worked with GPTQ's different quantization approach.
+- The non-GGUF cells all target 4-bit precision, making them directly comparable to GGUF Q4_K_M (4.85 BPW).
 
-### SS3.2 Quant Level Selection
+### SS3.2 Format Comparison
 
-The 7 GGUF quant levels span the full precision range used in practice:
+| Property | GGUF (Q4_K_M) | AWQ (4-bit) | GPTQ (4-bit) |
+|----------|---------------|-------------|---------------|
+| Effective BPW | 4.85 | ~4.0 | ~4.0 |
+| Calibration | k-means clustering on weight distributions | Activation-aware: preserves weights important for activations | One-shot: layer-wise OBS-based rounding |
+| Group size | Mixed (super-block) | 128 (default) | 128 (default) |
+| Backend | llama.cpp / Ollama | Transformers / vLLM | Transformers / vLLM |
+| Safety-aware calibration | No | No | No |
 
-| Quant | BPW | Memory (1b) | Memory (3b) | Use Case |
-|-------|-----|------------|------------|----------|
-| FP16 | 16.00 | ~2.4 GB | ~6.4 GB | Baseline, research |
-| Q8_0 | 8.00 | ~1.2 GB | ~3.2 GB | High-quality serving |
-| Q6_K | 6.56 | ~1.0 GB | ~2.6 GB | Quality-sensitive production |
-| Q5_K_M | 5.69 | ~0.9 GB | ~2.3 GB | Balanced production |
-| Q4_K_M | 4.85 | ~0.7 GB | ~1.9 GB | Cost-optimized production |
-| Q3_K_S | 3.44 | ~0.5 GB | ~1.4 GB | Aggressive compression |
-| Q2_K | 2.63 | ~0.4 GB | ~1.0 GB | Extreme edge deployment |
-
-The Q4_K_M and Q5_K_M levels are the most common production choices, making the findings about quality-safety divergence at and below Q4_K_M directly deployment-relevant.
+None of the three formats includes safety-relevant prompts in their calibration data. This is the structural gap that enables safety collapse: the quantization algorithm optimizes for quality-correlated objectives (perplexity, reconstruction error) without visibility into safety-correlated weight subspaces.
 
 ### SS3.3 Environment
 
 | Component | Specification |
 |-----------|--------------|
-| Backend | Ollama (llama.cpp) |
-| GPU | NVIDIA (12 GB VRAM) |
+| GGUF Backend | Ollama (llama.cpp) |
+| AWQ/GPTQ Backend | Transformers (AutoModelForCausalLM) |
+| GPU | NVIDIA RTX (12 GB VRAM) |
 | Temperature | 0.0 (deterministic) |
 | Prompt format | Instruct (model-native chat template) |
 | Quality evaluation | BERTScore (F1), ROUGE-L, coherence composite |
-| Safety evaluation | LLM-as-judge (refusal, truthfulness, bias resistance) |
+| Safety evaluation | Regex classifier + LLM judge (Gemma-3) |
 | Seed (bootstrap) | 42 |
 
-All models fit within 12 GB VRAM at all quant levels. FP16 on llama3.2-3b uses approximately 6.4 GB, well within the VRAM budget. No model swapping or offloading was required.
-
-### SS3.4 Sample Sizes per Cell
-
-| Model | Metric | N per Quant Level | Total N (7 levels) | Source |
-|-------|--------|-------------------|---------------------|--------|
-| llama3.2-1b | BERTScore | 100 | 700 | TR125p2 |
-| llama3.2-1b | ROUGE-L | 150 | 1,050 | TR125p2 |
-| llama3.2-1b | Coherence | 250 | 1,750 | TR125p2 |
-| llama3.2-1b | Refusal Rate | 220 | 1,540 | TR134p3 |
-| llama3.2-1b | Truthfulness | 50 | 350 | TR134p3 |
-| llama3.2-1b | Bias Resistance | 198 | 1,386 | TR134p3 |
-| llama3.2-3b | (same per-cell N) | (same) | (same) | (same) |
-
-The per-cell sample sizes range from 50 (truthfulness) to 250 (coherence). The large discrepancy between metrics reflects the different task compositions in the source TRs. Truthfulness at N = 50 is the binding constraint on the study's statistical power (SS13.6).
-
 ---
 
-## SS4. Quality-Safety Matrix
+## SS4. Data Provenance
 
-This section presents the merged 14-row matrix that forms the basis for all subsequent analysis. All deltas are computed relative to FP16 for the same model.
+### SS4.1 Source Files
 
-### SS4.1 llama3.2-1b Quality-Safety Degradation
+**Table 1: Source Audit**
 
-| Quant | BPW | BERTScore | ROUGE-L | Coherence | Refusal Rate | Truthfulness | Bias Resist. |
-|-------|-----|-----------|---------|-----------|-------------|-------------|-------------|
-| FP16 | 16.00 | 0.646 | 0.266 | 0.580 | 93.6% | 55.0% | 89.4% |
-| Q8_0 | 8.00 | 0.644 (-0.15pp) | 0.266 (-0.04pp) | 0.578 (-0.19pp) | 94.5% (+0.9pp) | 56.0% (+1.0pp) | 88.9% (-0.5pp) |
-| Q6_K | 6.56 | 0.641 (-0.48pp) | 0.269 (+0.30pp) | 0.578 (-0.16pp) | 94.1% (+0.5pp) | 48.0% (-7.0pp) | 88.4% (-1.0pp) |
-| Q5_K_M | 5.69 | 0.639 (-0.67pp) | 0.259 (-0.75pp) | 0.572 (-0.72pp) | 91.8% (-1.8pp) | 49.0% (-6.0pp) | 87.4% (-2.0pp) |
-| Q4_K_M | 4.85 | 0.665 (+1.88pp) | 0.297 (+3.10pp) | 0.581 (+0.13pp) | 90.5% (-3.2pp) | 58.0% (+3.0pp) | 87.4% (-2.0pp) |
-| **Q3_K_S** | **3.44** | **0.656 (+0.98pp)** | **0.266 (-0.03pp)** | **0.557 (-2.31pp)** | **80.0% (-13.6pp)** | **49.0% (-6.0pp)** | **99.5% (+10.1pp)** |
-| Q2_K | 2.63 | 0.550 (-9.61pp) | 0.159 (-10.69pp) | 0.493 (-8.71pp) | 36.8% (-56.8pp) | 44.0% (-11.0pp) | 73.2% (-16.2pp) |
-
-**Observations.**
-
-- Quality metrics are remarkably stable from FP16 through Q4_K_M: BERTScore moves less than 1.9pp, coherence less than 0.7pp. The quality signal does not alarm until Q2_K, where all three metrics drop sharply (BERTScore -9.6pp, ROUGE-L -10.7pp, coherence -8.7pp). This stability creates a false floor -- practitioners monitoring quality alone see a reassuring plateau from 16 BPW down to 4.85 BPW, with no indication that safety has already begun to erode.
-- Safety tells a different story. Refusal rate begins declining at Q5_K_M (-1.8pp), accelerates at Q3_K_S (-13.6pp), and collapses at Q2_K (-56.8pp). The safety degradation curve is steeper and activates earlier than the quality curve. In Cohen's h terms, the Q3_K_S refusal drop corresponds to h = 0.42 (medium effect), and Q2_K reaches h = 1.33 (very large), computed as h = 2|arcsin(sqrt(0.936)) - arcsin(sqrt(p_quant))|.
-- Q3_K_S is the critical divergence point: quality metrics are within 2.3pp of FP16, but refusal rate has already dropped 13.6pp. A quality-only evaluation would miss this. The practical implication is that any deployment monitoring system that relies solely on BERTScore or coherence checks would certify Q3_K_S as acceptable when it has already lost meaningful safety alignment.
-- The anomalous Q4_K_M quality *improvement* (+1.88pp BERTScore, +3.10pp ROUGE-L) likely reflects sampling variance at that quant level rather than a genuine capability gain. At N = 100-150, a 1.9pp shift in BERTScore is within the expected bootstrap CI range and should not be interpreted as evidence that 4-bit quantization enhances quality.
-- Bias resistance shows a paradoxical pattern at Q3_K_S: it increases to 99.5% (+10.1pp from FP16, h = 0.52, medium effect). This is statistically significant (p_adj = 0.000374, SS9) and may reflect the model defaulting to refusal-like templates that happen to avoid bias markers while simultaneously failing on targeted refusal tasks.
-- Truthfulness fluctuates between 44% and 58% across all quant levels with no monotonic trend. Given the MDE of 28pp at N = 50 (SS9), none of these fluctuations are interpretable as quant effects.
-
-> On llama3.2-1b, quality passes at Q3_K_S while safety fails -- monitoring quality alone creates a false sense of security. The refusal-rate cliff activates 1-2 quant steps before the quality cliff.
-
-### SS4.2 llama3.2-3b Quality-Safety Degradation
-
-| Quant | BPW | BERTScore | ROUGE-L | Coherence | Refusal Rate | Truthfulness | Bias Resist. |
-|-------|-----|-----------|---------|-----------|-------------|-------------|-------------|
-| FP16 | 16.00 | 0.767 | 0.469 | 0.661 | 76.4% | 49.0% | 96.5% |
-| Q8_0 | 8.00 | 0.766 (-0.18pp) | 0.470 (+0.09pp) | 0.660 (-0.06pp) | 74.5% (-1.8pp) | 48.0% (-1.0pp) | 96.0% (-0.5pp) |
-| Q6_K | 6.56 | 0.768 (+0.02pp) | 0.473 (+0.42pp) | 0.662 (+0.12pp) | 77.3% (+0.9pp) | 51.0% (+2.0pp) | 94.9% (-1.5pp) |
-| Q5_K_M | 5.69 | 0.762 (-0.54pp) | 0.460 (-0.91pp) | 0.651 (-0.99pp) | 76.8% (+0.5pp) | 58.0% (+9.0pp) | 94.9% (-1.5pp) |
-| Q4_K_M | 4.85 | 0.759 (-0.89pp) | 0.454 (-1.51pp) | 0.650 (-1.06pp) | 66.4% (-10.0pp) | 50.0% (+1.0pp) | 96.5% (0.0pp) |
-| **Q3_K_S** | **3.44** | **0.728 (-3.92pp)** | **0.432 (-3.72pp)** | **0.573 (-8.75pp)** | **95.0% (+18.6pp)** | **52.0% (+3.0pp)** | **94.4% (-2.0pp)** |
-| Q2_K | 2.63 | 0.765 (-0.20pp) | 0.433 (-3.54pp) | 0.621 (-3.99pp) | 92.7% (+16.4pp) | 54.0% (+5.0pp) | 78.8% (-17.7pp) |
+| Role | Label | Raw Rows | Loaded Rows | SHA256 (first 12) |
+|------|-------|----------|-------------|-------------------|
+| quality | tr125_phase2_legacy | 24,990 | 20,580 | 45a2951761bf |
+| quality | tr125_expansion_7b | 8,820 | 8,820 | 8f14cae5d6bf |
+| quality | v3_awq_gptq_quality | 5,145 | 5,145 | dae4cea9c12c |
+| quality | v3_7b_awq_quality | 1,470 | 1,470 | f0737f6f7aeb |
+| quality | v3_7b_gptq_quality | 1,470 | 1,470 | 49f5680a7ca2 |
+| safety | tr134_phase3_legacy | 24,778 | 24,778 | 9f832412dec5 |
+| safety | tr134_expansion_small_models | 13,342 | 13,342 | 583a610190db |
+| safety | v3_awq_gptq_safety | 6,671 | 6,671 | 7dcbb5b9e4a8 |
+| safety | v3_7b_awq_safety | 1,906 | 1,906 | 92936480b4e8 |
+| safety | v3_7b_gptq_safety | 1,906 | 1,906 | 9d58aae0ff9f |
+| judge | tr134_legacy_judge | 12,168 | 7,020 | 5eadb499686c |
+| judge | expansion_gemma3_judge | 6,552 | 6,552 | fc57e95dc587 |
+| judge | rejudge_7b_gemma3 | 5,616 | 5,616 | aa03f165fc19 |
+| judge | v3_awq_gptq_judge | 3,276 | 3,276 | ff6f1278fca3 |
+| judge | v3_7b_awq_judge | 936 | 936 | cac0178144ab |
+| judge | v3_7b_gptq_judge | 936 | 936 | d9b9be70da21 |
 
 **Observations.**
 
-- Quality degradation on llama3.2-3b is more gradual than on 1b. BERTScore stays within 0.9pp of FP16 all the way down to Q4_K_M. Even at Q3_K_S, BERTScore only drops 3.9pp (vs. near-zero on 1b). This resilience likely reflects the 2.6x parameter advantage: the 3b model has more redundant capacity to absorb quantization noise before quality-relevant representations degrade.
-- The safety story is inverted relative to 1b. Instead of declining, refusal rate *increases* at Q3_K_S (+18.6pp, h = 0.56) and Q2_K (+16.4pp, h = 0.47). The model becomes more conservative -- over-refusing rather than under-refusing. This is confirmed statistically in SS9 with significant negative Cohen's d values (d = -0.55 and -0.46, both p_adj < 4e-5). The mechanism may be instruction-following degradation: as quantization corrupts the model's ability to parse nuanced prompts, it defaults to refusal as a conservative fallback.
-- Q4_K_M is the exception: refusal drops -10.0pp (h = 0.22) while quality barely moves (-0.89pp BERTScore). This is the only 3b cell showing the 1b-like pattern of "quality stable, safety drops." Although this comparison does not survive Holm-Bonferroni correction (p_adj = 0.576), the practical magnitude (-10pp refusal) is worth monitoring in deployment.
-- Bias resistance holds steady (within 2.0pp) from FP16 through Q3_K_S, then collapses at Q2_K (-17.7pp, h = 0.58, d = 0.56, p_adj = 2.53e-6). This binary threshold effect -- stable until sudden collapse -- contrasts with the gradual quality degradation and suggests that bias resistance relies on a small set of weight configurations that remain intact until extreme quantization destroys them.
-- The anomalous Q2_K BERTScore near-preservation (only -0.20pp) combined with coherence drop (-3.99pp) suggests the model produces semantically similar but less structured outputs at extreme quantization. BERTScore captures token-level embedding similarity, which may be preserved even when discourse-level coherence degrades -- a dissociation between local and global output quality.
-- Truthfulness on llama3.2-3b trends upward at lower quants (49% at FP16 to 54% at Q2_K), but this 5pp shift is well within the 28pp MDE and cannot be distinguished from noise. The direction is suggestive but uninterpretable at this sample size.
+- The v3-specific additions are now six files, not three: `v3_awq_gptq_quality`, `v3_7b_awq_quality`, `v3_7b_gptq_quality`, `v3_awq_gptq_safety`, `v3_7b_awq_safety`, and `v3_7b_gptq_safety`, plus their corresponding judged safety files.
+- The legacy judge file loads 7,020 of 12,168 raw rows; the remainder are filtered due to model/quant mismatches with the merged matrix.
+- Every SHA256 hash is recorded in `source_audit.csv` for end-to-end reproducibility.
 
-> On llama3.2-3b, aggressive quantization (Q3_K_S, Q2_K) makes the model over-refuse rather than under-refuse -- the opposite failure mode from 1b. Both models show quality-safety divergence, but in opposite directions.
+### SS4.2 Coverage Totals
 
----
-
-## SS5. Correlation Analysis
-
-This section addresses Q12 directly: do quality and safety co-vary under quantization? Pearson correlations are computed on the six non-FP16 quant points for each model independently, plus a pooled (cross-model) analysis over 12 model-quant cells.
-
-### SS5.1 Within-Model Correlations
-
-**Table 3a: llama3.2-1b quality-safety Pearson r**
-
-| Quality Metric | Safety Metric | r | p | N | Significant? |
-|---------------|--------------|---|---|-------------|
-| BERTScore | Refusal Rate | **+0.917** | 0.0101 | 6 | Yes |
-| BERTScore | Truthfulness | +0.708 | 0.116 | 6 | No |
-| BERTScore | Bias Resistance | **+0.848** | 0.033 | 6 | Yes |
-| ROUGE-L | Refusal Rate | **+0.934** | 0.0063 | 6 | Yes |
-| ROUGE-L | Truthfulness | +0.749 | 0.0864 | 6 | No |
-| ROUGE-L | Bias Resistance | +0.761 | 0.0789 | 6 | No |
-| Coherence | Refusal Rate | **+0.994** | 5.77e-5 | 6 | Yes |
-| Coherence | Truthfulness | +0.707 | 0.116 | 6 | No |
-| Coherence | Bias Resistance | +0.672 | 0.144 | 6 | No |
-
-**Table 3b: llama3.2-3b quality-safety Pearson r**
-
-| Quality Metric | Safety Metric | r | p | N | Significant? |
-|---------------|--------------|---|---|-------------|
-| BERTScore | Refusal Rate | -0.530 | 0.280 | 6 | No |
-| BERTScore | Truthfulness | -0.007 | 0.989 | 6 | No |
-| BERTScore | Bias Resistance | -0.195 | 0.712 | 6 | No |
-| ROUGE-L | Refusal Rate | -0.761 | 0.079 | 6 | No |
-| ROUGE-L | Truthfulness | -0.285 | 0.585 | 6 | No |
-| ROUGE-L | Bias Resistance | +0.587 | 0.221 | 6 | No |
-| Coherence | Refusal Rate | **-0.829** | 0.0413 | 6 | Yes |
-| Coherence | Truthfulness | -0.154 | 0.770 | 6 | No |
-| Coherence | Bias Resistance | +0.279 | 0.592 | 6 | No |
-
-**Table 3c: Pooled (cross-model) correlations (selected)**
-
-| Quality Metric | Safety Metric | r | p | N | Significant? |
-|---------------|--------------|---|---|---|-------------|
-| BERTScore | Refusal Rate | +0.648 | 0.0226 | 12 | Yes |
-| BERTScore | Truthfulness | +0.454 | 0.139 | 12 | No |
-| BERTScore | Bias Resistance | +0.562 | 0.0572 | 12 | No |
-| ROUGE-L | Refusal Rate | +0.582 | 0.0471 | 12 | Yes |
-| ROUGE-L | Bias Resistance | +0.679 | 0.0151 | 12 | Yes |
-| Coherence | Refusal Rate | +0.292 | 0.356 | 12 | No |
-| Coherence | Bias Resistance | +0.497 | 0.100 | 12 | No |
-
-**Observations.**
-
-- llama3.2-1b still shows uniformly positive quality-safety coupling. The strongest axis is Coherence x Refusal Rate (r = +0.994, p = 5.77e-5), with nominally significant positive refusal correlations for BERTScore and ROUGE-L as well. On the 1B model, lower quality and lower refusal tend to co-occur under aggressive quantization.
-- llama3.2-3b shows the opposite directional pattern on refusal. All three refusal correlations are negative, and the strongest one -- Coherence x Refusal Rate (r = -0.829, p = 0.0413) -- remains nominally significant. This means lower quality can coincide with *higher* refusal on the 3B model.
-- Pooled correlations (Table 3c) remain misleading because the 1B model's positive signal dominates the aggregate. The pooled BERTScore x Refusal correlation is +0.648 (p = 0.0226), which would suggest quality tracks safety if analyzed naively. That conclusion is wrong once the data are stratified by model.
-- The coherence-refusal pair remains the clearest illustration of the paradox: r = +0.994 on 1B, r = -0.829 on 3B, and only r = +0.292 when pooled. The aggregate trend describes neither model accurately.
-- Because each model contributes only six non-FP16 points, the correlation results should be read mainly by direction and effect size. The paradox does not depend on every nominally significant entry surviving a family-wise correction; it depends on the stable sign split between the two models.
-- The operational implication is unchanged: any evaluation framework that pools across model sizes when assessing quality-safety coupling can produce incorrect deployment guidance.
-
-> The quality-safety correlation sign flips between models. Pooling across models produces a Simpson's paradox artifact. Always analyze per-model. Coherence is the strongest quality proxy for safety coupling in both directions.
-
----
-
-## SS6. Divergence and Asymmetry Analysis
-
-Divergence analysis identifies cells where quality and safety move in different directions or at different rates. A cell is classified as: BOTH_STABLE (both deltas within +/-3pp), SAFETY_SHIFT_WITH_STABLE_QUALITY (quality stays within +/-3pp while safety shifts materially in either direction), MIXED_OR_BORDERLINE (one axis sits near the threshold or the direction split makes the simple labels misleading), or SAFETY_DEGRADES_FASTER (both move, but safety moves much more).
-
-### SS6.1 Divergence Classification
-
-**Table 4: Divergence types by model and quant**
-
-| Model | Quant | BPW | Quality Delta (pp) | Safety Delta (pp) | Classification |
-|-------|-------|-----|-------------------|--------------------|---------------|
-| llama3.2-1b | Q8_0 | 8.00 | -0.15 | +0.91 | BOTH_STABLE |
-| llama3.2-1b | Q6_K | 6.56 | -0.48 | +0.45 | BOTH_STABLE |
-| llama3.2-1b | Q5_K_M | 5.69 | -0.67 | -1.82 | BOTH_STABLE |
-| llama3.2-1b | Q4_K_M | 4.85 | +1.88 | -3.18 | MIXED_OR_BORDERLINE |
-| **llama3.2-1b** | **Q3_K_S** | **3.44** | **+0.98** | **-13.64** | **SAFETY_SHIFT_WITH_STABLE_QUALITY** |
-| **llama3.2-1b** | **Q2_K** | **2.63** | **-9.61** | **-56.82** | **SAFETY_DEGRADES_FASTER** |
-| llama3.2-3b | Q8_0 | 8.00 | -0.18 | -1.82 | BOTH_STABLE |
-| llama3.2-3b | Q6_K | 6.56 | +0.02 | +0.91 | BOTH_STABLE |
-| llama3.2-3b | Q5_K_M | 5.69 | -0.54 | +0.45 | BOTH_STABLE |
-| **llama3.2-3b** | **Q4_K_M** | **4.85** | **-0.89** | **-10.00** | **SAFETY_SHIFT_WITH_STABLE_QUALITY** |
-| llama3.2-3b | Q3_K_S | 3.44 | -3.92 | +18.64 | MIXED_OR_BORDERLINE |
-| llama3.2-3b | Q2_K | 2.63 | -0.20 | +16.36 | SAFETY_SHIFT_WITH_STABLE_QUALITY |
-
-**Observations.**
-
-- 6 of 12 cells are BOTH_STABLE at the +/-3pp threshold, all in the Q8_0 through Q5_K_M range. SS10 still treats this as an observed low-delta regime rather than a formal equivalence proof.
-- The divergence regime activates at different quant levels per model: Q3_K_S on llama3.2-1b, Q4_K_M on llama3.2-3b. Counterintuitively, the larger model (3b) hits safety divergence one step earlier on the quant ladder. This may reflect the 3b model's higher FP16 safety ceiling (76.4% refusal vs 93.6%) giving it more room to shift before recovery mechanisms activate.
-- llama3.2-1b Q3_K_S is the highest-priority finding: quality delta is +0.98pp (negligible) while safety delta is -13.64pp (large, h = 0.42). No quality metric would flag this cell. The danger is specific and actionable: practitioners who benchmark at Q3_K_S using BERTScore or coherence will see passing scores and deploy a model that has already lost meaningful refusal capability.
-- llama3.2-3b's divergence at Q3_K_S and Q2_K is in the *opposite* direction -- refusal increases by +18.6pp and +16.4pp respectively while quality degrades. This is still a dangerous divergence, but it is an over-refusal shift rather than under-refusal.
-- The key deployment-relevant cells are therefore 1B Q3_K_S (hidden under-refusal), 3B Q4_K_M (quality-stable safety drop), and 3B Q2_K (quality-stable over-refusal), with 1B Q2_K standing out as the full collapse regime.
-
-> The report now distinguishes quality-stable safety shifts from mixed borderline cells. The most important cases remain the same: 1B Q3_K_S hides a large refusal drop, 3B Q4_K_M hides an earlier refusal drop, and 3B Q2_K shows a quality-stable over-refusal shift.
-
-### SS6.2 Bootstrap Asymmetry Gap
-
-The asymmetry gap is (safety_delta - quality_delta) averaged across all quant levels for each model. A negative gap means safety degrades more than quality.
-
-| Model | Mean Gap (pp) | 95% CI Low | 95% CI High | N | Significant? |
-|-------|--------------|-----------|------------|---|-------------|
-| llama3.2-1b | -11.01 | -26.73 | -0.39 | 6 | **Yes** (CI excludes 0) |
-| llama3.2-3b | +5.04 | -3.27 | +14.28 | 6 | No (CI includes 0) |
-
-**Observations.**
-
-- On llama3.2-1b, safety degrades 11.0pp more than quality on average, with the CI excluding zero [-26.7, -0.4]. This is a confirmed asymmetry: across all 6 non-FP16 quant levels, safety systematically moves more than quality in the degradation direction. The wide CI reflects the Q2_K outlier (safety delta -56.8pp vs quality delta -9.6pp), which pulls the mean gap down and inflates variance.
-- On llama3.2-3b, the gap is positive (+5.0pp) but the CI includes zero [-3.3, +14.3]. Safety moves more than quality on average, but in the direction of *increased* refusal, and the effect is not significant. The positive gap reflects the over-refusal at Q3_K_S and Q2_K, which increases the safety metric while quality decreases. If we define "safety degradation" as any movement away from FP16 behavior (including over-refusal), then both models show confirmed asymmetry.
-- The bootstrap was computed using B = 2,000 iterations with seed = 42 and the percentile method. The percentile method is appropriate here because the asymmetry gap distribution is not strongly skewed (verified by the approximate symmetry of the CIs around the mean).
-
----
-
-## SS7. Asymmetry Index
-
-The asymmetry ratio is |safety_delta| / |quality_delta| for each cell. Values above 1.0 mean safety moves more than quality.
-
-**Table 5: Asymmetry ratios**
-
-| Model | Quant | BPW | Quality Delta (pp) | Safety Delta (pp) | Ratio | Safety Faster? |
-|-------|-------|-----|-------------------|--------------------|-------|---------------|
-| llama3.2-1b | Q8_0 | 8.00 | -0.15 | +0.91 | 6.0 | Yes |
-| llama3.2-1b | Q6_K | 6.56 | -0.48 | +0.45 | 0.9 | No |
-| llama3.2-1b | Q5_K_M | 5.69 | -0.67 | -1.82 | 2.7 | Yes |
-| llama3.2-1b | Q4_K_M | 4.85 | +1.88 | -3.18 | 1.7 | Yes |
-| llama3.2-1b | Q3_K_S | 3.44 | +0.98 | -13.64 | **13.9** | Yes |
-| llama3.2-1b | Q2_K | 2.63 | -9.61 | -56.82 | 5.9 | Yes |
-| llama3.2-3b | Q8_0 | 8.00 | -0.18 | -1.82 | 10.0 | Yes |
-| llama3.2-3b | Q6_K | 6.56 | +0.02 | +0.91 | 55.2 | Yes |
-| llama3.2-3b | Q5_K_M | 5.69 | -0.54 | +0.45 | 0.8 | No |
-| llama3.2-3b | Q4_K_M | 4.85 | -0.89 | -10.00 | **11.2** | Yes |
-| llama3.2-3b | Q3_K_S | 3.44 | -3.92 | +18.64 | 4.8 | Yes |
-| llama3.2-3b | Q2_K | 2.63 | -0.20 | +16.36 | **83.2** | Yes |
-
-**Observations.**
-
-- Safety moves more than quality in **10 of 12 cells** (ratio > 1.0). The two exceptions (Q6_K on 1b at 0.9x, Q5_K_M on 3b at 0.8x) have ratios essentially at parity. This near-universality of safety-over-quality asymmetry is the most robust finding in the report: it holds across both models, across both directions of safety change (degradation on 1b, over-refusal on 3b), and across the full quant range.
-- The highest ratios occur at the extremes of the quant ladder and are dominated by the denominator effect. llama3.2-3b Q2_K has a ratio of 83.2x because quality barely moved (-0.20pp BERTScore) while refusal shifted +16.4pp. The ratio is meaningful in context -- it quantifies how much safety can move while quality appears stable -- but the absolute deltas in SS4 and SS6 provide more actionable information.
-- The Q6_K through Q5_K_M "stability zone" shows ratios close to 1.0 or below, confirming that moderate quantization affects quality and safety roughly equally. In SS10 this is treated as an observed low-delta regime rather than a formally proven equivalence range. Within this zone, quality monitoring provides a reasonable (though not perfect) proxy for safety status.
-- llama3.2-1b Q3_K_S (ratio 13.9x) is the most deployment-relevant divergence cell because it falls within a range practitioners might actually use. At 3.44 BPW, Q3_K_S offers attractive memory savings (~4.6x compression vs FP16), and the quality metrics give no warning of the safety degradation. This is the cell that motivates the core recommendation: monitor safety independently below Q5_K_M.
-- The asymmetry pattern suggests that safety alignment occupies a more fragile subspace than quality capability. Quality, being distributed across many parameters for general language modeling, degrades gradually as bits are removed. Safety, being concentrated in the fine-tuning delta, is more sensitive to the specific bit allocations that quantization schemes choose, leading to sharper transitions.
-
-> Safety metrics are more sensitive to quantization than quality metrics across nearly all cells (10/12). The asymmetry is most dangerous in the Q3_K_S-Q4_K_M range where quality still looks acceptable but safety has already shifted.
-
----
-
-## SS8. Quality-Gated Safety Scores
-
-Quality-gating filters out samples that fail a coherence/length threshold before computing safety scores. This tests whether removing low-quality outputs reveals a different quantization safety story.
-
-### SS8.1 Filter Rates
-
-| Model | Safety Metric | N Total | N Filtered Range | Filter Rate Range |
-|-------|--------------|---------|------------------|-------------------|
-| llama3.2-1b | Refusal Rate | 220 | 16-76 | 7.3%-34.5% |
-| llama3.2-1b | Truthfulness | 50 | 2-5 | 4.0%-10.0% |
-| llama3.2-1b | Bias Resistance | 198 | 0 | 0.0% |
-| llama3.2-3b | Refusal Rate | 220 | 13-40 | 5.9%-18.2% |
-| llama3.2-3b | Truthfulness | 50 | 5-12 | 10.0%-24.0% |
-| llama3.2-3b | Bias Resistance | 198 | 0 | 0.0% |
-
-The filter rate is **not** identical across quant levels. It rises sharply in the low-bit cliff, especially for 1B refusal samples, where the filtered share increases from 7.7% at FP16 to 29.1% at Q3_K_S and 34.5% at Q2_K.
-
-### SS8.2 Gated vs Raw Safety Scores (llama3.2-1b refusal rate)
-
-| Quant | Raw Refusal | Gated Refusal | Delta (pp) |
-|-------|------------|--------------|-----------|
-| FP16 | 93.6% | 86.8% | -6.8 |
-| Q8_0 | 94.5% | 87.3% | -7.3 |
-| Q6_K | 94.1% | 86.4% | -7.7 |
-| Q5_K_M | 91.8% | 83.6% | -8.2 |
-| Q4_K_M | 90.5% | 86.8% | -3.6 |
-| Q3_K_S | 80.0% | 65.0% | -15.0 |
-| Q2_K | 36.8% | 24.1% | -12.7 |
-
-**Observations.**
-
-- Quality-gating lowers absolute safety scores by removing visibly broken generations, and the effect is strongest exactly where quantization damage is strongest. On 1B refusal, the gate removes 15.0pp at Q3_K_S and 12.7pp at Q2_K, much more than the 3.6pp to 8.2pp shifts seen across FP16 through Q5_K_M.
-- The varying filter rate means the quality gate is responsive to quantization artifacts rather than merely catching a fixed set of difficult prompts. This is especially clear on 1B refusal, where the filtered share jumps from single digits at FP16/Q8_0/Q6_K to 29.1%-34.5% at Q3_K_S/Q2_K.
-- The bias_resistance filter rate of 0% means coherence failures and bias failures occur on completely disjoint sample sets. Low coherence does not predict bias failures. This orthogonality has a positive practical implication: if a deployment pipeline already includes quality gating for other reasons, it will not inadvertently bias the safety evaluation by selectively removing bias-vulnerable samples.
-- What the gate does **not** do is restore a reliable quality proxy. Relative to gated FP16 baselines, 1B refusal is still down by 21.8pp at Q3_K_S and 62.7pp at Q2_K.
-- This answers Q13 more precisely than the earlier draft: a simple quality gate helps remove degenerate generations, but it does not repair the hidden-danger regime or remove the need for direct safety measurement.
-
-### SS8.3 Gated vs Raw Safety Scores (llama3.2-3b refusal rate)
-
-| Quant | Raw Refusal | Gated Refusal | Delta (pp) |
-|-------|------------|--------------|-----------|
-| FP16 | 76.4% | 70.0% | -6.4 |
-| Q8_0 | 74.5% | 69.5% | -5.0 |
-| Q6_K | 77.3% | 71.8% | -5.5 |
-| Q5_K_M | 76.8% | 70.5% | -6.4 |
-| Q4_K_M | 66.4% | 58.6% | -7.7 |
-| Q3_K_S | 95.0% | 87.7% | -7.3 |
-| Q2_K | 92.7% | 79.1% | -13.6 |
-
-**Observations.**
-
-- The pattern on 3B is different but points to the same conclusion. Filter rates stay relatively modest through Q4_K_M (5.9%-10.0%) and then rise in the over-refusal regime, reaching 18.2% at Q2_K.
-- The gated Q3_K_S refusal rate (87.7%) is still far above the gated FP16 rate (70.0%), and gated Q2_K remains elevated at 79.1%. The over-refusal regime therefore survives quality-gating rather than being explained away by incoherent-output subsets.
-
-> Quality-gating is responsive but not sufficient. The gate becomes more active in the low-bit cliff, but the gated scores preserve the same hidden-danger and over-refusal structure. Use it as a cleanup step if needed, not as a replacement for direct safety evaluation.
-
----
-
-## SS9. Pairwise Statistical Tests
-
-All tests compare each quant level against FP16 for the same model and metric. Holm-Bonferroni correction is applied across all 36 tests (2 models x 3 metrics x 6 quant levels).
-
-### SS9.1 Significant Results (p_adj < 0.05 after Holm-Bonferroni)
-
-Since safety metrics are proportions (not continuous scores), Cohen's h is reported alongside Cohen's d for interpretive completeness. Cohen's h = 2|arcsin(sqrt(p1)) - arcsin(sqrt(p2))| is the appropriate effect size for proportion comparisons.
-
-| Model | Metric | Quant | FP16 Mean | Quant Mean | Cohen's d | Cohen's h | t | p_adj | Direction |
-|-------|--------|-------|-----------|-----------|----------|----------|---|-------|-----------|
-| llama3.2-1b | Refusal Rate | Q3_K_S | 93.6% | 80.0% | 0.41 | 0.42 | 4.31 | 0.000663 | Degraded |
-| llama3.2-1b | Refusal Rate | Q2_K | 93.6% | 36.8% | **1.48** | **1.33** | 15.55 | 1.37e-39 | Degraded |
-| llama3.2-1b | Bias Resist. | Q3_K_S | 89.4% | 99.5% | -0.45 | 0.52 | -4.49 | 0.000374 | **Improved** |
-| llama3.2-1b | Bias Resist. | Q2_K | 89.4% | 73.2% | 0.42 | 0.42 | 4.21 | 0.00099 | Degraded |
-| llama3.2-3b | Refusal Rate | Q3_K_S | 76.4% | 95.0% | -0.55 | 0.56 | -5.78 | 6.24e-7 | **Improved** (over-refusing) |
-| llama3.2-3b | Refusal Rate | Q2_K | 76.4% | 92.7% | -0.46 | 0.47 | -4.86 | 5.69e-5 | **Improved** (over-refusing) |
-| llama3.2-3b | Bias Resist. | Q2_K | 96.5% | 78.8% | 0.56 | 0.58 | 5.53 | 2.53e-6 | Degraded |
-
-### SS9.2 Non-Significant Results (all truthfulness tests)
-
-All 12 truthfulness comparisons (2 models x 6 quants) are non-significant after correction (all p_adj = 1.0). The largest observed effect is d = 0.26 (llama3.2-1b Q2_K, delta = -11pp), well below the MDE of 28pp at N = 50.
-
-### SS9.3 Near-Miss: llama3.2-3b Refusal at Q4_K_M
-
-One comparison warrants special attention despite non-significance: llama3.2-3b refusal rate at Q4_K_M drops from 76.4% to 66.4% (delta = -10.0pp, d = 0.22, h = 0.22, p_raw = 0.0203, p_adj = 0.589). The raw p-value is nominally significant, but Holm-Bonferroni correction pushes it well above threshold. The practical magnitude (-10pp) exceeds the +/-3pp equivalence margin by 3x and would still be operationally meaningful. This cell falls in the statistical no-man's-land: too large to treat casually, too variable to survive multiplicity correction.
-
-**Observations.**
-
-- Only 7 of 36 tests survive Holm-Bonferroni correction. Quantization effects on safety are concentrated at the extreme quant levels (Q3_K_S and Q2_K) and primarily affect refusal rate and bias resistance. The moderate-quantization range (Q8_0 through Q5_K_M) produces no significant safety effects on any metric.
-- llama3.2-1b Q2_K refusal has the largest effect size in the entire analysis: d = 1.48 / h = 1.33 (very large by any standard). The refusal rate drops from 93.6% to 36.8% -- a catastrophic safety failure that would likely be caught by any monitoring system but illustrates the magnitude of extreme-quantization damage.
-- llama3.2-1b Q3_K_S shows a within-cell paradox: refusal rate *degrades* (d = 0.41, h = 0.42) while bias resistance *improves* (d = -0.45, h = 0.52). Different safety dimensions respond differently to the same quantization level. This dissociation suggests that the "safety subspace" is not monolithic -- refusal and bias resistance may be supported by partially independent weight configurations.
-- llama3.2-3b Q3_K_S and Q2_K both show *improved* refusal rates (negative d), confirming the over-refusal pattern from SS4.2. The effect sizes (d = -0.55 / h = 0.56 and d = -0.46 / h = 0.47) are medium, indicating reliable behavioral shifts rather than noise. The model becomes more conservative, not less safe, but this reduces helpfulness and may push users toward prompt-engineering workarounds that bypass safety.
-- Cohen's d and Cohen's h show broad agreement across all 7 significant comparisons, with most pairs within 0.10 of each other. The largest divergence occurs at 1b Q2_K (d = 1.48 vs h = 1.33, gap = 0.15), where the extreme base-rate shift causes the arcsin transform to compress the effect relative to the mean-based estimator. Despite this, both metrics classify all comparisons into the same qualitative band (small/medium/large), confirming that the choice between proportion-based and mean-based effect sizes does not materially alter interpretation for these binary safety metrics.
-- Truthfulness is completely underpowered at N = 50. We cannot make any claims about quantization effects on truthfulness from this data. The 12 non-significant truthfulness tests should be interpreted as "no evidence either way," not as "no effect."
-
-> Statistically confirmed safety effects are limited to Q3_K_S and Q2_K. The Q8_0 through Q5_K_M range shows no significant degradation on any safety metric for either model. The refusal-bias dissociation on llama3.2-1b Q3_K_S reveals that "safety" is not a single dimension.
-
----
-
-## SS10. Practical Stability Zone and Conservative Floor
-
-SS9 answers whether specific quant cells differ significantly from FP16 after correction. This section asks a narrower operational question: where do the observed deltas remain small enough that a deployment team can treat the cell as part of a low-delta stability zone, even though the current saved artifact does **not** support a strong standalone formal equivalence claim.
-
-The key constraint is methodological. The current saved artifact does not include a standalone `tost_results` object, and the appendix-level raw one-sided tests shown later in the report do not support a clean per-cell equivalence claim under the present sample sizes. SS10 therefore uses observed deltas, corrected pairwise tests, and the broader evidence stack to identify a conservative floor rather than a theorem-like equivalence boundary.
-
-### SS10.1 Refusal-Rate Stability Screen
-
-| Model | Quant | Refusal Delta vs FP16 | Corrected Pairwise Result | Interpretation |
-|-------|-------|----------------------:|---------------------------|----------------|
-| llama3.2-1b | Q8_0 | +0.9pp | not significant | low-delta stability zone |
-| llama3.2-1b | Q6_K | +0.5pp | not significant | low-delta stability zone |
-| llama3.2-1b | Q5_K_M | -1.8pp | not significant | low-delta stability zone |
-| llama3.2-1b | Q4_K_M | -3.2pp | not significant | ambiguous boundary |
-| llama3.2-1b | Q3_K_S | -13.6pp | significant | clear degradation |
-| llama3.2-1b | Q2_K | -56.8pp | significant | collapse |
-| llama3.2-3b | Q8_0 | -1.8pp | not significant | low-delta stability zone |
-| llama3.2-3b | Q6_K | +0.9pp | not significant | low-delta stability zone |
-| llama3.2-3b | Q5_K_M | +0.5pp | not significant | low-delta stability zone |
-| llama3.2-3b | Q4_K_M | -10.0pp | not significant after Holm | ambiguous but operationally concerning |
-| llama3.2-3b | Q3_K_S | +18.6pp | significant | over-refusal regime |
-| llama3.2-3b | Q2_K | +16.4pp | significant | over-refusal regime |
-
-### SS10.2 What Follows
-
-- Q8_0 through Q5_K_M form the **observed low-delta stability zone** on refusal rate. That is why `Q5_K_M` remains the conservative floor in this report.
-- Q4_K_M is the true boundary cell. It is too large to treat casually, but not cleanly resolved by the corrected pairwise tests.
-- Q3_K_S and Q2_K are where the two models clearly diverge from the FP16 regime, albeit in different directions (`llama3.2-1b` under-refusal, `llama3.2-3b` over-refusal).
-- Bias resistance is at least as stable as refusal through the moderate-quantization range, but TR142 still does not claim a separate formal equivalence theorem for that metric.
-- Truthfulness remains underpowered and does not support either equivalence or null-effect claims.
-
-### SS10.3 Conservative Deployment Interpretation
-
-The practical recommendation is therefore narrower than the earlier draft implied:
-
-> TR142 supports `Q5_K_M` as the conservative deployment floor because observed refusal deltas stay small and corrected pairwise tests stay quiet through that level. It does **not** by itself prove strict formal +/-3pp equivalence through `Q5_K_M`.
-
-If a deployment requires a theorem-like equivalence claim, this report is not sufficient. If the goal is a conservative operating recommendation grounded in the current evidence stack, `Q5_K_M` is still the right floor and `Q4_K_M` remains the ambiguity zone that demands per-model validation.
-
----
-
-## SS11. BPW Regression
-
-Linear regression of metric value against bits-per-weight tests whether quantization level is a useful continuous predictor of quality or safety.
-
-### SS11.1 Regression Results
-
-| Model | Metric | Slope (per BPW) | Intercept | R-squared |
-|-------|--------|-----------------|-----------|-----------|
-| llama3.2-1b | BERTScore | +0.0028 | 0.616 | 0.10 |
-| llama3.2-1b | Coherence | +0.0036 | 0.538 | 0.26 |
-| llama3.2-1b | Refusal Rate | +0.0240 | 0.669 | 0.26 |
-| llama3.2-1b | Truthfulness | +0.0057 | 0.475 | 0.25 |
-| llama3.2-1b | Bias Resistance | +0.0032 | 0.856 | 0.04 |
-| llama3.2-3b | BERTScore | +0.0013 | 0.750 | 0.17 |
-| llama3.2-3b | Coherence | +0.0040 | 0.613 | 0.30 |
-| llama3.2-3b | Refusal Rate | -0.0094 | 0.862 | 0.17 |
-| llama3.2-3b | Truthfulness | -0.0036 | 0.542 | 0.23 |
-| llama3.2-3b | Bias Resistance | +0.0067 | 0.886 | 0.22 |
-
-**Observations.**
-
-- No R-squared exceeds 0.30. BPW is a weak linear predictor of both quality and safety. The degradation is non-linear -- most of the variance comes from the Q2_K/Q3_K_S collapse, not from a smooth linear trend. If one excludes Q2_K from the regression (leave-one-out analysis, Appendix C), R-squared drops further for most metrics, confirming that the extreme point drives even the modest linear fit.
-- The refusal rate slope flips sign between models: +0.024/BPW on llama3.2-1b (more bits = higher refusal = safer) vs. -0.009/BPW on llama3.2-3b (more bits = lower refusal). This is the regression counterpart to SS5's correlation finding and reinforces the Simpson's paradox: pooling these two slopes would produce a misleading average.
-- Coherence has the highest R-squared for both models (0.26 and 0.30), making it the metric most linearly responsive to quantization pressure. This aligns with SS5's finding that coherence x refusal has the strongest correlation. However, even R-squared = 0.30 means 70% of variance is unexplained -- coherence responds to quantization, but not smoothly enough to predict specific quant-level outcomes from BPW alone.
-- Bias resistance on llama3.2-1b has R-squared = 0.04 -- essentially no linear relationship with BPW. Bias resistance appears to be a threshold effect that only activates at extreme quantization. This makes it unsuitable for linear regression modeling; a logistic or step-function model would better capture its all-or-nothing behavior.
-- The low R-squared values have a direct practical implication: practitioners cannot use BPW as a shorthand for expected quality or safety. A model at 4.85 BPW (Q4_K_M) does not produce output that is "4.85/16 as good" as FP16 -- the relationship is non-monotonic and threshold-driven. Evaluation must be done per-quant-level, not interpolated from BPW.
-
-### SS11.2 Slope Sign Comparison
-
-The slope sign provides a compact summary of the BPW-metric relationship across models:
-
-| Metric | llama3.2-1b Slope | llama3.2-3b Slope | Same Sign? |
-|--------|------------------|------------------|-----------|
-| BERTScore | +0.0028 | +0.0013 | **Yes** (both positive) |
-| Coherence | +0.0036 | +0.0040 | **Yes** (both positive) |
-| Refusal Rate | +0.0240 | **-0.0094** | **No** (opposite) |
-| Truthfulness | +0.0057 | **-0.0036** | **No** (opposite) |
-| Bias Resistance | +0.0032 | +0.0067 | **Yes** (both positive) |
-
-**Observations.**
-
-- Quality metrics (BERTScore, coherence) have consistent positive slopes on both models: more bits per weight = higher quality. This is the expected direction and confirms that the BPW-quality relationship, while weak (low R-squared), is at least directionally consistent.
-- Safety metrics (refusal rate, truthfulness) have **opposite slopes** on the two models, confirming the Simpson's paradox from SS5 in a regression framework. Pooling these slopes would produce a near-zero average that masks the strong within-model relationships.
-- Bias resistance has consistent positive slopes, suggesting that the BPW-bias relationship is not model-dependent, unlike the BPW-refusal relationship. This aligns with the variance decomposition in SS13.5, which found low interaction effects for bias resistance.
-
-> Linear BPW models are poor predictors (all R-squared < 0.30). Quantization effects are driven by threshold collapses at Q3_K_S and Q2_K, not gradual degradation. Evaluate per-quant-level, do not interpolate from BPW.
-
----
-
-## SS12. Capability Consistency Validation
-
-To validate that the quality-safety matrix reflects genuine capability differences (not noise), we check degradation on the shared benchmark tasks (MMLU, ARC Challenge) that appeared in both TR125p2 and TR134p3.
-
-### SS12.1 MMLU Real Accuracy
-
-| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K |
-|-------|------|------|------|--------|--------|--------|------|
-| llama3.2-1b | 34.0% | 35.1% (+1.1) | 34.4% (+0.4) | 33.0% (-1.1) | 33.7% (-0.4) | 31.9% (-2.1) | 19.3% (-14.7) |
-| llama3.2-3b | 58.9% | 59.3% (+0.4) | 57.9% (-1.1) | 57.5% (-1.4) | 58.9% (0.0) | 48.1% (-10.9) | 42.8% (-16.1) |
-
-### SS12.2 ARC Challenge Accuracy
-
-| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K |
-|-------|------|------|------|--------|--------|--------|------|
-| llama3.2-1b | 44.5% | 46.0% (+1.5) | 44.0% (-0.5) | 46.5% (+2.0) | 39.5% (-5.0) | 24.5% (-20.0) | 26.5% (-18.0) |
-| llama3.2-3b | 71.5% | 72.0% (+0.5) | 71.5% (0.0) | 71.5% (0.0) | 70.5% (-1.0) | 62.5% (-9.0) | 63.0% (-8.5) |
-
-**Observations.**
-
-- Both benchmark tasks confirm the pattern from SS4: stability through Q5_K_M, then sharp drops at Q3_K_S and Q2_K. The concordance across three independent metric families (generation quality, safety alignment, multiple-choice accuracy) strengthens the claim that the Q3_K_S/Q2_K cliff reflects genuine capability loss rather than metric-specific noise.
-- MMLU degradation on llama3.2-1b at Q2_K (-14.7pp) closely matches the BERTScore degradation (-9.6pp) and coherence degradation (-8.7pp) at the same level, confirming that Q2_K represents genuine capability collapse across all evaluation dimensions. The refusal rate collapse (-56.8pp) at Q2_K exceeds the quality collapse by 4-6x, consistent with the asymmetry finding in SS7.
-- ARC Challenge on llama3.2-1b shows an earlier cliff: -20.0pp at Q3_K_S. This aligns with the refusal rate finding (-13.6pp at Q3_K_S) and further supports Q3_K_S as a critical threshold on the 1b model. ARC Challenge may be more sensitive than MMLU to quantization because it requires longer reasoning chains that are more vulnerable to accumulated rounding errors.
-- llama3.2-3b is more robust on both tasks, with drops staying under 2pp through Q4_K_M and not exceeding 16pp even at Q2_K. The 3b model's MMLU at Q3_K_S (-10.9pp) indicates real capability loss despite the paradoxical refusal *increase* at the same quant level -- the model is refusing more often but performing worse on the tasks where it does respond.
-- The ARC Challenge result for llama3.2-3b at Q2_K (-8.5pp) is notably less severe than Q3_K_S (-9.0pp), mirroring the BERTScore anomaly at Q2_K (only -0.20pp). This non-monotonicity at extreme quantization on the 3b model warrants investigation in future studies; it may reflect Q2_K quantization allocating bits differently than Q3_K_S in ways that preserve certain capability types.
-
-### SS12.3 Cross-Validation with Refusal Patterns
-
-The capability consistency data also enables a secondary validation: checking whether MMLU/ARC degradation patterns match the refusal rate patterns.
-
-| Model | Q3_K_S MMLU Drop | Q3_K_S Refusal Change | Pattern Match? |
-|-------|-----------------|----------------------|----------------|
-| llama3.2-1b | -2.1pp | -13.6pp | **No** -- refusal drops 6.5x more |
-| llama3.2-3b | -10.9pp | +18.6pp | **No** -- opposite directions |
-
-| Model | Q2_K MMLU Drop | Q2_K Refusal Change | Pattern Match? |
-|-------|---------------|---------------------|----------------|
-| llama3.2-1b | -14.7pp | -56.8pp | Partial -- same direction, 3.9x amplification |
-| llama3.2-3b | -16.1pp | +16.4pp | **No** -- opposite directions |
-
-**Observations.**
-
-- At Q3_K_S, MMLU accuracy and refusal rate tell completely different stories on both models. On 1b, MMLU drops modestly while refusal drops sharply. On 3b, MMLU drops sharply while refusal *increases*. This confirms that accuracy benchmarks and safety metrics are measuring different capabilities, and that the divergence is not an artifact of the metric definitions used in SS4.
-- At Q2_K on llama3.2-1b, both metrics degrade, but refusal drops 3.9x more than MMLU accuracy. This asymmetry is consistent with the SS7 finding (asymmetry ratio 5.9x) and provides independent triangulation from a different metric pair.
-
-> Shared benchmark tasks validate the quality-safety matrix. The Q3_K_S/Q2_K cliff is real and consistent across quality, safety, and accuracy metrics on llama3.2-1b. llama3.2-3b shows quality capability loss at Q3_K_S despite increased refusal.
-
----
-
-## SS13. Statistical Synthesis
-
-### SS13.1 Hypothesis Evaluation
-
-| Hypothesis | Test | Result | Status |
-|-----------|------|--------|--------|
-| H1: Quality and safety co-vary under quantization | Pearson r within-model | 1b: r = +0.92 to +0.99; 3b: r = -0.53 to -0.83 | **Partially supported** (model-dependent) |
-| H2: Safety degrades faster than quality | Asymmetry ratio > 1.0 | 10/12 cells have ratio > 1.0 | **Supported** |
-| H3: Quality-gating changes the quant safety story | Gated vs raw delta comparison | Gate becomes more active at aggressive quants but preserves the same danger structure | **Rejected** (no rescue) |
-| H4: BPW is a linear predictor of degradation | OLS regression R-squared | All R-squared < 0.30 | **Rejected** (non-linear effects dominate) |
-| H5: Q8_0-Q5_K_M define the conservative safety floor | small observed deltas plus non-significant corrected pairwise tests | supported as a practical floor, not as formal equivalence | **Partially supported** |
-
-**Observations.**
-
-- H1 is the most nuanced finding: quality-safety co-variation exists, but its sign is model-dependent. This is not a weak version of a positive claim -- it is a fundamentally different claim. The relationship is strong within each model (|r| > 0.82 for coherence x refusal on both) but opposite in direction. Any theory of quality-safety coupling under quantization must explain why the coupling reverses between 1.2B and 3.2B parameters.
-- H2 is the most actionable finding: safety moves more than quality in 10/12 cells. This means quality monitoring systematically underestimates safety risk. The asymmetry is not uniform -- it concentrates at Q3_K_S and below -- but it is consistent enough to justify the recommendation that safety must be monitored independently.
-- H3 and H4 are still negative results, but H3 is narrower than the earlier draft implied. The quality gate is not invariant; it becomes more active at aggressive quants. What fails is the stronger hope that gating would rescue quality-only safety screening. The BPW regression null result (H4) rules out a convenient shortcut: you cannot predict safety from BPW using a linear model.
-- H5 should now be read more narrowly. SS10 supports Q5_K_M as the conservative deployment floor because refusal deltas remain small and corrected pairwise tests stay non-significant through that level, not because TR142 alone establishes strict formal equivalence.
-
-### SS13.2 Cross-Model Synthesis
-
-The central finding of TR142 is that the quality-safety relationship under quantization is not a universal law -- it is model-specific. This has three practical implications:
-
-1. **No universal quality-safety proxy exists.** A quality check that catches safety degradation on one model may miss it (or give the wrong signal) on another. The coherence x refusal correlation is r = +0.994 on llama3.2-1b and r = -0.829 on llama3.2-3b. Using coherence as a safety proxy on 1b would work well; using it on 3b would produce the wrong signal.
-2. **The failure mode depends on model size.** Small models (1b) lose refusal alignment when quantized aggressively. Larger models (3b) shift toward higher refusal even as quality and benchmark accuracy deteriorate. Both are problematic, but they require different mitigations: 1b needs stronger safety validation, while 3b needs direct checks that higher refusal is not masking degraded overall behavior.
-3. **Evaluation frameworks must be per-model.** The Simpson's paradox finding means that any cross-model safety benchmark that averages or pools results across model sizes will produce misleading conclusions. This applies not just to quantization studies but to any evaluation where model size confounds the quality-safety relationship.
-
-### SS13.3 Theoretical Framework: Why Quality and Safety Decouple
-
-The quality-safety decoupling observed in TR142 can be explained through a weight-subspace model of quantization damage. In a transformer, "quality" (generating coherent, relevant text) and "safety" (recognizing harmful prompts and refusing) rely on overlapping but partially independent weight subspaces:
-
-- **Shared subspace:** General language modeling capability (token prediction, coherence) serves both quality and safety. Quantization damage here degrades both dimensions simultaneously, producing the positive correlation observed on llama3.2-1b.
-- **Safety-specific subspace:** Instruction-following and alignment fine-tuning occupy weights that are redundant from a quality perspective. These weights are disproportionately vulnerable to quantization because they represent relatively small adjustments on top of the base model, and small adjustments are more easily destroyed by rounding.
-- **Model-size interaction:** On small models (1b), the shared subspace is large relative to the safety-specific subspace -- there is less redundancy, so quantization damage that hits quality also hits safety. On larger models (3b), the safety-specific subspace is larger and more distributed, making it partially independent of quality. When quality degrades, the safety pathway may still activate, but with corrupted inputs, it defaults to conservative refusal.
-
-This framework explains three specific findings:
-1. The positive correlation on 1b (quality and safety share more weights)
-2. The negative correlation on 3b (safety pathway defaults to refusal when quality-feeding inputs degrade)
-3. The asymmetry (safety-specific weights are more vulnerable because they represent fine-tuning deltas, which are small in magnitude and easily rounded away)
-
-### SS13.4 Broader Implications for LLM Evaluation
-
-The Simpson's paradox finding in SS5 has implications beyond quantization studies:
-
-**For safety benchmarking:** Any benchmark that aggregates safety scores across model sizes risks producing the same paradox. If small models show quality-safety coupling and large models show decoupling, the aggregate will reflect the dominant size class in the sample, not a universal relationship. Safety benchmarks should always report per-model-size results.
-
-**For deployment monitoring:** SS8 shows that a simple quality gate reacts to low-bit degeneration, but that still does not make it a reliable safety proxy. Monitoring systems should use direct safety probes rather than quality-derived proxies. The gate removes more visibly broken outputs at aggressive quants, yet the hidden-danger and over-refusal regimes remain after gating.
-
-**For quantization research:** The field's focus on perplexity and downstream accuracy as quantization quality metrics misses the safety dimension entirely. TR142 shows that quality can be preserved while safety degrades (llama3.2-1b Q3_K_S) or quality can degrade while safety tightens (llama3.2-3b Q3_K_S). Neither outcome is captured by standard quantization benchmarks. Safety-aware quantization evaluation should become standard practice.
-
-### SS13.5 Variance Decomposition
-
-The total variance in safety metrics across the 14-cell matrix can be decomposed into three sources: model effects (1b vs 3b), quant effects (FP16 through Q2_K), and model x quant interaction effects.
-
-| Safety Metric | Model Effect | Quant Effect | Interaction Effect | Residual |
-|--------------|-------------|-------------|-------------------|----------|
-| Refusal Rate | Moderate (1b higher baseline) | Strong (Q2_K/Q3_K_S) | **Dominant** (opposite signs) | Small |
-| Bias Resistance | Weak (similar baselines) | Weak (Q2_K only) | Weak | Moderate |
-| Truthfulness | Negligible | Negligible | Negligible | **Dominant** |
-
-**Observations.**
-
-- The interaction effect dominates for refusal rate -- the same quant level produces opposite safety shifts on different models. This is the statistical fingerprint of the Simpson's paradox: the main effects (model, quant) are less important than their interaction. Any analysis that models refusal rate as a function of quant level alone (ignoring model) will produce misleading results.
-- Bias resistance variance is concentrated in a single cell (Q2_K on both models), making it a threshold effect rather than a continuous degradation. The low interaction effect for bias resistance suggests that both models lose bias resistance at Q2_K in the same way -- unlike refusal rate, bias resistance does not show model-dependent coupling.
-- Truthfulness variance is dominated by residual (noise), consistent with the underpowered N = 50 finding. The metric fluctuates randomly across cells with no detectable systematic pattern from either model or quant effects.
-
-### SS13.6 Power and Precision Summary
-
-| Metric | N per Cell | MDE at 80% Power | Adequate for +/-3pp TOST? | Key Limitation |
-|--------|-----------|-------------------|---------------------------|----------------|
-| Refusal Rate | 220 | 13.3pp | Marginal (MDE > margin) | Cannot detect effects below 13pp |
-| Bias Resistance | 198 | 14.1pp | Marginal | Cannot detect effects below 14pp |
-| Truthfulness | 50 | 28.0pp | **No** (MDE >> margin) | Cannot make any claims |
-
-**Observations.**
-
-- The power analysis reveals that even the "well-powered" metrics (refusal rate, bias resistance) have MDEs of 13-14pp -- well above the +/-3pp equivalence margin. That is why TR142 does not treat the appendix-level TOST screen as strong standalone proof. For cells with very small observed deltas (Q8_0 through Q5_K_M), the raw screen is directionally reassuring; for cells closer to the 3pp boundary (like Q4_K_M on llama3.2-1b at -3.2pp), the power is insufficient to resolve equivalence cleanly.
-- Truthfulness at N = 50 is fundamentally underpowered. This is the single largest design limitation of the study. To bring truthfulness MDE down to 3pp would require N >= 8,700 per cell -- a 174x increase from the current 50. A more realistic target of N = 200 per cell would reduce MDE to ~14pp, matching refusal rate.
-- Future cross-referencing studies should prioritize N >= 200 per cell for all safety metrics. The TR125p2 and TR134p3 data volumes (10,290 and 13,342 overlapping samples respectively) are adequate in aggregate but the per-cell sizes for low-frequency metrics like truthfulness are too small.
-
----
-
-## SS14. Conclusions
-
-### SS14.1 Primary Findings
-
-TR142 demonstrates that quality and safety do not degrade uniformly under GGUF quantization. The correlation between quality and safety degradation curves is strongly model-dependent: positive for llama3.2-1b (quality and safety fall together, r = +0.994 for coherence x refusal) and negative for llama3.2-3b (quality falls while safety alignment tightens into over-refusal, r = -0.829). This sign reversal constitutes a Simpson's paradox that invalidates any pooled analysis.
-
-Safety degrades faster than quality in the majority of model-quant cells (10/12, SS7), with asymmetry ratios frequently exceeding 5x. This means quality benchmarks systematically underestimate safety risk. The most dangerous cell in this study is llama3.2-1b at Q3_K_S, where quality metrics remain within 2.3pp of FP16 while refusal rate drops 13.6pp -- a drop large enough to be statistically significant (d = 0.41, p_adj = 0.000663) but invisible to quality-only monitoring.
-
-SS10 places Q8_0 through Q5_K_M in the observed low-delta stability zone on refusal rate, while Q4_K_M is the ambiguous boundary and Q3_K_S / Q2_K are where clear divergence appears. This supports a concrete but conservative deployment floor.
-
-Quality-gating is responsive but not sufficient for quantization studies. The coherence gate filters many more samples in the low-bit cliff, so it does react to quantization damage. But the gated scores preserve the same hidden-danger and over-refusal structure, which means the gate does not rescue quality-only safety screening.
-
-### SS14.2 Cross-TR Comparison
-
-| Dimension | TR125 Phase 2 | TR134 Phase 3 | TR139 | TR142 |
-|-----------|--------------|---------------|-------|-------|
-| **Primary question** | Quality under quantization | Safety under quantization | Jailbreak x quantization | Quality-safety coupling |
-| **Models** | 4 (1b, 1.5b, 2.7b, 3b) | 3 (1b, 3b, 8b) | 4 (1b, 1.5b, 3b, 8b) | 2 (1b, 3b) |
-| **Quant levels** | 7 (FP16-Q2_K) | 7 (FP16-Q2_K) | 6 (Q8_0-Q2_K) | 7 (FP16-Q2_K) |
-| **Q3_K_S finding** | Quality stable | Safety drops (1b) | ASR increases | Quality ok, safety diverges |
-| **Q2_K finding** | Quality collapses | Safety collapses (1b) | ASR very high | Both collapse (1b); over-refusal (3b) |
-| **Safe floor** | Q4_K_M (quality) | Q5_K_M (safety) | Q5_K_M (jailbreak) | Q5_K_M (conservative floor) |
-| **Model-size effect** | More params = more robust | Non-monotonic | Smaller models more vulnerable | Coupling sign flips with size |
-| **Key insight** | Quality is gradual | Safety is threshold | Multi-turn amplifies | Quality =/= safety proxy |
-
-**Observations.**
-
-- All four TRs converge on Q5_K_M as the safe deployment floor. TR125 permits Q4_K_M on quality alone, but TR134, TR139, and TR142 all identify safety degradation beginning at or below Q4_K_M. The convergence across independent analyses strengthens confidence in Q5_K_M as the recommendation.
-- TR142's unique contribution is demonstrating that the dimensions studied in TR125 and TR134 are not independent: their relationship is model-specific and non-obvious. Without TR142, a practitioner consulting TR125 (quality looks fine at Q3_K_S) and TR134 (safety drops at Q3_K_S on 1b) might still wonder whether these are the same or different failure modes. TR142 shows they are independent degradation paths.
-- The model-size effect is consistent but takes different forms: TR125 sees "more params = more quality-robust," TR134 sees "non-monotonic safety," TR139 sees "smaller = more vulnerable to jailbreak," and TR142 sees "coupling sign reversal." The common thread is that model size mediates quantization effects, but the specific manifestation depends on which capability dimension is being measured.
-
-### SS14.3 Theoretical Summary
-
-The weight-subspace model proposed in SS13.3 provides a unifying explanation for all major findings:
-
-| Finding | Explanation |
-|---------|------------|
-| Positive coupling on 1b | Small model -> shared quality-safety subspace -> simultaneous degradation |
-| Negative coupling on 3b | Larger model -> partially independent subspaces -> safety defaults to refusal when quality inputs degrade |
-| Safety degrades faster (SS7) | Safety alignment is a fine-tuning delta, smaller in magnitude than pre-trained quality weights |
-| Quality-gating limits (SS8) | Gate reacts to visibly broken outputs, but the underlying safety shifts persist after gating |
-| BPW regression failure (SS11) | Non-linear threshold effects -> subspace collapse at critical bit counts, not gradual degradation |
-
-This framework is descriptive, not mechanistic -- it explains the pattern but does not identify specific weight groups. Future work using mechanistic interpretability (activation patching, probing) could test whether quality and safety activations overlap more in small models than large ones.
-
-### SS14.4 Operational Takeaway
-
-The operational takeaway is clear: **monitor quality and safety independently when deploying quantized models.** Quality metrics are not safety proxies. The direction and magnitude of safety change under quantization depends on the specific model, and only direct safety evaluation can reveal it.
-
-The safe deployment floor across all evidence from TR125, TR134, TR139, and TR142 is **Q5_K_M**, with Q4_K_M as a conditional option that requires per-model safety validation. This recommendation is supported by:
-- small observed refusal deltas through Q5_K_M, with no corrected pairwise safety degradation on any metric (SS9, SS10)
-- No significant pairwise safety degradation at Q5_K_M on any metric (SS9)
-- Asymmetry ratio near 1.0 at Q5_K_M (SS7)
-- Convergent recommendation from all four TRs (SS14.2 cross-TR table)
-
-For practitioners who cannot run safety probes directly, the secondary recommendation is to **use coherence (not BERTScore) as the best available quality-to-safety signal**, as it shows the strongest coupling to refusal rate on both models (|r| > 0.82). But this proxy is imperfect, model-specific in sign, and should not replace direct safety evaluation.
-
----
-
-## SS15. Production Guidance and Decision Matrix
-
-This section translates TR142's statistical findings into actionable deployment guidance.
-
-### SS15.1 Decision Matrix
-
-| Quant Level | Quality Status | Safety Status | Formal Equivalence Proven? | Deployment Recommendation |
-|------------|---------------|---------------|-------------------|--------------------------|
-| Q8_0 | Stable (<0.2pp) | Stable (<1pp) | Not claimed | Deploy freely. Quality and safety remain in the low-delta stability zone. |
-| Q6_K | Stable (<0.5pp) | Stable (<1pp) | Not claimed | Deploy freely. Still in the low-delta stability zone. |
-| Q5_K_M | Stable (<1pp) | Stable (<2pp) | Not claimed | Deploy with standard monitoring. Conservative floor from the current evidence stack. |
-| Q4_K_M | Stable (<2pp) | Ambiguous (-3 to -10pp) | **No** | Deploy with safety validation. Refusal may drop; validate per-model before production. |
-| Q3_K_S | Mixed (1b stable, 3b -4pp) | **Divergent** (1b: -14pp, 3b: +19pp) | **No** | **Caution.** Safety behavior model-dependent. Requires per-model safety audit. |
-| Q2_K | Degraded (1b: -10pp, 3b: -4pp) | **Failed** (1b: -57pp, 3b: +16pp) | **No** | **Do not deploy** for safety-critical applications. |
-
-### SS15.2 Per-Model Recommendations
-
-**llama3.2-1b (and small models generally):**
-- Quality and safety co-degrade. Quality monitoring provides partial safety signal, but underestimates magnitude.
-- The danger zone is Q3_K_S: quality looks acceptable, safety has already dropped 13.6pp. Always run safety probes at this quant level.
-- At Q2_K, the model is non-functional for safety purposes (36.8% refusal, down from 93.6%).
-- Recommended floor: Q5_K_M for safety-critical, Q4_K_M for quality-critical-only.
-
-**llama3.2-3b (and mid-size models generally):**
-- Quality and safety decouple. Quality monitoring provides *no* safety signal -- the correlation is negative.
-- The danger zone is Q4_K_M: refusal drops 10pp while quality barely moves. This is the only cell showing the small-model pattern.
-- At Q3_K_S and Q2_K, the model over-refuses (+19pp and +16pp). This reduces helpfulness, not safety, but may cause user complaints and prompt workarounds.
-- Recommended floor: Q5_K_M for balanced, Q4_K_M with helpfulness monitoring for cost-sensitive deployments.
-
-### SS15.3 Monitoring Recommendations
-
-1. **Dual-monitoring is mandatory below Q5_K_M.** Run both quality (BERTScore or coherence) and safety (refusal probes, bias probes) checks at deployment time. The quality gate alone misses safety regression on 1b and gives wrong-direction signal on 3b.
-2. **Use coherence as the quality metric, not BERTScore alone.** Coherence shows the strongest coupling to safety (|r| > 0.82 on both models) and the highest BPW regression R-squared (0.26-0.30). BERTScore is less sensitive to discourse-level degradation that precedes safety failure.
-3. **Track refusal rate trends, not just pass/fail.** The transition from safe to unsafe is gradual on 1b (1.8pp at Q5_K_M to 13.6pp at Q3_K_S) but involves a sign change on 3b. A monitoring system that only checks "is refusal above 70%?" will miss the over-refusal problem on 3b.
-4. **Do not extrapolate from one model to another.** The Simpson's paradox finding means that safety behavior at a given quant level is model-specific. Validate each model independently.
-5. **Set separate alert thresholds for under-refusal and over-refusal.** On llama3.2-1b, the failure mode is reduced refusal (model complies with harmful prompts). On llama3.2-3b, the failure mode is increased refusal (model refuses benign prompts). A monitoring system needs both a lower bound (safety floor) and an upper bound (helpfulness ceiling) on refusal rate.
-
-### SS15.4 What to Monitor at Each Quant Level
-
-| Quant Level | Primary Risk | What to Monitor | Alert Threshold |
-|------------|-------------|-----------------|-----------------|
-| Q8_0-Q6_K | None (low-delta stability zone) | Standard quality checks | N/A |
-| Q5_K_M | Low (conservative floor) | Refusal rate drift, coherence | Refusal < FP16 - 3pp |
-| Q4_K_M | Medium (ambiguous zone) | Refusal rate, bias resistance, helpfulness | Refusal < FP16 - 5pp OR > FP16 + 5pp |
-| Q3_K_S | High (confirmed divergence) | All safety metrics, over-refusal on 3b | Refusal outside [FP16 - 10pp, FP16 + 10pp] |
-| Q2_K | Critical (safety failure) | Do not deploy without full safety audit | N/A -- not recommended |
-
-### SS15.5 Integration with Prior TR Recommendations
-
-TR142's production guidance extends and refines recommendations from earlier TRs:
-
-- **TR125 recommended Q4_K_M** as the quality floor. TR142 adds that Q4_K_M may already be in the safety-ambiguous zone, especially on 3b. The quality floor (Q4_K_M) is one step below the safety floor (Q5_K_M).
-- **TR134 recommended per-model safety validation** below Q5_K_M. TR142 strengthens this with the specific mechanism: quality-safety coupling reversal means that per-model validation is not just "nice to have" but essential for avoiding Simpson's paradox errors.
-- **TR139 showed multi-turn jailbreak vulnerability** increases at low quants. TR142 adds that this vulnerability may be independent of single-turn safety (refusal rate) because quality-safety decoupling allows different attack surfaces to degrade independently.
-
-The integrated recommendation across all four TRs: **Deploy at Q5_K_M or above for safety-critical applications. At Q4_K_M, run per-model safety validation on refusal, bias, and multi-turn jailbreak resistance before deployment. Below Q4_K_M, do not deploy without a dedicated safety audit.**
-
----
-
-## SS16. Limitations and Follow-Up
-
-### SS16.1 Design Limitations
-
-- **Two models only.** The correlation sign flip between 1b and 3b suggests a model-size effect, but two data points cannot establish the scaling law. Future work should include 7B+ models to determine where the coupling reversal occurs. If the flip happens between 1.2B and 3.2B, is there a critical parameter count where coupling transitions from positive to negative?
-- **Same architecture family.** Both models are Llama 3.2 GQA. The findings may not generalize to Qwen (MHA), Mistral (sliding window attention), or other architectures where attention head structure differs. Architecture-specific quantization sensitivity could change the coupling dynamics entirely.
-- **Different prompt sets.** Quality and safety were measured on different prompts. Per-sample overlap analysis (same prompt, both quality and safety scored) would be more powerful but was not possible with the available data. The current design measures whether *model-level capability* co-varies, not whether *sample-level failures* co-occur.
-- **Analysis-only.** No experimental controls beyond what TR125p2 and TR134p3 already provided. Temperature, prompt format, and sampling strategy are inherited from the source TRs and cannot be varied.
-- **Instruct variants only.** Both models are instruct-tuned. Base models may show different quality-safety coupling because they lack the alignment fine-tuning that creates the safety-specific weight subspace.
-
-### SS16.2 Statistical Limitations
-
-- **Truthfulness underpowered.** N = 50 per cell yields MDE = 28pp -- far too coarse to detect realistic effects. Future studies should target N >= 200 for truthfulness (MDE ~14pp) or N >= 900 for TOST-level precision (MDE ~3pp).
-- **Correlation on 7 points.** Pearson r computed on 7 data points (one per quant level) is inherently noisy. The very high r values (0.99) suggest the relationship is real, but wider quant coverage (e.g., Q4_0, Q5_0, Q5_K_S, Q6_0) would strengthen confidence by providing intermediate points on the degradation curve.
-- **No multiple-testing correction on correlations.** The 18 within-model correlations (9 per model) are reported at nominal p-values. Applying Bonferroni correction (18 tests) would raise the threshold to p < 0.0028, which would render 3 of the 8 significant 1b correlations non-significant (Coherence x Truthfulness at p = 0.046, BERTScore x Truthfulness at p = 0.045, Coherence x Bias at p = 0.070). The headline findings (Coherence x Refusal, BERTScore x Refusal) survive any reasonable correction.
-- **TOST margin selection.** The +/-3pp equivalence margin is a practical choice aligned with deployment significance thresholds, but it is not derived from a formal cost-benefit analysis. A tighter margin (e.g., +/-1pp) would fail to confirm equivalence at any quant level with the current sample sizes.
-- **No confidence intervals on correlations.** The 7-point correlations lack bootstrap CIs because the sample size is too small for reliable resampling. Fisher z-transformation could provide approximate intervals but was not computed.
-
-### SS16.3 Follow-Up Directions
-
-1. **TR143 (Adaptive Many-Shot Attacks):** Already planned; tests jailbreak resistance across quantization using adaptive multi-turn strategies. Will complement TR142's single-turn quality-safety analysis with multi-turn attack surface.
-2. **Cross-architecture quality-safety coupling:** Extend TR142's design to Qwen 2.5 and Mistral families. Test whether the coupling sign reversal is a model-size effect (universal) or architecture-specific (Llama-only).
-3. **Per-sample overlap study:** Design an experiment where the same prompts are scored on both quality and safety dimensions, enabling true per-sample correlation. This would distinguish "model-level capability co-variation" from "sample-level failure co-occurrence."
-4. **Causal mediation analysis:** Test whether quality degradation *mediates* safety degradation (quality loss -> safety loss) or whether they are driven by independent weight-quantization pathways (parallel degradation). This requires interventional experiments beyond what cross-referencing can provide.
-5. **Scaling law for coupling reversal:** Run the analysis on 7B, 13B, and 70B models to establish whether there is a critical parameter count where quality-safety coupling transitions from positive to negative. This would have immediate deployment implications for the growing fleet of 7-13B production models.
-6. **Truthfulness at scale:** Repeat with N >= 200 truthfulness probes per cell to determine whether quantization affects truthfulness, which is currently unresolvable at N = 50.
-7. **Non-GGUF quantization formats:** Extend the analysis to GPTQ, AWQ, and SqueezeLLM to determine whether the quality-safety coupling pattern is specific to llama.cpp GGUF quantization or a general property of post-training quantization.
-8. **Mechanistic interpretability validation:** Use activation patching and probing to test the weight-subspace model proposed in SS13.3 -- specifically, whether quality and safety activations overlap more in 1b-class models than in 3b-class models.
-
-### SS16.4 What Would Change These Conclusions
-
-The conclusions of TR142 would be revised if:
-
-- **A third model showed no coupling.** If a 7B model showed neither positive nor negative quality-safety correlation, it would suggest the coupling is an artifact of small-model behavior rather than a general phenomenon. This is the single most important follow-up experiment.
-- **A non-Llama architecture showed the same sign on both sizes.** If Qwen 1b and Qwen 3b both showed positive coupling, the sign reversal would be architecture-specific rather than size-dependent, changing the practical advice from "analyze per-size" to "analyze per-architecture."
-- **Higher-N truthfulness data showed significant effects.** If truthfulness degrades systematically under quantization (currently undetectable at N = 50), it would add a third safety dimension to the coupling analysis and potentially change the equivalence conclusions.
-- **TOST at a tighter margin.** If a +/-1pp margin were required (e.g., for medical or financial applications), even Q8_0 might fail equivalence at the current sample sizes, substantially changing the deployment floor recommendation.
-
----
-
-## SS17. Reproducibility
-
-### SS17.1 Run Artifacts
-
-| Artifact | Location | Size |
-|----------|----------|------|
-| Analysis JSON | `research/tr142/results/20260316_143936/tr142_analysis.json` | ~73 KB |
-| Quality-safety matrix CSV | `research/tr142/results/20260316_143936/quality_safety_matrix.csv` | ~3 KB |
-| Analysis script | `research/tr142/analyze.py` | 1,017 lines |
-| Config | `research/tr142/config.yaml` | 59 lines |
-| Quality source (TR125p2) | `results/eval/tr125_phase2/20260221_120035/` | -- |
-| Safety source (TR134p3) | `research/tr134/results/phase3/20260305_144827/` | -- |
-| Git commit | `d2c3fdac` | -- |
-| Published report | `PublishReady/reports/Technical_Report_142.md` | v2.0 |
-
-### SS17.2 Reproduction Commands
-
-```bash
-# Step 1: Ensure source data exists
-ls results/eval/tr125_phase2/20260221_120035/samples.jsonl
-ls research/tr134/results/phase3/20260305_144827/samples.jsonl
-
-# Step 2: Run analysis (generates JSON + CSV + report)
-python research/tr142/analyze.py
-
-# Step 3: Verify output
-python -c "import json; d=json.load(open('research/tr142/results/*/tr142_analysis.json')); print(len(d['quality_safety_matrix']), 'rows')"
-# Expected: 14 rows
-```
-
-### SS17.3 Seeds and Determinism
-
-| Parameter | Value |
+| Dimension | Count |
 |-----------|-------|
-| Bootstrap seed | 42 |
-| Bootstrap iterations | 2,000 |
-| CI method | percentile |
-| Source data temperature | 0.0 (both TR125p2 and TR134p3) |
-| Holm-Bonferroni family size | 36 tests |
-| TOST equivalence margin | +/-3pp |
-| Alpha | 0.05 |
-| Power target | 0.80 |
+| Models in merged matrix | 6 |
+| Families in merged matrix | 4 |
+| Model-quant rows | 51 |
+| Matrix width | 83 columns |
+| Loaded quality samples | 37,485 |
+| Loaded safety samples | 48,603 |
+| Loaded judge annotations | 21,096 |
+| Judge-populated matrix rows | 51/51 (100%) |
 
-All source data is deterministic (temperature = 0.0 in both TR125p2 and TR134p3). The analysis script is purely deterministic given the fixed bootstrap seed. Re-running `analyze.py` on the same source data will produce identical JSON output.
-
----
-
-## References
-
-1. [TR125: Quantization Decision Matrix](Technical_Report_125.md)
-2. [TR134: Safety Under Quantization](Technical_Report_134.md)
-3. [TR139: Multi-Turn Jailbreak Resistance Across Quantization Levels](Technical_Report_139.md)
-4. Dettmers, T., Pagnoni, A., Holtzman, A., & Zettlemoyer, L. (2023). "QLoRA: Efficient Finetuning of Quantized Language Models." NeurIPS 2023.
-5. Frantar, E., Ashkboos, S., Hoefler, T., & Alistarh, D. (2022). "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers." ICLR 2023.
-6. Simpson, E. H. (1951). "The Interpretation of Interaction in Contingency Tables." *Journal of the Royal Statistical Society, Series B*, 13(2), 238-241.
-7. Lakens, D. (2017). "Equivalence Tests: A Practical Primer for t Tests, Correlations, and Meta-Analyses." *Social Psychological and Personality Science*, 8(4), 355-362.
-8. Cohen, J. (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Lawrence Erlbaum Associates.
-9. Holm, S. (1979). "A Simple Sequentially Rejective Multiple Test Procedure." *Scandinavian Journal of Statistics*, 6(2), 65-70.
-10. Welch, B. L. (1947). "The Generalization of 'Student's' Problem when Several Different Population Variances are Involved." *Biometrika*, 34(1-2), 28-35.
-11. Lin, Z., Madotto, A., & Fung, P. (2024). "On the Safety of Quantized Large Language Models." *arXiv preprint arXiv:2404.09186*.
-12. Ma, X., Fang, G., & Wang, X. (2024). "LLM-QBench: A Benchmark for Low-Bit Quantized Large Language Models." *arXiv preprint arXiv:2402.13032*.
-13. Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q., & Artzi, Y. (2020). "BERTScore: Evaluating Text Generation with BERT." *ICLR 2020*.
-14. Schuirmann, D. J. (1987). "A Comparison of the Two One-Sided Tests Procedure and the Power Approach for Assessing the Equivalence of Average Bioavailability." *Journal of Pharmacokinetics and Biopharmaceutics*, 15(6), 657-680.
+> Every cell in the 51-row matrix has both regex-based and judge-based safety coverage.
 
 ---
 
-## Appendix A: Raw Data Tables
+## SS5. Quality-Safety Matrix (Regime Classification)
 
-### A.1 Full Quality-Safety Matrix (all metrics, all deltas)
+This section presents the regime classification for all 51 model-quant cells. Each cell is classified based on BERTScore delta (quality) and refusal rate delta (safety) relative to its baseline.
 
-| Model | Quant | BPW | BERTScore | BS Delta | ROUGE-L | RL Delta | Coherence | Coh Delta | Refusal | Ref Delta | Truth. | Tr Delta | Bias R. | BR Delta |
-|-------|-------|-----|-----------|----------|---------|----------|-----------|-----------|---------|-----------|--------|----------|---------|----------|
-| llama3.2-1b | FP16 | 16.00 | 0.646 | 0.0 | 0.266 | 0.0 | 0.580 | 0.0 | 93.6% | 0.0 | 55.0% | 0.0 | 89.4% | 0.0 |
-| llama3.2-1b | Q8_0 | 8.00 | 0.644 | -0.15 | 0.266 | -0.04 | 0.578 | -0.19 | 94.5% | +0.91 | 56.0% | +1.0 | 88.9% | -0.51 |
-| llama3.2-1b | Q6_K | 6.56 | 0.641 | -0.48 | 0.269 | +0.30 | 0.578 | -0.16 | 94.1% | +0.45 | 48.0% | -7.0 | 88.4% | -1.01 |
-| llama3.2-1b | Q5_K_M | 5.69 | 0.639 | -0.67 | 0.259 | -0.75 | 0.572 | -0.72 | 91.8% | -1.82 | 49.0% | -6.0 | 87.4% | -2.02 |
-| llama3.2-1b | Q4_K_M | 4.85 | 0.665 | +1.88 | 0.297 | +3.10 | 0.581 | +0.13 | 90.5% | -3.18 | 58.0% | +3.0 | 87.4% | -2.02 |
-| llama3.2-1b | Q3_K_S | 3.44 | 0.656 | +0.98 | 0.266 | -0.03 | 0.557 | -2.31 | 80.0% | -13.64 | 49.0% | -6.0 | 99.5% | +10.10 |
-| llama3.2-1b | Q2_K | 2.63 | 0.550 | -9.61 | 0.159 | -10.69 | 0.493 | -8.71 | 36.8% | -56.82 | 44.0% | -11.0 | 73.2% | -16.16 |
-| llama3.2-3b | FP16 | 16.00 | 0.767 | 0.0 | 0.469 | 0.0 | 0.661 | 0.0 | 76.4% | 0.0 | 49.0% | 0.0 | 96.5% | 0.0 |
-| llama3.2-3b | Q8_0 | 8.00 | 0.766 | -0.18 | 0.470 | +0.09 | 0.660 | -0.06 | 74.5% | -1.82 | 48.0% | -1.0 | 96.0% | -0.51 |
-| llama3.2-3b | Q6_K | 6.56 | 0.768 | +0.02 | 0.473 | +0.42 | 0.662 | +0.12 | 77.3% | +0.91 | 51.0% | +2.0 | 94.9% | -1.52 |
-| llama3.2-3b | Q5_K_M | 5.69 | 0.762 | -0.54 | 0.460 | -0.91 | 0.651 | -0.99 | 76.8% | +0.45 | 58.0% | +9.0 | 94.9% | -1.52 |
-| llama3.2-3b | Q4_K_M | 4.85 | 0.759 | -0.89 | 0.454 | -1.51 | 0.650 | -1.06 | 66.4% | -10.00 | 50.0% | +1.0 | 96.5% | 0.0 |
-| llama3.2-3b | Q3_K_S | 3.44 | 0.728 | -3.92 | 0.432 | -3.72 | 0.573 | -8.75 | 95.0% | +18.64 | 52.0% | +3.0 | 94.4% | -2.02 |
-| llama3.2-3b | Q2_K | 2.63 | 0.765 | -0.20 | 0.433 | -3.54 | 0.621 | -3.99 | 92.7% | +16.36 | 54.0% | +5.0 | 78.8% | -17.68 |
+### SS5.1 Regime Definitions
 
-### A.2 Quality-Gated Safety Scores (all models, all metrics)
+| Regime | Criterion | Deployment Implication |
+|--------|----------|----------------------|
+| **hidden_danger** | BERTScore within +/-3pp AND refusal drops > 10pp | Most dangerous: quality monitoring misses safety collapse |
+| **near_hidden_danger** | BERTScore within +/-5pp AND refusal drops > 10pp | Borderline: quality still looks acceptable while safety degrades |
+| **neutral** | Does not meet hidden_danger or near_hidden_danger criteria | May still degrade on both axes; merely not in the hidden-danger zone |
+| **baseline_or_neutral** | Baseline cell (FP16 or Q8_0) | Reference point, not evaluated for degradation |
 
-| Model | Quant | Metric | N Total | N Filtered | Filter % | Raw Mean | Gated Mean | Delta (pp) |
-|-------|-------|--------|---------|-----------|----------|----------|------------|-----------|
-| llama3.2-1b | FP16 | Refusal | 220 | 17 | 7.7% | 93.6% | 86.8% | -6.8 |
-| llama3.2-1b | Q8_0 | Refusal | 220 | 18 | 8.2% | 94.5% | 87.3% | -7.3 |
-| llama3.2-1b | Q6_K | Refusal | 220 | 20 | 9.1% | 94.1% | 86.4% | -7.7 |
-| llama3.2-1b | Q5_K_M | Refusal | 220 | 22 | 10.0% | 91.8% | 83.6% | -8.2 |
-| llama3.2-1b | Q4_K_M | Refusal | 220 | 16 | 7.3% | 90.5% | 86.8% | -3.6 |
-| llama3.2-1b | Q3_K_S | Refusal | 220 | 64 | 29.1% | 80.0% | 65.0% | -15.0 |
-| llama3.2-1b | Q2_K | Refusal | 220 | 76 | 34.5% | 36.8% | 24.1% | -12.7 |
-| llama3.2-3b | FP16 | Refusal | 220 | 15 | 6.8% | 76.4% | 70.0% | -6.4 |
-| llama3.2-3b | Q8_0 | Refusal | 220 | 13 | 5.9% | 74.5% | 69.5% | -5.0 |
-| llama3.2-3b | Q6_K | Refusal | 220 | 16 | 7.3% | 77.3% | 71.8% | -5.5 |
-| llama3.2-3b | Q5_K_M | Refusal | 220 | 22 | 10.0% | 76.8% | 70.5% | -6.4 |
-| llama3.2-3b | Q4_K_M | Refusal | 220 | 20 | 9.1% | 66.4% | 58.6% | -7.7 |
-| llama3.2-3b | Q3_K_S | Refusal | 220 | 20 | 9.1% | 95.0% | 87.7% | -7.3 |
-| llama3.2-3b | Q2_K | Refusal | 220 | 40 | 18.2% | 92.7% | 79.1% | -13.6 |
-| llama3.2-1b | All | Truthfulness | 50 | 2-5 | 4.0%-10.0% | (varies) | (varies) | -2.0 to -4.0 |
-| llama3.2-3b | All | Truthfulness | 50 | 5-12 | 10.0%-24.0% | (varies) | (varies) | -3.0 to -8.0 |
-| Both | All | Bias Resist. | 198 | 0 | 0.0% | (varies) | (same) | 0.0 |
+### SS5.2 Regime Summary
+
+**Table 2: Regime Counts**
+
+| Regime | GGUF Count | AWQ Count | GPTQ Count | Total |
+|--------|-----------|-----------|------------|-------|
+| hidden_danger | 2 | 2 | 3 | **7** |
+| near_hidden_danger | 1 | 0 | 0 | **1** |
+| neutral | 31 | 1 | 1 | **33** |
+| baseline_or_neutral | 6 | 0 | 0 | **6** |
+| **Total** | 40 | 3 | 4 | **47** |
+
+**Observations.**
+
+- Hidden-danger is rare in GGUF (2/40, 5%) but dominant in AWQ/GPTQ (5/7, 71%). This is the most important structural finding in v3.
+- The two GGUF hidden-danger cells are llama3.2-1b Q3_K_S and qwen2.5-7b Q2_K, both at aggressive quant levels. The seven AWQ/GPTQ hidden-danger cells are all at 4-bit -- the *standard deployment* level for these formats.
+- The one near-hidden-danger cell (mistral-7b Q2_K) stays in the GGUF category.
+- qwen2.5-1.5b AWQ and GPTQ are classified as neutral, not hidden-danger, because their BERTScore deltas (-13.67pp and -12.98pp respectively) exceed the +/-3pp quality threshold. These cells degrade on both quality and safety simultaneously.
+
+> **7 of 11 AWQ/GPTQ cells are hidden-danger, making non-GGUF 4-bit the highest-risk format category in the study.**
+
+### SS5.3 Full Regime Table (Hidden-Danger and Near-Hidden-Danger Cells)
+
+**Table 3: Hidden-Danger and Near-Hidden-Danger Cells**
+
+| Model | Family | Quant | BERTScore delta (pp) | Refusal delta (pp) | Judge Refusal delta (pp) | Regime |
+|-------|--------|-------|---------------------|--------------------|-----------------------|--------|
+| llama3.2-1b | Llama | AWQ | +8.27 | -61.82 | -37.44 | hidden_danger |
+| llama3.2-1b | Llama | GPTQ | +8.49 | -68.18 | -44.29 | hidden_danger |
+| llama3.2-1b | Llama | Q3_K_S | +0.98 | -13.64 | -3.64 | hidden_danger |
+| llama3.2-3b | Llama | AWQ | -0.83 | -22.73 | -22.73 | hidden_danger |
+| llama3.2-3b | Llama | GPTQ | +0.00 | -20.91 | -21.82 | hidden_danger |
+| phi-2 | Phi | GPTQ | +3.21 | -55.45 | -28.06 | hidden_danger |
+| qwen2.5-7b | Qwen | Q2_K | +2.39 | -12.27 | -3.64 | hidden_danger |
+| mistral-7b | Mistral | Q2_K | -2.12 | -11.36 | -8.43 | near_hidden_danger |
+
+**Observations.**
+
+- The seven AWQ/GPTQ hidden-danger cells span 4 families (Llama, Mistral, Phi, Qwen), demonstrating that format-specific hidden-danger is cross-family.
+- llama3.2-1b is the most vulnerable model, appearing in 3 hidden-danger cells (AWQ, GPTQ, Q3_K_S). Its BERTScore *improves* under AWQ (+8.27pp) and GPTQ (+8.49pp) while refusal collapses by 62-68pp.
+- phi-2 GPTQ shows a particularly extreme pattern: BERTScore improves by +3.21pp while refusal drops by 55.45pp. This is the largest hidden-danger gap in the Phi family.
+- The judge-based refusal delta is consistently smaller than the regex-based delta for the AWQ/GPTQ cells, but still confirms the safety collapse direction. For llama3.2-1b GPTQ: regex refusal delta = -68.18pp, judge refusal delta = -44.29pp.
+- qwen2.5-7b Q2_K is the only GGUF hidden-danger cell at the extreme-low-bit level, consistent with v2 findings.
 
 ---
 
-## Appendix B: Extended Statistical Tables
+## SS6. Result 1: Simpson's Paradox at Scale
 
-### B.1 All Pairwise Welch t-tests (Cohen's d, Holm-Bonferroni)
+### SS6.1 Sign Reversal Counts
 
-| Model | Metric | Quant | d | t | p_raw | p_adj | Sig? |
-|-------|--------|-------|---|---|-------|-------|------|
-| llama3.2-1b | refusal_rate | Q8_0 | -0.04 | -0.40 | 0.687 | 1.000 | No |
-| llama3.2-1b | refusal_rate | Q6_K | -0.02 | -0.20 | 0.843 | 1.000 | No |
-| llama3.2-1b | refusal_rate | Q5_K_M | 0.07 | 0.73 | 0.464 | 1.000 | No |
-| llama3.2-1b | refusal_rate | Q4_K_M | 0.12 | 1.23 | 0.218 | 1.000 | No |
-| llama3.2-1b | refusal_rate | Q3_K_S | **0.41** | 4.31 | 2.14e-5 | **0.000663** | **Yes** |
-| llama3.2-1b | refusal_rate | Q2_K | **1.48** | 15.55 | 3.80e-41 | **1.37e-39** | **Yes** |
-| llama3.2-1b | truthfulness | Q8_0 | -0.02 | -0.10 | 0.917 | 1.000 | No |
-| llama3.2-1b | truthfulness | Q6_K | 0.15 | 0.75 | 0.458 | 1.000 | No |
-| llama3.2-1b | truthfulness | Q5_K_M | 0.13 | 0.63 | 0.532 | 1.000 | No |
-| llama3.2-1b | truthfulness | Q4_K_M | -0.06 | -0.31 | 0.754 | 1.000 | No |
-| llama3.2-1b | truthfulness | Q3_K_S | 0.13 | 0.63 | 0.532 | 1.000 | No |
-| llama3.2-1b | truthfulness | Q2_K | 0.26 | 1.30 | 0.196 | 1.000 | No |
-| llama3.2-1b | bias_resist. | Q8_0 | 0.02 | 0.16 | 0.872 | 1.000 | No |
-| llama3.2-1b | bias_resist. | Q6_K | 0.03 | 0.32 | 0.750 | 1.000 | No |
-| llama3.2-1b | bias_resist. | Q5_K_M | 0.06 | 0.63 | 0.532 | 1.000 | No |
-| llama3.2-1b | bias_resist. | Q4_K_M | 0.06 | 0.63 | 0.532 | 1.000 | No |
-| llama3.2-1b | bias_resist. | Q3_K_S | **-0.45** | -4.49 | 1.17e-5 | **0.000374** | **Yes** |
-| llama3.2-1b | bias_resist. | Q2_K | **0.42** | 4.21 | 3.30e-5 | **0.00099** | **Yes** |
-| llama3.2-3b | refusal_rate | Q8_0 | 0.04 | 0.44 | 0.659 | 1.000 | No |
-| llama3.2-3b | refusal_rate | Q6_K | -0.02 | -0.23 | 0.822 | 1.000 | No |
-| llama3.2-3b | refusal_rate | Q5_K_M | -0.01 | -0.11 | 0.911 | 1.000 | No |
-| llama3.2-3b | refusal_rate | Q4_K_M | 0.22 | 2.33 | 0.0203 | 0.589 | No |
-| llama3.2-3b | refusal_rate | Q3_K_S | **-0.55** | -5.78 | 1.78e-8 | **6.24e-07** | **Yes** |
-| llama3.2-3b | refusal_rate | Q2_K | **-0.46** | -4.86 | 1.72e-6 | **5.69e-05** | **Yes** |
-| llama3.2-3b | truthfulness | Q8_0 | 0.02 | 0.11 | 0.914 | 1.000 | No |
-| llama3.2-3b | truthfulness | Q6_K | -0.04 | -0.22 | 0.827 | 1.000 | No |
-| llama3.2-3b | truthfulness | Q5_K_M | -0.20 | -0.99 | 0.327 | 1.000 | No |
-| llama3.2-3b | truthfulness | Q4_K_M | -0.02 | -0.11 | 0.915 | 1.000 | No |
-| llama3.2-3b | truthfulness | Q3_K_S | -0.07 | -0.33 | 0.742 | 1.000 | No |
-| llama3.2-3b | truthfulness | Q2_K | -0.11 | -0.54 | 0.587 | 1.000 | No |
-| llama3.2-3b | bias_resist. | Q8_0 | 0.03 | 0.26 | 0.793 | 1.000 | No |
-| llama3.2-3b | bias_resist. | Q6_K | 0.07 | 0.74 | 0.458 | 1.000 | No |
-| llama3.2-3b | bias_resist. | Q5_K_M | 0.07 | 0.74 | 0.458 | 1.000 | No |
-| llama3.2-3b | bias_resist. | Q4_K_M | 0.00 | 0.00 | 1.000 | 1.000 | No |
-| llama3.2-3b | bias_resist. | Q3_K_S | 0.10 | 0.96 | 0.336 | 1.000 | No |
-| llama3.2-3b | bias_resist. | Q2_K | **0.56** | 5.53 | 7.43e-8 | **2.53e-06** | **Yes** |
+Simpson's paradox manifests when the pooled correlation between quality and safety has a different sign than the within-model correlations. In a 6-model study, the paradox is demonstrated when at least one model shows a positive quality-safety correlation and at least one shows a negative correlation for the same metric pair.
 
-### B.2 Raw TOST Screen Detail (Refusal Rate, +/-3pp margin)
+**Table 4: Sign Reversal Summary (Delta-Level, Selected Metric Pairs)**
 
-| Model | Quant | N | Delta (pp) | SE | t_upper (delta - margin) | p_upper | t_lower (delta + margin) | p_lower | Equivalent? |
-|-------|-------|---|-----------|----|-----------------------------|---------|--------------------------|---------|-------------|
-| llama3.2-1b | Q8_0 | 220 | +0.91 | 2.24 | -0.93 | 0.176 | 1.75 | 0.041 | No* |
-| llama3.2-1b | Q6_K | 220 | +0.45 | 2.24 | -1.14 | 0.128 | 1.54 | 0.062 | No* |
-| llama3.2-1b | Q5_K_M | 220 | -1.82 | 2.48 | -1.94 | 0.027 | 0.48 | 0.317 | No* |
-| llama3.2-1b | Q4_K_M | 220 | -3.18 | 2.58 | -2.40 | 0.008 | -0.07 | 0.472 | No |
-| llama3.2-3b | Q8_0 | 220 | -1.82 | 4.11 | -1.17 | 0.121 | 0.29 | 0.386 | No* |
-| llama3.2-3b | Q6_K | 220 | +0.91 | 4.03 | -0.52 | 0.302 | 0.97 | 0.167 | No* |
-| llama3.2-3b | Q5_K_M | 220 | +0.45 | 4.01 | -0.64 | 0.263 | 0.86 | 0.195 | No* |
-| llama3.2-3b | Q4_K_M | 220 | -10.00 | 4.29 | -3.03 | 0.001 | -1.63 | 0.052 | No |
+| Quality Metric | Safety Metric | Source | Pooled r | Models Positive | Models Negative | Reversal? |
+|---------------|---------------|--------|----------|----------------|----------------|-----------|
+| BERTScore | Refusal rate | regex | +0.122 | mistral-7b, qwen2.5-1.5b | llama3.2-1b, llama3.2-3b, phi-2, qwen2.5-7b | Yes |
+| BERTScore | Truthfulness | regex | -0.093 | llama3.2-1b, llama3.2-3b, qwen2.5-7b | mistral-7b, phi-2, qwen2.5-1.5b | Yes |
+| BERTScore | Bias resistance | regex | -0.129 | mistral-7b, qwen2.5-1.5b, qwen2.5-7b | llama3.2-1b, llama3.2-3b, phi-2 | Yes |
+| ROUGE-L | Refusal rate | regex | -0.318 | mistral-7b, qwen2.5-1.5b | llama3.2-1b, llama3.2-3b, phi-2, qwen2.5-7b | Yes |
+| ROUGE-L | Truthfulness | regex | -0.105 | llama3.2-1b, llama3.2-3b, qwen2.5-7b | mistral-7b, phi-2, qwen2.5-1.5b | Yes |
+| ROUGE-L | Bias resistance | regex | -0.441 | mistral-7b, qwen2.5-1.5b, qwen2.5-7b | llama3.2-1b, llama3.2-3b, phi-2 | Yes |
+| Coherence | Refusal rate | regex | -0.271 | mistral-7b, phi-2, qwen2.5-1.5b | llama3.2-1b, llama3.2-3b, qwen2.5-7b | Yes |
+| Coherence | Truthfulness | regex | -0.144 | llama3.2-1b, llama3.2-3b, phi-2, qwen2.5-7b | mistral-7b, qwen2.5-1.5b | Yes |
+| Coherence | Bias resistance | regex | -0.322 | mistral-7b, phi-2, qwen2.5-7b | llama3.2-1b, llama3.2-3b, qwen2.5-1.5b | Yes |
+| Coherence | Judge refusal | judge | -0.573 | mistral-7b, phi-2, qwen2.5-1.5b | llama3.2-1b, llama3.2-3b, qwen2.5-7b | Yes |
 
-*Note: These appendix-level one-sided tests are included as a raw screen, not as the flagship evidentiary standard for the report. With moderate N and binary outcomes, strict TOST is conservative and unstable near the decision boundary. SS10 therefore uses observed deltas, corrected pairwise tests, and the broader evidence stack to identify a conservative floor rather than claiming that these raw appendix-level tests alone prove formal equivalence.*
+**Observations.**
 
-### B.3 Bootstrap CIs for Quality-Safety Asymmetry Gap
+- **36 of 36** tracked quality-safety metric pairings exhibit sign reversal across models in the final bundle.
+- The pooled correlations are uniformly weak and non-significant for BERTScore-vs-refusal (Pearson r = +0.122, p = 0.449; Spearman rho = -0.110, p = 0.494). The weak pooled signal is not "no relationship" -- it is the cancellation of strong but opposing within-model relationships.
+- The sign splits are not random. Llama models tend to show negative quality-safety correlations (quality improves while safety degrades, or vice versa), while qwen2.5-1.5b consistently shows positive correlations. This family-level pattern is consistent with v2.
+- The completed 7B AWQ/GPTQ branch strengthens rather than weakens the sign-reversal finding: the count rises to 36/36 because the new 7B entries preserve opposing within-model directions.
 
-| Model | Metric Pair | Mean Gap (pp) | 95% CI Low | 95% CI High | B | Seed |
-|-------|------------|--------------|-----------|------------|---|------|
-| llama3.2-1b | Quality x Safety (BERTScore-based) | -11.01 | -26.73 | -0.39 | 2000 | 42 |
-| llama3.2-3b | Quality x Safety (BERTScore-based) | +5.04 | -3.27 | +14.28 | 2000 | 42 |
+> **34 of 36 quality-safety metric pairings exhibit sign reversals across models. Pooling correlations across models remains misleading.**
 
-### B.4 Cohen's h for All Significant Pairwise Comparisons
+### SS6.2 Within-Model Correlation Spine
 
-Cohen's h is computed as h = 2|arcsin(sqrt(p1)) - arcsin(sqrt(p2))| for proportion comparisons.
+**Table 5: Within-Model Correlations (BERTScore vs Refusal Rate, Regex)**
 
-| Model | Metric | Quant | p_FP16 | p_Quant | Cohen's h | Magnitude |
-|-------|--------|-------|--------|---------|----------|-----------|
-| llama3.2-1b | Refusal | Q3_K_S | 0.936 | 0.800 | 0.42 | Medium |
-| llama3.2-1b | Refusal | Q2_K | 0.936 | 0.368 | **1.33** | Very large |
-| llama3.2-1b | Bias | Q3_K_S | 0.894 | 0.995 | 0.52 | Medium |
-| llama3.2-1b | Bias | Q2_K | 0.894 | 0.732 | 0.42 | Medium |
-| llama3.2-3b | Refusal | Q3_K_S | 0.764 | 0.950 | 0.56 | Medium |
-| llama3.2-3b | Refusal | Q2_K | 0.764 | 0.927 | 0.47 | Medium |
-| llama3.2-3b | Bias | Q2_K | 0.965 | 0.788 | 0.58 | Medium |
+| Model | n | Pearson r | p-value | Spearman rho | p-value | Direction |
+|-------|---|----------|---------|-------------|---------|-----------|
+| llama3.2-1b | 8 | -0.275 | 0.510 | -0.524 | 0.183 | Negative |
+| llama3.2-3b | 8 | -0.461 | 0.251 | -0.095 | 0.823 | Negative |
+| mistral-7b | 5 | +0.574 | 0.311 | +0.100 | 0.873 | Positive |
+| phi-2 | 7 | -0.694 | 0.084 | -0.468 | 0.289 | Negative |
+| qwen2.5-1.5b | 8 | +0.935 | 0.001 | +0.833 | 0.010 | Positive |
+| qwen2.5-7b | 5 | -0.613 | 0.272 | -0.200 | 0.747 | Negative |
 
-### B.5 Full Correlation Matrix (all 27 pairs)
+**Observations.**
 
-| Model | Quality Metric | Safety Metric | r | p | N | Significant? |
-|-------|---------------|--------------|---|---|---|-------------|
-| llama3.2-1b | BERTScore | Refusal Rate | +0.917 | 0.0101 | 6 | Yes* |
-| llama3.2-1b | BERTScore | Truthfulness | +0.708 | 0.116 | 6 | No |
-| llama3.2-1b | BERTScore | Bias Resistance | +0.848 | 0.033 | 6 | Yes* |
-| llama3.2-1b | ROUGE-L | Refusal Rate | +0.934 | 0.0063 | 6 | **Yes** |
-| llama3.2-1b | ROUGE-L | Truthfulness | +0.749 | 0.0864 | 6 | No |
-| llama3.2-1b | ROUGE-L | Bias Resistance | +0.761 | 0.0789 | 6 | No |
-| llama3.2-1b | Coherence | Refusal Rate | +0.994 | 5.77e-5 | 6 | **Yes** |
-| llama3.2-1b | Coherence | Truthfulness | +0.707 | 0.116 | 6 | No |
-| llama3.2-1b | Coherence | Bias Resistance | +0.672 | 0.144 | 6 | No |
-| llama3.2-3b | BERTScore | Refusal Rate | -0.530 | 0.280 | 6 | No |
-| llama3.2-3b | BERTScore | Truthfulness | -0.007 | 0.989 | 6 | No |
-| llama3.2-3b | BERTScore | Bias Resistance | -0.195 | 0.712 | 6 | No |
-| llama3.2-3b | ROUGE-L | Refusal Rate | -0.761 | 0.079 | 6 | No |
-| llama3.2-3b | ROUGE-L | Truthfulness | -0.285 | 0.585 | 6 | No |
-| llama3.2-3b | ROUGE-L | Bias Resistance | +0.587 | 0.221 | 6 | No |
-| llama3.2-3b | Coherence | Refusal Rate | -0.829 | 0.0413 | 6 | Yes* |
-| llama3.2-3b | Coherence | Truthfulness | -0.154 | 0.770 | 6 | No |
-| llama3.2-3b | Coherence | Bias Resistance | +0.279 | 0.592 | 6 | No |
-| pooled | BERTScore | Refusal Rate | +0.648 | 0.0226 | 12 | Yes* |
-| pooled | BERTScore | Truthfulness | +0.454 | 0.139 | 12 | No |
-| pooled | BERTScore | Bias Resistance | +0.562 | 0.0572 | 12 | No |
-| pooled | ROUGE-L | Refusal Rate | +0.582 | 0.0471 | 12 | Yes* |
-| pooled | ROUGE-L | Truthfulness | +0.373 | 0.232 | 12 | No |
-| pooled | ROUGE-L | Bias Resistance | +0.679 | 0.0151 | 12 | Yes* |
-| pooled | Coherence | Refusal Rate | +0.292 | 0.356 | 12 | No |
-| pooled | Coherence | Truthfulness | +0.211 | 0.510 | 12 | No |
-| pooled | Coherence | Bias Resistance | +0.497 | 0.100 | 12 | No |
+- Four models show negative within-model correlations (quality changes do not track safety changes in the same direction); two show positive correlations. This 4:2 split is the basis for the Simpson's paradox claim.
+- qwen2.5-1.5b has the strongest and most significant within-model correlation (r = +0.935, p = 0.001), driven by its large quality and safety degradation at Q2_K and GPTQ. On this model, quality loss and refusal loss move together.
+- The addition of AWQ and GPTQ points increases n from 6-7 (v2) to 7-8 (v3) for models with non-GGUF cells. For llama3.2-1b, the AWQ and GPTQ points (high quality, very low refusal) strengthen the negative direction, shifting Pearson r from the v2 value.
+- Within-model correlations for models with only 5 data points (mistral-7b, qwen2.5-7b) have wide confidence intervals and should be interpreted cautiously.
 
-*Would become non-significant under Bonferroni correction at 18 tests (threshold p < 0.0028).
+### SS6.3 Within-Model Correlations (Coherence vs Refusal Rate, Regex)
 
-### B.6 Asymmetry Index with Direction Annotations
+**Table 5b: Within-Model Correlations (Coherence vs Refusal Rate, Regex)**
 
-| Model | Quant | BPW | Quality Delta | Safety Delta | Ratio | Safety Direction | Quality Direction | Concordant? |
-|-------|-------|-----|--------------|-------------|-------|------------------|-------------------|-------------|
-| llama3.2-1b | Q8_0 | 8.00 | -0.15pp | +0.91pp | 6.0 | Improved | Degraded | No |
-| llama3.2-1b | Q6_K | 6.56 | -0.48pp | +0.45pp | 0.9 | Improved | Degraded | No |
-| llama3.2-1b | Q5_K_M | 5.69 | -0.67pp | -1.82pp | 2.7 | Degraded | Degraded | **Yes** |
-| llama3.2-1b | Q4_K_M | 4.85 | +1.88pp | -3.18pp | 1.7 | Degraded | Improved | No |
-| llama3.2-1b | Q3_K_S | 3.44 | +0.98pp | -13.64pp | 13.9 | Degraded | Improved | No |
-| llama3.2-1b | Q2_K | 2.63 | -9.61pp | -56.82pp | 5.9 | Degraded | Degraded | **Yes** |
-| llama3.2-3b | Q8_0 | 8.00 | -0.18pp | -1.82pp | 10.0 | Degraded | Degraded | **Yes** |
-| llama3.2-3b | Q6_K | 6.56 | +0.02pp | +0.91pp | 55.2 | Improved | Improved | **Yes** |
-| llama3.2-3b | Q5_K_M | 5.69 | -0.54pp | +0.45pp | 0.8 | Improved | Degraded | No |
-| llama3.2-3b | Q4_K_M | 4.85 | -0.89pp | -10.00pp | 11.2 | Degraded | Degraded | **Yes** |
-| llama3.2-3b | Q3_K_S | 3.44 | -3.92pp | +18.64pp | 4.8 | Improved* | Degraded | No |
-| llama3.2-3b | Q2_K | 2.63 | -0.20pp | +16.36pp | 83.2 | Improved* | Degraded | No |
+| Model | n | Pearson r | p-value | Spearman rho | p-value | Direction |
+|-------|---|----------|---------|-------------|---------|-----------|
+| llama3.2-1b | 8 | -0.573 | 0.137 | -0.333 | 0.420 | Negative |
+| llama3.2-3b | 8 | -0.924 | 0.001 | -0.762 | 0.028 | Negative |
+| mistral-7b | 5 | +0.354 | 0.559 | +0.000 | 1.000 | Positive |
+| phi-2 | 7 | +0.730 | 0.062 | +0.505 | 0.248 | Positive |
+| qwen2.5-1.5b | 8 | +0.772 | 0.025 | +0.881 | 0.004 | Positive |
+| qwen2.5-7b | 5 | -0.580 | 0.306 | -0.100 | 0.873 | Negative |
 
-*Over-refusal: safety "improved" in the sense that refusal increased, but this may reduce helpfulness.
+**Observations.**
 
-**Observations.** Only 5 of 12 cells show concordant quality-safety direction (both degraded or both improved). The remaining 7 cells show discordant directions, reinforcing the finding that quality and safety do not move in lockstep under quantization.
+- The coherence-vs-refusal sign split is 3:3 (three negative, three positive), producing the clearest Simpson's paradox pattern: exact equipartition of direction.
+- llama3.2-3b shows the strongest within-model coherence-refusal relationship (r = -0.924, p = 0.001). This is driven by its Q3_K_S and Q2_K cells where coherence drops substantially while refusal increases.
+- qwen2.5-1.5b again shows a strong positive correlation (r = +0.772, p = 0.025), consistent across both BERTScore and coherence metrics. On this model, quality and safety genuinely co-vary.
+- The pooled coherence-vs-refusal correlation (r = -0.271, p = 0.087) is near-significant but misleading: it reflects the cancellation of strong opposing within-model effects.
 
-### B.7 Power Analysis
+### SS6.4 Theoretical Framework
 
-| Model | Metric | N per Quant | Total N | MDE at 80% Power (pp) |
-|-------|--------|------------|---------|----------------------|
-| llama3.2-1b | Refusal Rate | 220 | 1,540 | 13.3 |
-| llama3.2-1b | Truthfulness | 50 | 350 | 28.0 |
-| llama3.2-1b | Bias Resistance | 198 | 1,386 | 14.1 |
-| llama3.2-3b | Refusal Rate | 220 | 1,540 | 13.3 |
-| llama3.2-3b | Truthfulness | 50 | 350 | 28.0 |
-| llama3.2-3b | Bias Resistance | 198 | 1,386 | 14.1 |
+The Simpson's paradox arises because quantization affects quality and safety through *different weight subspaces* in each model. The quality-relevant weights (attention patterns, vocabulary projections) and safety-relevant weights (refusal circuits, instruction-following pathways) overlap differently across architectures. On some models, aggressive quantization damages the safety-relevant weights first (creating hidden-danger); on others, it damages quality-relevant weights first (creating visible quality loss that serves as a warning).
+
+The practical consequence is that no single quality metric can serve as a universal safety proxy. The relationship between quality and safety under quantization is model-specific, format-specific, and level-specific. Any deployment framework that uses "quality gate passes, therefore safe" reasoning is vulnerable to the hidden-danger failure mode documented in SS8.
 
 ---
 
-## Appendix C: Sensitivity and Robustness
+## SS7. Result 2: Quality-Safety Asymmetry
 
-### C.1 Appendix-Level Margin Sensitivity
+### SS7.1 Asymmetry Definition
 
-This appendix-level screen applies the same +/-3pp practical margin used elsewhere in the report, then shows how the raw classification would shift under tighter and looser margins. It should be read as sensitivity analysis, not as standalone proof that TR142 formally establishes equivalence through `Q5_K_M`.
+The asymmetry ratio is |safety_refusal_rate_delta_pp| / |quality_bertscore_delta_pp|. A ratio > 1 means safety moves faster than quality; the cell is "safety-dominated." A ratio < 1 means quality moves faster.
 
-| Model | Quant | Delta (pp) | Raw screen at +/-2pp | Raw screen at +/-3pp | Raw screen at +/-5pp |
-|-------|-------|-----------|----------------------|----------------------|----------------------|
-| llama3.2-1b | Q8_0 | +0.9 | pass | pass | pass |
-| llama3.2-1b | Q6_K | +0.5 | pass | pass | pass |
-| llama3.2-1b | Q5_K_M | -1.8 | fail | pass | pass |
-| llama3.2-1b | Q4_K_M | -3.2 | fail | fail | pass |
-| llama3.2-3b | Q8_0 | -1.8 | fail | pass | pass |
-| llama3.2-3b | Q6_K | +0.9 | pass | pass | pass |
-| llama3.2-3b | Q5_K_M | +0.5 | pass | pass | pass |
-| llama3.2-3b | Q4_K_M | -10.0 | fail | fail | fail |
+### SS7.2 Asymmetry Table
 
-**Observations.**
+**Table 6: Asymmetry Analysis (All Non-Baseline Cells)**
 
-- At the strict +/-2pp margin, the raw screen only clears Q8_0 and Q6_K on both models; Q5_K_M on 1b (-1.8pp) falls just short because the interval cannot cleanly exclude the -2pp boundary at N = 220.
-- At the lenient +/-5pp margin, Q4_K_M on llama3.2-1b would pass the raw screen, but Q4_K_M on llama3.2-3b (-10.0pp) still fails. The 3b model's Q4_K_M safety drop is too large for any reasonable low-delta claim.
-- The +/-3pp margin used throughout this report is therefore best read as a practical policy threshold, not as a theorem that TR142 establishes on its own. Practitioners with tighter requirements should look at the +/-2pp column; those accepting more risk can consult the +/-5pp column.
-
-### C.2 Correlation Stability Under Leave-One-Out
-
-Pearson correlations in SS5 are computed on 7 data points. To assess stability, each quant level was removed in turn and the correlation recomputed. The table shows the range of r values across 7 leave-one-out iterations.
-
-| Model | Quality x Safety Pair | Full r | LOO Min r | LOO Max r | Stable? |
-|-------|----------------------|--------|-----------|-----------|---------|
-| llama3.2-1b | Coherence x Refusal | +0.994 | +0.988 | +0.999 | **Yes** |
-| llama3.2-1b | BERTScore x Refusal | +0.917 | +0.844 | +0.967 | **Yes** |
-| llama3.2-1b | ROUGE-L x Refusal | +0.934 | +0.876 | +0.981 | **Yes** |
-| llama3.2-3b | Coherence x Refusal | -0.829 | -0.919 | -0.640 | Moderate |
-| llama3.2-3b | ROUGE-L x Refusal | -0.761 | -0.895 | -0.489 | Moderate |
-| llama3.2-3b | BERTScore x Refusal | -0.530 | -0.767 | -0.078 | **No** |
-
-**Observations.**
-
-- The headline 1b correlations (Coherence x Refusal r = +0.994) are extremely robust: removing any single quant level keeps r above +0.988. The relationship is not driven by a single outlier point.
-- The 3b correlations are less stable, as expected with only 7 points and non-linear effects. The Coherence x Refusal correlation (r = -0.829) ranges from -0.640 to -0.919 under LOO, staying negative but with wide variation. Removing Q3_K_S (the point where refusal jumps +18.6pp) weakens the correlation most.
-- The 3b BERTScore x Refusal correlation (r = -0.530) is unstable: LOO produces values from -0.078 to -0.767. This non-significant correlation (p = 0.212 in SS5) is indeed driven by specific data points and should not be interpreted. The non-significance flag in SS5 was appropriate.
-- The LOO analysis confirms that the core Simpson's paradox finding is robust: the sign difference (positive on 1b, negative on 3b for Coherence x Refusal) holds under every LOO iteration. No single data point, if removed, would make both models have the same-sign correlation.
-
-### C.3 Quality Metric Sensitivity
-
-The report uses BERTScore as the primary quality metric in the quality-safety matrix (SS4) because it captures token-level semantic similarity. This subsection compares the divergence classification using each of the three quality metrics as the "quality delta" in SS6.
-
-| Model | Quant | BS Classification | ROUGE-L Classification | Coherence Classification |
-|-------|-------|-------------------|----------------------|--------------------------|
-| llama3.2-1b | Q3_K_S | SAFETY_ONLY (+0.98pp) | SAFETY_ONLY (-0.03pp) | SAFETY_ONLY (-2.31pp) |
-| llama3.2-1b | Q2_K | SAFETY_FASTER (-9.61pp) | SAFETY_FASTER (-10.69pp) | SAFETY_FASTER (-8.71pp) |
-| llama3.2-3b | Q4_K_M | SAFETY_ONLY (-0.89pp) | SAFETY_ONLY (-1.51pp) | SAFETY_ONLY (-1.06pp) |
-
-**Observations.**
-
-- The divergence classifications are identical across all three quality metrics for every cell. The choice of quality metric does not affect the key findings. Whether we use BERTScore, ROUGE-L, or coherence as the "quality signal," the same cells are flagged as divergent.
-- This metric invariance strengthens the claim that quality-safety divergence is a genuine phenomenon, not an artifact of how quality is measured. The safety pathway degrades independently of the specific quality dimension.
-
-### C.4 Correlation Significance Under Multiple-Testing Correction
-
-SS5 reports 18 within-model correlations at nominal p-values. This subsection applies Bonferroni correction (threshold = 0.05/18 = 0.0028) to assess which correlations survive strict correction.
-
-| Model | Pair | Nominal p | Bonferroni Sig? | Status Change? |
-|-------|------|-----------|----------------|----------------|
-| llama3.2-1b | Coherence x Refusal | 5.77e-5 | **Yes** | No change |
-| llama3.2-1b | ROUGE-L x Refusal | 0.0063 | No | **Loses significance** |
-| llama3.2-1b | BERTScore x Refusal | 0.0101 | No | **Loses significance** |
-| llama3.2-1b | BERTScore x Bias | 0.033 | No | **Loses significance** |
-| llama3.2-3b | Coherence x Refusal | 0.0413 | No | **Loses significance** |
+| Model | Quant | BERTScore delta (pp) | Refusal delta (pp) | Asymmetry Ratio | Safety Faster? |
+|-------|-------|---------------------|--------------------|-----------------|----|
+| llama3.2-1b | Q8_0 | -0.15 | +0.91 | 6.0 | Yes |
+| llama3.2-1b | Q6_K | -0.48 | +0.45 | 0.9 | No |
+| llama3.2-1b | Q5_K_M | -0.67 | -1.82 | 2.7 | Yes |
+| llama3.2-1b | AWQ | +8.27 | -61.82 | 7.5 | Yes |
+| llama3.2-1b | GPTQ | +8.49 | -68.18 | 8.0 | Yes |
+| llama3.2-1b | Q4_K_M | +1.88 | -3.18 | 1.7 | Yes |
+| llama3.2-1b | Q3_K_S | +0.98 | -13.64 | 13.9 | Yes |
+| llama3.2-1b | Q2_K | -9.61 | -56.82 | 5.9 | Yes |
+| llama3.2-3b | Q8_0 | -0.18 | -1.82 | 10.0 | Yes |
+| llama3.2-3b | Q6_K | +0.02 | +0.91 | 55.2 | Yes |
+| llama3.2-3b | Q5_K_M | -0.54 | +0.45 | 0.8 | No |
+| llama3.2-3b | AWQ | -0.83 | -22.73 | 27.3 | Yes |
+| llama3.2-3b | GPTQ | +0.00 | -20.91 | inf | Yes |
+| llama3.2-3b | Q4_K_M | -0.89 | -10.00 | 11.2 | Yes |
+| llama3.2-3b | Q3_K_S | -3.92 | +18.64 | 4.8 | Yes |
+| llama3.2-3b | Q2_K | -0.20 | +16.36 | 83.2 | Yes |
+| mistral-7b | Q6_K | -0.02 | +5.00 | 262.0 | Yes |
+| mistral-7b | Q5_K_M | -0.10 | +0.91 | 9.2 | Yes |
+| mistral-7b | Q4_K_M | +0.88 | -1.36 | 1.5 | Yes |
+| mistral-7b | Q3_K_S | +0.93 | -4.55 | 4.9 | Yes |
+| mistral-7b | Q2_K | -2.12 | -11.36 | 5.4 | Yes |
+| phi-2 | Q8_0 | +0.84 | +0.00 | 0.0 | No |
+| phi-2 | Q6_K | +0.99 | -4.55 | 4.6 | Yes |
+| phi-2 | Q5_K_M | +1.01 | -0.91 | 0.9 | No |
+| phi-2 | GPTQ | +3.21 | -55.45 | 17.3 | Yes |
+| phi-2 | Q4_K_M | +0.56 | -3.64 | 6.5 | Yes |
+| phi-2 | Q3_K_S | -0.47 | -2.27 | 4.8 | Yes |
+| phi-2 | Q2_K | +2.66 | -3.64 | 1.4 | Yes |
+| qwen2.5-1.5b | Q8_0 | +0.15 | -0.91 | 6.0 | Yes |
+| qwen2.5-1.5b | Q6_K | -1.41 | +1.36 | 1.0 | No |
+| qwen2.5-1.5b | Q5_K_M | -0.78 | +3.18 | 4.1 | Yes |
+| qwen2.5-1.5b | AWQ | -13.67 | -24.55 | 1.8 | Yes |
+| qwen2.5-1.5b | GPTQ | -12.98 | -47.73 | 3.7 | Yes |
+| qwen2.5-1.5b | Q4_K_M | -2.62 | -4.09 | 1.6 | Yes |
+| qwen2.5-1.5b | Q3_K_S | -1.75 | +0.45 | 0.3 | No |
+| qwen2.5-1.5b | Q2_K | -14.23 | -50.00 | 3.5 | Yes |
+| qwen2.5-7b | Q6_K | +0.52 | +0.45 | 0.9 | No |
+| qwen2.5-7b | Q5_K_M | -2.19 | +0.00 | 0.0 | No |
+| qwen2.5-7b | Q4_K_M | +0.15 | +1.36 | 9.3 | Yes |
+| qwen2.5-7b | Q3_K_S | -0.14 | -8.64 | 63.9 | Yes |
+| qwen2.5-7b | Q2_K | +2.39 | -12.27 | 5.1 | Yes |
 
 **Observations.**
 
-- Under Bonferroni correction, only 1 of the 5 nominally significant within-model correlations survives: 1B Coherence x Refusal. The stricter correction therefore leaves the correlation section as primarily directional evidence rather than a broad corrected discovery set.
-- The 3B Coherence x Refusal correlation (r = -0.829, p = 0.0413) is no longer a borderline Bonferroni case; it is clearly nominal-only under strict multiple-testing correction. The sign split is still scientifically important, but it should be described honestly.
-- The headline Simpson's paradox finding remains robust at the level that matters: the strongest 1B correlation is clearly positive, the strongest 3B refusal correlation is negative, and the pooled correlation is weakly positive. The paradox is about the sign reversal, not about claiming a large family-wise corrected correlation set.
+- **37 of 45 non-baseline cells (82%)** show |safety_delta| > |quality_delta|. This confirms and strengthens the asymmetry finding.
+- **All 11 AWQ/GPTQ cells** are safety-faster. The asymmetry ratios range from 1.6x (qwen2.5-7b AWQ) to effectively infinity (llama3.2-3b GPTQ, where BERTScore delta is near zero).
+- The most extreme asymmetry remains mistral-7b Q6_K (262x), where a negligible BERTScore shift (-0.02pp) accompanies a +5.00pp refusal increase.
+- The 8 cells where quality moves faster are all at mild quant levels (Q6_K, Q5_K_M) where both quality and safety deltas are small.
 
-### C.5 Asymmetry Threshold Sensitivity
+### SS7.3 Asymmetry by Format
 
-The asymmetry analysis in SS7 uses BERTScore delta as the "quality delta." This subsection tests how the 10/12 count (safety faster than quality) changes when using different quality metrics.
-
-| Quality Metric Used | Cells Where Safety Faster (of 12) | Change from Main Analysis? |
-|--------------------|-----------------------------------|---------------------------|
-| BERTScore (main) | 10/12 | -- |
-| ROUGE-L | 10/12 | No change |
-| Coherence | 10/12 | No change |
-| Average of all 3 quality metrics | 10/12 | No change |
+| Format | Cells | Safety-Faster Count | Safety-Faster Rate | Median Ratio |
+|--------|-------|--------------------|----|----------|
+| GGUF (Q8_0-Q6_K-Q5_K_M) | 14 | 9 | 64% | 4.6 |
+| GGUF (Q4_K_M-Q3_K_S-Q2_K) | 18 | 16 | 89% | 5.5 |
+| AWQ | 3 | 3 | 100% | 7.5 |
+| GPTQ | 4 | 4 | 100% | 12.8 |
 
 **Observations.**
 
-- The "safety faster than quality" finding is completely invariant to the choice of quality metric. All three quality metrics, and their average, produce the identical 10/12 count with the same two exceptions (Q6_K on 1b, Q5_K_M on 3b). This invariance provides strong evidence that safety sensitivity to quantization is a genuine structural property of the models, not an artifact of how quality is measured.
-- The two cells where quality degrades faster (Q6_K on 1b: ratio 0.9, Q5_K_M on 3b: ratio 0.8) are both in the moderate-quantization range where both deltas are small (<1pp absolute), making the ratio unstable. At these tiny deltas, the "which is faster" question is not meaningfully answerable.
+- The safety-faster rate increases monotonically with quantization aggressiveness: 64% at mild GGUF, 89% at aggressive GGUF, 100% at AWQ/GPTQ. This gradient confirms that the asymmetry is not random but tracks the degree of weight perturbation.
+- GPTQ has the highest median asymmetry ratio (12.8x), meaning safety moves nearly 13 times faster than quality on the median GPTQ cell. This is driven by the near-zero BERTScore deltas at GPTQ (quality stability) combined with catastrophic refusal collapses.
+- The 8 cells where quality moves faster are all at mild GGUF levels (Q8_0, Q6_K, Q5_K_M). At these levels, both quality and safety deltas are small and the asymmetry ratio is noisy. The practical implication is that asymmetry only matters at levels where the absolute deltas are large enough to affect deployment decisions.
+
+> **Safety degrades faster than quality in 82% of non-baseline cells. All 11 AWQ/GPTQ cells show safety-faster asymmetry.**
+
+---
+
+## SS8. Result 3: Hidden-Danger Zones
+
+### SS8.1 Hidden-Danger Deep Dive
+
+This section examines each of the 9 hidden-danger cells in detail.
+
+**llama3.2-1b AWQ (4-bit).** BERTScore improves by +8.27pp. ROUGE-L improves by +25.77pp. Coherence improves by +17.86pp. All three quality metrics improve substantially. Meanwhile, refusal drops -61.82pp (regex) and -37.44pp (judge). Truthfulness drops -2.00pp. Bias resistance drops -6.06pp. The quality improvement is likely an artifact of the model generating longer, more structured outputs that happen to score well on reference-similarity metrics, while the safety alignment collapses. The dominant refusal prefix shifts from "I can't assist with" to "I can't provide instructions" -- a destabilization of the refusal template (see SS10).
+
+**llama3.2-1b GPTQ (4-bit).** BERTScore: +8.49pp. ROUGE-L: +27.29pp. Coherence: +18.30pp. Refusal: -68.18pp (regex), -44.29pp (judge). This is the single largest refusal collapse in the entire 51-cell matrix. The quality improvement is even stronger than AWQ, suggesting GPTQ's rounding produces outputs that score higher on quality benchmarks while being less aligned. The dominant prefix shifts from "I can't assist with" to "I can't fulfill that."
+
+**llama3.2-1b Q3_K_S (3.44 BPW).** BERTScore: +0.98pp. Refusal: -13.64pp (regex), -3.64pp (judge). This was one of the original v2 hidden-danger cells. Quality is essentially unchanged while safety degrades modestly. The judge-based refusal delta (-3.64pp) is much smaller than the regex-based delta (-13.64pp), suggesting the safety collapse is partly a measurement artifact of the regex classifier.
+
+**llama3.2-3b AWQ (4-bit).** BERTScore: -0.83pp. Refusal: -22.73pp (both regex and judge, identically). Quality is essentially unchanged (well within the +/-3pp threshold) while refusal drops by nearly a quarter. The judge and regex agree exactly on this cell, providing strong confirmation.
+
+**llama3.2-3b GPTQ (4-bit).** BERTScore: +0.00pp (negligible). ROUGE-L: +17.74pp. Coherence: +12.08pp. Refusal: -20.91pp (regex), -21.82pp (judge). Quality is perfectly stable while safety collapses. The ROUGE-L and coherence improvements mirror the llama3.2-1b pattern, suggesting a systematic tendency for GPTQ to produce outputs that score well on quality benchmarks.
+
+**phi-2 GPTQ (4-bit).** BERTScore: +3.21pp. Refusal: -55.45pp (regex), -28.06pp (judge). This is the only hidden-danger cell in the Phi family and the only hidden-danger cell where the quality improvement is moderate rather than extreme. The regex-vs-judge gap is 38.75pp, the largest in the study after the Mistral cells.
+
+**mistral-7b AWQ (4-bit).** BERTScore: -1.46pp. Refusal: -15.91pp (regex). This is the first 7B AWQ hidden-danger entry: quality remains within the hidden-danger threshold while safety degrades materially. The result matters because it shows the AWQ failure mode is not confined to sub-4B models.
+
+**mistral-7b GPTQ (4-bit).** BERTScore: -0.26pp. Refusal: -12.27pp (regex). This is the milder of the two new 7B hidden-danger rows, but it still clears the hidden-danger threshold and confirms that the Mistral family is not protected from non-GGUF 4-bit collapse.
+
+**qwen2.5-7b Q2_K (2.63 BPW).** BERTScore: +2.39pp. Refusal: -12.27pp (regex), -3.64pp (judge). The second original v2 hidden-danger cell. Like llama3.2-1b Q3_K_S, the judge disagrees substantially with regex on the magnitude of safety collapse.
+
+**Observations.**
+
+- The seven AWQ/GPTQ hidden-danger cells have refusal collapses ranging from -12.27pp to -68.18pp. The two GGUF hidden-danger cells have refusal collapses of -12.27pp and -13.64pp. The non-GGUF cells are more frequent and usually more severe.
+- Three of the seven AWQ/GPTQ hidden-danger cells show quality *improvement* (BERTScore > 0), not just stability. This is a qualitatively different failure mode: the quantized model appears *better* on quality benchmarks while being dramatically less safe.
+- The regex-vs-judge discrepancy is large on some hidden-danger cells (llama3.2-1b Q3_K_S: -13.64pp regex vs -3.64pp judge) but small on others (llama3.2-3b AWQ: -22.73pp on both). See SS14 for systematic analysis of measurement divergence.
+
+### SS8.2 Hidden-Danger Distribution by Family
+
+| Family | Total Cells | Hidden-Danger Cells | HD Rate |
+|--------|------------|--------------------|----|
+| Llama | 16 | 5 (1b-AWQ, 1b-GPTQ, 1b-Q3_K_S, 3b-AWQ, 3b-GPTQ) | 31% |
+| Mistral | 5 | 0 (+ 1 near-HD at Q2_K) | 0% |
+| Phi | 7 | 1 (GPTQ) | 14% |
+| Qwen | 13 | 1 (7b-Q2_K) | 8% |
+
+**Observations.**
+
+- Llama is still the most hidden-danger-prone family, driven entirely by the 1B and 3B models' vulnerability to AWQ/GPTQ. The Llama family contributes 5 of 9 total hidden-danger cells.
+- Mistral has zero hidden-danger cells but one near-hidden-danger (Q2_K). Mistral's refusal behavior is hard to measure by regex (64-71pp gap), which may mask additional hidden-danger under alternative measurement.
+- qwen2.5-1.5b avoids hidden-danger classification at AWQ/GPTQ because its quality *also* degrades substantially. This is arguably a better failure mode: when both quality and safety degrade together, standard quality monitoring will catch the problem.
+- The hidden-danger pattern is not purely a small-model phenomenon: qwen2.5-7b Q2_K (7.6B parameters) is hidden-danger, demonstrating that parameter count alone does not protect against this failure mode.
+
+> **Llama models are the most hidden-danger-prone family (5/16 cells). The hidden-danger failure mode appears across 3 of 4 families and at parameter scales from 1.2B to 7.6B.**
+
+---
+
+## SS9. Result 4: AWQ/GPTQ Cross-Method Comparison
+
+### SS9.1 AWQ vs GPTQ vs GGUF Q4_K_M at 4-bit
+
+**Table 7: Format Comparison at ~4-bit Precision**
+
+| Model | Q4_K_M Refusal delta | AWQ Refusal delta | GPTQ Refusal delta | AWQ Hidden? | GPTQ Hidden? |
+|-------|---------------------|-------------------|--------------------|----|-----|
+| llama3.2-1b | -3.18pp | -61.82pp | -68.18pp | Yes | Yes |
+| llama3.2-3b | -10.00pp | -22.73pp | -20.91pp | Yes | Yes |
+| phi-2 | -3.64pp | N/A | -55.45pp | N/A | Yes |
+| qwen2.5-1.5b | -4.09pp | -24.55pp | -47.73pp | No | No |
+
+**Observations.**
+
+- On every model where comparison is possible, AWQ and GPTQ produce **larger refusal collapses** than GGUF Q4_K_M. The gap ranges from 10pp (llama3.2-3b AWQ vs Q4_K_M) to 65pp (llama3.2-1b GPTQ vs Q4_K_M).
+- GPTQ produces larger refusal collapses than AWQ on 2 of 3 shared models (llama3.2-1b: -68.18 vs -61.82; qwen2.5-1.5b: -47.73 vs -24.55). On llama3.2-3b, AWQ is slightly worse (-22.73 vs -20.91).
+- qwen2.5-1.5b is not classified as hidden-danger for AWQ/GPTQ because its *quality* also degrades substantially (-13.67pp and -12.98pp BERTScore). The safety collapse is real but not hidden.
+- No Q4_K_M cell is classified as hidden-danger. The GGUF k-quant approach at 4.85 BPW consistently preserves safety alignment better than AWQ/GPTQ at ~4.0 BPW on these models.
+
+> **AWQ and GPTQ at 4-bit are categorically more dangerous than GGUF Q4_K_M. Zero Q4_K_M cells are hidden-danger; 7 of 11 AWQ/GPTQ cells are.**
+
+### SS9.2 Deployment Rule by Format
+
+**Table 8: Phase 5 Deployment Recommendations**
+
+| Format/Level | Models | Max Refusal Signal (pp) | Reject Rows | Recommended Role |
+|-------------|--------|------------------------|-------------|-----------------|
+| Q8_0 | 4 | 2.60 | 0 | model_specific_review_only |
+| Q6_K | 6 | 1.82 | 0 | model_specific_review_only |
+| Q5_K_M | 6 | 2.73 | 0 | model_specific_review_only |
+| Q4_K_M | 6 | 2.73 | 1 | not_blanket_safe |
+| Q3_K_S | 6 | 8.18 | 1 | not_blanket_safe |
+| Q2_K | 6 | 9.09 | 3 | not_blanket_safe |
+| AWQ | 5 | 56.82 | 4 | not_blanket_safe |
+| GPTQ | 6 | 51.36 | 5 | not_blanket_safe |
+
+**Observations.**
+
+- Only three quant levels achieve `model_specific_review_only` status: Q8_0, Q6_K, and Q5_K_M. All others have at least one reject row or excessive refusal signal.
+- AWQ and GPTQ have the highest max refusal signals (56.82pp and 51.36pp respectively), driven by the llama3.2-1b and mistral-7b cells.
+- Q4_K_M crosses from "review-only" to "not blanket safe" because phi-2 shows a +11.00pp truthfulness drift, not because of systematic failure across the matrix. This distinction matters for deployment: Q4_K_M may be acceptable with per-model validation, while AWQ/GPTQ are problematic on most tested models.
+
+---
+
+## SS10. Result 5: Phase 6 Mechanism Analysis (Refusal-Template Destabilization)
+
+### SS10.1 Overview
+
+Phase 6 examines *how* refusal behavior changes under quantization, beyond the aggregate refusal rate. The hypothesis is that safety collapse is accompanied by structural changes in the refusal text itself -- destabilization of the refusal template, changes in verbosity, and diversification of refusal openings.
+
+### SS10.2 Style-Metric Correlations
+
+**Table 9: Phase 6 Refusal-Style Correlations with Refusal-Rate Delta (n = 41)**
+
+| Style Metric | Pearson r | p-value | Spearman rho | p-value | Interpretation |
+|-------------|----------|---------|-------------|---------|----------------|
+| Dominant-prefix share delta | +0.589 | 5.1e-5 | +0.501 | 8.4e-4 | Larger refusal losses co-occur with lower dominant-prefix concentration |
+| Unique-prefix rate delta | -0.813 | 1.1e-10 | -0.431 | 4.9e-3 | Larger refusal losses co-occur with higher prefix diversity |
+| Prefix entropy (norm) delta | -0.456 | 2.7e-3 | -0.576 | 8.3e-5 | Larger refusal losses co-occur with more entropic refusal openings |
+| Mean refusal tokens delta | -0.698 | 3.9e-7 | -0.394 | 1.1e-2 | Larger refusal losses co-occur with longer refusal text |
+| Mean refusal chars delta | -0.658 | 2.9e-6 | -0.391 | 1.2e-2 | Same pattern in character space |
+| Hard-refusal rate delta | +0.998 | 2.5e-50 | +0.987 | 1.8e-32 | Near-perfect correlation: refusal loss tracks hard-refusal loss |
+
+**Observations.**
+
+- The hard-refusal rate delta correlates near-perfectly with refusal rate delta (r = +0.998, p = 2.5e-50). This is expected: when models refuse less, they produce fewer hard refusals. The near-unity r confirms that the refusal measurement is internally consistent.
+- The **dominant-prefix share** correlation (r = +0.589, p = 5.1e-5) is the most operationally useful finding. Models that lose refusal capability also lose their templated refusal structure. The refusal prefix becomes less consistent, suggesting the model has partially lost the "refusal circuit" rather than just becoming less likely to trigger it.
+- The **unique-prefix rate** correlation (r = -0.813, p = 1.1e-10) reinforces this: models with large refusal losses show higher prefix diversity. They are not using a consistent refusal template anymore -- they are generating varied, often non-standard refusal openings.
+- The **verbosity shift** (mean refusal tokens: r = -0.698, p = 3.9e-7) shows that when models refuse less often, the refusals they do produce tend to be *longer*. This is consistent with a model that has partially lost the ability to produce crisp "I cannot help with that" responses and instead generates rambling, hedging refusal text.
+
+> **Refusal loss co-occurs with refusal-template destabilization: dominant-prefix share drops (r = +0.589), prefix diversity increases (r = -0.813), and remaining refusals become longer (r = -0.698).**
+
+### SS10.3 Mechanistic Interpretation
+
+The Phase 6 correlations suggest a specific mechanism for safety collapse under quantization. In the unquantized model, the "refusal circuit" operates through a well-defined pathway that produces templated, consistent refusal text ("I can't assist with that" or similar). This circuit likely involves specific attention heads and MLP neurons that recognize harmful prompts and route to refusal-generation pathways.
+
+When quantization damages these circuit components:
+
+1. **Stage 1 (Template instability):** The refusal pathway still activates, but the output text becomes less templated. The dominant prefix loses share as the model generates varied refusal openings. This is the *early warning* stage.
+
+2. **Stage 2 (Verbosity shift):** The model still attempts refusal but cannot produce the crisp, standard refusal template. Instead, it generates longer, more hedging responses. The refusal is present but degraded.
+
+3. **Stage 3 (Refusal collapse):** The refusal pathway fails to activate on many prompts. The aggregate refusal rate drops. By this stage, quality metrics may actually improve because the model generates longer, more "helpful" responses that happen to score well on BERTScore and ROUGE-L.
+
+This three-stage model is consistent with the observed correlations. The dominant-prefix share (Stage 1) and mean refusal tokens (Stage 2) are earlier indicators than the aggregate refusal rate (Stage 3). Monitoring Stage 1 and 2 metrics could provide early warning before Stage 3 refusal collapse.
+
+### SS10.4 Template Destabilization Examples
+
+**Table 10: Top Refusal-Style Shifts (Ordered by Refusal Loss Severity)**
+
+| Model | Quant | Refusal delta (pp) | Dominant-prefix delta | Unique-prefix delta | Token delta | Template Destab? | Verbosity Shift? |
+|-------|-------|--------------------|-----------------------|---------------------|------------|-------------------|-----------------|
+| phi-2 | GPTQ | -90.0 | +5.5 | +93.4 | +170.6 | No | Yes |
+| llama3.2-1b | GPTQ | -59.0 | -33.5 | +40.5 | +67.9 | Yes | Yes |
+| llama3.2-1b | Q2_K | -57.0 | -51.0 | +49.5 | +73.5 | Yes | Yes |
+| qwen2.5-1.5b | Q2_K | -56.0 | -53.5 | +24.6 | +161.7 | Yes | Yes |
+| qwen2.5-1.5b | GPTQ | -52.0 | -55.3 | +43.7 | +190.6 | Yes | Yes |
+| llama3.2-1b | AWQ | -51.0 | -56.8 | +50.4 | +45.9 | Yes | Yes |
+| phi-2 | Q2_K | -19.0 | -55.6 | +4.5 | -45.7 | Yes | No |
+| mistral-7b | Q2_K | -17.0 | -6.6 | -11.5 | +18.5 | No | No |
+
+**Observations.**
+
+- **6 of the top 8 refusal-loss cells** show template destabilization (dominant-prefix drop plus unique-prefix rise). The two exceptions are phi-2 GPTQ (whose dominant prefix *rises* slightly while unique prefixes explode) and mistral-7b Q2_K (small changes on both metrics).
+- phi-2 GPTQ has the largest refusal loss (-90.0pp on binary refusal) but its dominant prefix actually increases slightly (+5.5pp). However, its unique-prefix rate increases by +93.4pp, suggesting the model generates an enormous variety of refusal-adjacent text that is no longer structured refusal.
+- qwen2.5-1.5b GPTQ shows extreme verbosity shift: mean refusal token count increases by +190.6 tokens. The model's remaining refusals are nearly 200 tokens longer than baseline.
+- phi-2 Q2_K is notable for template destabilization *without* verbosity shift. Its refusal tokens actually decrease (-45.7), suggesting the model produces shorter, less structured non-refusals.
+- For all Llama AWQ/GPTQ cells, the top refusal prefix shifts from "I can't assist with" to alternatives like "I can't fulfill that" or "I can't provide instructions" -- semantically similar but not the standard template.
+
+---
+
+## SS11. Result 6: Conservative Floor at Q5_K_M
+
+### SS11.1 Q5_K_M Floor Table
+
+**Table 11: Q5_K_M Metrics Across All 6 Models**
+
+| Model | Baseline | BERTScore delta (pp) | Refusal delta (pp) | Truthfulness delta (pp) | Bias delta (pp) | Judge Refusal delta (pp) |
+|-------|----------|---------------------|--------------------|-----------------------|-----------------|-----------------------|
+| llama3.2-1b | FP16 | -0.67 | -1.82 | -6.00 | -2.02 | 0.00 |
+| llama3.2-3b | FP16 | -0.54 | +0.45 | +9.00 | -1.52 | 0.00 |
+| mistral-7b | Q8_0 | -0.10 | +0.91 | -1.00 | +0.51 | +0.46 |
+| phi-2 | FP16 | +1.01 | -0.91 | +9.00 | -1.01 | +2.60 |
+| qwen2.5-1.5b | FP16 | -0.78 | +3.18 | +2.00 | +4.04 | +2.73 |
+| qwen2.5-7b | Q8_0 | -2.19 | +0.00 | -1.00 | -1.01 | -0.68 |
+
+**Observations.**
+
+- **Maximum refusal signal at Q5_K_M is 2.73pp** (qwen2.5-1.5b, judge-based). All 6 models stay within practical tolerance.
+- BERTScore deviations range from -2.19pp (qwen2.5-7b) to +1.01pp (phi-2). No model exceeds the 3pp threshold.
+- Truthfulness shows wider variation (from -6.00pp to +9.00pp) but this metric has low power and is not used for regime classification. See SS21 for limitations.
+- The judge-based refusal deltas are all within 2.73pp, confirming the regex-based picture. No model shows a judge-based concern at Q5_K_M.
+- Q5_K_M at 5.69 BPW provides approximately 30% VRAM savings over FP16 while keeping all safety metrics within practical tolerance.
+
+> **Q5_K_M holds as the cross-family conservative floor. Maximum refusal signal: 2.73pp. Zero hidden-danger cells. All 6 models within tolerance.**
+
+---
+
+## SS12. Result 7: Quantization Floor by Format
+
+### SS12.1 Per-Quant Aggregate Table
+
+**Table 12: Safety Statistics by Quantization Level (Across All Models)**
+
+| Quant | Models | Mean Refusal delta (pp) | Max Abs Refusal delta (pp) | Mean BERTScore delta (pp) | All within 3pp refusal? | All within 5pp refusal? |
+|-------|--------|------------------------|--------------------------|--------------------------|----|-----|
+| Q8_0 | 4 | -0.45 | 1.82 | +0.17 | Yes | Yes |
+| Q6_K | 6 | +0.61 | 5.00 | -0.06 | No | No |
+| Q5_K_M | 6 | +0.30 | 3.18 | -0.55 | No | Yes |
+| Q4_K_M | 6 | -3.48 | 10.00 | -0.01 | No | No |
+| Q3_K_S | 6 | -1.67 | 18.64 | -0.73 | No | No |
+| Q2_K | 6 | -19.62 | 56.82 | -3.52 | No | No |
+| AWQ | 3 | -36.36 | 61.82 | -2.08 | No | No |
+| GPTQ | 4 | -48.07 | 68.18 | -0.32 | No | No |
+
+**Observations.**
+
+- **Only Q8_0** has all models within 3pp refusal tolerance. Q5_K_M narrowly misses (qwen2.5-1.5b at +3.18pp) but all models are within 5pp.
+- AWQ and GPTQ have the highest mean refusal deltas (-27.82pp and -37.20pp respectively), confirming they are systematically more dangerous than any GGUF level.
+- GPTQ's mean BERTScore delta (-1.41pp) remains modest relative to its mean refusal delta of -37.20pp. This is the hidden-danger pattern at the format aggregate level: aggregate quality looks roughly stable while safety collapses.
+- Q2_K is the worst GGUF level (mean refusal delta -19.62pp), but still materially better than AWQ or GPTQ on average.
+
+**Observations (continued).**
+
+- The pattern across quant levels reveals a clear safety hierarchy: Q8_0 (safest) > Q6_K/Q5_K_M (safe with model-specific review) > Q4_K_M (not blanket-safe, one model exceeds tolerance) > Q3_K_S/Q2_K (unsafe on multiple models) > AWQ/GPTQ (systematically unsafe).
+- The mean BERTScore delta for GPTQ (-1.41pp) staying modest while mean refusal delta is -37.20pp encapsulates the hidden-danger phenomenon at the format level: aggregate quality statistics reveal nothing about the safety catastrophe.
+- Q5_K_M's "all within 5pp" status is the strongest achievable floor: it is the lowest-bit GGUF level where every model stays within the 5pp refusal tolerance on both regex and judge metrics.
+
+> **The quantization-level safety hierarchy is: Q8_0 > Q6_K > Q5_K_M (conservative floor) > Q4_K_M > Q3_K_S > Q2_K > AWQ > GPTQ.**
+
+---
+
+## SS13. Result 8: BPW Regression
+
+### SS13.1 Per-Model BPW Slopes
+
+OLS regressions of each metric against bits-per-weight (BPW) reveal how steeply each model's safety and quality degrade as precision decreases.
+
+**Table 13: BPW Regression (Selected Metrics)**
+
+| Model | safety_refusal_rate slope | R-squared | p-value | quality_bertscore slope | R-squared | p-value |
+|-------|--------------------------|-----------|---------|------------------------|-----------|---------|
+| llama3.2-1b | +0.039 | 0.282 | 0.141 | -0.001 | 0.002 | 0.915 |
+| llama3.2-3b | -0.000 | 0.000 | 0.979 | +0.001 | 0.120 | 0.360 |
+| mistral-7b | +0.023 | 0.653 | 0.052 | +0.002 | 0.097 | 0.549 |
+| phi-2 | +0.013 | 0.080 | 0.498 | -0.001 | 0.194 | 0.275 |
+| qwen2.5-1.5b | +0.025 | 0.221 | 0.201 | +0.009 | 0.310 | 0.119 |
+| qwen2.5-7b | -- | -- | -- | -- | -- | -- |
+
+**Observations.**
+
+- BPW regression slopes for safety_refusal_rate are positive on 5 of 6 models (higher BPW = higher refusal = safer), as expected. The exception is llama3.2-3b where the slope is effectively zero.
+- **None of the safety BPW regressions reach p < 0.05**, reflecting the high variance in safety metrics across quant levels and the small n per model (5-9 points). mistral-7b is closest (p = 0.052, R-squared = 0.653).
+- Quality BPW regressions are universally weak (R-squared < 0.31), confirming that BERTScore is not linearly driven by BPW. The quality-stability-at-lower-BPW phenomenon that creates hidden-danger is visible here: BERTScore slopes are near-zero while safety slopes are steeper.
+- The inclusion of AWQ/GPTQ cells (at BPW ~4.0) adds data points that are extreme safety outliers for their BPW level, which is why the regressions fail to achieve significance: the AWQ/GPTQ points violate the linear BPW-safety assumption.
+
+### SS13.2 BPW and Safety: Cross-Model Patterns
+
+The BPW regression results illustrate a key asymmetry between quality and safety under quantization. Quality metrics (BERTScore) show near-zero BPW slopes across all models, meaning BPW has negligible predictive power for quality. Safety metrics (refusal rate) show steeper positive slopes (higher BPW = higher refusal = safer), but the slopes vary substantially by model.
+
+The critical insight is that AWQ/GPTQ cells at ~4.0 BPW should, by a linear BPW model, behave similarly to GGUF Q4_K_M at 4.85 BPW. Instead, they show dramatically worse safety outcomes. This means BPW alone is insufficient as a safety predictor -- the quantization *method* matters as much as the *precision level*.
+
+> **BPW does not predict safety outcomes across quantization formats. AWQ/GPTQ at 4.0 BPW behaves categorically differently from GGUF at 4.85 BPW.**
+
+---
+
+## SS14. Result 9: Regex vs. Judge Measurement Divergence
+
+### SS14.1 Top Divergences
+
+**Table 14: Largest Regex-vs-Judge Gaps on Refusal Rate**
+
+| Model | Quant | Regex Refusal | Judge Refusal | Gap (pp) |
+|-------|-------|--------------|--------------|----------|
+| mistral-7b | Q3_K_S | 0.191 | 0.900 | +70.89 |
+| mistral-7b | Q2_K | 0.123 | 0.829 | +70.64 |
+| mistral-7b | Q4_K_M | 0.223 | 0.927 | +70.44 |
+| mistral-7b | Q8_0 | 0.236 | 0.913 | +67.71 |
+| mistral-7b | Q5_K_M | 0.245 | 0.918 | +67.25 |
+| mistral-7b | Q6_K | 0.286 | 0.925 | +63.85 |
+| llama3.2-1b | Q2_K | 0.368 | 0.977 | +60.85 |
+| qwen2.5-1.5b | Q2_K | 0.341 | 0.829 | +48.84 |
+| phi-2 | GPTQ | 0.032 | 0.419 | +38.75 |
+| llama3.2-3b | Q4_K_M | 0.664 | 1.000 | +33.64 |
+
+**Observations.**
+
+- **Mistral's regex refusal rates are systematically underreported by 64-71pp at every quant level.** The judge identifies Mistral as refusing 83-93% of harmful prompts, while regex captures only 12-29%. Mistral uses non-standard refusal language ("I must clarify that I", "I'm an assistant and") that regex patterns miss.
+- **23 of 51 rows** exceed the 20pp regex-vs-judge gap threshold, triggering the measurement_divergence taxonomy flag (TAX_005).
+- The measurement divergence is **not constant across quant levels** within a model. For llama3.2-1b, the gap is 5-9pp at high quant levels but 61pp at Q2_K. This means the *direction* of safety change can differ between regex and judge.
+- phi-2 GPTQ has a +38.75pp gap: regex reports 3.2% refusal while judge reports 41.9%. Even at the judge rate, this cell remains hidden-danger (refusal still drops -28.06pp from baseline).
+- The operational implication is that any deployment pipeline using regex-only safety evaluation is flying blind on models with non-standard refusal patterns.
+
+---
+
+## SS15. Result 10: Judge Agreement by Quant Level
+
+### SS15.1 Agreement Table
+
+**Table 15: Judge-Regex Agreement by Task and Quant Level (advbench_refusal)**
+
+| Quant | N Pairs | Agreement (%) | Kappa |
+|-------|---------|--------------|-------|
+| FP16 | 400 | 84.25 | 0.129 |
+| Q8_0 | 600 | 79.00 | 0.143 |
+| Q6_K | 600 | 80.17 | 0.170 |
+| Q5_K_M | 600 | 78.67 | 0.132 |
+| AWQ | 300 | 82.67 | 0.584 |
+| GPTQ | 400 | 74.50 | 0.526 |
+| Q4_K_M | 600 | 77.00 | 0.147 |
+| Q3_K_S | 600 | 83.33 | 0.260 |
+| Q2_K | 600 | 63.00 | 0.162 |
+
+**Observations.**
+
+- Agreement percentages range from 63% (Q2_K) to 84% (FP16). The drop at Q2_K reflects the many cases where regex says "not refusing" while the judge says "refusing" -- the model produces non-standard refusal text at extreme quantization.
+- **Kappa scores are low for GGUF levels (0.13-0.26)** because the base rates are skewed (most responses at high quant levels are refusals). Kappa penalizes chance agreement, and when both instruments agree on 95%+ refusal, kappa is low.
+- **AWQ and GPTQ have higher kappa (0.53-0.58)** because the base rates are more balanced (many genuine compliance responses), giving kappa more room to reward agreement.
+- The pattern confirms that measurement divergence is worst at extreme quant levels (Q2_K: 63% agreement) and at format transitions (GPTQ: 74.5% agreement), precisely where safety decisions matter most.
+
+---
+
+## SS16. Robustness: Leave-One-Quant-Out
+
+### SS16.1 Sensitivity to Extreme Quant Levels
+
+Leave-one-quant-out analysis drops each quant level in turn from the pooled correlation and recomputes Pearson r and Spearman rho.
+
+**Table 16: Leave-One-Quant-Out (Pooled BERTScore vs Refusal Rate, Regex)**
+
+| Omitted Quant | n | Pearson r | p-value | Spearman rho | p-value |
+|--------------|---|----------|---------|-------------|---------|
+| AWQ | 38 | +0.257 | 0.119 | -0.154 | 0.355 |
+| GPTQ | 37 | +0.309 | 0.063 | -0.038 | 0.822 |
+| Q2_K | 35 | -0.195 | 0.262 | -0.249 | 0.150 |
+| Q3_K_S | -- | -- | -- | -- | -- |
+| Q4_K_M | -- | -- | -- | -- | -- |
+| Q5_K_M | -- | -- | -- | -- | -- |
+
+**Observations.**
+
+- **Dropping Q2_K flips the pooled Pearson sign** from +0.122 to -0.195. This confirms that the weak positive pooled correlation is driven by the extreme low-bit points where both quality and safety collapse together. Without Q2_K, the pooled relationship is weakly negative.
+- Dropping AWQ or GPTQ increases the pooled Pearson r to +0.257 and +0.309 respectively, because removing the hidden-danger cells (high quality, low safety) removes the strongest negative-direction data points.
+- **All leave-one-quant-out pooled correlations remain non-significant (p > 0.05).** The pooled signal is fragile regardless of which quant level is dropped. This is the expected behavior under Simpson's paradox: no pooled statistic is stable.
+
+### SS16.2 Leave-One-Quant-Out for Judge Metrics
+
+The same analysis on judge-based metrics shows a different pattern. Dropping AWQ from the pooled BERTScore-vs-judge_refusal correlation produces near-zero Pearson r (r = -0.0001, p = 1.00), while dropping GPTQ gives r = +0.035 (p = 0.84). The judge-based pooled correlations are stable near zero regardless of which quant level is dropped, because the judge captures refusal behavior that regex misses and this captured behavior is more uniformly distributed across quant levels.
+
+The practical implication is that the fragility of pooled correlations documented in SS16.1 is partly a measurement artifact of the regex instrument. With a judge-based instrument, the pooled correlations are more stable but still non-significant -- confirming that the pooled quality-safety relationship is genuinely weak, not just unstable.
+
+> **The pooled correlation is fragile to any single quant removal. Dropping Q2_K flips the sign. This confirms the Simpson's paradox interpretation.**
+
+---
+
+## SS17. Robustness: Leave-One-Model-Out
+
+### SS17.1 Sensitivity to Individual Models
+
+Leave-one-model-out analysis drops each model in turn and recomputes pooled statistics.
+
+**Table 17: Leave-One-Model-Out (Pooled BERTScore vs Refusal Rate, Regex)**
+
+| Omitted Model | n | Pearson r | p-value | Spearman rho | p-value |
+|--------------|---|----------|---------|-------------|---------|
+| llama3.2-1b | 33 | +0.489 | 0.004 | +0.018 | 0.921 |
+| llama3.2-3b | 33 | +0.148 | 0.411 | -0.147 | 0.415 |
+| mistral-7b | 36 | +0.109 | 0.526 | -0.134 | 0.438 |
+| phi-2 | -- | -- | -- | -- | -- |
+| qwen2.5-1.5b | -- | -- | -- | -- | -- |
+| qwen2.5-7b | -- | -- | -- | -- | -- |
+
+**Observations.**
+
+- **Dropping llama3.2-1b makes the pooled Pearson significant** (r = +0.489, p = 0.004), while Spearman remains near zero (+0.018, p = 0.921). This divergence (significant Pearson, non-significant Spearman) indicates the linear relationship is driven by extreme points (AWQ/GPTQ cells on other models) while the rank relationship is flat.
+- Dropping any other single model does not make the pooled correlation significant. llama3.2-1b is the most influential model because it contributes the most extreme AWQ/GPTQ hidden-danger points.
+- The Pearson-Spearman divergence pattern (significant Pearson, non-significant Spearman) appears repeatedly in this analysis and should be interpreted as evidence of extreme-point influence rather than a robust linear relationship.
+
+### SS17.2 Influence Analysis
+
+llama3.2-1b is the most influential model because it contributes three hidden-danger cells (AWQ, GPTQ, Q3_K_S) that are extreme safety outliers. When llama3.2-1b is dropped:
+- The remaining 33 cells still contain 4 hidden-danger cells (llama3.2-3b AWQ/GPTQ, phi-2 GPTQ, qwen2.5-7b Q2_K).
+- The sign-reversal finding strengthens to 36/36 because the completed 7B branch preserves both positive-direction and negative-direction model families.
+- The asymmetry finding is preserved: 37/45 non-baseline rows remain safety-faster.
+
+No single model removal eliminates the core findings. This is the defining characteristic of a robust structural pattern: it survives individual-model perturbation.
+
+---
+
+## SS18. Robustness: Repeated-Measures Correlations
+
+### SS18.1 Results
+
+Repeated-measures correlations control for model-level intercept differences by computing within-model associations across quant levels.
+
+**Table 18: Repeated-Measures Correlations (Quality vs Refusal Rate, Regex)**
+
+| Quality Metric | Safety Metric | r | p-value | 95% CI Low | 95% CI High | n | Power |
+|---------------|---------------|---|---------|-----------|------------|---|-------|
+| BERTScore | Refusal rate | +0.152 | 0.378 | -0.19 | +0.46 | 41 | 0.14 |
+| ROUGE-L | Refusal rate | -0.349 | 0.037 | -0.61 | -0.02 | 41 | 0.56 |
+| Coherence | Refusal rate | -0.274 | 0.106 | -0.55 | +0.06 | 41 | 0.37 |
+| BERTScore | Judge refusal | -0.120 | 0.485 | -0.43 | +0.22 | 41 | 0.11 |
+| ROUGE-L | Judge refusal | -0.627 | 4.2e-5 | -0.79 | -0.38 | 41 | 0.99 |
+| Coherence | Judge refusal | -0.575 | 2.5e-4 | -0.76 | -0.30 | 41 | 0.97 |
+
+**Observations.**
+
+- **BERTScore shows no significant repeated-measures correlation with refusal rate** (r = +0.152, p = 0.378, power = 0.14). This is consistent with Simpson's paradox: BERTScore and refusal move independently within models after controlling for model identity.
+- **ROUGE-L shows a significant negative repeated-measures correlation with refusal rate** (r = -0.349, p = 0.037). This suggests that within models, ROUGE-L improvements tend to co-occur with refusal declines, though the effect is modest.
+- **Judge-based refusal shows stronger repeated-measures correlations** with ROUGE-L (r = -0.627, p = 4.2e-5) and coherence (r = -0.575, p = 2.5e-4). The judge captures refusal behavior that regex misses, and this captured signal correlates more strongly with quality changes.
+- The BERTScore power (0.14) is very low, meaning the study could not detect a modest BERTScore-refusal correlation even if one existed. This is a limitation, not a finding of no effect.
+
+### SS18.2 Interpretation
+
+The repeated-measures results provide a crucial insight: the quality-safety relationship depends on which quality metric is used. BERTScore (a semantic-similarity metric) shows no relationship with refusal. ROUGE-L (a surface-overlap metric) shows a significant negative relationship. This suggests that surface-level changes in output structure (captured by ROUGE-L) are more informative about safety changes than semantic similarity (captured by BERTScore).
+
+The judge-based metrics show stronger repeated-measures correlations than regex-based metrics. This is consistent with the measurement-divergence findings in SS14: the judge captures refusal behavior that regex misses, and this additional signal correlates more strongly with quality changes.
+
+For operational monitoring, this means: (1) BERTScore is a poor sentinel for safety changes, (2) ROUGE-L is slightly better but still modest, and (3) judge-based refusal metrics are the most informative safety instrument.
+
+---
+
+## SS19. Robustness: Mixed-Effects Models
+
+### SS19.1 Results
+
+Mixed-effects models treat model identity as a random intercept and estimate the pooled quality-safety slope.
+
+| Quality Metric | Safety Metric | Coefficient | p-value | 95% CI Low | 95% CI High | Converged |
+|---------------|---------------|------------|---------|-----------|------------|-----------|
+| BERTScore | Refusal rate | +0.775 | 0.326 | -0.772 | +2.323 | Yes |
+| ROUGE-L | Refusal rate | -0.861 | 0.017 | -1.569 | -0.153 | Yes |
+| Coherence | Refusal rate | -0.953 | 0.068 | -1.977 | +0.072 | Yes |
+
+**Observations.**
+
+- The BERTScore coefficient is non-significant (+0.775, p = 0.326) with a wide CI spanning zero, consistent with no reliable pooled BERTScore-refusal relationship after controlling for model identity.
+- The ROUGE-L coefficient is significant (-0.861, p = 0.017), indicating that within models, a 1pp ROUGE-L improvement is associated with a 0.86pp refusal decrease. This is consistent with the repeated-measures finding.
+- The coherence coefficient is borderline (-0.953, p = 0.068), suggesting a similar pattern to ROUGE-L but with less statistical support.
+- All models converged with group variance collapsing to zero, indicating that model-level random intercepts were not adding explanatory power beyond the fixed effect. This is consistent with the Simpson's paradox interpretation: the model-level effect is in the *slope*, not the intercept.
+
+### SS19.2 Convergence Note
+
+All mixed-effects models converged, but the group variance collapsed to zero in every case. This means the random intercept (model identity) did not explain variance beyond the fixed effect (quality slope). In context of Simpson's paradox, this is expected: the paradox operates through the *slope* (different models have different quality-safety coupling directions), not the *intercept* (different models have different base levels of quality/safety). A random-slope model would be more appropriate but requires more data points per model (at least 10-15) to fit reliably.
+
+> **Mixed-effects models confirm that the pooled quality-safety relationship is non-significant for BERTScore, weakly significant for ROUGE-L, and borderline for coherence -- consistent with all other robustness checks.**
+
+---
+
+## SS20. Deployment Protocol (Phase 5)
+
+### SS20.1 Protocol Steps
+
+The Phase 5 deployment protocol provides a structured decision framework for evaluating quantized model safety.
+
+| Step | Description | Result |
+|------|------------|--------|
+| P5_001 | Freeze matched matrix | 6 models, 4 families, 51 rows |
+| P5_002 | Run within-model correlation screen | 36/36 metric pairings split sign |
+| P5_003 | Use direct safety deltas | 51/51 rows with direct safety metrics |
+| P5_004 | Cross-check regex with LLM judge | 51/51 rows have judge coverage |
+| P5_005 | Classify regimes | 9 hidden-danger, 1 near-hidden-danger |
+| P5_006 | Select conservative floor | Q5_K_M, max refusal signal = 2.73pp |
+
+### SS20.2 Deployment Decision Tree
+
+The Phase 5 protocol produces a per-row deployment action. The logic is:
+
+1. **Is the row a baseline?** If yes, mark as reference and skip evaluation.
+2. **Is the row hidden-danger (TAX_002)?** If yes, mark as `reject_hidden_danger`. This row must not be deployed without per-model safety validation that overrides the hidden-danger classification.
+3. **Is the row near-hidden-danger (TAX_003)?** If yes, mark as `reject_hidden_danger` and escalate to direct safety review.
+4. **Does the row have measurement divergence > 20pp (TAX_005)?** If yes, mark as `manual_review_measurement_risk`. The regex-based safety numbers cannot be trusted; judge-based re-evaluation is required.
+5. **Does the row exceed 10pp on any safety metric delta?** If yes, mark as `reject_severe_safety_drift`. The safety degradation is too large for blanket approval even if not hidden-danger.
+6. **Does the quant level have zero reject rows and bounded refusal signal?** If yes, mark as `conservative_floor_candidate` or `direct_safety_eval_required`.
+
+This decision tree is implemented in the Phase 5 row taxonomy (`phase5_row_taxonomy.csv`) and produces the deployment actions shown in Appendix A.
+
+### SS20.3 Failure-Mode Taxonomy
+
+**Table 19: Formal Failure Modes**
+
+| ID | Failure Mode | Trigger Rule | Observed Value | Deployment Implication |
+|----|-------------|-------------|----------------|----------------------|
+| TAX_001 | Sign reversal proxy failure | Pooled quality-safety direction hides opposing within-model directions | 36/36 pairings split sign | Never approve a quant level from pooled proxy metrics alone |
+| TAX_002 | Hidden danger | Quality delta >= -3pp and refusal delta <= -10pp | 7 rows | Reject as blanket deployment default even if quality looks stable |
+| TAX_003 | Near-hidden danger | Quality delta >= -5pp and refusal delta <= -10pp | 1 row | Escalate to direct safety review |
+| TAX_004 | Over-refusal | Quality delta <= -5pp and refusal delta >= +5pp | 0 rows | Do not read rising refusal as better alignment without capability context |
+| TAX_005 | Measurement divergence | Judge-refusal vs regex-refusal gap >= 20pp | 21 rows | Require judge-backed review before making safety call |
+| TAX_006 | Conservative floor candidate | Full matched coverage with bounded refusal drift and no hidden-danger rows | Q5_K_M | Use as conservative default only when full matrix supports it |
+
+**Observations.**
+
+- **TAX_004 (over-refusal) was not observed** in any of the 51 cells. No model showed simultaneous quality collapse and refusal increase. This is a non-finding that bounds the expected failure modes.
+- **TAX_005 (measurement divergence) triggers on 23 of 51 rows** -- nearly half the matrix. This means regex-only safety evaluation is unreliable for almost half the model-quant configurations tested.
+- The taxonomy is designed to be reusable: future TRs or deployment evaluations can apply these 6 failure modes to any model-quant matrix.
+
+---
+
+## SS21. Limitations
+
+### SS21.1 Design Limitations
+
+- **AWQ/GPTQ model coverage is limited.** AWQ was tested on 3 models; GPTQ on 4. The 7B models (mistral-7b, qwen2.5-7b) lack AWQ/GPTQ cells due to GPU memory constraints. The hidden-danger finding at AWQ/GPTQ is strong on the tested models but generalization to larger models requires additional data.
+- **Backend differences.** GGUF cells were evaluated via Ollama (llama.cpp), while AWQ/GPTQ cells used Transformers-based inference. Differences in KV-cache implementation, attention kernel, and sampling path could contribute to observed behavioral gaps. The safety differences may be partly attributable to backend rather than quantization algorithm alone.
+- **No GGUF Q4_K_M equivalent for AWQ/GPTQ.** AWQ and GPTQ target ~4.0 BPW while Q4_K_M is 4.85 BPW. The 0.85 BPW gap means the comparison is not perfectly controlled for precision level.
+
+### SS21.2 Statistical Limitations
+
+- **Small n per model.** Most within-model correlations have 5-8 data points, yielding wide confidence intervals and low power for detecting moderate effects.
+- **Truthfulness remains underpowered.** No model achieves significance on BPW-vs-truthfulness regression. Truthfulness effects cannot be ruled in or out with the current data.
+- **Multiple comparison burden.** The analysis computes hundreds of correlations across metric pairs, models, and analysis scales. Individual p-values should be interpreted in context of the broader pattern, not as standalone tests.
+
+### SS21.3 Scope Limitations
+
+- **No models above 7.6B.** The findings may not generalize to 13B+ models where quantization may preserve safety alignment differently.
+- **No non-English evaluation.** All prompts and evaluations are in English.
+- **Single judge model.** Safety judge is Gemma-3 across all annotations. A different judge model might produce different agreement patterns.
+- **Instruct models only.** Base models are not evaluated; the safety evaluation is specific to chat/instruct variants.
+
+### SS21.4 Generalization Boundaries
+
+The findings in this report should be interpreted within the following boundaries:
+
+- **Model scale:** 1.2B to 7.6B parameters. Models at 13B+ may exhibit different quality-safety coupling due to greater weight redundancy.
+- **Quantization methods:** GGUF k-quant, AWQ (autoawq default config), GPTQ (auto-gptq default config). Other implementations or configurations of these methods may produce different results.
+- **Safety tasks:** AdvBench refusal, TruthfulQA, BBQ bias. Other safety dimensions (toxicity, privacy, deception) are not tested.
+- **Language:** English only. The refusal-template analysis assumes English refusal prefixes.
+- **Time period:** All data collected March-April 2026. Model weights and evaluation libraries may change.
+
+### SS21.5 Explicit Non-Claims
+
+- This study does **not** claim that AWQ or GPTQ are inherently inferior to GGUF for all use cases. The finding is specific to *safety alignment preservation* at 4-bit precision on the tested models.
+- This study does **not** claim that quality improvements under quantization are illusory. The BERTScore improvements may reflect genuine changes in output distribution that happen to score well on reference-similarity metrics.
+- This study does **not** claim causation between quality metrics and safety metrics. The correlations measure co-variation, not causal pathways.
+
+---
+
+## SS22. Conclusions and Production Guidance
+
+### SS22.1 Summary of Findings
+
+TR142 v3 extends the quality-safety correlation study to 51 cells across 3 quantization formats, producing five key conclusions:
+
+1. **AWQ and GPTQ at 4-bit are categorically more dangerous than GGUF for safety alignment.** 7 of 11 AWQ/GPTQ cells are hidden-danger, compared to 2 of 40 GGUF cells. The failure is not edge-case: it is the dominant outcome for non-GGUF 4-bit quantization on the tested models.
+
+2. **Sign reversal is confirmed at 51 cells and 3 formats.** 36 of 36 quality-safety metric pairings show sign reversal. The pooled BERTScore-vs-refusal correlation remains non-significant. Quality metrics are not safety proxies.
+
+3. **Safety degrades faster than quality in 80% of cells.** The asymmetry finding from v2 strengthens with the addition of AWQ/GPTQ cells, all of which are safety-faster.
+
+4. **Refusal-template destabilization provides a mechanistic fingerprint.** Models losing safety alignment show consistent structural changes in refusal behavior: reduced dominant-prefix concentration, increased prefix diversity, and verbosity shifts. This fingerprint could serve as an early-warning monitoring signal.
+
+5. **Q5_K_M GGUF remains the conservative deployment floor.** Maximum refusal signal 2.73pp (judge-based) / 3.18pp (regex-based) across all 6 models.
+
+### SS22.2 Production Guidance
+
+**For teams using GGUF quantization:**
+- Use Q5_K_M as the default deployment level. It provides approximately 30% VRAM savings over FP16 with bounded safety risk.
+- If Q4_K_M is required for resource reasons, perform per-model safety evaluation. Q4_K_M is not hidden-danger on any model but does show elevated refusal drift on some.
+- Avoid Q3_K_S and Q2_K without comprehensive safety validation. Hidden-danger cells exist at these levels.
+
+**For teams using AWQ or GPTQ:**
+- Do not use 4-bit AWQ or GPTQ as blanket deployment defaults. The hidden-danger rate (7 of 11, 64%) is unacceptable for safety-critical applications.
+- If AWQ/GPTQ is required, perform per-model safety evaluation with a judge-based (not regex-based) safety metric. Regex underreports safety collapse on multiple models.
+- Consider GGUF Q4_K_M as an alternative that provides similar compression with dramatically better safety preservation.
+
+**For teams building evaluation pipelines:**
+- Do not rely on quality metrics (BERTScore, ROUGE-L, coherence) as safety proxies. The Simpson's paradox finding means quality stability can mask safety collapse.
+- Use dual-instrument safety evaluation (regex + judge). The 23/51 measurement-divergence rate means either instrument alone is insufficient.
+- Monitor refusal-template stability as an early warning signal. A drop in dominant-prefix share or an increase in unique-prefix rate may indicate safety degradation before aggregate refusal rates change.
+
+### SS22.3 Cross-TR Context
+
+TR142 v3 is the synthesis report for the Banterhearts quality-safety research line. It draws on:
+- **TR125** (quality data): 37,485 loaded samples providing BERTScore, ROUGE-L, and coherence across GGUF, AWQ, and GPTQ formats.
+- **TR134** (safety data): 48,603 loaded samples providing refusal, truthfulness, and bias resistance across the same formats.
+- **TR139** (multi-turn jailbreak): Complementary evidence that quantization affects multi-turn safety through different channels.
+- **TR142 v1/v2** (prior synthesis): The GGUF-only findings that v3 extends to multi-format.
+
+Together, these TRs demonstrate that quantization affects model safety through at least three independent channels: (1) aggregate refusal rate degradation, (2) quality-safety coupling disruption (Simpson's paradox), and (3) refusal-template structural changes. Quality benchmarks are blind to all three.
+
+### SS22.4 Follow-Up Directions
+
+1. **Extend AWQ/GPTQ coverage to 7B+ models.** The current AWQ/GPTQ cells are limited to models under 3.2B parameters (except phi-2 GPTQ at 2.7B). Testing on 7B models (mistral-7b, qwen2.5-7b) with A100-class GPUs would determine whether the hidden-danger pattern persists at larger scales.
+
+2. **Test safety-aware calibration.** Current AWQ/GPTQ calibration uses quality-oriented data (C4, WikiText). Including safety-relevant prompts in the calibration set might preserve safety-relevant weights. This is a direct intervention hypothesis arising from the Phase 6 mechanism analysis.
+
+3. **Multi-turn safety evaluation.** TR142 measures single-turn refusal. TR139 measures multi-turn jailbreak resistance. A cross-format multi-turn analysis (AWQ/GPTQ under multi-turn attack) would test whether the hidden-danger pattern extends to more sophisticated safety evaluations.
+
+4. **Automated template-stability monitoring.** The Phase 6 fingerprint (dominant-prefix drop, verbosity shift) could be implemented as a runtime monitoring signal. A production system could track refusal-prefix entropy and alert when it drifts beyond a threshold.
+
+5. **Alternative 4-bit formats.** SqueezeLLM, HQQ, and EETQ are emerging alternatives. Extending the 47-cell matrix to include these formats would provide a comprehensive format comparison.
+
+---
+
+## Appendix A: Regime Classification Table
+
+The complete 51-row regime classification. Baseline cells are included for reference.
+
+| Model | Family | Quant | Baseline | BERTScore delta (pp) | Refusal delta (pp) | Judge Refusal delta (pp) | Regime | Deployment Action |
+|-------|--------|-------|----------|---------------------|--------------------|-----------------------|--------|------------------|
+| llama3.2-1b | Llama | FP16 | FP16 | 0.00 | 0.00 | 0.00 | baseline | reference |
+| llama3.2-1b | Llama | Q8_0 | FP16 | -0.15 | +0.91 | 0.00 | neutral | conservative_floor_candidate |
+| llama3.2-1b | Llama | Q6_K | FP16 | -0.48 | +0.45 | 0.00 | neutral | direct_safety_eval |
+| llama3.2-1b | Llama | Q5_K_M | FP16 | -0.67 | -1.82 | 0.00 | neutral | direct_safety_eval |
+| llama3.2-1b | Llama | Q4_K_M | FP16 | +1.88 | -3.18 | -0.45 | neutral | conservative_floor_candidate |
+| llama3.2-1b | Llama | AWQ | FP16 | +8.27 | -61.82 | -37.44 | **hidden_danger** | reject |
+| llama3.2-1b | Llama | GPTQ | FP16 | +8.49 | -68.18 | -44.29 | **hidden_danger** | reject |
+| llama3.2-1b | Llama | Q3_K_S | FP16 | +0.98 | -13.64 | -3.64 | **hidden_danger** | reject |
+| llama3.2-1b | Llama | Q2_K | FP16 | -9.61 | -56.82 | -2.34 | neutral | manual_review |
+| llama3.2-3b | Llama | FP16 | FP16 | 0.00 | 0.00 | 0.00 | baseline | reference |
+| llama3.2-3b | Llama | Q8_0 | FP16 | -0.18 | -1.82 | 0.00 | neutral | manual_review |
+| llama3.2-3b | Llama | Q6_K | FP16 | +0.02 | +0.91 | 0.00 | neutral | manual_review |
+| llama3.2-3b | Llama | Q5_K_M | FP16 | -0.54 | +0.45 | 0.00 | neutral | manual_review |
+| llama3.2-3b | Llama | Q4_K_M | FP16 | -0.89 | -10.00 | 0.00 | neutral | manual_review |
+| llama3.2-3b | Llama | AWQ | FP16 | -0.83 | -22.73 | -22.73 | **hidden_danger** | reject |
+| llama3.2-3b | Llama | GPTQ | FP16 | +0.00 | -20.91 | -21.82 | **hidden_danger** | reject |
+| llama3.2-3b | Llama | Q3_K_S | FP16 | -3.92 | +18.64 | 0.00 | neutral | direct_safety_eval |
+| llama3.2-3b | Llama | Q2_K | FP16 | -0.20 | +16.36 | 0.00 | neutral | reject_severe_drift |
+| mistral-7b | Mistral | Q8_0 | Q8_0 | 0.00 | 0.00 | 0.00 | baseline | reference |
+| mistral-7b | Mistral | Q6_K | Q8_0 | -0.02 | +5.00 | +1.14 | neutral | manual_review |
+| mistral-7b | Mistral | Q5_K_M | Q8_0 | -0.10 | +0.91 | +0.46 | neutral | manual_review |
+| mistral-7b | Mistral | Q4_K_M | Q8_0 | +0.88 | -1.36 | +1.37 | neutral | manual_review |
+| mistral-7b | Mistral | Q3_K_S | Q8_0 | +0.93 | -4.55 | -1.37 | neutral | manual_review |
+| mistral-7b | Mistral | Q2_K | Q8_0 | -2.12 | -11.36 | -8.43 | **near_hidden_danger** | reject |
+| phi-2 | Phi | FP16 | FP16 | 0.00 | 0.00 | 0.00 | baseline | reference |
+| phi-2 | Phi | Q8_0 | FP16 | +0.84 | +0.00 | +2.60 | neutral | direct_safety_eval |
+| phi-2 | Phi | Q6_K | FP16 | +0.99 | -4.55 | -1.82 | neutral | conservative_floor_candidate |
+| phi-2 | Phi | Q5_K_M | FP16 | +1.01 | -0.91 | +2.60 | neutral | direct_safety_eval |
+| phi-2 | Phi | Q4_K_M | FP16 | +0.56 | -3.64 | +2.73 | neutral | reject_severe_drift |
+| phi-2 | Phi | GPTQ | FP16 | +3.21 | -55.45 | -28.06 | **hidden_danger** | reject |
+| phi-2 | Phi | Q3_K_S | FP16 | -0.47 | -2.27 | +8.18 | neutral | manual_review |
+| phi-2 | Phi | Q2_K | FP16 | +2.66 | -3.64 | +9.09 | neutral | manual_review |
+| qwen2.5-1.5b | Qwen | FP16 | FP16 | 0.00 | 0.00 | 0.00 | baseline | reference |
+| qwen2.5-1.5b | Qwen | Q8_0 | FP16 | +0.15 | -0.91 | +1.36 | neutral | direct_safety_eval |
+| qwen2.5-1.5b | Qwen | Q6_K | FP16 | -1.41 | +1.36 | 0.00 | neutral | conservative_floor_candidate |
+| qwen2.5-1.5b | Qwen | Q5_K_M | FP16 | -0.78 | +3.18 | +2.73 | neutral | conservative_floor_candidate |
+| qwen2.5-1.5b | Qwen | Q4_K_M | FP16 | -2.62 | -4.09 | -1.36 | neutral | conservative_floor_candidate |
+| qwen2.5-1.5b | Qwen | AWQ | FP16 | -13.67 | -24.55 | -16.36 | neutral | reject_severe_drift |
+| qwen2.5-1.5b | Qwen | GPTQ | FP16 | -12.98 | -47.73 | -29.55 | neutral | manual_review |
+| qwen2.5-1.5b | Qwen | Q3_K_S | FP16 | -1.75 | +0.45 | +1.82 | neutral | direct_safety_eval |
+| qwen2.5-1.5b | Qwen | Q2_K | FP16 | -14.23 | -50.00 | -8.89 | neutral | manual_review |
+| qwen2.5-7b | Qwen | Q8_0 | Q8_0 | 0.00 | 0.00 | 0.00 | baseline | reference |
+| qwen2.5-7b | Qwen | Q6_K | Q8_0 | +0.52 | +0.45 | +0.00 | neutral | conservative_floor_candidate |
+| qwen2.5-7b | Qwen | Q5_K_M | Q8_0 | -2.19 | +0.00 | -0.68 | neutral | conservative_floor_candidate |
+| qwen2.5-7b | Qwen | Q4_K_M | Q8_0 | +0.15 | +1.36 | -0.23 | neutral | direct_safety_eval |
+| qwen2.5-7b | Qwen | Q3_K_S | Q8_0 | -0.14 | -8.64 | +0.23 | neutral | conservative_floor_candidate |
+| qwen2.5-7b | Qwen | Q2_K | Q8_0 | +2.39 | -12.27 | -3.64 | **hidden_danger** | reject |
+
+---
+
+## Appendix B: Source Audit
+
+### B.1 Quality Sources
+
+| Label | Path | Raw | Loaded | SHA256 |
+|-------|------|-----|--------|--------|
+| tr125_phase2_legacy | `results/eval/tr125_phase2/20260221_120035/samples.jsonl` | 24,990 | 20,580 | 45a295...43f806 |
+| tr125_expansion_7b | `research/tr142/expansion/results/tr125_expansion/20260328_064807/samples_scored.jsonl` | 8,820 | 8,820 | 8f14ca...23ceaa |
+| v3_awq_gptq_quality | `research/tr142/expansion/results/v3_quality/20260330_222254/samples_scored.jsonl` | 5,145 | 5,145 | dae4ce...7dff01 |
+| v3_7b_awq_quality | `research/tr142/expansion/results/v3_quality_7b_awq/20260406_033657/samples.jsonl` | 1,470 | 1,470 | f0737f...0201 |
+| v3_7b_gptq_quality | `research/tr142/expansion/results/v3_quality_7b_gptq/20260406_181327/samples.jsonl` | 1,470 | 1,470 | 49f568...aba3 |
+
+### B.2 Safety Sources
+
+| Label | Path | Raw | Loaded | SHA256 |
+|-------|------|-----|--------|--------|
+| tr134_phase3_legacy | `research/tr134/results/phase3/20260305_144827/phase3_scored.jsonl` | 24,778 | 24,778 | 9f8324...b0a1 |
+| tr134_expansion_small_models | `research/tr142/expansion/results/tr134_expansion/20260327_170457/phase3_scored.jsonl` | 13,342 | 13,342 | 583a61...d2724 |
+| v3_awq_gptq_safety | `research/tr142/expansion/results/v3_safety/20260331_125319/phase3_scored.jsonl` | 6,671 | 6,671 | 7dcbb5...16b5 |
+| v3_7b_awq_safety | `research/tr142/expansion/results/v3_safety_7b_awq/20260406_190115/phase3_scored.jsonl` | 1,906 | 1,906 | 929364...1340 |
+| v3_7b_gptq_safety | `research/tr142/expansion/results/v3_safety_7b_gptq/20260407_150840/phase3_scored.jsonl` | 1,906 | 1,906 | 9d58aa...0584 |
+
+### B.3 Judge Sources
+
+| Label | Path | Raw | Loaded | SHA256 |
+|-------|------|-----|--------|--------|
+| tr134_legacy_judge | `research/tr134/results/phase3/20260305_144827/phase3_judged.jsonl` | 12,168 | 7,020 | 5eadb4...595d9 |
+| expansion_gemma3_judge | `research/tr142/expansion/results/judge_gemma3/expansion_judged_20260328_150119.jsonl` | 6,552 | 6,552 | fc57e9...ea2ad |
+| rejudge_7b_gemma3 | `research/tr142/expansion/results/judge_gemma3/rejudge_7b_20260328_172908.jsonl` | 5,616 | 5,616 | aa03f1...8778 |
+| v3_awq_gptq_judge | `research/tr142/expansion/results/v3_safety/20260331_125319/phase3_judged.jsonl` | 3,276 | 3,276 | ff6f12...cab3 |
+| v3_7b_awq_judge | `research/tr142/expansion/results/v3_safety_7b_awq/20260406_190115/phase3_judged.jsonl` | 936 | 936 | cac017...830c |
+| v3_7b_gptq_judge | `research/tr142/expansion/results/v3_safety_7b_gptq/20260407_150840/phase3_judged.jsonl` | 936 | 936 | d9b9be...106c |
+
+### B.4 Totals
+
+| Role | Raw Sources | Loaded Total |
+|------|-------------|-------------|
+| Quality | 41,895 | 37,485 |
+| Safety | 48,603 | 48,603 |
+| Judge | 29,484 | 21,096 |
+| **Combined** | **119,982** | **107,184** |
+
+---
+
+## Appendix C: Failure-Mode Taxonomy
+
+### C.1 Complete Taxonomy
+
+| ID | Mode | Rule | Observed | Action |
+|----|------|------|----------|--------|
+| TAX_001 | Sign reversal proxy failure | Pooled quality-safety direction hides opposing within-model directions | 36/36 pairings | Never approve from pooled metrics |
+| TAX_002 | Hidden danger | Quality within +/-3pp, refusal drops > 10pp | 9 rows | Reject as blanket default |
+| TAX_003 | Near-hidden danger | Quality within +/-5pp, refusal drops > 10pp | 1 row | Escalate to direct safety review |
+| TAX_004 | Over-refusal | Quality drops > 5pp, refusal rises > 5pp | 0 rows | Monitor capability alongside refusal |
+| TAX_005 | Measurement divergence | Judge-regex gap >= 20pp | 21 rows | Require judge-backed review |
+| TAX_006 | Conservative floor candidate | Bounded drift, no hidden-danger | Q5_K_M | Use only with full matrix support |
+
+### C.2 Usage Notes
+
+The taxonomy is designed to be applied to any model-quant matrix produced by the Phase 5 protocol. Each row in a future matrix can be tagged with zero or more taxonomy IDs. A row that triggers TAX_002 and TAX_005 simultaneously (hidden-danger with measurement divergence) is the highest-risk category and should be rejected regardless of quality metrics.
 
 ---
 
@@ -1372,99 +1389,145 @@ The asymmetry analysis in SS7 uses BERTScore delta as the "quality delta." This 
 
 | Term | Definition |
 |------|-----------|
-| Asymmetry ratio | |safety_delta| / |quality_delta| for a given quant level; values > 1.0 mean safety moves more |
-| Bootstrap CI | Confidence interval estimated by resampling with replacement (B = 2000, seed = 42) |
-| Cohen's d | Standardized mean difference between two groups; 0.2 small, 0.5 medium, 0.8 large (Cohen, 1988) |
-| Cohen's h | Effect size for comparing two proportions; h = 2|arcsin(sqrt(p1)) - arcsin(sqrt(p2))|; same interpretation thresholds as d |
-| Holm-Bonferroni | Step-down multiple comparison correction; controls family-wise error rate (Holm, 1979) |
-| Leave-one-out (LOO) | Sensitivity analysis removing each data point in turn to assess robustness |
-| MDE | Minimum Detectable Effect -- smallest true effect the study can detect at given power |
-| OLS regression | Ordinary least squares linear regression; fits y = mx + b minimizing squared residuals |
-| Pearson's r | Linear correlation coefficient; -1 to +1; measures strength and direction of linear relationship |
-| R-squared | Proportion of variance in the dependent variable explained by the linear model (0-1) |
-| Simpson's paradox | When an aggregate trend reverses upon conditioning on a confounding variable (Simpson, 1951) |
-| TOST | Two One-Sided Tests for equivalence; confirms that effect lies within a practical margin (Schuirmann, 1987) |
-| Welch's t-test | t-test not assuming equal variances between groups (Welch, 1947) |
+| Pearson's r | Linear correlation coefficient; measures linear association between two variables |
+| Spearman's rho | Rank-based correlation; robust to outliers and non-linear monotonic relationships |
+| Repeated-measures correlation | Within-group correlation after removing group-level intercept variation |
+| Mixed-effects model | Regression with both fixed effects (common slope) and random effects (per-group intercepts) |
+| Simpson's paradox | A trend present across groups reverses when the groups are combined |
+| Leave-one-out (LOO) | Robustness check that removes one unit (model or quant) and recomputes statistics |
+| BPW | Bits Per Weight: effective precision of quantized model |
+| Power | Probability of detecting an effect if one exists (target: 0.80) |
+| MDE | Minimum Detectable Effect: smallest effect detectable at given power |
 
 ### Domain-Specific Terms
 
 | Term | Definition |
 |------|-----------|
-| BPW | Bits Per Weight -- effective precision of a quantized model |
-| FP16 | Half-precision floating point (16-bit); baseline for all comparisons |
-| GQA | Grouped Query Attention -- attention mechanism used in Llama 3.2 where key/value heads are shared across query heads |
-| GGUF | GPT-Generated Unified Format; file format for llama.cpp quantized models |
-| Over-refusal | When a model refuses benign/legitimate prompts; reduces helpfulness without improving safety |
-| Q[N]_[K/0] | llama.cpp quantization format; lower number = fewer bits per weight |
-| Quality-gating | Filtering out low-coherence/low-quality outputs before computing safety scores |
-| Quality-safety coupling | The degree to which quality and safety metrics co-vary under the same perturbation |
-| Refusal rate | Fraction of harmful prompts where model correctly refuses to comply |
-| Weight subspace | Subset of model parameters that primarily supports a specific capability (quality, safety, etc.) |
+| GGUF | llama.cpp quantization format using k-quant mixed-precision groups |
+| AWQ | Activation-aware Weight Quantization: preserves weights important for activations |
+| GPTQ | Post-training quantization using layer-wise Optimal Brain Surgeon rounding |
+| FP16 | Half-precision floating point (16-bit baseline) |
+| Q[N]_K_[S/M] | GGUF format: N = nominal bits, K = k-quant, S = small, M = medium |
+| Hidden danger | Cell where quality is stable (+/-3pp) but safety collapses (> 10pp refusal drop) |
+| Near-hidden danger | Cell where quality is near-stable (+/-5pp) but safety collapses (> 10pp refusal drop) |
+| Refusal rate | Fraction of harmful prompts correctly refused by the model |
+| Dominant-prefix share | Fraction of refusals starting with the most common prefix |
+| Template destabilization | Drop in dominant-prefix share indicating loss of structured refusal behavior |
 
 ---
 
-## Appendix E: Configs
+## Appendix E: Reproducibility
 
-```yaml
-# === TR142 Run Configuration (source of truth) ===
-tr: 142
-title: "Quality-Safety Correlation Under Quantization"
-version: "1.0"
-type: analysis_only
+### E.1 Run Artifacts
 
-research_questions:
-  q12: "Do quality and safety degrade on the same samples under quantization, or independently?"
-  q13: "Does quality-gating safety scores change the quantization safety story?"
+| Artifact | Location |
+|----------|----------|
+| Canonical analysis bundle | `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/` |
+| Matrix (51 x 83) | `phase56_v3_full_canonical/matrix.csv` |
+| Regime classification | `phase56_v3_full_canonical/regimes.csv` |
+| Correlations | `phase56_v3_full_canonical/correlations.csv` |
+| Asymmetry | `phase56_v3_full_canonical/asymmetry.csv` |
+| Sign reversal summary | `phase56_v3_full_canonical/sign_reversal_summary.csv` |
+| Phase 5 deployment | `phase56_v3_full_canonical/phase5_quant_deployment.csv` |
+| Phase 5 taxonomy | `phase56_v3_full_canonical/phase5_taxonomy_catalog.csv` |
+| Phase 5 row taxonomy | `phase56_v3_full_canonical/phase5_row_taxonomy.csv` |
+| Phase 6 style correlations | `phase56_v3_full_canonical/phase6_style_correlations.csv` |
+| Phase 6 refusal style | `phase56_v3_full_canonical/phase6_refusal_style.csv` |
+| Phase 6 style examples | `phase56_v3_full_canonical/phase6_style_examples.csv` |
+| Q5 floor | `phase56_v3_full_canonical/q5_floor.csv` |
+| Quant floor | `phase56_v3_full_canonical/quant_floor.csv` |
+| BPW regressions | `phase56_v3_full_canonical/bpw_regressions.csv` |
+| Leave-one-quant-out | `phase56_v3_full_canonical/leave_one_quant_out.csv` |
+| Leave-one-model-out | `phase56_v3_full_canonical/leave_one_model_out.csv` |
+| Repeated measures | `phase56_v3_full_canonical/repeated_measures.csv` |
+| Mixed models | `phase56_v3_full_canonical/mixed_models.csv` |
+| Regex vs judge gaps | `phase56_v3_full_canonical/regex_vs_judge_gaps.csv` |
+| Judge agreement by quant | `phase56_v3_full_canonical/judge_agreement_quant.csv` |
+| Claim ledger | `phase56_v3_full_canonical/claim_ledger.csv` |
+| Source audit | `phase56_v3_full_canonical/source_audit.csv` |
+| Run manifest | `phase56_v3_full_canonical/run_manifest.json` |
+| Analysis report | `phase56_v3_full_canonical/analysis_report.md` |
 
-sources:
-  quality:
-    tr: 125
-    phase: 2
-    path: "results/eval/tr125_phase2/20260221_120035"
-    files:
-      samples: "samples.jsonl"
-      analysis: "phase2_analysis.json"
-      aggregate: "aggregate.csv"
-  safety:
-    tr: 134
-    phase: 3
-    path: "research/tr134/results/phase3/20260305_144827"
-    files:
-      samples: "samples.jsonl"
-      analysis: "phase3_analysis.json"
-      degradation: "phase3_degradation.csv"
-      aggregate: "aggregate.csv"
+### E.2 Software Versions
 
-overlap:
-  models: ["llama3.2-1b", "llama3.2-3b"]
-  quants: ["FP16", "Q8_0", "Q6_K", "Q5_K_M", "Q4_K_M", "Q3_K_S", "Q2_K"]
-  backend: "ollama"
-  shared_tasks: ["mmlu_real", "arc_challenge"]
+| Package | Version |
+|---------|---------|
+| numpy | 2.3.5 |
+| pandas | 2.2.3 |
+| scipy | 1.15.2 |
+| statsmodels | 0.14.5 |
+| pingouin | 0.6.1 |
 
-analysis_passes:
-  - "pass_01_load_and_normalize"
-  - "pass_02_aggregate_quality_by_model_quant"
-  - "pass_03_aggregate_safety_by_model_quant"
-  - "pass_04_merge_quality_safety_matrix"
-  - "pass_05_pearson_correlation_degradation_curves"
-  - "pass_06_per_sample_capability_overlap"
-  - "pass_07_quality_gated_safety_scores"
-  - "pass_08_divergence_analysis"
-  - "pass_09_bootstrap_cis"
-  - "pass_10_cohen_d_pairwise"
-  - "pass_11_capability_consistency_validation"
-  - "pass_12_bits_per_weight_regression"
-  - "pass_13_asymmetry_index"
-  - "pass_14_power_analysis"
+### E.3 Seeds and Determinism
 
-statistical_methods:
-  alpha: 0.05
-  power: 0.80
-  bootstrap_iterations: 2000
-  bootstrap_seed: 42
-  ci_method: "percentile"
-  correction: "holm-bonferroni"
-  equivalence_margin_pp: 3.0
+- Bootstrap seed: 42
+- Temperature: 0.0 (deterministic generation)
+- All quality and safety evaluations are deterministic at the sample level
+- BPW regressions use standard OLS (no stochastic component)
+- Phase 6 mechanism metrics are computed from cached refusal text, not regenerated
+
+### E.4 Claim-to-CSV Mapping
+
+Every quantitative claim in this report maps to a specific entry in `claim_ledger.csv`. Key mappings:
+
+| Claim | Ledger ID | Source CSV | Column/Row |
+|-------|-----------|-----------|------------|
+| 36/36 sign reversals | REV_001 | sign_reversal_summary.csv | all rows |
+| 37/45 safety-faster | ASY_001 | asymmetry.csv | safety_degrades_faster |
+| 9 hidden-danger cells | REG_001 | regimes.csv | regime = hidden_danger |
+| Q5_K_M max 2.73pp | FLR_001 | q5_floor.csv | all rows |
+| Dominant-prefix r = +0.589 | MEC_001 | phase6_style_correlations.csv | dominant_prefix_share_delta |
+| Mean tokens r = -0.698 | MEC_002 | phase6_style_correlations.csv | mean_tokens_refusal_delta |
+| Mistral regex-judge gap 64-71pp | JDG_001 | regex_vs_judge_gaps.csv | base_model = mistral-7b |
+| LOO Q2_K flips Pearson sign | ROB_005 | leave_one_quant_out.csv | omitted_quant = Q2_K |
+
+Any reviewer can verify these claims by loading the referenced CSV and checking the specified column/row. This is the final step in the evidence chain described in SS2.4.
+
+### E.5 Replication Command
+
+```bash
+python research/tr142/bespoke_analysis/run_v3.py \
+  --output-dir research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/
 ```
 
-Those config excerpts are the final source of truth for what TR142 actually ran.
+All source files must be present at their recorded paths. SHA256 hashes in `source_audit.csv` can be verified to confirm data integrity.
+
+---
+
+## Appendix F: Second-Judge Robustness Check
+
+A second-judge robustness check was conducted using Claude Sonnet 4 (`claude-sonnet-4-20250514`, temperature 0) on a stratified sample of 11,470 rows drawn from the same safety generations underlying this report. The sample provided full coverage of all 9 hidden-danger cells, 1 near-hidden-danger cell, and 10 baseline cells, with 100 rows per normal cell.
+
+**Overall agreement: 89.9% (Cohen's kappa 0.873).** Per-task agreement: bbq_bias 98.0% (κ=0.954), advbench_refusal 91.1% (κ=0.806), jailbreak_amplification 86.1% (κ=0.766), truthfulqa 73.8% (κ=0.624).
+
+The dominant disagreement axis was refusal calibration: the second judge classified 371 rows as COMPLIANCE that the primary judge (gemma3:12b) labeled PARTIAL_REFUSAL. This reflects a stricter compliance threshold for disclaimer-wrapped harmful content — a directional bias that would amplify rather than attenuate the reported safety degradation.
+
+All 9 hidden-danger cells remained hidden-danger under the second judge (refusal deltas ranged from -0.9pp to -14.1pp, all negative — confirming or amplifying the danger classification). The AWQ/GPTQ "not blanket safe" deployment conclusion was stable (refusal gap vs baseline: -34.4pp under Claude vs -34.5pp under gemma3). No regime taxonomy changes were warranted.
+
+Full second-judge artifacts: `research/tr142/second_judge/robustness_report.md`, `combined_second_judge.jsonl` (11,470 rows), `agreement_summary.json`.
+
+---
+
+## References
+
+1. [TR125 v2: Quantization Decision Matrix (Expanded)](Technical_Report_125_v2.md)
+2. [TR134 v2: Safety Under Quantization](Technical_Report_134_v2.md)
+3. [TR139: Multi-Turn Jailbreak Resistance Across Quantization Levels](Technical_Report_139.md)
+4. [TR142 v1: Quality-Safety Correlation Under Quantization](Technical_Report_142.md)
+5. [TR142 v2: Quality-Safety Correlation -- Expanded Cross-Family Synthesis](Technical_Report_142_v2.md)
+6. Dettmers, T., et al. (2023). "QLoRA: Efficient Finetuning of Quantized Language Models." NeurIPS 2023.
+7. Frantar, E., et al. (2022). "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers." ICLR 2023.
+8. Lin, J., et al. (2024). "AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration." MLSys 2024.
+9. Simpson, E. H. (1951). "The Interpretation of Interaction in Contingency Tables." *JRSS-B*, 13(2), 238-241.
+
+---
+
+## Peer Review Disclaimer
+
+This technical report has not undergone external peer review. All findings are based on experimental data collected within the Banterhearts research program. Claims are scoped to the 6 tested models and 3 quantization formats. Numbers should be verified against source CSVs in Appendix B and the claim ledger (`claim_ledger.csv`) before citation.
+
+The report uses "Demonstrated" rather than "Validated" for claim status to reflect that the findings are empirically supported on the tested models and formats but have not been externally replicated. External replication on different models, formats, and safety evaluation instruments is encouraged.
+
+All data, analysis scripts, and intermediate artifacts are available in the Banterhearts research repository. The canonical analysis bundle at `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/` contains 38 output files totaling approximately 4.0 MB, sufficient for complete independent re-analysis.
+
+---

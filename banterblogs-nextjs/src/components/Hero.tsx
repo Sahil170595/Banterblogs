@@ -112,7 +112,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 patches shipped
               </div>
               <div>
-                <span className="text-lg font-bold text-foreground">555K+</span>{' '}
+                <span className="text-lg font-bold text-foreground">593K+</span>{' '}
                 research measurements
               </div>
               <div>

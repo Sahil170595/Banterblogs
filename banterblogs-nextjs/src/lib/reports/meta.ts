@@ -95,7 +95,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   },
   'technical-report-125': {
     title: 'TR125: Quantization Decision Matrix',
-    description: 'Production-grade quant level selection across 5 models (1.2B–8B) with benchmark validation.',
+    description: 'Production quant selection across 6 models, 4 families, 9 formats (GGUF + AWQ + GPTQ) with quality and safety evaluation.',
   },
   'technical-report-126': {
     title: 'TR126: Linux/Triton Compile Validation',
@@ -133,7 +133,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   // ── Phase 3 — Safety (TR134–TR137) ──
   'technical-report-134': {
     title: 'TR134: Alignment Robustness Under Quantization',
-    description: 'Multi-family safety evaluation across 4 models (1.2B–7.6B) with jailbreak amplification analysis.',
+    description: 'GGUF + AWQ + GPTQ safety evaluation across 6 models (1.2B–7.6B) — refusal template destabilization and deployment taxonomy.',
   },
   'technical-report-135': {
     title: 'TR135: Safety Under Multi-Agent Concurrency',
@@ -166,7 +166,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   },
   'technical-report-142': {
     title: 'TR142: Quality-Safety Correlation Under Quantization',
-    description: 'Cross-referencing TR125 quality metrics with TR134 safety metrics — analysis-only, no new experiments.',
+    description: 'Multi-format synthesis across GGUF, AWQ, and GPTQ — 6 models, 51 model-quant cells, quality-safety divergence analysis.',
   },
   'technical-report-143': {
     title: 'TR143: Cross-Request Safety Leakage Under Continuous Batching',
@@ -235,6 +235,11 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   'technical-report-conclusive-138-143-whitepaper': {
     title: 'Phase 3.5 Decision Whitepaper',
     description: 'Executive guidance for safety attack-surface management in LLM inference.',
+  },
+
+  'technical-report-144': {
+    title: 'TR144: Speculative Decoding x Safety',
+    description: 'Protocol and publication contract — does speculative decoding change safety outcomes via draft model token shaping?',
   },
 
   // ── Other ──

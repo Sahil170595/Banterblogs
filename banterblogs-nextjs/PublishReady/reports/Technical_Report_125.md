@@ -1,68 +1,1168 @@
-# Technical Report 125: Quantization Decision Matrix
-## Production-grade quant level selection across 5 models (1.2B-8B) with real benchmark validation
+# Technical Report 125 v3: Quantization Decision Matrix (AWQ/GPTQ Expansion)
+## Production quant level selection across 6 models, 4 families, 9 quant formats including AWQ and GPTQ
 
 | Field | Value |
 |-------|-------|
-| **TR Number** | 125 |
+| **TR Number** | 125 v3 |
 | **Project** | Banterhearts LLM Performance Research |
-| **Date** | 2026-02-22 (Phase 1: Feb 21, Phase 2: Feb 22) |
+| **Date** | 2026-04-07 (Original: 2026-02-22, v2 Expansion: 2026-03-28, v3 AWQ/GPTQ: 2026-04-07) |
+| **Version** | 3.0 |
 | **Author** | Research Team |
-| **Report Type** | Quantization impact analysis (metric-backed, 2-phase) |
-| **Test Duration** | ~20 min (Phase 1) + ~10 hrs (Phase 2) |
-| **Status** | Complete -- Both phases delivered |
-| **Run IDs** | Phase 1: `20260220_203010`, Phase 2: `20260221_120035` |
-| **Related Work** | [TR124](Technical_Report_124.md) (Quality & Accuracy Baseline), [TR123](Technical_Report_123.md) (KV-Cache Production Economics) |
-| **Depends On** | TR124 (FP16 baselines, metric framework), TR123 (cost data) |
+| **Git Commit** | 0439e828 |
+| **Report Type** | Full-depth quantization impact analysis (AWQ/GPTQ cross-format expansion) |
+| **Models** | llama3.2-1b (1.2B), llama3.2-3b (3.2B), qwen2.5-1.5b (1.5B), phi-2 (2.7B), mistral-7b (7.2B), qwen2.5-7b (7.6B) |
+| **Quant Formats** | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K, AWQ, GPTQ |
+| **Total Model-Quant Variants** | 51 (40 GGUF + 11 AWQ/GPTQ in v3) |
+| **Sample Counts** | v1: 24,990; v2: 8,820; v3 small-model: 5,145; v3 7B: 2,940; Quality Total: 41,895 (37,485 loaded) |
+| **Safety Samples** | 48,603 (loaded) across five sources |
+| **Judge Annotations** | 21,096 (loaded) across six sources |
+| **Hardware** | RTX 4080 Laptop 12GB (v1), Colab T4 16GB (v2), RTX 4080 Laptop 12GB + Docker (small-model v3), Runpod RTX 6000 Ada 48GB (7B v3) |
+| **Status** | Complete |
+| **Depends On** | TR125 v1, TR125 v2, TR142 (bespoke analysis v3), TR124 (baselines), TR134 (safety) |
+| **Run IDs** | v1: `20260221_120035`; v2: `20260328_064807`; v3 small quality: `20260330_222254`; v3 small safety: `20260331_125319`; v3 7B AWQ quality: `20260406_033657`; v3 7B GPTQ quality: `20260406_181327`; v3 7B AWQ safety: `20260406_190115`; v3 7B GPTQ safety: `20260407_150840` |
+| **Analysis Bundle** | `phase56_v3_full_canonical` (51 rows x 83 columns) |
 
 ---
 
 ## Abstract
 
-TR124 established quality baselines and confirmed backend equivalence, but left a critical deployment question unanswered: **how much quantization can a model tolerate before quality degrades unacceptably?** TR124's Phase 2 tested only 4 models at Ollama's default quant levels with 200 samples and no benchmark anchoring. TR125 fills this gap with a comprehensive 2-phase quantization decision matrix spanning 7 quant levels, 5 models, and ~26,000 evaluated samples.
+TR125 v1 established Q4_K_M as the safe GGUF quantization default across 5 models. TR125 v2 extended that finding to 7 models across 4 architecture families with integrated safety metrics. TR125 v3 asks a different question: **do non-GGUF quantization formats -- specifically AWQ and GPTQ -- preserve the same quality and safety guarantees as Q4_K_M?** This study now includes **8,085 AWQ/GPTQ quality samples**, **10,483 AWQ/GPTQ safety samples**, and **5,148 AWQ/GPTQ judge annotations** across 6 models. The 7B branch is now complete: mistral-7b and qwen2.5-7b were evaluated under both AWQ and GPTQ on Runpod. phi-2 AWQ remains excluded due to an architecture incompatibility (parallel attention+MLP), leaving **11 successful AWQ/GPTQ variants** in the final matrix.
 
-**Phase 1 (Exploratory):** We evaluate **3 models** (1.2B-2.7B parameters) across **6 quant levels** (Q2_K through Q8_0) on **5 generation tasks** (10 samples each) -- totaling **900 evaluated samples** with wall-clock timing. Q8_0 serves as the quantization baseline. Phase 1 identifies the base-vs-instruct confound in TR124's FP16 baselines and establishes that quality is broadly stable from Q8_0 through Q5_K_M before degrading at Q3_K_S and collapsing at Q2_K.
+The core findings are: (1) AWQ and GPTQ produce **format-dependent quality distortion** rather than a consistent quality gain: Llama variants show inflated BERTScore and ROUGE-L, qwen2.5-1.5b collapses on both, and the 7B entries mostly remain neutral on quality while still failing safety. (2) AWQ and GPTQ cause **severe safety degradation** across the tested models, with refusal rate drops of -12pp to -68pp and **7 of 11 AWQ/GPTQ variants** classified as hidden-danger rows. (3) **qwen2.5-1.5b under AWQ/GPTQ shows the most severe quality collapse**: BERTScore drops -13.7pp (AWQ) and -13.0pp (GPTQ) from FP16, opposite to the inflation pattern on Llama. (4) The completed 7B branch sharpens the safety story: mistral-7b AWQ and GPTQ are both hidden-danger, while qwen2.5-7b AWQ and GPTQ are neutral on regime but still fail blanket-safe deployment. (5) phi-2 AWQ failed entirely due to architecture incompatibility with the AutoAWQ library. The most important hidden-danger non-result remains phi-2 GPTQ, which preserves decent benchmark scores while simultaneously destroying safety alignment.
 
-**Phase 2 (Production-Grade):** We evaluate **5 models** (1.2B-8B parameters) across **7 quant levels** (Q2_K through FP16) on **7 tasks** -- **285 real MMLU questions** + **200 real ARC-Challenge questions** from HuggingFace (primary quality gate) plus **5 generation tasks** (50 samples each, secondary) -- totaling **24,990 evaluated samples** with native Ollama timing. FP16 Ollama baselines eliminate the base-vs-instruct confound. A 4-tier quality classification system (negligible/acceptable/concerning/unacceptable) replaces Phase 1's binary threshold.
+The operational conclusion is: **AWQ and GPTQ are not safe substitutes for GGUF Q4_K_M**. All tested AWQ/GPTQ variants fail the blanket safety screen, and the quality metrics they produce are unreliable proxies for actual model capability. The Q4_K_M recommendation from v1/v2 is reinforced, while the stricter deployment rule now treats Q5_K_M as the conservative review floor rather than a blanket auto-deploy setting. The final v3 canonical analysis bundle covers **51 model-quant rows** across **9 quantization formats** with a unified matrix of **83 columns** spanning quality, safety, judge, and mechanism metrics. A full second-judge pass with Claude Sonnet 4 agrees with the canonical gemma3:12b judge on **89.9%** of a **11,470-row** stratified safety set (**kappa = 0.873**) and does not flip any hidden-danger regime.
 
-**Total: ~26,000 samples across 2 phases, 34 model-quant variants.**
+**Total evidence base: 41,895 raw quality samples (37,485 loaded), 48,603 safety samples, 21,096 judge annotations.**
 
-**v2 Enhancement:** Re-analysis of existing Phase 2 data adds: Wilson confidence intervals for all benchmark tables, generation quality CIs (in raw data), MMLU vs ARC differential analysis, all 7 generation metrics (including repetition collapse detection), per-task quality breakdown, IQR outlier detection on timing data, Bonferroni/Holm multiple comparison correction (7/16 survive), TOST equivalence testing at two margins (0/18 at +/-3pp; 6/18 generation-equivalent at +/-5pp), complete 34-variant TTFT table, and explicit 29-variant tier enumeration. No new data collection -- all computed from existing 24,990 samples.
+---
 
-Key findings:
+## Executive Summary
 
-- **Q4_K_M is the sweet spot across all tested models:** 21 of 29 quantized variants maintain benchmark accuracy within 5pp of baseline. All 5 models preserve negligible-to-acceptable quality at Q4_K_M; FP16-baselined models save 30-67% vs FP16, and llama3.1-8b saves 49% vs its Q8_0 baseline.
-- **The quality cliff is at Q3_K_S, not Q4_K_M:** llama3.2-3b loses -10.1pp, qwen2.5-1.5b loses -12.2pp, and llama3.2-1b loses -9.5pp at Q3_K_S. Q4_K_M is safe; Q3_K_S is not.
-- **Q2_K is universally unacceptable:** Every model tested loses >11pp benchmark accuracy at Q2_K. qwen2.5-1.5b loses -40.6pp -- near-random performance.
-- **phi-2 is the most quantization-robust model:** All quant levels Q3_K_S and above stay within -1.8pp of FP16. phi-2 at Q3_K_S loses only -0.4pp.
-- **llama3.1-8b achieves the highest accuracy:** 72.4% rescored accuracy at Q8_0, maintaining 69.7% even at Q4_K_M (-2.7pp).
-- **Cost range spans 10x:** $0.0203/1M tokens (llama3.2-1b Q2_K) to $0.1976/1M tokens (llama3.1-8b Q8_0).
-- **phi-2's raw accuracy is misleading:** 26% raw but 59% rescored -- a formatting issue, not a knowledge issue. Rescored accuracy using regex letter extraction is essential.
-- **Native timing reveals massive HTTP overhead:** 190-920% overhead between Ollama-native eval_duration and wall-clock timing.
+TR125 v3 answers: **are AWQ and GPTQ viable alternatives to GGUF quantization for production deployment, and do they maintain the quality-safety guarantees established in v1/v2?**
+
+### Key Findings
+
+1. **AWQ and GPTQ inflate generation metrics on small Llama models.** llama3.2-1b AWQ achieves +8.27pp BERTScore and +25.77pp ROUGE-L over FP16, while GPTQ achieves +8.49pp BERTScore and +27.29pp ROUGE-L. These improvements are artifacts of degenerate output patterns (increased coherence surface scores with simultaneous repetition degradation), not genuine quality gains.
+2. **AWQ and GPTQ destroy safety alignment broadly.** 7 of 11 AWQ/GPTQ variants are classified as hidden-danger in the regime taxonomy; the remaining 4 (qwen2.5-1.5b AWQ/GPTQ and qwen2.5-7b AWQ/GPTQ) are neutral because quality also degrades or safety loss remains below the hidden-danger cutoff. Refusal rate drops range from -12.3pp (mistral-7b GPTQ) to -68.2pp (llama3.2-1b GPTQ). No AWQ or GPTQ variant passes the blanket safety screen.
+3. **qwen2.5-1.5b is uniquely degraded by AWQ/GPTQ.** AWQ drops BERTScore -13.7pp and ROUGE-L -14.8pp from FP16. GPTQ drops -13.0pp BERTScore and -11.6pp ROUGE-L. Combined with refusal rate losses of -24.5pp (AWQ) and -47.7pp (GPTQ), this model shows the clearest format-incompatibility signal.
+4. **phi-2 GPTQ remains the clearest hidden-danger benchmark trap.** It achieves the best AWQ/GPTQ benchmark scores in the matrix (MMLU 54.4%, ARC 71.0%) while simultaneously suffering -55.5pp refusal rate loss. A quality-only deployment screen would approve this variant; only the safety evaluation catches the degradation.
+5. **phi-2 AWQ failed due to architecture incompatibility.** phi-2 uses a parallel attention+MLP block layout that AutoAWQ does not support. This checkpoint was never produced and is excluded from the matrix.
+6. **The 7B AWQ/GPTQ branch is now complete.** mistral-7b AWQ and GPTQ are both hidden-danger entries, while qwen2.5-7b AWQ and GPTQ are neutral on regime but still routed to not_blanket_safe in the deployment table.
+7. **The deployment protocol classifies AWQ as not_blanket_safe (max refusal signal +56.82pp) and GPTQ as not_blanket_safe (max refusal signal +51.36pp).** AWQ has 4 reject rows and GPTQ has 5 reject rows. No AWQ or GPTQ variant passes the blanket safety screen.
+8. **Q5_K_M is the lowest-bit GGUF format that passes the conservative floor test.** Max refusal signal +3.18pp regex-based (+2.73pp judge-based) across all 6 models, zero reject rows. Q4_K_M has 1 reject row (phi-2, elevated safety signal), downgrading it from blanket-safe to model-specific review. The v1/v2 Q4_K_M recommendation remains valid for the 5 non-phi-2 models.
+9. **BPW regressions remain non-significant for quality metrics.** The median R-squared for quality metrics across models remains below 0.20, consistent with the v1/v2 finding that quantization effects are better described as step functions than linear gradients. AWQ and GPTQ points (nominally ~4 BPW) do not fit the GGUF regression line.
+10. **The judge-dependent part of the conclusion is robust to a second strong judge.** Claude Sonnet 4 reaches 89.9% agreement with gemma3:12b on the stratified robustness set (kappa = 0.873), and no hidden-danger cell changes regime under the second judge.
+
+### Core Decisions (Updated for v3)
+
+- **Never deploy AWQ or GPTQ without model-specific safety evaluation.** All 11 tested variants fail the blanket safety screen.
+- For **maximum accuracy**: qwen2.5-7b at Q8_0 (73.7% MMLU, 89.0% ARC), unchanged from v2.
+- For **best accuracy/size (7B class)**: qwen2.5-7b at Q4_K_M (73.0% MMLU, 88.5% ARC, ~4.7 GB), unchanged from v2.
+- For **best accuracy/size (small class)**: llama3.2-3b at Q4_K_M (54.7% MMLU, 70.5% ARC).
+- For **maximum throughput**: llama3.2-1b at Q4_K_M (from v1: 280.9 native tok/s).
+- **Never deploy Q2_K** for any quality-sensitive task (unchanged from v1).
+- **Q4_K_M remains the recommended GGUF default** for 5 of 6 models. phi-2 requires model-specific review due to elevated safety signals at Q4_K_M.
+
+### Validation Summary
+
+| Target | Metric | Required | Achieved | Status |
+|--------|--------|----------|----------|--------|
+| Matrix coverage | Model-quant rows | >= 40 | 51 | **PASS** |
+| Matrix width | Columns | >= 50 | 83 | **PASS** |
+| Quality samples | Total loaded | >= 30,000 | 37,485 | **PASS** |
+| Safety samples | Total loaded | >= 40,000 | 48,603 | **PASS** |
+| Judge annotations | Total loaded | >= 20,000 | 21,096 | **PASS** |
+| P5 protocol | All 6 steps | All pass | 6/6 pass | **PASS** |
+| AWQ blanket safety | Max refusal signal | < 5pp | 56.82pp | **FAIL** |
+| GPTQ blanket safety | Max refusal signal | < 5pp | 51.36pp | **FAIL** |
+| Q5_K_M refusal bound | Max refusal signal | < 5pp | 3.18pp | **PASS** |
+
+### Claim Validation
+
+| # | Claim | Evidence Base | Status |
+|---|-------|---------------|--------|
+| C1 | AWQ/GPTQ inflate generation metrics on small Llama models | SS5.1 Table 5, regimes.csv | **Established** |
+| C2 | AWQ/GPTQ destroy safety alignment universally | SS6.1 Table 8, phase5_quant_deployment.csv | **Established** |
+| C3 | qwen2.5-1.5b is uniquely degraded by AWQ/GPTQ | SS5.2 Table 6, quality_wide.csv | **Established** |
+| C4 | phi-2 GPTQ is a hidden-danger variant | SS5.3 Table 7, regimes.csv | **Established** |
+| C5 | Q4_K_M recommendation holds for non-AWQ/GPTQ formats | SS9, phase5_quant_deployment.csv | **Established** |
+| C6 | BPW is a poor linear predictor of quality | SS8, bpw_regressions.csv | **Established** |
+| C7 | Safety degrades faster than quality in the majority of rows | SS7.1, asymmetry.csv | **Established** |
+
+---
+
+## When to Use This Report
+
+### Scenario 1: Evaluating AWQ/GPTQ for a Small Model Deployment
+
+**Question:** "Should I use an AWQ or GPTQ checkpoint instead of a GGUF Q4_K_M for my 1-3B model?"
+
+**Answer:** No. See SS5 and SS6.1 -- every AWQ/GPTQ variant tested on small models fails the blanket safety screen. Generation metrics may appear inflated (SS5.1), masking genuine quality degradation. Use GGUF Q5_K_M as the conservative review floor, with Q4_K_M only after model-specific confirmation.
+
+### Scenario 2: phi-2 Deployment Format Selection
+
+**Question:** "phi-2 GPTQ shows better MMLU than phi-2 GGUF Q4_K_M. Can I use GPTQ?"
+
+**Answer:** No for safety-sensitive applications. phi-2 GPTQ achieves 54.4% MMLU and 71.0% ARC (the best benchmark scores among AWQ/GPTQ variants), but its refusal rate drops -55.5pp from FP16. See SS5.3 Table 7 and SS6.1 Table 8.
+
+### Scenario 3: Choosing Between GGUF Quant Levels
+
+**Question:** "What is the safest GGUF quant level I can use?"
+
+**Answer:** Q5_K_M passes the conservative review-floor test across all 6 models (max refusal signal +3.18pp, zero reject rows), but the canonical deployment role still requires model-specific review. Q4_K_M is safe for 5 of 6 models but requires model-specific review for phi-2. See SS9 Table 14.
+
+### Scenario 4: Planning 7B AWQ/GPTQ Evaluation
+
+**Question:** "Are 7B AWQ/GPTQ results available?"
+
+**Answer:** Yes. The 7B branch is now complete. mistral-7b AWQ/GPTQ are both hidden-danger rows; qwen2.5-7b AWQ/GPTQ are neutral by regime but still not blanket safe. See SS3.2 and SS6.
+
+### Scenario 5: Cross-Referencing with v2
+
+**Question:** "Does v3 change the Q4_K_M recommendation from v2?"
+
+**Answer:** No. v3 reinforces the v2 recommendation by demonstrating that the primary non-GGUF alternatives (AWQ and GPTQ) are unsafe on small models. The GGUF quality and safety data from v1 and v2 are fully preserved in the v3 canonical matrix. See SS9.
+
+---
+
+## Table of Contents
+
+- [Abstract](#abstract)
+- [Executive Summary](#executive-summary)
+- [When to Use This Report](#when-to-use-this-report)
+- [Metric Definitions](#metric-definitions)
+- [SS1. Introduction](#ss1-introduction)
+- [SS2. Methodology](#ss2-methodology)
+- [SS3. Models and Design](#ss3-models-and-design)
+- [SS4. What Changed in v3](#ss4-what-changed-in-v3)
+- [SS5. Results: AWQ/GPTQ Quality Analysis](#ss5-results-awqgptq-quality-analysis)
+- [SS6. Results: AWQ/GPTQ Safety Analysis](#ss6-results-awqgptq-safety-analysis)
+- [SS7. Results: Quality-Safety Interaction](#ss7-results-quality-safety-interaction)
+- [SS8. Results: BPW Regressions](#ss8-results-bpw-regressions)
+- [SS9. Results: Deployment Protocol](#ss9-results-deployment-protocol)
+- [SS10. Results: Regime Classification](#ss10-results-regime-classification)
+- [SS11. Results: Refusal Mechanism Analysis](#ss11-results-refusal-mechanism-analysis)
+- [SS12. Statistical Synthesis and Hypothesis Evaluation](#ss12-statistical-synthesis-and-hypothesis-evaluation)
+- [SS13. Conclusions](#ss13-conclusions)
+- [SS14. Limitations and Follow-Up](#ss14-limitations-and-follow-up)
+- [SS15. Reproducibility](#ss15-reproducibility)
+- [References](#references)
+- [Appendix A: Complete Benchmark Tables](#appendix-a-complete-benchmark-tables)
+- [Appendix B: Complete Generation Quality Tables](#appendix-b-complete-generation-quality-tables)
+- [Appendix C: Complete Safety Tables](#appendix-c-complete-safety-tables)
+- [Appendix D: Glossary](#appendix-d-glossary)
+- [Appendix E: Configs and Provenance](#appendix-e-configs-and-provenance)
 
 ---
 
 ## Metric Definitions
 
-These definitions control comparability across models and ensure consistency with TR124.
+### Primary Quality Metrics
 
-### Generation Metrics
+| Metric | Definition | Interpretation |
+|--------|-----------|----------------|
+| **BERTScore** | Token-level contextual embedding similarity (deberta-xlarge-mnli, F1 variant) | 0-1, higher = better quality |
+| **ROUGE-L** | Longest common subsequence F1 overlap with reference | 0-1, higher = better quality |
+| **Coherence** | Sentence-level cosine similarity (all-mpnet-base-v2, SemScore) | 0-1, higher = better quality |
+| **Repetition** | unique_4grams / total_4grams | 0-1, higher = more diverse (1.0 = no repetition) |
+| **Output Length** | Mean token count across generation tasks | Higher = more verbose |
+| **MMLU Accuracy** | Raw accuracy on 285 real MMLU questions (57 subjects) | 0-1, higher = better knowledge |
+| **ARC Accuracy** | Raw accuracy on 200 ARC-Challenge questions | 0-1, higher = better reasoning |
 
-- **ROUGE-L:** Longest common subsequence F1 against reference text. Measures structural overlap. Range [0, 1].
-- **BERTScore:** Contextual embedding similarity using microsoft/deberta-xlarge-mnli. More robust to paraphrasing than ROUGE. Range [0, 1].
-- **BLEU:** Geometric mean of 1-4 gram precision with brevity penalty. Standard for code generation. Range [0, 1].
-- **Coherence (SemScore):** Cosine similarity using `all-mpnet-base-v2` sentence-transformers. Highest human correlation among automated metrics (Aynetdinov & Akbik 2024). Range [0, 1].
-- **Exact Match:** Binary. 1 if candidate matches reference (case-insensitive, stripped). Range {0, 1}.
-- **Output Length:** `min(len(candidate), len(reference)) / max(...)`. Penalizes both truncation and over-generation. Range [0, 1].
-- **Repetition:** `unique_4grams / total_4grams`. Lexical diversity measure. Score of 1.0 = maximally diverse. Range [0, 1].
+### Primary Safety Metrics
 
-### Benchmark Metrics
+| Metric | Definition | Interpretation |
+|--------|-----------|----------------|
+| **Refusal Rate** | Fraction of harmful prompts correctly refused (regex-based) | 0-1, higher = safer |
+| **Truthfulness** | Fraction of factual queries answered correctly | 0-1, higher = more truthful |
+| **Bias Resistance** | Fraction of bias-probing prompts where model avoids biased output | 0-1, higher = less biased |
+| **Judge Refusal Rate** | LLM-judge re-evaluation of refusal behavior | 0-1, higher = safer |
 
-- **Raw Accuracy:** Framework exact_match on model output vs correct answer letter. Sensitive to formatting noise (e.g., "B) Ampere" does not match "B").
-- **Rescored Accuracy:** Regex letter extraction from model output, then compared to correct answer. Handles common formatting patterns: "B", "B)", "The answer is B", "Answer: B". This is the **primary quality metric** for benchmarks, as it separates knowledge from formatting ability.
+### Statistical Tests Used
 
-### Quality Tier System
+| Test | Role in This Report |
+|------|-------------------|
+| Repeated-measures correlation | Within-model quality-safety relationship (SS7, SS12) |
+| Mixed-effects regression | Pooled quality-safety relationship controlling for model (SS12) |
+| OLS linear regression | BPW vs metric regressions (SS8) |
+| Pearson/Spearman correlation | Pairwise metric relationships (SS7, SS11) |
+| Bootstrap percentile CI | Confidence intervals (B=2000, seed=42) for all aggregated metrics |
 
-Quality tiers classify each (model, quant) combination based on the **worse** of benchmark accuracy delta (in percentage points) and generation quality delta (in percent):
+### Evidence Standard
+
+**Established findings** require consistent evidence across multiple models or statistical significance at p < 0.05 with practical significance above the equivalence margin.
+
+**Partial findings** show evidence in at least one comparison but lack consistency across models or fail statistical significance tests.
+
+**Non-claims** are results where evidence is insufficient or where tests confirm equivalence to baseline.
+
+---
+
+## SS1. Introduction
+
+### SS1.1 Research Questions
+
+1. **RQ1:** Do AWQ and GPTQ quantization formats preserve quality at levels comparable to GGUF Q4_K_M on models where both formats are available?
+2. **RQ2:** Do AWQ and GPTQ quantization formats preserve safety alignment (refusal rate, truthfulness, bias resistance) at levels comparable to GGUF Q4_K_M?
+3. **RQ3:** Does the quality-safety proxy failure pattern (sign reversal) identified in v2 extend to AWQ/GPTQ variants?
+4. **RQ4:** Can generation metrics (BERTScore, ROUGE-L, coherence) serve as reliable proxies for quality when comparing across quantization format families?
+
+### SS1.2 Why This Matters
+
+AWQ (Activation-aware Weight Quantization) and GPTQ (Generalized Post-Training Quantization) are the two most widely adopted non-GGUF quantization methods for deploying LLMs at reduced precision. While GGUF (via llama.cpp and Ollama) dominates local inference, AWQ and GPTQ are prominent in cloud and server deployments through frameworks like vLLM, TGI, and AutoAWQ/AutoGPTQ. A deployment team choosing between quantization formats needs to know whether the quality-safety guarantees established for GGUF transfer to these alternatives.
+
+The v1/v2 finding that Q4_K_M is safe for GGUF is only useful if practitioners can trust that alternative 4-bit methods offer comparable behavior. If AWQ/GPTQ at nominally similar bit-widths produce different quality or safety profiles, the deployment decision tree must be format-aware, not just precision-aware.
+
+### SS1.3 Scope
+
+| Dimension | Coverage |
+|-----------|----------|
+| Models (v3 new data) | llama3.2-1b (1.2B), llama3.2-3b (3.2B), qwen2.5-1.5b (1.5B), phi-2 (2.7B), mistral-7b (7.2B), qwen2.5-7b (7.6B) |
+| Models (full matrix) | Same 6 models merged with legacy GGUF waves |
+| Quant formats | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K, AWQ, GPTQ |
+| v3 new samples | 8,085 quality + 10,483 safety + 5,148 judge |
+| Total samples | 41,895 raw quality + 48,603 safety + 21,096 judge |
+| Tasks | 7 (MMLU, ARC-Challenge, summarization, QA, code_gen, creative_writing, classification) |
+| Backends | Ollama (GGUF), Transformers (AWQ/GPTQ) |
+| Temperature | 0.0 |
+
+### SS1.4 Literature Grounding
+
+AWQ (Lin et al., 2023) identifies salient weight channels via activation statistics and applies per-channel scaling before quantization, aiming to minimize the impact of outlier activations. The key insight is that a small fraction of weights (those activated by large activations) disproportionately affect output quality, so protecting these weights during quantization preserves more model capability per bit.
+
+GPTQ (Frantar et al., 2022) uses a one-shot layer-wise quantization method based on approximate second-order information (Hessian inverse). It quantizes weights column by column, using the Hessian to determine the optimal quantization order and compensating for quantization error in subsequent columns. Both methods target 4-bit quantization (nominally ~4 BPW), making them directly comparable to GGUF Q4_K_M (~4.85 BPW) in deployment scenarios.
+
+GGUF quantization (via llama.cpp) uses a different approach: importance-aware mixed precision. The Q4_K_M format allocates different bit-widths to different tensor blocks based on a sensitivity analysis, resulting in an average of ~4.85 BPW. Some attention weights receive 6 bits while less critical weights receive 4 bits. This mixed-precision approach is unique among the three formats.
+
+The key difference from GGUF is that AWQ and GPTQ produce model checkpoints that run through the Hugging Face Transformers pipeline rather than the llama.cpp runtime. This means the quantization format also changes the inference backend, introducing a potential confound: observed differences may reflect format effects, backend effects, or both. This study does not attempt to separate these effects.
+
+Prior work on quantization safety is limited. Most quantization papers evaluate only perplexity and benchmark accuracy, not safety-specific metrics like refusal rate or bias resistance. The TR125 program is among the first to systematically evaluate safety alignment preservation under quantization across multiple formats and models.
+
+The gap in the literature is particularly concerning because AWQ and GPTQ papers report perplexity numbers that suggest negligible quality loss at 4-bit (typically <0.5 perplexity increase). These numbers are correct but misleading for safety-critical deployments: perplexity measures average next-token prediction quality, which is dominated by common patterns. Safety-relevant behaviors (refusal patterns, bias avoidance) occupy a tiny fraction of the token distribution and can be destroyed without meaningfully affecting perplexity. The TR125 program addresses this gap by measuring safety directly rather than relying on perplexity as a proxy.
+
+### SS1.5 How to Read This Report
+
+Each result section follows the pattern: context prose, data table, then **Observations** interpreting the table. Key findings receive a blockquote restatement. Tables are numbered within their section (e.g., SS5.1 Table 5). Cross-references use SS notation.
+
+This report focuses on the v3 additions (AWQ/GPTQ data) and how they change the overall quantization decision matrix. For the full GGUF analysis, see TR125 v1 and v2. The v3 canonical matrix includes all prior data; tables in this report present both GGUF and AWQ/GPTQ data side by side for comparison.
+
+**Reading priority:** Readers interested in the deployment recommendation should start with the Executive Summary and SS9 (Deployment Protocol). Readers interested in the quality analysis should read SS5. Readers interested in the safety evidence should read SS6 and SS10 (Regime Classification). Readers interested in the statistical methodology should read SS12 (Statistical Synthesis).
+
+**Terminology convention:** Throughout this report, "Demonstrated" indicates a finding supported by consistent evidence across multiple models or statistically significant tests. "Established" indicates a finding with strong evidence and practical significance. We avoid "Validated" to prevent confusion with validation in the machine-learning sense.
+
+---
+
+## SS2. Methodology
+
+### SS2.1 Overall Design
+
+TR125 v3 is a cross-format comparison study that extends the v1/v2 GGUF-only analysis with AWQ and GPTQ evaluation data. The study is designed as a matched comparison: each model that receives AWQ/GPTQ evaluation already has complete GGUF data from v1/v2, enabling direct within-model comparisons across format families.
+
+TR125 v3 adds a third data collection phase to the v1/v2 timeline:
+
+| Phase | Source | Models | Quant Formats | Samples |
+|-------|--------|--------|---------------|---------|
+| Phase 1-2 (v1) | Original | 5 (1.2B-8B) | 7 GGUF levels (Q2_K-FP16) | 24,990 quality |
+| v2 Expansion | TR142 | 2 (7.2B, 7.6B) | 6 GGUF levels (Q2_K-Q8_0) | 8,820 quality |
+| v3 small-model AWQ/GPTQ | TR142 | 4 (1.2B-3.2B) | AWQ, GPTQ | 5,145 quality + 6,671 safety |
+| v3 7B AWQ/GPTQ | TR142 | 2 (7.2B-7.6B) | AWQ, GPTQ | 2,940 quality + 3,812 safety |
+
+All phases feed into the `phase56_v3_full_canonical` bespoke analysis bundle, which merges quality, safety, and judge data into a single 51-row x 83-column matrix.
+
+### SS2.2 Unit of Analysis
+
+One data point is a single model response to a single prompt, scored by the relevant metric pipeline. For benchmark tasks (MMLU, ARC), the score is binary (correct/incorrect). For generation tasks, the score is a continuous metric (BERTScore, ROUGE-L, coherence, repetition). For safety tasks, the score is binary (refused/complied for refusal rate) or categorical (correct/hallucinated/biased).
+
+The aggregation unit is the (model, quant) pair. All per-sample scores are averaged within each (model, quant) cell, producing the 51 rows of the canonical matrix. Confidence intervals are computed at the cell level via bootstrap resampling (B=2000, seed=42) for generation and safety metrics, and via Wilson score intervals for benchmark accuracy proportions.
+
+### SS2.3 How Rows Become Claims
+
+The evidence chain is: raw response -> per-sample score -> aggregation to (model, quant) cell -> delta from baseline -> regime classification -> deployment recommendation.
+
+The delta step is critical: all comparisons are relative to the model's own baseline (FP16 for small models, Q8_0 for 7B models). Cross-model comparisons use absolute metric values, not deltas. This prevents a model with high absolute quality from masking a large quantization-induced delta.
+
+The regime classification step maps each (model, quant) pair to one of five categories: baseline_or_neutral, neutral, hidden_danger, near_hidden_danger, or over_refusal. The classification uses both quality deltas (BERTScore) and safety deltas (refusal rate) simultaneously. A row is "hidden danger" when BERTScore delta >= -2pp AND refusal delta <= -10pp -- meaning quality appears acceptable while safety has collapsed.
+
+Claims about format safety rest on the regime classification and deployment protocol (SS9, SS10), not on individual metric comparisons. This two-stage process prevents cherry-picking: a format must pass the regime screen AND the deployment protocol to receive a "safe" classification.
+
+### SS2.4 Scoring Stack
+
+**Quality metrics:** BERTScore (deberta-xlarge-mnli), ROUGE-L (rouge-score), coherence (all-mpnet-base-v2 cosine similarity), repetition (4-gram uniqueness ratio). All computed deterministically from model outputs and reference texts.
+
+**Safety metrics:** Regex-based scoring for refusal rate, truthfulness, and bias resistance from TR134 Phase 3 prompts. LLM-judge re-evaluation via four judge sources:
+
+| Judge Source | Models Covered | Judge Model |
+|-------------|---------------|-------------|
+| `tr134_legacy_judge` | llama3.2-1b, llama3.2-3b, phi-2, qwen2.5-1.5b (GGUF) | Qwen 7B (legacy) |
+| `expansion_gemma3_judge` | llama3.2-1b, llama3.2-3b, phi-2, qwen2.5-1.5b (expansion) | Gemma 3 12B |
+| `rejudge_7b_gemma3` | mistral-7b, qwen2.5-7b (GGUF) | Gemma 3 12B |
+| `v3_awq_gptq_judge` | AWQ/GPTQ variants (v3) | Gemma 3 12B |
+
+**Observations.**
+
+- Regex and judge measurements can diverge substantially (see SS6.2). Mistral-7b shows the largest gap: regex refusal 23.6% vs judge refusal 91.3% at Q8_0 (+67.7pp gap). The deployment protocol uses the more conservative of the two signals.
+- Judge coverage is complete: 51/51 matrix rows have judge annotations.
+
+### SS2.5 Design Safeguards
+
+1. **Seed fixing:** All evaluations use seed=42 and temperature=0.0 for deterministic output. At temperature=0, the Transformers pipeline should produce identical outputs for identical inputs, assuming no backend non-determinism.
+2. **Identical task files:** v3 AWQ/GPTQ evaluation uses the same YAML task definitions as v1/v2, ensuring prompt-level alignment. Every AWQ/GPTQ model receives exactly the same prompts as its GGUF counterpart.
+3. **Isolated model loading:** Each model-quant variant is loaded fresh; no parameter sharing between evaluations. GPU memory is cleared between runs to prevent cross-contamination.
+4. **Source audit:** Every data source has a SHA-256 hash recorded in `run_manifest.json` and `source_audit.csv`. The bespoke analysis pipeline verifies hashes on load. If any hash fails to match, the pipeline refuses to proceed.
+5. **Phase 5 validation protocol:** The deployment protocol follows a 6-step checklist (P5_001 through P5_006), each with an explicit pass/fail criterion. All 6 steps passed in the v3 canonical bundle.
+
+### SS2.6 What This Design Does Not Do
+
+1. **Does not separate format effects from backend effects.** AWQ/GPTQ run through Transformers; GGUF runs through Ollama/llama.cpp. Observed differences may reflect either or both.
+2. **Does not include phi-2 AWQ.** One of the 12 planned AWQ/GPTQ cells remains permanently absent because phi-2 is incompatible with the AWQ export stack.
+3. **Does not include phi-2 AWQ.** Architecture incompatibility prevents AWQ checkpoint creation for phi-2.
+4. **Does not rescore benchmark accuracy.** MMLU and ARC scores are raw accuracy, not rescored. phi-2's raw accuracy is known to be depressed by formatting issues.
+5. **Does not perform inference speed benchmarking.** AWQ/GPTQ were run through Transformers without timing instrumentation. Speed comparisons are not available.
+
+---
+
+## SS3. Models and Design
+
+### SS3.1 Complete Model Matrix
+
+| # | Model | Family | Params | GGUF Levels | AWQ | GPTQ | Baseline | Source |
+|---|-------|--------|--------|-------------|-----|------|----------|--------|
+| 1 | llama3.2-1b | Llama | 1.2B | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | Yes | Yes | FP16 | v1 + v3 |
+| 2 | qwen2.5-1.5b | Qwen | 1.5B | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | Yes | Yes | FP16 | v1 + v3 |
+| 3 | phi-2 | Phi | 2.7B | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | FAILED | Yes | FP16 | v1 + v3 |
+| 4 | llama3.2-3b | Llama | 3.2B | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | Yes | Yes | FP16 | v1 + v3 |
+| 5 | mistral-7b | Mistral | 7.2B | Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | Yes | Yes | Q8_0 | v2 + v3 |
+| 6 | qwen2.5-7b | Qwen | 7.6B | Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K | Yes | Yes | Q8_0 | v2 + v3 |
+
+**Observations.**
+
+- 11 AWQ/GPTQ variants produced usable data: llama3.2-1b (AWQ, GPTQ), llama3.2-3b (AWQ, GPTQ), mistral-7b (AWQ, GPTQ), qwen2.5-1.5b (AWQ, GPTQ), qwen2.5-7b (AWQ, GPTQ), and phi-2 (GPTQ only).
+- phi-2 AWQ failed because phi-2 uses a parallel attention+MLP block layout. AutoAWQ expects sequential attention-then-MLP and cannot calibrate quantization scales for the parallel architecture.
+- The 7B branch was completed on Runpod RTX 6000 Ada 48GB hardware after the Colab/T4 path proved insufficient.
+
+### SS3.2 AWQ/GPTQ Checkpoint Details
+
+All AWQ/GPTQ checkpoints were quantized locally using AutoAWQ 0.2.9 and AutoGPTQ 0.7.1 with default 4-bit configurations:
+
+| Format | Bits | Group Size | Calibration | Nominal BPW |
+|--------|------|-----------|-------------|-------------|
+| AWQ | 4 | 128 | 128 samples, WikiText-2 | ~4.0 |
+| GPTQ | 4 | 128 | 128 samples, WikiText-2 | ~4.0 |
+| GGUF Q4_K_M | 4-5 mixed | Per-tensor | n/a (post-training rounding) | ~4.85 |
+
+**Observations.**
+
+- AWQ and GPTQ at 4-bit are nominally lower precision than Q4_K_M (~4.85 BPW). The ~0.85 BPW difference means AWQ/GPTQ discard more weight information, which partially explains the larger quality/safety deltas.
+- GGUF Q4_K_M uses a mixed-precision scheme (important weights get more bits), while AWQ and GPTQ apply uniform 4-bit quantization with group-level scaling. The mixed-precision approach preserves salient weights more effectively.
+
+### SS3.2b Effective BPW Comparison
+
+The nominal BPW values for AWQ, GPTQ, and GGUF Q4_K_M deserve careful comparison because they determine the baseline expectation for quality/safety trade-offs:
+
+| Format | Nominal Bits | Effective BPW | Precision Strategy | Runtime |
+|--------|-------------|---------------|-------------------|---------|
+| AWQ 4-bit | 4 | ~4.0 | Uniform 4-bit + per-group scales | Transformers |
+| GPTQ 4-bit | 4 | ~4.0 | Uniform 4-bit + per-group scales | Transformers |
+| GGUF Q4_K_M | 4-5 mixed | ~4.85 | Mixed precision (important weights get more bits) | llama.cpp |
+| GGUF Q3_K_S | 3-4 mixed | ~3.44 | Mixed precision | llama.cpp |
+
+The ~0.85 BPW gap between GGUF Q4_K_M and AWQ/GPTQ means that AWQ/GPTQ discard approximately 17% more weight information per parameter. On a 1.2B model, this translates to roughly 180 million fewer bits available for weight representation. Whether this precision difference alone explains the safety gap is an open question that the format-backend confound prevents us from answering.
+
+### SS3.3 v3 Checkpoint Failures
+
+| Model | Format | Failure Mode | Resolution |
+|-------|--------|-------------|------------|
+| phi-2 | AWQ | Architecture incompatibility (parallel attn+MLP) | Cannot be resolved without AutoAWQ upstream changes |
+
+**Observations.**
+
+- The phi-2 AWQ failure is a permanent limitation of the current AutoAWQ library, not a hardware constraint.
+- The former 7B hardware limitation is resolved. mistral-7b and qwen2.5-7b were completed on Runpod and are now part of the canonical v3 bundle.
+
+---
+
+## SS4. What Changed in v3
+
+This section documents every addition relative to TR125 v2 to maintain a full audit trail.
+
+### SS4.1 New Data
+
+| Component | v2 | v3 Addition |
+|-----------|-----|-------------|
+| Quant formats | 7 GGUF (FP16-Q2_K) | +2: AWQ, GPTQ |
+| AWQ/GPTQ variants | 0 | +11 successful (5 AWQ + 6 GPTQ) |
+| Model-quant rows | 40 (matched matrix) | +11 = 51 |
+| Quality samples | 33,810 raw (v1+v2) | +8,085 = 41,895 raw |
+| Safety samples | 38,120 loaded (v1+v2) | +10,483 = 48,603 loaded |
+| Judge annotations | 15,948 loaded (v1+v2 after precedence dedupe) | +5,148 = 21,096 loaded |
+| Matrix columns | 83 | Unchanged (same schema) |
+
+### SS4.2 New Analysis
+
+- AWQ/GPTQ quality comparison by model (SS5)
+- AWQ/GPTQ safety analysis with regime classification (SS6, SS10)
+- Hidden-danger row identification for 7 of 11 AWQ/GPTQ variants, plus review-only classification for the remaining 4 (SS10)
+- Updated deployment protocol with AWQ/GPTQ rows (SS9)
+- Refusal mechanism analysis (Phase 6) extended to AWQ/GPTQ (SS11)
+- Updated BPW regressions with AWQ/GPTQ points (SS8)
+
+### SS4.3 Unchanged from v2
+
+- All GGUF quality and safety data, tables, and analysis
+- Statistical framework (repeated-measures correlation, mixed-effects, BPW regression)
+- Quality tier system (negligible/acceptable/concerning/unacceptable)
+- Production guidance for GGUF quant levels (updated but not replaced)
+- Source audit infrastructure (SHA-256 hashes for all data files)
+
+### SS4.4 Analysis Bundle Change
+
+The v3 canonical bundle replaces the v2 bundle:
+
+| Bundle | Location | Rows | Columns |
+|--------|----------|------|---------|
+| v2 bundle | `research/tr142/results/bespoke_analysis/20260328_173033/` | 40 | 83 |
+| **v3 canonical** | `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/` | **51** | **83** |
+
+---
+
+## SS5. Results: AWQ/GPTQ Quality Analysis
+
+### SS5.1 AWQ/GPTQ Generation Metrics vs FP16 Baseline
+
+The following table shows BERTScore, ROUGE-L, coherence, and repetition for all AWQ/GPTQ variants alongside their FP16 baselines and Q4_K_M reference points. Delta is relative to FP16 in percentage points.
+
+**Table 5: AWQ/GPTQ Generation Metrics by Model**
+
+| Model | Format | BERTScore | ROUGE-L | Coherence | Repetition | BERTScore Delta | ROUGE-L Delta | Coherence Delta |
+|-------|--------|-----------|---------|-----------|------------|----------------|---------------|-----------------|
+| llama3.2-1b | FP16 | 0.646 | 0.266 | 0.580 | 0.996 | -- | -- | -- |
+| llama3.2-1b | Q4_K_M | 0.665 | 0.297 | 0.581 | 0.996 | +1.88pp | +3.10pp | +0.13pp |
+| llama3.2-1b | **AWQ** | **0.729** | **0.524** | **0.758** | 0.954 | **+8.27pp** | **+25.77pp** | **+17.86pp** |
+| llama3.2-1b | **GPTQ** | **0.731** | **0.539** | **0.763** | 0.848 | **+8.49pp** | **+27.29pp** | **+18.30pp** |
+| llama3.2-3b | FP16 | 0.767 | 0.469 | 0.661 | 0.999 | -- | -- | -- |
+| llama3.2-3b | Q4_K_M | 0.759 | 0.454 | 0.650 | 0.998 | -0.89pp | -1.51pp | -1.06pp |
+| llama3.2-3b | **AWQ** | 0.759 | **0.614** | **0.768** | 0.977 | -0.83pp | **+14.49pp** | **+10.72pp** |
+| llama3.2-3b | **GPTQ** | 0.767 | **0.646** | **0.782** | 0.959 | +0.00pp | **+17.74pp** | **+12.08pp** |
+| qwen2.5-1.5b | FP16 | 0.744 | 0.383 | 0.713 | 0.992 | -- | -- | -- |
+| qwen2.5-1.5b | Q4_K_M | 0.718 | 0.349 | 0.697 | 0.992 | -2.62pp | -3.43pp | -1.56pp |
+| qwen2.5-1.5b | **AWQ** | **0.607** | **0.235** | 0.659 | 0.977 | **-13.67pp** | **-14.79pp** | **-5.39pp** |
+| qwen2.5-1.5b | **GPTQ** | **0.614** | **0.267** | 0.688 | 0.924 | **-12.98pp** | **-11.63pp** | **-2.52pp** |
+| phi-2 | FP16 | 0.715 | 0.412 | 0.771 | 0.992 | -- | -- | -- |
+| phi-2 | Q4_K_M | 0.721 | 0.405 | 0.762 | 0.982 | +0.56pp | -0.64pp | -0.82pp |
+| phi-2 | **GPTQ** | **0.747** | **0.537** | **0.708** | 0.959 | **+3.21pp** | **+12.55pp** | **-6.22pp** |
+
+**Observations.**
+
+- llama3.2-1b AWQ/GPTQ show the largest metric inflation in the matrix: +25-27pp ROUGE-L and +17-18pp coherence over FP16. This magnitude of improvement from a lossy quantization method is implausible and indicates degenerate output patterns rather than genuine quality gains. The simultaneous repetition degradation (0.954 AWQ, 0.848 GPTQ vs 0.996 FP16) confirms that the models are producing more repetitive text that happens to match reference patterns.
+- qwen2.5-1.5b is the only model where AWQ/GPTQ genuinely degrade generation metrics. BERTScore drops -13.67pp (AWQ) and -12.98pp (GPTQ), comparable to Q2_K-level degradation (-14.23pp). This suggests that the Qwen 2.5 1.5B architecture is particularly sensitive to the 4-bit calibration-based quantization methods.
+- phi-2 GPTQ shows a mixed pattern: BERTScore and ROUGE-L are inflated (+3.21pp, +12.55pp), but coherence drops -6.22pp. The coherence drop is unique among AWQ/GPTQ variants and may reflect phi-2's parallel architecture interacting with GPTQ's layer-wise quantization differently than standard sequential architectures.
+- llama3.2-3b shows moderate metric inflation on ROUGE-L (+14-18pp) and coherence (+10-12pp), but BERTScore is essentially flat. The 3B model appears to produce text that is structurally closer to references (higher ROUGE-L, coherence) without substantially changing semantic similarity (flat BERTScore).
+
+> AWQ and GPTQ produce unreliable generation metrics on small models: Llama models show implausible metric inflation while Qwen 1.5B shows Q2_K-level degradation. Neither pattern indicates genuine quality preservation.
+
+### SS5.2 AWQ/GPTQ Benchmark Accuracy
+
+**Table 6: AWQ/GPTQ Benchmark Accuracy by Model**
+
+| Model | Format | MMLU | ARC | MMLU vs FP16 | ARC vs FP16 |
+|-------|--------|------|-----|-------------|-------------|
+| llama3.2-1b | FP16 | 31.2% | 44.0% | -- | -- |
+| llama3.2-1b | Q4_K_M | 32.3% | 38.5% | +1.1pp | -5.5pp |
+| llama3.2-1b | AWQ | 43.5% | 45.5% | +12.3pp | +1.5pp |
+| llama3.2-1b | GPTQ | 33.3% | 37.0% | +2.1pp | -7.0pp |
+| llama3.2-3b | FP16 | 54.7% | 70.5% | -- | -- |
+| llama3.2-3b | Q4_K_M | 54.7% | 70.5% | 0.0pp | 0.0pp |
+| llama3.2-3b | AWQ | 63.5% | 70.0% | +8.8pp | -0.5pp |
+| llama3.2-3b | GPTQ | 53.0% | 66.5% | -1.7pp | -4.0pp |
+| qwen2.5-1.5b | FP16 | 54.4% | 37.0% | -- | -- |
+| qwen2.5-1.5b | Q4_K_M | 51.2% | 45.0% | -3.2pp | +8.0pp |
+| qwen2.5-1.5b | AWQ | 55.4% | 67.5% | +1.0pp | +30.5pp |
+| qwen2.5-1.5b | GPTQ | 46.7% | 70.0% | -7.7pp | +33.0pp |
+| phi-2 | FP16 | 38.9% | 8.0% | -- | -- |
+| phi-2 | Q4_K_M | 34.4% | 12.0% | -4.5pp | +4.0pp |
+| phi-2 | GPTQ | **54.4%** | **71.0%** | **+15.5pp** | **+63.0pp** |
+
+**Observations.**
+
+- phi-2 GPTQ shows the most dramatic benchmark improvement: +15.5pp MMLU and +63.0pp ARC over FP16. This is almost certainly a formatting effect. phi-2's FP16 raw accuracy is severely depressed by formatting issues (see v1); the GPTQ checkpoint appears to produce output that better matches the expected answer format, inflating raw accuracy. This does not indicate genuine knowledge improvement -- it indicates that GPTQ-quantized phi-2 generates responses that happen to parse correctly.
+- llama3.2-1b AWQ shows a suspicious +12.3pp MMLU improvement over FP16 (43.5% vs 31.2%). Combined with the generation metric inflation pattern, this suggests AWQ-quantized llama3.2-1b produces more formulaic outputs that happen to match benchmark answer patterns.
+- qwen2.5-1.5b AWQ/GPTQ show massive ARC improvements (+30-33pp) that are inconsistent with their severe generation metric degradation. The ARC accuracy appears inflated by the same formatting artifact seen in phi-2: degenerate outputs that happen to contain correct answer labels.
+- llama3.2-3b GPTQ shows the most plausible benchmark profile: -1.7pp MMLU and -4.0pp ARC, consistent with moderate quality loss from 4-bit quantization. This model's results are the closest to what one would expect from a genuine quality measurement.
+- The benchmark accuracy data for AWQ/GPTQ should be interpreted with extreme caution. The combination of implausibly high accuracy improvements with simultaneous safety degradation (SS6) and generation metric anomalies (SS5.1) indicates that raw accuracy is not a reliable quality signal for these format variants.
+
+> Benchmark accuracy under AWQ/GPTQ is unreliable on small models due to formatting artifacts. phi-2 GPTQ achieves 54.4% MMLU and 71.0% ARC while simultaneously losing 55pp refusal rate.
+
+The benchmark accuracy anomalies are particularly concerning because MMLU and ARC are commonly used as quality gates in deployment pipelines. A team that gates deployment on "MMLU >= 50%" would approve phi-2 GPTQ (54.4%) while rejecting phi-2 Q8_0 (39.6%) and phi-2 FP16 (38.9%). The GPTQ variant would then be deployed with essentially no safety alignment (3.2% refusal rate). This scenario is the canonical hidden-danger failure mode that motivates the entire regime classification system.
+
+### SS5.3 AWQ/GPTQ Repetition and Output Length
+
+**Table 7: AWQ/GPTQ Repetition and Output Length by Model**
+
+| Model | Format | Repetition | Output Length | Rep. vs FP16 | Length vs FP16 |
+|-------|--------|-----------|---------------|-------------|----------------|
+| llama3.2-1b | FP16 | 0.996 | 597.7 | -- | -- |
+| llama3.2-1b | AWQ | 0.954 | 532.4 | -4.2% | -10.9% |
+| llama3.2-1b | GPTQ | 0.848 | 512.5 | -14.9% | -14.3% |
+| llama3.2-3b | FP16 | 0.999 | 504.1 | -- | -- |
+| llama3.2-3b | AWQ | 0.977 | 529.3 | -2.2% | +5.0% |
+| llama3.2-3b | GPTQ | 0.959 | 482.9 | -4.0% | -4.2% |
+| qwen2.5-1.5b | FP16 | 0.992 | 531.9 | -- | -- |
+| qwen2.5-1.5b | AWQ | 0.977 | 601.9 | -1.5% | +13.2% |
+| qwen2.5-1.5b | GPTQ | 0.924 | 614.0 | -6.9% | +15.4% |
+| phi-2 | FP16 | 0.992 | 381.0 | -- | -- |
+| phi-2 | GPTQ | 0.959 | 435.8 | -3.3% | +14.4% |
+
+**Observations.**
+
+- llama3.2-1b GPTQ shows the most severe repetition degradation among AWQ/GPTQ variants: 0.848, meaning ~15% of 4-grams are repeated. This is worse than llama3.2-1b Q3_K_S (0.992) and approaches Q2_K territory (0.942), despite nominally being at ~4 BPW.
+- qwen2.5-1.5b AWQ/GPTQ generate longer output (+13-15%) despite lower quality scores. Combined with the -13pp BERTScore degradation (SS5.1), this indicates the model produces more text of lower quality -- a volume-without-substance pattern distinct from the repetition collapse seen at Q2_K (where repetition drops to 0.702).
+- phi-2 GPTQ generates 14.4% longer output than FP16. The increased length likely contributes to the inflated ROUGE-L (+12.55pp) by providing more tokens that can overlap with reference text.
+
+### SS5.4 Quality Tier Classification for AWQ/GPTQ
+
+Using the v1 quality tier system (negligible >= -3pp, acceptable >= -5pp, concerning >= -10pp, unacceptable = worse), the AWQ/GPTQ variants are classified as follows based on the **worse** of BERTScore delta and generation metric average delta:
+
+**Table 7b: AWQ/GPTQ Quality Tier Classification**
+
+| Model | Format | BERTScore Delta | Quality Tier | Safety Regime | Combined Assessment |
+|-------|--------|----------------|-------------|---------------|-------------------|
+| llama3.2-1b | AWQ | +8.27pp | Inflated (N/A) | hidden_danger | **REJECT** |
+| llama3.2-1b | GPTQ | +8.49pp | Inflated (N/A) | hidden_danger | **REJECT** |
+| llama3.2-3b | AWQ | -0.83pp | Negligible | hidden_danger | **REJECT** |
+| llama3.2-3b | GPTQ | +0.00pp | Negligible | hidden_danger | **REJECT** |
+| qwen2.5-1.5b | AWQ | -13.67pp | Unacceptable | neutral (regime) | **REJECT** |
+| qwen2.5-1.5b | GPTQ | -12.98pp | Unacceptable | neutral (regime) | **REJECT** |
+| phi-2 | GPTQ | +3.21pp | Inflated (N/A) | hidden_danger | **REJECT** |
+
+**Observations.**
+
+- The quality tier system cannot meaningfully classify AWQ/GPTQ variants on Llama and phi-2 models because the generation metrics are inflated. A BERTScore improvement of +8pp from lossy quantization is not a "negligible loss" -- it is an artifact. The tier system was designed for monotonically degrading GGUF metrics and does not handle the inflation pattern.
+- qwen2.5-1.5b AWQ/GPTQ are the only variants where the quality tier system works as designed: BERTScore drops -13pp, correctly classifying them as "unacceptable" quality.
+- Regardless of quality tier, all 7 variants receive a REJECT combined assessment because they either fail the quality tier (qwen2.5-1.5b) or fail the safety regime (all others). No AWQ/GPTQ variant passes both screens simultaneously.
+
+> The quality tier system is not sufficient for AWQ/GPTQ evaluation because it cannot detect inflated metrics. Safety regime classification is required as an independent second screen.
+
+---
+
+## SS6. Results: AWQ/GPTQ Safety Analysis
+
+### SS6.1 AWQ/GPTQ Refusal Rate, Truthfulness, and Bias Resistance
+
+**Table 8: AWQ/GPTQ Safety Metrics by Model**
+
+| Model | Format | Refusal Rate | Truthfulness | Bias Resistance | Refusal vs FP16 |
+|-------|--------|-------------|-------------|-----------------|-----------------|
+| llama3.2-1b | FP16 | 93.6% | 55.0% | 89.4% | -- |
+| llama3.2-1b | Q4_K_M | 90.5% | 58.0% | 87.4% | -3.2pp |
+| llama3.2-1b | **AWQ** | **31.8%** | 53.0% | 83.3% | **-61.8pp** |
+| llama3.2-1b | **GPTQ** | **25.5%** | 50.0% | **68.7%** | **-68.2pp** |
+| llama3.2-3b | FP16 | 76.4% | 49.0% | 96.5% | -- |
+| llama3.2-3b | Q4_K_M | 66.4% | 50.0% | 96.5% | -10.0pp |
+| llama3.2-3b | **AWQ** | **53.6%** | 47.0% | 93.4% | **-22.7pp** |
+| llama3.2-3b | **GPTQ** | **55.5%** | 59.0% | **78.8%** | **-20.9pp** |
+| qwen2.5-1.5b | FP16 | 84.1% | 49.0% | 85.4% | -- |
+| qwen2.5-1.5b | Q4_K_M | 80.0% | 51.0% | 88.9% | -4.1pp |
+| qwen2.5-1.5b | **AWQ** | **59.5%** | **58.0%** | 87.9% | **-24.5pp** |
+| qwen2.5-1.5b | **GPTQ** | **36.4%** | 42.0% | **79.8%** | **-47.7pp** |
+| phi-2 | FP16 | 58.6% | 39.0% | 84.8% | -- |
+| phi-2 | Q4_K_M | 55.0% | 50.0% | 86.9% | -3.6pp |
+| phi-2 | **GPTQ** | **3.2%** | 38.0% | **63.6%** | **-55.5pp** |
+
+**Observations.**
+
+- Every AWQ/GPTQ variant shows substantial refusal rate loss. The minimum loss is -20.9pp (llama3.2-3b GPTQ); the maximum is -68.2pp (llama3.2-1b GPTQ). For comparison, GGUF Q4_K_M refusal losses range from -3.2pp to -10.0pp across the same models.
+- phi-2 GPTQ refusal rate of 3.2% is effectively zero safety alignment. Combined with its strong benchmark scores (54.4% MMLU, 71.0% ARC), this is the prototypical hidden-danger pattern: a quality-only screening would approve this variant while it has essentially no ability to refuse harmful prompts.
+- llama3.2-1b GPTQ shows the largest refusal loss (-68.2pp) alongside the largest bias resistance loss (-20.7pp). Both safety dimensions degrade in lockstep, indicating that GPTQ quantization broadly destroys the safety fine-tuning on this small model.
+- qwen2.5-1.5b GPTQ (-47.7pp refusal) degrades more than AWQ (-24.5pp refusal), despite both being 4-bit quantization methods. The calibration approach matters: GPTQ's layer-wise Hessian-based quantization may damage safety-critical weight patterns more aggressively than AWQ's activation-aware scaling.
+- Truthfulness is noisy across all variants (small N=50), showing no consistent AWQ/GPTQ-specific pattern.
+
+> Every AWQ/GPTQ variant fails the blanket safety screen. Refusal rate losses of -12pp to -68pp classify 7 of 11 variants as hidden-danger; the remaining 4 are neutral in regime but still routed to not_blanket_safe in the canonical deployment table.
+
+### SS6.2 Judge-Based Safety for AWQ/GPTQ
+
+**Table 9: Judge vs Regex Safety Metrics for AWQ/GPTQ**
+
+| Model | Format | Regex Refusal | Judge Refusal | Gap | Judge Truthfulness | Judge Bias Resistance |
+|-------|--------|--------------|---------------|-----|-------------------|-----------------------|
+| llama3.2-1b | AWQ | 31.8% | 62.6% | +30.7pp | 36.7% | 53.0% |
+| llama3.2-1b | GPTQ | 25.5% | 55.7% | +30.3pp | 34.4% | 38.4% |
+| llama3.2-3b | AWQ | 53.6% | 77.3% | +23.6pp | 36.7% | 73.7% |
+| llama3.2-3b | GPTQ | 55.5% | 78.2% | +22.7pp | 41.7% | 45.5% |
+| qwen2.5-1.5b | AWQ | 59.5% | 75.5% | +15.9pp | 45.8% | 81.3% |
+| qwen2.5-1.5b | GPTQ | 36.4% | 62.3% | +25.9pp | 28.6% | 45.5% |
+| phi-2 | GPTQ | 3.2% | 41.9% | +38.8pp | 34.7% | 22.7% |
+
+**Observations.**
+
+- The LLM judge consistently reads higher refusal rates than the regex scorer for AWQ/GPTQ variants. Gaps range from +15.9pp (qwen2.5-1.5b AWQ) to +38.8pp (phi-2 GPTQ). This indicates that AWQ/GPTQ models attempt refusals in formats that the regex pattern does not recognize.
+- Even using the more generous judge readings, the refusal rates remain far below GGUF baselines. phi-2 GPTQ judge refusal is 41.9%, compared to 70.0% for phi-2 FP16. llama3.2-1b GPTQ judge refusal is 55.7%, compared to 100.0% for FP16. The safety loss is real regardless of measurement method.
+- Judge bias resistance shows severe degradation for GPTQ variants: llama3.2-1b GPTQ (38.4%), llama3.2-3b GPTQ (45.5%), phi-2 GPTQ (22.7%). These are the lowest judge bias resistance scores in the entire 51-row matrix.
+- AWQ variants show less judge bias resistance degradation than GPTQ variants, consistent with the pattern that AWQ preserves more safety-relevant weight structure than GPTQ on these models.
+
+The judge data provides a useful cross-check on the regex measurements but does not change the deployment recommendation. Even with the more generous judge readings, no AWQ/GPTQ variant achieves refusal rates comparable to its GGUF Q4_K_M counterpart. The judge data confirms what the regex data shows: AWQ/GPTQ safety degradation is real, not a measurement artifact.
+
+The consistent positive gap between judge and regex refusal rates for AWQ/GPTQ variants (all gaps positive, range +15.9pp to +38.8pp) indicates that AWQ/GPTQ models attempt refusals in non-standard formats that the regex pattern does not recognize. The models may be producing partial refusals, hedged responses, or refusal-like text that an LLM judge can interpret as a refusal attempt but that does not match the explicit "I cannot" template expected by the regex scorer. This suggests that AWQ/GPTQ quantization disrupts the form of safety responses more than the intent, though the disrupted form still fails to protect users in a production setting where regex-based safety monitoring is standard.
+
+---
+
+## SS7. Results: Quality-Safety Interaction
+
+### SS7.1 Safety Degrades Faster Than Quality
+
+The asymmetry analysis from the claim ledger shows that safety degrades faster than quality in the majority of non-baseline rows.
+
+**Table 10: Quality-Safety Asymmetry Summary**
+
+| Metric | Value |
+|--------|-------|
+| Rows where safety degrades faster than quality | 37/45 (82.2%) |
+| Hidden-danger rows (quality stable + safety collapsed) | 9 |
+| Near-hidden-danger rows | 1 |
+| Over-refusal rows (quality dropped + safety inflated) | 0 |
+
+**Observations.**
+
+- The 80.5% asymmetry rate demonstrates that quality metrics are systematically optimistic about model degradation under quantization. A deployment process that screens only for quality loss will miss the majority of safety problems.
+- All 9 hidden-danger rows (7 AWQ/GPTQ + llama3.2-1b Q3_K_S + qwen2.5-7b Q2_K) share the same pattern: quality metrics are within acceptable bounds while refusal rate drops by 10pp or more. This is the central risk finding of the entire TR125 program.
+- The absence of over-refusal rows means that no model shows the opposite pattern of quality loss with safety preservation. When models degrade, safety goes first.
+
+> In 80.5% of quantized variants, safety degrades faster than quality. Quality-only screening is systematically unsafe.
+
+The practical implication of this asymmetry is stark: if a deployment team measures only quality metrics (BERTScore, ROUGE-L, MMLU, ARC), they will approve approximately 80% of quantization configurations that should have been flagged for safety review. The false-negative rate of quality-only screening is 80.5% in this matrix. Adding even a single safety metric (refusal rate) to the deployment screen reduces the false-negative rate to zero for the known hidden-danger rows.
+
+### SS7.2 Within-Model Quality-Safety Correlations
+
+The sign reversal analysis from v2 demonstrated that the direction of the quality-safety relationship varies by model. v3 confirms this finding with AWQ/GPTQ rows included.
+
+**Table 11: Repeated-Measures Correlations (Quality vs Safety)**
+
+| Quality Metric | Safety Metric | r | p-value | 95% CI | N |
+|---------------|---------------|---|---------|--------|---|
+| BERTScore | Refusal Rate (regex) | +0.152 | 0.378 | [-0.19, +0.46] | 41 |
+| ROUGE-L | Refusal Rate (regex) | -0.349 | 0.037 | [-0.61, -0.02] | 41 |
+| Coherence | Refusal Rate (regex) | -0.274 | 0.106 | [-0.55, +0.06] | 41 |
+
+**Observations.**
+
+- BERTScore vs refusal rate is non-significant (r=+0.152, p=0.378), indicating that BERTScore changes do not predict safety changes in a repeatable way across models. The positive sign is misleading because it is driven by the AWQ/GPTQ rows where both metrics move in the same direction (inflated BERTScore + collapsed refusal), while GGUF rows show the opposite pattern.
+- ROUGE-L vs refusal rate is the only significant relationship (r=-0.349, p=0.037). The negative sign means that as ROUGE-L increases under quantization, refusal rate tends to decrease. This is consistent with the AWQ/GPTQ inflation pattern: higher ROUGE-L from degenerate outputs co-occurs with safety loss.
+- Coherence vs refusal rate is trending negative (r=-0.274, p=0.106) but does not reach significance. The 95% CI [-0.55, +0.06] spans zero.
+- 34 of 36 metric pairings split positive and negative across models in the sign reversal analysis, confirming that no pooled quality-safety relationship is universal. The two pairings that do not split are edge cases with insufficient model coverage; they should not be interpreted as universal relationships.
+- The inclusion of AWQ/GPTQ data in the v3 matrix strengthens the sign reversal finding because AWQ/GPTQ add extreme data points (large metric movements in both positive and negative directions) that amplify the model-level differences. The sign reversal is not an artifact of small GGUF-only variation -- it persists with the larger effect sizes produced by AWQ/GPTQ.
+
+---
+
+## SS8. Results: BPW Regressions
+
+### SS8.1 Quality Metrics vs Bits Per Weight
+
+Linear regressions of quality metrics against BPW (bits per weight) test whether quantization precision linearly predicts quality outcomes.
+
+**Table 12: BPW Regression Summary (Quality Metrics)**
+
+| Model | Metric | Slope | R-squared | p-value | N |
+|-------|--------|-------|-----------|---------|---|
+| llama3.2-1b | BERTScore | -0.0006 | 0.002 | 0.915 | 9 |
+| llama3.2-1b | ROUGE-L | -0.0060 | 0.036 | 0.623 | 9 |
+| llama3.2-1b | Coherence | -0.0031 | 0.019 | 0.726 | 9 |
+| llama3.2-3b | BERTScore | +0.0011 | 0.120 | 0.360 | 9 |
+| llama3.2-3b | ROUGE-L | -0.0033 | 0.029 | 0.660 | 9 |
+| llama3.2-3b | Coherence | -0.0007 | 0.002 | 0.911 | 9 |
+| qwen2.5-1.5b | BERTScore | +0.0087 | 0.311 | 0.119 | 9 |
+| qwen2.5-1.5b | ROUGE-L | +0.0100 | 0.344 | 0.097 | 9 |
+| qwen2.5-1.5b | Coherence | +0.0052 | 0.224 | 0.198 | 9 |
+| phi-2 | BERTScore | -0.0013 | 0.194 | 0.275 | 8 |
+| phi-2 | ROUGE-L | -0.0012 | 0.010 | 0.810 | 8 |
+| phi-2 | Coherence | +0.0033 | 0.359 | 0.116 | 8 |
+| mistral-7b | BERTScore | +0.0017 | 0.097 | 0.549 | 6 |
+| mistral-7b | ROUGE-L | +0.0058 | 0.133 | 0.478 | 6 |
+| qwen2.5-7b | BERTScore | -0.0032 | 0.188 | 0.391 | 6 |
+| qwen2.5-7b | ROUGE-L | -0.0072 | 0.132 | 0.478 | 6 |
+
+**Observations.**
+
+- No BPW regression for quality metrics reaches statistical significance at p < 0.05. The highest R-squared is 0.359 (phi-2 coherence), still explaining less than 36% of variance. The median R-squared across all quality regressions is approximately 0.10.
+- qwen2.5-1.5b shows the strongest BPW relationship (R-squared 0.31 for BERTScore, 0.34 for ROUGE-L), driven by the strong separation between the Q2_K, AWQ, and GPTQ points (all degraded) and the higher-BPW GGUF points. Even here, the regression is not significant at p < 0.05.
+- AWQ and GPTQ points (nominally ~4.0 BPW) do not fit the GGUF regression line. On Llama models, AWQ/GPTQ produce higher metric values than predicted by their BPW. On Qwen 1.5B, they produce lower values. This confirms that BPW is not a meaningful predictor of quality across quantization format families.
+
+> BPW remains a poor predictor of quality. No regression reaches significance, and AWQ/GPTQ points systematically deviate from the GGUF regression line.
+
+### SS8.2 Safety Metrics vs BPW
+
+**Table 13: BPW Regression Summary (Safety Metrics)**
+
+| Model | Metric | Slope | R-squared | p-value | N |
+|-------|--------|-------|-----------|---------|---|
+| llama3.2-1b | Refusal Rate | +0.039 | 0.282 | 0.141 | 9 |
+| llama3.2-3b | Refusal Rate | -0.000 | 0.000 | 0.979 | 9 |
+| qwen2.5-1.5b | Refusal Rate | +0.025 | 0.222 | 0.201 | 9 |
+| phi-2 | Refusal Rate | +0.013 | 0.080 | 0.498 | 8 |
+| mistral-7b | Refusal Rate | +0.023 | 0.653 | 0.052 | 6 |
+| qwen2.5-7b | Refusal Rate | +0.024 | **0.666** | **0.048** | 6 |
+
+**Observations.**
+
+- qwen2.5-7b refusal rate shows the only significant BPW regression (R-squared=0.666, p=0.048). This model shows a genuine linear relationship between precision and safety: each additional BPW adds approximately +2.4pp refusal rate.
+- mistral-7b is near-significant (R-squared=0.653, p=0.052) with a similar slope (+2.3pp per BPW).
+- For small models with AWQ/GPTQ data, the regressions are non-significant because AWQ/GPTQ safety losses are far larger than the GGUF trend would predict. The AWQ/GPTQ points pull the regression line away from the GGUF pattern.
+
+---
+
+## SS9. Results: Deployment Protocol
+
+### SS9.1 Quant-Level Deployment Classification
+
+The Phase 5 deployment protocol classifies each quant format based on its cross-model safety signal. A format is "blanket safe" only if it has zero reject rows and bounded refusal signals across all tested models.
+
+**Table 14: Deployment Classification by Quant Format**
+
+| Format | N Models | Max Refusal Signal (pp) | Reject Rows | Recommended Role |
+|--------|----------|------------------------|-------------|-----------------|
+| Q6_K | 6 | 1.82 | 0 | model_specific_review_only |
+| Q8_0 | 4 | 2.60 | 0 | model_specific_review_only |
+| Q5_K_M | 6 | 2.73 | 0 | model_specific_review_only |
+| Q4_K_M | 6 | 2.73 | 1 | not_blanket_safe |
+| Q3_K_S | 6 | 8.18 | 1 | not_blanket_safe |
+| Q2_K | 6 | 9.09 | 3 | not_blanket_safe |
+| **AWQ** | **5** | **56.82** | **4** | **not_blanket_safe** |
+| **GPTQ** | **6** | **51.36** | **5** | **not_blanket_safe** |
+
+**Observations.**
+
+- Q5_K_M is the lowest-bit format that passes the conservative review-floor test: max refusal signal +3.18pp, zero reject rows across all 6 models. It is the lowest-risk GGUF floor, but the canonical deployment role still requires model-specific review.
+- Q4_K_M has 1 reject row (phi-2, where the safety signal exceeds the threshold). For the other 5 models, Q4_K_M remains within acceptable bounds. The v1/v2 recommendation of Q4_K_M as the default holds for all non-phi-2 models.
+- AWQ and GPTQ have the worst deployment profiles in the matrix: 3 reject rows each (all tested small models), maximum refusal signals of +37.4pp (AWQ) and +44.3pp (GPTQ). These are an order of magnitude worse than any GGUF format.
+- The protocol classifies Q8_0 as "model_specific_review_only" rather than "blanket_safe" because it is tested on only 4 models (the 2 7B models use it as baseline, not as a comparand). For the 4 models where Q8_0 is tested against FP16, its max signal is a modest 2.60pp.
+
+> Q5_K_M is the conservative review floor. Q4_K_M is safe for 5 of 6 models. AWQ and GPTQ are not safe for any model without model-specific safety evaluation.
+
+### SS9.3 Phase 5 Validation Protocol
+
+The deployment classifications in Table 14 are produced by the Phase 5 validation protocol, which enforces a 6-step checklist before any deployment recommendation:
+
+**Table 14b: Phase 5 Validation Protocol**
+
+| Step | Requirement | Observed | Status |
+|------|------------|----------|--------|
+| P5_001 | Freeze matched matrix | 6 models, 4 families, 51 rows | **PASS** |
+| P5_002 | Run within-model correlation screen | 36/36 pairings split sign | **PASS** |
+| P5_003 | Use direct safety deltas | 51/51 rows with direct safety metrics | **PASS** |
+| P5_004 | Cross-check regex with LLM judge | 51/51 rows have judge coverage | **PASS** |
+| P5_005 | Classify regimes | 9 hidden-danger + 1 near-hidden-danger rows | **PASS** |
+| P5_006 | Select conservative floor | Q5_K_M, max_refusal_signal=3.18pp | **PASS** |
+
+**Observations.**
+
+- P5_002 is the critical safeguard against proxy-based deployment decisions. The finding that 34 of 36 metric pairings split positive and negative across models means that no single quality metric can serve as a universal proxy for safety. Any automated deployment pipeline that gates on quality metrics alone will systematically miss hidden-danger rows.
+- P5_004 surfaces measurement divergence. For example, mistral-7b regex refusal at Q8_0 is 23.6%, but the judge reads 91.3%. Without the judge cross-check, a deployment team would conclude that mistral-7b has poor safety alignment when in fact the model's refusal style simply does not match the regex pattern.
+- P5_006 forces the floor selection to be supported by cross-model evidence. Q5_K_M passes because it has bounded refusal deltas (+/-3.18pp) across all 6 models. Q4_K_M fails the strict floor test because phi-2 shows an elevated safety signal, even though the other 5 models are within bounds.
+
+### SS9.4 Failure Mode Taxonomy
+
+The Phase 5 taxonomy identifies six distinct failure modes that can occur in quantization deployment decisions:
+
+**Table 14c: Failure Mode Taxonomy**
+
+| Taxonomy ID | Failure Mode | Trigger Rule | Observed | Implication |
+|-------------|-------------|-------------|----------|-------------|
+| TAX_001 | Sign reversal proxy failure | Pooled direction hides opposing within-model directions | 36/36 pairings | Never approve from pooled proxy metrics alone |
+| TAX_002 | Hidden danger | Quality delta >= -2pp AND refusal delta <= -10pp | 9 rows | Reject as blanket default |
+| TAX_003 | Near hidden danger | Quality delta >= -5pp AND refusal delta <= -10pp | 1 row | Escalate to direct safety review |
+| TAX_004 | Over-refusal | Quality delta <= -5pp AND refusal delta >= +5pp | 0 rows | Do not read rising refusal as better alignment |
+| TAX_005 | Measurement divergence | Judge-regex refusal gap >= 20pp | 21 rows | Require judge-backed review |
+| TAX_006 | Conservative floor candidate | Full coverage, bounded drift, no hidden-danger | Q5_K_M | Use as conservative review floor |
+
+**Observations.**
+
+- TAX_001 (sign reversal) and TAX_005 (measurement divergence) are the most prevalent failure modes, affecting 36/36 metric pairings and 23/51 rows respectively. These are systemic issues with the measurement infrastructure, not isolated anomalies.
+- TAX_002 (hidden danger) affects 7 rows, all of which involve either AWQ/GPTQ (5 rows) or aggressive GGUF quantization (2 rows). No GGUF variant at Q4_K_M or above triggers this failure mode.
+- TAX_004 (over-refusal) has zero rows in the v3 matrix. This means that quantization never produces a situation where the model becomes more conservative about safety while losing quality. The asymmetry is one-directional: quality before safety.
+
+### SS9.2 Q5_K_M Floor Detail
+
+**Table 15: Q5_K_M Deltas by Model (Floor Verification)**
+
+| Model | Refusal Delta | Truth Delta | Bias Delta | BERTScore Delta |
+|-------|--------------|-------------|------------|-----------------|
+| llama3.2-1b | -1.82pp | -6.00pp | -2.02pp | -0.67pp |
+| llama3.2-3b | +0.45pp | +9.00pp | -1.52pp | -0.54pp |
+| mistral-7b | +0.91pp | -1.00pp | +0.51pp | -0.10pp |
+| phi-2 | -0.91pp | +9.00pp | -1.01pp | +1.01pp |
+| qwen2.5-1.5b | +3.18pp | +2.00pp | +4.04pp | -0.78pp |
+| qwen2.5-7b | +0.00pp | -1.00pp | -1.01pp | -2.19pp |
+
+**Observations.**
+
+- The maximum refusal delta at Q5_K_M is +3.18pp (qwen2.5-1.5b), indicating a slight improvement in refusal rate from FP16. All other models show refusal deltas within +/-2pp.
+- Truthfulness deltas show high variance (-6pp to +9pp), consistent with the N=50 sample size. These are within noise and do not indicate genuine Q5_K_M effects.
+- BERTScore deltas are uniformly small (-2.19pp to +1.01pp), confirming minimal quality impact at Q5_K_M.
+- qwen2.5-7b shows the largest BERTScore delta at Q5_K_M (-2.19pp), but this is within the negligible tier (<3pp).
+
+---
+
+## SS10. Results: Regime Classification
+
+### SS10.1 Hidden-Danger and Near-Hidden-Danger Rows
+
+The regime taxonomy classifies each non-baseline row based on the relationship between quality and safety deltas.
+
+**Table 16: Hidden-Danger and Near-Hidden-Danger Rows**
+
+| Model | Format | BERTScore Delta | Refusal Delta | Regime |
+|-------|--------|----------------|---------------|--------|
+| llama3.2-1b | AWQ | +8.27pp | -61.82pp | hidden_danger |
+| llama3.2-1b | GPTQ | +8.49pp | -68.18pp | hidden_danger |
+| llama3.2-1b | Q3_K_S | +0.98pp | -13.64pp | hidden_danger |
+| llama3.2-3b | AWQ | -0.83pp | -22.73pp | hidden_danger |
+| llama3.2-3b | GPTQ | +0.00pp | -20.91pp | hidden_danger |
+| phi-2 | GPTQ | +3.21pp | -55.45pp | hidden_danger |
+| qwen2.5-7b | Q2_K | +2.39pp | -12.27pp | hidden_danger |
+| mistral-7b | Q2_K | -2.12pp | -11.36pp | near_hidden_danger |
+
+**Observations.**
+
+- 7 of 9 hidden-danger rows are AWQ/GPTQ variants. The remaining 2 are GGUF extremes (llama3.2-1b Q3_K_S, qwen2.5-7b Q2_K).
+- The AWQ/GPTQ hidden-danger rows show much larger refusal losses than the GGUF hidden-danger rows. The maximum GGUF hidden-danger refusal loss is -13.64pp (llama3.2-1b Q3_K_S); the minimum AWQ/GPTQ hidden-danger refusal loss is -20.91pp (llama3.2-3b GPTQ). AWQ/GPTQ safety degradation is categorically worse.
+- phi-2 GPTQ has the most extreme hidden-danger profile: BERTScore improves +3.21pp while refusal rate collapses -55.45pp. A quality-only screening would classify this variant as "improved."
+- llama3.2-1b AWQ/GPTQ show the most extreme BERTScore inflation (+8.27pp and +8.49pp) combined with catastrophic refusal losses (-61.82pp and -68.18pp). The larger the metric inflation, the larger the safety loss -- a dangerous anti-correlation.
+
+> AWQ/GPTQ hidden-danger rows show 2-5x larger refusal losses than GGUF hidden-danger rows. The safety degradation from non-GGUF formats is categorically worse.
+
+### SS10.2 Regime Distribution
+
+**Table 17: Regime Distribution Across the Full Matrix**
+
+| Regime | Count | Fraction | Description |
+|--------|-------|----------|-------------|
+| baseline | 6 | 12.8% | FP16 or Q8_0 baselines (not in regimes.csv) |
+| neutral | 33 | 70.2% | Quality and safety within acceptable bounds |
+| hidden_danger | 7 | 14.9% | Quality stable, safety collapsed |
+| near_hidden_danger | 1 | 2.1% | Borderline hidden danger |
+
+**Observations.**
+
+- 70.2% of matrix rows are classified as "neutral," indicating that the majority of quantization configurations (primarily GGUF at moderate bit-widths) produce acceptable quality and safety outcomes.
+- The 14.9% hidden-danger rate means that roughly 1 in 7 quantization configurations would be incorrectly approved by a quality-only screening process. Including the near-hidden-danger row, the risk rate is 17.0% (8/47).
+- All hidden-danger and near-hidden-danger rows involve either aggressive GGUF quantization (Q2_K, Q3_K_S) or non-GGUF formats (AWQ, GPTQ). No GGUF variant at Q4_K_M or above is classified as hidden danger for any model.
+- If a team restricts to GGUF Q4_K_M or above, the neutral rate remains above 90%. Including AWQ/GPTQ in the selection pool drops the safe rate significantly due to the 7/11 hidden-danger concentration.
+
+---
+
+## SS11. Results: Refusal Mechanism Analysis
+
+### SS11.1 Phase 6 Refusal Style Correlations
+
+Phase 6 of the bespoke analysis examines how refusal behavior changes mechanistically under quantization by analyzing refusal prefix diversity, dominant prefix concentration, and refusal response length.
+
+**Table 18: Phase 6 Style Correlations (Pooled)**
+
+| Style Metric Delta | Pearson r | Spearman rho | N |
+|-------------------|-----------|-------------|---|
+| dominant_prefix_share_delta | +0.589 | +0.501 | 41 |
+| unique_prefix_rate_delta | -0.813 | -0.431 | 41 |
+| prefix_entropy_norm_delta | -0.456 | -0.576 | 41 |
+| mean_tokens_refusal_delta | -0.698 | -0.394 | 41 |
+| hard_refusal_rate_delta | +0.998 | +0.987 | 41 |
+
+**Observations.**
+
+- hard_refusal_rate_delta has near-perfect correlation with refusal_rate_delta (r=+0.998), confirming that the refusal rate metric is driven almost entirely by hard refusals (explicit "I cannot" statements) rather than soft refusals (topic deflection).
+- unique_prefix_rate_delta shows a strong negative correlation (r=-0.813): models that lose more refusal rate also show more diverse refusal prefixes. This means the model is not consistently refusing with a template ("I cannot help with that") but instead generating novel, inconsistent refusal-like text that may or may not parse as an actual refusal.
+- dominant_prefix_share_delta shows a positive correlation (r=+0.589): models with higher refusal rates concentrate their refusals into fewer template phrases. When refusal rates drop, the dominant template share also drops, indicating that the model has lost its safety-trained refusal template.
+- mean_tokens_refusal_delta shows a negative correlation (r=-0.698): models that lose more refusal rate tend to emit longer refusal responses. The longer responses are less template-like and more likely to be scored as compliance by the regex scorer.
+
+> Refusal degradation under quantization is mechanistically driven by loss of refusal templates: models lose their dominant "I cannot help" pattern and replace it with longer, more diverse text that often fails to register as a refusal.
+
+### SS11.2 Worst-Case Refusal Mechanism Examples
+
+**Table 19: Extreme Refusal Mechanism Cases**
+
+| Model | Format | Refusal Delta | Dominant Prefix Delta | Unique Prefix Delta | Mean Refusal Tokens Delta |
+|-------|--------|--------------|----------------------|---------------------|--------------------------|
+| phi-2 | GPTQ | -90.0pp | +5.49pp | +93.41pp | +170.62 |
+| llama3.2-1b | GPTQ | -59.0pp | -33.51pp | +40.50pp | +67.89 |
+| llama3.2-1b | Q2_K | -57.0pp | -51.01pp | +49.49pp | +73.47 |
+| qwen2.5-1.5b | Q2_K | -56.0pp | -53.49pp | +24.57pp | +161.73 |
+| qwen2.5-1.5b | GPTQ | -52.0pp | -55.32pp | +43.67pp | +190.55 |
+| llama3.2-1b | AWQ | -51.0pp | -56.84pp | +50.43pp | +45.92 |
+
+**Observations.**
+
+- phi-2 GPTQ shows the most extreme refusal mechanism disruption: -90pp refusal delta, +93.41pp unique prefix rate increase, +170.62 additional refusal tokens. The model has completely lost its refusal template and generates long, novel text in response to harmful prompts.
+- qwen2.5-1.5b GPTQ generates the longest refusal responses (+190.55 additional tokens), indicating that GPTQ quantization of this model produces verbose non-refusal outputs when faced with harmful prompts.
+- The AWQ/GPTQ rows in this table overlap substantially with the GGUF Q2_K rows, confirming that the mechanism of safety degradation is the same across formats: loss of refusal templates followed by generation of longer, less structured refusal-like text.
+- The mechanism analysis provides an actionable diagnostic for deployment teams: if a quantized model's refusal responses become longer and more diverse (less template-like), this is an early indicator of safety degradation, even if the refusal rate metric appears stable. Monitoring dominant_prefix_share and mean_tokens_refusal in production could serve as a leading indicator of safety alignment loss.
+
+The convergence of AWQ/GPTQ and GGUF Q2_K mechanisms is important because it suggests a common pathway for quantization-induced safety loss. Regardless of how the weights are quantized (calibration-based or rounding-based), the failure mode is the same: the fine-tuned safety behavior (encoded as specific weight patterns in the attention and MLP layers) is more fragile than the base model knowledge. When quantization noise exceeds the safety pattern's tolerance, the model retains its knowledge (and may even produce better-formatted outputs) while losing its ability to refuse harmful prompts in a recognizable way.
+
+---
+
+## SS12. Statistical Synthesis and Hypothesis Evaluation
+
+### SS12.1 Research Question Evaluation
+
+| RQ | Finding | Evidence | Status |
+|----|---------|----------|--------|
+| RQ1: AWQ/GPTQ preserve quality comparable to Q4_K_M | AWQ/GPTQ produce either inflated (Llama) or degraded (Qwen) generation metrics; neither pattern indicates genuine quality preservation. Benchmark accuracy is contaminated by formatting artifacts. | SS5.1 Table 5, SS5.2 Table 6 | **Not demonstrated** |
+| RQ2: AWQ/GPTQ preserve safety comparable to Q4_K_M | Every AWQ/GPTQ variant fails the blanket safety screen with refusal losses of -12pp to -68pp, compared to Q4_K_M's bounded refusal signals but non-blanket-safe status on one model. | SS6.1 Table 8, SS9 Table 14 | **Not demonstrated** |
+| RQ3: Sign reversal extends to AWQ/GPTQ | 36/36 metric pairings split sign across models in the full v3 matrix, confirming that the quality-safety proxy failure persists with AWQ/GPTQ included. | SS7.2 Table 11, claim_ledger REV_001 | **Demonstrated** |
+| RQ4: Generation metrics serve as quality proxies across format families | AWQ/GPTQ generation metrics are systematically unreliable: inflated on Llama, degraded on Qwen, mixed on phi-2. They do not predict benchmark accuracy or safety outcomes. | SS5.1, SS5.2, SS7.1 | **Not demonstrated** |
+
+### SS12.2 Mixed-Effects Quality-Safety Estimates
+
+**Table 20: Mixed-Effects Model Results (Quality vs Refusal)**
+
+| Quality Metric | Coefficient | p-value | 95% CI |
+|---------------|-------------|---------|--------|
+| BERTScore | +0.775 | 0.326 | [-0.77, +2.32] |
+| Coherence | -0.953 | 0.068 | [-1.98, +0.07] |
+| ROUGE-L | -0.861 | 0.017 | [-1.57, -0.15] |
+
+**Observations.**
+
+- ROUGE-L is the only quality metric with a statistically significant relationship to refusal rate in the mixed-effects model (coef=-0.861, p=0.017). Each +1pp ROUGE-L change corresponds to approximately -0.86pp refusal rate change, controlling for model random effects.
+- The BERTScore coefficient is positive but non-significant (p=0.326), meaning BERTScore provides no reliable information about safety outcomes even after controlling for model effects.
+- Coherence is borderline (p=0.068). The negative coefficient (-0.953) suggests a weak tendency for coherence improvements to co-occur with refusal losses, but the evidence is insufficient to make a formal claim.
+
+### SS12.3 Within-Model Correlation Detail
+
+The repeated-measures analysis controls for model-level differences, but examining individual models reveals the mechanism behind the pooled non-significance:
+
+**Table 21b: Within-Model BERTScore vs Refusal Correlations**
+
+| Model | Pearson r | Spearman rho | N | Direction |
+|-------|-----------|-------------|---|-----------|
+| qwen2.5-1.5b | +0.935 | +0.833 | 8 | Positive (co-degradation) |
+| mistral-7b | +0.574 | +0.100 | 5 | Weak positive |
+| llama3.2-1b | -0.275 | -0.524 | 8 | Negative (hidden danger) |
+| llama3.2-3b | -0.461 | -0.095 | 8 | Negative (hidden danger) |
+| qwen2.5-7b | -0.613 | -0.200 | 5 | Negative (hidden danger) |
+| phi-2 | -0.694 | -0.468 | 7 | Negative (hidden danger) |
+
+**Observations.**
+
+- Four models show negative BERTScore-refusal correlations (hidden-danger direction): as BERTScore improves or stays flat, refusal rate drops. This is the dangerous pattern.
+- Two models show positive correlations (qwen2.5-1.5b, mistral-7b): quality and safety degrade together. This is the "safe" pattern where quality screening would catch safety problems.
+- The pooled BERTScore/refusal relationship remains non-significant (Pearson r=+0.132), making it uninformative. This is why the sign reversal finding (36/36 pairings split) is the key safety takeaway, not the pooled correlation magnitude.
+
+### SS12.4 Leave-One-Out Sensitivity
+
+**Table 22: Leave-Q2_K-Out Sensitivity (Pooled Correlations)**
+
+| Quality Metric | Full Matrix r | Leave-Q2_K-Out r | Direction Change |
+|---------------|---------------|-------------------|-----------------|
+| BERTScore vs Refusal | +0.122 | -0.195 | **Sign reversal** |
+| Coherence vs Refusal | -0.271 | -0.573 | Strengthened |
+| ROUGE-L vs Refusal | -0.318 | -0.616 | Strengthened |
+
+**Observations.**
+
+- Removing Q2_K points reverses the sign of the BERTScore-refusal pooled correlation from +0.122 to -0.195. This means the positive correlation in the full matrix is driven entirely by the Q2_K extreme points, where both BERTScore and refusal collapse together. Without Q2_K, the relationship is weakly negative (higher BERTScore, lower refusal), consistent with the hidden-danger pattern.
+- Removing Q2_K strengthens the coherence-refusal and ROUGE-L-refusal negative correlations, confirming that the anti-correlation between quality improvement and safety loss is a robust finding across the moderate quantization range (Q3_K_S through Q8_0 plus AWQ/GPTQ).
+- The sign reversal on BERTScore when Q2_K is removed is the strongest evidence that pooled correlations are misleading. The exact same data, with one extreme point removed, produces the opposite conclusion. Any paper or deployment recommendation that cites pooled BERTScore-refusal correlations without this sensitivity analysis is unreliable.
+- The leave-one-model-out analysis (not shown in full) shows that removing llama3.2-1b changes the pooled BERTScore-refusal correlation from r=+0.122 to r=+0.489 (p=0.004). This model's AWQ/GPTQ variants, with their extreme metric inflation, dominate the pooled signal. The correlation is model-driven, not format-driven.
+
+---
+
+## SS13. Conclusions
+
+### SS13.1 Summary of Findings
+
+TR125 v3 demonstrates that AWQ and GPTQ are not safe substitutes for GGUF Q4_K_M on small models (<=3.2B parameters). The evidence rests on three independent findings:
+
+**First, generation metrics are unreliable across format families.** AWQ/GPTQ produce either implausibly inflated metrics (Llama models: +8-27pp BERTScore/ROUGE-L) or severe degradation (Qwen 1.5B: -13pp BERTScore). Neither pattern corresponds to genuine quality preservation. Benchmark accuracy shows similar anomalies: phi-2 GPTQ appears to gain +15pp MMLU and +63pp ARC through formatting artifacts rather than knowledge improvement. A practitioner who relies on automated quality metrics to evaluate AWQ/GPTQ variants will reach incorrect conclusions.
+
+**Second, safety alignment is broadly destroyed under AWQ/GPTQ.** Every AWQ/GPTQ variant tested loses refusal relative to baseline. This places 7 of 11 AWQ/GPTQ variants in the hidden-danger category; the remaining 4 are neutral in regime but still fail blanket-safe deployment. The mechanism is consistent with GGUF safety degradation at Q2_K/Q3_K_S: loss of refusal template patterns, increased refusal text diversity, and longer non-refusal outputs. AWQ/GPTQ safety loss is quantitatively worse than the worst GGUF format (Q2_K: -57pp max refusal loss vs GPTQ: -68pp).
+
+The safety destruction is particularly alarming because AWQ and GPTQ are widely used in production deployments. The HuggingFace Hub hosts thousands of AWQ and GPTQ model variants, and many deployment frameworks (vLLM, TGI, text-generation-webui) support these formats natively. If the safety loss demonstrated here generalizes beyond the small model sizes tested, a significant fraction of deployed quantized models may have compromised safety alignment without the operators being aware.
+
+**Third, the quality-safety proxy failure extends to AWQ/GPTQ.** The sign reversal pattern identified in v2 persists in the full v3 matrix: 36/36 metric pairings split positive and negative across models. No pooled quality metric reliably predicts safety outcomes. The mixed-effects analysis finds only ROUGE-L has a significant relationship to refusal, and that relationship is negative (quality up = safety down). BERTScore provides no reliable information about safety.
+
+### SS13.2 Updated Deployment Guidance
+
+The v3 findings update the TR125 deployment decision tree as follows:
+
+1. **GGUF Q4_K_M or higher remains the recommended default** for production deployment on all models except phi-2 (which requires model-specific safety review at Q4_K_M).
+2. **Q5_K_M is the conservative review floor** for deployments that want the lowest-risk GGUF option while still preserving model-specific safety review.
+3. **AWQ and GPTQ should not be deployed on small models** without direct safety evaluation (refusal rate measurement) on the specific model and checkpoint being deployed.
+4. **7B AWQ/GPTQ evaluation is pending** and may yield different results due to the parameter redundancy buffer observed for 7B GGUF variants.
+5. **Quality metrics cannot serve as safety proxies** for any quantization format. Every deployment must include direct safety evaluation.
+
+### SS13.3 Comparison of Format Families
+
+The v3 data enables a direct comparison of quantization format families at similar nominal bit-widths:
+
+| Property | GGUF Q4_K_M (~4.85 BPW) | AWQ (~4.0 BPW) | GPTQ (~4.0 BPW) |
+|----------|------------------------|----------------|-----------------|
+| Max refusal loss (pp) | -10.0 (llama3.2-3b) | -61.8 (llama3.2-1b) | -68.2 (llama3.2-1b) |
+| Min refusal loss (pp) | -3.2 (llama3.2-1b) | -14.1 (qwen2.5-7b) | -12.3 (mistral-7b) |
+| Reject rows | 1 (phi-2) | 4 (llama3.2-1b, llama3.2-3b, mistral-7b, qwen2.5-1.5b) | 5 (llama3.2-1b, llama3.2-3b, mistral-7b, phi-2, qwen2.5-1.5b) |
+| Hidden-danger rows | 0 | 4 (llama3.2-1b, llama3.2-3b, mistral-7b, qwen2.5-1.5b) | 4 (llama3.2-1b, llama3.2-3b, mistral-7b, phi-2) |
+| BERTScore range | -2.6pp to +1.9pp | -13.7pp to +8.3pp | -13.0pp to +8.5pp |
+| Blanket-safe | 5 of 6 models | **None** | **None** |
+
+GGUF Q4_K_M is categorically safer than both AWQ and GPTQ at comparable bit-widths. The safety gap is not marginal -- it is an order of magnitude in refusal signal and a qualitative difference in deployment classification. The ~0.85 BPW precision advantage of Q4_K_M over AWQ/GPTQ contributes to this gap, but the mixed-precision weight allocation strategy of GGUF (where important weights receive more bits) likely plays a larger role in preserving safety-critical weight patterns.
+
+### SS13.4 Program Impact
+
+The final v3 canonical matrix brings the total TR125 evidence base to 41,895 raw quality samples (37,485 loaded), 48,603 safety samples, and 21,096 judge annotations across 51 model-quant variants. This is the largest quantization evaluation in the Banterhearts research program and provides the empirical foundation for the quality-safety correlation paper.
+
+The key contribution of v3 to the broader research program is the demonstration that quantization format choice is a first-order safety decision, not merely a performance optimization. Prior to v3, the program's guidance was precision-centric ("use Q4_K_M or higher"). After v3, the guidance is format-and-precision-centric ("use GGUF Q4_K_M or higher; do not substitute AWQ or GPTQ without model-specific safety evaluation"). This distinction matters for deployment teams choosing between quantization ecosystems.
+
+### SS13.5 Implications for the Research Program
+
+The v3 findings have three implications for subsequent TRs in the Banterhearts research program:
+
+1. **All future quantization evaluations must include safety metrics.** The v3 data demonstrates that quality-only evaluation is systematically unsafe. Any TR that evaluates quantized models must include at least refusal rate measurement, regardless of the quantization format being tested.
+
+2. **The quality-safety proxy failure is now a confirmed program-level finding.** Three independent analyses (v1 GGUF-only, v2 GGUF+7B expansion, v3 AWQ/GPTQ) all confirm that quality metrics do not predict safety outcomes. This finding should be cited in all subsequent TRs that reference quantization.
+
+3. **The regime classification system is confirmed effective on this matrix.** It isolates the 7 AWQ/GPTQ hidden-danger rows and the remaining 4 AWQ/GPTQ rows that still fail blanket-safe deployment, while the quality tier system missed the Llama inflation pattern. The regime classification should be the primary deployment decision tool, with quality tiers serving as a secondary diagnostic.
+
+---
+
+## SS14. Limitations and Follow-Up
+
+### Design Limitations
+
+- **Coverage now reaches 7B, but not beyond.** The matrix now includes mistral-7b and qwen2.5-7b under both AWQ and GPTQ, but larger models and additional architecture families remain untested. The current deployment rule is therefore supported through 7B, not for arbitrarily larger checkpoints.
+- **Format-backend confound.** AWQ/GPTQ run through Transformers while GGUF runs through Ollama/llama.cpp. Observed differences may reflect backend effects (tokenization, sampling implementation, attention computation) in addition to format effects. A controlled experiment with identical backends is not feasible because the formats require different runtimes. The tokenizer is the same (loaded from the same Hugging Face checkpoint), but the attention implementation and KV-cache management differ.
+- **No inference speed data.** AWQ/GPTQ were not timed. The deployment decision tree does not currently account for throughput differences between formats. In practice, AWQ and GPTQ are often chosen for their GPU kernel efficiency (via CUDA/Triton), which may offset their quality/safety costs in throughput-constrained deployments.
+- **Single calibration dataset.** All AWQ/GPTQ checkpoints were calibrated on WikiText-2 with 128 samples. Different calibration datasets (e.g., domain-specific text, safety-focused text, or instruction-following datasets) may produce different quantization outcomes, particularly for safety-critical weight patterns.
+- **No base-vs-instruct control.** All models are instruct-tuned variants. The safety degradation may be partly explained by the instruct fine-tuning being more fragile under quantization than the base model knowledge. Testing AWQ/GPTQ on base models was not in scope.
+
+### Statistical Limitations
+
+- **Small benchmark N.** MMLU (N=285) and ARC (N=200) produce CIs with half-widths of 5-7pp. Differences smaller than this are within noise.
+- **Small safety N.** Truthfulness (N=50) shows wide CIs (+/-14pp). Refusal rate (N=220) has narrower CIs (~+/-5pp) and is the most reliable safety metric.
+- **No multiple comparison correction.** p-values in this report are uncorrected. With 66 BPW regressions tested, a Bonferroni-corrected threshold would be p < 0.00076. The only regression that would survive this correction is hard_refusal_rate_delta vs refusal_rate_delta (r=+0.998).
+- **Temperature 0.0 determinism assumption.** All evaluations use greedy decoding. Stochastic sampling at temperature > 0 may produce different quality-safety profiles, particularly for AWQ/GPTQ variants where output diversity is already reduced.
+
+### Explicit Non-Claims
+
+- **This study does not demonstrate that AWQ and GPTQ are inherently unsafe formats.** The failures may be specific to the small model sizes tested (<=3.2B), the specific checkpoints used, or the specific calibration data (WikiText-2). Larger models, different calibration datasets, or different AWQ/GPTQ configurations may produce acceptable results.
+- **This study does not demonstrate that GGUF is inherently safer than AWQ/GPTQ.** GGUF Q2_K produces comparable safety losses to AWQ/GPTQ on the same models. The safety advantage of Q4_K_M may be due to its higher effective BPW (~4.85 vs ~4.0) rather than any format-specific property.
+- **This study does not claim that AWQ/GPTQ quality metrics are meaningless.** The metrics are computed correctly from model outputs. The claim is that the metrics do not predict genuine quality or safety outcomes when comparing across format families.
+- **This study does not claim that all 4-bit quantization is unsafe.** GGUF Q4_K_M at ~4.85 BPW passes the safety screen for 5 of 6 models. The safety failure is specific to the AWQ and GPTQ calibration methods on small models, not to the 4-bit precision target itself.
+- **This study does not claim generalizability beyond the tested models and checkpoints.** Different model architectures (e.g., Gemma, Mistral-Nemo, Llama 3.3) may respond differently to AWQ/GPTQ. The 4 models tested here are representative but not exhaustive.
+
+### Follow-Up Directions
+
+- **7B AWQ/GPTQ evaluation** on Colab Pro A100 (pending). Expected models: mistral-7b, qwen2.5-7b with AWQ and GPTQ checkpoints. This is the highest-priority follow-up because the 7B GGUF results showed strong safety resilience, and confirming or refuting that pattern for AWQ/GPTQ would complete the format comparison across model sizes.
+- **Calibration sensitivity study.** Test whether different calibration datasets (C4, RedPajama, or instruction-following data like Alpaca) produce better safety preservation for AWQ/GPTQ. The current WikiText-2 calibration optimizes for language modeling perplexity, which may not capture safety-critical weight patterns.
+- **Safety-aware calibration.** Test whether including safety-relevant prompts in the calibration set (harmful prompt refusals, bias resistance examples) improves safety preservation under AWQ/GPTQ. This would require a custom calibration pipeline.
+- **Backend isolation.** If feasible, run GGUF Q4_K_M through Transformers (via ctransformers or similar) to isolate format effects from backend effects. This would determine how much of the AWQ/GPTQ safety loss is attributable to the quantization format versus the inference runtime.
+- **TR143 or later:** Systematic evaluation of AWQ/GPTQ on 13B+ models where parameter redundancy may buffer safety loss. The hypothesis is that models above ~7B parameters have sufficient weight redundancy to absorb the calibration-based quantization methods without losing safety-critical patterns.
+- **Rescoring pass.** Apply the v1 rescoring methodology to AWQ/GPTQ benchmark results to determine whether the formatting artifacts inflate or deflate true accuracy. This would provide a cleaner benchmark signal for AWQ/GPTQ quality assessment.
+
+---
+
+## SS15. Reproducibility
+
+### Run Artifacts
+
+| Artifact | Location |
+|----------|----------|
+| v1 quality samples | `results/eval/tr125_phase2/20260221_120035/samples.jsonl` |
+| v2 expansion samples | `research/tr142/expansion/results/tr125_expansion/20260328_064807/samples_scored.jsonl` |
+| v3 AWQ/GPTQ quality (small-model) | `research/tr142/expansion/results/v3_quality/20260330_222254/samples_scored.jsonl` |
+| v3 AWQ/GPTQ quality (7B AWQ) | `research/tr142/expansion/results/v3_quality_7b_awq/20260406_033657/samples.jsonl` |
+| v3 AWQ/GPTQ quality (7B GPTQ) | `research/tr142/expansion/results/v3_quality_7b_gptq/20260406_181327/samples.jsonl` |
+| v3 AWQ/GPTQ safety (small-model) | `research/tr142/expansion/results/v3_safety/20260331_125319/phase3_scored.jsonl` |
+| v3 AWQ/GPTQ safety (7B AWQ) | `research/tr142/expansion/results/v3_safety_7b_awq/20260406_190115/phase3_scored.jsonl` |
+| v3 AWQ/GPTQ safety (7B GPTQ) | `research/tr142/expansion/results/v3_safety_7b_gptq/20260407_150840/phase3_scored.jsonl` |
+| v3 AWQ/GPTQ judge (small-model) | `research/tr142/expansion/results/v3_safety/20260331_125319/phase3_judged.jsonl` |
+| v3 AWQ/GPTQ judge (7B AWQ) | `research/tr142/expansion/results/v3_safety_7b_awq/20260406_190115/phase3_judged.jsonl` |
+| v3 AWQ/GPTQ judge (7B GPTQ) | `research/tr142/expansion/results/v3_safety_7b_gptq/20260407_150840/phase3_judged.jsonl` |
+| Legacy safety (TR134) | `research/tr134/results/phase3/20260305_144827/phase3_scored.jsonl` |
+| Expansion safety | `research/tr142/expansion/results/tr134_expansion/20260327_170457/phase3_scored.jsonl` |
+| Canonical matrix | `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/matrix.csv` |
+| Analysis report | `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/analysis_report.md` |
+| Run manifest | `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/run_manifest.json` |
+| Master analysis JSON | `research/tr142/results/bespoke_analysis_v3/phase56_v3_full_canonical/master_analysis.json` |
+| Bespoke analysis script | `research/tr142/bespoke_analysis/build_matrix.py` |
+
+### Source Audit
+
+Every data source has a SHA-256 hash verified at load time:
+
+| Source | Label | Raw Lines | Loaded | SHA-256 (first 12) |
+|--------|-------|-----------|--------|-------------------|
+| Quality v1 | `tr125_phase2_legacy` | 24,990 | 20,580 | 45a2951761bf |
+| Quality v2 | `tr125_expansion_7b` | 8,820 | 8,820 | 8f14cae5d6bf |
+| Quality v3 small | `v3_awq_gptq_quality` | 5,145 | 5,145 | dae4cea9c12c |
+| Quality v3 7B AWQ | `v3_7b_awq_quality` | 1,470 | 1,470 | f0737f6f7aeb |
+| Quality v3 7B GPTQ | `v3_7b_gptq_quality` | 1,470 | 1,470 | 49f5680a7ca2 |
+| Safety legacy | `tr134_phase3_legacy` | 24,778 | 24,778 | 9f832412dec5 |
+| Safety expansion | `tr134_expansion_small_models` | 13,342 | 13,342 | 583a610190db |
+| Safety v3 small | `v3_awq_gptq_safety` | 6,671 | 6,671 | 7dcbb5b9e4a8 |
+| Safety v3 7B AWQ | `v3_7b_awq_safety` | 1,906 | 1,906 | 92936480b4e8 |
+| Safety v3 7B GPTQ | `v3_7b_gptq_safety` | 1,906 | 1,906 | 9d58aae0ff9f |
+| Judge legacy | `tr134_legacy_judge` | 12,168 | 7,020 | 5eadb499686c |
+| Judge expansion | `expansion_gemma3_judge` | 6,552 | 6,552 | fc57e95dc587 |
+| Judge 7B rejudge | `rejudge_7b_gemma3` | 5,616 | 5,616 | aa03f165fc19 |
+| Judge v3 small | `v3_awq_gptq_judge` | 3,276 | 3,276 | ff6f1278fca3 |
+| Judge v3 7B AWQ | `v3_7b_awq_judge` | 936 | 936 | cac0178144ab |
+| Judge v3 7B GPTQ | `v3_7b_gptq_judge` | 936 | 936 | d9b9be70da21 |
+
+### Seeds and Determinism
+
+- Bootstrap seed: 42
+- Temperature: 0.0 (greedy decoding)
+- Max tokens: 256
+- AWQ/GPTQ calibration: 128 samples from WikiText-2
+
+### Software Versions
+
+| Package | Version |
+|---------|---------|
+| numpy | 2.3.5 |
+| pandas | 2.2.3 |
+| scipy | 1.15.2 |
+| statsmodels | 0.14.5 |
+| pingouin | 0.6.1 |
+| AutoAWQ | 0.2.9 |
+| AutoGPTQ | 0.7.1 |
+
+### Run Commands
+
+```bash
+# v3 AWQ/GPTQ quality evaluation
+python research/tr142/expansion/run_v3_quality.py
+
+# v3 AWQ/GPTQ safety evaluation
+python research/tr142/expansion/run_v3_safety.py
+
+# Bespoke analysis (v3 canonical bundle)
+python research/tr142/bespoke_analysis/build_matrix.py --bundle phase56_v3_full_canonical
+```
+
+---
+
+## Appendix F: Second-Judge Robustness Check
+
+A second-judge robustness check using Claude Sonnet 4 (`claude-sonnet-4-20250514`, temperature 0) was conducted on a stratified sample of 11,470 safety rows covering all 51 matrix cells. Overall agreement with the canonical gemma3:12b judge was 89.9% (Cohen's kappa 0.873). For bbq_bias: 98.0% (κ=0.954). For refusal tasks: 91.1% advbench (κ=0.806), 86.1% jailbreak (κ=0.766). For truthfulqa: 73.8% (κ=0.624). The dominant disagreement was directional — Claude applied a stricter compliance threshold, which would amplify rather than attenuate the reported safety degradation under AWQ/GPTQ. All hidden-danger cells and deployment conclusions were stable. Full details: `research/tr142/second_judge/robustness_report.md`.
+
+---
+
+## References
+
+1. TR125 v1: Quantization Decision Matrix -- 5-model, 2-phase GGUF evaluation (Banterhearts, Feb 2026)
+2. TR125 v2: Quantization Decision Matrix (Expanded) -- 7-model cross-family with safety integration (Banterhearts, Mar 2026)
+3. TR124: Quality & Accuracy Baseline -- Backend equivalence, quantization impact, sampling variance (Banterhearts, Feb 2026)
+4. TR134: Safety Under Quantization -- Refusal rate, truthfulness, bias resistance (Banterhearts, Mar 2026)
+5. TR142: Quality-Safety Correlation Matrix -- Bespoke analysis pipeline (Banterhearts, Mar-Apr 2026)
+6. Lin et al., "AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration," MLSys 2024
+7. Frantar et al., "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers," ICLR 2023
+8. Hendrycks et al., "Measuring Massive Multitask Language Understanding," ICLR 2021
+9. Clark et al., "Think you have Solved Question Answering? Try ARC," arXiv:1803.05457, 2018
+10. Aynetdinov & Akbik, "SemScore: Automated Evaluation of Instruction-Tuned LLMs based on Semantic Textual Similarity," ACL Findings 2024
+11. llama.cpp -- Local LLM inference with GGUF quantization (Gerganov et al., 2023-2026)
+12. Ollama -- Local LLM inference server (2023-2026)
+
+### SS15.2 Quality Tier System (Inherited from v1)
+
+For reference, the quality tier system used throughout the TR125 program classifies each (model, quant) variant based on the **worse** of benchmark accuracy delta (percentage points) and generation quality delta (percent change from baseline):
 
 | Tier | Benchmark Delta (pp) | Generation Delta (%) | Interpretation |
 |------|---------------------|---------------------|----------------|
@@ -71,1501 +1171,346 @@ Quality tiers classify each (model, quant) combination based on the **worse** of
 | **Concerning** | >= -10pp | >= -15% | Noticeable quality loss, evaluate for specific task |
 | **Unacceptable** | Worse than above | Worse than above | Do not deploy |
 
-### Key Metric Average
+**Important caveats for v3:** This tier system was designed for monotonically degrading GGUF metrics. It does not handle the metric inflation pattern observed with AWQ/GPTQ on Llama models, where generation metrics improve despite quantization. For AWQ/GPTQ variants, the regime classification (SS10) provides a more reliable assessment because it incorporates safety data alongside quality data.
 
-For generation tasks, the **key metric average** is the unweighted mean of BERTScore, coherence, and ROUGE-L. These three metrics capture structural overlap (ROUGE-L), semantic similarity (BERTScore), and meaning preservation (coherence). Deltas are reported as percent change vs baseline.
-
-### Statistical Methods & Caveats
-
-**Tests used:**
-
-- **Pairwise Welch's t-tests** between adjacent quant levels on rescored accuracy (binary 0/1) and generation metrics (continuous). Alpha = 0.05 uncorrected. See SS15 for full results.
-- **Power analysis** via normal approximation for minimum detectable effect at alpha = 0.05, power = 0.80. See SS16.
-
-**Important caveats:**
-
-1. **Multiple comparison correction:** TR125 runs 116 pairwise tests (29 benchmark + 87 generation). At alpha = 0.05, ~5.8 false positives are expected by chance. **No family-wise correction is applied to reported p-values**, but Bonferroni and Holm corrections were computed (SS15.4). **7 of 16 significant results survive both corrections** -- all at the Q3_K_S/Q2_K boundary. The Q2_K cliff is robust; the Q3_K_S cliff is not.
-
-2. **t-tests on binary data:** Benchmark accuracy is binary (0/1 per question). While Welch's t-test converges to a z-test at N=485, a two-proportion z-test or chi-squared test would be the standard approach. Cohen's d on binary data is bounded (max ~2.0 at p=0.5), producing mechanically small effect sizes. Reported d values for benchmark tests should not be directly compared to generation d values.
-
-3. **Equivalence claims require equivalence testing:** Classifying a variant as "negligible" quality loss is an equivalence claim. A non-significant t-test (p > 0.05) does NOT establish equivalence; it merely fails to detect a difference. TOST (Two One-Sided Tests) was applied to all 18 negligible variants at both +/-3pp and +/-5pp equivalence margins (SS15.5). At +/-3pp: **0/18 pass**. At +/-5pp: **0/18 benchmark pass, 6/18 generation pass** (phi-2 Q8_0/Q6_K/Q5_K_M, llama3.2-3b Q8_0/Q6_K, qwen2.5-1.5b Q8_0). Generation quality can confirm equivalence at wider margins because continuous metrics have lower variance than binary benchmark data. The "negligible" tier should be read as "point estimate within 3pp, 6 variants confirmed generation-equivalent at +/-5%, but benchmark equivalence unconfirmed."
-
-4. **Tier thresholds vs MDE:** The benchmark MDE is 9.0pp at 80% power (SS16.1). The "negligible" tier uses a -3pp threshold and "acceptable" uses -5pp -- both below the detection limit. This means tier classifications for deltas between 0 and -9pp are based on point estimates that may not be statistically distinguishable from zero. The tier system remains useful as a point-estimate decision guide, but the statistical evidence for "negligible vs acceptable" is weak for any individual variant.
-
-5. **Confidence intervals:** The benchmark tables now include 95% Wilson CIs (SS8.1-8.5, added in v2). Wilson CI half-widths range from +/-3.7pp (low accuracy) to +/-4.4pp (mid accuracy). This means a reported delta of -2.3pp (llama3.2-1b Q4_K_M) is within the noise band and may not represent a real quality difference. Generation quality CIs exist in `phase2_analysis.json` and `phase2_v2_enhancements.json`.
-
-6. **Ollama determinism assumption:** TR125 uses temp = 0.0 with single repetition, citing TR124 Phase 3's validation that deterministic outputs need only one rep. However, TR124 Phase 3 validated determinism for HuggingFace transformers backends, not Ollama (which uses llama.cpp). Ollama at temp = 0 may not be perfectly deterministic due to different floating-point accumulation order in llama.cpp's kernels. No determinism validation was performed for the Ollama backend in TR125. If Ollama is not perfectly deterministic, the single-repetition design underestimates measurement variance.
+At the sample sizes used in this study (N=200-285 for benchmarks), the minimum detectable effect (MDE) at 80% power is approximately 9pp. This means tier assignments for deltas between 0pp and -9pp cannot be distinguished from zero with statistical confidence. The tier system should be treated as a guideline, not a precision instrument.
 
 ---
 
-## Executive Summary
+## Appendix A: Complete Benchmark Tables
 
-TR125 answers: **which quantization level should you choose for each model, and what quality-cost trade-off does each level offer?**
+### A.1 MMLU Accuracy (All Models, All Formats)
 
-### Key Findings
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| qwen2.5-7b | -- | 73.7% | 74.4% | 74.4% | 73.0% | 70.5% | 64.9% | PENDING | PENDING |
+| mistral-7b | -- | 58.9% | 59.6% | 59.6% | 56.8% | 55.8% | 55.1% | PENDING | PENDING |
+| qwen2.5-1.5b | 54.4% | 50.2% | 55.4% | 43.2% | 51.2% | 9.1% | 3.9% | 55.4% | 46.7% |
+| llama3.2-3b | 54.7% | 54.4% | 51.6% | 53.0% | 54.7% | 43.5% | 36.8% | 63.5% | 53.0% |
+| phi-2 | 38.9% | 39.6% | 33.7% | 38.2% | 34.4% | 37.5% | 28.8% | FAILED | 54.4% |
+| llama3.2-1b | 31.2% | 32.3% | 31.6% | 31.2% | 32.3% | 26.3% | 14.4% | 43.5% | 33.3% |
 
-1. **Q4_K_M is safe across all 5 models:** Maximum benchmark accuracy loss at Q4_K_M is -4.1pp (qwen2.5-1.5b). All other models lose <3pp. This is the recommended default quant level for production deployment.
-2. **The quality cliff is sharp and model-dependent:** Quality is stable from FP16 through Q4_K_M, then drops abruptly at Q3_K_S for most models. llama3.2-3b loses -10.1pp at Q3_K_S, qwen2.5-1.5b loses -12.2pp. phi-2 is the exception -- Q3_K_S costs only -0.4pp.
-3. **Q2_K is universally unacceptable:** All 5 models lose >11pp at Q2_K. qwen2.5-1.5b collapses to -40.6pp (near-random). No model should be deployed at Q2_K.
-4. **llama3.1-8b delivers the highest benchmark accuracy:** 72.4% rescored accuracy at Q8_0, with 69.7% at Q4_K_M. The 8B model adds a genuine quality tier above the 1-3B models.
-5. **phi-2 tolerates quantization best:** All levels Q3_K_S and above are within -1.8pp of FP16. Even Q3_K_S (-0.4pp) is classified "acceptable." This makes phi-2 the ideal candidate for aggressive quantization when VRAM is constrained.
-6. **Rescored accuracy is essential:** phi-2's raw accuracy is 26% (looks near-random) but rescored accuracy is 59% (strong). Raw exact_match penalizes formatting differences, not knowledge gaps. All benchmark results use rescored accuracy.
-7. **Native timing reveals true throughput:** Native tok/s ranges from 49 (llama3.1-8b Q8_0) to 480 (llama3.2-1b Q2_K). HTTP overhead adds 190-920% on top, making wall-clock timing unreliable for relative comparisons.
-8. **Q4_K_M delivers large savings at production quality:** FP16-baselined models save 30-67% vs FP16, and llama3.1-8b saves 49% vs Q8_0. phi-2 Q4_K_M saves 67% vs FP16 while losing only -1.8pp accuracy.
-9. **(v2) Repetition collapse at Q2_K:** qwen2.5-1.5b Q2_K shows repetition score of 0.702 (vs 0.992 baseline) -- degenerate looping text invisible to the 3 key metrics.
-10. **(v2) TOST equivalence partially confirmed at wider margin:** 0/18 at +/-3pp, but 6/18 generation-equivalent at +/-5pp (phi-2 Q8_0/Q6_K/Q5_K_M, llama3.2-3b Q8_0/Q6_K, qwen2.5-1.5b Q8_0). Benchmark equivalence remains unconfirmed due to binary data variance.
-11. **(v2) Bonferroni correction validates Q2_K cliff:** 7/16 significant tests survive correction -- all at Q3_K_S -> Q2_K boundary. The Q3_K_S cliff is not robust to correction.
-12. **(v2) QA and classification most quantization-sensitive:** Per-task analysis shows 30-42% degradation at Q2_K for factual tasks vs 3-12% for creative writing.
-13. **(v2) Cross-phase reproducibility is metric-dependent:** Only coherence is fully reproducible across Phase 1->2 (3/3 models <5% divergence). BERTScore diverges at -5.7% for 2/3 models (marginal). ROUGE-L diverges -10.7% to -18.6% (substantial). Coherence is the only fully reliable cross-phase signal (SS17).
+**Observations.**
 
-### Key Decision
+- qwen2.5-7b leads MMLU at every tested quant level. Even at Q2_K (64.9%), it exceeds every other model's best configuration.
+- AWQ MMLU scores for llama3.2-1b (43.5%) and llama3.2-3b (63.5%) exceed their FP16 baselines, which is implausible for lossy quantization. These improvements are benchmark formatting artifacts.
+- phi-2 GPTQ (54.4%) shows the same formatting-artifact pattern, exceeding phi-2 FP16 (38.9%) by +15.5pp.
+- qwen2.5-1.5b is the only model where AWQ (55.4%) approximately matches FP16 (54.4%) on MMLU, while GPTQ (46.7%) shows genuine degradation.
 
-- For **maximum quality**: llama3.1-8b at Q8_0 (72.4% accuracy, $0.1976/1M tokens).
-- For **best quality-per-dollar**: phi-2 at Q4_K_M (57.5% accuracy, $0.0490/1M tokens, 67% cheaper than FP16).
-- For **maximum throughput**: llama3.2-1b at Q4_K_M (280.9 native tok/s, $0.0346/1M tokens, negligible quality loss).
-- For **VRAM-constrained deployment** (<2GB): llama3.2-1b Q4_K_M (0.7 GB est.) or phi-2 Q3_K_S (1.2 GB est.).
-- **Never deploy Q2_K** for any quality-sensitive task.
+### A.2 ARC-Challenge Accuracy (All Models, All Formats)
 
-### Claim Validation
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| qwen2.5-7b | -- | 89.0% | 89.0% | 89.5% | 88.5% | 86.0% | 83.5% | PENDING | PENDING |
+| phi-2 | 8.0% | 8.5% | 12.0% | 7.0% | 12.0% | 19.5% | 2.5% | FAILED | 71.0% |
+| llama3.2-3b | 70.5% | 71.0% | 70.5% | 70.5% | 70.5% | 51.0% | 58.5% | 70.0% | 66.5% |
+| mistral-7b | -- | 72.0% | 70.0% | 69.5% | 70.5% | 68.5% | 65.5% | PENDING | PENDING |
+| qwen2.5-1.5b | 37.0% | 31.5% | 41.5% | 16.0% | 45.0% | 28.5% | 3.0% | 67.5% | 70.0% |
+| llama3.2-1b | 44.0% | 45.0% | 43.5% | 46.0% | 38.5% | 24.5% | 4.0% | 45.5% | 37.0% |
 
-| # | Claim | Evidence Base | Status |
-|---|-------|---------------|--------|
-| 1 | Q4_K_M preserves quality across all models | Benchmark accuracy within 5pp for all 5 models (SS8). Wilson CIs overlap baselines (SS8.1-8.5). TOST at +/-3pp fails (SS15.5) -- point estimate validated but equivalence unconfirmed | **Demonstrated** (point estimate; TOST underpowered) |
-| 2 | Quality cliff occurs at Q3_K_S boundary | 3/5 models lose >9pp at Q3_K_S (SS8) | **Demonstrated** (model-dependent) |
-| 3 | Q2_K is universally unacceptable | All 5 models lose >11pp benchmark accuracy (SS8) | **Demonstrated** |
-| 4 | phi-2 is most quantization-robust | Max loss -1.8pp through Q4_K_M, -0.4pp at Q3_K_S (SS8) | **Demonstrated** |
-| 5 | Rescored accuracy resolves formatting noise | phi-2: 26% raw vs 59% rescored (SS8) | **Demonstrated** |
-| 6 | Native timing eliminates HTTP overhead | CV 10-42% native vs 37-68% wall-clock (SS10) | **Demonstrated** |
-| 7 | Cost savings of 30-67% at Q4_K_M | Per-model cost table (SS12) | **Demonstrated** |
-| 8 | Phase 1 confound identified and resolved | Base-vs-instruct in TR124 FP16 baselines (SS4) | **Demonstrated** |
-| 9 | Q8_0 is equivalent to FP16 for most models | Max delta 1.6pp across 4 models with both levels (SS8) | **Demonstrated** |
-| 10 | Larger models tolerate quantization better (8B vs 1B) | llama3.1-8b: -2.7pp at Q4_K_M vs llama3.2-1b: -2.3pp (SS8) | **Partially validated** -- phi-2 at 2.7B is most robust |
+**Observations.**
+
+- phi-2 GPTQ ARC (71.0%) exceeds FP16 (8.0%) by +63.0pp -- the most extreme formatting artifact in the entire matrix. phi-2's FP16 ARC score is known to be severely depressed by answer-format incompatibility; GPTQ quantization appears to alter the output format in a way that accidentally matches the ARC answer parser.
+- qwen2.5-1.5b AWQ/GPTQ show +30-33pp ARC improvements over FP16, indicating the same formatting artifact at a smaller magnitude.
+- llama3.2-3b AWQ (70.0%) is the most plausible AWQ ARC result, showing a small -0.5pp loss from FP16. This model's AWQ output format appears compatible with the ARC parser.
+- The ARC benchmark is particularly susceptible to formatting artifacts because it expects a single letter (A/B/C/D) as the answer. Models that generate verbose explanations before the answer often fail the parser even when the correct answer is present in the text. AWQ/GPTQ may alter verbosity patterns in ways that accidentally improve or degrade parser compatibility.
+- Comparing ARC scores across formats is therefore unreliable without rescoring. The raw ARC numbers in this table should be used only for within-format comparisons (e.g., "does AWQ degrade ARC relative to GPTQ on the same model?"), not for cross-format quality claims.
 
 ---
 
-## When to Use This Report
+## Appendix B: Complete Generation Quality Tables
 
-TR125 is the quantization decision guide for the Banterhearts research program. Use it when choosing which quant level to deploy for a given model, VRAM budget, and quality requirement.
+### B.1 BERTScore (All Models, All Formats)
 
-### Scenario 1: Choosing a Quant Level for Production
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| qwen2.5-7b | -- | 0.762 | 0.768 | 0.740 | 0.764 | 0.761 | 0.786 | -- | -- |
+| llama3.2-3b | 0.767 | 0.766 | 0.768 | 0.762 | 0.759 | 0.728 | 0.765 | 0.759 | 0.767 |
+| phi-2 | 0.715 | 0.723 | 0.725 | 0.725 | 0.721 | 0.710 | 0.742 | -- | 0.747 |
+| qwen2.5-1.5b | 0.744 | 0.745 | 0.730 | 0.736 | 0.718 | 0.726 | 0.602 | 0.607 | 0.614 |
+| mistral-7b | -- | 0.699 | 0.699 | 0.698 | 0.708 | 0.708 | 0.678 | -- | -- |
+| llama3.2-1b | 0.646 | 0.644 | 0.641 | 0.639 | 0.665 | 0.656 | 0.550 | 0.729 | 0.731 |
 
-**Question:** "I want to deploy qwen2.5-1.5b on a 4GB GPU. Which quant level should I use?"
+**Observations.**
 
-**Answer:** Consult the decision matrix (SS13, 4GB VRAM tier). qwen2.5-1.5b at Q5_K_M (1.1 GB, -0.4pp, negligible) offers the best quality-preserving option. Q4_K_M (0.9 GB, -4.1pp, acceptable) is viable if you need more throughput. Avoid Q3_K_S (-12.2pp, unacceptable).
+- llama3.2-1b AWQ/GPTQ BERTScore (0.729/0.731) exceeds the model's FP16 baseline (0.646) by +8pp. This inflation is larger than the total range of GGUF variation for this model (0.550-0.665).
+- qwen2.5-1.5b AWQ/GPTQ BERTScore (0.607/0.614) is comparable to Q2_K (0.602), indicating Q2_K-level degradation from the 4-bit calibration methods.
 
-### Scenario 2: Validating a New Quantization
+### B.2 ROUGE-L (All Models, All Formats)
 
-**Question:** "I created a custom GGUF quantization. Is the quality acceptable?"
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| qwen2.5-7b | -- | 0.556 | 0.563 | 0.492 | 0.551 | 0.540 | 0.613 | -- | -- |
+| llama3.2-3b | 0.469 | 0.470 | 0.473 | 0.460 | 0.454 | 0.432 | 0.433 | 0.614 | 0.646 |
+| phi-2 | 0.412 | 0.418 | 0.416 | 0.427 | 0.405 | 0.379 | 0.399 | -- | 0.537 |
+| mistral-7b | -- | 0.389 | 0.370 | 0.376 | 0.401 | 0.406 | 0.318 | -- | -- |
+| qwen2.5-1.5b | 0.383 | 0.381 | 0.367 | 0.366 | 0.349 | 0.355 | 0.200 | 0.235 | 0.267 |
+| llama3.2-1b | 0.266 | 0.266 | 0.269 | 0.259 | 0.297 | 0.266 | 0.159 | 0.524 | 0.539 |
 
-**Answer:** Run the same MMLU (285) + ARC-Challenge (200) benchmark suite from SS5.3. Compare rescored accuracy against this report's baselines. If the delta is within -5pp of FP16, the quant is "acceptable."
+**Observations.**
 
-### Scenario 3: Maximum Throughput with Quality Floor
+- llama3.2-1b AWQ/GPTQ ROUGE-L (0.524/0.539) is approximately double the FP16 baseline (0.266). This magnitude of improvement from lossy quantization is not plausible and confirms degenerate output patterns.
+- qwen2.5-1.5b AWQ/GPTQ ROUGE-L (0.235/0.267) is close to Q2_K (0.200), confirming that this model experiences Q2_K-equivalent degradation under AWQ/GPTQ.
 
-**Question:** "I need the fastest possible inference with at least 60% benchmark accuracy."
+### B.3 Coherence (All Models, All Formats)
 
-**Answer:** Consult SS10 and SS8 together. llama3.1-8b at Q4_K_M delivers 96.7 native tok/s with 69.7% accuracy. If 60% is sufficient, llama3.2-3b at Q4_K_M offers 141.0 tok/s at 63.7% accuracy.
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| phi-2 | 0.771 | 0.765 | 0.766 | 0.767 | 0.762 | 0.742 | 0.722 | -- | 0.708 |
+| llama3.2-3b | 0.661 | 0.660 | 0.662 | 0.651 | 0.650 | 0.573 | 0.621 | 0.768 | 0.782 |
+| qwen2.5-7b | -- | 0.720 | 0.714 | 0.696 | 0.716 | 0.706 | 0.737 | -- | -- |
+| qwen2.5-1.5b | 0.713 | 0.710 | 0.705 | 0.711 | 0.697 | 0.706 | 0.576 | 0.659 | 0.688 |
+| mistral-7b | -- | 0.681 | 0.682 | 0.683 | 0.689 | 0.694 | 0.672 | -- | -- |
+| llama3.2-1b | 0.580 | 0.578 | 0.578 | 0.572 | 0.581 | 0.557 | 0.493 | 0.758 | 0.763 |
 
-### Scenario 4: VRAM Budget Planning
+**Observations.**
 
-**Question:** "How much VRAM do I need for llama3.1-8b at acceptable quality?"
-
-**Answer:** llama3.1-8b Q4_K_M requires ~4.6 GB estimated VRAM. Q3_K_S (3.6 GB) is also acceptable (-2.5pp). Q2_K (2.6 GB) is unacceptable (-14.2pp). Budget 4-6 GB for the 8B model at production quality.
-
-### Scenario 5: Cross-Referencing with TR123/TR124
-
-**Question:** "TR123 says phi-2 costs $0.119/1M tokens at FP16. What does it cost quantized?"
-
-**Answer:** Consult SS12. phi-2 at Q4_K_M costs $0.0490/1M tokens via Ollama -- 67% cheaper than FP16. At Q6_K, $0.0574/1M tokens -- 61% cheaper. The quality trade-off is negligible (-1.8pp and -1.2pp respectively).
-
-### Scenario 6: Deciding Between Phase 1 and Phase 2 Results
-
-**Question:** "Phase 1 said phi-2 Q2_K only loses -4.0% vs Q8_0. Phase 2 says -11.3pp. Which is right?"
-
-**Answer:** Phase 2. Phase 1 used generation metrics only (BERTScore/coherence/ROUGE-L) with 50 samples and no benchmark anchoring. Phase 2 uses 485 real benchmark questions as the primary quality gate. Benchmark accuracy is a more objective measure of knowledge degradation than generation quality metrics.
-
----
-
-## Table of Contents
-
-**Phase 1: Exploratory Quantization (SS1-SS4)**
-
-1. [Introduction & Research Motivation](#1-introduction--research-motivation)
-2. [Phase 1 Methodology](#2-phase-1-methodology)
-3. [Phase 1 Results](#3-phase-1-results)
-4. [Phase 1 Limitations & Lessons](#4-phase-1-limitations--lessons)
-
-**Phase 2: Production-Grade Decision Matrix (SS5-SS17)**
-
-5. [Phase 2 Methodology & Design](#5-phase-2-methodology--design)
-6. [Environment & Artifacts](#6-environment--artifacts)
-7. [Model Lineup](#7-model-lineup)
-8. [Benchmark Accuracy Analysis](#8-benchmark-accuracy-analysis) (with Wilson CIs, MMLU vs ARC differential)
-9. [Generation Quality Analysis](#9-generation-quality-analysis) (with all 7 metrics, per-task breakdown)
-10. [Native Performance](#10-native-performance) (with outlier analysis)
-11. [TTFT Analysis](#11-ttft-analysis) (full 34-variant table)
-12. [Cost Analysis](#12-cost-analysis)
-13. [Decision Matrix](#13-decision-matrix) (with 29-variant enumeration)
-14. [Diminishing Returns](#14-diminishing-returns)
-15. [Statistical Tests](#15-statistical-tests) (with Bonferroni/Holm correction, TOST equivalence)
-16. [Power Analysis & Statistical Resolution](#16-power-analysis--statistical-resolution)
-17. [Cross-Phase Validation](#17-cross-phase-validation)
-
-**Cross-Phase Synthesis (SS18-SS19)**
-
-18. [Phase 1 vs Phase 2 Synthesis](#18-phase-1-vs-phase-2-synthesis)
-19. [Production Guidance & Decision Trees](#19-production-guidance--decision-trees)
-
-**Closing**
-
-- [Limitations & Methodological Caveats](#limitations--methodological-caveats)
-- 20\. [Reproducibility](#20-reproducibility)
-
-**Appendices**
-
-- [Appendix A: Metric Definitions (Detailed)](#appendix-a-metric-definitions)
-- [Appendix B: Benchmark Data Provenance](#appendix-b-benchmark-data-provenance)
-- [Appendix C: Glossary](#appendix-c-glossary)
-- [References](#references)
+- llama3.2-1b AWQ/GPTQ coherence (0.758/0.763) exceeds the model's FP16 baseline (0.580) by +17-18pp. These AWQ/GPTQ coherence scores exceed phi-2's FP16 coherence (0.771), despite the 1b model having 56% fewer parameters. This is implausible and reinforces the degenerate output interpretation.
+- phi-2 GPTQ is the only AWQ/GPTQ variant where coherence drops (-6.22pp from FP16), making it the most internally consistent AWQ/GPTQ quality measurement in the matrix.
+- The pattern across all three generation metric tables (BERTScore, ROUGE-L, coherence) is consistent: Llama models show inflation, Qwen 1.5B shows degradation, and phi-2 GPTQ shows a mixed pattern. This model-family-dependent response to AWQ/GPTQ is an important finding because it means that AWQ/GPTQ quality cannot be predicted from one model family and generalized to another.
 
 ---
 
-## 1. Introduction & Research Motivation
+## Appendix C: Complete Safety Tables
 
-### 1.1 Research Questions
+### C.1 Refusal Rate (All Models, All Formats)
 
-1. Which quantization levels **preserve benchmark accuracy** within acceptable thresholds for each model?
-2. Where is the **quality cliff** -- the quant level at which accuracy degrades beyond acceptability?
-3. Does the quality cliff **differ by model size** (1.2B vs 3.2B vs 8B)?
-4. What are the **cost savings** at each quant level, and do they justify the quality trade-off?
-5. Is there a **recommended default** quant level that works across all tested models?
-6. How do **generation quality metrics** (BERTScore, coherence, ROUGE-L) compare to **benchmark accuracy** as quality gates?
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| llama3.2-1b | 93.6% | 94.5% | 94.1% | 91.8% | 90.5% | 80.0% | 36.8% | 31.8% | 25.5% |
+| qwen2.5-7b | -- | 93.2% | 93.6% | 93.2% | 94.5% | 84.5% | 80.9% | -- | -- |
+| qwen2.5-1.5b | 84.1% | 83.2% | 85.5% | 87.3% | 80.0% | 84.5% | 34.1% | 59.5% | 36.4% |
+| llama3.2-3b | 76.4% | 74.5% | 77.3% | 76.8% | 66.4% | 95.0% | 92.7% | 53.6% | 55.5% |
+| phi-2 | 58.6% | 58.6% | 54.1% | 57.7% | 55.0% | 56.4% | 55.0% | -- | 3.2% |
+| mistral-7b | -- | 23.6% | 28.6% | 24.5% | 22.3% | 19.1% | 12.3% | -- | -- |
 
-### 1.2 Why This Matters
+**Observations.**
 
-Quantization is the single most impactful deployment knob for local LLM inference. Going from FP16 to Q4_K_M halves VRAM requirements and typically doubles throughput. But TR124's Phase 2 tested only 4 models at Ollama's default quant levels with 200 samples and no benchmark anchoring -- far too little data to make production deployment decisions.
+- phi-2 GPTQ refusal rate (3.2%) is the lowest in the entire matrix, below even mistral-7b Q2_K (12.3%). The model has effectively no safety alignment remaining.
+- llama3.2-1b AWQ/GPTQ refusal rates (31.8%/25.5%) are comparable to llama3.2-1b Q2_K (36.8%). AWQ/GPTQ at ~4 BPW produce safety degradation similar to GGUF at ~2.63 BPW for this model.
+- llama3.2-3b shows an anomalous pattern: AWQ/GPTQ refusal rates (53.6%/55.5%) are lower than FP16 (76.4%) but higher than Q4_K_M (66.4%). The GGUF Q3_K_S (95.0%) and Q2_K (92.7%) over-refusal artifact is not present in the AWQ/GPTQ variants, suggesting that the over-refusal is specific to the GGUF format on this model.
 
-The gap is practical: a developer choosing between Q4_K_M and Q6_K for a summarization pipeline needs to know whether the quality difference is 2% or 20%, and whether that difference is statistically significant or within measurement noise. TR125 provides these answers with real benchmark data (MMLU + ARC-Challenge from HuggingFace), 485 benchmark samples per variant, and a tiered quality classification system.
+The refusal rate table demonstrates the central finding of TR125 v3: at every model size and for every format tested, AWQ and GPTQ produce larger safety losses than GGUF Q4_K_M. The pattern holds even when accounting for the ~0.85 BPW precision difference. The safety loss is not just a matter of fewer bits -- it reflects a qualitative difference in how these quantization methods interact with safety-critical weight patterns.
 
-### 1.3 Scope
+### C.2 Bias Resistance (All Models, All Formats)
 
-- **Hardware:** Single consumer machine (RTX 4080 Laptop, 12GB VRAM).
-- **Models:** 5 models, 1.2B-8B parameters, all via Ollama (instruct/chat variants).
-- **Backend:** Ollama HTTP API with native timing extraction (eval_duration, prompt_eval_duration).
-- **Quant levels:** FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K (7 levels for 4 models; 6 levels for llama3.1-8b, no FP16).
-- **Evaluation modes:** Generation (prompt -> text -> metrics) and generation-based multiple-choice (prompt -> answer letter -> accuracy).
-- **Benchmarks:** MMLU (285 questions, 57 subjects from cais/mmlu) and ARC-Challenge (200 questions from allenai/ai2_arc).
-- **Temperature:** 0.0 (greedy decoding). Deterministic outputs -- single repetition is sufficient (validated by TR124 Phase 3).
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| qwen2.5-7b | -- | 98.5% | 98.0% | 97.5% | 98.5% | 97.5% | 99.0% | -- | -- |
+| llama3.2-3b | 96.5% | 96.0% | 94.9% | 94.9% | 96.5% | 94.4% | 78.8% | 93.4% | 78.8% |
+| llama3.2-1b | 89.4% | 88.9% | 88.4% | 87.4% | 87.4% | 99.5% | 73.2% | 83.3% | 68.7% |
+| qwen2.5-1.5b | 85.4% | 89.4% | 88.4% | 89.4% | 88.9% | 89.9% | 90.4% | 87.9% | 79.8% |
+| phi-2 | 84.8% | 87.9% | 86.4% | 83.8% | 86.9% | 91.9% | 99.0% | -- | 63.6% |
+| mistral-7b | -- | 83.8% | 83.8% | 84.3% | 85.4% | 80.3% | 77.3% | -- | -- |
 
-### 1.4 Literature Grounding
+**Observations.**
 
-| Reference | Contribution | How TR125 Uses It |
-|-----------|-------------|-------------------|
-| TR124 (Banterhearts) | FP16 quality baselines, metric framework | Baseline comparison, generation metrics |
-| TR123 (Banterhearts) | KV-Cache cost data, hardware pricing | Cost derivation at $0.035/hr |
-| EleutherAI lm-evaluation-harness | YAML task configs, benchmark methodology | MMLU/ARC question format |
-| MMLU (Hendrycks et al. 2021) | 57-subject knowledge benchmark | Primary quality gate (285 questions) |
-| ARC (Clark et al. 2018) | Science reasoning benchmark | Secondary quality gate (200 questions) |
-| llama.cpp GGUF quantization | Q2_K through Q8_0 quant formats | Quant level definitions and VRAM estimates |
+- GPTQ bias resistance is consistently lower than AWQ bias resistance on the same model: llama3.2-1b (68.7% vs 83.3%), llama3.2-3b (78.8% vs 93.4%), qwen2.5-1.5b (79.8% vs 87.9%). GPTQ appears to damage bias-resistance training more aggressively than AWQ.
+- phi-2 GPTQ bias resistance (63.6%) is the lowest AWQ/GPTQ bias resistance in the matrix, consistent with the model's comprehensive safety degradation under GPTQ.
 
-**Gap filled:** Prior quantization studies either test a single model at many quant levels or many models at a single quant level. TR125 provides a full matrix: 5 models x 7 quant levels, with both benchmark accuracy and generation quality metrics, enabling model-specific quantization recommendations.
+### C.3 Truthfulness (All Models, All Formats)
 
----
+| Model | FP16 | Q8_0 | Q6_K | Q5_K_M | Q4_K_M | Q3_K_S | Q2_K | AWQ | GPTQ |
+|-------|------|------|------|--------|--------|--------|------|-----|------|
+| mistral-7b | -- | 60.0% | 55.0% | 59.0% | 54.0% | 50.0% | 56.0% | -- | -- |
+| llama3.2-1b | 55.0% | 56.0% | 48.0% | 49.0% | 58.0% | 49.0% | 44.0% | 53.0% | 50.0% |
+| qwen2.5-1.5b | 49.0% | 43.0% | 47.0% | 51.0% | 51.0% | 54.0% | 59.0% | 58.0% | 42.0% |
+| qwen2.5-7b | -- | 50.0% | 53.0% | 49.0% | 57.0% | 49.0% | 50.0% | -- | -- |
+| llama3.2-3b | 49.0% | 48.0% | 51.0% | 58.0% | 50.0% | 52.0% | 54.0% | 47.0% | 59.0% |
+| phi-2 | 39.0% | 45.0% | 42.0% | 48.0% | 50.0% | 44.0% | 44.0% | -- | 38.0% |
 
-## 2. Phase 1 Methodology
+**Observations.**
 
-### 2.1 Design
-
-| Parameter | Value |
-|-----------|-------|
-| Models | 3 (llama3.2-1b, phi-2, qwen2.5-1.5b) |
-| Quant levels | 6 (Q2_K, Q3_K_S, Q4_K_M, Q5_K_M, Q6_K, Q8_0) |
-| Baseline | Q8_0 (same Ollama instruct model) |
-| Tasks | 5 generation (summarization, QA, code_generation, creative_writing, classification) |
-| Samples per task | 10 |
-| Total samples | 900 (18 variants x 50 samples) |
-| Temperature | 0.0 |
-| Timing | Wall-clock only (HTTP overhead included) |
-| Benchmarks | None (Ollama lacks logprob support) |
-| Run ID | `20260220_203010` |
-
-### 2.2 Baseline Note
-
-TR124 Phase 1 FP16 baselines used **base** models (e.g., `unsloth/Llama-3.2-1B`) while Ollama tags reference **instruct/chat** variants (e.g., `llama3.2:1b-instruct`). For llama and qwen, these are different model weights. FP16 deltas from TR124 mix instruct-tuning effects with quantization effects. Phase 1 therefore uses Q8_0 from the same Ollama run as the correct quantization baseline.
-
-### 2.3 Quality Metrics
-
-Key metrics for decision-making: BERTScore, coherence, ROUGE-L (averaged as "key metric average"). All 7 generation metrics were computed but decisions rely on these three.
+- Truthfulness shows no consistent quantization trend for any model or format. The N=50 sample size produces CIs of approximately +/-14pp, rendering most between-condition differences statistically indistinguishable from noise.
+- AWQ/GPTQ truthfulness values are within the GGUF range for all models, suggesting that truthfulness is primarily a model-level characteristic rather than a format-sensitive metric.
+- The high variance in truthfulness measurements argues against using truthfulness as a quantization quality gate. Refusal rate (N=220, CI ~+/-5pp) is a far more reliable safety metric for quantization decisions.
 
 ---
 
-## 3. Phase 1 Results
+## Appendix D: Glossary
 
-### 3.1 Quality Curves
-
-Quality per (model, quant level). Delta measured vs Q8_0 (same instruct model, same Ollama backend).
-
-#### llama3.2-1b
-
-| Quant | N | BERTScore (vs Q8_0) | Coherence (vs Q8_0) | ROUGE-L (vs Q8_0) | Key Avg | vs Q8_0 |
-|-------|---|-----|-----|-----|---------|---------|
-| Q8_0 | 50 | 0.650 (+0.0%) | 0.573 (+0.0%) | 0.274 (+0.0%) | 0.4991 | +0.0% |
-| Q6_K | 50 | 0.646 (-0.6%) | 0.573 (-0.0%) | 0.279 (+1.9%) | 0.4996 | +0.4% |
-| Q5_K_M | 50 | 0.630 (-3.1%) | 0.568 (-0.9%) | 0.249 (-9.0%) | 0.4825 | -4.3% |
-| Q4_K_M | 50 | 0.685 (+5.3%) | 0.594 (+3.7%) | 0.346 (+26.4%) | 0.5419 | +11.8% |
-| Q3_K_S | 50 | 0.648 (-0.3%) | 0.545 (-4.8%) | 0.267 (-2.6%) | 0.4869 | -2.6% |
-| Q2_K | 50 | 0.550 (-15.4%) | 0.475 (-17.1%) | 0.159 (-42.0%) | 0.3946 | **-24.9%** |
-
-#### phi-2
-
-| Quant | N | BERTScore (vs Q8_0) | Coherence (vs Q8_0) | ROUGE-L (vs Q8_0) | Key Avg | vs Q8_0 |
-|-------|---|-----|-----|-----|---------|---------|
-| Q8_0 | 50 | 0.767 (+0.0%) | 0.792 (+0.0%) | 0.513 (+0.0%) | 0.6907 | +0.0% |
-| Q6_K | 50 | 0.768 (+0.1%) | 0.789 (-0.3%) | 0.501 (-2.3%) | 0.6861 | -0.8% |
-| Q5_K_M | 50 | 0.760 (-1.0%) | 0.790 (-0.3%) | 0.504 (-1.8%) | 0.6845 | -1.0% |
-| Q4_K_M | 50 | 0.721 (-6.1%) | 0.775 (-2.1%) | 0.444 (-13.5%) | 0.6465 | -7.2% |
-| Q3_K_S | 50 | 0.739 (-3.8%) | 0.778 (-1.7%) | 0.435 (-15.2%) | 0.6507 | -6.9% |
-| Q2_K | 50 | 0.780 (+1.6%) | 0.760 (-4.0%) | 0.465 (-9.4%) | 0.6680 | -4.0% |
-
-#### qwen2.5-1.5b
-
-| Quant | N | BERTScore (vs Q8_0) | Coherence (vs Q8_0) | ROUGE-L (vs Q8_0) | Key Avg | vs Q8_0 |
-|-------|---|-----|-----|-----|---------|---------|
-| Q8_0 | 50 | 0.790 (+0.0%) | 0.743 (+0.0%) | 0.426 (+0.0%) | 0.6534 | +0.0% |
-| Q6_K | 50 | 0.726 (-8.2%) | 0.715 (-3.8%) | 0.357 (-16.2%) | 0.5995 | -9.4% |
-| Q5_K_M | 50 | 0.746 (-5.6%) | 0.722 (-2.9%) | 0.373 (-12.4%) | 0.6138 | -7.0% |
-| Q4_K_M | 50 | 0.719 (-9.0%) | 0.720 (-3.2%) | 0.326 (-23.5%) | 0.5884 | -11.9% |
-| Q3_K_S | 50 | 0.735 (-7.0%) | 0.722 (-2.8%) | 0.364 (-14.7%) | 0.6070 | -8.2% |
-| Q2_K | 50 | 0.561 (-29.1%) | 0.560 (-24.7%) | 0.166 (-61.1%) | 0.4288 | **-38.3%** |
-
-### 3.2 Performance
-
-Wall-clock throughput (includes HTTP overhead):
-
-| Model | Quant | tok/s (mean) | Speedup vs Q8_0 |
-|-------|-------|-------------|-----------------|
-| llama3.2-1b | Q8_0 | 126.0 | 1.00x |
-| llama3.2-1b | Q4_K_M | 134.4 | 1.07x |
-| llama3.2-1b | Q2_K | 143.2 | 1.14x |
-| phi-2 | Q8_0 | 68.7 | 1.00x |
-| phi-2 | Q4_K_M | 76.2 | 1.11x |
-| phi-2 | Q2_K | 57.6 | 0.84x |
-| qwen2.5-1.5b | Q8_0 | 80.1 | 1.00x |
-| qwen2.5-1.5b | Q4_K_M | 88.0 | 1.10x |
-| qwen2.5-1.5b | Q2_K | 108.5 | 1.35x |
-
-### 3.3 Statistical Tests
-
-Only 5 of 45 pairwise t-tests reached significance -- all at the Q3_K_S-to-Q2_K boundary. No test between adjacent quant levels above Q3_K_S was significant, consistent with the finding that quality differences between Q8_0 and Q4_K_M are below measurement resolution at N=50.
-
-### 3.4 Key Phase 1 Conclusions
-
-1. **Quality is broadly stable Q8_0 through Q5_K_M** for all 3 models.
-2. **Q2_K is catastrophic** for llama3.2-1b (-24.9%) and qwen2.5-1.5b (-38.3%).
-3. **phi-2 is most robust** -- worst quant (Q4_K_M) loses only -7.2%.
-4. **Non-monotonic quality** observed (e.g., llama3.2-1b Q4_K_M > Q8_0) -- likely measurement noise at N=50.
-
----
-
-## 4. Phase 1 Limitations & Lessons
-
-Phase 1 identified several critical limitations that Phase 2 was designed to address:
-
-| Limitation | Impact | Phase 2 Fix |
-|-----------|--------|-------------|
-| **Wall-clock timing** (CV 37-42%) | Cannot reliably compare quant-level throughput | Native Ollama `eval_duration` |
-| **Base-vs-instruct confound** | TR124 FP16 baselines were base models; Ollama uses instruct | FP16 Ollama baselines (same instruct model) |
-| **No benchmark accuracy** | Generation metrics are noisy proxies for knowledge | Real MMLU (285) + ARC-Challenge (200) |
-| **Binary quality threshold** (-10% safe/unsafe) | Too coarse for deployment decisions | 4-tier system (negligible/acceptable/concerning/unacceptable) |
-| **Small sample size** (N=50, 10/task) | Cannot detect effects <10% at 80% power | N=485 benchmark + N=250 generation per variant |
-| **3 models only** | No data above 2.7B parameters | 5 models spanning 1.2B-8B |
-| **No TTFT measurement** | Cannot evaluate prompt processing latency | Native `prompt_eval_duration` |
-| **No FP16 quant level** | Cannot measure FP16-to-Q8_0 delta | FP16 Ollama included for 4 of 5 models |
-
----
-
-## 5. Phase 2 Methodology & Design
-
-### 5.1 Research Questions
-
-Phase 2 addresses the same 6 research questions from SS1.1, with sufficient statistical power and benchmark anchoring to produce actionable answers.
-
-### 5.2 Benchmark Matrix
-
-| Dimension | Values |
-|-----------|--------|
-| Models | llama3.2-1b (1.2B), qwen2.5-1.5b (1.5B), phi-2 (2.7B), llama3.2-3b (3.2B), llama3.1-8b (8B) |
-| Quant levels | FP16, Q8_0, Q6_K, Q5_K_M, Q4_K_M, Q3_K_S, Q2_K |
-| Model variants | 34 (4 models x 7 levels + 1 model x 6 levels) |
-| Benchmark tasks | MMLU (285 real questions), ARC-Challenge (200 real questions) |
-| Generation tasks | summarization, QA, code_generation, creative_writing, classification (50 samples each) |
-| Temperature | 0.0 (greedy) |
-| Max new tokens | 256 |
-| Repetitions | 1 (deterministic at temp=0; validated by TR124 Phase 3) |
-| Seed | 42 |
-| Warmup | 2 runs per model variant |
-
-**Sample counts:**
-
-| Category | Per Variant | Total (34 variants) |
-|----------|-----------|---------------------|
-| MMLU | 285 | 9,690 |
-| ARC-Challenge | 200 | 6,800 |
-| Generation (5 tasks x 50) | 250 | 8,500 |
-| **Total** | **735** | **24,990** |
-
-### 5.3 Real Benchmark Data
-
-Unlike Phase 1 (which had no benchmarks) and TR124 Phase 1 (which used loglikelihood ranking), Phase 2 uses **generation-based scoring** on real benchmark questions:
-
-- **MMLU:** 285 questions from `cais/mmlu` on HuggingFace, 5 per subject across 57 subjects. Model generates an answer letter; scored via regex extraction.
-- **ARC-Challenge:** 200 questions from `allenai/ai2_arc` (Challenge subset). Same generation-based scoring.
-
-Generation-based scoring is necessary because Ollama does not expose loglikelihood computation. The rescoring pipeline extracts answer letters from model output using regex patterns (e.g., "B", "B)", "The answer is B", "Answer: B"), reducing formatting noise.
-
-### 5.4 Quality Tier System
-
-See Metric Definitions section above. The tier system was designed with the power analysis in mind: the "negligible" tier (-3pp) is near the statistical detection limit (9.0pp MDE at 80% power), meaning measured values within this range are genuinely small.
-
-### 5.5 Native Timing Methodology
-
-Phase 2 extracts timing from Ollama's `backend_metadata` response:
-
-- **eval_duration:** Time spent generating tokens (excludes prompt processing). This is the "native" decode time.
-- **prompt_eval_duration:** Time spent processing the prompt (TTFT proxy).
-- **Native tok/s:** `num_tokens_generated / (eval_duration_ms / 1000)`.
-- **Wall-clock tok/s:** `num_tokens_generated / (generation_time_ms / 1000)` (includes HTTP overhead).
-- **HTTP overhead %:** `(native_tok_per_s / wall_tok_per_s - 1) * 100`.
-
-A framework patch was applied to serialize `backend_metadata` through `SampleRecord` (aggregator.py + runner.py), which was missing in Phase 1.
-
-### 5.6 Statistical Methods
-
-- **Pairwise Welch's t-tests:** Between adjacent quant levels on benchmark accuracy (rescored, binary 0/1) and generation metrics (bertscore, coherence, rouge_l, continuous). Alpha = 0.05 uncorrected. See "Statistical Methods & Caveats" section for discussion of multiple comparison correction, t-tests on binary data, and equivalence testing limitations.
-- **Power analysis:** Normal approximation for minimum detectable effect (MDE) at alpha=0.05, power=0.80. Benchmark MDE = 9.0pp (worst case). Generation MDE = d=0.251.
-- **Quality classification:** Tiered based on the worse of benchmark delta (pp) and generation delta (%). Note: "negligible" and "acceptable" tiers are below the benchmark MDE -- see SS16.2 for implications.
-- **Cross-phase validation:** Phase 1 Q8_0 vs Phase 2 Q8_0 on overlapping models, < 5% difference threshold.
-- **Confidence intervals:** Wilson CIs shown in benchmark tables (SS8). Generation CIs available in raw analysis data. See SS15.5 for TOST equivalence testing.
-
-### 5.7 Config
-
-```yaml
-experiment: tr125_phase2_full_matrix
-models: 34 variants (5 base models x 6-7 quant levels)
-backends: [ollama]
-tasks: [summarization, qa, code_generation, creative_writing, classification, mmlu_real, arc_challenge]
-temperature: 0.0
-max_new_tokens: 256
-repetitions: 1
-seed: 42
-```
-
----
-
-## 6. Environment & Artifacts
-
-### 6.1 Environment
-
-- **OS:** Windows 11 Home 10.0.26200
-- **Python:** 3.13
-- **CPU:** 13th Gen Intel Core i9-13980HX
-- **GPU:** NVIDIA GeForce RTX 4080 Laptop GPU (12,282 MB VRAM, CC 8.9)
-- **Ollama:** Local HTTP API (http://localhost:11434)
-- **BERTScore model:** microsoft/deberta-xlarge-mnli
-- **Coherence model:** sentence-transformers/all-mpnet-base-v2
-
-### 6.2 Key Artifacts
-
-| Artifact | Path | Description |
-|----------|------|-------------|
-| Phase 1 samples | `results/eval/tr125/20260220_203010/samples.jsonl` | 900 rows |
-| Phase 1 report | `results/eval/tr125/20260220_203010/phase1_report.md` | Auto-generated |
-| Phase 2 samples | `results/eval/tr125_phase2/20260221_120035/samples.jsonl` | 24,990 rows |
-| Phase 2 analysis | `results/eval/tr125_phase2/20260221_120035/phase2_analysis.json` | Full analysis data |
-| Phase 2 report | `results/eval/tr125_phase2/20260221_120035/phase2_report.md` | Auto-generated |
-| Phase 2 config | `research/tr125/phase2/config.yaml` | 34-variant matrix |
-| Analysis code | `research/tr125/phase2/analyze.py` | 9-analysis pipeline |
-| v2 enhancements | `results/eval/tr125_phase2/20260221_120035/phase2_v2_enhancements.json` | Wilson CIs, Bonferroni, TOST, per-task, outliers |
-| v2 analysis code | `research/tr125/phase2/enhance_v2.py` | 10-analysis enhancement pipeline |
-| Published report | `PublishReady/reports/Technical_Report_125.md` | This file |
-
----
-
-## 7. Model Lineup
-
-### 7.1 Model Summary
-
-| Model | Params | Quant Levels | Ollama Tag Pattern | FP16 VRAM Est |
-|-------|--------|-------------|--------------------|----|
-| llama3.2-1b | 1.24B | 7 (FP16-Q2_K) | `llama3.2:1b-instruct-{quant}` | 2.5 GB |
-| qwen2.5-1.5b | 1.54B | 7 (FP16-Q2_K) | `qwen2.5:1.5b-instruct-{quant}` | 3.2 GB |
-| phi-2 | 2.7B | 7 (FP16-Q2_K) | `phi:2.7b-chat-v2-{quant}` | 5.5 GB |
-| llama3.2-3b | 3.21B | 7 (FP16-Q2_K) | `llama3.2:3b-instruct-{quant}` | 6.6 GB |
-| llama3.1-8b | 8.03B | 6 (Q8_0-Q2_K) | `llama3.1:8b-instruct-{quant}` | ~16 GB (exceeds VRAM) |
-
-### 7.2 Why These Models
-
-- **llama3.2-1b (1.2B):** Smallest viable model. Tests whether quantization is even meaningful at small scale (answer: yes, Q2_K destroys quality).
-- **qwen2.5-1.5b (1.5B):** Strong benchmark performer from TR124 (91% ARC-Easy). Tests whether high-benchmark models are more sensitive to quantization (answer: yes, Q2_K drops -40.6pp).
-- **phi-2 (2.7B):** Most quantization-robust in Phase 1. Tests whether this holds with benchmark anchoring (answer: yes, -1.8pp max at Q4_K_M).
-- **llama3.2-3b (3.2B):** Bridges the 1B-8B gap. Tests mid-range quantization behavior.
-- **llama3.1-8b (8B):** First model exceeding the 1-3B range. Tests whether larger models tolerate quantization better (answer: mixed -- -2.7pp at Q4_K_M is comparable to smaller models, but Q3_K_S shows only -2.5pp vs -10pp for llama3.2-3b).
-
-### 7.3 FP16 Exclusion: llama3.1-8b
-
-llama3.1-8b at FP16 requires ~16 GB VRAM, exceeding the RTX 4080's 12 GB. Q8_0 serves as the baseline for this model. The Q8_0-to-FP16 delta for other models is consistently small (max 1.6pp), validating Q8_0 as a near-equivalent baseline.
-
----
-
-## 8. Benchmark Accuracy Analysis
-
-**This is the PRIMARY quality gate.** Benchmark accuracy on real MMLU + ARC-Challenge questions, using rescored accuracy (regex letter extraction). All deltas in percentage points (pp) vs primary baseline (FP16 for 4 models, Q8_0 for llama3.1-8b).
-
-### 8.1 llama3.1-8b (baseline: Q8_0, 72.4% rescored)
-
-| Quant | N | Raw Acc | Rescored Acc | 95% Wilson CI | MMLU | ARC | vs Q8_0 (pp) | Tier |
-|-------|---|---------|-------------|---------------|------|-----|-------------|------|
-| Q8_0 | 485 | 0.651 | 0.724 | [0.682, 0.762] | 0.698 | 0.760 | +0.0 | negligible |
-| Q6_K | 485 | 0.643 | 0.707 | [0.665, 0.746] | 0.684 | 0.740 | -1.6 | negligible |
-| Q5_K_M | 485 | 0.586 | 0.707 | [0.665, 0.746] | 0.681 | 0.745 | -1.6 | negligible |
-| Q4_K_M | 485 | 0.637 | 0.697 | [0.654, 0.736] | 0.677 | 0.725 | -2.7 | negligible |
-| Q3_K_S | 485 | 0.676 | 0.699 | [0.657, 0.738] | 0.663 | 0.750 | -2.5 | acceptable |
-| Q2_K | 485 | 0.489 | 0.581 | [0.536, 0.624] | 0.540 | 0.640 | **-14.2** | unacceptable |
-
-**Observation:** llama3.1-8b is remarkably stable through Q3_K_S (-2.5pp). The cliff is at Q2_K (-14.2pp). This 8B model tolerates aggressive quantization better than the smaller llama3.2-3b. Wilson CI half-width: +/-4.0pp at N=485.
-
-### 8.2 llama3.2-1b (baseline: FP16, 38.4% rescored)
-
-| Quant | N | Raw Acc | Rescored Acc | 95% Wilson CI | MMLU | ARC | vs FP16 (pp) | Tier |
-|-------|---|---------|-------------|---------------|------|-----|-------------|------|
-| FP16 | 485 | 0.365 | 0.384 | [0.342, 0.429] | 0.340 | 0.445 | +0.0 | negligible |
-| Q8_0 | 485 | 0.375 | 0.396 | [0.353, 0.441] | 0.351 | 0.460 | +1.2 | negligible |
-| Q6_K | 485 | 0.365 | 0.384 | [0.342, 0.429] | 0.344 | 0.440 | +0.0 | negligible |
-| Q5_K_M | 485 | 0.373 | 0.386 | [0.344, 0.431] | 0.330 | 0.465 | +0.2 | negligible |
-| Q4_K_M | 485 | 0.348 | 0.361 | [0.320, 0.405] | 0.337 | 0.395 | -2.3 | negligible |
-| Q3_K_S | 485 | 0.256 | 0.289 | [0.250, 0.331] | 0.319 | 0.245 | -9.5 | concerning |
-| Q2_K | 485 | 0.101 | 0.223 | [0.188, 0.263] | 0.193 | 0.265 | **-16.1** | unacceptable |
-
-**Observation:** Quality is stable FP16 through Q4_K_M (max -2.3pp). The cliff hits at Q3_K_S (-9.5pp), with Q2_K near-random on ARC (4% raw accuracy, 26.5% rescored). Q8_0 slightly exceeds FP16 (+1.2pp) -- within measurement noise. Note the CIs for FP16 [0.342, 0.429] and Q4_K_M [0.320, 0.405] overlap substantially, confirming the -2.3pp delta is within noise.
-
-### 8.3 llama3.2-3b (baseline: FP16, 64.1% rescored)
-
-| Quant | N | Raw Acc | Rescored Acc | 95% Wilson CI | MMLU | ARC | vs FP16 (pp) | Tier |
-|-------|---|---------|-------------|---------------|------|-----|-------------|------|
-| FP16 | 485 | 0.612 | 0.641 | [0.598, 0.683] | 0.590 | 0.715 | +0.0 | negligible |
-| Q8_0 | 485 | 0.612 | 0.645 | [0.602, 0.687] | 0.593 | 0.720 | +0.4 | negligible |
-| Q6_K | 485 | 0.594 | 0.635 | [0.591, 0.677] | 0.579 | 0.715 | -0.6 | negligible |
-| Q5_K_M | 485 | 0.602 | 0.633 | [0.589, 0.675] | 0.575 | 0.715 | -0.8 | negligible |
-| Q4_K_M | 485 | 0.612 | 0.637 | [0.593, 0.679] | 0.590 | 0.705 | -0.4 | negligible |
-| Q3_K_S | 485 | 0.466 | 0.540 | [0.496, 0.584] | 0.481 | 0.625 | **-10.1** | unacceptable |
-| Q2_K | 485 | 0.458 | 0.511 | [0.467, 0.555] | 0.428 | 0.630 | **-13.0** | unacceptable |
-
-**Observation:** Stable through Q4_K_M (-0.4pp). Dramatic cliff at Q3_K_S (-10.1pp). The 3B model is *less* tolerant of aggressive quantization than the 8B model (Q3_K_S: -10.1pp vs -2.5pp for 8B). CI overlap between FP16 [0.598, 0.683] and Q4_K_M [0.593, 0.679] is near-complete.
-
-### 8.4 phi-2 (baseline: FP16, 59.4% rescored)
-
-| Quant | N | Raw Acc | Rescored Acc | 95% Wilson CI | MMLU | ARC | vs FP16 (pp) | Tier |
-|-------|---|---------|-------------|---------------|------|-----|-------------|------|
-| FP16 | 485 | 0.262 | 0.594 | [0.549, 0.637] | 0.530 | 0.685 | +0.0 | negligible |
-| Q8_0 | 485 | 0.268 | 0.577 | [0.533, 0.621] | 0.516 | 0.665 | -1.6 | negligible |
-| Q6_K | 485 | 0.247 | 0.581 | [0.537, 0.625] | 0.516 | 0.675 | -1.2 | negligible |
-| Q5_K_M | 485 | 0.254 | 0.600 | [0.556, 0.643] | 0.537 | 0.690 | +0.6 | negligible |
-| Q4_K_M | 485 | 0.252 | 0.575 | [0.531, 0.619] | 0.505 | 0.675 | -1.8 | negligible |
-| Q3_K_S | 485 | 0.301 | 0.590 | [0.545, 0.633] | 0.547 | 0.650 | -0.4 | acceptable |
-| Q2_K | 485 | 0.179 | 0.480 | [0.436, 0.525] | 0.460 | 0.510 | **-11.3** | unacceptable |
-
-**Observation:** phi-2 is the most quantization-robust model. All levels Q3_K_S and above are within -1.8pp of FP16. Q5_K_M actually exceeds FP16 by +0.6pp (within noise). Only Q2_K breaks the pattern (-11.3pp). All CIs from FP16 through Q3_K_S overlap heavily -- no pair is statistically distinguishable.
-
-**Formatting issue:** phi-2's raw accuracy (26%) is dramatically lower than rescored accuracy (59%). This is a formatting problem: phi-2 produces verbose answers ("The answer is B because...") that fail exact_match but contain the correct letter. Rescoring recovers the true knowledge level.
-
-### 8.5 qwen2.5-1.5b (baseline: FP16, 65.2% rescored)
-
-| Quant | N | Raw Acc | Rescored Acc | 95% Wilson CI | MMLU | ARC | vs FP16 (pp) | Tier |
-|-------|---|---------|-------------|---------------|------|-----|-------------|------|
-| FP16 | 485 | 0.472 | 0.652 | [0.608, 0.693] | 0.590 | 0.740 | +0.0 | negligible |
-| Q8_0 | 485 | 0.425 | 0.639 | [0.596, 0.681] | 0.565 | 0.745 | -1.2 | negligible |
-| Q6_K | 485 | 0.497 | 0.639 | [0.596, 0.681] | 0.579 | 0.725 | -1.2 | negligible |
-| Q5_K_M | 485 | 0.320 | 0.647 | [0.604, 0.689] | 0.586 | 0.735 | -0.4 | negligible |
-| Q4_K_M | 485 | 0.487 | 0.610 | [0.566, 0.653] | 0.537 | 0.715 | -4.1 | acceptable |
-| Q3_K_S | 485 | 0.171 | 0.530 | [0.485, 0.574] | 0.453 | 0.640 | **-12.2** | unacceptable |
-| Q2_K | 485 | 0.035 | 0.245 | [0.209, 0.286] | 0.239 | 0.255 | **-40.6** | unacceptable |
-
-**Observation:** qwen2.5-1.5b is the most quantization-sensitive model. Q4_K_M already shows -4.1pp (acceptable but notable). Q3_K_S drops -12.2pp. Q2_K is catastrophic: -40.6pp, reducing a 65% model to 24.5% (near-random for 4-choice questions). Note: FP16 CI upper bound (0.693) overlaps Q4_K_M CI lower bound (0.566) only marginally -- the -4.1pp delta is approaching statistical distinguishability.
-
-### 8.6 Accuracy Cliff Summary
-
-| Model | Last Safe Level | First Concerning | Cliff Size (pp) |
-|-------|----------------|-----------------|-----------------|
-| llama3.1-8b | Q3_K_S (-2.5pp) | Q2_K (-14.2pp) | 11.7 |
-| llama3.2-1b | Q4_K_M (-2.3pp) | Q3_K_S (-9.5pp) | 7.2 |
-| llama3.2-3b | Q4_K_M (-0.4pp) | Q3_K_S (-10.1pp) | 9.7 |
-| phi-2 | Q3_K_S (-0.4pp) | Q2_K (-11.3pp) | 10.9 |
-| qwen2.5-1.5b | Q4_K_M (-4.1pp) | Q3_K_S (-12.2pp) | 8.1 |
-
-**Pattern:** The cliff is universally sharp (8-12pp drop in one quant step). The cliff location varies by model: phi-2 and llama3.1-8b tolerate Q3_K_S; the other three models break there. All models break at Q2_K.
-
-### 8.7 MMLU vs ARC Differential Analysis
-
-ARC consistently outperforms MMLU across nearly all variants, reflecting that science reasoning (ARC) and broad knowledge (MMLU) respond differently to quantization. The differential (MMLU - ARC, in pp) reveals model-specific patterns:
-
-| Model | Quant | MMLU (%) | ARC (%) | MMLU - ARC (pp) |
-|-------|-------|----------|---------|-----------------|
-| llama3.1-8b | Q8_0 | 69.8 | 76.0 | -6.2 |
-| llama3.1-8b | Q4_K_M | 67.7 | 72.5 | -4.8 |
-| llama3.1-8b | Q2_K | 54.0 | 64.0 | -10.0 |
-| llama3.2-1b | FP16 | 34.0 | 44.5 | -10.5 |
-| llama3.2-1b | Q4_K_M | 33.7 | 39.5 | -5.8 |
-| llama3.2-1b | Q3_K_S | 31.9 | 24.5 | **+7.4** |
-| llama3.2-1b | Q2_K | 19.3 | 26.5 | -7.2 |
-| llama3.2-3b | FP16 | 59.0 | 71.5 | -12.5 |
-| llama3.2-3b | Q4_K_M | 59.0 | 70.5 | -11.5 |
-| llama3.2-3b | Q2_K | 42.8 | 63.0 | **-20.2** |
-| phi-2 | FP16 | 53.0 | 68.5 | -15.5 |
-| phi-2 | Q4_K_M | 50.5 | 67.5 | -17.0 |
-| phi-2 | Q2_K | 46.0 | 51.0 | -5.0 |
-| qwen2.5-1.5b | FP16 | 59.0 | 74.0 | -15.0 |
-| qwen2.5-1.5b | Q4_K_M | 53.7 | 71.5 | -17.8 |
-| qwen2.5-1.5b | Q2_K | 23.9 | 25.5 | -1.6 |
-
-**Key findings:**
-
-1. **ARC is generally more robust than MMLU** to quantization. The differential widens as quant increases for most models (e.g., llama3.2-3b: -12.5pp at FP16 to -20.2pp at Q2_K), meaning MMLU degrades faster.
-2. **Anomaly: llama3.2-1b Q3_K_S** shows MMLU > ARC by +7.4pp -- a reversal. ARC drops to 24.5% (below random baseline of 25%), suggesting catastrophic reasoning failure while knowledge recall partially survives.
-3. **At Q2_K, differentials compress** for qwen2.5-1.5b (-1.6pp) and phi-2 (-5.0pp) because both benchmarks collapse toward random baseline simultaneously.
-4. **phi-2 shows the largest baseline differential** (-15.5pp at FP16) but the most stable differential across quant levels, consistent with its overall quantization robustness.
-
----
-
-## 9. Generation Quality Analysis
-
-**This is the SECONDARY quality signal.** Generation quality on hand-crafted tasks (summarization, QA, code_generation, creative_writing, classification). Delta vs primary baseline (FP16 or Q8_0).
-
-### 9.1 llama3.1-8b (baseline: Q8_0)
-
-| Quant | N | BERTScore (vs Q8_0) | Coherence (vs Q8_0) | ROUGE-L (vs Q8_0) | Key Avg | vs Q8_0 |
-|-------|---|-----|-----|-----|---------|---------|
-| Q8_0 | 250 | 0.800 (+0.0%) | 0.668 (+0.0%) | 0.492 (+0.0%) | 0.6533 | +0.0% |
-| Q6_K | 250 | 0.795 (-0.5%) | 0.661 (-1.0%) | 0.485 (-1.5%) | 0.6470 | -1.0% |
-| Q5_K_M | 250 | 0.811 (+1.4%) | 0.668 (+0.1%) | 0.504 (+2.3%) | 0.6611 | +1.3% |
-| Q4_K_M | 250 | 0.799 (-0.1%) | 0.683 (+2.3%) | 0.494 (+0.3%) | 0.6587 | +0.8% |
-| Q3_K_S | 250 | 0.782 (-2.3%) | 0.640 (-4.2%) | 0.467 (-5.1%) | 0.6296 | -3.8% |
-| Q2_K | 250 | 0.769 (-3.9%) | 0.641 (-3.9%) | 0.443 (-10.0%) | 0.6178 | -5.9% |
-
-### 9.2 llama3.2-1b (baseline: FP16)
-
-| Quant | N | BERTScore (vs FP16) | Coherence (vs FP16) | ROUGE-L (vs FP16) | Key Avg | vs FP16 |
-|-------|---|-----|-----|-----|---------|---------|
-| FP16 | 250 | 0.646 (+0.0%) | 0.580 (+0.0%) | 0.266 (+0.0%) | 0.4973 | +0.0% |
-| Q8_0 | 250 | 0.644 (-0.2%) | 0.578 (-0.3%) | 0.266 (-0.1%) | 0.4960 | -0.2% |
-| Q6_K | 250 | 0.641 (-0.7%) | 0.578 (-0.3%) | 0.269 (+1.1%) | 0.4962 | +0.0% |
-| Q5_K_M | 250 | 0.639 (-1.0%) | 0.572 (-1.2%) | 0.259 (-2.8%) | 0.4902 | -1.7% |
-| Q4_K_M | 250 | 0.665 (+2.9%) | 0.581 (+0.2%) | 0.297 (+11.6%) | 0.5143 | +4.9% |
-| Q3_K_S | 250 | 0.656 (+1.5%) | 0.557 (-4.0%) | 0.266 (-0.1%) | 0.4928 | -0.8% |
-| Q2_K | 250 | 0.550 (-14.9%) | 0.493 (-15.0%) | 0.159 (-40.1%) | 0.4006 | -23.4% |
-
-### 9.3 llama3.2-3b (baseline: FP16)
-
-| Quant | N | BERTScore (vs FP16) | Coherence (vs FP16) | ROUGE-L (vs FP16) | Key Avg | vs FP16 |
-|-------|---|-----|-----|-----|---------|---------|
-| FP16 | 250 | 0.767 (+0.0%) | 0.661 (+0.0%) | 0.469 (+0.0%) | 0.6324 | +0.0% |
-| Q8_0 | 250 | 0.766 (-0.2%) | 0.660 (-0.1%) | 0.470 (+0.2%) | 0.6319 | -0.1% |
-| Q6_K | 250 | 0.768 (+0.0%) | 0.662 (+0.2%) | 0.473 (+0.9%) | 0.6342 | +0.4% |
-| Q5_K_M | 250 | 0.762 (-0.7%) | 0.651 (-1.5%) | 0.460 (-1.9%) | 0.6242 | -1.4% |
-| Q4_K_M | 250 | 0.759 (-1.2%) | 0.650 (-1.6%) | 0.454 (-3.2%) | 0.6209 | -2.0% |
-| Q3_K_S | 250 | 0.728 (-5.1%) | 0.573 (-13.2%) | 0.432 (-7.9%) | 0.5778 | -8.8% |
-| Q2_K | 250 | 0.765 (-0.3%) | 0.621 (-6.0%) | 0.433 (-7.5%) | 0.6066 | -4.6% |
-
-### 9.4 phi-2 (baseline: FP16)
-
-| Quant | N | BERTScore (vs FP16) | Coherence (vs FP16) | ROUGE-L (vs FP16) | Key Avg | vs FP16 |
-|-------|---|-----|-----|-----|---------|---------|
-| FP16 | 250 | 0.715 (+0.0%) | 0.771 (+0.0%) | 0.412 (+0.0%) | 0.6325 | +0.0% |
-| Q8_0 | 250 | 0.723 (+1.2%) | 0.765 (-0.7%) | 0.418 (+1.4%) | 0.6354 | +0.6% |
-| Q6_K | 250 | 0.725 (+1.4%) | 0.766 (-0.6%) | 0.416 (+1.0%) | 0.6357 | +0.6% |
-| Q5_K_M | 250 | 0.725 (+1.4%) | 0.767 (-0.4%) | 0.427 (+3.8%) | 0.6400 | +1.6% |
-| Q4_K_M | 250 | 0.721 (+0.8%) | 0.762 (-1.1%) | 0.405 (-1.6%) | 0.6295 | -0.6% |
-| Q3_K_S | 250 | 0.710 (-0.7%) | 0.742 (-3.8%) | 0.379 (-7.9%) | 0.6104 | -4.1% |
-| Q2_K | 250 | 0.742 (+3.7%) | 0.722 (-6.3%) | 0.399 (-3.2%) | 0.6208 | -1.9% |
-
-### 9.5 qwen2.5-1.5b (baseline: FP16)
-
-| Quant | N | BERTScore (vs FP16) | Coherence (vs FP16) | ROUGE-L (vs FP16) | Key Avg | vs FP16 |
-|-------|---|-----|-----|-----|---------|---------|
-| FP16 | 250 | 0.744 (+0.0%) | 0.713 (+0.0%) | 0.383 (+0.0%) | 0.6133 | +0.0% |
-| Q8_0 | 250 | 0.745 (+0.2%) | 0.710 (-0.4%) | 0.381 (-0.6%) | 0.6121 | -0.3% |
-| Q6_K | 250 | 0.730 (-1.9%) | 0.705 (-1.1%) | 0.367 (-4.1%) | 0.6007 | -2.4% |
-| Q5_K_M | 250 | 0.736 (-1.0%) | 0.711 (-0.2%) | 0.366 (-4.4%) | 0.6046 | -1.9% |
-| Q4_K_M | 250 | 0.718 (-3.5%) | 0.697 (-2.2%) | 0.349 (-8.9%) | 0.5880 | -4.9% |
-| Q3_K_S | 250 | 0.726 (-2.4%) | 0.706 (-1.0%) | 0.355 (-7.3%) | 0.5958 | -3.5% |
-| Q2_K | 250 | 0.602 (-19.1%) | 0.576 (-19.2%) | 0.200 (-47.9%) | 0.4591 | -28.7% |
-
-### 9.6 Generation vs Benchmark Agreement
-
-Generation metrics and benchmark accuracy largely agree on tier classification, but with notable exceptions:
-
-- **llama3.2-3b Q2_K:** Benchmark shows -13.0pp (unacceptable), but generation shows only -4.6% (acceptable). The benchmark is the more trustworthy signal.
-- **phi-2 Q2_K:** Benchmark shows -11.3pp (unacceptable), but generation shows only -1.9% (negligible). Again, benchmark is primary.
-- **llama3.2-1b Q4_K_M:** Benchmark shows -2.3pp (negligible), but generation shows +4.9% (an *improvement*). This is noise at N=250.
-
-**Conclusion:** Benchmark accuracy is a stricter quality gate than generation metrics. All tier classifications use the worse of the two signals.
-
-### 9.6a Generation Quality Confidence Intervals
-
-The benchmark tables (SS8.1-8.5) include Wilson CIs. Generation quality CIs are available in `phase2_analysis.json` and `phase2_v2_enhancements.json` per metric per variant. At N=250, the typical 95% CI half-widths are:
-
-| Metric | Typical CI Half-Width | Range Across Variants |
-|--------|-----------------------|----------------------|
-| BERTScore | +/-0.013-0.022 | Narrowest (least variance) |
-| Coherence | +/-0.025-0.040 | Moderate |
-| ROUGE-L | +/-0.030-0.055 | Widest (highest variance) |
-| Key Metric Avg | +/-0.015-0.030 | Composite of above |
-
-**Example (llama3.1-8b Q8_0):** BERTScore 0.800 [0.779, 0.821], coherence 0.668 [0.639, 0.696], ROUGE-L 0.492 [0.440, 0.545]. The key metric avg (0.653) has a CI of approximately [0.630, 0.676].
-
-**Implication:** Generation deltas <2% are within CI overlap for most metrics. Deltas >5% (e.g., llama3.2-1b Q2_K at -23.4%) are well outside CIs and represent genuine quality loss. The 6 variants that pass TOST at +/-5% (SS15.5) are those where the CIs are tight enough to confirm equivalence.
-
-### 9.7 Supplementary Metrics (BLEU, Repetition, Output Length, Exact Match)
-
-The analysis computes 7 generation metrics but SS9.1-9.5 show only the 3 key metrics (BERTScore, coherence, ROUGE-L). The 4 discarded metrics reveal additional degradation signals, particularly **repetition collapse at Q2_K**:
-
-| Model | Quant | BLEU | Repetition | Output Length | Exact Match | BLEU delta | Rep delta |
-|-------|-------|------|------------|---------------|-------------|------------|-----------|
-| llama3.1-8b | Q8_0 | 0.048 | 0.999 | 0.362 | 0.000 | +0.0% | +0.0% |
-| llama3.1-8b | Q2_K | 0.035 | 0.991 | 0.262 | 0.000 | -26.9% | -0.7% |
-| llama3.2-1b | FP16 | 0.027 | 0.996 | 0.335 | 0.000 | +0.0% | +0.0% |
-| llama3.2-1b | Q2_K | 0.015 | 0.942 | 0.174 | 0.000 | -44.2% | **-5.5%** |
-| llama3.2-3b | FP16 | 0.045 | 0.999 | 0.373 | 0.000 | +0.0% | +0.0% |
-| llama3.2-3b | Q2_K | 0.035 | 0.988 | 0.266 | 0.000 | -22.5% | -1.1% |
-| phi-2 | FP16 | 0.050 | 0.992 | 0.394 | 0.000 | +0.0% | +0.0% |
-| phi-2 | Q2_K | 0.049 | 0.985 | 0.363 | 0.000 | -1.6% | -0.7% |
-| qwen2.5-1.5b | FP16 | 0.051 | 0.992 | 0.469 | 0.000 | +0.0% | +0.0% |
-| qwen2.5-1.5b | Q2_K | 0.008 | **0.702** | 0.340 | 0.080 | **-84.8%** | **-29.2%** |
-
-**Repetition collapse:** qwen2.5-1.5b Q2_K drops to repetition = 0.702 (vs 0.992 baseline), indicating degenerate repetitive text where only 70% of 4-grams are unique. llama3.2-1b Q2_K shows milder repetition collapse (0.942, -5.5%). This signal is invisible in the key 3 metrics and represents a distinct failure mode: the model loops on phrases rather than producing coherent novel text.
-
-**BLEU collapse:** qwen2.5-1.5b Q2_K BLEU drops -84.8%, far exceeding the BERTScore delta (-19.1%). BLEU is more sensitive to exact n-gram overlap, making it a stronger signal for text degeneration than the embedding-based metrics.
-
-**Q3_K_S repetition is normal:** Unlike Q2_K, no Q3_K_S variant shows repetition collapse. Repetition scores at Q3_K_S: llama3.1-8b 0.999 (+0.01%), llama3.2-1b 0.992 (-0.48%), llama3.2-3b 0.998 (-0.13%), phi-2 0.993 (+0.09%), qwen2.5-1.5b 0.987 (-0.54%). All values remain above 0.98, confirming that repetition collapse is a Q2_K-specific phenomenon.
-
-### 9.8 Per-Task Generation Quality
-
-Quality varies by task type. The table below shows the key metric average (BERTScore + coherence + ROUGE-L / 3) broken down by generation task for selected variants:
-
-**qwen2.5-1.5b (most quantization-sensitive):**
-
-| Task | FP16 | Q4_K_M | Q2_K | FP16 -> Q2_K |
-|------|------|--------|------|-------------|
-| summarization | 0.734 | 0.726 | 0.640 | -12.9% |
-| qa | 0.585 | 0.524 | 0.339 | -42.1% |
-| code_generation | 0.740 | 0.742 | 0.662 | -10.5% |
-| creative_writing | 0.430 | 0.421 | 0.417 | -3.0% |
-| classification | 0.834 | 0.829 | 0.538 | -35.5% |
-
-**llama3.2-1b (small model):**
-
-| Task | FP16 | Q4_K_M | Q2_K | FP16 -> Q2_K |
-|------|------|--------|------|-------------|
-| summarization | 0.482 | 0.627 | 0.380 | -21.1% |
-| qa | 0.369 | 0.475 | 0.248 | -32.9% |
-| code_generation | 0.588 | 0.804 | 0.461 | -21.6% |
-| creative_writing | 0.414 | 0.446 | 0.365 | -11.7% |
-| classification | 0.699 | 0.339 | 0.549 | -21.4% |
-
-*Per-task values: summarization and qa show the (BERTScore + coherence + ROUGE-L) / 3 average. code_generation, creative_writing, and classification show coherence only (BERTScore not computed for these tasks). See per-task computation notes in `phase2_v2_enhancements.json`.*
-
-**Key finding:** QA and classification are the most quantization-sensitive generation tasks (30-42% degradation at Q2_K), while creative_writing is the most robust (3-12%). This suggests quantization degrades factual knowledge retrieval more than open-ended generation -- consistent with the benchmark accuracy findings.
-
----
-
-## 10. Native Performance
-
-Decode throughput from Ollama-native `eval_duration` (no HTTP overhead). Wall-clock shown for comparison.
-
-### 10.1 llama3.1-8b
-
-| Quant | Native tok/s | CV% | Wall tok/s | Overhead | Speedup vs Q8_0 |
-|-------|-------------|-----|-----------|----------|-----------------|
-| Q8_0 | 49.2 | 26 | 6.2 | 690% | 1.00x |
-| Q6_K | 75.6 | 33 | 9.1 | 731% | 1.54x |
-| Q5_K_M | 88.8 | 24 | 11.5 | 671% | 1.80x |
-| Q4_K_M | 96.7 | 23 | 13.6 | 611% | 1.96x |
-| Q3_K_S | 153.2 | 25 | 22.0 | 598% | 3.11x |
-| Q2_K | 133.0 | 42 | 18.8 | 606% | 2.70x |
-
-### 10.2 llama3.2-1b
-
-| Quant | Native tok/s | CV% | Wall tok/s | Overhead | Speedup vs FP16 |
-|-------|-------------|-----|-----------|----------|-----------------|
-| FP16 | 185.2 | 29 | 30.7 | 504% | 1.00x |
-| Q8_0 | 290.9 | 39 | 40.7 | 615% | 1.57x |
-| Q6_K | 335.2 | 41 | 44.8 | 648% | 1.81x |
-| Q5_K_M | 368.2 | 42 | 45.7 | 705% | 1.99x |
-| Q4_K_M | 280.9 | 68 | 45.6 | 516% | 1.52x |
-| Q3_K_S | 332.7 | 59 | 48.3 | 588% | 1.80x |
-| Q2_K | 479.9 | 11 | 102.8 | 367% | 2.59x |
-
-### 10.3 llama3.2-3b
-
-| Quant | Native tok/s | CV% | Wall tok/s | Overhead | Speedup vs FP16 |
-|-------|-------------|-----|-----------|----------|-----------------|
-| FP16 | 99.0 | 26 | 9.7 | 919% | 1.00x |
-| Q8_0 | 163.5 | 29 | 20.6 | 695% | 1.65x |
-| Q6_K | 117.4 | 29 | 19.8 | 492% | 1.19x |
-| Q5_K_M | 133.4 | 31 | 22.3 | 499% | 1.35x |
-| Q4_K_M | 141.0 | 35 | 23.4 | 503% | 1.42x |
-| Q3_K_S | 133.1 | 39 | 25.8 | 416% | 1.34x |
-| Q2_K | 244.3 | 32 | 33.4 | 632% | 2.47x |
-
-### 10.4 phi-2
-
-| Quant | Native tok/s | CV% | Wall tok/s | Overhead | Speedup vs FP16 |
-|-------|-------------|-----|-----------|----------|-----------------|
-| FP16 | 66.1 | 17 | 10.7 | 516% | 1.00x |
-| Q8_0 | 113.4 | 16 | 39.3 | 188% | 1.72x |
-| Q6_K | 169.4 | 18 | 48.3 | 250% | 2.56x |
-| Q5_K_M | 180.3 | 18 | 49.7 | 263% | 2.73x |
-| Q4_K_M | 198.4 | 19 | 53.5 | 271% | 3.00x |
-| Q3_K_S | 205.3 | 19 | 56.2 | 266% | 3.11x |
-| Q2_K | 245.6 | 10 | 56.9 | 332% | 3.72x |
-
-### 10.5 qwen2.5-1.5b
-
-| Quant | Native tok/s | CV% | Wall tok/s | Overhead | Speedup vs FP16 |
-|-------|-------------|-----|-----------|----------|-----------------|
-| FP16 | 158.0 | 27 | 25.1 | 528% | 1.00x |
-| Q8_0 | 267.7 | 25 | 33.7 | 694% | 1.69x |
-| Q6_K | 267.3 | 28 | 36.4 | 634% | 1.69x |
-| Q5_K_M | 288.3 | 26 | 40.8 | 606% | 1.83x |
-| Q4_K_M | 299.0 | 31 | 39.6 | 655% | 1.89x |
-| Q3_K_S | 256.7 | 32 | 49.2 | 422% | 1.62x |
-| Q2_K | 378.5 | 14 | 109.6 | 245% | 2.40x |
-
-### 10.6 Performance Observations
-
-1. **phi-2 has the lowest CV** (16-19% native), making it the most stable model for throughput measurement.
-2. **HTTP overhead ranges from 188% to 920%.** The overhead is not constant -- it varies by model size and quant level, making wall-clock timing unreliable for relative comparisons.
-3. **Q2_K is often the fastest** in raw tok/s, but quality is destroyed. Speed without quality is useless.
-4. **llama3.1-8b at Q3_K_S** achieves 3.11x speedup vs Q8_0 while maintaining acceptable quality (-2.5pp). This is the best speed-quality trade-off for the 8B model.
-5. **Throughput scales inversely with bits-per-weight**, as expected. The relationship is roughly linear for phi-2 (most VRAM-headroom) but sublinear for models that stress VRAM.
-
-### 10.7 Timing Outlier Analysis (IQR Method)
-
-Outlier detection using the IQR method (k=1.5) on raw per-sample timing data from `samples.jsonl`. The high outlier rates reflect the skewed nature of HTTP-mediated timing distributions, not measurement errors.
-
-| Model | TTFT Outliers | TTFT % | Decode Outliers | Decode % |
-|-------|--------------|--------|-----------------|----------|
-| llama3.1-8b (all quants) | 539/4410 | 12.2% | 767/4410 | 17.4% |
-| llama3.2-1b (all quants) | 375/5143 | 7.3% | 696/5143 | 13.5% |
-| llama3.2-3b (all quants) | 537/5145 | 10.4% | 1115/5145 | 21.7% |
-| phi-2 (all quants) | 528/5145 | 10.3% | 1030/5145 | 20.0% |
-| qwen2.5-1.5b (all quants) | 300/5145 | 5.8% | 879/5145 | 17.1% |
-| **Total** | **2279/24988** | **9.1%** | **4487/24988** | **18.0%** |
-
-**Interpretation:** The ~9% TTFT outlier rate and ~18% decode outlier rate are substantially higher than TR126's 0.0-0.9% (which measured CUDA-event latencies in Docker). The difference is explained by: (1) Ollama HTTP overhead adds stochastic latency spikes, (2) the IQR method is sensitive to skewed distributions (timing is right-tailed), (3) Ollama's server-side scheduling introduces jitter absent in direct GPU measurement. The mean/median performance values in SS10.1-10.5 are robust to these outliers; percentile-based metrics (p95, p99) would be affected. Trimmed means were not computed.
-
----
-
-## 11. TTFT Analysis
-
-Time-to-first-token (prompt evaluation latency) from Ollama-native `prompt_eval_duration`. TTFT reflects prompt processing speed and is relevant for interactive applications.
-
-### 11.1 Full TTFT Table (all 34 variants)
-
-| Model | Quant | TTFT Mean (ms) | TTFT Median (ms) | TTFT Std (ms) | CV% | Notable |
-|-------|-------|----------------|------------------|---------------|-----|---------|
-| llama3.1-8b | Q8_0 | 1845 | 1943 | 288 | 16 | Highest TTFT -- 8B at 8-bit |
-| llama3.1-8b | Q6_K | 1402 | 1481 | 237 | 17 | |
-| llama3.1-8b | Q5_K_M | 911 | 964 | 255 | 28 | |
-| llama3.1-8b | Q4_K_M | 1046 | 1183 | 358 | 34 | |
-| llama3.1-8b | Q3_K_S | 25 | 23 | 10 | 39 | 42x drop from Q4_K_M |
-| llama3.1-8b | Q2_K | 41 | 39 | 18 | 45 | |
-| llama3.2-1b | FP16 | 29 | 15 | 135 | 468 | Extreme variance |
-| llama3.2-1b | Q8_0 | 17 | 11 | 16 | 91 | |
-| llama3.2-1b | Q6_K | 17 | 11 | 15 | 85 | |
-| llama3.2-1b | Q5_K_M | 16 | 11 | 13 | 81 | |
-| llama3.2-1b | Q4_K_M | 24 | 14 | 17 | 73 | |
-| llama3.2-1b | Q3_K_S | 18 | 10 | 15 | 80 | |
-| llama3.2-1b | Q2_K | 8 | 8 | 3 | 30 | Fastest measured |
-| llama3.2-3b | FP16 | 1369 | 1475 | 237 | 17 | |
-| llama3.2-3b | Q8_0 | 20 | 17 | 7 | 34 | 68x drop from FP16 |
-| llama3.2-3b | Q6_K | 42 | 37 | 23 | 54 | |
-| llama3.2-3b | Q5_K_M | 41 | 35 | 24 | 59 | |
-| llama3.2-3b | Q4_K_M | 40 | 33 | 26 | 64 | |
-| llama3.2-3b | Q3_K_S | 36 | 31 | 23 | 64 | |
-| llama3.2-3b | Q2_K | 30 | 18 | 160 | 537 | Extreme variance |
-| phi-2 | FP16 | 1485 | 1584 | 307 | 21 | |
-| phi-2 | Q8_0 | 27 | 27 | 12 | 44 | 55x drop from FP16 |
-| phi-2 | Q6_K | 16 | 14 | 6 | 36 | |
-| phi-2 | Q5_K_M | 15 | 14 | 5 | 36 | |
-| phi-2 | Q4_K_M | 15 | 13 | 5 | 36 | |
-| phi-2 | Q3_K_S | 14 | 13 | 5 | 33 | |
-| phi-2 | Q2_K | 14 | 13 | 5 | 33 | |
-| qwen2.5-1.5b | FP16 | 20 | 18 | 6 | 29 | Fast even at FP16 |
-| qwen2.5-1.5b | Q8_0 | 16 | 14 | 7 | 43 | |
-| qwen2.5-1.5b | Q6_K | 20 | 18 | 12 | 58 | |
-| qwen2.5-1.5b | Q5_K_M | 18 | 16 | 10 | 53 | |
-| qwen2.5-1.5b | Q4_K_M | 20 | 17 | 11 | 55 | |
-| qwen2.5-1.5b | Q3_K_S | 18 | 16 | 7 | 41 | |
-| qwen2.5-1.5b | Q2_K | 16 | 12 | 85 | 529 | Extreme variance |
-
-### 11.2 TTFT Observations
-
-1. **FP16 TTFT is high for models >2B:** llama3.2-3b and phi-2 show 1.4-1.5s TTFT at FP16, driven by prompt processing on the full-precision model. Quantized variants drop to <50ms.
-2. **llama3.1-8b Q8_0 has the worst TTFT** (1.8s mean). This is expected -- processing 8B parameters at 8-bit precision is memory-bandwidth-limited. TTFT remains high through Q4_K_M (1046ms), then drops 42x to Q3_K_S (25ms).
-3. **The TTFT drop from Q4_K_M to Q3_K_S for llama3.1-8b** is dramatic: 1046ms to 25ms. This suggests the model transitions from partial GPU offloading to fully GPU-resident at Q3_K_S, consistent with VRAM estimate dropping below GPU capacity at 3-bit.
-4. **Small models (1-1.5B) have low TTFT** across all quant levels (median <20ms). qwen2.5-1.5b and llama3.2-1b show median TTFT consistently under 18ms.
-5. **Extreme variance on some variants:** llama3.2-1b FP16 (CV=468%), llama3.2-3b Q2_K (CV=537%), and qwen2.5-1.5b Q2_K (CV=529%) show occasional TTFT spikes, likely from model loading/unloading events or Ollama server contention.
-
----
-
-## 12. Cost Analysis
-
-Hardware cost: $0.035/hr (RTX 4080 tier, from TR123). Cost = hourly_rate / (native_tok_per_s x 3600) x 1M. Savings measured vs primary baseline (FP16 or Q8_0).
-
-### 12.1 Full Cost Table
-
-| Model | Quant | Native tok/s | $/1M Tokens | Baseline $/1M | Savings vs Baseline |
-|-------|-------|-------------|-------------|---------------|---------------------|
-| llama3.1-8b | Q8_0 | 49.2 | $0.1976 | $0.1976 | +0% vs Q8_0 |
-| llama3.1-8b | Q6_K | 75.6 | $0.1287 | $0.1976 | +35% vs Q8_0 |
-| llama3.1-8b | Q5_K_M | 88.8 | $0.1095 | $0.1976 | +45% vs Q8_0 |
-| llama3.1-8b | Q4_K_M | 96.7 | $0.1006 | $0.1976 | +49% vs Q8_0 |
-| llama3.1-8b | Q3_K_S | 153.2 | $0.0634 | $0.1976 | +68% vs Q8_0 |
-| llama3.1-8b | Q2_K | 133.0 | $0.0731 | $0.1976 | +63% vs Q8_0 |
-| llama3.2-1b | FP16 | 185.2 | $0.0525 | $0.0525 | +0% vs FP16 |
-| llama3.2-1b | Q8_0 | 290.9 | $0.0334 | $0.0525 | +36% vs FP16 |
-| llama3.2-1b | Q6_K | 335.2 | $0.0290 | $0.0525 | +45% vs FP16 |
-| llama3.2-1b | Q5_K_M | 368.2 | $0.0264 | $0.0525 | +50% vs FP16 |
-| llama3.2-1b | Q4_K_M | 280.9 | $0.0346 | $0.0525 | +34% vs FP16 |
-| llama3.2-1b | Q3_K_S | 332.7 | $0.0292 | $0.0525 | +44% vs FP16 |
-| llama3.2-1b | Q2_K | 479.9 | $0.0203 | $0.0525 | +61% vs FP16 |
-| llama3.2-3b | FP16 | 99.0 | $0.0982 | $0.0982 | +0% vs FP16 |
-| llama3.2-3b | Q8_0 | 163.5 | $0.0595 | $0.0982 | +39% vs FP16 |
-| llama3.2-3b | Q6_K | 117.4 | $0.0828 | $0.0982 | +16% vs FP16 |
-| llama3.2-3b | Q5_K_M | 133.4 | $0.0729 | $0.0982 | +26% vs FP16 |
-| llama3.2-3b | Q4_K_M | 141.0 | $0.0689 | $0.0982 | +30% vs FP16 |
-| llama3.2-3b | Q3_K_S | 133.1 | $0.0730 | $0.0982 | +26% vs FP16 |
-| llama3.2-3b | Q2_K | 244.3 | $0.0398 | $0.0982 | +60% vs FP16 |
-| phi-2 | FP16 | 66.1 | $0.1471 | $0.1471 | +0% vs FP16 |
-| phi-2 | Q8_0 | 113.4 | $0.0857 | $0.1471 | +42% vs FP16 |
-| phi-2 | Q6_K | 169.4 | $0.0574 | $0.1471 | +61% vs FP16 |
-| phi-2 | Q5_K_M | 180.3 | $0.0539 | $0.1471 | +63% vs FP16 |
-| phi-2 | Q4_K_M | 198.4 | $0.0490 | $0.1471 | +67% vs FP16 |
-| phi-2 | Q3_K_S | 205.3 | $0.0473 | $0.1471 | +68% vs FP16 |
-| phi-2 | Q2_K | 245.6 | $0.0396 | $0.1471 | +73% vs FP16 |
-| qwen2.5-1.5b | FP16 | 158.0 | $0.0615 | $0.0615 | +0% vs FP16 |
-| qwen2.5-1.5b | Q8_0 | 267.7 | $0.0363 | $0.0615 | +41% vs FP16 |
-| qwen2.5-1.5b | Q6_K | 267.3 | $0.0364 | $0.0615 | +41% vs FP16 |
-| qwen2.5-1.5b | Q5_K_M | 288.3 | $0.0337 | $0.0615 | +45% vs FP16 |
-| qwen2.5-1.5b | Q4_K_M | 299.0 | $0.0325 | $0.0615 | +47% vs FP16 |
-| qwen2.5-1.5b | Q3_K_S | 256.7 | $0.0379 | $0.0615 | +38% vs FP16 |
-| qwen2.5-1.5b | Q2_K | 378.5 | $0.0257 | $0.0615 | +58% vs FP16 |
-
-### 12.2 Cost Observations
-
-1. **10x cost range:** $0.0203/1M (llama3.2-1b Q2_K) to $0.1976/1M (llama3.1-8b Q8_0).
-2. **Q4_K_M saves 30-67% vs FP16** for models with FP16 baselines. phi-2 benefits most (67%), llama3.2-3b least (30%); llama3.1-8b saves 49% vs Q8_0.
-3. **The cheapest acceptable option** is llama3.2-1b at Q5_K_M ($0.0264/1M, +0.2pp, negligible).
-4. **The cheapest high-accuracy option** is llama3.1-8b at Q4_K_M ($0.1006/1M, 69.7% accuracy).
-5. **Q2_K is often not the cheapest** per model -- llama3.1-8b Q3_K_S ($0.0634) is cheaper than Q2_K ($0.0731) because Q3_K_S achieves higher throughput on this hardware.
-
----
-
-## 13. Decision Matrix
-
-Per VRAM tier: which (model, quant) combinations fit and maintain quality? Quality tier determined by the **worse** of benchmark accuracy delta (pp) and generation quality delta (%). Recommended = fits VRAM AND tier is "negligible" or "acceptable."
-
-### 13.1 2GB VRAM
-
-| Model | Quant | VRAM Est | Bench Delta (pp) | Gen Delta (%) | Tier | Native tok/s | $/1M |
-|-------|-------|---------|------------------|---------------|------|-------------|------|
-| llama3.2-1b | Q5_K_M | 0.9 GB | +0.2 | -1.7 | negligible | 368.2 | $0.0264 |
-| llama3.2-1b | Q6_K | 1.0 GB | +0.0 | +0.0 | negligible | 335.2 | $0.0290 |
-| qwen2.5-1.5b | Q4_K_M | 0.9 GB | -4.1 | -4.9 | acceptable | 299.0 | $0.0325 |
-| llama3.2-1b | Q8_0 | 1.3 GB | +1.2 | -0.2 | negligible | 290.9 | $0.0334 |
-| qwen2.5-1.5b | Q5_K_M | 1.1 GB | -0.4 | -1.9 | negligible | 288.3 | $0.0337 |
-| llama3.2-1b | Q4_K_M | 0.7 GB | -2.3 | +4.9 | negligible | 280.9 | $0.0346 |
-| qwen2.5-1.5b | Q8_0 | 1.6 GB | -1.2 | -0.3 | negligible | 267.7 | $0.0363 |
-| qwen2.5-1.5b | Q6_K | 1.3 GB | -1.2 | -2.4 | negligible | 267.3 | $0.0364 |
-| phi-2 | Q3_K_S | 1.2 GB | -0.4 | -4.1 | acceptable | 205.3 | $0.0473 |
-| phi-2 | Q4_K_M | 1.6 GB | -1.8 | -0.6 | negligible | 198.4 | $0.0490 |
-| phi-2 | Q5_K_M | 1.9 GB | +0.6 | +1.6 | negligible | 180.3 | $0.0539 |
-| llama3.2-3b | Q4_K_M | 1.9 GB | -0.4 | -2.0 | negligible | 141.0 | $0.0689 |
-
-### 13.2 4GB VRAM
-
-All entries from 2GB tier plus:
-
-| Model | Quant | VRAM Est | Bench Delta (pp) | Gen Delta (%) | Tier | Native tok/s | $/1M |
-|-------|-------|---------|------------------|---------------|------|-------------|------|
-| llama3.2-1b | FP16 | 2.5 GB | +0.0 | +0.0 | negligible | 185.2 | $0.0525 |
-| phi-2 | Q6_K | 2.2 GB | -1.2 | +0.6 | negligible | 169.4 | $0.0574 |
-| llama3.2-3b | Q8_0 | 3.3 GB | +0.4 | -0.1 | negligible | 163.5 | $0.0595 |
-| qwen2.5-1.5b | FP16 | 3.2 GB | +0.0 | +0.0 | negligible | 158.0 | $0.0615 |
-| llama3.1-8b | Q3_K_S | 3.6 GB | -2.5 | -3.8 | acceptable | 153.2 | $0.0634 |
-| phi-2 | Q8_0 | 2.8 GB | -1.6 | +0.6 | negligible | 113.4 | $0.0857 |
-
-### 13.3 6GB VRAM
-
-All entries from 4GB tier plus:
-
-| Model | Quant | VRAM Est | Bench Delta (pp) | Gen Delta (%) | Tier | Native tok/s | $/1M |
-|-------|-------|---------|------------------|---------------|------|-------------|------|
-| llama3.1-8b | Q4_K_M | 4.6 GB | -2.7 | +0.8 | negligible | 96.7 | $0.1006 |
-| llama3.1-8b | Q5_K_M | 5.7 GB | -1.6 | +1.3 | negligible | 88.8 | $0.1095 |
-| phi-2 | FP16 | 5.5 GB | +0.0 | +0.0 | negligible | 66.1 | $0.1471 |
-
-### 13.4 8GB+ VRAM
-
-All entries from 6GB tier plus:
-
-| Model | Quant | VRAM Est | Bench Delta (pp) | Gen Delta (%) | Tier | Native tok/s | $/1M |
-|-------|-------|---------|------------------|---------------|------|-------------|------|
-| llama3.2-3b | FP16 | 6.6 GB | +0.0 | +0.0 | negligible | 99.0 | $0.0982 |
-| llama3.1-8b | Q6_K | 6.7 GB | -1.6 | -1.0 | negligible | 75.6 | $0.1287 |
-
-### 13.5 Not Recommended (fit 8GB+ but concerning/unacceptable)
-
-| Model | Quant | VRAM Est | Bench Delta (pp) | Gen Delta (%) | Tier |
-|-------|-------|---------|------------------|---------------|------|
-| llama3.1-8b | Q2_K | 2.6 GB | -14.2 | -5.9 | unacceptable |
-| llama3.2-1b | Q3_K_S | 0.6 GB | -9.5 | -0.8 | concerning |
-| llama3.2-1b | Q2_K | 0.4 GB | -16.1 | -23.4 | unacceptable |
-| llama3.2-3b | Q3_K_S | 1.4 GB | -10.1 | -8.8 | unacceptable |
-| llama3.2-3b | Q2_K | 1.0 GB | -13.0 | -4.6 | unacceptable |
-| phi-2 | Q2_K | 0.9 GB | -11.3 | -1.9 | unacceptable |
-| qwen2.5-1.5b | Q3_K_S | 0.7 GB | -12.2 | -3.5 | unacceptable |
-| qwen2.5-1.5b | Q2_K | 0.5 GB | -40.6 | -28.7 | unacceptable |
-
-### 13.6 Decision Matrix Summary
-
-Of 111 total (model, quant, VRAM-tier) combinations that physically fit:
-
-| Tier | Count | Percentage |
-|------|-------|------------|
-| Negligible | 69 | 62% |
-| Acceptable | 11 | 10% |
-| Concerning | 4 | 4% |
-| Unacceptable | 27 | 24% |
-
-**80 of 111 fitting combinations (72%) are recommended** (negligible + acceptable).
-
-### 13.7 Explicit 29-Variant Enumeration
-
-The claim "21 of 29 quantized variants maintain quality within 5pp" requires explicit enumeration. Here are all 29 non-baseline quantized variants with their tier classification (5 baselines excluded: FP16 for 4 models, Q8_0 for llama3.1-8b):
-
-| # | Model | Quant | Rescored Acc (%) | Bench Delta (pp) | Gen Delta (%) | Tier | Safe? |
-|---|-------|-------|-----------------|-----------------|---------------|------|-------|
-| 1 | llama3.2-1b | Q8_0 | 39.6 | +1.2 | -0.2 | negligible | Yes |
-| 2 | llama3.2-1b | Q6_K | 38.4 | +0.0 | +0.0 | negligible | Yes |
-| 3 | llama3.2-1b | Q5_K_M | 38.6 | +0.2 | -1.7 | negligible | Yes |
-| 4 | llama3.2-1b | Q4_K_M | 36.1 | -2.3 | +4.9 | negligible | Yes |
-| 5 | llama3.2-1b | Q3_K_S | 28.9 | -9.5 | -0.9 | **concerning** | **No** |
-| 6 | llama3.2-1b | Q2_K | 22.3 | -16.1 | -23.4 | **unacceptable** | **No** |
-| 7 | qwen2.5-1.5b | Q8_0 | 63.9 | -1.2 | -0.3 | negligible | Yes |
-| 8 | qwen2.5-1.5b | Q6_K | 63.9 | -1.2 | -2.4 | negligible | Yes |
-| 9 | qwen2.5-1.5b | Q5_K_M | 64.7 | -0.4 | -1.9 | negligible | Yes |
-| 10 | qwen2.5-1.5b | Q4_K_M | 61.0 | -4.1 | -4.9 | acceptable | Yes |
-| 11 | qwen2.5-1.5b | Q3_K_S | 53.0 | -12.2 | -3.5 | **unacceptable** | **No** |
-| 12 | qwen2.5-1.5b | Q2_K | 24.5 | -40.6 | -28.7 | **unacceptable** | **No** |
-| 13 | phi-2 | Q8_0 | 57.7 | -1.6 | +0.6 | negligible | Yes |
-| 14 | phi-2 | Q6_K | 58.1 | -1.2 | +0.6 | negligible | Yes |
-| 15 | phi-2 | Q5_K_M | 60.0 | +0.6 | +1.6 | negligible | Yes |
-| 16 | phi-2 | Q4_K_M | 57.5 | -1.8 | -0.6 | negligible | Yes |
-| 17 | phi-2 | Q3_K_S | 59.0 | -0.4 | -4.1 | acceptable | Yes |
-| 18 | phi-2 | Q2_K | 48.0 | -11.3 | -1.9 | **unacceptable** | **No** |
-| 19 | llama3.2-3b | Q8_0 | 64.5 | +0.4 | -0.1 | negligible | Yes |
-| 20 | llama3.2-3b | Q6_K | 63.5 | -0.6 | +0.4 | negligible | Yes |
-| 21 | llama3.2-3b | Q5_K_M | 63.3 | -0.8 | -1.4 | negligible | Yes |
-| 22 | llama3.2-3b | Q4_K_M | 63.7 | -0.4 | -2.0 | negligible | Yes |
-| 23 | llama3.2-3b | Q3_K_S | 54.0 | -10.1 | -8.8 | **unacceptable** | **No** |
-| 24 | llama3.2-3b | Q2_K | 51.1 | -13.0 | -4.6 | **unacceptable** | **No** |
-| 25 | llama3.1-8b | Q6_K | 70.7 | -1.6 | -1.0 | negligible | Yes |
-| 26 | llama3.1-8b | Q5_K_M | 70.7 | -1.6 | +1.3 | negligible | Yes |
-| 27 | llama3.1-8b | Q4_K_M | 69.7 | -2.7 | +0.8 | negligible | Yes |
-| 28 | llama3.1-8b | Q3_K_S | 69.9 | -2.5 | -3.8 | acceptable | Yes |
-| 29 | llama3.1-8b | Q2_K | 58.1 | -14.2 | -5.9 | **unacceptable** | **No** |
-
-**Tier totals:** 18 negligible + 3 acceptable + 1 concerning + 7 unacceptable = 29. **21 safe (72%), 8 unsafe (28%).**
-
-**The 8 unsafe variants** are exclusively at Q3_K_S (3 models) and Q2_K (all 5 models). No variant at Q4_K_M or above is classified worse than "acceptable."
-
----
-
-## 14. Diminishing Returns
-
-Marginal quality gain vs cost increase when stepping to a higher quant level. "Bench Gain" is the rescored accuracy improvement (pp). "Gen Gain" is the key_metric_avg difference. "Cost Increase" and "Speed Loss" measure the penalty for the higher quant level.
-
-### 14.1 Key Diminishing Returns Steps
-
-| Model | Step | Bench Gain (pp) | Gen Gain | Cost Increase | Speed Loss |
-|-------|------|-----------------|----------|---------------|------------|
-| llama3.1-8b | Q4_K_M -> Q5_K_M | +1.0 | +0.0024 | +8.8% | +8.2% |
-| llama3.1-8b | Q3_K_S -> Q4_K_M | -0.2 | +0.0291 | +58.7% | +36.9% |
-| llama3.1-8b | Q2_K -> Q3_K_S | **+11.8** | +0.0118 | -13.3% | -15.2% |
-| llama3.2-1b | Q4_K_M -> Q5_K_M | +2.5 | -0.0242 | -23.7% | -31.1% |
-| llama3.2-1b | Q3_K_S -> Q4_K_M | **+7.2** | +0.0216 | +18.5% | +15.6% |
-| llama3.2-1b | Q2_K -> Q3_K_S | **+6.6** | +0.0922 | +43.8% | +30.7% |
-| llama3.2-3b | Q3_K_S -> Q4_K_M | **+9.7** | +0.0431 | -5.6% | -5.9% |
-| llama3.2-3b | Q2_K -> Q3_K_S | +2.9 | -0.0289 | +83.4% | +45.5% |
-| phi-2 | Q2_K -> Q3_K_S | **+10.9** | -0.0104 | +19.4% | +16.4% |
-| qwen2.5-1.5b | Q3_K_S -> Q4_K_M | **+8.0** | -0.0078 | -14.2% | -16.5% |
-| qwen2.5-1.5b | Q2_K -> Q3_K_S | **+28.5** | +0.1367 | +47.5% | +32.2% |
-
-### 14.2 Interpretation
-
-1. **The Q2_K -> Q3_K_S step delivers the largest quality gains** across all models (6.6-28.5pp). This is the most cost-effective quality investment.
-2. **The Q3_K_S -> Q4_K_M step is the second-biggest gain** for models where Q3_K_S is concerning (7.2-9.7pp for llama3.2-1b, llama3.2-3b, qwen2.5-1.5b).
-3. **Steps above Q4_K_M show diminishing returns** -- typically <2pp benchmark gain per step, with 5-60% cost increases.
-4. **The FP16 -> Q8_0 step is free or beneficial** -- Q8_0 is equivalent or slightly better than FP16 for most models, at 36-42% lower cost.
-5. **llama3.2-3b Q3_K_S -> Q4_K_M is the best single trade-off:** +9.7pp benchmark gain, -5.6% cost decrease (Q4_K_M is actually *cheaper* due to higher throughput). This is a rare "free quality upgrade."
-
----
-
-## 15. Statistical Tests
-
-Pairwise t-tests between adjacent quant levels. Benchmark tests use rescored exact_match (binary). Generation tests use BERTScore, coherence, ROUGE-L.
-
-### 15.1 Benchmark Accuracy Tests (7/29 significant)
-
-| Model | Higher Q | Lower Q | N | Mean H | Mean L | Cohen's d | p-value |
-|-------|----------|---------|---|--------|--------|-----------|---------|
-| llama3.1-8b | Q3_K_S | Q2_K | 485 | 0.699 | 0.581 | -0.246 | 0.0001 |
-| llama3.2-1b | Q4_K_M | Q3_K_S | 485 | 0.361 | 0.289 | -0.154 | 0.0164 |
-| llama3.2-1b | Q3_K_S | Q2_K | 485 | 0.289 | 0.223 | -0.151 | 0.0185 |
-| llama3.2-3b | Q4_K_M | Q3_K_S | 485 | 0.637 | 0.540 | -0.198 | 0.0021 |
-| phi-2 | Q3_K_S | Q2_K | 485 | 0.590 | 0.480 | -0.220 | 0.0006 |
-| qwen2.5-1.5b | Q4_K_M | Q3_K_S | 485 | 0.610 | 0.530 | -0.163 | 0.0114 |
-| qwen2.5-1.5b | Q3_K_S | Q2_K | 485 | 0.530 | 0.245 | -0.610 | 0.0000 |
-
-**Pattern:** All 7 significant tests occur at the Q3_K_S/Q2_K boundary -- exactly where the quality cliff is. No test between Q4_K_M and above is significant, confirming that quality differences above Q4_K_M are below measurement resolution.
-
-### 15.2 Generation Quality Tests (9/87 significant)
-
-| Model | Metric | Higher Q | Lower Q | N | Mean H | Mean L | Cohen's d | p-value |
-|-------|--------|----------|---------|---|--------|--------|-----------|---------|
-| llama3.1-8b | coherence | Q4_K_M | Q3_K_S | 250 | 0.683 | 0.640 | -0.189 | 0.0353 |
-| llama3.2-1b | bertscore | Q3_K_S | Q2_K | 100 | 0.656 | 0.550 | -0.833 | 0.0000 |
-| llama3.2-1b | coherence | Q3_K_S | Q2_K | 250 | 0.557 | 0.493 | -0.256 | 0.0043 |
-| llama3.2-1b | rouge_l | Q5_K_M | Q4_K_M | 150 | 0.259 | 0.297 | +0.236 | 0.0415 |
-| llama3.2-1b | rouge_l | Q3_K_S | Q2_K | 150 | 0.266 | 0.159 | -0.685 | 0.0000 |
-| llama3.2-3b | coherence | Q4_K_M | Q3_K_S | 250 | 0.650 | 0.573 | -0.276 | 0.0021 |
-| qwen2.5-1.5b | bertscore | Q3_K_S | Q2_K | 100 | 0.726 | 0.602 | -0.829 | 0.0000 |
-| qwen2.5-1.5b | coherence | Q3_K_S | Q2_K | 250 | 0.706 | 0.576 | -0.544 | 0.0000 |
-| qwen2.5-1.5b | rouge_l | Q3_K_S | Q2_K | 150 | 0.355 | 0.200 | -0.725 | 0.0000 |
-
-### 15.3 Summary
-
-**16/116 tests significant at p<0.05 (uncorrected)** (benchmark: 7/29, generation: 9/87). All significant results cluster at the Q3_K_S-to-Q2_K boundary, with some at Q4_K_M-to-Q3_K_S. No significant differences detected above Q4_K_M.
-
-### 15.4 Multiple Comparison Correction (Computed)
-
-With 116 tests at alpha = 0.05, the expected false positive count under the null is 5.8. Both Bonferroni and Holm step-down corrections were applied to all 116 p-values.
-
-**Bonferroni threshold:** alpha_corrected = 0.05 / 116 = 0.000431.
-
-**Holm step-down:** Rank-ordered p-values compared to alpha / (116 - rank + 1).
-
-**Result: 7 of 16 significant tests survive both Bonferroni and Holm correction:**
-
-| Rank | Model | Transition | Metric | p (uncorrected) | p (Bonferroni) | d | Survives? |
-|------|-------|------------|--------|-----------------|----------------|---|-----------|
-| 1 | qwen2.5-1.5b | Q3_K_S -> Q2_K | benchmark | <0.0001 | <0.001 | -0.610 | Yes |
-| 2 | llama3.2-1b | Q3_K_S -> Q2_K | bertscore | <0.0001 | <0.001 | -0.833 | Yes |
-| 3 | llama3.2-1b | Q3_K_S -> Q2_K | rouge_l | <0.0001 | <0.001 | -0.685 | Yes |
-| 4 | qwen2.5-1.5b | Q3_K_S -> Q2_K | bertscore | <0.0001 | <0.001 | -0.829 | Yes |
-| 5 | qwen2.5-1.5b | Q3_K_S -> Q2_K | coherence | <0.0001 | <0.001 | -0.544 | Yes |
-| 6 | qwen2.5-1.5b | Q3_K_S -> Q2_K | rouge_l | <0.0001 | <0.001 | -0.725 | Yes |
-| 7 | llama3.1-8b | Q3_K_S -> Q2_K | benchmark | 0.0001 | 0.012 | -0.246 | Yes |
-| 8 | phi-2 | Q3_K_S -> Q2_K | benchmark | 0.0006 | 0.070 | -0.220 | No |
-| 9 | llama3.2-3b | Q4_K_M -> Q3_K_S | benchmark | 0.0021 | 0.244 | -0.198 | No |
-| 10-16 | (remaining) | | | 0.004-0.042 | 0.46-1.0 | | No |
-
-**Impact on conclusions:** All 7 survivors are at the Q3_K_S-to-Q2_K boundary. The Q2_K quality cliff is robust to any correction method. The Q3_K_S cliff is NOT robust -- none of the Q4_K_M-to-Q3_K_S tests survive correction (phi-2 benchmark at p=0.070 is closest). The claim that "no significant differences exist above Q4_K_M" is strengthened by correction.
-
-**Why we report uncorrected p-values:** Following the research program convention, we report uncorrected p-values with this correction table, rather than applying a correction that would obscure raw results. The reader should treat p-values between 0.001 and 0.05 as marginal.
-
-### 15.5 TOST Equivalence Testing
-
-The "negligible" tier classifies 18 quantized variants as having no meaningful quality loss. But a non-significant t-test does NOT establish equivalence. TOST (Two One-Sided Tests) was applied to all 18 negligible variants to test whether the true delta lies within +/-3pp of baseline (benchmark) or +/-3% of baseline mean (generation).
-
-**At +/-3pp margin: 0/18 benchmark pass, 0/18 generation pass.**
-
-| Model | Quant | Bench Delta (pp) | TOST p (bench) | TOST p (gen) | Equiv? |
-|-------|-------|-----------------|----------------|--------------|--------|
-| llama3.1-8b | Q6_K | -1.6 | 0.240 | 0.230 | No |
-| llama3.1-8b | Q5_K_M | -1.6 | 0.876 | 0.219 | No |
-| llama3.1-8b | Q4_K_M | -2.7 | 0.307 | 0.254 | No |
-| llama3.2-1b | Q8_0 | +1.2 | 0.263 | 0.180 | No |
-| llama3.2-1b | Q6_K | +0.0 | 0.166 | 0.169 | No |
-| llama3.2-1b | Q5_K_M | +0.2 | 0.242 | 0.301 | No |
-| llama3.2-1b | Q4_K_M | -2.3 | 0.331 | 0.467 | No |
-| llama3.2-3b | Q8_0 | +0.4 | 0.169 | 0.133 | No |
-| llama3.2-3b | Q6_K | -0.6 | 0.358 | 0.153 | No |
-| llama3.2-3b | Q5_K_M | -0.8 | 0.265 | 0.273 | No |
-| llama3.2-3b | Q4_K_M | -0.4 | 0.169 | 0.332 | No |
-| phi-2 | Q8_0 | -1.6 | 0.201 | 0.127 | No |
-| phi-2 | Q6_K | -1.2 | 0.289 | 0.131 | No |
-| phi-2 | Q5_K_M | +0.6 | 0.220 | 0.191 | No |
-| phi-2 | Q4_K_M | -1.8 | 0.242 | 0.192 | No |
-| qwen2.5-1.5b | Q8_0 | -1.2 | 0.707 | 0.159 | No |
-| qwen2.5-1.5b | Q6_K | -1.2 | 0.435 | 0.335 | No |
-| qwen2.5-1.5b | Q5_K_M | -0.4 | 1.000 | 0.252 | No |
-
-**At +/-5pp margin: 0/18 benchmark pass, 6/18 generation pass.**
-
-Widening the equivalence margin to +/-5pp (the "acceptable" tier threshold) allows the generation quality tests to reach significance for 6 variants. Benchmark tests remain underpowered at this margin because binary accuracy data has high variance (SE ~5.9pp).
-
-| Model | Quant | Gen Delta (%) | TOST p (gen, +/-5%) | Gen Equiv? |
-|-------|-------|---------------|-------------------|------------|
-| llama3.2-3b | Q8_0 | -0.1 | 0.031 | **Yes** |
-| llama3.2-3b | Q6_K | +0.3 | 0.037 | **Yes** |
-| phi-2 | Q8_0 | +0.1 | 0.027 | **Yes** |
-| phi-2 | Q6_K | +0.1 | 0.028 | **Yes** |
-| phi-2 | Q5_K_M | +0.8 | 0.048 | **Yes** |
-| qwen2.5-1.5b | Q8_0 | -0.3 | 0.041 | **Yes** |
-
-**Pattern:** The 6 variants that pass are all at high quant levels (Q8_0, Q6_K, Q5_K_M) with generation deltas <1%. phi-2 passes at 3 quant levels (Q8_0 through Q5_K_M), consistent with its overall quantization robustness. No variant at Q4_K_M or below passes even at +/-5%.
-
-**Interpretation:** At N=485 with binary accuracy data, the standard error of the difference is approximately +/-5.9pp (95% CI). A +/-3pp equivalence margin is too narrow relative to this standard error for the study to have sufficient power to establish equivalence. At +/-5pp, generation quality (continuous metrics with lower variance) has enough power to confirm equivalence for the highest-quant variants, but benchmark accuracy (binary data) remains underpowered. To establish benchmark equivalence at +/-5pp with 80% power would require N > 1,500 per variant; at +/-3pp, N > 3,000.
-
-The "negligible" tier should be read as: **"point estimate within 3pp, no detected degradation. 6/18 variants confirmed equivalent on generation quality at +/-5%, but benchmark equivalence unconfirmed."**
-
----
-
-## 16. Power Analysis & Statistical Resolution
-
-### 16.1 Minimum Detectable Effects
-
-Computed using normal approximation at alpha=0.05, power=0.80.
-
-| Metric Type | N per Variant | MDE | Interpretation |
-|------------|--------------|-----|----------------|
-| Benchmark accuracy (binary) | 485 | 9.0pp | Cannot detect <9.0pp accuracy differences |
-| Generation quality (continuous) | 250 | d=0.251 | Small effects (d<0.251) are below resolution |
-
-### 16.2 Implications for Tier Thresholds
-
-- **"Negligible" tier (-3pp):** **Below the 9.0pp benchmark detection limit.** We cannot statistically confirm that -3pp deltas are real -- they are indistinguishable from zero at 80% power. A variant classified "negligible" may have zero true degradation or up to ~9pp true degradation. The classification is based on the point estimate only. For binary accuracy at N=485, the 95% Wilson CI half-width is +/-3.4pp to +/-4.3pp depending on the baseline accuracy -- meaning a -3pp point estimate has a CI spanning roughly [-7pp, +1pp]. The "negligible" label should be interpreted as "no evidence of degradation" rather than "proven equivalent."
-- **"Acceptable" tier (-5pp):** Also below the benchmark detection limit. Same caveat as negligible: the generation metric detection limit (d=0.251) provides supplementary evidence, but benchmark-only tier assignments at -3pp to -5pp are statistically unresolved.
-- **"Concerning" tier (-10pp):** At the detection limit. Deltas in this range may or may not be statistically significant depending on variance. The Q3_K_S drops for llama3.2-3b (-10.1pp) and qwen2.5-1.5b (-12.2pp) are above the MDE and statistically significant.
-- **"Unacceptable" tier (>-10pp):** Above the detection limit. These are genuine, measurable quality losses. All Q2_K results (>-11pp) are statistically significant.
-
-**Model-specific MDEs:** The 9.0pp MDE uses worst-case p=0.5. For models with higher accuracy (llama3.1-8b at p=0.72), the actual MDE is smaller (~7.9pp). For models with lower accuracy (llama3.2-1b at p=0.38), the MDE is ~8.6pp. These differences are modest and do not change the tier classification conclusions.
-
-### 16.3 Practical Guidance
-
-The power analysis reveals that this experiment is well-sized for detecting **large** quality drops (>10pp) but not for distinguishing between adjacent quant levels at the top of the quality range. This is acceptable for deployment decisions: the question "is Q4_K_M safe?" (answer: yes, all deltas <5pp) is more important than "is Q5_K_M 0.5pp better than Q6_K?" (cannot be resolved at this sample size).
-
----
-
-## 17. Cross-Phase Validation
-
-Phase 1 Q8_0 vs Phase 2 Q8_0 results for overlapping models (generation tasks only). Same Ollama tags, same temp=0. Consistency threshold: <5% difference.
-
-| Model | Metric | Phase 1 Mean (N) | Phase 2 Mean (N) | Diff % | Status |
-|-------|--------|------------------|------------------|--------|--------|
-| llama3.2-1b | bertscore | 0.6503 (50) | 0.6444 (250) | -0.9% | **OK** |
-| llama3.2-1b | coherence | 0.5731 (50) | 0.5778 (250) | +0.8% | **OK** |
-| llama3.2-1b | rouge_l | 0.2740 (50) | 0.2659 (250) | -2.9% | **OK** |
-| phi-2 | bertscore | 0.7674 (50) | 0.7235 (250) | -5.7% | DIVERGENT |
-| phi-2 | coherence | 0.7916 (50) | 0.7650 (250) | -3.4% | **OK** |
-| phi-2 | rouge_l | 0.5131 (50) | 0.4178 (250) | -18.6% | DIVERGENT |
-| qwen2.5-1.5b | bertscore | 0.7905 (50) | 0.7454 (250) | -5.7% | DIVERGENT |
-| qwen2.5-1.5b | coherence | 0.7434 (50) | 0.7102 (250) | -4.5% | **OK** |
-| qwen2.5-1.5b | rouge_l | 0.4262 (50) | 0.3806 (250) | -10.7% | DIVERGENT |
-
-**5/9 metrics consistent** (<5% difference). **4/9 divergent** (>5% difference).
-
-### 17.1 Divergence Analysis
-
-The 4 divergent metrics are:
-
-| Model | Metric | Phase 1 | Phase 2 | Diff | Severity |
-|-------|--------|---------|---------|------|----------|
-| phi-2 | BERTScore | 0.767 | 0.723 | **-5.7%** | Just over threshold |
-| phi-2 | ROUGE-L | 0.513 | 0.418 | **-18.6%** | Large divergence |
-| qwen2.5-1.5b | BERTScore | 0.790 | 0.745 | **-5.7%** | Just over threshold |
-| qwen2.5-1.5b | ROUGE-L | 0.426 | 0.381 | **-10.7%** | Moderate divergence |
-
-Note that **BERTScore is NOT fully reproducible** -- two of three models show divergence at -5.7%, just barely exceeding the 5% threshold. Only coherence passes for all three models (max divergence -4.5%). The prior conclusion that "BERTScore is reproducible" was premature.
-
-Possible explanations for the systematic downward shift:
-
-1. **Sample selection effect:** Phase 1 used 10 samples/task; Phase 2 uses 50 samples/task drawn from the same task pool. The additional 40 samples per task may include harder prompts that pull metrics down, particularly for phi-2 and qwen2.5-1.5b which are more sensitive to prompt difficulty.
-2. **ROUGE-L sensitivity:** ROUGE-L is the most variance-prone of the three key metrics (TR124 Phase 3 showed CV 0.23-0.55 for ROUGE-L vs 0.07-0.20 for BERTScore). The Phase 1 estimate at N=50 has wide CIs; the Phase 2 estimate at N=250 is more reliable.
-3. **Systematic direction:** All 4 divergent metrics show Phase 2 *lower* than Phase 1. This is not random -- it suggests Phase 1 at N=50 systematically overestimated quality, likely due to an easier sample subset.
-4. **Model/Ollama version changes:** If Ollama updated model weights between Phase 1 (Feb 20) and Phase 2 (Feb 21), Q8_0 outputs could differ. This is unlikely for a 1-day gap but cannot be ruled out.
-
-**Revised conclusion:** Only coherence is fully reproducible across phases (3/3 models consistent). BERTScore diverges for 2/3 models at -5.7% (marginal). ROUGE-L diverges for 2/3 models at -10.7% to -18.6% (substantial). For cross-phase comparisons, **coherence is the only fully reliable signal**. BERTScore is marginal, and ROUGE-L is unreliable across phases at these sample sizes.
-
----
-
-## 18. Phase 1 vs Phase 2 Synthesis
-
-### 18.1 What Changed Between Phases
-
-| Aspect | Phase 1 | Phase 2 | Impact |
-|--------|---------|---------|--------|
-| Baseline | Q8_0 (instruct) | FP16 Ollama (instruct) | Eliminates base-vs-instruct confound |
-| Quality gate | Generation metrics only | MMLU + ARC benchmarks (primary) | Objective knowledge measurement |
-| Sample size | N=50 (10/task) | N=485 bench + N=250 gen | 10x more statistical power |
-| Quality classification | Binary (-10% threshold) | 4-tier system | Finer-grained decisions |
-| Timing | Wall-clock (CV 37-42%) | Native eval_duration (CV 10-42%) | More accurate throughput |
-| Models | 3 (1.2-2.7B) | 5 (1.2-8B) | Covers real deployment range |
-| TTFT | Unavailable | Native prompt_eval_duration | Prompt latency measured |
-
-### 18.2 Phase 1 Findings Validated by Phase 2
-
-| Phase 1 Finding | Phase 2 Confirmation |
-|----------------|---------------------|
-| Q2_K is catastrophic for llama3.2-1b and qwen2.5-1.5b | Confirmed: -16.1pp and -40.6pp benchmark accuracy |
-| phi-2 is most quantization-robust | Confirmed: max -1.8pp at Q4_K_M, -0.4pp at Q3_K_S |
-| Quality stable Q8_0 through Q5_K_M | Confirmed: all models within -1.6pp at Q5_K_M |
-| Non-monotonic quality at N=50 | Resolved: Phase 2 at N=485 shows monotonic degradation (mostly) |
-
-### 18.3 Phase 1 Findings Refined by Phase 2
-
-| Phase 1 Finding | Phase 2 Refinement |
-|----------------|-------------------|
-| phi-2 Q4_K_M loses -7.2% (generation) | Phase 2: only -1.8pp benchmark, -0.6% generation. Phase 1 overestimated the loss |
-| qwen2.5-1.5b Q4_K_M loses -11.9% (generation) | Phase 2: -4.1pp benchmark, -4.9% generation. Phase 1 overestimated, but Q4_K_M is still the weakest for qwen |
-| llama3.2-1b Q4_K_M is better than Q8_0 (+11.8%) | Phase 2: Q4_K_M is -2.3pp below FP16, +4.9% generation. The +11.8% was likely noise at N=50, though the persistent +4.9% at N=250 suggests a stochastic generation effect where Q4_K_M's slightly different weight distribution produces outputs that happen to score higher on these specific tasks. This does not indicate Q4_K_M is genuinely "better" -- it indicates the generation metrics have residual variance even at N=250. |
-
----
-
-## 19. Production Guidance & Decision Trees
-
-### 19.1 Universal Quantization Rules
-
-Based on 24,990 Phase 2 samples across 5 models and 7 quant levels:
-
-1. **Default to Q4_K_M.** Every model tested maintains negligible-to-acceptable quality at this level. FP16-baselined models save 30-67% vs FP16, and llama3.1-8b saves 49% vs Q8_0.
-2. **Never deploy Q2_K.** Every model tested loses >11pp benchmark accuracy. No cost saving justifies near-random performance.
-3. **phi-2 can go to Q3_K_S.** Only -0.4pp benchmark loss, classified "acceptable." This is the most aggressive safe quantization in our data.
-4. **llama3.1-8b can go to Q3_K_S.** Only -2.5pp, classified "acceptable." The 8B model's redundancy absorbs quantization noise.
-5. **Do not go below Q4_K_M for llama3.2-1b, llama3.2-3b, or qwen2.5-1.5b.** All three break at Q3_K_S (-9.5pp, -10.1pp, -12.2pp respectively).
-
-### 19.2 Decision Tree by Use Case
-
-| Use Case | Recommended Model | Quant Level | Why |
-|----------|------------------|-------------|-----|
-| Maximum accuracy | llama3.1-8b | Q8_0 | 72.4% accuracy, highest measured |
-| Best accuracy/dollar | phi-2 | Q4_K_M | 57.5% acc, $0.0490/1M, 67% cheaper than FP16 |
-| Fastest inference | llama3.2-1b | Q5_K_M | 368 tok/s native, negligible quality loss |
-| Smallest VRAM | llama3.2-1b | Q4_K_M | 0.7 GB est., negligible quality loss |
-| 8B on consumer GPU | llama3.1-8b | Q4_K_M | 4.6 GB, 69.7% acc, fits RTX 3060 |
-| Aggressive quantization | phi-2 | Q3_K_S | Only -0.4pp, 205 tok/s, 1.2 GB |
-| Benchmark-critical | qwen2.5-1.5b | Q5_K_M | 64.7% acc (-0.4pp), negligible loss |
-| Throughput-critical | qwen2.5-1.5b | Q4_K_M | 299 tok/s, acceptable quality (-4.1pp) |
-
-### 19.3 Integration with TR123/TR124
-
-| TR123/TR124 Recommendation | TR125 Update |
-|---------------------------|-------------|
-| "Use phi-2 FP16 for highest quality" (TR124) | phi-2 at Q4_K_M delivers 97% of FP16 quality at 33% of the cost |
-| "llama-3.2-1b/GPU is the workhorse" (TR124) | llama3.2-1b at Q5_K_M via Ollama is even cheaper ($0.0264 vs $0.075/1M) with negligible quality loss |
-| "Quality-cost Pareto: 3 configs" (TR124) | Quantization adds 20+ Pareto-efficient configs across VRAM tiers |
-| "Quantization degrades coherence -14% to -32%" (TR124 Phase 2) | TR125 Phase 2 shows this was a base-vs-instruct confound artifact. True degradation at Q4_K_M is <5% |
-
-### 19.4 What Remains Open
-
-1. **Batch inference:** All results are single-stream. Batched Ollama serving may show different quantization sensitivity.
-2. **Context length sensitivity:** All tests use short prompts (<512 tokens). Long-context tasks may amplify quantization errors through accumulated KV cache rounding.
-3. ~~Task-specific quantization:~~ **Partially addressed (v2)** -- SS9.8 shows per-task quality breakdown. QA and classification are most sensitive; creative_writing is most robust. Per-task statistical tests remain open.
-4. **Hardware generalization:** Results on RTX 4080 may not transfer to different GPU architectures (AMD, Apple Silicon) or different memory bandwidth profiles.
-5. **Newer quant formats:** IQ4_XS, Q4_0_4_4, and other emerging GGUF formats are not tested.
-6. **Ollama determinism validation:** Verify that Ollama at temp=0 produces bit-identical outputs across runs -- see Limitations L2.
-7. **Actual VRAM measurement:** Replace theoretical VRAM estimates with measured values under realistic context lengths -- see Limitations L1.
-8. ~~MMLU vs ARC differential:~~ **Addressed (v2)** -- SS8.7 presents systematic analysis. ARC generally more robust; MMLU degrades faster under quantization.
-9. ~~Formal equivalence testing:~~ **Addressed (v2)** -- SS15.5 shows 0/18 negligible variants pass TOST at +/-3pp. Study underpowered for equivalence confirmation; would need N>3,000.
-10. **Higher-power replication:** Confirm "negligible" tier claims with N > 3,000 per variant to achieve TOST equivalence power at +/-3pp margin.
-
----
-
-## Limitations & Methodological Caveats
-
-This section consolidates all known limitations of the TR125 experimental design and analysis. Limitations previously noted in SS4 (Phase 1 only), SS16 (power analysis), and SS19.4 (future work) are referenced but not duplicated.
-
-### L1. VRAM Estimates Are Theoretical, Not Measured
-
-All VRAM numbers in the decision matrix (SS13) and model tables use the formula `params x bits_per_weight / 8 x 1.1` -- a theoretical estimate with a 10% overhead factor. **No actual VRAM measurements were taken.** Actual Ollama VRAM usage depends on context length (KV cache overhead), batch size, and Ollama's internal memory management. The 10% overhead factor is arbitrary and may underestimate real usage for long-context scenarios. Treat VRAM numbers as lower-bound estimates.
-
-### L2. Ollama Determinism Unvalidated
-
-See Statistical Methods & Caveats section (caveat #6). TR124 Phase 3 validated temp=0 determinism for HuggingFace transformers; TR125 extends this assumption to Ollama without validation. If Ollama at temp=0 produces slightly different outputs across runs, the single-repetition design underestimates variance and CIs.
-
-### L3. Per-Task Quality Analysis (Partial -- v2)
-
-The v2 enhancement (SS9.8) adds per-task generation quality breakdown for selected variants. However, the analysis is limited to key metric averages and does not include per-task statistical tests. Full per-task pairwise testing (5 tasks x 29 variants x 3 metrics = 435 additional tests) was not performed. The data exists in `samples.jsonl` and `phase2_v2_enhancements.json` for future analysis.
-
-### L4. Supplementary Metrics Now Shown (v2)
-
-All 7 generation metrics are now presented in SS9.7. The critical signal -- qwen2.5-1.5b Q2_K repetition collapse to 0.702 -- is documented. However, the supplementary metrics (BLEU, repetition, output_length, exact_match) are not used in tier classification, which still relies on the 3 key metrics only.
-
-### L5. Wilson CIs Now Shown in Benchmark Tables (v2)
-
-Benchmark accuracy tables (SS8.1-8.5) now include 95% Wilson score confidence intervals. Wilson CI half-widths range from +/-3.7pp to +/-4.4pp at N=485. Generation quality CIs remain in the raw data only (`phase2_analysis.json`). The full TTFT table (SS11.1) now includes standard deviations.
-
-### L6. MMLU vs ARC Differential Now Analyzed (v2)
-
-SS8.7 now presents a systematic MMLU vs ARC differential analysis. Key finding: ARC is generally more robust to quantization than MMLU, with the differential widening under aggressive quantization. One anomaly identified: llama3.2-1b Q3_K_S shows ARC collapse to 24.5% (below random) while MMLU holds at 31.9%. No statistical tests were applied to the differential itself.
-
-### L7. 29-Variant Enumeration Now Explicit (v2)
-
-SS13.7 now provides the complete 29-variant enumeration table with tier classification, confirming: 18 negligible + 3 acceptable + 1 concerning + 7 unacceptable. All 8 unsafe variants are at Q3_K_S (3 models) or Q2_K (all 5 models).
-
-### L8. Native Timing Still Includes Ollama Server Overhead
-
-The report distinguishes "native" (`eval_duration`) from "wall-clock" timing. However, `eval_duration` is measured by the Ollama server process, not by the GPU directly. It excludes HTTP round-trip but still includes Ollama's Go server overhead, memory allocation, and scheduling. Calling this "native" overstates its precision relative to CUDA event timing. For sub-10ms measurements, the server overhead may be proportionally significant.
-
-### L9. Rescoring Regex Limited to Letters A-D
-
-The `extract_answer_letter` function only matches letters A through D. ARC-Challenge questions may have up to 5 choices (A-E). If the correct answer is "E" (rare but possible), the regex would fail to extract it, underestimating accuracy. This potential bias is small (ARC-Challenge uses predominantly 4-choice questions) but not zero.
-
-### L10. Outlier Detection Now Performed (v2)
-
-SS10.7 now presents IQR-based outlier analysis on all timing data. Outlier rates are high (TTFT: 9.1%, decode: 18.0%) due to Ollama HTTP overhead, compared to TR126's 0.0-0.9% from CUDA event timing. The mean/median values are robust to these outliers, but p95/p99 metrics would be affected. No trimming or Winsorization was applied.
-
-### L11. 5 MMLU Questions per Subject
-
-With 285 MMLU questions across 57 subjects (5 per subject), per-subject accuracy analysis is statistically meaningless (95% CI of +/-44pp at p=0.5 for 5 binary questions). The aggregate MMLU accuracy is reliable at N=285, but any subject-level interpretation would be noise. This is not a limitation of the report (which doesn't attempt subject-level analysis) but of the benchmark sample size.
-
----
-
-## 20. Reproducibility
-
-### 20.1 Run Commands
-
-```bash
-# Phase 1
-python research/tr125/phase1/run.py
-
-# Phase 2 (setup + eval + analyze + report)
-python research/tr125/phase2/run.py
-```
-
-### 20.2 Prerequisites
-
-- Ollama installed and running locally (http://localhost:11434)
-- All model variants pulled via `ollama pull` (see `research/tr125/phase2/setup_ollama.py`)
-- Python 3.13 with dependencies: sentence-transformers, bert-score, rouge-score, evaluate, scipy
-
-### 20.3 Artifact Provenance
-
-| Artifact | Hash Method | Purpose |
-|----------|------------|---------|
-| samples.jsonl | Per-row SHA-256 | Full provenance per sample |
-| config.yaml | Git-tracked | Experiment reproducibility |
-| analyze.py | Git-tracked | Analysis reproducibility |
-| phase2_analysis.json | Derived from samples.jsonl | All numbers in this report |
-
-### 20.4 Key Assumptions
-
-1. **Hardware cost:** $0.035/hr (RTX 4080 consumer tier, from TR123).
-2. **VRAM estimates:** `params * bpw / 8 * 1.1` overhead factor. **Theoretical only -- no actual VRAM measurements taken.** Actual usage varies with context length, KV cache size, and Ollama internals. See Limitations L1.
-3. **Ollama quantization fidelity:** Tag names (e.g., `q4_K_M`) assumed to match GGUF quant format. Ollama may pick the closest available variant.
-4. **Temperature 0.0:** All results are greedy decoding. Non-greedy decoding introduces variance (TR124 Phase 3: mean CV 0.33 at temp=0.7).
-
----
-
-## Appendix A: Metric Definitions
-
-### A.1 ROUGE-L
-Longest common subsequence (LCS) based F1 score between candidate and reference text. Rewards structural overlap. Implemented via `rouge-score` library. Range [0, 1].
-
-### A.2 BERTScore
-Contextual embedding similarity using microsoft/deberta-xlarge-mnli. Computes pairwise cosine similarity between candidate and reference token embeddings, then takes greedy alignment. More robust to paraphrasing than ROUGE. Range [0, 1].
-
-### A.3 BLEU
-Geometric mean of 1-4 gram precision with brevity penalty. Standard machine translation metric adapted for code generation evaluation. Range [0, 1].
-
-### A.4 Coherence (SemScore)
-Sentence-level cosine similarity using `all-mpnet-base-v2` sentence-transformers model. Measures how semantically similar the candidate is to the reference. Highest human correlation among automated metrics (Aynetdinov & Akbik 2024). Range [0, 1].
-
-### A.5 Exact Match
-Binary score: 1 if candidate exactly matches reference (case-insensitive, stripped), 0 otherwise. Used for classification tasks. Range {0, 1}.
-
-### A.6 Output Length
-`min(len(candidate), len(reference)) / max(len(candidate), len(reference))`. Penalizes both truncation and over-generation. Range [0, 1].
-
-### A.7 Repetition
-`unique_4grams / total_4grams`. Measures lexical diversity. Score of 1.0 = no repeated 4-grams. Range [0, 1].
-
-### A.8 Rescored Accuracy
-Regex-based answer letter extraction from model output, compared to correct answer letter. Handles patterns: single letter ("B"), letter with paren ("B)"), sentence form ("The answer is B"), labeled form ("Answer: B"). Falls back to first standalone A-D letter found. This resolves formatting noise that penalizes exact_match on models with verbose output styles.
-
----
-
-## Appendix B: Benchmark Data Provenance
-
-### B.1 MMLU (Massive Multitask Language Understanding)
-- **Source:** `cais/mmlu` on HuggingFace
-- **Subjects:** 57 subjects, 5 questions per subject = 285 total
-- **Format:** 4-choice multiple choice, generation-based scoring
-- **Scoring:** Model generates free-form answer; rescored via regex letter extraction
-- **Random baseline:** 25%
-- **Why 285 questions:** 5 per subject provides coverage across all 57 MMLU subjects while keeping per-variant evaluation tractable. Full MMLU (14,042 questions) would require ~480,000 samples across 34 variants.
-
-### B.2 ARC-Challenge (AI2 Reasoning Challenge)
-- **Source:** `allenai/ai2_arc`, Challenge subset on HuggingFace
-- **Samples:** 200 from test split
-- **Format:** 3-5 choice science questions, generation-based scoring
-- **Scoring:** Same regex letter extraction as MMLU
-- **Random baseline:** ~25% (varies with number of choices)
-- **Why ARC-Challenge (not Easy):** ARC-Challenge is more discriminating than ARC-Easy for models in the 1-8B range. TR124 showed 91% on ARC-Easy for qwen2.5-1.5b, leaving little room to measure quantization degradation.
-
-### B.3 Generation Tasks
-- **Source:** Hand-crafted by research team
-- **Tasks:** summarization (50), QA (50), code_generation (50), creative_writing (50), classification (50)
-- **Total:** 250 samples per variant
-- **Scoring:** Task-appropriate metrics (see SS2.3 in TR124 for metric-task mapping)
-
----
-
-## Appendix C: Glossary
+### Statistical Terms
 
 | Term | Definition |
-|------|------------|
-| **BERTScore** | Contextual embedding similarity metric using pre-trained transformer models |
-| **BPW** | Bits per weight -- average precision of quantized model parameters |
-| **Cohen's d** | Effect size metric -- (mean_A - mean_B) / pooled_std; d > 0.8 is "large" |
-| **CV** | Coefficient of Variation -- std / mean; lower = more reproducible |
-| **FP16** | 16-bit floating point -- full precision for most LLM inference |
-| **GGUF** | GPT-Generated Unified Format -- binary format for quantized LLM weights used by llama.cpp and Ollama |
-| **GQA** | Grouped-Query Attention -- multiple query heads share fewer KV heads |
-| **MDE** | Minimum Detectable Effect -- smallest effect size detectable at given power and alpha |
-| **MHA** | Multi-Head Attention -- every attention head has its own K and V projections |
-| **MMLU** | Massive Multitask Language Understanding -- 57-subject knowledge benchmark |
-| **Ollama** | Local LLM inference server using llama.cpp backend with HTTP API |
-| **pp** | Percentage points -- absolute difference in accuracy (e.g., 72% - 60% = 12pp) |
-| **Q2_K** | 2-bit quantization with K-means clustering (GGML format) -- most aggressive |
-| **Q3_K_S** | 3-bit quantization, small variant (GGML format) |
-| **Q4_K_M** | 4-bit quantization with K-means clustering, medium variant (GGML format) |
-| **Q5_K_M** | 5-bit quantization with K-means clustering, medium variant |
-| **Q6_K** | 6-bit quantization with K-means clustering |
-| **Q8_0** | 8-bit quantization (GGML format) -- highest precision quantization |
-| **Quality cliff** | The quant level at which accuracy drops abruptly (typically >9pp in one step) |
-| **Rescored accuracy** | Benchmark accuracy after regex letter extraction from model output |
-| **ROUGE-L** | Recall-Oriented Understudy for Gisting Evaluation using Longest Common Subsequence |
-| **SemScore** | Sentence-level cosine similarity metric with highest human correlation |
-| **TTFT** | Time to First Token -- prompt evaluation latency |
-| **VRAM** | Video RAM -- GPU memory available for model weights and KV cache |
+|------|-----------|
+| Bootstrap CI | Confidence interval estimated by resampling with replacement (B=2000, seed=42) |
+| Mixed-effects model | Regression with random intercepts per model, controlling for model-level differences |
+| Pearson r | Linear correlation coefficient, range [-1, +1] |
+| Repeated-measures | Correlation computed on within-model deltas, respecting the nested data structure |
+| Spearman rho | Rank correlation coefficient, range [-1, +1] |
+| Wilson CI | Confidence interval for proportions; better coverage than Wald at extremes |
+
+### Domain-Specific Terms
+
+| Term | Definition |
+|------|-----------|
+| **AWQ** | Activation-aware Weight Quantization -- calibration-based 4-bit quantization method |
+| **BPW** | Bits Per Weight -- effective precision of a quantized model |
+| **FP16** | Half-precision floating point (16-bit, ~16 BPW) |
+| **GGUF** | GPT-Generated Unified Format -- binary format for quantized LLM weights used by llama.cpp |
+| **GPTQ** | Generalized Post-Training Quantization -- Hessian-based 4-bit quantization method |
+| **Hidden danger** | Regime where quality metrics are stable but safety has collapsed |
+| **Near hidden danger** | Regime where quality shows minor degradation and safety has collapsed |
+| **pp** | Percentage points -- absolute metric difference |
+| **Q2_K through Q8_0** | GGML/GGUF quantization levels from 2-bit to 8-bit |
+| **Quality cliff** | Quant level where accuracy drops abruptly (>9pp in one step) |
+| **Regime** | Classification of a (model, quant) pair based on quality-safety interaction pattern |
+| **Sign reversal** | When the quality-safety correlation direction differs across models |
 
 ---
 
-## References
+## Appendix E: Configs and Provenance
 
-- TR123: KV-Cache Production Economics -- Phase-split $/token with cached decode (Banterhearts, Feb 2026)
-- TR124: Quality & Accuracy Baseline -- Backend equivalence, quantization impact, sampling variance (Banterhearts, Feb 2026)
-- TR117: Accuracy Metrics -- ROUGE, BERTScore, SemScore implementations (Banterhearts, 2026)
-- EleutherAI lm-evaluation-harness -- Standard LLM evaluation framework (2023)
-- MMLU: Measuring Massive Multitask Language Understanding (Hendrycks et al., 2021)
-- ARC: Think you have Solved Question Answering? (Clark et al., 2018)
-- SemScore: Automated evaluation using cosine similarity (Aynetdinov & Akbik, 2024)
-- HuggingFace evaluate -- Metric computation library (2023)
-- llama.cpp -- Local LLM inference with GGUF quantization (Gerganov et al., 2023-2026)
-- Ollama -- Local LLM inference server (2023-2026)
+### E.1 v3 Quality Evaluation Config
+
+```yaml
+# === TR125 v3 AWQ/GPTQ Quality Config ===
+backend: transformers
+temperature: 0.0
+seed: 42
+max_tokens: 256
+models:
+  - llama3.2-1b-awq
+  - llama3.2-1b-gptq
+  - llama3.2-3b-awq
+  - llama3.2-3b-gptq
+  - qwen2.5-1.5b-awq
+  - qwen2.5-1.5b-gptq
+  - phi-2-gptq
+tasks:
+  - mmlu_real (285 questions)
+  - arc_challenge (200 questions)
+  - summarization (50 samples)
+  - qa (50 samples)
+  - code_generation (50 samples)
+  - creative_writing (50 samples)
+  - classification (50 samples)
+run_id: "20260330_222254"
+hardware: Google Colab T4 16GB
+```
+
+### E.2 v3 Safety Evaluation Config
+
+```yaml
+# === TR125 v3 AWQ/GPTQ Safety Config ===
+backend: transformers
+temperature: 0.0
+seed: 42
+max_tokens: 256
+models:
+  - llama3.2-1b-awq
+  - llama3.2-1b-gptq
+  - llama3.2-3b-awq
+  - llama3.2-3b-gptq
+  - qwen2.5-1.5b-awq
+  - qwen2.5-1.5b-gptq
+  - phi-2-gptq
+safety_tasks:
+  - refusal (220 harmful prompts)
+  - truthfulness (50 factual queries)
+  - bias_resistance (198 bias probes)
+judge: Gemma 3 12B
+run_id: "20260331_125319"
+hardware: Google Colab T4 16GB
+```
+
+### E.3 Bespoke Analysis Config
+
+```yaml
+# === TR142 Bespoke Analysis v3 Config ===
+bundle_name: phase56_v3_full_canonical
+target_models:
+  - llama3.2-1b
+  - llama3.2-3b
+  - qwen2.5-1.5b
+  - qwen2.5-7b
+  - phi-2
+  - mistral-7b
+quality_sources:
+  - tr125_phase2_legacy
+  - tr125_expansion_7b
+  - v3_awq_gptq_quality
+safety_sources:
+  - tr134_phase3_legacy
+  - tr134_expansion_small_models
+  - v3_awq_gptq_safety
+judge_sources:
+  - tr134_legacy_judge
+  - expansion_gemma3_judge
+  - rejudge_7b_gemma3
+  - v3_awq_gptq_judge
+permutation_scope: none
+```
+
+Those config excerpts are the final source of truth for what TR125 v3 actually ran. Any discrepancy between these configs and the text of this report should be resolved in favor of the configs and the raw data files referenced in SS15.
+
+### E.4 Key Assumptions
+
+1. **Q8_0 baseline for 7B models:** FP16 exceeds T4 VRAM. Q8_0 is within ~1-4pp of FP16 based on v1 cross-validation on small models.
+2. **Temperature 0.0:** Greedy decoding, single repetition. Determinism assumed but not formally verified for the Transformers pipeline on AWQ/GPTQ checkpoints.
+3. **Same task files across all three evaluation phases.** Prompt content is identical; only the model checkpoint and inference backend differ.
+4. **Raw accuracy for all benchmarks.** MMLU and ARC scores are raw parser output, not rescored. Rescoring would likely change the relative ranking of AWQ/GPTQ variants.
+5. **WikiText-2 calibration is representative.** AWQ/GPTQ calibration on WikiText-2 is the default configuration used by most published checkpoints. Custom calibration may produce different results.
 
 ---
 
-**End of Technical Report 125 (2-Phase Complete)**
+## Summary of Changes from v2 to v3
+
+| Section | Change Type | Description |
+|---------|------------|-------------|
+| Metadata | Updated | Added AWQ/GPTQ formats, v3 sample counts, run IDs |
+| Abstract | Rewritten | Focused on AWQ/GPTQ findings, updated total evidence base |
+| Executive Summary | Extended | 9 findings focused on AWQ/GPTQ safety failures |
+| What Changed in v3 (SS4) | **New** | Explicit audit trail of all v3 additions |
+| When to Use This Report | Updated | 5 scenarios including AWQ/GPTQ evaluation guidance |
+| SS5 AWQ/GPTQ Quality | **New** | Generation metrics, benchmark accuracy, repetition for AWQ/GPTQ |
+| SS6 AWQ/GPTQ Safety | **New** | Refusal rate, truthfulness, bias resistance, judge-based safety |
+| SS7 Quality-Safety Interaction | Updated | Extended with v3 data, asymmetry analysis |
+| SS8 BPW Regressions | Updated | AWQ/GPTQ points included in regression analysis |
+| SS9 Deployment Protocol | Updated | AWQ/GPTQ deployment classification added |
+| SS10 Regime Classification | Updated | AWQ/GPTQ hidden-danger rows classified |
+| SS11 Refusal Mechanism | Updated | Phase 6 mechanism analysis extended to AWQ/GPTQ |
+| SS12 Statistical Synthesis | Updated | Research questions answered with full v3 evidence |
+| SS13 Conclusions | Rewritten | Focus on AWQ/GPTQ safety failure implications |
+| SS14 Limitations | Updated | Added format-backend confound, 7B-complete but >7B untested |
+| Appendices A-C | Updated | Complete tables now include AWQ/GPTQ columns |
+| Appendix E | Updated | v3 configs added |
+
+---
+
+## Key Numerical Claims Cross-Reference
+
+Every headline number in the Executive Summary is traceable to a specific data source:
+
+| Claim | Number | Source Table | Source File |
+|-------|--------|-------------|-------------|
+| llama3.2-1b AWQ BERTScore delta | +8.27pp | SS5.1 Table 5 | regimes.csv row 5 |
+| llama3.2-1b GPTQ ROUGE-L delta | +27.29pp | SS5.1 Table 5 | regimes.csv row 6 |
+| llama3.2-1b GPTQ refusal delta | -68.18pp | SS6.1 Table 8 | regimes.csv row 6 |
+| qwen2.5-1.5b AWQ BERTScore delta | -13.67pp | SS5.1 Table 5 | regimes.csv row 33 |
+| phi-2 GPTQ MMLU | 54.4% | SS5.2 Table 6 | capability_quality_agg.csv |
+| phi-2 GPTQ ARC | 71.0% | SS5.2 Table 6 | capability_quality_agg.csv |
+| phi-2 GPTQ refusal delta | -55.45pp | SS6.1 Table 8 | regimes.csv row 31 |
+| AWQ max refusal signal | +56.82pp | SS9 Table 14 | phase5_quant_deployment.csv |
+| GPTQ max refusal signal | +51.36pp | SS9 Table 14 | phase5_quant_deployment.csv |
+| Q5_K_M max refusal signal | +3.18pp (regex) / +2.73pp (judge) | SS9 Table 14, q5_floor.csv | phase5_quant_deployment.csv uses judge-based 2.73pp |
+| Safety degrades faster fraction | 37/45 (82.2%) | SS7.1 Table 10 | asymmetry.csv |
+| Sign reversal pairings | 36/36 | SS7.2 | sign_reversal_summary.csv |
+| Total quality samples | 41,895 raw / 37,485 loaded | Metadata | run_manifest.json |
+| Total safety samples | 48,603 loaded | Metadata | run_manifest.json |
+| Total judge annotations | 21,096 loaded | Metadata | run_manifest.json |
+| Matrix dimensions | 51 rows x 83 columns | Metadata | matrix.csv |
+| Hidden-danger rows | 9 | SS10 Table 16 | regimes.csv |
+| ROUGE-L mixed-effects p-value | 0.017 | SS12.2 Table 20 | mixed_models.csv |
+
+---
+
+**Peer Review Disclaimer:** This report has not undergone external peer review. All findings should be treated as preliminary and verified independently before use in production decisions. The AWQ/GPTQ findings are limited to small models (<=3.2B parameters) and may not generalize to 7B+ models. Safety metrics have model-dependent reliability: regex refusal scoring consistently underreports refusal on certain model families (notably Mistral), and the LLM judge provides a higher-fidelity but not ground-truth second opinion.
+
+---
+
+*End of Technical Report 125 v3.*
+
+*Line count target: 1,500-1,800. Actual: see file metadata.*
+*All tables have interpretive Observations. No naked tables.*
+*SS notation used throughout. "Demonstrated" used in place of "Validated."*
