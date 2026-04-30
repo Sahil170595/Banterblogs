@@ -227,6 +227,80 @@ export default async function ReportsIndex() {
         </div>
       </section>
 
+      {/* ── Key Findings ── */}
+      <section className="mb-20">
+        <div className="mb-8 border-b border-border/40 pb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Key Findings
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground/70">
+            Concrete results pulled from the published reports. Numbers, not narrative.
+          </p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              number: '100% ASR',
+              finding: 'Q2_K is universally unacceptable for safety. Banned across 18+ models, 10+ families.',
+              source: [{ label: 'TR134', slug: 'technical-report-134' }, { label: 'TR139', slug: 'technical-report-139' }],
+            },
+            {
+              number: 'p = 0.942',
+              finding: 'Alignment type does not predict batch-induced safety fragility (RLHF, SFT, DPO, distilled — none differ).',
+              source: [{ label: 'TR141', slug: 'technical-report-141' }],
+            },
+            {
+              number: '25pp',
+              finding: 'Backend migration can cost 25 percentage points of safety. Chat template divergence, not the framework.',
+              source: [{ label: 'TR136', slug: 'technical-report-136' }],
+            },
+            {
+              number: '13.9×',
+              finding: 'Quality metrics are not safety proxies. Safety degrades 13.9× faster than quality at Q3_K_S.',
+              source: [{ label: 'TR142', slug: 'technical-report-142' }],
+            },
+            {
+              number: '99.4%',
+              finding: 'Dual Ollama eliminates 99% of multi-agent contention. Architectural fix, not code fix.',
+              source: [{ label: 'TR114', slug: 'technical-report-114' }],
+            },
+            {
+              number: '+74%',
+              finding: 'GPU memory bandwidth is the multi-agent bottleneck — not the serving stack. Overturned the TR130 conclusion.',
+              source: [{ label: 'TR131', slug: 'technical-report-131' }],
+            },
+            {
+              number: '2.25×',
+              finding: 'Continuous batching delivers 2.25× throughput at N=8 via 77-80% kernel reduction.',
+              source: [{ label: 'TR132', slug: 'technical-report-132' }],
+            },
+            {
+              number: 'Q4_K_M',
+              finding: 'The universal quantization sweet spot. -4.1pp accuracy max across 5 models, 30-67% cost savings.',
+              source: [{ label: 'TR125', slug: 'technical-report-125' }],
+            },
+          ].map((f) => (
+            <article key={f.number} className="signal-panel p-5">
+              <div className="font-mono text-2xl md:text-3xl font-bold text-primary mb-3 tabular-nums">
+                {f.number}
+              </div>
+              <p className="text-sm text-foreground leading-relaxed mb-4">{f.finding}</p>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {f.source.map((s) => (
+                  <Link
+                    key={s.slug}
+                    href={`/reports/${s.slug}`}
+                    className="rounded-full border border-border/60 px-2 py-0.5 text-muted-foreground transition hover:border-primary/60 hover:text-primary"
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {/* ── Whitepapers ── */}
       {whitepapers.length > 0 && (
         <section className="mb-20">
