@@ -174,7 +174,7 @@ export default async function AboutPage() {
 
         <div className="signal-panel p-6 w-full">
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            Episodes are auto-generated from git commits across all eight repositories. A multi-agent
+            Episodes are auto-generated from git commits across all nine repositories. A multi-agent
             pipeline (Chimera Multi-Agent) ingests commits and benchmark data, generates roundtable-style
             commentary with four AI personas, and publishes to this Next.js site via GitHub + Vercel.
           </p>
@@ -201,6 +201,18 @@ export default async function AboutPage() {
             className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary/5"
           >
             Research Archive
+          </Link>
+          <Link
+            href="/papers"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:text-primary"
+          >
+            Papers
+          </Link>
+          <Link
+            href="/work"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:text-primary"
+          >
+            Work
           </Link>
           <Link
             href="/episodes"
