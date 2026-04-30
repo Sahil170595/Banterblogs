@@ -1,9 +1,9 @@
+/* Syntax highlighting styles */
+@import 'highlight.js/styles/github-dark.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Syntax highlighting styles */
-@import 'highlight.js/styles/github-dark.css';
 
 :root {
   /* Obsidian & Aurora palette — darker contrast pass */
