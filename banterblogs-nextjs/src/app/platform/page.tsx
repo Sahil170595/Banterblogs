@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -15,6 +16,25 @@ import {
 } from 'lucide-react';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
 import { formatReadingTime } from '@/lib/formatUtils';
+
+export const metadata: Metadata = {
+  title: 'Platform',
+  description:
+    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 5 languages, sub-20ms P95 on the fast path.',
+  openGraph: {
+    title: 'Platform Architecture | Chimeraforge',
+    description:
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 5 languages, sub-20ms P95 on the fast path.',
+    url: 'https://chimeraforge.vercel.app/platform',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Platform Architecture | Chimeraforge',
+    description:
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 5 languages, sub-20ms P95 on the fast path.',
+  },
+};
 
 export default async function PlatformPage() {
   const episodes = await getAllEpisodes();

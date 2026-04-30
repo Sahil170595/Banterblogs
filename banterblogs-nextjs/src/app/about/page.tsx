@@ -8,6 +8,19 @@ export const metadata: Metadata = {
   title: 'About Chimera',
   description:
     'Constitutional AI ecosystem built by Sahil Kadadekar — 9 repos across Python, Rust, TypeScript, and C#. Constitutional enforcement, cryptographic provenance, and self-improving alignment.',
+  openGraph: {
+    title: 'About Chimera | Chimeraforge',
+    description:
+      'Constitutional AI ecosystem · 9 repos, 5 languages, Rust alignment runtime, multi-model debate, cryptographic provenance.',
+    url: 'https://chimeraforge.vercel.app/about',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About Chimera | Chimeraforge',
+    description:
+      'Constitutional AI ecosystem · 9 repos, 5 languages, Rust alignment runtime, multi-model debate, cryptographic provenance.',
+  },
 };
 
 export default async function AboutPage() {

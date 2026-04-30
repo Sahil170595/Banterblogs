@@ -5,7 +5,20 @@ import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Link
 export const metadata: Metadata = {
   title: 'Work',
   description:
-    'ML Engineer building inference optimization, constitutional AI architectures, and empirical safety evaluation. 5 NeurIPS 2026 papers in submission, 41 technical reports, 728K+ measurements.',
+    'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 44 technical reports, 728K+ measurements.',
+  openGraph: {
+    title: 'Work | Chimeraforge',
+    description:
+      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 44 technical reports, 728K+ measurements.',
+    url: 'https://chimeraforge.vercel.app/work',
+    type: 'profile',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Work | Chimeraforge',
+    description:
+      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 44 technical reports, 728K+ measurements.',
+  },
 };
 
 interface Experience {

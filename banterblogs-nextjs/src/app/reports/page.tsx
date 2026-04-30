@@ -8,7 +8,20 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 export const metadata: Metadata = {
   title: 'Research Archive',
   description:
-    'Independent ML research: 728,000+ measurements across model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination, and cross-backend safety analysis.',
+    'Independent LLM safety research · 44 technical reports · 728,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
+  openGraph: {
+    title: 'Research Archive | Chimeraforge',
+    description:
+      'Independent LLM safety research · 44 technical reports · 728,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
+    url: 'https://chimeraforge.vercel.app/reports',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Research Archive | Chimeraforge',
+    description:
+      'Independent LLM safety research · 44 technical reports · 728,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
+  },
 };
 
 export const revalidate = 900;

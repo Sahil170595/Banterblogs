@@ -5,7 +5,20 @@ import { ArrowRight, FileText, Layers } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Papers',
   description:
-    '5 NeurIPS 2026 papers packet-ready, 6 in preparation. Independent research on inference optimization, constitutional AI, and empirical safety evaluation.',
+    '5 NeurIPS 2026 papers packet-ready · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+  openGraph: {
+    title: 'Papers | Chimeraforge',
+    description:
+      '5 NeurIPS 2026 papers packet-ready · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+    url: 'https://chimeraforge.vercel.app/papers',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Papers | Chimeraforge',
+    description:
+      '5 NeurIPS 2026 papers packet-ready · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+  },
 };
 
 interface Paper {
