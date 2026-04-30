@@ -7,7 +7,7 @@ import { formatNumber } from '@/lib/formatUtils';
 export const metadata: Metadata = {
   title: 'About Chimera',
   description:
-    'Constitutional AI ecosystem built by Sahil Kadadekar — 8 repos across Python, Rust, TypeScript, and C#. Constitutional enforcement, cryptographic provenance, and self-improving alignment.',
+    'Constitutional AI ecosystem built by Sahil Kadadekar — 9 repos across Python, Rust, TypeScript, and C#. Constitutional enforcement, cryptographic provenance, and self-improving alignment.',
 };
 
 export default async function AboutPage() {
@@ -59,7 +59,7 @@ export default async function AboutPage() {
           <div className="signal-panel p-6">
             <h3 className="font-semibold mb-3">The research</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              593,000+ measurements across 37 technical reports. Not wall-clock approximations —
+              728,000+ measurements across 44 technical reports. Not wall-clock approximations —
               CUDA event timing with defined hardware profiles and statistical methodology. Covers
               model loading, ONNX conversion, TensorRT compilation, KV cache optimization,
               multi-agent coordination, and safety analysis across Ollama, vLLM, and TGI.
@@ -85,7 +85,7 @@ export default async function AboutPage() {
             {
               name: 'Banterhearts',
               lang: 'Python',
-              what: 'ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of 593K+ measurements across 37 technical reports.',
+              what: 'ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of 728K+ measurements across 44 technical reports.',
             },
             {
               name: 'Chimeraforge',
@@ -131,7 +131,7 @@ export default async function AboutPage() {
         </div>
 
         <div className="mt-6 text-center text-sm text-muted-foreground/70">
-          8 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
+          9 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
         </div>
       </section>
 
@@ -139,8 +139,8 @@ export default async function AboutPage() {
       <section className="mb-20">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
-            { value: '593K+', label: 'Research Measurements' },
-            { value: '37', label: 'Technical Reports' },
+            { value: '728K+', label: 'Research Measurements' },
+            { value: '44', label: 'Technical Reports' },
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatNumber(stats.totalLinesAdded), label: 'Lines Documented' },
           ].map((stat) => (
@@ -166,7 +166,7 @@ export default async function AboutPage() {
             commentary with four AI personas, and publishes to this Next.js site via GitHub + Vercel.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            The research archive surfaces 37 technical reports with phase grouping, searchable titles,
+            The research archive surfaces 44 technical reports with phase grouping, searchable titles,
             and ISR with 15-minute revalidation. Every report links to real measurements and defined
             methodology.
           </p>

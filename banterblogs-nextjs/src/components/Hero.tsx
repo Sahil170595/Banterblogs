@@ -62,7 +62,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
                 An AI enforcement architecture with embedding-based safety routing, multi-model
                 debate, cryptographic provenance chains, and zero-knowledge proofs — built in
-                Python and Rust across 8 repositories.
+                Python and Rust across 9 repositories.
               </p>
             </div>
 
@@ -112,7 +112,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 patches shipped
               </div>
               <div>
-                <span className="text-lg font-bold text-foreground">593K+</span>{' '}
+                <span className="text-lg font-bold text-foreground">728K+</span>{' '}
                 research measurements
               </div>
               <div>

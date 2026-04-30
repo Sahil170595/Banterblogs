@@ -35,7 +35,7 @@ export function RoadmapRail() {
           Research Program
         </p>
         <h2 className="mt-3 text-3xl md:text-4xl font-bold leading-tight display">
-          593,000+ measurements across 37 technical reports
+          728,000+ measurements across 44 technical reports
         </h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed mx-auto">
           Independent ML research with CUDA event timing and controlled safety evaluations.

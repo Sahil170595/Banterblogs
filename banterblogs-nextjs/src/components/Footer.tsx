@@ -95,7 +95,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-sm text-muted-foreground md:flex-row">
           <span>(c) {new Date().getFullYear()} Chimeraforge. Crafted in public, powered by local AI.</span>
-          <span>8 repos. One ecosystem.</span>
+          <span>9 repos. One ecosystem.</span>
         </div>
       </div>
     </footer>

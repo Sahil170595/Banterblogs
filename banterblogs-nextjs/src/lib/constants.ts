@@ -24,7 +24,7 @@ export const EXTERNAL_LINKS = {
 
 export const SITE_CONFIG = {
   NAME: 'Chimeraforge',
-  DESCRIPTION: 'Personal AI platform running on your hardware — local inference, constitutional AI governance, and 593K+ research measurements.',
+  DESCRIPTION: 'Personal AI platform running on your hardware — local inference, constitutional AI governance, and 728K+ research measurements.',
   AUTHOR: 'Sahil Kadadekar',
   TWITTER_HANDLE: '@sahilkadadekar',
 } as const;

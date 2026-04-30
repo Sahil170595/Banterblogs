@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: "Chimeraforge",
     template: "%s | Chimeraforge",
   },
-  description: "Constitutional AI enforcement architecture — embedding-based safety routing, multi-model debate, cryptographic provenance, zero-knowledge proofs, and self-improving alignment. 8 repositories across Python, Rust, TypeScript, and C#.",
+  description: "Constitutional AI enforcement architecture — embedding-based safety routing, multi-model debate, cryptographic provenance, zero-knowledge proofs, and self-improving alignment. 9 repositories across Python, Rust, TypeScript, and C#.",
   keywords: ["chimera", "constitutional ai", "jarvis", "zero-knowledge proofs", "llm safety", "multi-agent", "ml research", "banterpacks", "banterhearts", "provenance"],
   authors: [{ name: "Sahil Kadadekar" }],
   creator: "Sahil Kadadekar",

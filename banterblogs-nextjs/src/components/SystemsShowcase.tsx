@@ -18,8 +18,8 @@ const coreEngines = [
     name: 'Banterhearts',
     role: 'ML Research Backbone',
     description:
-      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 37 technical reports.',
-    stats: ['593K+ measurements', '37 reports', '4 compilation backends'],
+      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 44 technical reports.',
+    stats: ['728K+ measurements', '44 reports', '4 compilation backends'],
     href: '/reports',
     icon: <Cpu className="h-6 w-6" />,
   },
@@ -158,7 +158,7 @@ export function SystemsShowcase() {
 
       {/* Subtle engineering depth strip */}
       <div className="mt-10 text-center text-sm text-muted-foreground/60">
-        8 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
+        9 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
       </div>
     </section>
   );

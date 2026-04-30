@@ -8,7 +8,7 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 export const metadata: Metadata = {
   title: 'Research Archive',
   description:
-    'Independent ML research: 593,000+ measurements across model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination, and cross-backend safety analysis.',
+    'Independent ML research: 728,000+ measurements across model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination, and cross-backend safety analysis.',
 };
 
 export const revalidate = 900;
@@ -165,10 +165,10 @@ export default async function ReportsIndex() {
       {/* ── Stats Ribbon ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: '593,000+', label: 'Research Measurements' },
-          { value: String(reports.length), label: 'Technical Reports' },
-          { value: '8', label: 'Repositories' },
-          { value: '<100ms', label: 'Inference Target' },
+          { value: '728,000+', label: 'Research Measurements' },
+          { value: '44', label: 'Technical Reports' },
+          { value: '12', label: 'Synthesis Whitepapers' },
+          { value: '9', label: 'Repositories' },
         ].map((stat) => (
           <div key={stat.label} className="signal-panel p-5 text-center">
             <div className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</div>
