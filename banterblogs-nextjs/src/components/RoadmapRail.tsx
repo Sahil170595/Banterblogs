@@ -22,7 +22,7 @@ const highlights = [
   },
   {
     label: 'Phase 3 — Safety',
-    range: 'TR134–TR144',
+    range: 'TR134–TR147',
     summary: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding.',
   },
 ];

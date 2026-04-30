@@ -175,7 +175,7 @@ export default function WorkPage() {
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
-            5 NeurIPS 2026 papers packet-ready, 41 technical reports, 728,000+ empirical measurements, and a
+            5 NeurIPS 2026 papers packet-ready, 44 technical reports, 728,000+ empirical measurements, and a
             constitutional AI ecosystem spanning 9 repositories and 5 languages.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">

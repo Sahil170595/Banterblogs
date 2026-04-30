@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Github, Linkedin, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
@@ -33,7 +33,7 @@ export function Header() {
         </Link>
 
         <div className="flex flex-1 items-center justify-end gap-4">
-          <div className="hidden flex-1 md:block max-w-sm">
+          <div className="hidden flex-1 md:block lg:max-w-[180px] xl:max-w-xs 2xl:max-w-sm">
             <SearchDialog />
           </div>
 
@@ -43,7 +43,7 @@ export function Header() {
                 key={item.label}
                 href={item.href}
                 aria-current={pathname === item.href ? 'page' : undefined}
-                className={`rounded-full px-3 py-2 transition ${
+                className={`rounded-full px-2.5 py-2 transition xl:px-3 ${
                   pathname === item.href || pathname.startsWith(`${item.href}/`)
                     ? 'bg-primary/15 text-primary'
                     : 'hover:bg-primary/10 hover:text-primary'
@@ -52,22 +52,26 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href={GITHUB_URLS.BANTERBLOGS}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border border-border/60 px-4 py-2 text-foreground transition hover:border-primary/60 hover:text-primary"
-            >
-              GitHub
-            </Link>
-            <Link
-              href={EXTERNAL_LINKS.LINKEDIN}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border border-border/60 px-4 py-2 text-foreground transition hover:border-primary/60 hover:text-primary"
-            >
-              LinkedIn
-            </Link>
+            <div className="ml-2 flex items-center gap-1 border-l border-border/40 pl-2">
+              <Link
+                href={GITHUB_URLS.BANTERBLOGS}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 text-foreground transition hover:border-primary/60 hover:text-primary"
+              >
+                <Github className="h-4 w-4" />
+              </Link>
+              <Link
+                href={EXTERNAL_LINKS.LINKEDIN}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 text-foreground transition hover:border-primary/60 hover:text-primary"
+              >
+                <Linkedin className="h-4 w-4" />
+              </Link>
+            </div>
           </nav>
 
           <button

@@ -22,12 +22,12 @@
       display:inline-block;
       font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
       padding:.35rem .9rem;border-radius:999px;
-      background:rgba(234,101,51,.15);color:#ea6533;
+      background:rgba(230,102,55,.15);color:#e66637;
       margin-bottom:1rem;
     }
     h1{font-size:1.75rem;font-weight:700;margin-bottom:.5rem}
     .subtitle{color:#939ba8;font-size:.9rem}
-    .count{color:#15b8c9;font-weight:600}
+    .count{color:#22b5d3;font-weight:600}
     table{width:100%;border-collapse:collapse;margin-top:1.5rem}
     thead th{
       text-align:left;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
@@ -35,21 +35,21 @@
       border-bottom:1px solid rgba(255,255,255,.08);
     }
     tbody tr{border-bottom:1px solid rgba(255,255,255,.04)}
-    tbody tr:hover{background:rgba(234,101,51,.04)}
+    tbody tr:hover{background:rgba(230,102,55,.04)}
     td{padding:.65rem 1rem;font-size:.85rem}
     td:first-child{max-width:480px}
-    a{color:#15b8c9;text-decoration:none;word-break:break-all}
-    a:hover{color:#ea6533;text-decoration:underline}
+    a{color:#22b5d3;text-decoration:none;word-break:break-all}
+    a:hover{color:#e66637;text-decoration:underline}
     .pri{
       display:inline-block;padding:.15rem .5rem;border-radius:4px;
       font-size:.75rem;font-weight:600;font-variant-numeric:tabular-nums;
     }
-    .pri-high{background:rgba(234,101,51,.15);color:#ea6533}
-    .pri-med{background:rgba(21,184,201,.12);color:#15b8c9}
+    .pri-high{background:rgba(230,102,55,.15);color:#e66637}
+    .pri-med{background:rgba(34,181,211,.12);color:#22b5d3}
     .pri-low{background:rgba(147,155,168,.12);color:#939ba8}
     .date{color:#939ba8;font-variant-numeric:tabular-nums;white-space:nowrap}
     .footer{text-align:center;margin-top:2.5rem;color:#939ba8;font-size:.8rem}
-    .footer a{color:#ea6533}
+    .footer a{color:#e66637}
   </style>
 </head>
 <body>

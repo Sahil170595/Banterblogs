@@ -172,6 +172,14 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     title: 'TR143: Cross-Request Safety Leakage Under Continuous Batching',
     description: '14,250 records — batch composition effects on safety in multi-tenant vLLM inference.',
   },
+  'technical-report-146': {
+    title: 'TR146: Mechanistic Safety Probing Under Quantization',
+    description: 'Why standard mechanistic probes fail to predict quantization-induced safety degradation. 5,100 forward passes across 4 phases.',
+  },
+  'technical-report-147': {
+    title: 'TR147: Final Portability Validation for Benchmarking Integrity',
+    description: 'Full v1–v4 integration plus external case study using TR126 as reference standard. 52,410 measurements across 4 GPU regimes and 3 Triton minor versions.',
+  },
 
   // ── Conclusive Reports & Whitepapers ──
   'technical-report-conclusive-108-116': {

@@ -121,7 +121,7 @@ export default async function ReportsIndex() {
   const technicalByPhase = new Map<string, ReportEntry[]>();
 
   const PHASE_META: Record<string, { label: string; description: string; order: number }> = {
-    'phase3': { label: 'Phase 3 — Safety (TR134–TR144)', description: 'Alignment under quantization, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding, AWQ/GPTQ safety.', order: 0 },
+    'phase3': { label: 'Phase 3 — Safety & Methodology (TR134–TR147)', description: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding, mechanistic probing, portability validation.', order: 0 },
     'phase2': { label: 'Phase 2 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 1 },
     'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 2 },
     'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 3 },
