@@ -9,8 +9,10 @@ import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
 
 const NAV_ITEMS = [
   { href: '/platform', label: 'Platform' },
-  { href: '/episodes', label: 'Episodes' },
   { href: '/reports', label: 'Research' },
+  { href: '/papers', label: 'Papers' },
+  { href: '/episodes', label: 'Episodes' },
+  { href: '/work', label: 'Work' },
   { href: '/about', label: 'About' },
 ];
 

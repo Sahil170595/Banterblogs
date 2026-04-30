@@ -4,8 +4,10 @@ import { BookOpen, Github, Linkedin, Mail, Package, Rss, Twitter } from 'lucide-
 const FOOTER_LINKS = {
   Explore: [
     { href: '/platform', label: 'Platform' },
-    { href: '/episodes', label: 'Episodes' },
     { href: '/reports', label: 'Research' },
+    { href: '/papers', label: 'Papers' },
+    { href: '/episodes', label: 'Episodes' },
+    { href: '/work', label: 'Work' },
     { href: '/about', label: 'About' },
   ],
   Resources: [
