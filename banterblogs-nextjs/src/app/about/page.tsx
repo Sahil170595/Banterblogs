@@ -203,6 +203,14 @@ export default async function AboutPage() {
           >
             Substack
           </Link>
+          <Link
+            href="https://linkedin.com/in/sahilkadadekar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:text-primary"
+          >
+            LinkedIn
+          </Link>
         </div>
       </section>
     </div>

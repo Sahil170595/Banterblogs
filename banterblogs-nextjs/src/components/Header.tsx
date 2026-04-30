@@ -5,7 +5,7 @@ import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
-import { GITHUB_URLS } from '@/lib/constants';
+import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
 
 const NAV_ITEMS = [
   { href: '/platform', label: 'Platform' },
@@ -58,6 +58,14 @@ export function Header() {
             >
               GitHub
             </Link>
+            <Link
+              href={EXTERNAL_LINKS.LINKEDIN}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-border/60 px-4 py-2 text-foreground transition hover:border-primary/60 hover:text-primary"
+            >
+              LinkedIn
+            </Link>
           </nav>
 
           <button
@@ -94,6 +102,15 @@ export function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               GitHub
+            </Link>
+            <Link
+              href={EXTERNAL_LINKS.LINKEDIN}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              LinkedIn
             </Link>
           </div>
         </div>

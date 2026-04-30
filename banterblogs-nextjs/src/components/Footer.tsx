@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, Github, Mail, Package, Rss, Twitter } from 'lucide-react';
+import { BookOpen, Github, Linkedin, Mail, Package, Rss, Twitter } from 'lucide-react';
 
 const FOOTER_LINKS = {
   Explore: [
@@ -14,6 +14,7 @@ const FOOTER_LINKS = {
     { href: '/sitemap.xml', label: 'Sitemap' },
     { href: 'https://github.com/Sahil170595/Banterblogs', label: 'GitHub' },
     { href: 'https://substack.com/@sahilkadadekar', label: 'Substack' },
+    { href: 'https://linkedin.com/in/sahilkadadekar', label: 'LinkedIn' },
   ],
 } as const;
 
@@ -46,6 +47,14 @@ export function Footer() {
                 className="transition hover:text-primary"
               >
                 <Twitter className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://linkedin.com/in/sahilkadadekar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-primary"
+              >
+                <Linkedin className="h-5 w-5" />
               </Link>
               <Link href="mailto:sahilkadadekar@gmail.com" className="transition hover:text-primary">
                 <Mail className="h-5 w-5" />
