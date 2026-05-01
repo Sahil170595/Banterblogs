@@ -211,7 +211,7 @@ export default function WorkPage() {
       {/* ── Experience ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <Briefcase className="h-4 w-4 text-primary" />
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
           Experience
         </h2>
         <div className="space-y-8">
@@ -244,7 +244,7 @@ export default function WorkPage() {
       {/* ── Education ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <GraduationCap className="h-4 w-4 text-primary" />
+          <GraduationCap className="h-4 w-4 text-muted-foreground" />
           Education
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
@@ -265,7 +265,7 @@ export default function WorkPage() {
       {/* ── Skills ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <Code2 className="h-4 w-4 text-primary" />
+          <Code2 className="h-4 w-4 text-muted-foreground" />
           Technical Skills
         </h2>
         <div className="signal-panel p-6 md:p-8">
@@ -283,7 +283,7 @@ export default function WorkPage() {
       {/* ── Open Source ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <ExternalLink className="h-4 w-4 text-primary" />
+          <ExternalLink className="h-4 w-4 text-muted-foreground" />
           Open Source
         </h2>
         <div className="space-y-4">

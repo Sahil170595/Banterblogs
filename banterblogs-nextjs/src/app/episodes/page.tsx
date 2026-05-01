@@ -26,7 +26,7 @@ export default async function EpisodesPage() {
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="space-y-4">
             <span className="signal-pill">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
               Chimera Timeline
             </span>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">All Episodes</h1>

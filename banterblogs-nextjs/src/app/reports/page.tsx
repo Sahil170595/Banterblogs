@@ -184,7 +184,7 @@ export default async function ReportsIndex() {
           { value: '9', label: 'Repositories' },
         ].map((stat) => (
           <div key={stat.label} className="signal-panel p-5 text-center">
-            <div className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</div>
+            <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>
             <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</div>
           </div>
         ))}

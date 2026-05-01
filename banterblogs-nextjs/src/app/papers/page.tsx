@@ -150,7 +150,7 @@ const IN_PREP: Paper[] = [
 function StatusBadge({ status }: { status: Paper['status'] }) {
   const styles: Record<Paper['status'], string> = {
     'NeurIPS 2026': 'border-primary/40 bg-primary/10 text-primary',
-    'In preparation': 'border-accent/40 bg-accent/10 text-accent',
+    'In preparation': 'border-border/60 bg-muted/30 text-foreground/80',
     Synthesis: 'border-border/60 bg-muted/30 text-muted-foreground',
     'Pre-execution': 'border-border/60 bg-background text-muted-foreground/70',
   };
@@ -225,7 +225,7 @@ export default function PapersPage() {
           { value: '728K+', label: 'Measurements' },
         ].map((s) => (
           <div key={s.label} className="signal-panel p-5 text-center">
-            <div className="text-2xl md:text-3xl font-bold text-primary">{s.value}</div>
+            <div className="text-2xl md:text-3xl font-bold text-foreground">{s.value}</div>
             <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{s.label}</div>
           </div>
         ))}
@@ -235,7 +235,7 @@ export default function PapersPage() {
       <section className="mb-16">
         <div className="mb-8 border-b border-border/40 pb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
+            <FileText className="h-4 w-4 text-muted-foreground" />
             NeurIPS 2026 — Packet Ready
           </h2>
           <p className="mt-2 text-sm text-muted-foreground/70">

@@ -41,10 +41,7 @@
 
 body {
   color: hsl(var(--foreground));
-  background:
-    radial-gradient(circle at 18% 10%, hsl(var(--primary) / 0.10), transparent 45%),
-    radial-gradient(circle at 82% 6%, hsl(var(--primary) / 0.06), transparent 48%),
-    hsl(var(--background));
+  background: hsl(var(--background));
   font-feature-settings: "rlig" 1, "calt" 1;
   font-family: var(--font-sans), system-ui, sans-serif;
 }

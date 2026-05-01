@@ -60,7 +60,7 @@ export default async function PlatformPage() {
       {/* ── Core Engines ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
           Core Engines
         </h2>
 
@@ -90,7 +90,7 @@ export default async function PlatformPage() {
               ].map((item) => (
                 <div key={item.label} className="rounded-xl border border-border/40 bg-card/30 p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <item.icon className="h-3.5 w-3.5 text-primary" />
+                    <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs font-semibold text-foreground">{item.label}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{item.detail}</p>
@@ -126,7 +126,7 @@ export default async function PlatformPage() {
               ].map((item) => (
                 <div key={item.label} className="rounded-xl border border-border/40 bg-card/30 p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <item.icon className="h-3.5 w-3.5 text-primary/80" />
+                    <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs font-semibold text-foreground">{item.label}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{item.detail}</p>
@@ -143,7 +143,7 @@ export default async function PlatformPage() {
       {/* ── JARVIS Gateway ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-accent" />
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
           JARVIS Gateway
         </h2>
 
@@ -164,7 +164,7 @@ export default async function PlatformPage() {
               { icon: Layers, label: 'Voice' },
             ].map((mod) => (
               <div key={mod.label} className="flex flex-col items-center gap-2 rounded-xl border border-border/40 bg-card/30 p-4">
-                <mod.icon className="h-5 w-5 text-primary" />
+                <mod.icon className="h-5 w-5 text-muted-foreground" />
                 <span className="text-xs font-semibold">{mod.label}</span>
               </div>
             ))}
@@ -175,14 +175,14 @@ export default async function PlatformPage() {
       {/* ── Supporting Systems ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
           Supporting Systems
         </h2>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Brain className="h-4 w-4 text-primary" />
+              <Brain className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">Chimera Multi-Agent</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
@@ -194,7 +194,7 @@ export default async function PlatformPage() {
 
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Gauge className="h-4 w-4 text-primary" />
+              <Gauge className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">Chimeraforge</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
@@ -214,7 +214,7 @@ export default async function PlatformPage() {
 
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Smartphone className="h-4 w-4 text-primary" />
+              <Smartphone className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">Chimeradroid</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
@@ -226,7 +226,7 @@ export default async function PlatformPage() {
 
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Mail className="h-4 w-4 text-primary" />
+              <Mail className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">Echo</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
@@ -238,7 +238,7 @@ export default async function PlatformPage() {
 
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Layers className="h-4 w-4 text-primary" />
+              <Layers className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">JARVIS Console</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
@@ -250,7 +250,7 @@ export default async function PlatformPage() {
 
           <div className="signal-panel p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Gauge className="h-4 w-4 text-primary" />
+              <Gauge className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">This Site</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
@@ -276,7 +276,7 @@ export default async function PlatformPage() {
             { value: '<100ms', label: 'Inference Target' },
           ].map((item) => (
             <div key={item.label} className="signal-panel p-5 text-center">
-              <div className="text-2xl md:text-3xl font-bold text-primary">{item.value}</div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">{item.value}</div>
               <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{item.label}</div>
             </div>
           ))}
@@ -286,7 +286,7 @@ export default async function PlatformPage() {
       {/* ── Data Flow ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
           How Data Flows
         </h2>
 
@@ -316,7 +316,7 @@ export default async function PlatformPage() {
             ].map((step) => (
               <div key={step.step} className="rounded-xl border border-border/40 bg-card/30 p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-xs font-bold text-foreground">
                     {step.step}
                   </span>
                   <h4 className="font-semibold text-foreground">{step.title}</h4>

@@ -52,7 +52,7 @@ export default async function AboutPage() {
       {/* ── What This Is ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
           What This Is
         </h2>
 
@@ -84,7 +84,7 @@ export default async function AboutPage() {
       {/* ── The Ecosystem ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-accent" />
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
           The Ecosystem
         </h2>
 
@@ -158,7 +158,7 @@ export default async function AboutPage() {
             { value: formatNumber(stats.totalLinesAdded), label: 'Lines Documented' },
           ].map((stat) => (
             <div key={stat.label} className="signal-panel p-5 text-center">
-              <div className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>
               <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</div>
             </div>
           ))}
@@ -168,7 +168,7 @@ export default async function AboutPage() {
       {/* ── This Site ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
           About This Site
         </h2>
 

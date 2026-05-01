@@ -49,14 +49,13 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
             className="space-y-10"
           >
             <div className="space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-primary font-semibold">
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
                 <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 In Beta
               </span>
 
               <h1 className="display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                Constitutional AI that{' '}
-                <span className="gradient-text">proves its reasoning</span>
+                Constitutional AI that proves its reasoning
               </h1>
 
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
@@ -87,7 +86,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               <Link
                 href="/episodes"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary/30"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-2xl hover:shadow-primary/30"
               >
                 See the build log
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -168,7 +167,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
 
                   <Link
                     href={`/episodes/${latestEpisode.slug}`}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-4 py-2.5 text-xs sm:text-sm font-semibold text-primary transition-all duration-200 hover:bg-primary/15 hover:border-primary/60"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/40 px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground transition-all duration-200 hover:border-primary/50 hover:text-primary"
                   >
                     Read Episode {latestEpisode.id}
                     <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
