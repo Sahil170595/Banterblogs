@@ -76,18 +76,14 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
             whileHover={{ scale: 1.05 }}
           >
             <motion.span
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/40 text-xs font-bold text-foreground"
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
             >
               {formattedEpisodeNumber}
             </motion.span>
             <motion.span
-              className={`px-2 py-1 rounded-full text-[10px] font-medium ${
-                colorClass === 'accent'
-                  ? 'bg-accent/10 text-accent'
-                  : 'bg-primary/10 text-primary'
-              }`}
+              className="px-2 py-1 rounded-full border border-border/60 bg-muted/40 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
               whileHover={{ scale: 1.05 }}
             >
               {platformLabel}
@@ -204,10 +200,11 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
             {tags.map((tag, tagIndex) => (
               <motion.span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-primary"
-                whileHover={{ 
-                  scale: 1.05, 
-                  backgroundColor: 'hsl(var(--primary) / 0.2)' 
+                className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground"
+                whileHover={{
+                  scale: 1.05,
+                  color: 'hsl(var(--primary))',
+                  borderColor: 'hsl(var(--primary) / 0.5)',
                 }}
                 transition={{
                   delay: tagIndex * 0.05,

@@ -34,28 +34,28 @@ export default async function EpisodesPage() {
               The full development narrative across Banterpacks and Chimera Engine, from raw commits to benchmarked outcomes.
             </p>
           </div>
-          <div className="grid gap-3 sm:min-w-[280px]">
+          <div className="grid gap-3 sm:grid-cols-2 sm:min-w-[560px]">
             <Link
               href="/banterpacks"
-              className="group flex items-center justify-between rounded-2xl border border-border/60 bg-primary/10 px-5 py-4 text-primary transition hover:bg-primary/15"
+              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition hover:border-primary hover:bg-card/80"
             >
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20 text-primary">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <Radio className="h-4 w-4" />
                 </span>
                 <div>
                   <div className="text-sm font-semibold">Banterpacks Episodes</div>
-                  <div className="text-xs text-primary/80">{banterpacksCount} episodes</div>
+                  <div className="text-xs text-muted-foreground">{banterpacksCount} episodes</div>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary/80 transition group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 text-primary transition group-hover:translate-x-1" />
             </Link>
             <Link
               href="/chimera"
-              className="group flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 px-5 py-4 text-foreground transition hover:border-primary/40"
+              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition hover:border-primary hover:bg-card/80"
             >
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/40 text-foreground/80">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <Cpu className="h-4 w-4" />
                 </span>
                 <div>
@@ -63,7 +63,7 @@ export default async function EpisodesPage() {
                   <div className="text-xs text-muted-foreground">{chimeraCount} episodes</div>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+              <ArrowRight className="h-4 w-4 text-primary transition group-hover:translate-x-1" />
             </Link>
           </div>
         </div>

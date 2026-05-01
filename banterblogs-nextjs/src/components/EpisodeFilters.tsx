@@ -99,7 +99,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
 
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="flex items-center justify-center rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="flex items-center justify-center rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
                 {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
               </button>
@@ -118,7 +118,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
           className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
             selectedTag === ''
               ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:bg-accent/20 hover:text-accent'
+              : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
           }`}
         >
           All
@@ -130,7 +130,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
             className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
               selectedTag === tag
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-accent/20 hover:text-accent'
+                : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
             }`}
           >
             {tag}
