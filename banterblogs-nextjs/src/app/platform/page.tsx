@@ -50,7 +50,7 @@ export default async function PlatformPage() {
             What Powers Chimeraforge
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Eight repositories across Python, Rust, TypeScript, and C#. Constitutional AI
+            Nine repositories across Python, Rust, TypeScript, and C#. Constitutional AI
             enforcement with cryptographic provenance, multi-model debate, and a self-improving
             alignment loop — from the JARVIS gateway to mobile clients to channel adapters.
           </p>
@@ -105,7 +105,7 @@ export default async function PlatformPage() {
           {/* Banterhearts */}
           <div className="signal-panel p-6 md:p-8">
             <div className="flex items-center gap-3 mb-5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary">
                 <Gauge className="h-5 w-5" />
               </span>
               <div>
@@ -126,7 +126,7 @@ export default async function PlatformPage() {
               ].map((item) => (
                 <div key={item.label} className="rounded-xl border border-border/40 bg-card/30 p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <item.icon className="h-3.5 w-3.5 text-accent" />
+                    <item.icon className="h-3.5 w-3.5 text-primary/80" />
                     <span className="text-xs font-semibold text-foreground">{item.label}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{item.detail}</p>

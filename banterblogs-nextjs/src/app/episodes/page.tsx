@@ -52,18 +52,18 @@ export default async function EpisodesPage() {
             </Link>
             <Link
               href="/chimera"
-              className="group flex items-center justify-between rounded-2xl border border-border/60 bg-accent/10 px-5 py-4 text-accent transition hover:bg-accent/15"
+              className="group flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 px-5 py-4 text-foreground transition hover:border-primary/40"
             >
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/20 text-accent">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/40 text-foreground/80">
                   <Cpu className="h-4 w-4" />
                 </span>
                 <div>
                   <div className="text-sm font-semibold">Chimera Episodes</div>
-                  <div className="text-xs text-accent/80">{chimeraCount} episodes</div>
+                  <div className="text-xs text-muted-foreground">{chimeraCount} episodes</div>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-accent/80 transition group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
             </Link>
           </div>
         </div>

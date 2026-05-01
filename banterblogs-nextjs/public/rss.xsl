@@ -22,15 +22,15 @@
       display:inline-block;
       font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
       padding:.35rem .9rem;border-radius:999px;
-      background:rgba(230,102,55,.15);color:#e66637;
+      background:rgba(249,82,21,.15);color:#f95215;
       margin-bottom:1rem;
     }
     h1{font-size:1.75rem;font-weight:700;margin-bottom:.5rem}
     .subtitle{color:#939ba8;font-size:.9rem;line-height:1.6;max-width:540px;margin:0 auto}
     .hint{
       margin-top:1.25rem;padding:.75rem 1rem;border-radius:8px;
-      background:rgba(34,181,211,.08);border:1px solid rgba(34,181,211,.15);
-      font-size:.8rem;color:#22b5d3;
+      background:rgba(224,220,215,.08);border:1px solid rgba(224,220,215,.15);
+      font-size:.8rem;color:#e0dcd7;
     }
     .hint code{
       background:rgba(255,255,255,.08);padding:.1rem .35rem;border-radius:3px;
@@ -43,14 +43,14 @@
       background:rgba(255,255,255,.02);
       transition:border-color .2s;
     }
-    .episode:hover{border-color:rgba(230,102,55,.25)}
+    .episode:hover{border-color:rgba(249,82,21,.25)}
     .ep-title{font-size:1rem;font-weight:600;margin-bottom:.4rem}
     .ep-title a{color:#f7f5f2;text-decoration:none}
-    .ep-title a:hover{color:#e66637}
+    .ep-title a:hover{color:#f95215}
     .ep-date{font-size:.75rem;color:#939ba8;margin-bottom:.5rem;font-variant-numeric:tabular-nums}
     .ep-desc{font-size:.85rem;color:#939ba8;line-height:1.55}
     .footer{text-align:center;margin-top:2.5rem;color:#939ba8;font-size:.8rem}
-    .footer a{color:#e66637;text-decoration:none}
+    .footer a{color:#f95215;text-decoration:none}
     .footer a:hover{text-decoration:underline}
   </style>
 </head>

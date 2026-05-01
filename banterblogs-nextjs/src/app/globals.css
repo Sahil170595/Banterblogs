@@ -6,33 +6,33 @@
 @tailwind utilities;
 
 :root {
-  /* Obsidian & Aurora palette — darker contrast pass */
-  --background: 220 30% 2%;
+  /* Obsidian & Ember — single accent, monochrome base, shiny ember */
+  --background: 220 32% 2%;
   --foreground: 36 18% 97%;
   --card: 220 22% 6%;
   --card-foreground: 36 18% 97%;
   --popover: 220 22% 6%;
   --popover-foreground: 36 18% 97%;
-  --primary: 16 78% 56%;
-  --primary-foreground: 220 30% 4%;
-  --secondary: 220 18% 11%;
+  --primary: 16 95% 53%;
+  --primary-foreground: 220 32% 4%;
+  --secondary: 220 16% 12%;
   --secondary-foreground: 36 18% 97%;
-  --muted: 220 18% 11%;
-  --muted-foreground: 220 10% 60%;
-  --accent: 190 72% 48%;
-  --accent-foreground: 220 30% 4%;
+  --muted: 220 16% 12%;
+  --muted-foreground: 220 8% 62%;
+  --accent: 36 12% 86%;
+  --accent-foreground: 220 32% 4%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 220 14% 18%;
-  --input: 220 14% 18%;
-  --ring: 16 78% 56%;
+  --border: 220 12% 18%;
+  --input: 220 12% 18%;
+  --ring: 16 95% 53%;
 
-  /* Chart Colors - Signal Palette */
-  --chart-1: 16 80% 58%;
-  --chart-2: 190 76% 50%;
-  --chart-3: 38 76% 48%;
-  --chart-4: 220 16% 78%;
-  --chart-5: 220 14% 48%;
+  /* Chart Colors — monochrome with ember anchor */
+  --chart-1: 16 95% 53%;
+  --chart-2: 36 12% 86%;
+  --chart-3: 220 8% 62%;
+  --chart-4: 220 12% 38%;
+  --chart-5: 220 14% 24%;
 }
 
 * {
@@ -42,9 +42,8 @@
 body {
   color: hsl(var(--foreground));
   background:
-    radial-gradient(circle at 15% 12%, hsl(var(--accent) / 0.14), transparent 42%),
-    radial-gradient(circle at 85% 8%, hsl(var(--primary) / 0.14), transparent 45%),
-    radial-gradient(circle at 60% 80%, hsl(var(--chart-3) / 0.08), transparent 50%),
+    radial-gradient(circle at 18% 10%, hsl(var(--primary) / 0.10), transparent 45%),
+    radial-gradient(circle at 82% 6%, hsl(var(--primary) / 0.06), transparent 48%),
     hsl(var(--background));
   font-feature-settings: "rlig" 1, "calt" 1;
   font-family: var(--font-sans), system-ui, sans-serif;
