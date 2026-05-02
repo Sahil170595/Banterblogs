@@ -37,11 +37,28 @@ function sectionWeight(fileName: string) {
   return 10;
 }
 
+// Rewrite inline markdown links like [TR134](Technical_Report_134.md) or
+// (Technical_Report_134_v2.md) to absolute /reports/<slug> routes.
+// Strips version suffixes (_v2, _v2.2, _v3) — site has only one canonical file per TR.
+function rewriteReportLinks(markdown: string): string {
+  return markdown.replace(/\(([^)]*Technical_Report_[^)]+\.md)\)/gi, (_match, target: string) => {
+    const base = target
+      .replace(/\.md$/i, '')
+      .replace(/_v\d+(\.\d+)?/gi, '');
+    const slug = base
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return `(/reports/${slug})`;
+  });
+}
+
 async function buildSection(filePath: string, sourceLabel: string, originKey: string): Promise<ReportSection> {
   const raw = readFileContent(filePath);
   const fallback = path.basename(filePath, path.extname(filePath));
   const title = extractPrimaryHeading(raw) ?? toHumanTitle(fallback);
-  const html = await renderMarkdownToHtml(raw);
+  const processed = rewriteReportLinks(raw);
+  const html = await renderMarkdownToHtml(processed);
   return {
     id: sanitizeId(title) || sanitizeId(fallback),
     title,
