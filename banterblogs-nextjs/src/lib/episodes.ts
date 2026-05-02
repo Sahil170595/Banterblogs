@@ -365,23 +365,46 @@ function fallbackMetadata(content: string, displayId: number): Partial<ResolvedE
     metadata.subtitle = cleanHeading(subtitleMatch[1]);
   }
 
-  const isoDateMatch = content.match(/\b\d{4}-\d{2}-\d{2}T[^\s]+\b/);
+  // Date detection — try in order of specificity:
+  //   1. Full ISO timestamp (e.g. 2025-09-27T22:22:12-04:00)
+  //   2. Plain ISO date (e.g. 2025-10-02) — chimera episode 19+ format
+  //   3. Human-readable weekday + year (e.g. "Sunday, September 7, 2025 at 05:59 PM") — banterpacks format
+  // The previous emoji-strip regex was mangled UTF-16 gibberish (/^dY["'-]\s*/),
+  // which left "📅 ..." in the input and caused every banterpacks episode to
+  // fail date parsing and default to new Date(). Strip leading non-alphanumerics
+  // explicitly instead.
+  const isoDateMatch = content.match(/\b\d{4}-\d{2}-\d{2}T[^\s]+/);
   if (isoDateMatch) {
     const parsed = new Date(isoDateMatch[0]);
     if (!Number.isNaN(parsed.getTime())) {
       metadata.date = parsed.toISOString();
     }
-  } else {
+  }
+  if (!metadata.date) {
+    const plainDateMatch = content.match(/###[^\n]*?\b(\d{4}-\d{2}-\d{2})\b/);
+    if (plainDateMatch) {
+      const parsed = new Date(`${plainDateMatch[1]}T00:00:00Z`);
+      if (!Number.isNaN(parsed.getTime())) {
+        metadata.date = parsed.toISOString();
+      }
+    }
+  }
+  if (!metadata.date) {
     const fallbackDate = content.match(/###\s+[^\n]*?(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)[^\n]*\b(\d{4})/i);
     if (fallbackDate) {
-      const parsed = new Date(fallbackDate[0].replace(/^###\s+/, "").replace(/^dY["'-]\s*/, ""));
+      const cleaned = fallbackDate[0]
+        .replace(/^###\s+/, "")
+        .replace(/^[^\w\d]+/, "");
+      const parsed = new Date(cleaned);
       if (!Number.isNaN(parsed.getTime())) {
         metadata.date = parsed.toISOString();
       }
     }
   }
 
-  const commitMatch = content.match(/Commit:\s*`([0-9a-f]{7,40})`/i);
+  // Commit hash detection — singular or plural ("Commit: `abc1234`" or
+  // "Commits: `hash1`, `hash2`"). Take the first hash either way.
+  const commitMatch = content.match(/Commits?:\s*`([0-9a-f]{7,40})`/i);
   if (commitMatch) {
     metadata.commit = commitMatch[1];
   }
