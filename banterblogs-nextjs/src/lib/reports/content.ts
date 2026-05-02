@@ -38,14 +38,20 @@ function sectionWeight(fileName: string) {
 }
 
 // Rewrite inline markdown links like [TR134](Technical_Report_134.md) or
-// (Technical_Report_134_v2.md) to absolute /reports/<slug> routes.
-// Strips version suffixes (_v2, _v2.2, _v3) — site has only one canonical file per TR.
+// (Technical_Report_134_v2.md) or (../../reports/Technical_Report_119v1.md)
+// to absolute /reports/<slug> routes.
+// Strips:
+//   - any path prefix (../../reports/, etc.)
+//   - any version marker matching [_]?v\d+(\.\d+)? (handles _v2, _v2.2, v1)
+//   - the .md extension
+// Site has one canonical file per TR; all version variants resolve to the same slug.
 function rewriteReportLinks(markdown: string): string {
   return markdown.replace(/\(([^)]*Technical_Report_[^)]+\.md)\)/gi, (_match, target: string) => {
-    const base = target
+    const basename = target.replace(/^.*[\\/]/, '');
+    const stripped = basename
       .replace(/\.md$/i, '')
-      .replace(/_v\d+(\.\d+)?/gi, '');
-    const slug = base
+      .replace(/_?v\d+(\.\d+)?/gi, '');
+    const slug = stripped
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
