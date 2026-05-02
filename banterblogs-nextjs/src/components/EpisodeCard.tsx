@@ -38,7 +38,7 @@ function resolvePlatform(
 export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
   const displayId = episode.displayId ?? episode.id;
   const formattedEpisodeNumber = formatEpisodeNumber(displayId);
-  const { label: platformLabel, colorClass } = resolvePlatform(episode);
+  const { label: platformLabel } = resolvePlatform(episode);
   const tags = episode.tags.slice(0, 3);
   const magneticRef = useMagneticCursor({ strength: 0.08, radius: 40 });
 
