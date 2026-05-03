@@ -7,8 +7,8 @@ import { EpisodeStats } from '@/components/EpisodeStats';
 import { TableOfContents } from '@/components/TableOfContents';
 import { ContentEnhancer, ContentStats } from '@/components/ContentEnhancer';
 import { MobileNavigation } from '@/components/MobileOptimization';
-import { SocialShare, BookmarkManager } from '@/components/SocialFeatures';
-import { ContentRecommendations } from '@/components/ContentRecommendations';
+import { EpisodeFloatingUI } from '@/components/EpisodeFloatingUI';
+import { EpisodeRecommendationsClient } from '@/components/EpisodeRecommendationsClient';
 
 export default async function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -55,10 +55,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
     <>
       <TableOfContents content={episode.content} />
 
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-2">
-        <SocialShare episode={episode} />
-        <BookmarkManager />
-      </div>
+      <EpisodeFloatingUI episode={episode} />
 
       <MobileNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
 
@@ -117,7 +114,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
           <EpisodeNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
 
           <div className="mt-16">
-            <ContentRecommendations currentEpisode={episode} allEpisodes={allEpisodes} />
+            <EpisodeRecommendationsClient currentEpisode={episode} allEpisodes={allEpisodes} />
           </div>
         </div>
       </div>
