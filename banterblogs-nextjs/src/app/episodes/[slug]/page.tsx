@@ -1,3 +1,4 @@
+import 'highlight.js/styles/github-dark.css';
 import { notFound, redirect } from 'next/navigation';
 export const runtime = 'nodejs';
 import { getAllEpisodes } from '@/lib/episodes';

@@ -1,5 +1,7 @@
-/* Syntax highlighting styles */
-@import 'highlight.js/styles/github-dark.css';
+/* highlight.js github-dark stylesheet was here. Moved to ReportMarkdown,
+ * compendium, and episode pages so it only loads where code blocks render
+ * (was shipping on every page including /, /about, /work, /papers).
+ */
 
 @tailwind base;
 @tailwind components;

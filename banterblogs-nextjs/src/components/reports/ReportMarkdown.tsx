@@ -1,3 +1,4 @@
+import 'highlight.js/styles/github-dark.css';
 import type { ReportSection } from '@/lib/reports/content';
 
 interface ReportMarkdownProps {

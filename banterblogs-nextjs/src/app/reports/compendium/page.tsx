@@ -1,3 +1,4 @@
+import 'highlight.js/styles/github-dark.css';
 import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';
