@@ -16,8 +16,11 @@ const eslintConfig = [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", ignoreRestSiblings: true },
       ],
-      // React 19's new rule flags legacy setState-in-effect patterns across the codebase.
-      // Real anti-pattern but pre-existing; refactor as its own task.
+      // 9 pre-existing setState-in-effect violations in ContentEnhancer (2),
+      // SearchDialog (3), SocialFeatures (2), TableOfContents (2). Real
+      // anti-patterns but predate this work and refactoring each requires
+      // case-by-case analysis (event handlers, useMemo, external sync).
+      // Tracked as a separate cleanup; rule kept off so CI doesn't block.
       "react-hooks/set-state-in-effect": "off",
     },
   },
