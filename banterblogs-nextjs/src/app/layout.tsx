@@ -5,7 +5,8 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { AccessibilityPanel, KeyboardNavigation, FocusIndicator } from "@/components/AccessibilityPanel";
+import { KeyboardNavigation, FocusIndicator } from "@/components/AccessibilityShell";
+import { AccessibilityPanelClient } from "@/components/AccessibilityPanelClient";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -70,8 +71,8 @@ export default function RootLayout({
               </main>
               <Footer />
               
-              {/* Global UI Components */}
-              <AccessibilityPanel />
+              {/* Global UI Components — heavy panel lazy-loaded via client wrapper */}
+              <AccessibilityPanelClient />
             </div>
           </KeyboardNavigation>
         </ErrorBoundary>
