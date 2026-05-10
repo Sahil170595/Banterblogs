@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { KeyboardNavigation, FocusIndicator } from "@/components/AccessibilityShell";
 import { AccessibilityPanelClient } from "@/components/AccessibilityPanelClient";
+import { BlackHoleBackground } from "@/components/BlackHoleBackground";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -61,10 +62,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-background text-foreground antialiased`}>
+        {/* Site-wide gravitational center — fixed-position canvas behind
+            all content. Every page reads as ordered information escaping
+            the singularity. */}
+        <BlackHoleBackground />
         <ErrorBoundary>
           <KeyboardNavigation>
             <FocusIndicator />
-            <div className="relative flex min-h-screen flex-col">
+            <div className="relative z-10 flex min-h-screen flex-col">
               <Header />
               <main className="flex-1 chimera-shell">
                 {children}

@@ -37,10 +37,7 @@ function CopyButton() {
 export function Hero({ stats, latestEpisode }: HeroProps) {
   return (
     <section className="relative overflow-hidden border-b border-border/50">
-      {/* Background — single subtle radial, no particles */}
-      <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.12),transparent_55%)]" />
-
-      <div className="container relative py-20 md:py-28">
+      <div className="container relative z-10 py-20 md:py-28">
         <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_420px]">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
