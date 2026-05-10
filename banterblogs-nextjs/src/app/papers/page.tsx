@@ -5,11 +5,11 @@ import { ArrowRight, FileText, Layers } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Papers',
   description:
-    '5 NeurIPS 2026 papers packet-ready · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+    '5 papers submitted to NeurIPS 2026 · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   openGraph: {
     title: 'Papers | Chimeraforge',
     description:
-      '5 NeurIPS 2026 papers packet-ready · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '5 papers submitted to NeurIPS 2026 · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
     url: 'https://chimeraforge.vercel.app/papers',
     type: 'website',
   },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Papers | Chimeraforge',
     description:
-      '5 NeurIPS 2026 papers packet-ready · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '5 papers submitted to NeurIPS 2026 · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   },
 };
 
@@ -25,7 +25,7 @@ interface Paper {
   title: string;
   thesis: string;
   venue: string;
-  status: 'NeurIPS 2026' | 'In preparation' | 'Synthesis' | 'Pre-execution';
+  status: 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
   trs: { label: string; slug: string }[];
 }
 
@@ -35,7 +35,7 @@ const NEURIPS_2026: Paper[] = [
     thesis:
       'Independent upstream bugs in PyTorch and Triton jointly produce the torch.compile decode crash. Triton minor-version ablation on the same GPU flips the conclusion. Benchmark identity is a 5-tuple (GPU, Triton, PyTorch, cache, compile mode). Companion to upstream PR #175562.',
     venue: 'NeurIPS 2026',
-    status: 'NeurIPS 2026',
+    status: 'Submitted',
     trs: [
       { label: 'TR126', slug: 'technical-report-126' },
       { label: 'TR147', slug: 'technical-report-147' },
@@ -46,7 +46,7 @@ const NEURIPS_2026: Paper[] = [
     thesis:
       "Simpson's paradox in the safety-quality relationship. Refusal Template Stability Index calibrated with LOOCV across 51 model-format cells (GGUF + AWQ + GPTQ), inter-judge κ = 0.873.",
     venue: 'NeurIPS 2026',
-    status: 'NeurIPS 2026',
+    status: 'Submitted',
     trs: [
       { label: 'TR125', slug: 'technical-report-125' },
       { label: 'TR134', slug: 'technical-report-134' },
@@ -58,7 +58,7 @@ const NEURIPS_2026: Paper[] = [
     thesis:
       'Q2_K is the recurring vulnerability threshold for many-shot and long-context attacks. Message-array vs faux-dialogue prompt formatting (92% vs 0% ASR) across 4 model families. Format mediates effect more strongly than quantization alone.',
     venue: 'NeurIPS 2026',
-    status: 'NeurIPS 2026',
+    status: 'Submitted',
     trs: [{ label: 'TR140', slug: 'technical-report-140' }],
   },
   {
@@ -66,7 +66,7 @@ const NEURIPS_2026: Paper[] = [
     thesis:
       '16,783 samples across production-scale 70B target + 8B draft pairs (adversarial draft, quantized draft, non-greedy decoding). Zero measurable safety degradation, contradicting the SSD premise. Strong null result.',
     venue: 'NeurIPS 2026',
-    status: 'NeurIPS 2026',
+    status: 'Submitted',
     trs: [{ label: 'TR144', slug: 'technical-report-144' }],
   },
   {
@@ -74,12 +74,20 @@ const NEURIPS_2026: Paper[] = [
     thesis:
       '8 attack strategies × 4 models × 6 quantization levels: 10,600 conversations, 37,825 judge labels. Threshold-specific shift in risk rather than universal multi-turn amplification.',
     venue: 'NeurIPS 2026',
-    status: 'NeurIPS 2026',
+    status: 'Submitted',
     trs: [{ label: 'TR139', slug: 'technical-report-139' }],
   },
 ];
 
 const IN_PREP: Paper[] = [
+  {
+    title: 'Batch Inference Safety Under Non-Determinism',
+    thesis:
+      'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
+    venue: 'AI4Good',
+    status: 'Submitted',
+    trs: [{ label: 'TR138', slug: 'technical-report-138' }],
+  },
   {
     title: 'Inference Optimization Is Not Safety-Neutral',
     thesis:
@@ -92,14 +100,6 @@ const IN_PREP: Paper[] = [
       { label: 'TR136', slug: 'technical-report-136' },
       { label: 'TR137', slug: 'technical-report-137' },
     ],
-  },
-  {
-    title: 'Batch Inference Safety Under Non-Determinism',
-    thesis:
-      'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
-    venue: 'Workshop submission',
-    status: 'In preparation',
-    trs: [{ label: 'TR138', slug: 'technical-report-138' }],
   },
   {
     title: 'Empirical Capacity Planning for Local LLM Inference',
@@ -149,7 +149,7 @@ const IN_PREP: Paper[] = [
 
 function StatusBadge({ status }: { status: Paper['status'] }) {
   const styles: Record<Paper['status'], string> = {
-    'NeurIPS 2026': 'border-primary/40 bg-primary/10 text-primary',
+    'Submitted': 'border-primary/60 bg-primary/15 text-primary',
     'In preparation': 'border-border/60 bg-muted/30 text-foreground/80',
     Synthesis: 'border-border/60 bg-muted/30 text-muted-foreground',
     'Pre-execution': 'border-border/60 bg-background text-muted-foreground/70',
@@ -203,7 +203,7 @@ export default function PapersPage() {
         <div className="space-y-5 max-w-3xl">
           <span className="signal-pill">Papers</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            5 NeurIPS 2026 candidates · 6 in preparation
+            5 papers submitted to NeurIPS 2026 · 6 in preparation
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
@@ -219,7 +219,7 @@ export default function PapersPage() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: '5', label: 'NeurIPS 2026 ready' },
+          { value: '5', label: 'Submitted · NeurIPS 2026' },
           { value: '11', label: 'Papers total' },
           { value: '45', label: 'Technical Reports' },
           { value: '752K+', label: 'Measurements' },
@@ -236,10 +236,10 @@ export default function PapersPage() {
         <div className="mb-8 border-b border-border/40 pb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            NeurIPS 2026 — Packet Ready
+            NeurIPS 2026 — Submitted · Under Review
           </h2>
           <p className="mt-2 text-sm text-muted-foreground/70">
-            5 papers with PDFs, artifact manifests, and venue checklists complete. Submission window: May 6.
+            5 papers submitted with PDFs, artifact manifests, and venue checklists complete. Now under peer review.
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
