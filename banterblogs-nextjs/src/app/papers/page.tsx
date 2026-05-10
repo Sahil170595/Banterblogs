@@ -140,10 +140,10 @@ const IN_PREP: Paper[] = [
   {
     title: 'KV-Cache Quantization and Safety',
     thesis:
-      'KV-cache quantization is a serving-layer perturbation that touches retained attention state. Needs its own safety evaluation rather than inferred from weight quantization. 5-phase study on FP16 vs FP8.',
-    venue: 'TBD',
-    status: 'Pre-execution',
-    trs: [],
+      'KV-cache quantization is a serving-layer perturbation that touches retained attention state. 5-phase paired study on FP16 vs FP8 across 24K records, 3 models. Headline result is a null: no Holm-significant safety effect detectable at α=0.05, 80% power. Operational rule: workload-specific paired eval, not pre-approval.',
+    venue: 'Workshop submission',
+    status: 'In preparation',
+    trs: [{ label: 'TR145', slug: 'technical-report-145' }],
   },
 ];
 
@@ -208,7 +208,7 @@ export default function PapersPage() {
           <p className="text-lg text-muted-foreground leading-relaxed">
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
             evaluation. Each paper is backed by reproducible technical reports and artifact-level provenance from a
-            728,000+ measurement program.
+            752,000+ measurement program.
           </p>
           <p className="text-sm text-muted-foreground/80">
             Author: <span className="text-foreground font-medium">Sahil Kadadekar</span> · Independent research
@@ -221,8 +221,8 @@ export default function PapersPage() {
         {[
           { value: '5', label: 'NeurIPS 2026 ready' },
           { value: '11', label: 'Papers total' },
-          { value: '44', label: 'Technical Reports' },
-          { value: '728K+', label: 'Measurements' },
+          { value: '45', label: 'Technical Reports' },
+          { value: '752K+', label: 'Measurements' },
         ].map((s) => (
           <div key={s.label} className="signal-panel p-5 text-center">
             <div className="text-2xl md:text-3xl font-bold text-foreground">{s.value}</div>
@@ -276,7 +276,7 @@ export default function PapersPage() {
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
-              44 technical reports with 728,000+ measurements — the evidence layer behind these papers.
+              45 technical reports with 752,000+ measurements — the evidence layer behind these papers.
             </p>
             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
               Browse reports <ArrowRight className="h-3 w-3" />

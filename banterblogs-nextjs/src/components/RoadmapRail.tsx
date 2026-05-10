@@ -23,7 +23,7 @@ const highlights = [
   {
     label: 'Phase 3 — Safety',
     range: 'TR134–TR147',
-    summary: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding.',
+    summary: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding, KV-cache safety.',
   },
 ];
 
@@ -35,7 +35,7 @@ export function RoadmapRail() {
           Research Program
         </p>
         <h2 className="mt-3 text-3xl md:text-4xl font-bold leading-tight display">
-          728,000+ measurements across 44 technical reports
+          752,000+ measurements across 45 technical reports
         </h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed mx-auto">
           Independent ML research with CUDA event timing and controlled safety evaluations.

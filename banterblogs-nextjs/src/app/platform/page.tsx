@@ -110,12 +110,12 @@ export default async function PlatformPage() {
               </span>
               <div>
                 <h3 className="text-xl font-semibold">Banterhearts</h3>
-                <span className="text-xs text-muted-foreground">Python &middot; 728K+ measurements</span>
+                <span className="text-xs text-muted-foreground">Python &middot; 752K+ measurements</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-              ML research platform and production inference backbone. 728,000+ measurements
-              across 44 technical reports, targeting consumer GPUs with sub-100ms inference.
+              ML research platform and production inference backbone. 752,000+ measurements
+              across 45 technical reports, targeting consumer GPUs with sub-100ms inference.
             </p>
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
@@ -255,7 +255,7 @@ export default async function PlatformPage() {
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
               Auto-generated episodes from git commits across all repos. Research archive
-              with 44 technical reports. Next.js 15 with SSG + ISR.
+              with 45 technical reports. Next.js 15 with SSG + ISR.
             </p>
             <span className="text-[10px] text-muted-foreground/70">TypeScript &middot; Vercel</span>
           </div>
@@ -267,7 +267,7 @@ export default async function PlatformPage() {
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
             { value: '8', label: 'Repositories' },
-            { value: '728K+', label: 'Research Measurements' },
+            { value: '752K+', label: 'Research Measurements' },
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatReadingTime(stats.totalReadingTime), label: 'Total Reading Time' },
             { value: '89', label: 'Patches Shipped' },
@@ -337,7 +337,7 @@ export default async function PlatformPage() {
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
-              44 technical reports with 728,000+ measurements across inference, optimization, and safety.
+              45 technical reports with 752,000+ measurements across inference, optimization, and safety.
             </p>
             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
               Browse reports <ArrowRight className="h-3 w-3" />

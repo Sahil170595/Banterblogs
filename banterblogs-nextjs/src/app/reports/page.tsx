@@ -8,11 +8,11 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 export const metadata: Metadata = {
   title: 'Research Archive',
   description:
-    'Independent LLM safety research · 44 technical reports · 728,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
+    'Independent LLM safety research · 45 technical reports · 752,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
   openGraph: {
     title: 'Research Archive | Chimeraforge',
     description:
-      'Independent LLM safety research · 44 technical reports · 728,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
+      'Independent LLM safety research · 45 technical reports · 752,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
     url: 'https://chimeraforge.vercel.app/reports',
     type: 'website',
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Research Archive | Chimeraforge',
     description:
-      'Independent LLM safety research · 44 technical reports · 728,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
+      'Independent LLM safety research · 45 technical reports · 752,000+ empirical measurements · 5 NeurIPS 2026 candidates.',
   },
 };
 
@@ -121,7 +121,7 @@ export default async function ReportsIndex() {
   const technicalByPhase = new Map<string, ReportEntry[]>();
 
   const PHASE_META: Record<string, { label: string; description: string; order: number }> = {
-    'phase3': { label: 'Phase 3 — Safety & Methodology (TR134–TR147)', description: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding, mechanistic probing, portability validation.', order: 0 },
+    'phase3': { label: 'Phase 3 — Safety & Methodology (TR134–TR147)', description: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding, KV-cache safety, mechanistic probing, portability validation.', order: 0 },
     'phase2': { label: 'Phase 2 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 1 },
     'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 2 },
     'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 3 },
@@ -178,8 +178,8 @@ export default async function ReportsIndex() {
       {/* ── Stats Ribbon ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: '728,000+', label: 'Research Measurements' },
-          { value: '44', label: 'Technical Reports' },
+          { value: '752,000+', label: 'Research Measurements' },
+          { value: '45', label: 'Technical Reports' },
           { value: '12', label: 'Synthesis Whitepapers' },
           { value: '9', label: 'Repositories' },
         ].map((stat) => (
@@ -291,6 +291,11 @@ export default async function ReportsIndex() {
               number: 'Q4_K_M',
               finding: 'The universal quantization sweet spot. -4.1pp accuracy max across 5 models, 30-67% cost savings.',
               source: [{ label: 'TR125', slug: 'technical-report-125' }],
+            },
+            {
+              number: 'NULL',
+              finding: 'FP8 KV-cache produces no Holm-significant safety effect across 24K paired records on 3 models. Not pre-approved, not pre-banned — workload-specific paired eval required.',
+              source: [{ label: 'TR145', slug: 'technical-report-145' }],
             },
           ].map((f) => (
             <article key={f.number} className="signal-panel p-5">

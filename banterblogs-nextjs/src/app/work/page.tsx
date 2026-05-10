@@ -5,11 +5,11 @@ import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Link
 export const metadata: Metadata = {
   title: 'Work',
   description:
-    'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 44 technical reports, 728K+ measurements.',
+    'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 45 technical reports, 752K+ measurements.',
   openGraph: {
     title: 'Work | Chimeraforge',
     description:
-      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 44 technical reports, 728K+ measurements.',
+      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 45 technical reports, 752K+ measurements.',
     url: 'https://chimeraforge.vercel.app/work',
     type: 'profile',
   },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Work | Chimeraforge',
     description:
-      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 44 technical reports, 728K+ measurements.',
+      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 5 NeurIPS 2026 papers, 45 technical reports, 752K+ measurements.',
   },
 };
 
@@ -175,7 +175,7 @@ export default function WorkPage() {
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
-            5 NeurIPS 2026 papers packet-ready, 44 technical reports, 728,000+ empirical measurements, and a
+            5 NeurIPS 2026 papers packet-ready, 45 technical reports, 752,000+ empirical measurements, and a
             constitutional AI ecosystem spanning 9 repositories and 5 languages.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
