@@ -30,30 +30,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const data = await request.json();
-    console.log('Webhook payload received:', data);
+    await request.json();
 
     // Revalidate the episodes pages
     revalidatePath('/episodes');
-    revalidatePath('/episodes-dynamic');
-    revalidatePath('/episodes-live');
     revalidatePath('/');
     revalidatePath('/tags');
     revalidatePath('/api/episodes');
 
-    console.log('Pages revalidated successfully');
-
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Pages revalidated successfully',
       timestamp: new Date().toISOString(),
       revalidated: [
         '/episodes',
-        '/episodes-dynamic', 
-        '/episodes-live',
         '/',
         '/tags',
-        '/api/episodes'
-      ]
+        '/api/episodes',
+      ],
     });
   } catch (error) {
     console.error('Webhook error:', error);

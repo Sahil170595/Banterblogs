@@ -115,7 +115,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 research measurements
               </div>
               <div>
-                <span className="text-lg font-bold text-foreground">4</span>{' '}
+                <span className="text-lg font-bold text-foreground">5</span>{' '}
                 languages
               </div>
             </div>

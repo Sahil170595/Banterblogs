@@ -584,7 +584,7 @@ html {
 
 .hljs-built_in,
 .hljs-builtin-name {
-  @apply text-cyan-400;
+  @apply text-amber-300;
 }
 
 .hljs-meta {

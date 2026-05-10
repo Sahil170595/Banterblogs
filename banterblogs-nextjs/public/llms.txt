@@ -1,43 +1,56 @@
 # Chimeraforge
 
-> Personal AI platform — JARVIS-level autonomous AI infrastructure running on your hardware.
+> Personal AI platform — JARVIS-level autonomous AI infrastructure running on local hardware. Site and PyPI brand for the Chimera constitutional AI architecture.
+
+## Naming
+
+- **Chimera** is the constitutional AI architecture itself: debate engine, multi-model consensus, embedding-based safety routing, BFT/Ed25519 provenance, ZK proofs, RLAIF self-improving loop.
+- **Chimeraforge** is the public site (https://chimeraforge.vercel.app) and the PyPI package (`pip install chimeraforge`, an LLM deployment optimizer CLI).
+- The two names are distinct on purpose. Do not collapse them.
 
 ## What This Is
 
-Chimeraforge is a personal AI platform built by Sahil Kadadekar. It is NOT a chatbot, NOT a streaming tool, and NOT a portfolio site. It is a multi-modal smart assistant with local inference, constitutional AI governance, and a research program backing every engineering decision.
-
-The platform runs entirely on consumer hardware (no cloud dependency) and handles calendar, inbox, smart home, memory, proactive intelligence, and tool execution through a JARVIS gateway with 7 modules (calendar, inbox, memory, smart home, proactive, tools, store).
+Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar. It is NOT a chatbot, NOT a streaming tool, and NOT a portfolio site. The platform runs on consumer hardware and handles calendar, inbox, smart home, memory, proactive intelligence, and tool execution through a JARVIS gateway with 7 modules (calendar, inbox, memory, smart home, proactive, tools, store).
 
 ## Scale
 
-- 6 repositories, 200K+ lines of code across Python, TypeScript, Rust, and C#
-- 555,000+ research data points across 36 technical reports
-- 30+ services, 10 Rust crates, 8 MCP servers, 5 OpenAPI contracts
-- 829+ test files
-- PyPI package: pip install chimeraforge
-- 266+ auto-generated development episodes
+- 9 repositories across Python, Rust, TypeScript, C#, JavaScript
+- 752,000+ research measurements across 45 technical reports
+- 5 papers submitted to NeurIPS 2026 (under peer review)
+- 1 paper submitted to AI4Good
+- 266+ auto-generated development episodes (193 Banterpacks + 73 Chimera)
+- PyPI package: `pip install chimeraforge`
 
-## The 6 Repositories
+## The Repositories
 
-### 1. Banterpacks (122K LOC — TypeScript, Rust, Python)
-Production monorepo. 9 Python services (Registry, Chimera constitutional AI, TDD002 visual embeddings, JARVIS Gateway, Intelligence Pipeline, Authoring, RLAIF, Task Orchestration, Core), 4 Node.js apps (Frontend Studio, Overlay, Banterblogs Automation, Git Analysis), 10 Rust crates (chimera-core, tdd004_agent, tdd004_provenance, tdd005_ffi, tdd005_orchestrator, tdd005_p2p, tdd005_sync, tdd005_checkpoints, tdd005_provenance, tdd005_sandbox). 829+ test files, 5 OpenAPI contracts, 14 Docker profiles.
+### 1. Banterpacks (Python, Rust, TypeScript)
+Core monorepo. Six interconnected subsystems handling constitutional AI enforcement, multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant. Includes a 7-crate Rust runtime with Ed25519 provenance, BFT consensus, and zero-knowledge proofs.
 
-### 2. Banterhearts (32K LOC — Python)
-ML research platform. Inference API (FastAPI, model selection, streaming, backend dispatch), Ingestion API (data pipeline, SQLite persistence), AutoOpt Agent (Thompson sampling, multi-armed bandit, SLA enforcement). 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats (INT8, FP8, QAT, calibration, validation). 37-file evaluation framework, 20 monitoring modules, 12 security modules (RBAC, OIDC, audit, signing, secrets, key rotation, replay protection, redaction, multi-tenancy). Source of 555K+ measurements.
+### 2. Banterhearts (Python)
+ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 752K+ measurements across 45 reports.
 
-### 3. Chimeraforge Tools (39K LOC — Python, Rust)
-LLM deployment optimizer published on PyPI. `chimeraforge plan` CLI — 4-gate capacity planner (VRAM, Quality, Latency, Cost) searching model x quant x backend x N_agents (1-16) across 15 GPU database. Bench runner (3 backends: Ollama, vLLM, TGI), eval runner, report generator, refit tools. Rust agents deliver 58% TTFT reduction, 67% memory reduction, 83% startup reduction, 15.2% throughput improvement over Python. 158 tests.
+### 3. Chimeraforge (Python, Rust)
+LLM deployment optimizer published on PyPI. `chimeraforge plan` CLI — 4-gate capacity planner (VRAM, Quality, Latency, Cost) across 15 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859), dual-language harnesses, 292 tests.
 
-### 4. Chimera Multi-Agent (12K LOC — Python)
-6-agent content pipeline (Muse Protocol): Banterhearts Ingestor, Banterpacks Collector, Watcher (pipeline health, circuit breaking), Council (AI-powered episode generation), Publisher (GitHub/Vercel), i18n Translator (German, Chinese, Hindi via DeepL). 8 MCP servers (Datadog, ClickHouse, DeepL, Vercel, Git, Orchestrator, Freepik, LinkUp). ClickHouse with 7 tables, Datadog dashboard with 22 widgets, OpenTelemetry tracing, Terraform monitors.
+### 4. Chimera Multi-Agent (Python)
+Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the ecosystem observability layer (OpenTelemetry, Datadog, dead-letter queue with 102 tests).
 
-### 5. Chimeradroid (3.5K LOC — C#/Unity)
-Android mobile client for JARVIS v2 gateway. 8-tab GUI (Chat, Voice, Sessions, Tools, Handoff, Mesh, Notifications, Settings). Device registration, real-time WebSocket streaming, session handoff, tool approval workflows, mesh networking, proactive notifications.
+### 5. Chimeradroid (C# / Unity)
+Android companion for JARVIS — voice, chat, session handoff, tool approval, mesh networking, offline-first.
 
-### 6. Chimeraforge Site (8K LOC — TypeScript/Next.js)
-This site. Next.js 15, React Server Components, SSG + ISR (15-minute revalidation for reports), Tailwind CSS, Framer Motion. Design system: "Obsidian & Aurora" — ember primary, cyan accent, dark background. 266+ episodes, 36 technical reports, full-text search, XSLT-styled sitemap and RSS.
+### 6. Echo (Python)
+Messaging channel adapters — Slack and Discord bridges to JARVIS with session tracking and device key auth.
 
-## Research Program — 555,000+ Data Points
+### 7. JARVIS Console (TypeScript / Next.js)
+Web console for JARVIS — chat with streaming, control room dashboard, cognitive agent ELO, tool catalog, workflow management, memory browser.
+
+### 8. Banterblogs / Chimeraforge Site (TypeScript / Next.js)
+This site (https://chimeraforge.vercel.app). Auto-generated episodes from git commits across all repos, research archive of 45 technical reports with 5 phase whitepapers + 5 conclusive synthesis docs + 5 extended appendices. Next.js 16 with SSG + ISR.
+
+### 9. Project Wyvern
+Embodied autonomy extension of the constitutional architecture. Governed mission-execution plane between Chimera control and PX4/ArduPilot, with a 5-tier authority hierarchy, cryptographic mission replay, and OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP on PX4 + ROS 2 + Gazebo in progress.
+
+## Research Program — 752,000+ Measurements
 
 Independent ML research with CUDA event timing and controlled safety evaluations. All measurements are reproducible with defined hardware profiles, statistical methodology, and raw data.
 
@@ -45,84 +58,67 @@ Independent ML research with CUDA event timing and controlled safety evaluations
 - Primary: NVIDIA RTX 4080 Laptop GPU (12GB VRAM), 13th Gen Intel i9
 - Extension: NVIDIA RTX PRO 6000 Blackwell Server Edition (98GB VRAM) via Google Colab
 
-### Phase 1: Foundation (TR108-TR116) — ~8,000 runs
-- TR108: Single-agent benchmarking, 158+ configs, 6 models
-- TR109: Agent workflow optimization, GPU=60, CTX=512, TEMP=0.8
-- TR110: Concurrent multi-agent performance, 150 runs
-- TR111: Rust agent workflow, parameter optimization
-- TR112: Rust vs Python cross-language comparison, 111 runs
-- TR113: Rust concurrent multi-agent contention analysis
-- TR114: Dual Ollama architecture, near-zero contention, 135 runs
-- TR115: Async runtime deep dive for multi-agent LLM workloads
-- TR116: Cross-model benchmarks (Qwen 2.5 vs Gemma 3 vs Llama 3.1 8B)
-- Key findings: Rust delivers 58% TTFT reduction, 67% memory reduction. Dual Ollama eliminates contention.
+### Phases
+- **Phase 1 — Foundation (TR108–TR116):** Model loading, ONNX conversion, quantization baselines, security analysis.
+- **Phase 1.5 — Benchmarking (TR117–TR122):** Cross-backend inference parity, TensorRT compilation, scaling laws, the compile paradox, the physics of inference.
+- **Phase 2 — Optimization (TR123–TR133):** KV-cache tuning, INT8/FP8 quantization, context scaling (512–32K tokens), N-agent scaling, GPU kernel profiling, predictive capacity planner.
+- **Phase 3 — Safety & Methodology (TR134–TR147):** Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding (null), KV-cache safety (null), mechanistic probing, portability validation.
 
-### Phase 1.5: Benchmarking (TR117-TR122) — ~8,400 runs
-- TR117: Cross-backend frontier benchmark (eager, JIT, torch.compile, ONNX, TensorRT), 3,017 runs
-- TR117 Multi-Agent: Efficiency anomalies — Python ceiling, Qwen mystery, ranking flip
-- TR118: Model scale comparative analysis, ONNX + TensorRT across 1,210x parameter scaling, 720 runs
-- TR119: Cost and energy analysis, local-first inference TCO with telemetry
-- TR120: The compile paradox — why compile wins the mean but loses the median
-- TR121: Scaling laws and capacity planning, 0.1M to 20.9B parameters
-- TR122: The physics of inference, fundamental constraints on consumer hardware
-
-### Phase 2: Optimization (TR123-TR133) — ~75,000 measurements
-- TR123: KV-cache production economics, phase-split $/token
-- TR124: Quality and accuracy baseline, backend equivalence across 5 models, 3,600 samples
-- TR125: Quantization decision matrix, 5 models (1.2B-8B), ~26,000 samples
-- TR126: Linux/Triton compile validation, ~29,900 measurements
-- TR127: Long-context performance, 512 to 32K tokens, two-regime VRAM analysis
-- TR128: Production workload characterization, concurrency/saturation/streaming, 3,172 measurements
-- TR129: N-agent scaling laws on consumer GPU, 5,310 measurements
-- TR130: Serving stack benchmarking (Ollama vs vLLM vs TGI), 4,797 measurements
-- TR131: GPU kernel profiling via NVIDIA Nsight Systems
-- TR132: In-container Nsight Systems analysis of vLLM and TGI
-- TR133: Predictive capacity planner operationalizing 70,000+ measurements into `chimeraforge plan` CLI
-- Key findings: Q4_K_M is the universal sweet spot. ONNX wins for small models, eager for large. vLLM scales best under concurrent load.
-
-### Phase 3: Safety (TR134-TR143) — ~465,000 data points
-- TR134: Alignment robustness under quantization, 4 models (1.2B-7.6B), ~35,260 samples, jailbreak amplification analysis
-- TR135: Safety under multi-agent concurrency, 39,060 raw records, 10,416 prompt-level observations
-- TR136: Cross-backend safety consistency (Ollama vs vLLM vs TGI), 10,416 samples
-- TR137: The safety tax of inference optimization, 74,254 synthesized samples (meta-analysis of TR134-136)
-- TR138: Batch inference safety under non-determinism, 31,410 base + 7,257 replication samples with corrected refusal detector
-- TR139: Multi-turn jailbreak susceptibility under quantization, 10,600 conversations, 37,825 judge labels, 8 attack strategies
-- TR140: Many-shot and long-context jailbreak under quantization, 15,000 samples, 5 shot counts, 3 context-length profiles
-- TR141: Cross-architecture refusal fragility under batch perturbation, 127,224 records, 18 models, 10+ families, 4 alignment types (RLHF, SFT, DPO, distilled), Blackwell GPU
-- TR142: Quality-safety correlation under quantization (analysis-only, cross-references TR125 + TR134)
-- TR143: Cross-request safety leakage under continuous batching, 14,250 records, multi-tenant vLLM
-- Key findings: Q2_K is universally unacceptable for safety. Safety degrades 13.9x faster than quality at Q3_K_S — quality metrics are categorically insufficient as safety proxies. Batch perturbation causes 0.16% genuine safety flip rate (human-adjudicated). Output instability predicts fragility with r=0.91. Alignment type (RLHF/SFT/DPO/distilled) does NOT predict batch fragility. Q2_K + attention_shift achieves 100% attack success rate on qwen2.5-1.5b.
-
-### Conclusive Reports and Whitepapers
+### Synthesis Documents
 Each phase has a conclusive synthesis (dissertation-style), extended appendices, and an executive decision whitepaper:
-- Phase 1 Conclusive (TR108-TR116): Language, architecture, runtime, and model selection
-- Phase 1.5 Conclusive (TR117-TR122): Performance, cost, scaling, compiler behavior
-- Phase 2 Conclusive (TR123-TR133): Economics, quantization, context scaling, serving stacks
-- Phase 3 Conclusive (TR134-TR137): Quantization-induced alignment erosion, concurrency invariance, backend template divergence
-- Phase 3.5 Conclusive (TR138-TR143): Safety attack-surface synthesis, 306,996 samples, 18+ models, 10+ architecture families
+- Phase 1 (TR108–TR116): Language, architecture, runtime, and model selection
+- Phase 1.5 (TR117–TR122): Performance, cost, scaling, compiler behavior
+- Phase 2 (TR123–TR133): Economics, quantization, context scaling, serving stacks
+- Phase 3 (TR134–TR137): Quantization-induced alignment erosion, concurrency invariance, backend template divergence
+- Phase 3.5 (TR138–TR143): Safety attack-surface synthesis, 306,996 samples, 18+ models, 10+ architecture families
+
+### Headline Findings
+- **Q4_K_M is the universal quantization sweet spot** (-4.1pp accuracy max across 5 models, 30-67% cost savings).
+- **Q2_K is universally unacceptable for safety** (100% ASR; banned across 18+ models, 10+ families).
+- **Quality metrics are not safety proxies** — safety degrades 13.9× faster than quality at Q3_K_S.
+- **Backend choice can move safety by 25pp** (chat template divergence, not the framework).
+- **Alignment type does not predict batch fragility** (RLHF/SFT/DPO/distilled all show same flip pattern, p = 0.942).
+- **FP8 KV-cache produces no measurable safety degradation** across 24K paired records (TR145, null result).
+- **Speculative decoding × safety is a clean null** at 16,783 samples (TR144).
+
+## Papers — 6 Submitted, 5 In Preparation
+
+### Submitted to NeurIPS 2026 (under peer review)
+1. Compile-Stack Attribution (TR126, TR147)
+2. Quality-Safety Correlation Under Quantization (TR125, TR134, TR142)
+3. Many-Shot Jailbreak Under Quantization (TR140)
+4. Speculative Decoding Safety — Null Result (TR144)
+5. Multi-Turn Jailbreak × Quantization (TR139)
+
+### Submitted to AI4Good (under peer review)
+6. Batch Inference Safety Under Non-Determinism (TR138)
+
+### In Preparation
+- Inference Optimization Is Not Safety-Neutral (TR134, TR135, TR136, TR137 synthesis)
+- Empirical Capacity Planning for Local LLM Inference (TR123, TR127, TR133)
+- Multi-Agent Runtime Architecture (TR112, TR114, TR115)
+- Serving Stacks, Continuous Batching & the Physics of Throughput (TR129, TR130, TR132)
+- KV-Cache Quantization and Safety (TR145)
 
 ## JARVIS Gateway
 
-Multi-modal smart assistant running locally. 7 modules:
-- Calendar: Schedule management and conflict resolution
-- Inbox: Email triage and priority routing
-- Memory: Persistent context and pattern learning
-- Smart Home: Device control and automation
-- Proactive: Anticipatory task suggestions based on patterns
-- Tools: Extensible tool execution framework
-- Store: Plugin marketplace for third-party integrations
-
-Multi-LLM routing (GPT-4, Claude, Gemini, local Ollama). Rust runtime for sub-200ms latency.
+Multi-modal AI gateway with multi-provider routing (Anthropic, OpenAI, Gemini, Ollama). Every chat turn routes through the constitutional router. Tool execution uses a 3-stage propose/approve/execute pipeline with cryptographic provenance on every action. 7 modules: Calendar, Inbox, Memory, Smart Home, Proactive, Tools, Voice.
 
 ## Constitutional AI
 
-Multi-model consensus debate platform (TDD001). Models debate ethical decisions and reach consensus through structured constitutional governance. RLAIF training data generation from debate outputs. This is not a content filter — it's a governance framework.
+Embedding-based fast-path router classifies 99% of queries in <10ms via cosine similarity with calibration (isotonic/Platt). Uncertain queries escalate to a multi-model debate engine with heat-based escalation and three consensus algorithms (weighted, ranked-choice, Condorcet). Self-improving via debate-outcome DPO training pairs with statistical drift detection (Welch's t-test, Cohen's d, KS, PSI, ADWIN) and a canary deployment controller with auto-rollback.
+
+## Design System
+
+"Obsidian & Ember" — single hot-copper accent on a near-black background. Cyan accent was dropped in favor of disciplined single-accent palette ("torch in a cave" — restraint everywhere except purposeful highlights).
+- Background: hsl(215, 28%, 4%)
+- Primary (ember/copper): hsl(16, 90%, 58%) / #ea6533
 
 ## PyPI Package
 
 - Package: chimeraforge
 - Version: 0.2.1
-- Install: pip install chimeraforge
+- Install: `pip install chimeraforge`
 - Python: >=3.10
 - License: MIT
 - CLI: `chimeraforge plan` — capacity planner for LLM deployment
@@ -132,17 +128,23 @@ Multi-model consensus debate platform (TDD001). Models debate ethical decisions 
 
 - Site: https://chimeraforge.vercel.app
 - PyPI: https://pypi.org/project/chimeraforge/
-- GitHub (site): https://github.com/Sahil170595/Banterblogs
-- GitHub (tools): https://github.com/Sahil170595/Chimeraforge
+- GitHub (site source): https://github.com/Sahil170595/Banterblogs
+- GitHub (Chimeraforge tools): https://github.com/Sahil170595/Chimeraforge
 - Research Archive: https://chimeraforge.vercel.app/reports
+- Papers: https://chimeraforge.vercel.app/papers
 - Platform Architecture: https://chimeraforge.vercel.app/platform
+- Work / CV: https://chimeraforge.vercel.app/work
 - About: https://chimeraforge.vercel.app/about
 - Episodes: https://chimeraforge.vercel.app/episodes
 - RSS: https://chimeraforge.vercel.app/rss.xml
 - Substack: https://substack.com/@sahilkadadekar
+- LinkedIn: https://linkedin.com/in/sahilkadadekar
+- Twitter: https://twitter.com/sahilkadadekar
+- HuggingFace (15 model releases): https://huggingface.co/Crusadersk
 
 ## Contact
 
 Built by Sahil Kadadekar
-- Substack: https://substack.com/@sahilkadadekar
-- Twitter: https://twitter.com/KadadekarSahil
+- Email: sahilkadadekar@gmail.com
+- Twitter: https://twitter.com/sahilkadadekar
+- LinkedIn: https://linkedin.com/in/sahilkadadekar

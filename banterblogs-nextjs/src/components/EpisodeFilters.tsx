@@ -89,6 +89,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortKey)}
+                aria-label="Sort episodes by"
                 className="rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
                 <option value="date">Date</option>

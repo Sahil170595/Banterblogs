@@ -26,7 +26,7 @@ export default async function ChimeraPage() {
             {chimeraEpisodes.length} episodes covering the constitutional AI debate engine and alignment architecture.
           </p>
           <Link
-            href="/platform#overview"
+            href="/platform"
             className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
             Learn about Chimera on the Platform page

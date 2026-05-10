@@ -172,6 +172,10 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     title: 'TR143: Cross-Request Safety Leakage Under Continuous Batching',
     description: '14,250 records — batch composition effects on safety in multi-tenant vLLM inference.',
   },
+  'technical-report-145': {
+    title: 'TR145: KV-Cache Quantization x Safety',
+    description: 'FP8 KV-cache as a silent safety degradation vector — five-phase null result across 24,054 records on 3 models. Workload-specific paired eval recipe.',
+  },
   'technical-report-146': {
     title: 'TR146: Mechanistic Safety Probing Under Quantization',
     description: 'Why standard mechanistic probes fail to predict quantization-induced safety degradation. 5,100 forward passes across 4 phases.',

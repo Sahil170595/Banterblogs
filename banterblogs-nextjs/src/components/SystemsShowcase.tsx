@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Radio, Cpu, BrainCircuit, BarChart3, Smartphone, BookOpen } from 'lucide-react';
+import { ArrowRight, Radio, Cpu, BrainCircuit, BarChart3, Smartphone, BookOpen, Rocket } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const coreEngines = [
@@ -68,6 +68,13 @@ const supportingSystems = [
     href: '/about',
     icon: <BookOpen className="h-5 w-5" />,
   },
+  {
+    name: 'Project Wyvern',
+    role: 'Embodied autonomy',
+    description: 'Governed mission-execution plane between Chimera and PX4/ArduPilot. Phase 0 specs complete; SIM-ONLY MVP in progress.',
+    href: '/about',
+    icon: <Rocket className="h-5 w-5" />,
+  },
 ];
 
 export function SystemsShowcase() {
@@ -78,7 +85,7 @@ export function SystemsShowcase() {
           What powers the platform
         </p>
         <h2 className="mt-3 text-3xl md:text-4xl font-bold leading-tight display">
-          Two core engines. Six supporting systems.
+          Two core engines. Seven supporting systems.
         </h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed mx-auto">
           Banterpacks is the constitutional AI core. Banterhearts provides the research backbone.
@@ -133,7 +140,7 @@ export function SystemsShowcase() {
         ))}
       </div>
 
-      {/* Supporting systems — four smaller cards */}
+      {/* Supporting systems — smaller cards in a flexible grid */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {supportingSystems.map((system, index) => (
           <motion.article

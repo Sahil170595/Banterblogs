@@ -38,14 +38,16 @@ export function Footer() {
                 href="https://github.com/Sahil170595/Banterblogs"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="GitHub"
                 className="transition hover:text-primary"
               >
                 <Github className="h-5 w-5" />
               </Link>
               <Link
-                href="https://twitter.com/KadadekarSahil"
+                href="https://twitter.com/sahilkadadekar"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Twitter"
                 className="transition hover:text-primary"
               >
                 <Twitter className="h-5 w-5" />
@@ -54,17 +56,23 @@ export function Footer() {
                 href="https://linkedin.com/in/sahilkadadekar"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="LinkedIn"
                 className="transition hover:text-primary"
               >
                 <Linkedin className="h-5 w-5" />
               </Link>
-              <Link href="mailto:sahilkadadekar@gmail.com" className="transition hover:text-primary">
+              <Link
+                href="mailto:sahilkadadekar@gmail.com"
+                aria-label="Email"
+                className="transition hover:text-primary"
+              >
                 <Mail className="h-5 w-5" />
               </Link>
               <Link
                 href="https://pypi.org/project/chimeraforge/"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="PyPI"
                 className="transition hover:text-primary"
               >
                 <Package className="h-5 w-5" />
@@ -73,11 +81,16 @@ export function Footer() {
                 href="https://substack.com/@sahilkadadekar"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Substack"
                 className="transition hover:text-primary"
               >
                 <BookOpen className="h-5 w-5" />
               </Link>
-              <Link href="/rss.xml" className="transition hover:text-primary">
+              <Link
+                href="/rss.xml"
+                aria-label="RSS feed"
+                className="transition hover:text-primary"
+              >
                 <Rss className="h-5 w-5" />
               </Link>
             </div>

@@ -130,6 +130,11 @@ export default async function AboutPage() {
               lang: 'TypeScript / Next.js',
               what: 'Public presence. Episodes generated from git commits, research archive, platform documentation.',
             },
+            {
+              name: 'Project Wyvern',
+              lang: 'Python, Rust, ROS 2',
+              what: 'Embodied autonomy plane. Governed mission execution between Chimera control and PX4/ArduPilot — 5-tier authority hierarchy, cryptographic mission replay, OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP in progress on PX4 + Gazebo.',
+            },
           ].map((repo) => (
             <div key={repo.name} className="signal-panel p-5 flex flex-col md:flex-row md:items-start gap-4">
               <div className="md:w-48 shrink-0">

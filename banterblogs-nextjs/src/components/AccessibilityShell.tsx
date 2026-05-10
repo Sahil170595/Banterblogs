@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 // Lightweight a11y wrappers — no framer-motion, no lucide.
 // Loaded eagerly in the root layout. The heavy AccessibilityPanel UI
@@ -11,62 +11,13 @@ interface KeyboardNavigationProps {
   children: ReactNode;
 }
 
+// Container wrapper. Earlier revisions hijacked all arrow-key/Home/End
+// presses on the document (event.preventDefault on every key), which
+// silently broke arrow-scrolling, <select> nav, and text-input cursor
+// movement. The class hook is preserved so FocusIndicator's :global
+// selectors still target focusable descendants.
 export function KeyboardNavigation({ children }: KeyboardNavigationProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!containerRef.current) return;
-
-      const focusableElements = containerRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-
-      const currentIndex = Array.from(focusableElements).findIndex(
-        (el) => el === document.activeElement,
-      );
-
-      switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowRight': {
-          event.preventDefault();
-          const nextIndex = (currentIndex + 1) % focusableElements.length;
-          (focusableElements[nextIndex] as HTMLElement)?.focus();
-          break;
-        }
-
-        case 'ArrowUp':
-        case 'ArrowLeft': {
-          event.preventDefault();
-          const prevIndex =
-            currentIndex <= 0 ? focusableElements.length - 1 : currentIndex - 1;
-          (focusableElements[prevIndex] as HTMLElement)?.focus();
-          break;
-        }
-
-        case 'Home': {
-          event.preventDefault();
-          (focusableElements[0] as HTMLElement)?.focus();
-          break;
-        }
-
-        case 'End': {
-          event.preventDefault();
-          (focusableElements[focusableElements.length - 1] as HTMLElement)?.focus();
-          break;
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  return (
-    <div ref={containerRef} className="keyboard-navigation">
-      {children}
-    </div>
-  );
+  return <div className="keyboard-navigation">{children}</div>;
 }
 
 interface FocusIndicatorProps {

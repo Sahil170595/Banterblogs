@@ -255,9 +255,22 @@ export default async function PlatformPage() {
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
               Auto-generated episodes from git commits across all repos. Research archive
-              with 45 technical reports. Next.js 15 with SSG + ISR.
+              with 45 technical reports. Next.js 16 with SSG + ISR.
             </p>
             <span className="text-[10px] text-muted-foreground/70">TypeScript &middot; Vercel</span>
+          </div>
+
+          <div className="signal-panel p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Wrench className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold">Project Wyvern</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              Embodied autonomy. Governed mission-execution plane between Chimera control
+              and PX4/ArduPilot — 5-tier authority hierarchy, cryptographic mission replay,
+              OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP in progress.
+            </p>
+            <span className="text-[10px] text-muted-foreground/70">Python, Rust &middot; ROS 2 &middot; PX4 + Gazebo</span>
           </div>
         </div>
       </section>
@@ -266,12 +279,12 @@ export default async function PlatformPage() {
       <section className="mb-20">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
-            { value: '8', label: 'Repositories' },
+            { value: '9', label: 'Repositories' },
             { value: '752K+', label: 'Research Measurements' },
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatReadingTime(stats.totalReadingTime), label: 'Total Reading Time' },
             { value: '89', label: 'Patches Shipped' },
-            { value: '4', label: 'Languages' },
+            { value: '5', label: 'Languages' },
             { value: '99%', label: 'Fast-Path Routing' },
             { value: '<100ms', label: 'Inference Target' },
           ].map((item) => (

@@ -180,7 +180,7 @@ export default async function ReportsIndex() {
         {[
           { value: '752,000+', label: 'Research Measurements' },
           { value: '45', label: 'Technical Reports' },
-          { value: '12', label: 'Synthesis Whitepapers' },
+          { value: '5', label: 'Synthesis Whitepapers' },
           { value: '9', label: 'Repositories' },
         ].map((stat) => (
           <div key={stat.label} className="signal-panel p-5 text-center">

@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Keyboard, Eye, EyeOff, Volume2, VolumeX, Settings, X } from 'lucide-react';
+import { Keyboard, Eye, EyeOff, Type, VolumeX, Settings, X } from 'lucide-react';
 
 interface AccessibilitySettings {
   highContrast: boolean;
@@ -146,7 +146,7 @@ export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) 
               {/* Font Size */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Volume2 className="h-4 w-4 text-green-400" />
+                  <Type className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium text-foreground">Font Size</span>
                 </div>
                 <div className="flex gap-2">

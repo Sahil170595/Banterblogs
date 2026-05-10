@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -88,13 +89,13 @@ export function ContentRecommendations({ currentEpisode, allEpisodes, className 
   const getRecommendationIcon = (index: number) => {
     switch (index) {
       case 0:
-        return <Star className="h-4 w-4 text-yellow-400" />;
+        return <Star className="h-4 w-4 text-primary" />;
       case 1:
-        return <TrendingUp className="h-4 w-4 text-accent" />;
+        return <TrendingUp className="h-4 w-4 text-primary/80" />;
       case 2:
-        return <Zap className="h-4 w-4 text-primary" />;
+        return <Zap className="h-4 w-4 text-primary/70" />;
       default:
-        return <BookOpen className="h-4 w-4 text-primary" />;
+        return <BookOpen className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -126,7 +127,7 @@ export function ContentRecommendations({ currentEpisode, allEpisodes, className 
                   transition={{ delay: index * 0.1 }}
                   className="group"
                 >
-                  <a
+                  <Link
                     href={`/episodes/${episode.slug}`}
                     className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
                   >
@@ -165,7 +166,7 @@ export function ContentRecommendations({ currentEpisode, allEpisodes, className 
                     </div>
                     
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                  </a>
+                  </Link>
                   
                   <div className="ml-7 mt-1">
                     <p className="text-xs text-primary/70">
