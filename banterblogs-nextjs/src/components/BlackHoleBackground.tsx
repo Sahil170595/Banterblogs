@@ -45,14 +45,16 @@ export function BlackHoleBackground() {
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: min(95vmin, 1100px);
-          height: min(95vmin, 1100px);
+          /* Centermass: dominate the viewport, let the lensed disk
+             crescent bleed past the edges. */
+          width: min(135vmin, 1600px);
+          height: min(135vmin, 1600px);
           pointer-events: none;
           z-index: 0;
-          opacity: 0.95;
-          /* Feather edges so the rectangular bounding box never shows. */
-          mask-image: radial-gradient(circle at center, black 45%, transparent 88%);
-          -webkit-mask-image: radial-gradient(circle at center, black 45%, transparent 88%);
+          opacity: 0.85;
+          /* Feather edges so the bounding box never shows. */
+          mask-image: radial-gradient(circle at center, black 50%, transparent 92%);
+          -webkit-mask-image: radial-gradient(circle at center, black 50%, transparent 92%);
         }
         .black-hole-fallback,
         .black-hole-canvas {

@@ -3,14 +3,22 @@
 import { useEffect, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
 
-// Pseudo-relativistic black hole shader. Not full GR ray-marching — instead
-// uses 2D radial light bending around a central singularity, plus an
-// accretion-disk sample with Doppler beaming. Looks Interstellar-adjacent
-// for a fraction of the GPU cost.
+// Real-time black hole with accretion disk. Adapted from set111's
+// Shadertoy `tsBXW3` ("Black hole with accretion disk", MIT-spirited).
+// Algorithm: iterative ray-bending with inverse-square force per step
+// (Newtonian approximation, magic factor 0.625 calibrated to match
+// Schwarzschild lensing visually). 20 outer steps × 6 substeps = 120
+// march iterations. The disk is sampled by raymarchDisk() with 12
+// layered samples through the disk plane, with value-noise turbulence
+// for plasma flame structure.
 //
-// Tuned to the site's hot-copper palette (hsl 16 95 53). The disk runs
-// warm-orange where Doppler-bright, deep-red where Doppler-dim, with a
-// sharp photon ring at the event horizon.
+// Adaptations from the original:
+//   - Background nebula/stars (iChannel0) removed; escaped rays return
+//     transparent so page content shows through underneath.
+//   - Mouse interaction removed; camera is fixed at the Gargantua
+//     composition (slight elevation above disk plane).
+//   - Disk colors retuned from gold/yellow to copper-orange to match
+//     the brand palette.
 
 const VERT = /* glsl */ `
   attribute vec2 position;
@@ -24,104 +32,206 @@ const FRAG = /* glsl */ `
 
   uniform vec2 uResolution;
   uniform float uTime;
-  uniform float uPixelRatio;
 
-  // Brand copper. Brighter / dimmer ends of the Doppler shift on the disk.
-  const vec3 COPPER_HOT  = vec3(1.00, 0.62, 0.30);
-  const vec3 COPPER_MID  = vec3(0.98, 0.32, 0.08);
-  const vec3 COPPER_DARK = vec3(0.45, 0.10, 0.02);
+  #define _Speed 1.4   // disk rotation speed (slower than original 3.0)
+  #define _Steps 12.0  // disk texture layers
+  #define _Size  0.3   // black hole size
 
-  // Cheap noise for disk turbulence.
-  float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  // ── Hash + value noise ───────────────────────────────────────────
+  float hash1(float x) { return fract(sin(x) * 152754.742); }
+  float hash2(vec2 x)  { return hash1(x.x + hash1(x.y)); }
+
+  float value(vec2 p, float f) {
+    float bl = hash2(floor(p * f + vec2(0.0, 0.0)));
+    float br = hash2(floor(p * f + vec2(1.0, 0.0)));
+    float tl = hash2(floor(p * f + vec2(0.0, 1.0)));
+    float tr = hash2(floor(p * f + vec2(1.0, 1.0)));
+    vec2 fr = fract(p * f);
+    fr = (3.0 - 2.0 * fr) * fr * fr;
+    float b = mix(bl, br, fr.x);
+    float t = mix(tl, tr, fr.x);
+    return mix(b, t, fr.y);
   }
-  float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(
-      mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
-      mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
-      u.y
+
+  // ── Accretion disk (12-layer raymarch through z=0 plane) ─────────
+  vec4 raymarchDisk(vec3 ray, vec3 zeroPos) {
+    vec3 position = zeroPos;
+    float lengthPos = length(position.xz);
+    float dist = min(1.0, lengthPos * (1.0 / _Size) * 0.5)
+               * _Size * 0.4 * (1.0 / _Steps) / abs(ray.y);
+
+    position += dist * _Steps * ray * 0.5;
+
+    vec2 deltaPos;
+    deltaPos.x = -zeroPos.z * 0.01 + zeroPos.x;
+    deltaPos.y =  zeroPos.x * 0.01 + zeroPos.z;
+    deltaPos = normalize(deltaPos - zeroPos.xz);
+
+    float parallel = dot(ray.xz, deltaPos);
+    parallel /= sqrt(lengthPos);
+    parallel *= 0.5;
+    float redShift = parallel + 0.3;
+    redShift *= redShift;
+    redShift = clamp(redShift, 0.0, 1.0);
+
+    float disMix = clamp((lengthPos - _Size * 2.0) * (1.0 / _Size) * 0.24, 0.0, 1.0);
+
+    // Copper palette (was gold→deep-red in original):
+    //   inner hot: brand copper (~hsl 16 95% 53%)
+    //   outer cool: deep ember red, dimmed
+    vec3 insideCol = mix(
+      vec3(1.00, 0.55, 0.18),                 // copper hot
+      vec3(0.50, 0.13, 0.02) * 0.2,           // deep red (kept from original)
+      disMix
     );
-  }
-  float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
-    for (int i = 0; i < 4; i++) {
-      v += a * noise(p);
-      p *= 2.1;
-      a *= 0.5;
+
+    // Doppler: warm (approaching) ↔ cool (receding). Blue-shift damped
+    // so the disk stays in the copper family (less chromatic noise).
+    insideCol *= mix(vec3(0.40, 0.20, 0.10), vec3(1.4, 1.5, 2.2), redShift);
+    insideCol *= 0.85;  // overall dimmer so content reads cleanly on top
+    redShift += 0.12;
+    redShift *= redShift;
+
+    vec4 o = vec4(0.0);
+
+    for (float i = 0.0; i < _Steps; i++) {
+      position -= dist * ray;
+
+      float intensity = clamp(1.0 - abs((i - 0.8) * (1.0 / _Steps) * 2.0), 0.0, 1.0);
+      float lengthPos2 = length(position.xz);
+      float distMult = 1.0;
+
+      distMult *= clamp((lengthPos2 - _Size * 0.75) * (1.0 / _Size) * 1.5, 0.0, 1.0);
+      distMult *= clamp((_Size * 10.0 - lengthPos2) * (1.0 / _Size) * 0.20, 0.0, 1.0);
+      distMult *= distMult;
+
+      float u = lengthPos2 + uTime * _Size * 0.3 + intensity * _Size * 0.2;
+
+      vec2 xy;
+      float rot = mod(uTime * _Speed, 8192.0);
+      xy.x = -position.z * sin(rot) + position.x * cos(rot);
+      xy.y =  position.x * sin(rot) + position.z * cos(rot);
+
+      float x = abs(xy.x / xy.y);
+      float angle = 0.02 * atan(x);
+
+      // Smoother disk: lower noise frequency + flatten contrast so the
+      // disk reads as a continuous ring instead of plasma static.
+      const float f = 45.0;
+      float n = value(vec2(angle, u * (1.0 / _Size) * 0.05), f);
+      n = n * 0.75 + 0.25 * value(vec2(angle, u * (1.0 / _Size) * 0.05), f * 1.6);
+      n = mix(0.5, n, 0.7); // pull noise toward mean → less stippling
+
+      float extraWidth = n * 0.7 * (1.0 - clamp(i * (1.0 / _Steps) * 2.0 - 1.0, 0.0, 1.0));
+
+      float alpha = clamp(
+        n * (intensity + extraWidth) * ((1.0 / _Size) * 10.0 + 0.01) * dist * distMult,
+        0.0, 1.0
+      );
+
+      vec3 col = 1.4 * mix(vec3(0.3, 0.2, 0.15) * insideCol, insideCol, min(1.0, intensity * 2.0));
+      o = clamp(vec4(col * alpha + o.rgb * (1.0 - alpha),
+                     o.a * (1.0 - alpha) + alpha),
+                vec4(0.0), vec4(1.0));
+
+      lengthPos2 *= (1.0 / _Size);
+      // Inner-ring glow contribution (was 100.0 — way too hot, blew out
+      // the inner edge and bled chromatic noise into content above).
+      o.rgb += redShift * (intensity * 1.0 + 0.5) * (1.0 / _Steps) * 50.0
+             * distMult / (lengthPos2 * lengthPos2);
     }
-    return v;
+
+    o.rgb = clamp(o.rgb - 0.005, 0.0, 1.0);
+    return o;
+  }
+
+  // ── Camera rotation helper ───────────────────────────────────────
+  void Rotate(inout vec3 v, vec2 angle) {
+    v.yz = cos(angle.y) * v.yz + sin(angle.y) * vec2(-1, 1) * v.zy;
+    v.xz = cos(angle.x) * v.xz + sin(angle.x) * vec2(-1, 1) * v.zx;
   }
 
   void main() {
-    // Center the coordinates, aspect-correct, and scale so the disk fits.
-    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / min(uResolution.x, uResolution.y);
-    float r = length(uv);
-    float angle = atan(uv.y, uv.x);
+    // Dead-center composition: no screen rotation, no off-axis offset.
+    // BH sits exactly at viewport center so it reads as a centermass.
+    vec2 fragCoordRot = gl_FragCoord.xy;
 
-    // Event horizon radius (the dark void). Sized so the void reads big
-    // enough to anchor the page even at small viewports.
-    float eventHorizon = 0.11;
+    // Camera: fixed at slight elevation above disk plane, looking at BH.
+    // FOV multiplier 0.55 zooms in so the void dominates the viewport and
+    // the bright disk crescent pushes past the screen edges (where the
+    // CSS mask fades it out), keeping the content-occupied middle calm.
+    vec3 ray = normalize(vec3((fragCoordRot - uResolution * 0.5) / uResolution.x * 0.55, 1.0));
+    vec3 pos = vec3(0.0, 0.05, -5.0);
+    vec2 angle = vec2(0.0, 3.24);
+    float dist = length(pos);
+    Rotate(pos, angle);
+    angle.xy -= min(0.3 / dist, 3.14) * vec2(1.0, 0.5);
+    Rotate(ray, angle);
 
-    // Photon ring sits just outside the horizon. Sharp bright edge.
-    float photonRing = smoothstep(eventHorizon + 0.014, eventHorizon, r) *
-                       smoothstep(eventHorizon - 0.005, eventHorizon - 0.001, r);
+    vec4 col = vec4(0.0);
+    vec4 glow = vec4(0.0);
+    vec4 outCol = vec4(100.0);
+    bool resolved = false;
 
-    // Outside the void: render the accretion disk via radial bands plus
-    // turbulent FBM noise that rotates over time. Disk is brightest at the
-    // inner edge and falls off outward.
-    float diskInner = eventHorizon + 0.012;
-    float diskOuter = 0.50;
+    for (int disks = 0; disks < 20; disks++) {
+      // 6 substeps per outer iteration to amortize exit-condition cost.
+      for (int h = 0; h < 6; h++) {
+        float dotpos    = dot(pos, pos);
+        float invDist   = inversesqrt(dotpos);
+        float centDist  = dotpos * invDist;
+        float stepDist  = 0.92 * abs(pos.y / ray.y);
+        float farLimit  = centDist * 0.5;
+        float closeLimit = centDist * 0.1
+                         + 0.05 * centDist * centDist * (1.0 / _Size);
+        stepDist = min(stepDist, min(farLimit, closeLimit));
 
-    // Spiral coordinate — angle plus a logarithmic-ish twist so detail
-    // streams inward as it rotates.
-    float spiral = angle + 4.0 * log(max(r, 0.0001)) - uTime * 0.35;
+        float invDistSqr = invDist * invDist;
+        float bendForce  = stepDist * invDistSqr * _Size * 0.625;
+        ray = normalize(ray - (bendForce * invDist) * pos);
+        pos += stepDist * ray;
 
-    // Rotation-driven turbulence
-    vec2 noisePos = vec2(spiral * 0.5, r * 8.0) + vec2(uTime * 0.05, 0.0);
-    float turb = fbm(noisePos);
+        // Halo/photon-sphere glow. Dimmer than original (was 0.012) so
+        // the bright ring around the void doesn't fight foreground text.
+        glow += vec4(1.2, 1.0, 0.85, 1.0) * (
+          0.006 * stepDist * invDistSqr * invDistSqr
+          * clamp(centDist * 2.0 - 1.2, 0.0, 1.0)
+        );
+      }
 
-    // Disk falloff: bright at inner edge, gone past diskOuter.
-    float diskFalloff = smoothstep(diskOuter, diskInner, r);
+      float dist2 = length(pos);
 
-    // Doppler beaming: the side rotating toward viewer is brighter. Use
-    // sin(angle) to pick a hemisphere.
-    float doppler = 0.5 + 0.5 * sin(angle + 1.2);
-    doppler = pow(doppler, 1.6);
-
-    // Combine into disk intensity.
-    float diskIntensity = diskFalloff * (0.5 + 0.7 * turb) * (0.45 + 0.55 * doppler);
-
-    // Mask out the void (no disk inside event horizon).
-    diskIntensity *= step(eventHorizon, r);
-
-    // Color the disk: hot near inner edge / bright side, dark at outer edge.
-    vec3 diskColor = mix(COPPER_DARK, COPPER_MID, diskIntensity);
-    diskColor = mix(diskColor, COPPER_HOT, diskIntensity * doppler);
-
-    // Add the photon ring.
-    diskColor += COPPER_HOT * photonRing * 1.2;
-
-    // Soft outer glow that fades to nothing past the disk.
-    float glow = exp(-r * 5.5) * 0.3;
-    diskColor += COPPER_MID * glow * (1.0 - smoothstep(0.0, eventHorizon, r));
-
-    // Final alpha: present where there's disk or glow or photon ring,
-    // transparent elsewhere so the page background shows through.
-    float alpha = max(diskIntensity * 1.2, photonRing);
-    alpha = max(alpha, glow * (1.0 - step(eventHorizon, r) * step(r, eventHorizon)));
-    alpha = clamp(alpha, 0.0, 1.0);
-
-    // Inside the event horizon: pure black, fully opaque (the void).
-    if (r < eventHorizon) {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      return;
+      if (dist2 < _Size * 0.1) {
+        // Sucked in — opaque void (with glow that accumulated up to plunge).
+        outCol = vec4(col.rgb * col.a + glow.rgb * (1.0 - col.a), 1.0);
+        resolved = true;
+        break;
+      } else if (dist2 > _Size * 1000.0) {
+        // Escaped to infinity — transparent sky (no nebula). Composite
+        // disk + glow against transparent background.
+        outCol = vec4(
+          col.rgb * col.a + glow.rgb * (1.0 - col.a),
+          clamp(col.a + glow.a * (1.0 - col.a), 0.0, 1.0)
+        );
+        resolved = true;
+        break;
+      } else if (abs(pos.y) <= _Size * 0.002) {
+        // Hit the accretion disk plane — sample disk, continue marching.
+        vec4 diskCol = raymarchDisk(ray, pos);
+        pos.y = 0.0;
+        pos += abs(_Size * 0.001 / ray.y) * ray;
+        col = vec4(diskCol.rgb * (1.0 - col.a) + col.rgb,
+                   col.a + diskCol.a * (1.0 - col.a));
+      }
     }
 
-    gl_FragColor = vec4(diskColor, alpha);
+    if (!resolved) {
+      outCol = vec4(col.rgb + glow.rgb * (col.a + glow.a),
+                    clamp(col.a + glow.a, 0.0, 1.0));
+    }
+
+    // Gamma adjustment (matches original).
+    outCol.rgb = pow(outCol.rgb, vec3(0.6));
+    gl_FragColor = outCol;
   }
 `;
 
@@ -136,7 +246,6 @@ export function BlackHoleCanvas({ className }: BlackHoleCanvasProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    // Respect motion preferences.
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let renderer: Renderer;
@@ -144,11 +253,10 @@ export function BlackHoleCanvas({ className }: BlackHoleCanvasProps) {
       renderer = new Renderer({
         alpha: true,
         antialias: true,
-        dpr: Math.min(window.devicePixelRatio, 2),
+        // Cap dpr — 120 march iterations per pixel is heavy.
+        dpr: Math.min(window.devicePixelRatio, 1.5),
       });
     } catch {
-      // No WebGL — leave the container empty; the static SVG fallback
-      // rendered server-side will remain visible.
       return;
     }
 
@@ -166,7 +274,6 @@ export function BlackHoleCanvas({ className }: BlackHoleCanvasProps) {
       uniforms: {
         uResolution: { value: [container.clientWidth, container.clientHeight] },
         uTime: { value: 0 },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
       },
       transparent: true,
     });
@@ -194,7 +301,6 @@ export function BlackHoleCanvas({ className }: BlackHoleCanvasProps) {
     };
     raf = requestAnimationFrame(render);
 
-    // For reduced motion: render exactly one frame, no animation loop.
     if (reducedMotion) {
       cancelAnimationFrame(raf);
       renderer.render({ scene: mesh });
