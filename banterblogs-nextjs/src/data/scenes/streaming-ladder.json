@@ -1,0 +1,822 @@
+{
+  "scene": "streaming-ladder",
+  "generated_at": "2026-05-11T23:10:47.121Z",
+  "spec_ref": "docs/tdd/TDD012.md §3, §8, §17 + P102.0-19",
+  "description": "One response's reasoning steps flow through the five-tier streaming adjudication ladder: T1 deterministic verifier → T2 LLM judge → T2.5 RISE self-correct → T3 multi-model panel → Enforcer. Each step shows the verdict, confidence, latency, and how the enforcer's rewind/proceed/degrade decision composes the tier signals.",
+  "tiers": [
+    {
+      "id": "t1",
+      "name": "T1 Verifier",
+      "spec": "§8.2",
+      "port": 8090,
+      "budget_ms": 20,
+      "description": "Deterministic 15-rule pack — math, citations, repetition, profanity, self-contradiction, etc. No LLM."
+    },
+    {
+      "id": "t2",
+      "name": "T2 Judge",
+      "spec": "§18.5",
+      "port": 8091,
+      "budget_ms": 60,
+      "description": "LLM judge (or PRM-as-judge router) for reasoning-quality scoring on steps T1 didn't resolve."
+    },
+    {
+      "id": "t2_5",
+      "name": "T2.5 RISE Self-Correct",
+      "spec": "§18.4",
+      "port": 8092,
+      "budget_ms": 100,
+      "description": "Policy-model self-critique. Text protocol: returns either OK or Correction: <rewrite>."
+    },
+    {
+      "id": "t3",
+      "name": "T3 Panel",
+      "spec": "§18.5",
+      "port": 8093,
+      "budget_ms": 8000,
+      "description": "Multi-model panel debate (Chimera TDD-001) for steps the lower tiers couldn't resolve."
+    },
+    {
+      "id": "enforcement",
+      "name": "Enforcer",
+      "spec": "§17.1",
+      "port": 8094,
+      "description": "Composes T1/T2/T3 verdicts into PROCEED / REWIND / DEGRADE with budget tracking and independent per-tier flags."
+    }
+  ],
+  "records": [
+    {
+      "step_id": "demo-1",
+      "step_index": 0,
+      "step_content": "The sum of 2 and 2 is 4 — basic arithmetic.",
+      "trigger_signals": {
+        "min_top1": 0.94,
+        "max_entropy": 0.6,
+        "max_runner_up_ratio": 0.18,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": false,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 11
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "ok",
+        "confidence": 0.5,
+        "reasoning": "fake",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0.006800000846851617
+      },
+      "t2_5": {
+        "outcome": "ok",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "",
+        "latency_ms": 0.0040000013541430235,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "proceed",
+        "reason": "no_t1_fire",
+        "triggered_rule_names": [],
+        "max_rule_confidence": 0,
+        "rewind_steps_so_far": 0,
+        "evidence": {
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t2_enabled": false,
+          "t3_confidence": 0,
+          "t3_enabled": false
+        }
+      }
+    },
+    {
+      "step_id": "demo-2",
+      "step_index": 1,
+      "step_content": "We can verify by simple addition that 2 + 2 = 5.",
+      "trigger_signals": {
+        "min_top1": 0.31,
+        "max_entropy": 2.7,
+        "max_runner_up_ratio": 0.89,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 12
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": true,
+            "confidence": 0.95,
+            "evidence": {
+              "mismatches": [
+                {
+                  "claimed": 5,
+                  "expected": 4,
+                  "expression": "2 + 2 = 5"
+                }
+              ]
+            }
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "skipped",
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0
+      },
+      "t2_5": {
+        "outcome": "skipped",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "latency_ms": 0,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "rewind",
+        "reason": "t1_high_confidence_rewind",
+        "triggered_rule_names": [
+          "math_arithmetic"
+        ],
+        "max_rule_confidence": 0.95,
+        "rewind_steps_so_far": 1,
+        "evidence": {
+          "enforcement_source": "t1",
+          "max_rewind_steps": 3,
+          "max_rewind_tokens": 512,
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t3_confidence": 0
+        }
+      }
+    },
+    {
+      "step_id": "demo-3",
+      "step_index": 2,
+      "step_content": "I think this might be approximately correct but I'm not entirely sure about the precision.",
+      "trigger_signals": {
+        "min_top1": 0.28,
+        "max_entropy": 3.1,
+        "max_runner_up_ratio": 0.78,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 15
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0.13333333333333333
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "ok",
+        "confidence": 0.5,
+        "reasoning": "fake",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0.0034999975468963385
+      },
+      "t2_5": {
+        "outcome": "ok",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "",
+        "latency_ms": 0.0036000019463244826,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "proceed",
+        "reason": "no_t1_fire",
+        "triggered_rule_names": [],
+        "max_rule_confidence": 0,
+        "rewind_steps_so_far": 0,
+        "evidence": {
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t2_enabled": false,
+          "t3_confidence": 0,
+          "t3_enabled": false
+        }
+      }
+    },
+    {
+      "step_id": "demo-4",
+      "step_index": 3,
+      "step_content": "All birds can fly. Penguins are birds. Penguins cannot fly. Therefore penguins are birds.",
+      "trigger_signals": {
+        "min_top1": 0.34,
+        "max_entropy": 2.4,
+        "max_runner_up_ratio": 0.82,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 14
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "ok",
+        "confidence": 0.5,
+        "reasoning": "fake",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0.0015999976312741637
+      },
+      "t2_5": {
+        "outcome": "ok",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "",
+        "latency_ms": 0.0013000026228837669,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "proceed",
+        "reason": "no_t1_fire",
+        "triggered_rule_names": [],
+        "max_rule_confidence": 0,
+        "rewind_steps_so_far": 0,
+        "evidence": {
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t2_enabled": false,
+          "t3_confidence": 0,
+          "t3_enabled": false
+        }
+      }
+    },
+    {
+      "step_id": "demo-5",
+      "step_index": 4,
+      "step_content": "That is total shit reasoning and the conclusion is just wrong.",
+      "trigger_signals": {
+        "min_top1": 0.27,
+        "max_entropy": 2.9,
+        "max_runner_up_ratio": 0.91,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 11
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": true,
+            "confidence": 0.99,
+            "evidence": {
+              "matches": [
+                "shit"
+              ]
+            }
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "skipped",
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0
+      },
+      "t2_5": {
+        "outcome": "skipped",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "latency_ms": 0,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "rewind",
+        "reason": "t1_high_confidence_rewind",
+        "triggered_rule_names": [
+          "profanity"
+        ],
+        "max_rule_confidence": 0.99,
+        "rewind_steps_so_far": 2,
+        "evidence": {
+          "enforcement_source": "t1",
+          "max_rewind_steps": 3,
+          "max_rewind_tokens": 512,
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t3_confidence": 0
+        }
+      }
+    }
+  ]
+}
