@@ -14,16 +14,16 @@ import {
   Star,
   Eye
 } from 'lucide-react';
-import type { Episode } from '@/lib/episodes';
+import type { EpisodeSummary } from '@/lib/episodes';
 
 interface ContentRecommendationsProps {
-  currentEpisode: Episode;
-  allEpisodes: Episode[];
+  currentEpisode: EpisodeSummary;
+  allEpisodes: EpisodeSummary[];
   className?: string;
 }
 
 export function ContentRecommendations({ currentEpisode, allEpisodes, className = '' }: ContentRecommendationsProps) {
-  const [recommendations, setRecommendations] = useState<Episode[]>([]);
+  const [recommendations, setRecommendations] = useState<EpisodeSummary[]>([]);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -72,8 +72,8 @@ export function ContentRecommendations({ currentEpisode, allEpisodes, className 
     return () => clearTimeout(timer);
   }, [currentEpisode, allEpisodes]);
 
-  const getRecommendationReason = (episode: Episode) => {
-    const commonTags = episode.tags.filter(tag => 
+  const getRecommendationReason = (episode: EpisodeSummary) => {
+    const commonTags = episode.tags.filter((tag: string) =>
       currentEpisode.tags.includes(tag)
     );
     

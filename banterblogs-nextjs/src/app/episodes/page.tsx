@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Cpu, Radio, Sparkles } from 'lucide-react';
-import { getAllEpisodes } from '@/lib/episodes';
+import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
 
 export const metadata: Metadata = {
@@ -69,7 +69,7 @@ export default async function EpisodesPage() {
         </div>
       </div>
 
-      <EpisodeFilters episodes={episodes} />
+      <EpisodeFilters episodes={episodes.map(toEpisodeSummary)} />
     </div>
   );
 }

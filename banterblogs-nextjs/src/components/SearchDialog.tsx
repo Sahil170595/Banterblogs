@@ -3,20 +3,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Search, Tag, FileText, X } from 'lucide-react';
 import { EpisodeSearch } from '@/lib/search';
-import type { Episode } from '@/lib/episodes';
+import type { EpisodeSummary } from '@/lib/episodes';
 import Link from 'next/link';
 
 interface SearchDialogProps {
-  episodes?: Episode[];
+  episodes?: EpisodeSummary[];
 }
 
 export function SearchDialog({ episodes = [] }: SearchDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Episode[]>([]);
+  const [results, setResults] = useState<EpisodeSummary[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [searchInstance, setSearchInstance] = useState<EpisodeSearch | null>(null);
-  const [episodeData, setEpisodeData] = useState<Episode[]>(episodes);
+  const [episodeData, setEpisodeData] = useState<EpisodeSummary[]>(episodes);
   const fetchInFlightRef = useRef(false);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
           if (!res.ok) {
             throw new Error('Failed to load episodes for search');
           }
-          const data: Episode[] = await res.json();
+          const data: EpisodeSummary[] = await res.json();
           setEpisodeData(data);
         } catch (e) {
           if ((e as any).name !== 'AbortError') {

@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { Episode } from '@/lib/episodes';
+import type { EpisodeSummary } from '@/lib/episodes';
 
 // Bottom-of-page "you might also like" recommendations. 183 LOC of
 // framer-motion + 9 lucide icons. Sits well below the fold and is the
@@ -17,8 +17,8 @@ const ContentRecommendations = dynamic(
 );
 
 interface EpisodeRecommendationsClientProps {
-  currentEpisode: Episode;
-  allEpisodes: Episode[];
+  currentEpisode: EpisodeSummary;
+  allEpisodes: EpisodeSummary[];
 }
 
 export function EpisodeRecommendationsClient({

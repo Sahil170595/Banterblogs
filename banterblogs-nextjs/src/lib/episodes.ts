@@ -38,6 +38,22 @@ export interface Episode {
   metrics?: EpisodeMetrics;
 }
 
+// Client-safe projection: everything Episode carries EXCEPT the rendered
+// markdown body. Server pages should strip `content` via `toEpisodeSummary`
+// before handing a list to a `'use client'` component — otherwise Next
+// serialises 14 KB of markdown per episode into the page HTML for hydration.
+// For 193 episodes that's ~2.7 MB of dead weight on /episodes, /banterpacks,
+// /chimera, /tags/[tag], and every episode-detail page (which re-ships the
+// whole index for the recommendations panel).
+export type EpisodeSummary = Omit<Episode, "content">;
+
+export function toEpisodeSummary(episode: Episode): EpisodeSummary {
+  // Destructure to drop `content`; the underscore prefix marks it as
+  // intentionally unused so ESLint doesn't flag it.
+  const { content: _content, ...summary } = episode;
+  return summary;
+}
+
 const postsDirectory = path.join(process.cwd(), "posts");
 
 const markdownProcessor = remark()

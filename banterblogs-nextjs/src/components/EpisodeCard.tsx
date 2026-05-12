@@ -3,12 +3,12 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Clock, FileText, GitCommit, Tag } from 'lucide-react';
-import type { Episode, EpisodePlatform } from '@/lib/episodes';
+import type { EpisodePlatform, EpisodeSummary } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 import { useMagneticCursor } from '@/hooks/useMagneticCursor';
 
 interface EpisodeCardProps {
-  episode: Episode;
+  episode: EpisodeSummary;
   index?: number;
 }
 
@@ -20,7 +20,7 @@ function formatEpisodeNumber(value: number): string {
 }
 
 function resolvePlatform(
-  episode: Episode,
+  episode: EpisodeSummary,
 ): { label: string; colorClass: 'accent' | 'primary'; key: EpisodePlatform } {
   const inferred = episode.platform ?? (episode.slug.startsWith('chimera-episode-') ? 'chimera' : 'banterpacks');
 

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Package, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
-import type { Episode } from '@/lib/episodes';
+import type { EpisodeSummary } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
 interface HeroStats {
@@ -17,7 +17,7 @@ interface HeroStats {
 
 interface HeroProps {
   stats: HeroStats;
-  latestEpisode?: Episode;
+  latestEpisode?: EpisodeSummary;
 }
 
 function CopyButton() {
