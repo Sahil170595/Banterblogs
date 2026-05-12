@@ -1,6 +1,6 @@
 {
   "scene": "streaming-ladder",
-  "generated_at": "2026-05-11T23:10:47.121Z",
+  "generated_at": "2026-05-11T23:31:00.033Z",
   "spec_ref": "docs/tdd/TDD012.md §3, §8, §17 + P102.0-19",
   "description": "One response's reasoning steps flow through the five-tier streaming adjudication ladder: T1 deterministic verifier → T2 LLM judge → T2.5 RISE self-correct → T3 multi-model panel → Enforcer. Each step shows the verdict, confidence, latency, and how the enforcer's rewind/proceed/degrade decision composes the tier signals.",
   "tiers": [
@@ -49,6 +49,7 @@
       "step_id": "demo-1",
       "step_index": 0,
       "step_content": "The sum of 2 and 2 is 4 — basic arithmetic.",
+      "narrative": "Confident step. Trigger gate doesn't flag — top-1 probability 0.94 is well above the floor. Every downstream tier passes trivially. The enforcer proceeds without ceremony.",
       "trigger_signals": {
         "min_top1": 0.94,
         "max_entropy": 0.6,
@@ -164,14 +165,14 @@
         "reasoning": "fake",
         "judge_provider": "fake",
         "judge_model": "fake",
-        "latency_ms": 0.006800000846851617
+        "latency_ms": 0.003999997716164216
       },
       "t2_5": {
         "outcome": "ok",
         "corrected_step_content": null,
         "confidence": 1,
         "reasoning": "",
-        "latency_ms": 0.0040000013541430235,
+        "latency_ms": 0.0024000000848900527,
         "protocol": "text"
       },
       "t3": {
@@ -200,6 +201,7 @@
       "step_id": "demo-2",
       "step_index": 1,
       "step_content": "We can verify by simple addition that 2 + 2 = 5.",
+      "narrative": "The arithmetic is wrong. The T1 math-arithmetic rule re-computes 2+2=4, sees the claim 5, fires at 0.95 confidence. T2, T2.5, and T3 short-circuit via the §8 T1-skip optimization — no LLM is invoked when a deterministic rule already resolved with high confidence. Enforcer issues REWIND, attributed source T1.",
       "trigger_signals": {
         "min_top1": 0.31,
         "max_entropy": 2.7,
@@ -362,6 +364,7 @@
       "step_id": "demo-3",
       "step_index": 2,
       "step_content": "I think this might be approximately correct but I'm not entirely sure about the precision.",
+      "narrative": "Low confidence step — top-1 0.28, high entropy. Trigger gate flags it. T1's 15 deterministic rules can't disprove the content (no math, no banned words, no citation format issue), so T1 stays quiet. In production this escalates to T2 LLM judge. In this demo, T2 runs with the fake provider — labelled clearly so viewers see what's canned.",
       "trigger_signals": {
         "min_top1": 0.28,
         "max_entropy": 3.1,
@@ -477,14 +480,14 @@
         "reasoning": "fake",
         "judge_provider": "fake",
         "judge_model": "fake",
-        "latency_ms": 0.0034999975468963385
+        "latency_ms": 0.0024000000848900527
       },
       "t2_5": {
         "outcome": "ok",
         "corrected_step_content": null,
         "confidence": 1,
         "reasoning": "",
-        "latency_ms": 0.0036000019463244826,
+        "latency_ms": 0.003999997716164216,
         "protocol": "text"
       },
       "t3": {
@@ -513,6 +516,7 @@
       "step_id": "demo-4",
       "step_index": 3,
       "step_content": "All birds can fly. Penguins are birds. Penguins cannot fly. Therefore penguins are birds.",
+      "narrative": "A faulty syllogism. The deterministic rule pack doesn't carry a logic-detector — that's intentional, semantic contradictions are LLM-tier work. T1 stays quiet. In production the T2 judge would catch the contradiction and escalate to T2.5 self-correct + T3 panel debate. The fake provider in this demo can't replicate that judgement, which is exactly why production deployments need real LLM judges wired in.",
       "trigger_signals": {
         "min_top1": 0.34,
         "max_entropy": 2.4,
@@ -628,14 +632,14 @@
         "reasoning": "fake",
         "judge_provider": "fake",
         "judge_model": "fake",
-        "latency_ms": 0.0015999976312741637
+        "latency_ms": 0.000800002453615889
       },
       "t2_5": {
         "outcome": "ok",
         "corrected_step_content": null,
         "confidence": 1,
         "reasoning": "",
-        "latency_ms": 0.0013000026228837669,
+        "latency_ms": 0.0011999982234556228,
         "protocol": "text"
       },
       "t3": {
@@ -664,6 +668,7 @@
       "step_id": "demo-5",
       "step_index": 4,
       "step_content": "That is total shit reasoning and the conclusion is just wrong.",
+      "narrative": "The profanity rule's wordlist matches at the boundary, fires at 0.99 confidence. Same T1-skip pattern as demo-2 — downstream LLM tiers don't run when a deterministic rule already resolved. Enforcer REWIND, source T1.",
       "trigger_signals": {
         "min_top1": 0.27,
         "max_entropy": 2.9,
