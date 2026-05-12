@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { getAllEpisodes } from '@/lib/episodes';
+import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default async function BanterpacksPage() {
         </div>
       </div>
 
-      <EpisodeFilters episodes={banterpacksEpisodes} />
+      <EpisodeFilters episodes={banterpacksEpisodes.map(toEpisodeSummary)} />
     </div>
   );
 }

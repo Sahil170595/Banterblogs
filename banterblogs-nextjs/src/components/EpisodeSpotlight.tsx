@@ -3,11 +3,11 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import type { Episode } from '@/lib/episodes';
+import type { EpisodeSummary } from '@/lib/episodes';
 import { EpisodeCard } from '@/components/EpisodeCard';
 
 interface EpisodeSpotlightProps {
-  episodes: Episode[];
+  episodes: EpisodeSummary[];
 }
 
 export function EpisodeSpotlight({ episodes }: EpisodeSpotlightProps) {

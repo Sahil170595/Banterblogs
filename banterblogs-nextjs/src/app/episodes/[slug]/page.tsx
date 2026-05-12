@@ -1,7 +1,7 @@
 import 'highlight.js/styles/github-dark.css';
 import { notFound, redirect } from 'next/navigation';
 export const runtime = 'nodejs';
-import { getAllEpisodes } from '@/lib/episodes';
+import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeNavigation } from '@/components/EpisodeNavigation';
 import { EpisodeStats } from '@/components/EpisodeStats';
 import { TableOfContents } from '@/components/TableOfContents';
@@ -114,7 +114,10 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
           <EpisodeNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
 
           <div className="mt-16">
-            <EpisodeRecommendationsClient currentEpisode={episode} allEpisodes={allEpisodes} />
+            <EpisodeRecommendationsClient
+              currentEpisode={toEpisodeSummary(episode)}
+              allEpisodes={allEpisodes.map(toEpisodeSummary)}
+            />
           </div>
         </div>
       </div>

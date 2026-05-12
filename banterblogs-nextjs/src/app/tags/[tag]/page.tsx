@@ -1,4 +1,4 @@
-import { getAllEpisodes } from '@/lib/episodes';
+import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeCard } from '@/components/EpisodeCard';
 import { notFound } from 'next/navigation';
 
@@ -6,9 +6,9 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
   const { tag } = await params;
   const decodedTag = decodeURIComponent(tag);
   const episodes = await getAllEpisodes();
-  const filteredEpisodes = episodes.filter((episode) =>
-    episode.tags.some((t) => t.toLowerCase() === decodedTag.toLowerCase())
-  );
+  const filteredEpisodes = episodes
+    .filter((episode) => episode.tags.some((t) => t.toLowerCase() === decodedTag.toLowerCase()))
+    .map(toEpisodeSummary);
 
   if (filteredEpisodes.length === 0) {
     notFound();

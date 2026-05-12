@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { Search, SortAsc, SortDesc } from 'lucide-react';
-import type { Episode } from '@/lib/episodes';
+import type { EpisodeSummary } from '@/lib/episodes';
 import { EpisodeSearch } from '@/lib/search';
 import { EpisodeCard } from './EpisodeCard';
 
 interface EpisodeFiltersProps {
-  episodes: Episode[];
+  episodes: EpisodeSummary[];
 }
 
 type SortKey = 'date' | 'title' | 'complexity' | 'files';
@@ -21,7 +21,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
   const searchInstance = useMemo(() => new EpisodeSearch(episodes), [episodes]);
 
   const filteredEpisodes = useMemo(() => {
-    let filtered: Episode[] = episodes;
+    let filtered: EpisodeSummary[] = episodes;
 
     // Search filter
     if (searchQuery) {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { getAllEpisodes } from '@/lib/episodes';
+import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
 
 export const metadata: Metadata = {
@@ -35,7 +35,7 @@ export default async function ChimeraPage() {
         </div>
       </div>
 
-      <EpisodeFilters episodes={chimeraEpisodes} />
+      <EpisodeFilters episodes={chimeraEpisodes.map(toEpisodeSummary)} />
     </div>
   );
 }

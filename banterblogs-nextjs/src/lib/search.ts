@@ -1,16 +1,16 @@
 import Fuse from 'fuse.js';
-import { Episode } from './episodes';
+import type { EpisodeSummary } from './episodes';
 
 export interface SearchResult {
-  item: Episode;
+  item: EpisodeSummary;
   score?: number;
 }
 
 export class EpisodeSearch {
-  private fuse: Fuse<Episode>;
-  private episodes: Episode[];
+  private fuse: Fuse<EpisodeSummary>;
+  private episodes: EpisodeSummary[];
 
-  constructor(episodes: Episode[]) {
+  constructor(episodes: EpisodeSummary[]) {
     this.episodes = episodes;
     this.fuse = new Fuse(episodes, {
       keys: [
@@ -28,7 +28,7 @@ export class EpisodeSearch {
 
   search(query: string): SearchResult[] {
     if (!query.trim()) return [];
-    
+
     const results = this.fuse.search(query);
     return results.map(result => ({
       item: result.item,
@@ -36,13 +36,13 @@ export class EpisodeSearch {
     }));
   }
 
-  searchByTag(tag: string): Episode[] {
+  searchByTag(tag: string): EpisodeSummary[] {
     return this.episodes.filter((episode) =>
       episode.tags.some((t) => t.toLowerCase().includes(tag.toLowerCase()))
     );
   }
 
-  searchByComplexity(min: number, max: number): Episode[] {
+  searchByComplexity(min: number, max: number): EpisodeSummary[] {
     return this.episodes.filter((episode) =>
       episode.complexity >= min && episode.complexity <= max
     );
@@ -51,23 +51,21 @@ export class EpisodeSearch {
   getSuggestions(query: string, limit: number = 5): string[] {
     const results = this.search(query);
     const suggestions = new Set<string>();
-    
+
     results.slice(0, limit).forEach(result => {
-      // Add title words
       result.item.title.split(' ').forEach(word => {
         if (word.toLowerCase().includes(query.toLowerCase()) && word.length > 2) {
           suggestions.add(word);
         }
       });
-      
-      // Add tags
+
       result.item.tags.forEach(tag => {
         if (tag.toLowerCase().includes(query.toLowerCase())) {
           suggestions.add(tag);
         }
       });
     });
-    
+
     return Array.from(suggestions).slice(0, limit);
   }
 }
