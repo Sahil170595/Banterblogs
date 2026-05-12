@@ -92,6 +92,7 @@ type TaskRecord = {
     ranked: { style: string; weight: number; confidence: number }[];
     selected_style: string;
     selection_reason: string;
+    is_flag_override: boolean;
     surfaced_flags: Record<string, string[]>;
   };
   latency: {
@@ -124,54 +125,53 @@ type SceneData = {
 
 type AgentId = 'analytical' | 'creative' | 'adversarial' | 'domain_expert' | 'meta';
 
-// Per-agent visual register. Each agent gets its own color temperature
-// so the four cards read as four genuinely different cognitive paths
-// at TikTok scroll speed — not "four identical orange dashboard tiles."
-// When an agent is SELECTED the card flips to ember (primary) so the
-// selection signal still dominates.
-const AGENT_VISUAL: Record<AgentId, { Icon: typeof Brain; tint: string; ring: string; icon: string }> = {
+// Per-agent visual register. `ring` / `icon` are the IDLE tints; when
+// SELECTED the agent flips to ember (primary). Adversarial's rose idle
+// state would visually merge with the ember selected state (warm-on-
+// warm), so Adversarial gets a special-case neutral icon when selected
+// — handled in AgentCard via the `isSelected` branch.
+const AGENT_VISUAL: Record<AgentId, { Icon: typeof Brain; ring: string; icon: string }> = {
   analytical: {
     Icon: Brain,
-    tint: 'slate',
     ring: 'border-slate-400/30',
     icon: 'text-slate-300/90',
   },
   creative: {
     Icon: Lightbulb,
-    tint: 'amber',
     ring: 'border-amber-400/30',
     icon: 'text-amber-300/90',
   },
   adversarial: {
     Icon: ShieldAlert,
-    tint: 'rose',
     ring: 'border-rose-400/30',
     icon: 'text-rose-300/90',
   },
   domain_expert: {
     Icon: Compass,
-    tint: 'cyan',
     ring: 'border-cyan-400/30',
     icon: 'text-cyan-300/90',
   },
   meta: {
     Icon: Scale,
-    tint: 'ember',
     ring: 'border-primary/40',
     icon: 'text-primary',
   },
 };
 
-// Char-by-char typewriter. All timer handles tracked in a ref; a
-// parallel sr-only live region carries the full text so screen readers
-// announce once. Respects prefers-reduced-motion via prop.
+// Char-by-char typewriter. Pace ~9ms/char (halved from v2's 18ms — TikTok-
+// conditioned attention bounces at ~3 seconds otherwise). Single
+// in-flight timer handle. Respects prefers-reduced-motion.
 function Typewriter({ text, reducedMotion }: { text: string; reducedMotion: boolean }) {
   const [shown, setShown] = useState('');
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // D2 fix: single handle, not an unbounded array. Only one timer is
+  // ever pending at a time per tick().
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    timersRef.current.forEach((t) => clearTimeout(t));
-    timersRef.current = [];
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
 
     if (reducedMotion) {
       setShown(text);
@@ -187,31 +187,31 @@ function Typewriter({ text, reducedMotion }: { text: string; reducedMotion: bool
       idx += 1;
       setShown(text.slice(0, idx));
       const ch = text[idx - 1];
-      const delay = ch === '.' || ch === '?' || ch === '!' ? 180 : ch === ',' || ch === ';' ? 80 : 18;
-      const t = setTimeout(tick, delay);
-      timersRef.current.push(t);
+      const delay = ch === '.' || ch === '?' || ch === '!' ? 110 : ch === ',' || ch === ';' ? 55 : 9;
+      timerRef.current = setTimeout(tick, delay);
     }
-    const first = setTimeout(tick, 60);
-    timersRef.current.push(first);
+    timerRef.current = setTimeout(tick, 40);
     return () => {
       stopped = true;
-      timersRef.current.forEach((t) => clearTimeout(t));
-      timersRef.current = [];
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [text, reducedMotion]);
 
+  // C6 fix: the sr-only live region used to live HERE (inside the
+  // Typewriter, which is wrapped in AnimatePresence in the parent). On
+  // every beat the motion.div unmounted and remounted the live region,
+  // so announcements stopped firing after beat 1. The live region is
+  // now hoisted up to the main component body where it persists.
   return (
-    <>
-      <span aria-hidden>
-        {shown}
-        {!reducedMotion && shown.length < text.length && (
-          <span className="inline-block w-[0.5ch] -mb-0.5 ml-0.5 bg-primary animate-pulse">&nbsp;</span>
-        )}
-      </span>
-      <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {text}
-      </span>
-    </>
+    <span aria-hidden>
+      {shown}
+      {!reducedMotion && shown.length < text.length && (
+        <span className="inline-block w-[0.5ch] -mb-0.5 ml-0.5 bg-primary animate-pulse">&nbsp;</span>
+      )}
+    </span>
   );
 }
 
@@ -251,9 +251,6 @@ function ConfidenceBar({
   );
 }
 
-// Extracted to module scope (was defined inside CreativeCard render
-// body; that created a new component identity per render and
-// re-animated the bars on every beat tick).
 function SignalRow({
   label,
   value,
@@ -523,6 +520,11 @@ function AgentCard({
 }) {
   const visual = AGENT_VISUAL[agentId];
   const Icon = visual.Icon;
+  // C8 fix: when Adversarial is the selected agent, suppress its rose
+  // tint on the icon so the ember selected-state doesn't visually merge
+  // with the warm-red idle tint. The other three agents have cool tints
+  // (slate/amber/cyan) that contrast cleanly with ember.
+  const iconClass = isSelected ? 'text-primary' : visual.icon;
   return (
     <motion.div
       animate={
@@ -532,6 +534,8 @@ function AgentCard({
       }
       transition={{ duration: 0.35, ease: 'easeOut' }}
       aria-hidden={!isRevealed}
+      // D19 fix: announce the selection state to screen readers.
+      aria-label={isSelected ? `${title} agent, selected by the meta-controller` : undefined}
       className={`relative rounded-lg border ${
         isSelected
           ? 'border-primary shadow-[0_0_44px_-10px_hsl(var(--primary)/0.6)]'
@@ -541,7 +545,7 @@ function AgentCard({
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Icon className={`h-4 w-4 ${isSelected ? 'text-primary' : visual.icon}`} aria-hidden />
+            <Icon className={`h-4 w-4 ${iconClass}`} aria-hidden />
             <div className={`font-bold tracking-tight text-[15px] ${isSelected ? 'text-primary' : 'text-foreground'}`}>
               {title}
             </div>
@@ -549,7 +553,8 @@ function AgentCard({
           <div className="text-[11px] text-muted-foreground leading-snug">{plain}</div>
         </div>
         {isSelected && (
-          <span className="rounded border border-primary/60 bg-primary/10 text-primary px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest">
+          // D11 fix: badge bumped from text-[9px] to text-[11px].
+          <span className="rounded border border-primary/60 bg-primary/15 text-primary px-2 py-0.5 text-[11px] font-mono font-bold uppercase tracking-widest">
             selected
           </span>
         )}
@@ -568,8 +573,8 @@ function MetaControllerCard({
   reducedMotion: boolean;
 }) {
   const meta = record.meta;
-  // Was a flag-priority override what selected this agent?
-  const isOverride = /override|flagged|boundary/i.test(meta.selection_reason);
+  // D6 fix: use the typed boolean from the JSON, not a regex on free text.
+  const isOverride = meta.is_flag_override === true;
   const DecisionIcon = isOverride ? ShieldCheck : CornerDownRight;
 
   return (
@@ -649,44 +654,46 @@ function MetaControllerCard({
 function JourneyPanel({ record, agentCount }: { record: TaskRecord; agentCount: number }) {
   const lat = record.latency;
   const saved = Math.min(99.9, lat.saved_pct);
+  // D4 fix: use the precomputed per-agent value from the data, not
+  // a derived guess.
   const perAgentMs = Math.round(lat.naive_total_ms / Math.max(1, agentCount));
   return (
-    <div className="signal-panel-strong p-4 md:p-6 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr] gap-4 md:gap-6 items-baseline">
+    <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.6fr] gap-4 md:gap-6 items-baseline">
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
+        {/* D12 fix: smaller, lighter sub-labels so the dominant number
+            in each column is the actual content, not the label. */}
+        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
           this task cost
         </div>
-        <div className="font-mono text-xl md:text-2xl text-foreground font-bold leading-tight">
+        <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           {lat.actual_total_ms}ms
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1">
+        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
           {agentCount} structural agents in parallel + meta
         </div>
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
-          4-LLM ensemble would cost
+        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
+          {agentCount}-LLM ensemble would cost
         </div>
         <div
-          className="font-mono text-lg md:text-xl text-muted-foreground/70 line-through font-bold leading-tight"
-          aria-label={`Naive 4-LLM ensemble cost: approximately ${lat.naive_total_ms} milliseconds, shown as crossed-out comparison`}
+          className="font-mono text-xl md:text-2xl text-muted-foreground/70 line-through font-bold leading-tight"
+          aria-label={`${agentCount}-LLM ensemble running in parallel would cost approximately ${lat.naive_total_ms} milliseconds wall-clock, shown as crossed-out comparison`}
         >
           ~{lat.naive_total_ms}ms
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1">
-          {agentCount} × ~{perAgentMs}ms LLM call
+        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
+          parallel LLM calls, ~{perAgentMs}ms each
         </div>
       </div>
-      {/* Saved % — emphasized as the proof claim, not flattened to a peer
-          column. ~2× larger than the comparison numbers. */}
       <div className="md:border-l md:border-border/30 md:pl-6">
-        <div className="text-[10px] uppercase tracking-widest text-primary/90 mb-1">
+        <div className="text-[10px] uppercase tracking-widest text-primary/90 mb-1.5">
           saved
         </div>
-        <div className="font-mono text-4xl md:text-5xl text-primary font-bold leading-none tracking-tight">
+        <div className="font-mono text-5xl md:text-6xl text-primary font-bold leading-none tracking-tight">
           {saved.toFixed(1)}%
         </div>
-        <div className="text-[11px] text-muted-foreground mt-2">
+        <div className="text-[10px] text-muted-foreground/80 mt-2">
           no LLM, no API bill
         </div>
       </div>
@@ -749,17 +756,16 @@ function AftermathPanel({
 }
 
 export function CognitiveAgents({ data }: { data: SceneData }) {
-  // useReducedMotion can return null pre-hydration. We snapshot to a
-  // boolean here and treat null as "prefer reduced" to fail safe.
   const rawReducedMotion = useReducedMotion();
-  const reducedMotion = rawReducedMotion ?? false;
+  // C4 fix: null is treated as 'prefer reduced' to fail safe. The v2
+  // comment said "fail safe" but the coercion was `?? false` which
+  // means motion ON. Now matches the stated intent.
+  const reducedMotion = rawReducedMotion ?? true;
 
-  const entryIdx = useMemo(() => pickEntryIndex(data.records), [data.records]);
-  const [activeIdx, setActiveIdx] = useState(entryIdx);
+  // D5 fix: lazy-initialize via useState callback. useMemo here was
+  // overkill for a one-shot computation on stable input.
+  const [activeIdx, setActiveIdx] = useState(() => pickEntryIndex(data.records));
   const [beatIdx, setBeatIdx] = useState(0);
-  // Initialize playing to false; flip to true after first paint if
-  // motion is allowed. Avoids the SSR/hydration mismatch where
-  // useReducedMotion returns null on first render then resolves.
   const [playing, setPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   useLayoutEffect(() => {
@@ -768,7 +774,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
 
   const noRecords = data.records.length === 0;
   const safeActiveIdx = noRecords ? 0 : Math.min(Math.max(0, activeIdx), data.records.length - 1);
-  const record = noRecords ? null : data.records[safeActiveIdx];
+  const record: TaskRecord | null = noRecords ? null : data.records[safeActiveIdx];
   const beats = useMemo(() => record?.beats || [], [record]);
   const activeBeat = beats[beatIdx];
 
@@ -807,26 +813,42 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
     setHasInteracted(true);
   }, []);
 
-  // Roving-tabindex arrow-key handler for the task scrubber radiogroup.
-  const handleScrubberKey = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
-      if (noRecords) return;
-      let next: number | null = null;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        next = (safeActiveIdx + 1) % data.records.length;
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        next = (safeActiveIdx - 1 + data.records.length) % data.records.length;
-      } else if (e.key === 'Home') {
-        next = 0;
-      } else if (e.key === 'End') {
-        next = data.records.length - 1;
-      }
-      if (next !== null) {
-        e.preventDefault();
-        selectRecord(next);
-      }
-    },
-    [data.records.length, safeActiveIdx, selectRecord, noRecords],
+  // Roving-tabindex arrow-key handler factory.
+  const handleArrowKeys = useCallback(
+    (currentIdx: number, count: number, setter: (idx: number) => void) =>
+      (e: KeyboardEvent<HTMLDivElement>) => {
+        if (count === 0) return;
+        let next: number | null = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          next = (currentIdx + 1) % count;
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          next = (currentIdx - 1 + count) % count;
+        } else if (e.key === 'Home') {
+          next = 0;
+        } else if (e.key === 'End') {
+          next = count - 1;
+        }
+        if (next !== null) {
+          e.preventDefault();
+          setter(next);
+        }
+      },
+    [],
+  );
+
+  const handleScrubberKey = useMemo(
+    () => handleArrowKeys(safeActiveIdx, data.records.length, selectRecord),
+    [handleArrowKeys, safeActiveIdx, data.records.length, selectRecord],
+  );
+
+  // C5 fix: beat scrubber gets arrow-key navigation too.
+  const handleBeatKey = useMemo(
+    () =>
+      handleArrowKeys(beatIdx, beats.length, (idx) => {
+        setBeatIdx(idx);
+        setHasInteracted(true);
+      }),
+    [handleArrowKeys, beatIdx, beats.length],
   );
 
   const revealedAgents = useMemo(() => {
@@ -848,16 +870,35 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
   const isIntroBeat = activeBeat?.target_agent === null;
   const metaRevealed = revealedAgents.has('meta');
 
-  // Polite live region — announces when a new agent reveals so screen
-  // reader users hear "Adversarial agent revealed" rather than missing
-  // the progressive disclosure entirely.
-  const lastRevealedAgent = useMemo(() => {
+  // D25 fix: dedupe agent-reveal announcements. Only fire when an
+  // agent FIRST appears in the revealed set on this beat — not on
+  // every beat that targets the same agent.
+  const lastRevealedAgentRef = useRef<string>('');
+  const [revealAnnouncement, setRevealAnnouncement] = useState('');
+  useEffect(() => {
     const target = activeBeat?.target_agent;
-    if (!target || target === 'meta') return '';
-    const verdict = record?.verdicts[target as keyof typeof record.verdicts];
-    if (!verdict) return '';
-    return `${target.replace('_', ' ')} agent revealed`;
-  }, [activeBeat, record]);
+    if (!target || target === 'meta') return;
+    if (lastRevealedAgentRef.current === target) return;
+    lastRevealedAgentRef.current = target;
+    setRevealAnnouncement(`${target.replace('_', ' ')} agent revealed`);
+  }, [activeBeat]);
+
+  // D22 fix: announce aftermath panel reveal once.
+  const [aftermathAnnouncement, setAftermathAnnouncement] = useState('');
+  useEffect(() => {
+    if (metaRevealed) {
+      setAftermathAnnouncement(`Verdict and aftermath available: ${record?.meta.selected_style ?? ''}`);
+    } else {
+      setAftermathAnnouncement('');
+    }
+  }, [metaRevealed, record]);
+
+  // Reset reveal-tracking when record switches.
+  useEffect(() => {
+    lastRevealedAgentRef.current = '';
+    setRevealAnnouncement('');
+    setAftermathAnnouncement('');
+  }, [safeActiveIdx]);
 
   if (noRecords || !record) {
     return (
@@ -869,11 +910,18 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
 
   const selectedStyle = record.meta.selected_style;
   return (
-    <div className="relative">
-      {/* Polite live region for progressive reveals. */}
-      <div role="status" aria-live="polite" className="sr-only">
-        {lastRevealedAgent}
-      </div>
+    <div className="relative" id="demo">
+      {/* C6 fix: persistent sr-only live regions OUTSIDE AnimatePresence.
+          Updated via state so they survive every beat transition. */}
+      <span aria-live="polite" aria-atomic="true" className="sr-only">
+        {activeBeat?.copy ?? ''}
+      </span>
+      <span aria-live="polite" className="sr-only">
+        {revealAnnouncement}
+      </span>
+      <span aria-live="polite" className="sr-only">
+        {aftermathAnnouncement}
+      </span>
 
       {/* Task content + summary */}
       <motion.div
@@ -949,12 +997,12 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
           </AnimatePresence>
         </div>
 
-        {/* Beat scrubber — radiogroup pattern, not tab pattern (no
-            associated panels). Uses arrow keys for navigation. */}
+        {/* C5 fix: beat scrubber gets arrow-key handler too. */}
         <div
           className="mt-4 flex gap-0.5 flex-wrap"
           role="radiogroup"
           aria-label="Beat selector"
+          onKeyDown={handleBeatKey}
         >
           {beats.map((_, i) => (
             <button
@@ -983,7 +1031,6 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
         </div>
       </div>
 
-      {/* 4-agent grid — each agent has its own visual register. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <AnalyticalCard
           verdict={record.verdicts.analytical}
@@ -1023,10 +1070,10 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
       />
 
       <div className="mt-8 md:mt-10">
-        <JourneyPanel record={record} agentCount={4} />
+        {/* D3 fix: agentCount derived from data instead of hardcoded. */}
+        <JourneyPanel record={record} agentCount={data.agents.filter((a) => a.id !== 'meta').length} />
       </div>
 
-      {/* Task scrubber — radiogroup with arrow-key roving tabindex. */}
       <div className="mt-6 md:mt-8">
         <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Try a different task · {data.records.length} scenarios
@@ -1051,6 +1098,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
                 }`}
                 role="radio"
                 aria-checked={isActive}
+                aria-label={`Scenario ${r.step_index + 1}: ${r.task_description.slice(0, 80)}${r.task_description.length > 80 ? '…' : ''} (selected by ${sel})`}
                 tabIndex={isActive ? 0 : -1}
               >
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">

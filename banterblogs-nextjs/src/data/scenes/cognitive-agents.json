@@ -1,6 +1,6 @@
 {
   "scene": "cognitive-agents",
-  "generated_at": "2026-05-12T03:09:39.374Z",
+  "generated_at": "2026-05-12T16:12:46.439Z",
   "spec_ref": "TDD-005 cognitive layer · cognitive_agent.rs:79-623 + meta_controller.rs:478-520",
   "description": "Four cognitive agents process the same task in parallel. Each uses a completely different structural algorithm — no LLM calls. The meta-controller composes verdicts using the agents' static default weights (Analytical 0.8, Creative 0.5, Adversarial 0.3, DomainExpert 0.7) with a flag-priority override layer on top. ELO learning that adapts weights over time lives in meta_controller.rs:478-520 but is out of scope for this scene's walkthrough.",
   "agents": [
@@ -62,12 +62,12 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "A potentially risky task. Watch how the structural agents split apart on this. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
+          "copy": "A potentially risky task. Watch how the rule-based agents split apart on this. Adversarial is the one to watch — but Analytical will weigh in too."
         },
         {
           "target_agent": "analytical",
           "dwell_ms": 4200,
-          "copy": "Analytical decomposes the task: 0 verbs, 2 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
+          "copy": "Analytical decomposes the task: 0 verbs found — Analytical reads English action words (\"delete\", \"execute\"), not shell binaries like rm or cat. So shell inputs come back empty here; Adversarial picks up the slack. Assessment \"ready\", confidence 100%."
         },
         {
           "target_agent": "creative",
@@ -77,7 +77,7 @@
         {
           "target_agent": "adversarial",
           "dwell_ms": 4400,
-          "copy": "Adversarial runs the risk path: Shannon entropy 4.21, tool multiplier 1.0, 2 flags (cwe78 os command injection + privilege escalation:sudo). Recommendation \"block\". Risk score 65%."
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.21, tool multiplier 1.0, 2 flags (cwe78 os command injection + privilege escalation:sudo). CWE is the standard catalog of common software weaknesses — the regex caught a known injection pattern. Recommendation \"block\". Risk score 65%."
         },
         {
           "target_agent": "domain_expert",
@@ -92,7 +92,7 @@
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: adversarial via flag override. adversarial recommended \"block\" — security priority overrides confidence ranking. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble pattern would have paid roughly 200ms for the same diversity."
+          "copy": "Selected: adversarial via flag override. adversarial recommended \"block\" — security priority overrides confidence ranking. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble running in parallel would have paid roughly 50ms wall-clock for the same diversity."
         }
       ],
       "verdicts": {
@@ -188,6 +188,7 @@
         ],
         "selected_style": "adversarial",
         "selection_reason": "adversarial recommended \"block\" — security priority overrides confidence ranking",
+        "is_flag_override": true,
         "surfaced_flags": {
           "analytical": [],
           "creative": [],
@@ -200,8 +201,8 @@
       },
       "latency": {
         "actual_total_ms": 8.5,
-        "naive_total_ms": 200,
-        "saved_pct": 95.75,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
         "per_agent_ms": 2,
         "meta_compose_ms": 0.5
       }
@@ -217,7 +218,7 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "A potentially risky task. Watch how the structural agents split apart on this. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
+          "copy": "A potentially risky task. Watch how the rule-based agents split apart on this. Adversarial is the one to watch — but Analytical will weigh in too."
         },
         {
           "target_agent": "analytical",
@@ -247,7 +248,7 @@
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble pattern would have paid roughly 200ms for the same diversity."
+          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble running in parallel would have paid roughly 50ms wall-clock for the same diversity."
         }
       ],
       "verdicts": {
@@ -361,6 +362,7 @@
         ],
         "selected_style": "domain_expert",
         "selection_reason": "domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed",
+        "is_flag_override": true,
         "surfaced_flags": {
           "analytical": [],
           "creative": [],
@@ -375,8 +377,8 @@
       },
       "latency": {
         "actual_total_ms": 8.5,
-        "naive_total_ms": 200,
-        "saved_pct": 95.75,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
         "per_agent_ms": 2,
         "meta_compose_ms": 0.5
       }
@@ -392,7 +394,7 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "An ML-flavored task. The taxonomy agent and the lateral agent both have signals here. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
+          "copy": "An ML-flavored task. The taxonomy agent and the lateral agent both have signals here. DomainExpert's taxonomy is built for this; Creative looks for reframings nearby."
         },
         {
           "target_agent": "analytical",
@@ -422,7 +424,7 @@
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble pattern would have paid roughly 200ms for the same diversity."
+          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble running in parallel would have paid roughly 50ms wall-clock for the same diversity."
         }
       ],
       "verdicts": {
@@ -527,6 +529,7 @@
         ],
         "selected_style": "domain_expert",
         "selection_reason": "domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed",
+        "is_flag_override": true,
         "surfaced_flags": {
           "analytical": [],
           "creative": [],
@@ -538,8 +541,8 @@
       },
       "latency": {
         "actual_total_ms": 8.5,
-        "naive_total_ms": 200,
-        "saved_pct": 95.75,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
         "per_agent_ms": 2,
         "meta_compose_ms": 0.5
       }
@@ -555,7 +558,7 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "A clear, well-formed task. The kind where the cheap agents do all the work. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
+          "copy": "A clear, well-formed task. The kind where the cheap agents do all the work. Analytical does the heavy lifting on structurally clean inputs like this one."
         },
         {
           "target_agent": "analytical",
@@ -585,7 +588,7 @@
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: analytical at 100%. The task was well-formed — verbs match parameters, no contradictions, low ambiguity. No flag forced an override. Total cost: ~8.5ms; the same workload through a 4-LLM ensemble would have been ~200ms."
+          "copy": "Selected: analytical at 100%. The task was well-formed — verbs match parameters, no contradictions, low ambiguity. No flag forced an override. Total cost: ~8.5ms; a 4-LLM ensemble running in parallel would have been ~50ms wall-clock."
         }
       ],
       "verdicts": {
@@ -686,6 +689,7 @@
         ],
         "selected_style": "analytical",
         "selection_reason": "highest raw confidence (100%); no flags forced an override",
+        "is_flag_override": false,
         "surfaced_flags": {
           "analytical": [],
           "creative": [],
@@ -695,8 +699,8 @@
       },
       "latency": {
         "actual_total_ms": 8.5,
-        "naive_total_ms": 200,
-        "saved_pct": 95.75,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
         "per_agent_ms": 2,
         "meta_compose_ms": 0.5
       }
@@ -712,7 +716,7 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "A vague task. Each agent will surface something different — or nothing. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
+          "copy": "A vague task. Each agent will surface something different — or nothing at all. If the input is too thin, none of the four can read intent. Expect convergence, not insight."
         },
         {
           "target_agent": "analytical",
@@ -737,12 +741,12 @@
         {
           "target_agent": "meta",
           "dwell_ms": 4400,
-          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 100% > creative 41% > domain_expert 40%. No flags forced an override — top-of-rank takes the route."
+          "copy": "All four agents converged on high confidence with zero flags. That's a tell — when rule-based agents agree without surfacing anything, the input was too thin for them to read. The orchestrator has to escalate beyond the structural layer."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: analytical at 100%. The task was well-formed — verbs match parameters, no contradictions, low ambiguity. No flag forced an override. Total cost: ~8.5ms; the same workload through a 4-LLM ensemble would have been ~200ms."
+          "copy": "Selected: analytical (the system's tie-break default). The honest read: every agent gave a confident verdict on a task that means nothing, because rule-based analysis can't detect vagueness. In production this is where the orchestrator would escalate to a clarification request — that path is shown in the aftermath, not this walkthrough."
         }
       ],
       "verdicts": {
@@ -832,6 +836,7 @@
         ],
         "selected_style": "analytical",
         "selection_reason": "highest raw confidence (100%); no flags forced an override",
+        "is_flag_override": false,
         "surfaced_flags": {
           "analytical": [],
           "creative": [],
@@ -841,8 +846,8 @@
       },
       "latency": {
         "actual_total_ms": 8.5,
-        "naive_total_ms": 200,
-        "saved_pct": 95.75,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
         "per_agent_ms": 2,
         "meta_compose_ms": 0.5
       }
