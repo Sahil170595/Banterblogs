@@ -12,6 +12,12 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Gauge,
+  Regex,
+  Cpu,
+  RefreshCw,
+  Users,
+  Scale,
 } from 'lucide-react';
 
 type RuleVerdict = {
@@ -53,7 +59,16 @@ type Record = {
   step_index: number;
   step_content: string;
   summary?: string | null;
+  aftermath?: string | null;
   beats: Beat[];
+  latency?: {
+    actual_total_ms: number;
+    naive_total_ms: number;
+    t1_actual_ms: number;
+    t2_actual_ms: number;
+    t2_5_actual_ms: number;
+    t3_actual_ms: number;
+  };
   trigger_signals: {
     min_top1: number;
     max_entropy: number;
@@ -88,27 +103,62 @@ type SceneData = {
 };
 
 // Plain-language labels — what each tier IS for a non-technical reader.
-const TIER_PLAIN: { [id: string]: { plain: string; what_it_does: string } } = {
+// `cost_label` is the human-readable budget; `cost_log` is the position
+// on a log scale 0..1 from "free" (1ms) to "max" (8000ms) used by the
+// cost-cascade indicator. The Icon is the tier's identity glyph
+// (distinct from the status icon which lives on the spine node).
+const TIER_PLAIN: {
+  [id: string]: {
+    plain: string;
+    what_it_does: string;
+    cost_label: string;
+    cost_log: number;
+    Icon: typeof Gauge;
+  };
+} = {
+  gate: {
+    plain: 'should we even check this?',
+    what_it_does:
+      'looks at the model’s token confidence to decide if the step needs inspection',
+    cost_label: '<1ms',
+    cost_log: 0,
+    Icon: Gauge,
+  },
   t1: {
     plain: '15 hand-coded checks',
     what_it_does:
       'fast, deterministic — math, banned words, broken citations, repetition',
+    cost_label: '20ms',
+    cost_log: 0.4,
+    Icon: Regex,
   },
   t2: {
     plain: 'an LLM judge',
     what_it_does: 'reads the step and decides if the reasoning is sound',
+    cost_label: '60ms',
+    cost_log: 0.55,
+    Icon: Cpu,
   },
   t2_5: {
     plain: 'the model second-guesses itself',
-    what_it_does: 'a one-line "OK or correction" reply from the model',
+    what_it_does: 'a one-line “OK or correction” reply from the model',
+    cost_label: '100ms',
+    cost_log: 0.6,
+    Icon: RefreshCw,
   },
   t3: {
     plain: 'a three-model panel debates',
-    what_it_does: "only runs if the lower tiers couldn't agree",
+    what_it_does: 'only runs if the lower tiers couldn’t agree',
+    cost_label: '8s',
+    cost_log: 1.0,
+    Icon: Users,
   },
   enforcement: {
     plain: 'the final decision',
     what_it_does: 'collects every verdict, decides proceed / rewind / degrade',
+    cost_label: 'composer',
+    cost_log: 0.3,
+    Icon: Scale,
   },
 };
 
@@ -129,6 +179,28 @@ type ClassifiedTier = {
 };
 
 function classifyTier(rec: Record, tierId: string): ClassifiedTier {
+  if (tierId === 'gate') {
+    // Trigger gate is a 0th tier. It fires (escalates to the ladder)
+    // when the model's own top-1 probability is below floor — i.e.
+    // when the model wasn't sure. It "passes" when the model was
+    // confident enough to skip the ladder.
+    if (rec.trigger_verdict) {
+      return {
+        state: 'ran-fire',
+        label: 'escalate',
+        sublabel: 'model was uncertain — run the ladder',
+        fake_provider: false,
+        confidence_for_bar: 1 - rec.trigger_signals.min_top1,
+      };
+    }
+    return {
+      state: 'ran-pass',
+      label: 'no escalation',
+      sublabel: 'model was confident — skip the ladder',
+      fake_provider: false,
+      confidence_for_bar: rec.trigger_signals.min_top1,
+    };
+  }
   if (tierId === 't1') {
     if (!rec.t1) return { state: 'not-invoked', label: 'not invoked', sublabel: '', fake_provider: false, confidence_for_bar: null };
     const fired = rec.t1.rule_verdicts?.filter((r) => r.fired) || [];
@@ -568,14 +640,28 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                 transition={{ duration: 0.35, ease: 'easeOut' }}
                 className="relative grid grid-cols-[32px_1fr] md:grid-cols-[1fr_40px_1fr] items-stretch gap-3 md:gap-4"
               >
-                {/* Left column (desktop): plain-language label */}
-                <div className="hidden md:flex flex-col items-end justify-center pr-2 text-right">
-                  <div className="text-sm font-bold tracking-tight text-foreground/95">
-                    {plain?.plain || ts.tier.name}
+                {/* Left column (desktop): plain-language label + cost cascade */}
+                <div className="hidden md:flex flex-col items-end justify-center pr-2 text-right gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-bold tracking-tight text-foreground/95">
+                      {plain?.plain || ts.tier.name}
+                    </div>
+                    {plain?.Icon && (
+                      <plain.Icon className="h-3.5 w-3.5 text-muted-foreground/60" aria-hidden />
+                    )}
                   </div>
-                  <div className="text-[10px] text-muted-foreground leading-snug max-w-[220px]">
+                  <div className="text-[10px] text-muted-foreground leading-snug max-w-[240px]">
                     {plain?.what_it_does || ts.tier.description}
                   </div>
+                  {plain && (
+                    <div className="mt-0.5">
+                      <CostCascade
+                        costLog={plain.cost_log}
+                        label={plain.cost_label}
+                        faded={ts.state === 'skipped' || ts.state === 'not-invoked'}
+                      />
+                    </div>
+                  )}
                   <div className="text-[9px] text-muted-foreground/60 font-mono uppercase tracking-widest mt-0.5">
                     {ts.tier.name} · {ts.tier.spec}
                   </div>
@@ -615,14 +701,28 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                     isActive ? theme.glow : ''
                   }`}
                 >
-                  {/* Mobile-only plain-language header */}
-                  <div className="md:hidden mb-2">
-                    <div className="text-sm font-bold tracking-tight">
-                      {plain?.plain || ts.tier.name}
+                  {/* Mobile-only plain-language header + cost cascade */}
+                  <div className="md:hidden mb-2 flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        {plain?.Icon && (
+                          <plain.Icon className="h-3 w-3 text-muted-foreground/60" aria-hidden />
+                        )}
+                        <div className="text-sm font-bold tracking-tight">
+                          {plain?.plain || ts.tier.name}
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                        {plain?.what_it_does || ts.tier.description}
+                      </div>
                     </div>
-                    <div className="text-[10px] text-muted-foreground leading-snug">
-                      {plain?.what_it_does || ts.tier.description}
-                    </div>
+                    {plain && (
+                      <CostCascade
+                        costLog={plain.cost_log}
+                        label={plain.cost_label}
+                        faded={ts.state === 'skipped' || ts.state === 'not-invoked'}
+                      />
+                    )}
                   </div>
 
                   <AnimatePresence mode="wait" initial={false}>
@@ -659,8 +759,21 @@ export function StreamingLadder({ data }: { data: SceneData }) {
         </div>
       </div>
 
+      {/* Aftermath — what happens to the response after the enforcer fires.
+          Reveals after the visitor has reached the enforcer beat. */}
+      <AftermathPanel
+        record={record}
+        visible={revealedTierIds.has('enforcement')}
+      />
+
+      {/* Journey panel — cost vs naive worst case. Surfaces the cost-cascade
+          payoff in concrete numbers. */}
+      <div className="mt-8 md:mt-10">
+        <JourneyPanel record={record} />
+      </div>
+
       {/* Record scrubber */}
-      <div className="mt-8 md:mt-12">
+      <div className="mt-4 md:mt-6">
         <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Try a different reasoning step · {data.records.length} scenarios
         </div>
@@ -701,6 +814,17 @@ export function StreamingLadder({ data }: { data: SceneData }) {
 
 function TierBody({ record, tier, state }: { record: Record; tier: Tier; state: TierState }) {
   if (state === 'skipped' || state === 'not-invoked') return null;
+
+  if (tier.id === 'gate') {
+    const ts = record.trigger_signals;
+    return (
+      <div className="mt-2 md:mt-3 grid grid-cols-3 gap-2 md:gap-3">
+        <SignalGauge label="top-1 prob" value={ts.min_top1} hint="how sure the model was about the most likely next token" />
+        <SignalGauge label="entropy" value={Math.min(1, ts.max_entropy / 3.5)} raw={ts.max_entropy.toFixed(2)} hint="how spread out the next-token candidates were" />
+        <SignalGauge label="runner-up" value={ts.max_runner_up_ratio} hint="how close the second-best token was to the top one" />
+      </div>
+    );
+  }
 
   if (tier.id === 't1' && record.t1) {
     const fired = record.t1.rule_verdicts?.filter((r) => r.fired) || [];
@@ -772,5 +896,219 @@ function ConfidenceBar({ value, barClass }: { value: number | null; barClass: st
         className={`h-full ${barClass}`}
       />
     </div>
+  );
+}
+
+// A small visual gauge — fills proportionally to value (0..1), shows
+// the raw number underneath the label, and a tooltip hint on hover.
+function SignalGauge({
+  label,
+  value,
+  raw,
+  hint,
+}: {
+  label: string;
+  value: number;
+  raw?: string;
+  hint?: string;
+}) {
+  const clamped = Math.min(1, Math.max(0, value));
+  return (
+    <div className="rounded border border-border/40 bg-background/40 p-2 group relative">
+      <div className="text-[9px] uppercase tracking-widest text-muted-foreground/80 mb-1.5">
+        {label}
+      </div>
+      <div className="h-1 w-full rounded-full bg-border/30 overflow-hidden mb-1.5">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${clamped * 100}%` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="h-full bg-accent/70"
+        />
+      </div>
+      <div className="font-mono text-[11px] text-foreground/90">
+        {raw ?? clamped.toFixed(2)}
+      </div>
+      {hint && (
+        <div className="hidden group-hover:block absolute left-1/2 -translate-x-1/2 -bottom-1.5 translate-y-full z-20 w-48 rounded border border-border/60 bg-background/95 backdrop-blur p-2 text-[10px] text-muted-foreground leading-snug pointer-events-none">
+          {hint}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Cost-cascade indicator. Shows where this tier sits on a log scale
+// from "free" to "most expensive tier" (8s). Visualized as a 6-segment
+// bar; the number of filled segments scales with cost_log.
+function CostCascade({ costLog, label, faded }: { costLog: number; label: string; faded: boolean }) {
+  const segments = 6;
+  const filled = Math.max(1, Math.round(costLog * segments));
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex gap-[2px]" aria-hidden>
+        {Array.from({ length: segments }).map((_, i) => (
+          <span
+            key={i}
+            className={`h-2.5 w-1 rounded-sm ${
+              i < filled
+                ? faded
+                  ? 'bg-border/40'
+                  : 'bg-primary/70'
+                : 'bg-border/30'
+            }`}
+          />
+        ))}
+      </div>
+      <span className={`font-mono text-[10px] ${faded ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// Compact stat panel: actual cost vs naive worst-case for this record.
+function JourneyPanel({ record }: { record: Record }) {
+  const lat = record.latency;
+  if (!lat) return null;
+  const actual = lat.actual_total_ms;
+  const naive = lat.naive_total_ms;
+  // Saved %: how much of the naive worst case did we avoid?
+  const saved_pct = naive > 0 ? Math.max(0, 100 - (actual / naive) * 100) : 0;
+  const fmt = (ms: number) => {
+    if (ms < 1) return '<1ms';
+    if (ms < 1000) return `${ms < 10 ? ms.toFixed(2) : ms.toFixed(0)}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+  return (
+    <div className="signal-panel-strong p-4 md:p-5 mb-6 md:mb-8 grid grid-cols-3 gap-3 md:gap-4">
+      <div>
+        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/80 mb-1">
+          this step actually cost
+        </div>
+        <div className="font-mono text-lg md:text-xl text-foreground font-bold leading-tight">
+          {fmt(actual)}
+        </div>
+        <div className="text-[10px] text-muted-foreground mt-0.5">
+          end-to-end latency
+        </div>
+      </div>
+      <div>
+        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/80 mb-1">
+          worst case would have been
+        </div>
+        <div className="font-mono text-lg md:text-xl text-muted-foreground/80 line-through font-bold leading-tight">
+          {fmt(naive)}
+        </div>
+        <div className="text-[10px] text-muted-foreground mt-0.5">
+          if every tier had run
+        </div>
+      </div>
+      <div>
+        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/80 mb-1">
+          saved
+        </div>
+        <div className="font-mono text-lg md:text-xl text-primary font-bold leading-tight">
+          {saved_pct.toFixed(1)}%
+        </div>
+        <div className="text-[10px] text-muted-foreground mt-0.5">
+          by short-circuiting cheap-first
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// What happens to the response after the enforcer fires — token-stream
+// preview. Shows the step text in a faux stream, then a roll-back or
+// continuation animation based on outcome.
+function AftermathPanel({ record, visible }: { record: Record; visible: boolean }) {
+  const outcome = (record.enforcement?.outcome || '').toLowerCase();
+  const isRewind = outcome === 'rewind';
+  const isDegrade = outcome === 'degrade';
+  const isPass = outcome === 'proceed';
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="mt-6 md:mt-8 signal-panel-strong p-5 md:p-7"
+        >
+          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            What the user sees
+          </div>
+
+          <div className="font-mono text-xs md:text-sm leading-relaxed bg-background/40 border border-border/40 rounded p-3 md:p-4 mb-4 space-y-2">
+            <div className="text-muted-foreground/70">
+              ...previous reasoning step shipped...
+            </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className={
+                isRewind
+                  ? 'text-primary line-through opacity-70'
+                  : isDegrade
+                  ? 'text-foreground/80'
+                  : 'text-foreground/90'
+              }
+            >
+              {record.step_content}
+            </motion.div>
+            {isRewind && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="text-primary font-bold"
+                >
+                  ← rewind. retry.
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.1 }}
+                  className="text-accent/80 italic"
+                >
+                  ...new completion sampled, step regenerated...
+                </motion.div>
+              </>
+            )}
+            {isDegrade && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="text-primary/80 font-bold"
+              >
+                ⚠ response marked degraded — too many low-confidence steps
+              </motion.div>
+            )}
+            {isPass && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-accent/80"
+              >
+                → step accepted, model continues to the next reasoning step
+              </motion.div>
+            )}
+          </div>
+
+          {record.aftermath && (
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              {record.aftermath}
+            </p>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

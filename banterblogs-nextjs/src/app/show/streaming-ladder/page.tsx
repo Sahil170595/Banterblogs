@@ -24,7 +24,7 @@ export default function StreamingLadderPage() {
         <span className="signal-pill">Scene · 01</span>
       </div>
 
-      <header className="mb-10 md:mb-12 space-y-5">
+      <header className="mb-10 md:mb-12 space-y-6">
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
           A live walkthrough
         </div>
@@ -35,21 +35,62 @@ export default function StreamingLadderPage() {
         </h1>
         <div className="space-y-4 text-base md:text-lg text-muted-foreground max-w-3xl leading-relaxed">
           <p>
-            When a language model produces a long answer, it writes one reasoning step at a time —
-            each step is a sentence or two of thinking that feeds the next one. If a step is wrong
+            When a language model writes a long answer, it builds it one reasoning step at a time —
+            each step a sentence or two of thinking that feeds the next one. If a step is wrong
             (bad math, faulty logic, banned language) it poisons everything after it.
           </p>
           <p>
             This system inspects every step the moment it&apos;s written, before it&apos;s allowed to
-            influence the next one. Five independent checks run in parallel, each cheaper or more
-            careful than the last. A final &ldquo;enforcer&rdquo; decides whether to keep the step,
-            roll it back, or downgrade the response.
-          </p>
-          <p className="text-foreground/90">
-            Below is a working example. Press play if it&apos;s not already running. Each beat is a
-            narration of what the system is doing right now.
+            influence the next one. Each tier is cheaper to skip than to run; the expensive ones
+            only fire when the cheap ones can&apos;t resolve it. A final &ldquo;enforcer&rdquo;
+            composes every verdict into one decision: <span className="text-foreground/90">proceed</span>,
+            <span className="text-primary"> rewind</span>, or
+            <span className="text-foreground/90"> degrade</span>.
           </p>
         </div>
+
+        {/* Compared to what — the contrast that makes this matter */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 pt-2">
+          <div className="rounded-lg border border-border/40 bg-card/30 p-4">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-2">
+              Most chatbots
+            </div>
+            <div className="text-2xl md:text-3xl font-bold tracking-tight text-muted-foreground/80 leading-none mb-2">
+              0 checks
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The model writes, the user reads. If a step is wrong, the wrong answer ships.
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/40 bg-card/30 p-4">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-2">
+              Safety-filtered chatbots
+            </div>
+            <div className="text-2xl md:text-3xl font-bold tracking-tight text-muted-foreground/90 leading-none mb-2">
+              1 check
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              A single classifier runs once at the end. Catches banned content. Misses reasoning errors.
+            </p>
+          </div>
+          <div className="rounded-lg border border-primary/60 bg-primary/5 p-4 shadow-[0_0_30px_-14px_hsl(var(--primary)/0.5)]">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-primary/80 mb-2">
+              This system
+            </div>
+            <div className="text-2xl md:text-3xl font-bold tracking-tight text-primary leading-none mb-2">
+              5 staged
+            </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Five tiers per step, cheap-first, gated by a token-probability trigger. Inspects every step before it ships.
+            </p>
+          </div>
+        </div>
+
+        <p className="text-base md:text-lg text-foreground/90 leading-relaxed max-w-3xl">
+          Below is a working example. The walkthrough auto-plays. Each beat is a narration of what
+          the system is doing right now.
+        </p>
+
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] md:text-xs font-mono text-muted-foreground/70 pt-2">
           <span>spec · {sceneData.spec_ref}</span>
           <span>generated · {new Date(sceneData.generated_at).toLocaleString()}</span>
