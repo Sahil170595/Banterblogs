@@ -24,7 +24,7 @@ const scenes = [
     title: 'Four ways to think about the same prompt',
     blurb:
       'Analytical, Creative, Adversarial, Domain Expert — four cognitive styles inspecting one task with their own structural logic. ELO-weighted, meta-controller-tuned.',
-    available: false,
+    available: true,
     spec: 'TDD-005 cognitive layer',
   },
   {
