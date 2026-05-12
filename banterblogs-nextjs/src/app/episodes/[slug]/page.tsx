@@ -1,8 +1,44 @@
 import 'highlight.js/styles/github-dark.css';
+import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 export const runtime = 'nodejs';
 import { getAllEpisodes } from '@/lib/episodes';
 import { EpisodeNavigation } from '@/components/EpisodeNavigation';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const slugParam = decodeURIComponent(slug).toLowerCase();
+  const allEpisodes = await getAllEpisodes();
+  const episode = allEpisodes.find((ep) => ep.slug.toLowerCase() === slugParam);
+  if (!episode) {
+    return { title: 'Episode' };
+  }
+  const displayId = episode.displayId ?? episode.id;
+  const title = `Episode ${displayId}: ${episode.title}`;
+  const description =
+    episode.subtitle ?? episode.preview ?? `${episode.title} — Chimeraforge dev log episode ${displayId}.`;
+  const url = `https://chimeraforge.vercel.app/episodes/${episode.slug}`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | Chimeraforge`,
+      description,
+      url,
+      type: 'article',
+      publishedTime: new Date(episode.date).toISOString(),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | Chimeraforge`,
+      description,
+    },
+  };
+}
 import { EpisodeStats } from '@/components/EpisodeStats';
 import { TableOfContents } from '@/components/TableOfContents';
 import { ContentEnhancer, ContentStats } from '@/components/ContentEnhancer';

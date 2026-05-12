@@ -4,10 +4,23 @@ import { ArrowLeft } from 'lucide-react';
 import { StreamingLadder } from '@/components/scenes/StreamingLadder';
 import sceneData from '@/data/scenes/streaming-ladder.json';
 
+const LADDER_DESCRIPTION =
+  'When a language model writes a reasoning step, five staged checks run on it before it can affect the next sentence. Watch one step go through the ladder.';
+
 export const metadata: Metadata = {
   title: 'Streaming Ladder · Chimera Show',
-  description:
-    'When a language model writes a reasoning step, five staged checks run on it before it can affect the next sentence. Watch one step go through the ladder.',
+  description: LADDER_DESCRIPTION,
+  openGraph: {
+    title: 'Streaming Ladder · Chimera Show | Chimeraforge',
+    description: LADDER_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/show/streaming-ladder',
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Streaming Ladder · Chimera Show | Chimeraforge',
+    description: LADDER_DESCRIPTION,
+  },
 };
 
 export default function StreamingLadderPage() {

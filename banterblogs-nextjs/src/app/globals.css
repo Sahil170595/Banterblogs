@@ -563,7 +563,7 @@ html {
 
 .hljs-type,
 .hljs-class .hljs-title {
-  @apply text-yellow-400;
+  @apply text-amber-300;
 }
 
 .hljs-tag,
@@ -609,13 +609,13 @@ html {
 
 /* Content Enhancement Styles */
 .search-highlight {
-  @apply bg-yellow-400/20 text-yellow-400 font-semibold px-1 py-0.5 rounded;
+  @apply bg-primary/20 text-primary font-semibold px-1 py-0.5 rounded;
   animation: highlight-pulse 2s ease-in-out infinite;
 }
 
 @keyframes highlight-pulse {
-  0%, 100% { background-color: rgba(250, 204, 21, 0.2); }
-  50% { background-color: rgba(250, 204, 21, 0.4); }
+  0%, 100% { background-color: hsl(var(--primary) / 0.2); }
+  50% { background-color: hsl(var(--primary) / 0.4); }
 }
 
 /* Enhanced Content Styles */

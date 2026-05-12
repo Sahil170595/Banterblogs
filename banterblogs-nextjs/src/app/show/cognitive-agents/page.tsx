@@ -75,10 +75,23 @@ type SceneData = ComponentProps<typeof CognitiveAgents>['data'];
 // Parse-at-import. If shape ever drifts, the build fails loudly.
 const sceneData = SceneDataSchema.parse(sceneDataRaw) as unknown as SceneData;
 
+const AGENTS_DESCRIPTION =
+  'Four agents inspect the same task in parallel — each with a structurally different algorithm, none making LLM calls.';
+
 export const metadata: Metadata = {
   title: 'Cognitive Agents · Chimera Show',
-  description:
-    'Four agents inspect the same task in parallel — each with a structurally different algorithm, none making LLM calls.',
+  description: AGENTS_DESCRIPTION,
+  openGraph: {
+    title: 'Cognitive Agents · Chimera Show | Chimeraforge',
+    description: AGENTS_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/show/cognitive-agents',
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cognitive Agents · Chimera Show | Chimeraforge',
+    description: AGENTS_DESCRIPTION,
+  },
 };
 
 export default function CognitiveAgentsPage() {

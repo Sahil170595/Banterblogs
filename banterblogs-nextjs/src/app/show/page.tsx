@@ -2,10 +2,23 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
+const SHOW_DESCRIPTION =
+  'Interactive scenes from the Chimera constitutional AI ecosystem — real cryptographic, consensus, and verifier internals rendered as visual demos.';
+
 export const metadata: Metadata = {
   title: 'Show · Chimera',
-  description:
-    'Interactive scenes from the Chimera constitutional AI ecosystem — real cryptographic, consensus, and verifier internals rendered as visual demos.',
+  description: SHOW_DESCRIPTION,
+  openGraph: {
+    title: 'Show · Chimera | Chimeraforge',
+    description: SHOW_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/show',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Show · Chimera | Chimeraforge',
+    description: SHOW_DESCRIPTION,
+  },
 };
 
 const scenes = [
