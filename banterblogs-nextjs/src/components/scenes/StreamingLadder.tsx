@@ -421,7 +421,9 @@ function Typewriter({ text, onDone }: { text: string; onDone?: () => void }) {
   const reducedMotion = useReducedMotion();
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     // Clear any pending timers from the previous text.
@@ -505,9 +507,15 @@ export function StreamingLadder({ data }: { data: SceneData }) {
   // the hooks below always have a non-null record to memo against.
   const noRecords = data.records.length === 0;
   const safeActiveIdx = noRecords ? 0 : Math.min(Math.max(0, activeIdx), data.records.length - 1);
-  const record: StepRecord = noRecords
-    ? ({ step_id: 'none', step_index: 0, step_content: '', beats: [], trigger_signals: { min_top1: 0, max_entropy: 0, max_runner_up_ratio: 0, topk: 0, degraded_logprobs: false }, trigger_verdict: false, t1: null, t2: null, t2_5: null, t3: null, enforcement: null } as StepRecord)
-    : data.records[safeActiveIdx];
+  // Memoize so dependent hooks see a stable identity. The stub case
+  // (noRecords) short-circuits below at render time.
+  const record: StepRecord = useMemo(
+    () =>
+      noRecords
+        ? ({ step_id: 'none', step_index: 0, step_content: '', beats: [], trigger_signals: { min_top1: 0, max_entropy: 0, max_runner_up_ratio: 0, topk: 0, degraded_logprobs: false }, trigger_verdict: false, t1: null, t2: null, t2_5: null, t3: null, enforcement: null } as StepRecord)
+        : data.records[safeActiveIdx],
+    [noRecords, data.records, safeActiveIdx],
+  );
   const beats = useMemo(() => record.beats || [], [record.beats]);
   const activeBeat = beats[beatIdx];
 
@@ -982,7 +990,7 @@ function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; sta
     const src = evidence.enforcement_source;
     return (
       <div className="mt-2 md:mt-3 text-[11px] md:text-xs font-mono text-muted-foreground space-y-0.5">
-        {src && <div>source · {String(src)}</div>}
+        {src != null && <div>source · {String(src)}</div>}
         {record.enforcement.rewind_steps_so_far != null && (
           <div>rewinds used · {record.enforcement.rewind_steps_so_far}</div>
         )}

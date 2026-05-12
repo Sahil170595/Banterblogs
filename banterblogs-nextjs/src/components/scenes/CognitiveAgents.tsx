@@ -8,6 +8,7 @@ import {
   useCallback,
   useLayoutEffect,
 } from 'react';
+import type { ReactNode, KeyboardEvent } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Play,
@@ -290,7 +291,7 @@ function SignalRow({
   );
 }
 
-function FlagBadge({ children, tone = 'risk' }: { children: React.ReactNode; tone?: 'risk' | 'info' }) {
+function FlagBadge({ children, tone = 'risk' }: { children: ReactNode; tone?: 'risk' | 'info' }) {
   const cls = tone === 'risk'
     ? 'border-primary/60 bg-primary/10 text-primary'
     : 'border-accent/40 bg-accent/10 text-accent';
@@ -518,7 +519,7 @@ function AgentCard({
   title: string;
   plain: string;
   confidence: number;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const visual = AGENT_VISUAL[agentId];
   const Icon = visual.Icon;
@@ -808,7 +809,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
 
   // Roving-tabindex arrow-key handler for the task scrubber radiogroup.
   const handleScrubberKey = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
+    (e: KeyboardEvent<HTMLDivElement>) => {
       if (noRecords) return;
       let next: number | null = null;
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {

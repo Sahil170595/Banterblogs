@@ -2,7 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { CognitiveAgents } from '@/components/scenes/CognitiveAgents';
-import sceneData from '@/data/scenes/cognitive-agents.json';
+import sceneDataRaw from '@/data/scenes/cognitive-agents.json';
+import type { ComponentProps } from 'react';
+
+// JSON import widens literal types (e.g. `style: "analytical"` → `string`).
+// Cast at the boundary so the discriminated-union types in the component
+// don't fight the JSON's inferred shape. Runtime validation via Zod is
+// queued (playbook §9.6) but not yet wired.
+type SceneData = ComponentProps<typeof CognitiveAgents>['data'];
+const sceneData = sceneDataRaw as unknown as SceneData;
 
 export const metadata: Metadata = {
   title: 'Cognitive Agents · Chimera Show',
