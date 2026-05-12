@@ -18,7 +18,9 @@ export async function generateMetadata({
     return { title: 'Episode' };
   }
   const displayId = episode.displayId ?? episode.id;
-  const title = `Episode ${displayId}: ${episode.title}`;
+  // The markdown H1 often already starts with "Episode N:" — don't double-prefix.
+  const alreadyPrefixed = /^episode\s+\d+\b/i.test(episode.title.trim());
+  const title = alreadyPrefixed ? episode.title : `Episode ${displayId}: ${episode.title}`;
   const description =
     episode.subtitle ?? episode.preview ?? `${episode.title} — Chimeraforge dev log episode ${displayId}.`;
   const url = `https://chimeraforge.vercel.app/episodes/${episode.slug}`;
