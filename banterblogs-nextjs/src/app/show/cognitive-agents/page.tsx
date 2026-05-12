@@ -7,7 +7,7 @@ import sceneData from '@/data/scenes/cognitive-agents.json';
 export const metadata: Metadata = {
   title: 'Cognitive Agents · Chimera Show',
   description:
-    'Four cognitive agents inspect the same task in parallel — each with a structurally different algorithm, none making LLM calls. The meta-controller composes verdicts using ELO-derived weights.',
+    'Four agents inspect the same task in parallel — each with a structurally different algorithm, none making LLM calls.',
 };
 
 export default function CognitiveAgentsPage() {
@@ -26,26 +26,26 @@ export default function CognitiveAgentsPage() {
 
       <header className="mb-10 md:mb-14 space-y-8 md:space-y-10">
         <div className="text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground">
-          A live walkthrough · TDD-005 cognitive layer
+          A live walkthrough · four cognitive agents
         </div>
 
         <h1 className="font-bold tracking-tight leading-[0.95]">
           <span className="block text-3xl md:text-5xl text-muted-foreground/90 font-light">
             Four ways to think,
           </span>
-          <span className="block text-5xl md:text-7xl text-primary mt-1">
-            no LLMs in the loop.
+          <span className="block text-5xl md:text-7xl text-primary mt-1 [overflow-wrap:break-word]">
+            no LLMs.
           </span>
         </h1>
 
         <p className="text-base md:text-lg text-foreground/80 max-w-3xl leading-relaxed">
-          Most multi-agent systems are <span className="text-foreground">N copies of the same LLM</span> voting on
-          one prompt — same blind spots, just averaged. This system runs four structurally different agents in
-          parallel. Each one uses a different algorithm to inspect the task: decomposition, lateral signals,
+          Most multi-agent systems are <span className="text-foreground">several copies of the same LLM</span>{' '}
+          voting on one prompt — same blind spots, just averaged. This system runs four structurally different
+          agents in parallel. Each one uses a completely different algorithm: decomposition, lateral signals,
           structural risk, multi-domain taxonomy. Zero LLM calls anywhere on this page.
         </p>
 
-        {/* Proof — comparison cards before any further explanation. */}
+        {/* Proof — comparison cards directly under the claim. */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
           <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-4 md:p-5">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-2">
@@ -66,13 +66,13 @@ export default function CognitiveAgentsPage() {
               Ensemble voting
             </div>
             <div className="text-3xl md:text-4xl font-light tracking-tight text-muted-foreground/90 leading-none mb-2">
-              N×same
+              same×N
             </div>
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-2">
               copies vote
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              The 2015 ensemble pattern. Same model, N calls, majority wins. Same blind spots, averaged.
+              The 2015 ensemble pattern. Same model, multiple calls, majority wins. Same blind spots, averaged.
             </p>
           </div>
           <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.08] via-primary/[0.04] to-transparent p-5 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
@@ -99,18 +99,14 @@ export default function CognitiveAgentsPage() {
             all four agents in parallel, the meta-controller composing the verdicts.
           </p>
           <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            <span className="font-mono text-foreground/80">Honest scope:</span> all four agents and the meta-
-            controller&apos;s composition logic are ported from{' '}
-            <span className="font-mono text-foreground/80">cognitive_agent.rs</span> and{' '}
-            <span className="font-mono text-foreground/80">meta_controller.rs</span> with the constants
-            verbatim. The ELO ratings that adapt weights over time are out of scope for this scene — the
-            walkthrough uses the default weights (Analytical 0.8, Creative 0.5, Adversarial 0.3, DomainExpert
-            0.7) and surfaces the flag-based override logic the orchestrator actually runs.
+            <span className="font-mono text-foreground/80">Scope:</span> this walkthrough uses the agents&apos;{' '}
+            static default weights. The system can also adapt weights over time based on which agent style
+            tends to be right for which task class — that learning behavior is a separate scene.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] md:text-xs font-mono text-muted-foreground/70 pt-1">
-          <span>spec · {sceneData.spec_ref}</span>
+          <span>spec · TDD-005 cognitive layer</span>
           <span>generated · {new Date(sceneData.generated_at).toISOString().slice(0, 10)}</span>
           <span>scenarios · {sceneData.records.length}</span>
         </div>
@@ -123,14 +119,15 @@ export default function CognitiveAgentsPage() {
           The four cognitive agents are not LLM agents. They are deterministic Rust code that runs in under 2ms
           per task. Each algorithm is described inline in{' '}
           <span className="font-mono text-foreground">tdd005/crates/tdd005_orchestrator/src/cognitive_agent.rs</span>{' '}
-          — the demo&apos;s JS implementation mirrors the Rust constants and thresholds verbatim. Verifiable by
-          grep.
+          — the demo&apos;s JS port mirrors the Rust constants verbatim (CWE regex bodies, entropy thresholds,
+          risk weights, default agent weights, domain taxonomies). Verifiable by grep.
         </p>
         <p>
-          The meta-controller&apos;s ELO weights and conformity detection live at{' '}
-          <span className="font-mono text-foreground">meta_controller.rs</span>. Over time, the system learns
-          which agent style matches which task class — the default weights you see above are the starting
-          point. This walkthrough is a single snapshot; the learning dynamics are a separate scene.
+          The meta-controller&apos;s composition logic in this walkthrough is the flag-priority path: adversarial
+          recommendation of block/review takes the route, domain boundary flags take the route, otherwise the
+          highest raw confidence wins. ELO-based weight adaptation lives at{' '}
+          <span className="font-mono text-foreground">meta_controller.rs:478-520</span> but is out of scope for
+          this scene — a single-snapshot walkthrough wouldn&apos;t show the learning anyway.
         </p>
       </footer>
     </div>

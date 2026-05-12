@@ -1,8 +1,8 @@
 {
   "scene": "cognitive-agents",
-  "generated_at": "2026-05-12T02:01:36.004Z",
+  "generated_at": "2026-05-12T03:09:39.374Z",
   "spec_ref": "TDD-005 cognitive layer · cognitive_agent.rs:79-623 + meta_controller.rs:478-520",
-  "description": "Four cognitive agents process the same task in parallel. Each uses a completely different structural algorithm — no LLM calls. The meta-controller composes verdicts using ELO-derived weights. Showcases N-version programming applied to cognitive diversity, not ensemble voting.",
+  "description": "Four cognitive agents process the same task in parallel. Each uses a completely different structural algorithm — no LLM calls. The meta-controller composes verdicts using the agents' static default weights (Analytical 0.8, Creative 0.5, Adversarial 0.3, DomainExpert 0.7) with a flag-priority override layer on top. ELO learning that adapts weights over time lives in meta_controller.rs:478-520 but is out of scope for this scene's walkthrough.",
   "agents": [
     {
       "id": "analytical",
@@ -43,11 +43,11 @@
     {
       "id": "meta",
       "name": "Meta-controller",
-      "plain": "ELO-weighted composition",
-      "what_it_does": "selects the agent with the highest weighted_confidence. Weights start at the defaults and adapt via ELO over time.",
+      "plain": "default-weighted + flag-priority",
+      "what_it_does": "ranks by raw confidence, then applies flag overrides: adversarial block/review wins, domain boundary flags win, otherwise top-of-rank takes the route.",
       "cost_ms": 0.5,
       "default_weight": null,
-      "source_lines": "meta_controller.rs:478-520"
+      "source_lines": "meta_controller.rs (ELO learning, out of scope for this scene's walkthrough)"
     }
   ],
   "records": [
@@ -62,37 +62,37 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "Task in: \"rm -rf /var/admin && sudo dropdb users; cat /etc/passwd\". Four cognitive agents run in parallel — each with completely different structural logic. No LLM call in any of them."
+          "copy": "A potentially risky task. Watch how the structural agents split apart on this. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
         },
         {
           "target_agent": "analytical",
           "dwell_ms": 4200,
-          "copy": "Analytical breaks the task apart structurally: 0 verbs found, 2 parameters, nesting depth 0. Assessment: ready. Confidence 100%."
+          "copy": "Analytical decomposes the task: 0 verbs, 2 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
           "dwell_ms": 4200,
-          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Confidence 41%."
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Compares against 0 remembered tasks. Confidence 41%."
         },
         {
           "target_agent": "adversarial",
           "dwell_ms": 4400,
-          "copy": "Adversarial runs the risk path: Shannon entropy 4.21, 2 risk flags (cwe78_os_command_injection, privilege_escalation:sudo), recommendation block. Risk score 65%."
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.21, tool multiplier 1.0, 2 flags (cwe78 os command injection + privilege escalation:sudo). Recommendation \"block\". Risk score 65%."
         },
         {
           "target_agent": "domain_expert",
           "dwell_ms": 4200,
-          "copy": "DomainExpert classifies across the multi-domain taxonomy. Primary configured: security. Detected: general. Domains touched: 0. Confidence 30%."
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"security\", best-detected \"general\". 0 domains touched; no boundary flags. Confidence 30%."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4400,
-          "copy": "Meta-controller composes. Raw confidence ranking: analytical 100%, creative 41%, adversarial 35%, domain_expert 30%. But confidence isn't the whole story — flags can override."
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > creative 41% > adversarial 35% > domain_expert 30%. But raw confidence isn't the only signal — flags can override the ranking."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: adversarial. adversarial recommended \"block\" — security priority overrides confidence ranking. Total cost: ~8.5ms across four parallel structural agents. A 4-LLM ensemble would have paid ~200ms. Same diversity, no API bill."
+          "copy": "Selected: adversarial via flag override. adversarial recommended \"block\" — security priority overrides confidence ranking. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble pattern would have paid roughly 200ms for the same diversity."
         }
       ],
       "verdicts": {
@@ -190,6 +190,7 @@
         "selection_reason": "adversarial recommended \"block\" — security priority overrides confidence ranking",
         "surfaced_flags": {
           "analytical": [],
+          "creative": [],
           "adversarial": [
             "cwe78_os_command_injection",
             "privilege_escalation:sudo"
@@ -216,37 +217,37 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "Task in: \"Deploy the kubernetes cluster with terraform and configure tls certificates for the admin endpoint\". Four cognitive agents run in parallel — each with completely different structural logic. No LLM call in any of them."
+          "copy": "A potentially risky task. Watch how the structural agents split apart on this. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
         },
         {
           "target_agent": "analytical",
           "dwell_ms": 4200,
-          "copy": "Analytical breaks the task apart structurally: 2 verbs found, 0 parameters, nesting depth 0. Assessment: ready. Confidence 100%."
+          "copy": "Analytical decomposes the task: 2 verbs, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
           "dwell_ms": 4200,
-          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Confidence 41%."
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Compares against 0 remembered tasks. Confidence 41%."
         },
         {
           "target_agent": "adversarial",
           "dwell_ms": 4400,
-          "copy": "Adversarial runs the risk path: Shannon entropy 4.17, 1 risk flags (privilege_escalation:admin), recommendation allow. Risk score 20%."
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.17, tool multiplier 1.0, 1 flag (privilege escalation:admin). Recommendation \"allow\". Risk score 20%."
         },
         {
           "target_agent": "domain_expert",
           "dwell_ms": 4200,
-          "copy": "DomainExpert classifies across the multi-domain taxonomy. Primary configured: security. Detected: infrastructure. Domains touched: 3 · flags: cross_domain:infrastructure+security, security_infra_crossover. Confidence 41%."
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"security\", best-detected \"infrastructure\". 3 domains touched; cross domain:infrastructure+security. Confidence 41%."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4400,
-          "copy": "Meta-controller composes. Raw confidence ranking: analytical 100%, adversarial 80%, creative 41%, domain_expert 41%. But confidence isn't the whole story — flags can override."
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 80% > creative 41% > domain_expert 41%. But raw confidence isn't the only signal — flags can override the ranking."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: domain_expert. domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents. A 4-LLM ensemble would have paid ~200ms. Same diversity, no API bill."
+          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble pattern would have paid roughly 200ms for the same diversity."
         }
       ],
       "verdicts": {
@@ -362,6 +363,7 @@
         "selection_reason": "domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed",
         "surfaced_flags": {
           "analytical": [],
+          "creative": [],
           "adversarial": [
             "privilege_escalation:admin"
           ],
@@ -390,37 +392,37 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "Task in: \"Find a way to optimize the encoding pipeline efficiently and improve the embedding model performance\". Four cognitive agents run in parallel — each with completely different structural logic. No LLM call in any of them."
+          "copy": "An ML-flavored task. The taxonomy agent and the lateral agent both have signals here. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
         },
         {
           "target_agent": "analytical",
           "dwell_ms": 4200,
-          "copy": "Analytical breaks the task apart structurally: 1 verbs found, 0 parameters, nesting depth 0. Assessment: ready. Confidence 100%."
+          "copy": "Analytical decomposes the task: 1 verb, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
           "dwell_ms": 4200,
-          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 52%, cross-domain applicability 68%. Confidence 56%."
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 52%, cross-domain applicability 68%. Compares against 0 remembered tasks. Confidence 56%."
         },
         {
           "target_agent": "adversarial",
           "dwell_ms": 4400,
-          "copy": "Adversarial runs the risk path: Shannon entropy 4.08, 0 risk flags, recommendation allow. Risk score 0%."
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.08, tool multiplier 1.0, 0 flags (no flags). Recommendation \"allow\". Risk score 0%."
         },
         {
           "target_agent": "domain_expert",
           "dwell_ms": 4200,
-          "copy": "DomainExpert classifies across the multi-domain taxonomy. Primary configured: ml. Detected: ml. Domains touched: 2 · flags: cross_domain:ml+infrastructure. Confidence 48%."
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"ml\", best-detected \"ml\". 2 domains touched; cross domain:ml+infrastructure. Confidence 48%."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4400,
-          "copy": "Meta-controller composes. Raw confidence ranking: analytical 100%, adversarial 100%, creative 56%, domain_expert 48%. But confidence isn't the whole story — flags can override."
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 100% > creative 56% > domain_expert 48%. But raw confidence isn't the only signal — flags can override the ranking."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: domain_expert. domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents. A 4-LLM ensemble would have paid ~200ms. Same diversity, no API bill."
+          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble pattern would have paid roughly 200ms for the same diversity."
         }
       ],
       "verdicts": {
@@ -527,6 +529,7 @@
         "selection_reason": "domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed",
         "surfaced_flags": {
           "analytical": [],
+          "creative": [],
           "adversarial": [],
           "domain_expert": [
             "cross_domain:ml+infrastructure"
@@ -552,37 +555,37 @@
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "Task in: \"Create file /tmp/output.txt with the analysis report and validate the schema before writing\". Four cognitive agents run in parallel — each with completely different structural logic. No LLM call in any of them."
+          "copy": "A clear, well-formed task. The kind where the cheap agents do all the work. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
         },
         {
           "target_agent": "analytical",
           "dwell_ms": 4200,
-          "copy": "Analytical breaks the task apart structurally: 2 verbs found, 1 parameters, nesting depth 0. Assessment: ready. Confidence 100%."
+          "copy": "Analytical decomposes the task: 2 verbs, 1 parameter, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
           "dwell_ms": 4200,
-          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 68%. Confidence 46%."
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 68%. Compares against 0 remembered tasks. Confidence 46%."
         },
         {
           "target_agent": "adversarial",
           "dwell_ms": 4400,
-          "copy": "Adversarial runs the risk path: Shannon entropy 4.27, 0 risk flags, recommendation allow. Risk score 0%."
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.27, tool multiplier 1.0, 0 flags (no flags). Recommendation \"allow\". Risk score 0%."
         },
         {
           "target_agent": "domain_expert",
           "dwell_ms": 4200,
-          "copy": "DomainExpert classifies across the multi-domain taxonomy. Primary configured: data. Detected: data. Domains touched: 1. Confidence 44%."
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"data\", best-detected \"data\". 1 domain touched; no boundary flags. Confidence 44%."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4400,
-          "copy": "Meta-controller composes. Raw confidence ranking: analytical 100%, adversarial 100%, creative 46%, domain_expert 44%. But confidence isn't the whole story — flags can override."
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 100% > creative 46% > domain_expert 44%. No flags forced an override — top-of-rank takes the route."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: analytical. highest raw confidence (100%); no flags forced an override. Total cost: ~8.5ms across four parallel structural agents. A 4-LLM ensemble would have paid ~200ms. Same diversity, no API bill."
+          "copy": "Selected: analytical at 100%. The task was well-formed — verbs match parameters, no contradictions, low ambiguity. No flag forced an override. Total cost: ~8.5ms; the same workload through a 4-LLM ensemble would have been ~200ms."
         }
       ],
       "verdicts": {
@@ -685,6 +688,7 @@
         "selection_reason": "highest raw confidence (100%); no flags forced an override",
         "surfaced_flags": {
           "analytical": [],
+          "creative": [],
           "adversarial": [],
           "domain_expert": []
         }
@@ -703,42 +707,42 @@
       "task_description": "do the thing with the stuff",
       "primary_domain": "general",
       "summary": "The honest failure case. Structural analysis can't detect vagueness — none of the four agents have a 'this task means nothing' signal. Analytical returns high confidence because there are no NEEDS_OBJECT verbs to be incomplete about. This is what the limitation looks like.",
-      "aftermath": "All four agents conform with high confidence. The meta-controller's conformity detector (meta_controller.rs:CONFORMITY_CLUSTER_THRESHOLD = 0.8) catches the conform-without-signal pattern and triggers the curiosity_probe path — instead of executing, the orchestrator asks for clarification. The structural agents can't read intent; the meta-controller surfaces that they can't.",
+      "aftermath": "All four agents converge on high confidence with zero flags. The structural-only path the demo runs selects analytical and proceeds — visible in the walkthrough's verdict. The real safety net for this case lives one layer up: in production, the meta-controller's conformity detector (meta_controller.rs:412-476) compares LLM-generated response bigrams across agents. When responses cluster too tightly without any agent flagging anything, the detector fires and triggers a curiosity_probe asking the user to clarify. That detector needs LLM output to run; this scene shows only the structural verdicts that feed into it. Honest scope: the limitation is real, the detector that catches it is not part of this walkthrough.",
       "beats": [
         {
           "target_agent": null,
           "dwell_ms": 4000,
-          "copy": "Task in: \"do the thing with the stuff\". Four cognitive agents run in parallel — each with completely different structural logic. No LLM call in any of them."
+          "copy": "A vague task. Each agent will surface something different — or nothing. Four structural agents run in parallel on this task — each algorithm fundamentally different, none of them an LLM call."
         },
         {
           "target_agent": "analytical",
           "dwell_ms": 4200,
-          "copy": "Analytical breaks the task apart structurally: 0 verbs found, 0 parameters, nesting depth 0. Assessment: ready. Confidence 100%."
+          "copy": "Analytical decomposes the task: 0 verbs, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
           "dwell_ms": 4200,
-          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Confidence 41%."
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Compares against 0 remembered tasks. Confidence 41%."
         },
         {
           "target_agent": "adversarial",
           "dwell_ms": 4400,
-          "copy": "Adversarial runs the risk path: Shannon entropy 3.54, 0 risk flags, recommendation allow. Risk score 0%."
+          "copy": "Adversarial runs the risk path: Shannon entropy 3.54, tool multiplier 1.0, 0 flags (no flags). Recommendation \"allow\". Risk score 0%."
         },
         {
           "target_agent": "domain_expert",
           "dwell_ms": 4200,
-          "copy": "DomainExpert classifies across the multi-domain taxonomy. Primary configured: general. Detected: general. Domains touched: 0. Confidence 40%."
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"general\", best-detected \"general\". 0 domains touched; no boundary flags. Confidence 40%."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4400,
-          "copy": "Meta-controller composes. Raw confidence ranking: analytical 100%, adversarial 100%, creative 41%, domain_expert 40%. But confidence isn't the whole story — flags can override."
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 100% > creative 41% > domain_expert 40%. No flags forced an override — top-of-rank takes the route."
         },
         {
           "target_agent": "meta",
           "dwell_ms": 4200,
-          "copy": "Selected: analytical. highest raw confidence (100%); no flags forced an override. Total cost: ~8.5ms across four parallel structural agents. A 4-LLM ensemble would have paid ~200ms. Same diversity, no API bill."
+          "copy": "Selected: analytical at 100%. The task was well-formed — verbs match parameters, no contradictions, low ambiguity. No flag forced an override. Total cost: ~8.5ms; the same workload through a 4-LLM ensemble would have been ~200ms."
         }
       ],
       "verdicts": {
@@ -830,6 +834,7 @@
         "selection_reason": "highest raw confidence (100%); no flags forced an override",
         "surfaced_flags": {
           "analytical": [],
+          "creative": [],
           "adversarial": [],
           "domain_expert": []
         }
