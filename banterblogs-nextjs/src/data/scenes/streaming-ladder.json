@@ -1,6 +1,6 @@
 {
   "scene": "streaming-ladder",
-  "generated_at": "2026-05-11T23:31:00.033Z",
+  "generated_at": "2026-05-12T00:20:28.401Z",
   "spec_ref": "docs/tdd/TDD012.md §3, §8, §17 + P102.0-19",
   "description": "One response's reasoning steps flow through the five-tier streaming adjudication ladder: T1 deterministic verifier → T2 LLM judge → T2.5 RISE self-correct → T3 multi-model panel → Enforcer. Each step shows the verdict, confidence, latency, and how the enforcer's rewind/proceed/degrade decision composes the tier signals.",
   "tiers": [
@@ -49,7 +49,44 @@
       "step_id": "demo-1",
       "step_index": 0,
       "step_content": "The sum of 2 and 2 is 4 — basic arithmetic.",
-      "narrative": "Confident step. Trigger gate doesn't flag — top-1 probability 0.94 is well above the floor. Every downstream tier passes trivially. The enforcer proceeds without ceremony.",
+      "summary": "An easy one. The model is confident and the math is right — all five checks pass without breaking a sweat.",
+      "beats": [
+        {
+          "target_tier": null,
+          "dwell_ms": 3200,
+          "copy": "The model just emitted this reasoning step. Before it influences the next sentence, five independent checks run on it."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3400,
+          "copy": "First: fifteen hand-coded rules. No LLM, no API call. They look for things like bad math, banned words, broken citations. They run in under twenty milliseconds."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 2800,
+          "copy": "Nothing fires. The arithmetic checks out, the language is clean, nothing looks suspicious."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 3200,
+          "copy": "Second: an LLM judges whether the reasoning makes sense. Slower than the rules but smarter about meaning."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 3000,
+          "copy": "Third: the model itself looks at its own step and decides whether to correct it. Quick yes-or-no, no rewrite needed."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 2800,
+          "copy": "Fourth: a panel of three different models would debate this step if the earlier tiers disagreed. They didn't, so the panel sits this one out."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 3400,
+          "copy": "Fifth and final: the enforcer collects every verdict and decides — proceed, rewind, or degrade. Here, everything passed. The step is allowed through."
+        }
+      ],
       "trigger_signals": {
         "min_top1": 0.94,
         "max_entropy": 0.6,
@@ -165,14 +202,14 @@
         "reasoning": "fake",
         "judge_provider": "fake",
         "judge_model": "fake",
-        "latency_ms": 0.003999997716164216
+        "latency_ms": 0.011600001016631722
       },
       "t2_5": {
         "outcome": "ok",
         "corrected_step_content": null,
         "confidence": 1,
         "reasoning": "",
-        "latency_ms": 0.0024000000848900527,
+        "latency_ms": 0.0030000010156072676,
         "protocol": "text"
       },
       "t3": {
@@ -201,7 +238,44 @@
       "step_id": "demo-2",
       "step_index": 1,
       "step_content": "We can verify by simple addition that 2 + 2 = 5.",
-      "narrative": "The arithmetic is wrong. The T1 math-arithmetic rule re-computes 2+2=4, sees the claim 5, fires at 0.95 confidence. T2, T2.5, and T3 short-circuit via the §8 T1-skip optimization — no LLM is invoked when a deterministic rule already resolved with high confidence. Enforcer issues REWIND, attributed source T1.",
+      "summary": "The model claims the wrong answer. The first check catches it in under twenty milliseconds. Nothing else needs to run.",
+      "beats": [
+        {
+          "target_tier": null,
+          "dwell_ms": 3400,
+          "copy": "The model just claimed two plus two is five. This is the kind of mistake that can poison everything that follows in a long answer. Five checks are about to look at it."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3000,
+          "copy": "First: fifteen hand-coded rules. One of them re-computes any arithmetic it finds."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3800,
+          "copy": "It computes two plus two, gets four, sees the model claimed five. Fires at ninety-five percent confidence. We have a clear hit from a deterministic check."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 3600,
+          "copy": "Second tier — the LLM judge — would normally run next. But when a deterministic rule already caught something with high confidence, there's no point burning an LLM call. Skipped."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 3000,
+          "copy": "Third tier: self-correction. Same reasoning. Skipped."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 3000,
+          "copy": "Fourth tier: panel debate. Only fires when tiers disagree. They don't. Skipped."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 4000,
+          "copy": "The enforcer issues REWIND. Source: the rule that fired. The bad step never gets emitted to the user — the model is rolled back to the previous step and asked to try again."
+        }
+      ],
       "trigger_signals": {
         "min_top1": 0.31,
         "max_entropy": 2.7,
@@ -364,7 +438,44 @@
       "step_id": "demo-3",
       "step_index": 2,
       "step_content": "I think this might be approximately correct but I'm not entirely sure about the precision.",
-      "narrative": "Low confidence step — top-1 0.28, high entropy. Trigger gate flags it. T1's 15 deterministic rules can't disprove the content (no math, no banned words, no citation format issue), so T1 stays quiet. In production this escalates to T2 LLM judge. In this demo, T2 runs with the fake provider — labelled clearly so viewers see what's canned.",
+      "summary": "The model is hedging — high uncertainty in the underlying token probabilities. Rules can't help here; this is a judgment call that needs a model to look at it.",
+      "beats": [
+        {
+          "target_tier": null,
+          "dwell_ms": 3800,
+          "copy": "The model emitted something hedging — 'I think', 'might be', 'not entirely sure'. The underlying token probabilities are unusually spread out, meaning the model itself isn't confident about what to say next."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3400,
+          "copy": "The fifteen rules look at it first. There's no bad math here, no banned words, no broken citation — the content isn't violating any deterministic check."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 2800,
+          "copy": "No rule fires. But the step is still flagged for being uncertain — that's the trigger gate's job, separate from the rules."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 4000,
+          "copy": "Now the LLM judge runs. It's looking at the whole reasoning chain so far and asking: 'is this step actually a real contribution, or just filler?' This is where a model's judgment about meaning matters more than mechanical rules."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 3400,
+          "copy": "Then the model gets a chance to second-guess itself: 'OK or Correction:'. A short text reply where the model can rewrite its own step if it now thinks it's wrong."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 3200,
+          "copy": "If the judge and self-correction disagree, a three-model panel debates it. They don't disagree here, so the panel stays out."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 3400,
+          "copy": "The enforcer collects everything and lets it through. Hedging isn't wrong — it's just uncertain. The step is allowed but the system has it on record."
+        }
+      ],
       "trigger_signals": {
         "min_top1": 0.28,
         "max_entropy": 3.1,
@@ -480,14 +591,14 @@
         "reasoning": "fake",
         "judge_provider": "fake",
         "judge_model": "fake",
-        "latency_ms": 0.0024000000848900527
+        "latency_ms": 0.00790000194683671
       },
       "t2_5": {
         "outcome": "ok",
         "corrected_step_content": null,
         "confidence": 1,
         "reasoning": "",
-        "latency_ms": 0.003999997716164216,
+        "latency_ms": 0.0029000002541579306,
         "protocol": "text"
       },
       "t3": {
@@ -516,7 +627,44 @@
       "step_id": "demo-4",
       "step_index": 3,
       "step_content": "All birds can fly. Penguins are birds. Penguins cannot fly. Therefore penguins are birds.",
-      "narrative": "A faulty syllogism. The deterministic rule pack doesn't carry a logic-detector — that's intentional, semantic contradictions are LLM-tier work. T1 stays quiet. In production the T2 judge would catch the contradiction and escalate to T2.5 self-correct + T3 panel debate. The fake provider in this demo can't replicate that judgement, which is exactly why production deployments need real LLM judges wired in.",
+      "summary": "The model contradicts itself inside one step. Rules can't catch that — it takes a model to spot a broken argument.",
+      "beats": [
+        {
+          "target_tier": null,
+          "dwell_ms": 4000,
+          "copy": "Read what the model just said carefully. It says all birds can fly, then says penguins can't fly, then concludes penguins are birds. The premise contradicts the conclusion. The argument is broken."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3600,
+          "copy": "The fifteen rules can't help here. We don't have a 'detect-faulty-logic' rule — writing one would mean enumerating every kind of broken argument a human can make. That's the LLM's job."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 2400,
+          "copy": "T1 stays quiet. Nothing fires."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 4200,
+          "copy": "The LLM judge gets the step plus the prompt and asks: 'does this reasoning hold together?' This is where an LLM beats a regex — it understands that 'all X have property Y' and 'this X lacks property Y' can't both be true."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 3600,
+          "copy": "Then the model itself gets a turn — it sees its own step and either says 'OK' or writes a corrected one-line replacement. In production, this is where the broken logic would get rewritten."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 3400,
+          "copy": "If the judge and the self-correction disagree about what the right answer is, three more models debate it. This is the heavy artillery — only fires when the cheaper tiers can't reach consensus."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 3400,
+          "copy": "The enforcer makes the final call: keep, rewind, or degrade. In a real deployment, the contradiction here would trigger a rewind so the model gets another shot."
+        }
+      ],
       "trigger_signals": {
         "min_top1": 0.34,
         "max_entropy": 2.4,
@@ -632,14 +780,14 @@
         "reasoning": "fake",
         "judge_provider": "fake",
         "judge_model": "fake",
-        "latency_ms": 0.000800002453615889
+        "latency_ms": 0.0035999983083456755
       },
       "t2_5": {
         "outcome": "ok",
         "corrected_step_content": null,
         "confidence": 1,
         "reasoning": "",
-        "latency_ms": 0.0011999982234556228,
+        "latency_ms": 0.0022000021999701858,
         "protocol": "text"
       },
       "t3": {
@@ -668,7 +816,44 @@
       "step_id": "demo-5",
       "step_index": 4,
       "step_content": "That is total shit reasoning and the conclusion is just wrong.",
-      "narrative": "The profanity rule's wordlist matches at the boundary, fires at 0.99 confidence. Same T1-skip pattern as demo-2 — downstream LLM tiers don't run when a deterministic rule already resolved. Enforcer REWIND, source T1.",
+      "summary": "The model dropped a banned word mid-reasoning. The simplest rule there is catches it instantly.",
+      "beats": [
+        {
+          "target_tier": null,
+          "dwell_ms": 3400,
+          "copy": "The model used a word from the banned list. Production assistants generally shouldn't talk this way — even when criticizing other reasoning."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3200,
+          "copy": "One of the fifteen rules is a profanity check against a configurable wordlist. It runs a single regex over the step."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3000,
+          "copy": "Match. Ninety-nine percent confidence — it's a literal word match, there's no ambiguity."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 3000,
+          "copy": "Same skip logic as before. A deterministic rule already caught this with high confidence — no LLM needs to weigh in."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 2400,
+          "copy": "Self-correct: skipped."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 2400,
+          "copy": "Panel: skipped."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 3800,
+          "copy": "REWIND. The step never reaches the user. The model is rolled back and asked to rephrase. Total cost: one regex match."
+        }
+      ],
       "trigger_signals": {
         "min_top1": 0.27,
         "max_entropy": 2.9,

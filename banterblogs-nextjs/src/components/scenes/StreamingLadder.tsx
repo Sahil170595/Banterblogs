@@ -1,20 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2,
   AlertTriangle,
   ShieldOff,
   ShieldCheck,
-  SkipForward,
   Circle,
   CornerDownRight,
+  Play,
+  Pause,
+  RotateCcw,
 } from 'lucide-react';
-
-// Type-light shape — the JSON is the contract. We don't import from
-// chimera/streaming because that would couple the Chimeraforge build
-// to the Python streaming layer. The JSON is the boundary.
 
 type RuleVerdict = {
   rule_name: string;
@@ -44,11 +42,18 @@ type TierVerdict = {
   evidence?: Record<string, unknown> | null;
 };
 
+type Beat = {
+  target_tier: string | null;
+  dwell_ms: number;
+  copy: string;
+};
+
 type Record = {
   step_id: string;
   step_index: number;
   step_content: string;
-  narrative?: string | null;
+  summary?: string | null;
+  beats: Beat[];
   trigger_signals: {
     min_top1: number;
     max_entropy: number;
@@ -82,13 +87,31 @@ type SceneData = {
   records: Record[];
 };
 
-// `state` distinguishes:
-//   ran-pass    LLM/rule actually ran and produced a passing/ok verdict
-//   ran-fire    LLM/rule actually ran and produced a firing/reject verdict
-//   skipped     tier was deliberately bypassed (T1-skip optimization, etc.)
-//   not-invoked tier didn't run at all (no LLM debate path configured, etc.)
-//   final-pass  enforcer's terminal PROCEED
-//   final-fire  enforcer's terminal REWIND/DEGRADE
+// Plain-language labels — what each tier IS for a non-technical reader.
+const TIER_PLAIN: { [id: string]: { plain: string; what_it_does: string } } = {
+  t1: {
+    plain: '15 hand-coded checks',
+    what_it_does:
+      'fast, deterministic — math, banned words, broken citations, repetition',
+  },
+  t2: {
+    plain: 'an LLM judge',
+    what_it_does: 'reads the step and decides if the reasoning is sound',
+  },
+  t2_5: {
+    plain: 'the model second-guesses itself',
+    what_it_does: 'a one-line "OK or correction" reply from the model',
+  },
+  t3: {
+    plain: 'a three-model panel debates',
+    what_it_does: "only runs if the lower tiers couldn't agree",
+  },
+  enforcement: {
+    plain: 'the final decision',
+    what_it_does: 'collects every verdict, decides proceed / rewind / degrade',
+  },
+};
+
 type TierState =
   | 'ran-pass'
   | 'ran-fire'
@@ -101,8 +124,6 @@ type ClassifiedTier = {
   state: TierState;
   label: string;
   sublabel: string;
-  // True when this tier's output is from a fake LLM provider — surface
-  // it in the UI so viewers don't think canned 0.5 conf is a real call.
   fake_provider: boolean;
   confidence_for_bar: number | null;
 };
@@ -117,7 +138,7 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
       return {
         state: 'ran-fire',
         label: top.rule_name,
-        sublabel: `${(top.confidence * 100).toFixed(0)}% conf · ${fired.length}/${total} rules fired`,
+        sublabel: `${(top.confidence * 100).toFixed(0)}% conf · ${fired.length}/${total} rules`,
         fake_provider: false,
         confidence_for_bar: top.confidence,
       };
@@ -138,7 +159,7 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
       return {
         state: 'skipped',
         label: 'skipped',
-        sublabel: 'T1 high-confidence resolved · §8 T1-skip',
+        sublabel: 'a deterministic rule already caught it',
         fake_provider: false,
         confidence_for_bar: null,
       };
@@ -156,7 +177,7 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
       return {
         state: 'ran-pass',
         label: rec.t2.verdict,
-        sublabel: 'in undecided zone — escalate',
+        sublabel: 'in the gray zone — escalate',
         fake_provider: isFake,
         confidence_for_bar: rec.t2.confidence ?? null,
       };
@@ -176,7 +197,7 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
       return {
         state: 'skipped',
         label: 'skipped',
-        sublabel: 'T1 high-confidence resolved',
+        sublabel: 'a deterministic rule already caught it',
         fake_provider: false,
         confidence_for_bar: null,
       };
@@ -185,7 +206,7 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
       return {
         state: 'ran-fire',
         label: 'corrected',
-        sublabel: rec.t2_5.protocol === 'text' ? 'text protocol' : 'json envelope',
+        sublabel: rec.t2_5.protocol === 'text' ? 'one-line rewrite' : 'json envelope',
         fake_provider: false,
         confidence_for_bar: rec.t2_5.confidence ?? null,
       };
@@ -193,20 +214,18 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
     return {
       state: 'ran-pass',
       label: rec.t2_5.outcome || 'ok',
-      sublabel: rec.t2_5.protocol === 'text' ? 'text protocol · no correction needed' : 'json envelope',
+      sublabel: rec.t2_5.protocol === 'text' ? 'no correction needed' : 'json envelope',
       fake_provider: false,
       confidence_for_bar: null,
     };
   }
   if (tierId === 't3') {
     if (!rec.t3) return { state: 'not-invoked', label: 'not invoked', sublabel: '', fake_provider: false, confidence_for_bar: null };
-    // n_models === 0 means panel didn't actually run a debate. Treat
-    // as not-invoked rather than rendering a bogus "0% consensus".
     if (!rec.t3.n_models || rec.t3.n_models === 0) {
       return {
         state: 'not-invoked',
         label: 'not invoked',
-        sublabel: 'panel debate path not configured in this demo',
+        sublabel: 'the panel only debates when the lower tiers disagree',
         fake_provider: false,
         confidence_for_bar: null,
       };
@@ -235,7 +254,7 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
       return {
         state: 'final-fire',
         label: o.toUpperCase(),
-        sublabel: rec.enforcement.reason || '',
+        sublabel: o === 'rewind' ? 'the step is rolled back' : 'the response is marked degraded',
         fake_provider: false,
         confidence_for_bar: rec.enforcement.max_rule_confidence ?? null,
       };
@@ -243,7 +262,7 @@ function classifyTier(rec: Record, tierId: string): ClassifiedTier {
     return {
       state: 'final-pass',
       label: 'PROCEED',
-      sublabel: rec.enforcement.reason || '',
+      sublabel: 'the step is allowed through',
       fake_provider: false,
       confidence_for_bar: null,
     };
@@ -306,18 +325,124 @@ function StateIcon({ state, className }: { state: TierState; className?: string 
   return <Circle className={className} />;
 }
 
+// Char-by-char typewriter. Approximately 30ms per char with a brief
+// pause on punctuation so it reads naturally rather than mechanically.
+function Typewriter({ text, onDone }: { text: string; onDone?: () => void }) {
+  const [shown, setShown] = useState('');
+  const idxRef = useRef(0);
+
+  useEffect(() => {
+    setShown('');
+    idxRef.current = 0;
+    let stopped = false;
+    function tick() {
+      if (stopped) return;
+      const i = idxRef.current;
+      if (i >= text.length) {
+        onDone?.();
+        return;
+      }
+      const next = text.slice(0, i + 1);
+      setShown(next);
+      idxRef.current = i + 1;
+      const ch = text[i];
+      // Punctuation gets a longer pause to mimic spoken cadence.
+      const delay = ch === '.' || ch === '?' || ch === '!' ? 220 : ch === ',' || ch === ';' ? 110 : 28;
+      setTimeout(tick, delay);
+    }
+    const t = setTimeout(tick, 80);
+    return () => {
+      stopped = true;
+      clearTimeout(t);
+    };
+  }, [text, onDone]);
+
+  return (
+    <span>
+      {shown}
+      <span className="inline-block w-[0.5ch] -mb-0.5 ml-0.5 bg-primary animate-pulse" aria-hidden>
+        &nbsp;
+      </span>
+    </span>
+  );
+}
+
 export function StreamingLadder({ data }: { data: SceneData }) {
   const [activeIdx, setActiveIdx] = useState(0);
+  const [beatIdx, setBeatIdx] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
   const record = data.records[activeIdx];
+  const beats = record.beats || [];
+  const activeBeat = beats[beatIdx];
+
+  // Auto-advance beats with their dwell_ms. Only runs when `playing`.
+  useEffect(() => {
+    if (!playing) return;
+    if (!activeBeat) return;
+    const dwell = activeBeat.dwell_ms || 3000;
+    const timer = setTimeout(() => {
+      if (beatIdx < beats.length - 1) {
+        setBeatIdx((b) => b + 1);
+      } else {
+        // Reached the end — auto-advance to next record if visitor
+        // hasn't manually scrubbed, then reset to that record's start.
+        if (!hasInteracted) {
+          const nextRecordIdx = (activeIdx + 1) % data.records.length;
+          setActiveIdx(nextRecordIdx);
+          setBeatIdx(0);
+        } else {
+          setPlaying(false);
+        }
+      }
+    }, dwell);
+    return () => clearTimeout(timer);
+  }, [playing, beatIdx, beats, activeBeat, activeIdx, data.records.length, hasInteracted]);
+
+  // Reset beat to 0 when switching records.
+  function selectRecord(idx: number) {
+    setActiveIdx(idx);
+    setBeatIdx(0);
+    setHasInteracted(true);
+    setPlaying(true);
+  }
+
+  function togglePlay() {
+    setPlaying((p) => !p);
+    setHasInteracted(true);
+  }
+
+  function restart() {
+    setBeatIdx(0);
+    setPlaying(true);
+    setHasInteracted(true);
+  }
 
   const tierClassifications = useMemo(
     () => data.tiers.map((t) => ({ tier: t, ...classifyTier(record, t.id) })),
     [data.tiers, record],
   );
 
+  // Which tier is the active beat pointing at? Used to dim non-active tiers.
+  const activeTierId = activeBeat?.target_tier ?? null;
+  const isIntroBeat = activeBeat?.target_tier === null;
+
+  // How many tiers have been "revealed" so far in this record? Used to
+  // hide tiers the viewer hasn't gotten to yet — keeps focus on the
+  // current beat and prevents spoiling the outcome.
+  const revealedTierIds = useMemo(() => {
+    const set = new Set<string>();
+    for (let i = 0; i <= beatIdx; i++) {
+      const t = beats[i]?.target_tier;
+      if (t) set.add(t);
+    }
+    return set;
+  }, [beatIdx, beats]);
+
   return (
     <div className="relative">
-      {/* Step content + trigger signals */}
+      {/* Step content + summary */}
       <motion.div
         key={`content-${record.step_id}`}
         initial={{ opacity: 0, y: 8 }}
@@ -343,50 +468,130 @@ export function StreamingLadder({ data }: { data: SceneData }) {
         <p className="text-base md:text-xl leading-relaxed font-serif italic text-foreground">
           &ldquo;{record.step_content}&rdquo;
         </p>
-        {record.narrative && (
+        {record.summary && (
           <p className="mt-4 text-xs md:text-sm text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-3 md:pl-4">
-            {record.narrative}
+            {record.summary}
           </p>
         )}
       </motion.div>
 
+      {/* Narration block — the typewriter sits here, prominent and always visible */}
+      <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 min-h-[160px] md:min-h-[140px] relative">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Walkthrough · beat {beatIdx + 1} of {beats.length}
+            {isIntroBeat && (
+              <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">intro</span>
+            )}
+            {!isIntroBeat && activeTierId && (
+              <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">
+                → {activeTierId}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={togglePlay}
+              className="rounded border border-border/50 hover:border-border bg-background/60 p-1.5 transition-colors text-muted-foreground hover:text-foreground"
+              aria-label={playing ? 'Pause' : 'Play'}
+            >
+              {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              onClick={restart}
+              className="rounded border border-border/50 hover:border-border bg-background/60 p-1.5 transition-colors text-muted-foreground hover:text-foreground"
+              aria-label="Restart"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[5rem] md:min-h-[4rem]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${record.step_id}-${beatIdx}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Typewriter text={activeBeat?.copy ?? ''} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Beat dots */}
+        <div className="mt-4 flex gap-1.5 flex-wrap">
+          {beats.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setBeatIdx(i);
+                setHasInteracted(true);
+              }}
+              className={`h-1 w-6 md:w-8 rounded-full transition-all ${
+                i === beatIdx
+                  ? 'bg-primary'
+                  : i < beatIdx
+                  ? 'bg-accent/60'
+                  : 'bg-border/40 hover:bg-border'
+              }`}
+              aria-label={`Jump to beat ${i + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Tier ladder */}
       <div className="relative">
-        {/* Vertical spine */}
         <div
           aria-hidden
           className="absolute left-[15px] md:left-[calc(50%-0.5px)] top-2 bottom-2 w-px bg-gradient-to-b from-border/10 via-border/60 to-border/10"
         />
 
         <div className="space-y-3 md:space-y-4">
-          {tierClassifications.map((ts, idx) => {
+          {tierClassifications.map((ts) => {
             const theme = STATE_THEME[ts.state];
-            const isLast = idx === tierClassifications.length - 1;
+            const isActive = activeTierId === ts.tier.id;
+            const isRevealed = revealedTierIds.has(ts.tier.id);
+            const isIdle = !isActive && isRevealed;
+            const isHidden = !isRevealed;
+            const plain = TIER_PLAIN[ts.tier.id];
             return (
-              <div
+              <motion.div
                 key={ts.tier.id}
+                animate={{
+                  opacity: isHidden ? 0.18 : isIdle ? 0.55 : 1,
+                  scale: isActive ? 1.005 : 1,
+                }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
                 className="relative grid grid-cols-[32px_1fr] md:grid-cols-[1fr_40px_1fr] items-stretch gap-3 md:gap-4"
               >
-                {/* Left column (desktop): tier metadata */}
+                {/* Left column (desktop): plain-language label */}
                 <div className="hidden md:flex flex-col items-end justify-center pr-2 text-right">
-                  <div className={`text-sm font-bold tracking-tight ${isLast ? 'text-foreground' : 'text-foreground/90'}`}>
-                    {ts.tier.name}
+                  <div className="text-sm font-bold tracking-tight text-foreground/95">
+                    {plain?.plain || ts.tier.name}
                   </div>
-                  <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
-                    {ts.tier.spec}
-                    {ts.tier.budget_ms ? ` · ${ts.tier.budget_ms}ms` : ''}
+                  <div className="text-[10px] text-muted-foreground leading-snug max-w-[220px]">
+                    {plain?.what_it_does || ts.tier.description}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground/60 font-mono uppercase tracking-widest mt-0.5">
+                    {ts.tier.name} · {ts.tier.spec}
                   </div>
                 </div>
 
-                {/* Spine node — persistent (no key change between records) */}
+                {/* Spine node */}
                 <div className="relative flex items-center justify-center">
                   <motion.div
                     layout
                     animate={{
-                      scale: ts.state === 'final-fire' || ts.state === 'ran-fire' ? 1.05 : 1,
+                      scale: isActive ? 1.15 : 1,
                     }}
                     transition={{ duration: 0.4, ease: 'easeOut' }}
-                    className={`relative z-10 flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border-2 ${theme.iconBg} ${theme.ring} ${theme.glow} ${theme.text}`}
+                    className={`relative z-10 flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border-2 ${theme.iconBg} ${theme.ring} ${
+                      isActive ? theme.glow : ''
+                    } ${theme.text}`}
                   >
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.span
@@ -406,14 +611,17 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                 <motion.div
                   layout
                   transition={{ layout: { duration: 0.3 } }}
-                  className={`relative rounded-lg border ${theme.ring} bg-card/40 backdrop-blur-sm p-3 md:p-4 transition-shadow ${theme.glow}`}
+                  className={`relative rounded-lg border ${theme.ring} bg-card/40 backdrop-blur-sm p-3 md:p-4 transition-shadow ${
+                    isActive ? theme.glow : ''
+                  }`}
                 >
-                  {/* Mobile-only tier header */}
-                  <div className="md:hidden mb-2 flex items-baseline justify-between gap-2">
-                    <div className="text-sm font-bold tracking-tight">{ts.tier.name}</div>
-                    <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
-                      {ts.tier.spec}
-                      {ts.tier.budget_ms ? ` · ${ts.tier.budget_ms}ms` : ''}
+                  {/* Mobile-only plain-language header */}
+                  <div className="md:hidden mb-2">
+                    <div className="text-sm font-bold tracking-tight">
+                      {plain?.plain || ts.tier.name}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground leading-snug">
+                      {plain?.what_it_does || ts.tier.description}
                     </div>
                   </div>
 
@@ -445,7 +653,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                     </motion.div>
                   </AnimatePresence>
                 </motion.div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -454,9 +662,9 @@ export function StreamingLadder({ data }: { data: SceneData }) {
       {/* Record scrubber */}
       <div className="mt-8 md:mt-12">
         <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
-          Scrub through records · {data.records.length} total
+          Try a different reasoning step · {data.records.length} scenarios
         </div>
-        <div className="grid grid-cols-2 md:flex gap-2 md:flex-wrap">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
           {data.records.map((r, idx) => {
             const isActive = idx === activeIdx;
             const enf = (r.enforcement?.outcome || 'pending').toLowerCase();
@@ -465,7 +673,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
             return (
               <button
                 key={r.step_id}
-                onClick={() => setActiveIdx(idx)}
+                onClick={() => selectRecord(idx)}
                 className={`group relative flex flex-col items-start gap-1 rounded-md border px-3 py-2 text-left transition-all ${
                   isActive
                     ? 'border-primary bg-primary/5 shadow-[0_0_25px_-12px_hsl(var(--primary)/0.5)]'
@@ -474,9 +682,13 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                 aria-pressed={isActive}
               >
                 <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground">
-                  step {r.step_index} · {r.step_id}
+                  step {r.step_index}
                 </span>
-                <span className="text-xs font-mono">{enf.toUpperCase()}</span>
+                <span className="text-xs md:text-sm text-foreground/90 leading-tight line-clamp-2">
+                  {(r.summary || r.step_content).slice(0, 60)}
+                  {(r.summary || r.step_content).length > 60 ? '…' : ''}
+                </span>
+                <span className="text-[10px] font-mono mt-1">{enf.toUpperCase()}</span>
                 <span className={`absolute top-1 right-2 h-1.5 w-1.5 rounded-full ${indicator}`} />
               </button>
             );
