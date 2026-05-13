@@ -52,7 +52,7 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
   return (
     <motion.article
       ref={magneticRef}
-      initial={{ opacity: 0, y: 20 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
       whileHover={{ 
@@ -193,7 +193,7 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
         {tags.length > 0 && (
           <motion.div
             className="flex flex-wrap gap-2"
-            initial={{ opacity: 0 }}
+            initial={false}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
@@ -255,7 +255,7 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
       <motion.div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         aria-hidden
-        initial={{ opacity: 0 }}
+        initial={false}
         whileHover={{ opacity: 1 }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-transparent" />

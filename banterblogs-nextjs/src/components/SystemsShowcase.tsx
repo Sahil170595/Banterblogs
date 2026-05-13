@@ -98,7 +98,7 @@ export function SystemsShowcase() {
         {coreEngines.map((engine, index) => (
           <motion.article
             key={engine.name}
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -145,7 +145,7 @@ export function SystemsShowcase() {
         {supportingSystems.map((system, index) => (
           <motion.article
             key={system.name}
-            initial={{ opacity: 0, y: 16 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.08 }}
             viewport={{ once: true, amount: 0.3 }}

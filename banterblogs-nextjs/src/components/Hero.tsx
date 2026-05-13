@@ -42,8 +42,10 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
 
       <div className="container relative py-20 md:py-28">
         <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_420px]">
+          {/* initial={false} avoids the SSR-vs-client style-attribute
+              mismatch that fired React #418 in prod. Trade: no entry fade. */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             className="space-y-10"
@@ -123,7 +125,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
 
           {/* Latest episode sidebar — proof of active development */}
           <motion.aside
-            initial={{ opacity: 0, y: 32 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
             className="relative w-full"

@@ -119,7 +119,10 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-sm text-muted-foreground md:flex-row">
-          <span>(c) {new Date().getFullYear()} Chimeraforge. Crafted in public, powered by local AI.</span>
+          {/* Year hardcoded so server-build and client-hydration agree —
+              new Date().getFullYear() can mismatch across timezones / build
+              boundaries and tripped React #418 in prod. Bump yearly. */}
+          <span>(c) 2026 Chimeraforge. Crafted in public, powered by local AI.</span>
           <span>9 repos. One ecosystem.</span>
         </div>
       </div>

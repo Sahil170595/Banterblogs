@@ -35,7 +35,7 @@ export function EpisodeSpotlight({ episodes }: EpisodeSpotlightProps) {
 
       {episodes.length > 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, amount: 0.2 }}
