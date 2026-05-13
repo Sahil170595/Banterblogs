@@ -42,11 +42,16 @@ export function EpisodeCard({ episode, index = 0 }: EpisodeCardProps) {
   const tags = episode.tags.slice(0, 3);
   const magneticRef = useMagneticCursor({ strength: 0.08, radius: 40 });
 
+  // Pin timezone to UTC so server and client render the same date
+  // string regardless of the visitor's local timezone — without this
+  // an episode dated "2026-05-08" prints "May 8" on the server (UTC)
+  // and "May 7" on a client west of UTC, tripping React #418.
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC',
     });
 
   return (

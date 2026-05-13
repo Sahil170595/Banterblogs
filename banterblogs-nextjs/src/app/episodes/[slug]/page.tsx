@@ -110,6 +110,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
+                  timeZone: 'UTC',
                 })}
               </span>
             </div>
