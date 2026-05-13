@@ -579,7 +579,7 @@ function MetaControllerCard({
 
   return (
     <motion.div
-      initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="signal-panel-strong p-5 md:p-6 mt-4 md:mt-6"
@@ -714,7 +714,7 @@ function AftermathPanel({
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -926,7 +926,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
       {/* Task content + summary */}
       <motion.div
         key={`content-${record.step_id}`}
-        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="signal-panel-strong p-5 md:p-8 mb-6 md:mb-8"
@@ -987,7 +987,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
           <AnimatePresence mode="wait">
             <motion.div
               key={`${record.step_id}-${beatIdx}`}
-              initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
               transition={{ duration: 0.25 }}
