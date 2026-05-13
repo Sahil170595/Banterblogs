@@ -47,7 +47,7 @@ export function RoadmapRail() {
         {highlights.map((phase, index) => (
           <motion.div
             key={phase.label}
-            initial={{ opacity: 0, y: 16 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.08 }}
             viewport={{ once: true, amount: 0.3 }}
