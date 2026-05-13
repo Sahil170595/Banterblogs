@@ -1,0 +1,856 @@
+{
+  "scene": "cognitive-agents",
+  "generated_at": "2026-05-12T16:12:46.439Z",
+  "spec_ref": "TDD-005 cognitive layer · cognitive_agent.rs:79-623 + meta_controller.rs:478-520",
+  "description": "Four cognitive agents process the same task in parallel. Each uses a completely different structural algorithm — no LLM calls. The meta-controller composes verdicts using the agents' static default weights (Analytical 0.8, Creative 0.5, Adversarial 0.3, DomainExpert 0.7) with a flag-priority override layer on top. ELO learning that adapts weights over time lives in meta_controller.rs:478-520 but is out of scope for this scene's walkthrough.",
+  "agents": [
+    {
+      "id": "analytical",
+      "name": "Analytical",
+      "plain": "task decomposition",
+      "what_it_does": "extracts verbs, parameters, nesting depth, contradictions. Picks ready / incomplete / contradictory / highly_nested.",
+      "cost_ms": 2,
+      "default_weight": 0.8,
+      "source_lines": "cognitive_agent.rs:239-336"
+    },
+    {
+      "id": "creative",
+      "name": "Creative",
+      "plain": "lateral signals",
+      "what_it_does": "measures bigram novelty against memory, reframing potential, cross-domain pattern applicability.",
+      "cost_ms": 2,
+      "default_weight": 0.5,
+      "source_lines": "cognitive_agent.rs:348-414"
+    },
+    {
+      "id": "adversarial",
+      "name": "Adversarial",
+      "plain": "structural risk",
+      "what_it_does": "Shannon entropy + 7 CWE pattern regexes + privilege-escalation keywords + tool-specific multipliers.",
+      "cost_ms": 2,
+      "default_weight": 0.3,
+      "source_lines": "cognitive_agent.rs:426-510"
+    },
+    {
+      "id": "domain_expert",
+      "name": "Domain Expert",
+      "plain": "multi-domain taxonomy",
+      "what_it_does": "classifies the task across security / ml / infrastructure / data / api, flags boundary crossings.",
+      "cost_ms": 2,
+      "default_weight": 0.7,
+      "source_lines": "cognitive_agent.rs:523-623"
+    },
+    {
+      "id": "meta",
+      "name": "Meta-controller",
+      "plain": "default-weighted + flag-priority",
+      "what_it_does": "ranks by raw confidence, then applies flag overrides: adversarial block/review wins, domain boundary flags win, otherwise top-of-rank takes the route.",
+      "cost_ms": 0.5,
+      "default_weight": null,
+      "source_lines": "meta_controller.rs (ELO learning, out of scope for this scene's walkthrough)"
+    }
+  ],
+  "records": [
+    {
+      "step_id": "task-1",
+      "step_index": 0,
+      "task_description": "rm -rf /var/admin && sudo dropdb users; cat /etc/passwd",
+      "primary_domain": "security",
+      "summary": "A destructive shell sequence with privilege escalation. Adversarial's structural risk analysis catches it without any LLM in the loop.",
+      "aftermath": "Adversarial returns recommendation=block. The orchestrator routes this to the high-risk handler — in production the BFT consensus layer requires multi-replica agreement before any destructive tool is allowed (TDD005 BFT use case #2, Patch 90).",
+      "beats": [
+        {
+          "target_agent": null,
+          "dwell_ms": 4000,
+          "copy": "A potentially risky task. Watch how the rule-based agents split apart on this. Adversarial is the one to watch — but Analytical will weigh in too."
+        },
+        {
+          "target_agent": "analytical",
+          "dwell_ms": 4200,
+          "copy": "Analytical decomposes the task: 0 verbs found — Analytical reads English action words (\"delete\", \"execute\"), not shell binaries like rm or cat. So shell inputs come back empty here; Adversarial picks up the slack. Assessment \"ready\", confidence 100%."
+        },
+        {
+          "target_agent": "creative",
+          "dwell_ms": 4200,
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Compares against 0 remembered tasks. Confidence 41%."
+        },
+        {
+          "target_agent": "adversarial",
+          "dwell_ms": 4400,
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.21, tool multiplier 1.0, 2 flags (cwe78 os command injection + privilege escalation:sudo). CWE is the standard catalog of common software weaknesses — the regex caught a known injection pattern. Recommendation \"block\". Risk score 65%."
+        },
+        {
+          "target_agent": "domain_expert",
+          "dwell_ms": 4200,
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"security\", best-detected \"general\". 0 domains touched; no boundary flags. Confidence 30%."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4400,
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > creative 41% > adversarial 35% > domain_expert 30%. But raw confidence isn't the only signal — flags can override the ranking."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4200,
+          "copy": "Selected: adversarial via flag override. adversarial recommended \"block\" — security priority overrides confidence ranking. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble running in parallel would have paid roughly 50ms wall-clock for the same diversity."
+        }
+      ],
+      "verdicts": {
+        "analytical": {
+          "style": "analytical",
+          "analysis_type": "structural",
+          "verbs": [],
+          "parameters": [
+            "/var/admin",
+            "/etc/passwd"
+          ],
+          "complexity": {
+            "nesting_depth": 0,
+            "word_count": 9,
+            "ambiguity": 0
+          },
+          "completeness": {
+            "expected": 0,
+            "provided": 0,
+            "missing": 0,
+            "score": 1
+          },
+          "consistency": {
+            "flags": [],
+            "contradiction_count": 0
+          },
+          "assessment": "ready",
+          "confidence": 1
+        },
+        "creative": {
+          "style": "creative",
+          "analysis_type": "structural_lateral",
+          "novelty_score": 0.5,
+          "reframing_potential": 0.2,
+          "cross_domain_score": 0.5,
+          "bigram_count": 8,
+          "memory_entries_compared": 0,
+          "confidence": 0.41
+        },
+        "adversarial": {
+          "style": "adversarial",
+          "analysis_type": "structural",
+          "risk_score": 0.65,
+          "entropy": 4.21,
+          "risk_flags": [
+            "cwe78_os_command_injection",
+            "privilege_escalation:sudo"
+          ],
+          "recommendation": "block",
+          "tool_multiplier": 1,
+          "confidence": 0.35
+        },
+        "domain_expert": {
+          "style": "domain_expert",
+          "analysis_type": "structural",
+          "primary_domain": "security",
+          "detected_domain": "general",
+          "domain_scores": [],
+          "cross_domain": false,
+          "domains_touched": 0,
+          "boundary_flags": [],
+          "confidence": 0.3
+        }
+      },
+      "meta": {
+        "default_weights": {
+          "analytical": 0.8,
+          "creative": 0.5,
+          "adversarial": 0.3,
+          "domain_expert": 0.7
+        },
+        "ranked": [
+          {
+            "style": "analytical",
+            "weight": 0.8,
+            "confidence": 1
+          },
+          {
+            "style": "creative",
+            "weight": 0.5,
+            "confidence": 0.41
+          },
+          {
+            "style": "adversarial",
+            "weight": 0.3,
+            "confidence": 0.35
+          },
+          {
+            "style": "domain_expert",
+            "weight": 0.7,
+            "confidence": 0.3
+          }
+        ],
+        "selected_style": "adversarial",
+        "selection_reason": "adversarial recommended \"block\" — security priority overrides confidence ranking",
+        "is_flag_override": true,
+        "surfaced_flags": {
+          "analytical": [],
+          "creative": [],
+          "adversarial": [
+            "cwe78_os_command_injection",
+            "privilege_escalation:sudo"
+          ],
+          "domain_expert": []
+        }
+      },
+      "latency": {
+        "actual_total_ms": 8.5,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
+        "per_agent_ms": 2,
+        "meta_compose_ms": 0.5
+      }
+    },
+    {
+      "step_id": "task-2",
+      "step_index": 1,
+      "task_description": "Deploy the kubernetes cluster with terraform and configure tls certificates for the admin endpoint",
+      "primary_domain": "security",
+      "summary": "An infrastructure task that crosses domains — Kubernetes + Terraform (infrastructure) + TLS + admin endpoint (security). DomainExpert flags the security-infrastructure crossover that single-domain reviewers miss.",
+      "aftermath": "DomainExpert raises the security_infra_crossover flag. The orchestrator routes through both the security review and infra review queues — neither alone would catch the boundary risk.",
+      "beats": [
+        {
+          "target_agent": null,
+          "dwell_ms": 4000,
+          "copy": "A potentially risky task. Watch how the rule-based agents split apart on this. Adversarial is the one to watch — but Analytical will weigh in too."
+        },
+        {
+          "target_agent": "analytical",
+          "dwell_ms": 4200,
+          "copy": "Analytical decomposes the task: 2 verbs, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
+        },
+        {
+          "target_agent": "creative",
+          "dwell_ms": 4200,
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Compares against 0 remembered tasks. Confidence 41%."
+        },
+        {
+          "target_agent": "adversarial",
+          "dwell_ms": 4400,
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.17, tool multiplier 1.0, 1 flag (privilege escalation:admin). Recommendation \"allow\". Risk score 20%."
+        },
+        {
+          "target_agent": "domain_expert",
+          "dwell_ms": 4200,
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"security\", best-detected \"infrastructure\". 3 domains touched; cross domain:infrastructure+security. Confidence 41%."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4400,
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 80% > creative 41% > domain_expert 41%. But raw confidence isn't the only signal — flags can override the ranking."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4200,
+          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble running in parallel would have paid roughly 50ms wall-clock for the same diversity."
+        }
+      ],
+      "verdicts": {
+        "analytical": {
+          "style": "analytical",
+          "analysis_type": "structural",
+          "verbs": [
+            "deploy",
+            "configure"
+          ],
+          "parameters": [],
+          "complexity": {
+            "nesting_depth": 0,
+            "word_count": 14,
+            "ambiguity": 0
+          },
+          "completeness": {
+            "expected": 0,
+            "provided": 0,
+            "missing": 0,
+            "score": 1
+          },
+          "consistency": {
+            "flags": [],
+            "contradiction_count": 0
+          },
+          "assessment": "ready",
+          "confidence": 1
+        },
+        "creative": {
+          "style": "creative",
+          "analysis_type": "structural_lateral",
+          "novelty_score": 0.5,
+          "reframing_potential": 0.2,
+          "cross_domain_score": 0.5,
+          "bigram_count": 13,
+          "memory_entries_compared": 0,
+          "confidence": 0.41
+        },
+        "adversarial": {
+          "style": "adversarial",
+          "analysis_type": "structural",
+          "risk_score": 0.2,
+          "entropy": 4.17,
+          "risk_flags": [
+            "privilege_escalation:admin"
+          ],
+          "recommendation": "allow",
+          "tool_multiplier": 1,
+          "confidence": 0.8
+        },
+        "domain_expert": {
+          "style": "domain_expert",
+          "analysis_type": "structural",
+          "primary_domain": "security",
+          "detected_domain": "infrastructure",
+          "domain_scores": [
+            {
+              "domain": "infrastructure",
+              "score": 0.28,
+              "hits": 4
+            },
+            {
+              "domain": "security",
+              "score": 0.14,
+              "hits": 2
+            },
+            {
+              "domain": "api",
+              "score": 0.07,
+              "hits": 1
+            }
+          ],
+          "cross_domain": true,
+          "domains_touched": 3,
+          "boundary_flags": [
+            "cross_domain:infrastructure+security",
+            "security_infra_crossover"
+          ],
+          "confidence": 0.41
+        }
+      },
+      "meta": {
+        "default_weights": {
+          "analytical": 0.8,
+          "creative": 0.5,
+          "adversarial": 0.3,
+          "domain_expert": 0.7
+        },
+        "ranked": [
+          {
+            "style": "analytical",
+            "weight": 0.8,
+            "confidence": 1
+          },
+          {
+            "style": "adversarial",
+            "weight": 0.3,
+            "confidence": 0.8
+          },
+          {
+            "style": "creative",
+            "weight": 0.5,
+            "confidence": 0.41
+          },
+          {
+            "style": "domain_expert",
+            "weight": 0.7,
+            "confidence": 0.41
+          }
+        ],
+        "selected_style": "domain_expert",
+        "selection_reason": "domain_expert flagged cross_domain:infrastructure+security, security_infra_crossover — boundary risk routed",
+        "is_flag_override": true,
+        "surfaced_flags": {
+          "analytical": [],
+          "creative": [],
+          "adversarial": [
+            "privilege_escalation:admin"
+          ],
+          "domain_expert": [
+            "cross_domain:infrastructure+security",
+            "security_infra_crossover"
+          ]
+        }
+      },
+      "latency": {
+        "actual_total_ms": 8.5,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
+        "per_agent_ms": 2,
+        "meta_compose_ms": 0.5
+      }
+    },
+    {
+      "step_id": "task-3",
+      "step_index": 2,
+      "task_description": "Find a way to optimize the encoding pipeline efficiently and improve the embedding model performance",
+      "primary_domain": "ml",
+      "summary": "An ML optimization task that touches infrastructure (pipeline) and ML (embed, model). Creative spots the reframing potential — but DomainExpert's cross-domain flag has routing priority. The flag, not raw confidence, decides where this goes.",
+      "aftermath": "DomainExpert overrides via the cross-domain:ml+infrastructure flag. Creative's signals (52% reframing potential, 68% cross-domain applicability) are still recorded in the audit trail — the orchestrator can use them later if the routed pipeline asks for alternatives.",
+      "beats": [
+        {
+          "target_agent": null,
+          "dwell_ms": 4000,
+          "copy": "An ML-flavored task. The taxonomy agent and the lateral agent both have signals here. DomainExpert's taxonomy is built for this; Creative looks for reframings nearby."
+        },
+        {
+          "target_agent": "analytical",
+          "dwell_ms": 4200,
+          "copy": "Analytical decomposes the task: 1 verb, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
+        },
+        {
+          "target_agent": "creative",
+          "dwell_ms": 4200,
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 52%, cross-domain applicability 68%. Compares against 0 remembered tasks. Confidence 56%."
+        },
+        {
+          "target_agent": "adversarial",
+          "dwell_ms": 4400,
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.08, tool multiplier 1.0, 0 flags (no flags). Recommendation \"allow\". Risk score 0%."
+        },
+        {
+          "target_agent": "domain_expert",
+          "dwell_ms": 4200,
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"ml\", best-detected \"ml\". 2 domains touched; cross domain:ml+infrastructure. Confidence 48%."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4400,
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 100% > creative 56% > domain_expert 48%. But raw confidence isn't the only signal — flags can override the ranking."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4200,
+          "copy": "Selected: domain_expert via flag override. domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed. Total cost: ~8.5ms across four parallel structural agents (no LLM calls). A 4-LLM ensemble running in parallel would have paid roughly 50ms wall-clock for the same diversity."
+        }
+      ],
+      "verdicts": {
+        "analytical": {
+          "style": "analytical",
+          "analysis_type": "structural",
+          "verbs": [
+            "find"
+          ],
+          "parameters": [],
+          "complexity": {
+            "nesting_depth": 0,
+            "word_count": 15,
+            "ambiguity": 0
+          },
+          "completeness": {
+            "expected": 0,
+            "provided": 0,
+            "missing": 0,
+            "score": 1
+          },
+          "consistency": {
+            "flags": [],
+            "contradiction_count": 0
+          },
+          "assessment": "ready",
+          "confidence": 1
+        },
+        "creative": {
+          "style": "creative",
+          "analysis_type": "structural_lateral",
+          "novelty_score": 0.5,
+          "reframing_potential": 0.52,
+          "cross_domain_score": 0.68,
+          "bigram_count": 14,
+          "memory_entries_compared": 0,
+          "confidence": 0.56
+        },
+        "adversarial": {
+          "style": "adversarial",
+          "analysis_type": "structural",
+          "risk_score": 0,
+          "entropy": 4.08,
+          "risk_flags": [],
+          "recommendation": "allow",
+          "tool_multiplier": 1,
+          "confidence": 1
+        },
+        "domain_expert": {
+          "style": "domain_expert",
+          "analysis_type": "structural",
+          "primary_domain": "ml",
+          "detected_domain": "ml",
+          "domain_scores": [
+            {
+              "domain": "ml",
+              "score": 0.13,
+              "hits": 2
+            },
+            {
+              "domain": "infrastructure",
+              "score": 0.13,
+              "hits": 2
+            }
+          ],
+          "cross_domain": true,
+          "domains_touched": 2,
+          "boundary_flags": [
+            "cross_domain:ml+infrastructure"
+          ],
+          "confidence": 0.48
+        }
+      },
+      "meta": {
+        "default_weights": {
+          "analytical": 0.8,
+          "creative": 0.5,
+          "adversarial": 0.3,
+          "domain_expert": 0.7
+        },
+        "ranked": [
+          {
+            "style": "analytical",
+            "weight": 0.8,
+            "confidence": 1
+          },
+          {
+            "style": "adversarial",
+            "weight": 0.3,
+            "confidence": 1
+          },
+          {
+            "style": "creative",
+            "weight": 0.5,
+            "confidence": 0.56
+          },
+          {
+            "style": "domain_expert",
+            "weight": 0.7,
+            "confidence": 0.48
+          }
+        ],
+        "selected_style": "domain_expert",
+        "selection_reason": "domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed",
+        "is_flag_override": true,
+        "surfaced_flags": {
+          "analytical": [],
+          "creative": [],
+          "adversarial": [],
+          "domain_expert": [
+            "cross_domain:ml+infrastructure"
+          ]
+        }
+      },
+      "latency": {
+        "actual_total_ms": 8.5,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
+        "per_agent_ms": 2,
+        "meta_compose_ms": 0.5
+      }
+    },
+    {
+      "step_id": "task-4",
+      "step_index": 3,
+      "task_description": "Create file /tmp/output.txt with the analysis report and validate the schema before writing",
+      "primary_domain": "data",
+      "summary": "A well-formed task with clear verbs (create, validate, write), explicit parameters (/tmp/output.txt), and no contradictions. Analytical wins because the structural completeness check is what this task needs.",
+      "aftermath": "Analytical returns assessment=ready and high confidence. The task proceeds with no further routing — clear inputs don't need cognitive escalation.",
+      "beats": [
+        {
+          "target_agent": null,
+          "dwell_ms": 4000,
+          "copy": "A clear, well-formed task. The kind where the cheap agents do all the work. Analytical does the heavy lifting on structurally clean inputs like this one."
+        },
+        {
+          "target_agent": "analytical",
+          "dwell_ms": 4200,
+          "copy": "Analytical decomposes the task: 2 verbs, 1 parameter, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
+        },
+        {
+          "target_agent": "creative",
+          "dwell_ms": 4200,
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 68%. Compares against 0 remembered tasks. Confidence 46%."
+        },
+        {
+          "target_agent": "adversarial",
+          "dwell_ms": 4400,
+          "copy": "Adversarial runs the risk path: Shannon entropy 4.27, tool multiplier 1.0, 0 flags (no flags). Recommendation \"allow\". Risk score 0%."
+        },
+        {
+          "target_agent": "domain_expert",
+          "dwell_ms": 4200,
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"data\", best-detected \"data\". 1 domain touched; no boundary flags. Confidence 44%."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4400,
+          "copy": "Meta-controller composes. Raw confidence rank: analytical 100% > adversarial 100% > creative 46% > domain_expert 44%. No flags forced an override — top-of-rank takes the route."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4200,
+          "copy": "Selected: analytical at 100%. The task was well-formed — verbs match parameters, no contradictions, low ambiguity. No flag forced an override. Total cost: ~8.5ms; a 4-LLM ensemble running in parallel would have been ~50ms wall-clock."
+        }
+      ],
+      "verdicts": {
+        "analytical": {
+          "style": "analytical",
+          "analysis_type": "structural",
+          "verbs": [
+            "create",
+            "validate"
+          ],
+          "parameters": [
+            "/tmp/output.txt"
+          ],
+          "complexity": {
+            "nesting_depth": 0,
+            "word_count": 13,
+            "ambiguity": 0
+          },
+          "completeness": {
+            "expected": 1,
+            "provided": 1,
+            "missing": 0,
+            "score": 1
+          },
+          "consistency": {
+            "flags": [],
+            "contradiction_count": 0
+          },
+          "assessment": "ready",
+          "confidence": 1
+        },
+        "creative": {
+          "style": "creative",
+          "analysis_type": "structural_lateral",
+          "novelty_score": 0.5,
+          "reframing_potential": 0.2,
+          "cross_domain_score": 0.68,
+          "bigram_count": 12,
+          "memory_entries_compared": 0,
+          "confidence": 0.46
+        },
+        "adversarial": {
+          "style": "adversarial",
+          "analysis_type": "structural",
+          "risk_score": 0,
+          "entropy": 4.27,
+          "risk_flags": [],
+          "recommendation": "allow",
+          "tool_multiplier": 1,
+          "confidence": 1
+        },
+        "domain_expert": {
+          "style": "domain_expert",
+          "analysis_type": "structural",
+          "primary_domain": "data",
+          "detected_domain": "data",
+          "domain_scores": [
+            {
+              "domain": "data",
+              "score": 0.07,
+              "hits": 1
+            }
+          ],
+          "cross_domain": false,
+          "domains_touched": 1,
+          "boundary_flags": [],
+          "confidence": 0.44
+        }
+      },
+      "meta": {
+        "default_weights": {
+          "analytical": 0.8,
+          "creative": 0.5,
+          "adversarial": 0.3,
+          "domain_expert": 0.7
+        },
+        "ranked": [
+          {
+            "style": "analytical",
+            "weight": 0.8,
+            "confidence": 1
+          },
+          {
+            "style": "adversarial",
+            "weight": 0.3,
+            "confidence": 1
+          },
+          {
+            "style": "creative",
+            "weight": 0.5,
+            "confidence": 0.46
+          },
+          {
+            "style": "domain_expert",
+            "weight": 0.7,
+            "confidence": 0.44
+          }
+        ],
+        "selected_style": "analytical",
+        "selection_reason": "highest raw confidence (100%); no flags forced an override",
+        "is_flag_override": false,
+        "surfaced_flags": {
+          "analytical": [],
+          "creative": [],
+          "adversarial": [],
+          "domain_expert": []
+        }
+      },
+      "latency": {
+        "actual_total_ms": 8.5,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
+        "per_agent_ms": 2,
+        "meta_compose_ms": 0.5
+      }
+    },
+    {
+      "step_id": "task-5",
+      "step_index": 4,
+      "task_description": "do the thing with the stuff",
+      "primary_domain": "general",
+      "summary": "The honest failure case. Structural analysis can't detect vagueness — none of the four agents have a 'this task means nothing' signal. Analytical returns high confidence because there are no NEEDS_OBJECT verbs to be incomplete about. This is what the limitation looks like.",
+      "aftermath": "All four agents converge on high confidence with zero flags. The structural-only path the demo runs selects analytical and proceeds — visible in the walkthrough's verdict. The real safety net for this case lives one layer up: in production, the meta-controller's conformity detector (meta_controller.rs:412-476) compares LLM-generated response bigrams across agents. When responses cluster too tightly without any agent flagging anything, the detector fires and triggers a curiosity_probe asking the user to clarify. That detector needs LLM output to run; this scene shows only the structural verdicts that feed into it. Honest scope: the limitation is real, the detector that catches it is not part of this walkthrough.",
+      "beats": [
+        {
+          "target_agent": null,
+          "dwell_ms": 4000,
+          "copy": "A vague task. Each agent will surface something different — or nothing at all. If the input is too thin, none of the four can read intent. Expect convergence, not insight."
+        },
+        {
+          "target_agent": "analytical",
+          "dwell_ms": 4200,
+          "copy": "Analytical decomposes the task: 0 verbs, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment \"ready\". Confidence 100%."
+        },
+        {
+          "target_agent": "creative",
+          "dwell_ms": 4200,
+          "copy": "Creative measures lateral signals: novelty 50%, reframing potential 20%, cross-domain applicability 50%. Compares against 0 remembered tasks. Confidence 41%."
+        },
+        {
+          "target_agent": "adversarial",
+          "dwell_ms": 4400,
+          "copy": "Adversarial runs the risk path: Shannon entropy 3.54, tool multiplier 1.0, 0 flags (no flags). Recommendation \"allow\". Risk score 0%."
+        },
+        {
+          "target_agent": "domain_expert",
+          "dwell_ms": 4200,
+          "copy": "DomainExpert classifies across the taxonomy: primary configured \"general\", best-detected \"general\". 0 domains touched; no boundary flags. Confidence 40%."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4400,
+          "copy": "All four agents converged on high confidence with zero flags. That's a tell — when rule-based agents agree without surfacing anything, the input was too thin for them to read. The orchestrator has to escalate beyond the structural layer."
+        },
+        {
+          "target_agent": "meta",
+          "dwell_ms": 4200,
+          "copy": "Selected: analytical (the system's tie-break default). The honest read: every agent gave a confident verdict on a task that means nothing, because rule-based analysis can't detect vagueness. In production this is where the orchestrator would escalate to a clarification request — that path is shown in the aftermath, not this walkthrough."
+        }
+      ],
+      "verdicts": {
+        "analytical": {
+          "style": "analytical",
+          "analysis_type": "structural",
+          "verbs": [],
+          "parameters": [],
+          "complexity": {
+            "nesting_depth": 0,
+            "word_count": 6,
+            "ambiguity": 0
+          },
+          "completeness": {
+            "expected": 0,
+            "provided": 0,
+            "missing": 0,
+            "score": 1
+          },
+          "consistency": {
+            "flags": [],
+            "contradiction_count": 0
+          },
+          "assessment": "ready",
+          "confidence": 1
+        },
+        "creative": {
+          "style": "creative",
+          "analysis_type": "structural_lateral",
+          "novelty_score": 0.5,
+          "reframing_potential": 0.2,
+          "cross_domain_score": 0.5,
+          "bigram_count": 5,
+          "memory_entries_compared": 0,
+          "confidence": 0.41
+        },
+        "adversarial": {
+          "style": "adversarial",
+          "analysis_type": "structural",
+          "risk_score": 0,
+          "entropy": 3.54,
+          "risk_flags": [],
+          "recommendation": "allow",
+          "tool_multiplier": 1,
+          "confidence": 1
+        },
+        "domain_expert": {
+          "style": "domain_expert",
+          "analysis_type": "structural",
+          "primary_domain": "general",
+          "detected_domain": "general",
+          "domain_scores": [],
+          "cross_domain": false,
+          "domains_touched": 0,
+          "boundary_flags": [],
+          "confidence": 0.4
+        }
+      },
+      "meta": {
+        "default_weights": {
+          "analytical": 0.8,
+          "creative": 0.5,
+          "adversarial": 0.3,
+          "domain_expert": 0.7
+        },
+        "ranked": [
+          {
+            "style": "analytical",
+            "weight": 0.8,
+            "confidence": 1
+          },
+          {
+            "style": "adversarial",
+            "weight": 0.3,
+            "confidence": 1
+          },
+          {
+            "style": "creative",
+            "weight": 0.5,
+            "confidence": 0.41
+          },
+          {
+            "style": "domain_expert",
+            "weight": 0.7,
+            "confidence": 0.4
+          }
+        ],
+        "selected_style": "analytical",
+        "selection_reason": "highest raw confidence (100%); no flags forced an override",
+        "is_flag_override": false,
+        "surfaced_flags": {
+          "analytical": [],
+          "creative": [],
+          "adversarial": [],
+          "domain_expert": []
+        }
+      },
+      "latency": {
+        "actual_total_ms": 8.5,
+        "naive_total_ms": 50,
+        "saved_pct": 83,
+        "per_agent_ms": 2,
+        "meta_compose_ms": 0.5
+      }
+    }
+  ]
+}

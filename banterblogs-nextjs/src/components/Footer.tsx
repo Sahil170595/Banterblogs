@@ -6,6 +6,7 @@ const FOOTER_LINKS = {
     { href: '/platform', label: 'Platform' },
     { href: '/reports', label: 'Research' },
     { href: '/papers', label: 'Papers' },
+    { href: '/show', label: 'Show' },
     { href: '/episodes', label: 'Episodes' },
     { href: '/work', label: 'Work' },
     { href: '/about', label: 'About' },

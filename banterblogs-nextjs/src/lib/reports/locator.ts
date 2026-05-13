@@ -20,6 +20,18 @@ const ROOT_CANDIDATES: ReportRoot[] = [
   { root: path.join(process.cwd(), 'PublishReady', 'reports'), label: 'publish-ready' },
 ];
 
+// Module-level cache for the filesystem scan. Build time previously walked
+// PublishReady/reports/ once per call — generateStaticParams + every
+// ReportDetail render + every readReportMeta lookup. With ~60 reports that's
+// 60 + 60 + N lookups → ~120+ readdirSync calls. Now: one walk, cached.
+//
+// Cache is keyed by an absolute path → an array of locations. Build runs in
+// a fresh Node process so the cache survives across page renders within a
+// single build. ISR revalidation also benefits: subsequent requests in the
+// same revalidate window hit cached scans instead of touching disk.
+let cachedDiscover: ReportLocation[] | null = null;
+const cachedLookups = new Map<string, ReportLocation[]>();
+
 function normalizeSlug(value: string): string {
   return value
     .trim()
@@ -37,7 +49,7 @@ function listEntries(root: string) {
   }
 }
 
-export function discoverReports(): ReportLocation[] {
+function scanReports(): ReportLocation[] {
   const results: ReportLocation[] = [];
   for (const candidate of ROOT_CANDIDATES) {
     const entries = listEntries(candidate.root);
@@ -70,17 +82,26 @@ export function discoverReports(): ReportLocation[] {
   return results.sort((a, b) => a.slug.localeCompare(b.slug) || a.path.localeCompare(b.path));
 }
 
+export function discoverReports(): ReportLocation[] {
+  if (cachedDiscover) return cachedDiscover;
+  cachedDiscover = scanReports();
+  return cachedDiscover;
+}
+
 export function findReportFolder(id: string): ReportLocation | null {
   const target = normalizeSlug(id);
   if (!target) return null;
-  const entries = discoverReports();
-  return entries.find((entry) => entry.slug === target) ?? null;
+  return discoverReports().find((entry) => entry.slug === target) ?? null;
 }
 
 export function findReportLocations(id: string): ReportLocation[] {
   const target = normalizeSlug(id);
   if (!target) return [];
-  return discoverReports().filter((entry) => entry.slug === target);
+  const cached = cachedLookups.get(target);
+  if (cached) return cached;
+  const result = discoverReports().filter((entry) => entry.slug === target);
+  cachedLookups.set(target, result);
+  return result;
 }
 
 export function toHumanTitle(slugOrLabel: string): string {

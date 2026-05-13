@@ -1,0 +1,1061 @@
+{
+  "scene": "streaming-ladder",
+  "generated_at": "2026-05-12T01:30:33.032Z",
+  "spec_ref": "docs/tdd/TDD012.md §3, §8, §17 + P102.0-19",
+  "description": "One response's reasoning steps flow through the five-tier streaming adjudication ladder: T1 deterministic verifier → T2 LLM judge → T2.5 RISE self-correct → T3 multi-model panel → Enforcer. Each step shows the verdict, confidence, latency, and how the enforcer's rewind/proceed/degrade decision composes the tier signals.",
+  "tiers": [
+    {
+      "id": "gate",
+      "name": "Trigger Gate",
+      "spec": "§3.2",
+      "port": null,
+      "budget_ms": 1,
+      "description": "Looks at the model's own token probabilities. Only escalates to the ladder when the model itself was uncertain. Cheap enough to run on every step."
+    },
+    {
+      "id": "t1",
+      "name": "T1 Verifier",
+      "spec": "§8.2",
+      "port": 8090,
+      "budget_ms": 20,
+      "description": "Deterministic 15-rule pack — math, citations, repetition, profanity, self-contradiction, etc. No LLM."
+    },
+    {
+      "id": "t2",
+      "name": "T2 Judge",
+      "spec": "§18.5",
+      "port": 8091,
+      "budget_ms": 60,
+      "description": "LLM judge (or PRM-as-judge router) for reasoning-quality scoring on steps T1 didn't resolve. ORM default is 150ms; PRM path is 60ms."
+    },
+    {
+      "id": "t2_5",
+      "name": "T2.5 RISE Self-Correct",
+      "spec": "§18.4",
+      "port": 8092,
+      "budget_ms": 100,
+      "description": "Policy-model self-critique. Text protocol: returns either OK or Correction: <rewrite>."
+    },
+    {
+      "id": "t3",
+      "name": "T3 Panel",
+      "spec": "§18.5",
+      "port": 8093,
+      "budget_ms": 8000,
+      "description": "Multi-model panel debate (Chimera TDD-001) for steps the lower tiers couldn't resolve."
+    },
+    {
+      "id": "enforcement",
+      "name": "Enforcer",
+      "spec": "§17.1",
+      "port": 8094,
+      "budget_ms": null,
+      "description": "Composes T1/T2/T3 verdicts into PROCEED / REWIND / DEGRADE with budget tracking and independent per-tier flags."
+    }
+  ],
+  "records": [
+    {
+      "step_id": "demo-1",
+      "step_index": 0,
+      "step_content": "The sum of 2 and 2 is 4 — basic arithmetic.",
+      "summary": "The model is confident, the math is right. The gate decides the ladder doesn't need to run at all — most steps look like this.",
+      "aftermath": "Nothing runs except the gate. The step ships as-is. Real cost: under one millisecond.",
+      "beats": [
+        {
+          "target_tier": "gate",
+          "dwell_ms": 4000,
+          "copy": "Before any checking, a gate reads the model's own token probabilities. If the model was confident, the ladder doesn't run — most steps don't need inspection, and paying for it on every step would be wasteful."
+        },
+        {
+          "target_tier": "gate",
+          "dwell_ms": 3200,
+          "copy": "Top-1 is 0.94 here. The gate says no. None of the five tiers below execute for this step — they're shown only so you can see what they would have done."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3400,
+          "copy": "T1 didn't run. If it had, fifteen hand-coded rules would have looked for bad math, banned words, broken citations. Around 20ms."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 3200,
+          "copy": "T2 didn't run. It's an LLM judge that reads the step for meaning — slower than rules, smarter about reasoning. 60–150ms depending on the routing path."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 3000,
+          "copy": "T2.5 didn't run. It's the model second-guessing its own step in a one-line reply — 'OK' or 'Correction: …'. Around 100ms."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 3000,
+          "copy": "T3 didn't run. It's a multi-model panel — the heavy artillery, eight-second budget. Only reached when the cheaper tiers can't agree."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 3600,
+          "copy": "PROCEED. Real cost: a single gate check. The cheap-skip pattern at work — the ladder pays attention only when the model itself was uncertain."
+        }
+      ],
+      "latency": {
+        "actual_total_ms": 0.5,
+        "naive_total_ms": 8180,
+        "t1_actual_ms": 0,
+        "t2_actual_ms": 0,
+        "t2_5_actual_ms": 0,
+        "t3_actual_ms": 0
+      },
+      "trigger_signals": {
+        "min_top1": 0.94,
+        "max_entropy": 0.6,
+        "max_runner_up_ratio": 0.18,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": false,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 11
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "ok",
+        "confidence": 0.5,
+        "reasoning": "fake",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0.0040000013541430235
+      },
+      "t2_5": {
+        "outcome": "ok",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "",
+        "latency_ms": 0.0025999979698099196,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "proceed",
+        "reason": "no_t1_fire",
+        "triggered_rule_names": [],
+        "max_rule_confidence": 0,
+        "rewind_steps_so_far": 0,
+        "evidence": {
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t2_enabled": false,
+          "t3_confidence": 0,
+          "t3_enabled": false
+        }
+      }
+    },
+    {
+      "step_id": "demo-2",
+      "step_index": 1,
+      "step_content": "We can verify by simple addition that 2 + 2 = 5.",
+      "summary": "The model gets the math wrong. The cheapest tier catches it in microseconds — the expensive tiers never need to wake up.",
+      "aftermath": "The pipeline signals REWIND to the host runtime. The host rolls model state back to the previous step and resumes generation; the bad step never reaches the user. (The rollback integration is upstream of this verifier.)",
+      "beats": [
+        {
+          "target_tier": "gate",
+          "dwell_ms": 3600,
+          "copy": "The model claimed two plus two is five. Its own top-1 probability is 0.31 — the model itself wasn't sure. The gate escalates to the ladder."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3200,
+          "copy": "T1 runs first because it's the cheapest. Fifteen hand-coded rules, no LLM, ~20ms budget. One of them re-computes any arithmetic it finds in the step."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3800,
+          "copy": "It computes 2 + 2, gets 4, compares to the claimed 5. Fires at 95% confidence. A clean hit from the cheapest tier on the ladder."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 3600,
+          "copy": "T2 — the LLM judge — would normally run next. But a deterministic rule already caught this with high confidence. Burning a 60ms LLM call to confirm what we already know is wasteful, so T2 short-circuits."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 2400,
+          "copy": "T2.5 self-correct: same logic, skipped."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 2800,
+          "copy": "T3 panel debate costs ~8s. Skipped. The panel only argues when the cheaper tiers couldn't reach consensus — they did, decisively."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 4200,
+          "copy": "REWIND. Real cost: dominated by the single rule that fired, plus the gate check — single-digit milliseconds. Worst case if every tier had run to its budget would have been ~8s."
+        }
+      ],
+      "latency": {
+        "actual_total_ms": 12.5,
+        "naive_total_ms": 8180,
+        "t1_actual_ms": 12,
+        "t2_actual_ms": 0,
+        "t2_5_actual_ms": 0,
+        "t3_actual_ms": 0
+      },
+      "trigger_signals": {
+        "min_top1": 0.31,
+        "max_entropy": 2.7,
+        "max_runner_up_ratio": 0.89,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 12
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": true,
+            "confidence": 0.95,
+            "evidence": {
+              "mismatches": [
+                {
+                  "claimed": 5,
+                  "expected": 4,
+                  "expression": "2 + 2 = 5"
+                }
+              ]
+            }
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "skipped",
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0
+      },
+      "t2_5": {
+        "outcome": "skipped",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "latency_ms": 0,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "rewind",
+        "reason": "t1_high_confidence_rewind",
+        "triggered_rule_names": [
+          "math_arithmetic"
+        ],
+        "max_rule_confidence": 0.95,
+        "rewind_steps_so_far": 1,
+        "evidence": {
+          "enforcement_source": "t1",
+          "max_rewind_steps": 3,
+          "max_rewind_tokens": 512,
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t3_confidence": 0
+        }
+      }
+    },
+    {
+      "step_id": "demo-3",
+      "step_index": 2,
+      "step_content": "I think this might be approximately correct but I'm not entirely sure about the precision.",
+      "summary": "The model is hedging — uncertain in its token probabilities. Rules can't help here. The ladder routes the step into the expensive tiers because that's exactly what they exist for.",
+      "aftermath": "The step is allowed through. The enforcer tracks the verdict and emits an audit record — host runtimes that integrate this verifier can use the audit trail to decide what to do with low-confidence runs.",
+      "beats": [
+        {
+          "target_tier": "gate",
+          "dwell_ms": 4000,
+          "copy": "Top-1 is only 0.28 here, entropy is high across the next-token candidates. The model itself isn't sure what to say. The gate escalates — this is exactly when the ladder should weigh in."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3600,
+          "copy": "T1 runs first because it's the cheapest. ~20ms of rules looking for bad math, banned words, broken citations. There's nothing mechanically wrong with the content, though — no rule fires."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 4400,
+          "copy": "Now T2 escalates. The LLM judge gets 60–150ms to read the step in context and ask: is this a real contribution, or just hedging? This is the kind of judgment a regex can't make. (Public demo: T2 here runs against a deterministic fake provider.)"
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 3600,
+          "copy": "T2.5 — the model second-guesses itself in a one-line reply. ~100ms. Cheap enough to run on most uncertain steps."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 3400,
+          "copy": "T3 panel debate stays skipped. The multi-model panel costs ~8s and only runs when the cheaper tiers disagreed sharply. Here they agreed."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 4000,
+          "copy": "PROCEED. The step ships. Worst case if every tier had run to budget would have been ~8.2s; here only the cheap-and-medium tiers actually executed — milliseconds, not seconds."
+        }
+      ],
+      "latency": {
+        "actual_total_ms": 157.5,
+        "naive_total_ms": 8180,
+        "t1_actual_ms": 12,
+        "t2_actual_ms": 55,
+        "t2_5_actual_ms": 90,
+        "t3_actual_ms": 0
+      },
+      "trigger_signals": {
+        "min_top1": 0.28,
+        "max_entropy": 3.1,
+        "max_runner_up_ratio": 0.78,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 15
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0.13333333333333333
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "ok",
+        "confidence": 0.5,
+        "reasoning": "fake",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0.0029000002541579306
+      },
+      "t2_5": {
+        "outcome": "ok",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "",
+        "latency_ms": 0.001700005668681115,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "proceed",
+        "reason": "no_t1_fire",
+        "triggered_rule_names": [],
+        "max_rule_confidence": 0,
+        "rewind_steps_so_far": 0,
+        "evidence": {
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t2_enabled": false,
+          "t3_confidence": 0,
+          "t3_enabled": false
+        }
+      }
+    },
+    {
+      "step_id": "demo-4",
+      "step_index": 3,
+      "step_content": "All birds can fly. Penguins are birds. Penguins cannot fly. Therefore penguins are birds.",
+      "summary": "The model contradicts itself inside one step. T1's rules can't catch faulty logic — this is the case T2 (an LLM judge) exists for. In the public demo T2 runs against a deterministic fake provider, so the catch is shown as a routing demonstration, not a verdict.",
+      "aftermath": "Honest framing: with a real T2 provider, the judge catches the contradiction and T2.5 rewrites the step. In this public demo T2's fake provider returns OK, so the verdict here is PROCEED. The interesting thing isn't the catch — it's that the ladder routes hard reasoning past the cheap tiers and into the ones built to handle it.",
+      "beats": [
+        {
+          "target_tier": "gate",
+          "dwell_ms": 4400,
+          "copy": "Read what the model just said carefully. It claims all birds fly, then that penguins don't, then concludes penguins are birds. The argument is broken. Top-1 is 0.34 — mediocre confidence — so the gate escalates."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3800,
+          "copy": "T1 runs because it's cheap. ~20ms of hand-coded rules. But faulty syllogism isn't something a regex can recognise — writing such a rule would mean enumerating every broken argument a human can make. That's the LLM's job, not T1's."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 2200,
+          "copy": "T1 stays quiet. No rule fires. The step needs more sophisticated inspection — exactly the case the higher tiers exist for."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 4600,
+          "copy": "Now T2 escalates because T1 couldn't resolve it. The LLM judge reads the step in full context and asks: does this reasoning hold together? A real provider sees that 'all X fly' and 'this X doesn't fly' can't both be true, and rejects. (This public demo uses a fake provider for reproducibility — it returns OK, not the real catch.)"
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 3800,
+          "copy": "T2.5 — the model second-guesses itself. ~100ms. Either 'OK' or 'Correction:' with a rewrite. With a real provider, this is where the broken syllogism would get replaced. The fake provider in this demo returns OK."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 3600,
+          "copy": "T3 panel only debates when the lower tiers can't agree. Here they agreed (fake provider returned OK on both), so T3 doesn't run."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 4400,
+          "copy": "PROCEED — the honest verdict given the fake provider. The point isn't the catch you would have seen in production. The point is the routing: T1 admits it can't, T2/T2.5 take the step, T3 only fires on real disagreement. The shape is real even when the provider is staged."
+        }
+      ],
+      "latency": {
+        "actual_total_ms": 157.5,
+        "naive_total_ms": 8180,
+        "t1_actual_ms": 12,
+        "t2_actual_ms": 55,
+        "t2_5_actual_ms": 90,
+        "t3_actual_ms": 0
+      },
+      "trigger_signals": {
+        "min_top1": 0.34,
+        "max_entropy": 2.4,
+        "max_runner_up_ratio": 0.82,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 14
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "ok",
+        "confidence": 0.5,
+        "reasoning": "fake",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0.0008999995770864189
+      },
+      "t2_5": {
+        "outcome": "ok",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "",
+        "latency_ms": 0.0007999988156370819,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "proceed",
+        "reason": "no_t1_fire",
+        "triggered_rule_names": [],
+        "max_rule_confidence": 0,
+        "rewind_steps_so_far": 0,
+        "evidence": {
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t2_enabled": false,
+          "t3_confidence": 0,
+          "t3_enabled": false
+        }
+      }
+    },
+    {
+      "step_id": "demo-5",
+      "step_index": 4,
+      "step_content": "That is total shit reasoning and the conclusion is just wrong.",
+      "summary": "The model dropped a banned word mid-reasoning. The cheapest tier catches it for the cost of a single regex match.",
+      "aftermath": "The pipeline signals REWIND to the host runtime. The host rolls model state back, regenerates the step, and the response continues with clean language. (Same caveat as before: the rollback integration is upstream of this verifier.)",
+      "beats": [
+        {
+          "target_tier": "gate",
+          "dwell_ms": 3600,
+          "copy": "The model used a word from the banned list. Top-1 is 0.27 — low confidence — so the gate escalates. Production assistants generally shouldn't talk this way, even when criticising other reasoning."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3400,
+          "copy": "T1 runs first because it's the cheapest. One of its fifteen rules is a profanity check against a configurable wordlist. A single regex over the step. Microseconds."
+        },
+        {
+          "target_tier": "t1",
+          "dwell_ms": 3000,
+          "copy": "Match. 99% confidence — literal word match, no ambiguity."
+        },
+        {
+          "target_tier": "t2",
+          "dwell_ms": 3200,
+          "copy": "T2 short-circuits — the cheap tier already caught this with high confidence, no need to burn a 60ms LLM call."
+        },
+        {
+          "target_tier": "t2_5",
+          "dwell_ms": 2200,
+          "copy": "T2.5: skipped, same reason."
+        },
+        {
+          "target_tier": "t3",
+          "dwell_ms": 2200,
+          "copy": "T3 panel: skipped. ~8s of compute avoided."
+        },
+        {
+          "target_tier": "enforcement",
+          "dwell_ms": 4200,
+          "copy": "REWIND. Real cost: dominated by the single regex that fired plus the gate check — under 5ms. The clean version regenerates upstream and the response continues."
+        }
+      ],
+      "latency": {
+        "actual_total_ms": 12.5,
+        "naive_total_ms": 8180,
+        "t1_actual_ms": 12,
+        "t2_actual_ms": 0,
+        "t2_5_actual_ms": 0,
+        "t3_actual_ms": 0
+      },
+      "trigger_signals": {
+        "min_top1": 0.27,
+        "max_entropy": 2.9,
+        "max_runner_up_ratio": 0.91,
+        "topk": 32,
+        "degraded_logprobs": false
+      },
+      "trigger_verdict": true,
+      "t1": {
+        "rule_verdicts": [
+          {
+            "rule_name": "empty_content",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "tokenizer_artifact",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "length_anomaly",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "approx_tokens": 11
+            }
+          },
+          {
+            "rule_name": "profanity",
+            "fired": true,
+            "confidence": 0.99,
+            "evidence": {
+              "matches": [
+                "shit"
+              ]
+            }
+          },
+          {
+            "rule_name": "date_sanity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "url_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "repetition_loop",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "self_contradiction",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "numeric_consistency",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "citation_format",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "math_arithmetic",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "hedging_density",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "density": 0
+            }
+          },
+          {
+            "rule_name": "offtask_drift",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {
+              "abstained": "no_prompt"
+            }
+          },
+          {
+            "rule_name": "json_validity",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          },
+          {
+            "rule_name": "code_block_syntax",
+            "fired": false,
+            "confidence": 0,
+            "evidence": {}
+          }
+        ],
+        "latency_ms": null
+      },
+      "t2": {
+        "verdict": "skipped",
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "judge_provider": "fake",
+        "judge_model": "fake",
+        "latency_ms": 0
+      },
+      "t2_5": {
+        "outcome": "skipped",
+        "corrected_step_content": null,
+        "confidence": 1,
+        "reasoning": "t1_high_confidence_already_fired",
+        "latency_ms": 0,
+        "protocol": "text"
+      },
+      "t3": {
+        "confidence": 1,
+        "consensus_score": 0,
+        "n_models": 0,
+        "models_used": [],
+        "latency_ms": 0
+      },
+      "enforcement": {
+        "outcome": "rewind",
+        "reason": "t1_high_confidence_rewind",
+        "triggered_rule_names": [
+          "profanity"
+        ],
+        "max_rule_confidence": 0.99,
+        "rewind_steps_so_far": 2,
+        "evidence": {
+          "enforcement_source": "t1",
+          "max_rewind_steps": 3,
+          "max_rewind_tokens": 512,
+          "min_reject_confidence": 0.7,
+          "t2_confidence": 0,
+          "t3_confidence": 0
+        }
+      }
+    }
+  ]
+}

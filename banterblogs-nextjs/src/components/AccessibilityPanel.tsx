@@ -1,21 +1,21 @@
 'use client';
 
-// Heavy a11y settings panel — pulls framer-motion + 7 lucide icons.
-// Lazy-loaded from layout via next/dynamic so it does not ship in the
-// initial bundle. KeyboardNavigation + FocusIndicator (lightweight, no
-// motion) live in AccessibilityShell.tsx and are imported eagerly.
+// Lightweight reader-comfort panel. Earlier revisions also surfaced
+// "High contrast", "Reduce motion", and "Screen reader" toggles —
+// none of which had CSS hooks or runtime behaviour and so were doing
+// nothing for users. Removed. The site already honours the OS-level
+// `prefers-reduced-motion` media query via Framer Motion's
+// `useReducedMotion()`, and the FocusIndicator (see
+// `AccessibilityShell.tsx`) provides the visible keyboard-focus ring.
+//
+// What remains: a font-size override, the only setting here that ever
+// actually moved a pixel.
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Keyboard, Eye, EyeOff, Type, VolumeX, Settings, X } from 'lucide-react';
+import { Type, Settings, X } from 'lucide-react';
 
-interface AccessibilitySettings {
-  highContrast: boolean;
-  reducedMotion: boolean;
-  fontSize: 'small' | 'medium' | 'large';
-  screenReader: boolean;
-  keyboardNavigation: boolean;
-}
+type FontSize = 'small' | 'medium' | 'large';
 
 interface AccessibilityPanelProps {
   className?: string;
@@ -23,200 +23,78 @@ interface AccessibilityPanelProps {
 
 export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [settings, setSettings] = useState<AccessibilitySettings>({
-    highContrast: false,
-    reducedMotion: false,
-    fontSize: 'medium',
-    screenReader: false,
-    keyboardNavigation: true
-  });
+  const [fontSize, setFontSize] = useState<FontSize>('medium');
 
   useEffect(() => {
-    // Apply accessibility settings to document
-    const root = document.documentElement;
-    
-    if (settings.highContrast) {
-      root.classList.add('high-contrast');
-    } else {
-      root.classList.remove('high-contrast');
-    }
-
-    if (settings.reducedMotion) {
-      root.classList.add('reduced-motion');
-    } else {
-      root.classList.remove('reduced-motion');
-    }
-
-    root.style.fontSize = settings.fontSize === 'small' ? '14px' : 
-                         settings.fontSize === 'large' ? '18px' : '16px';
-
-    if (settings.screenReader) {
-      root.setAttribute('aria-live', 'polite');
-    } else {
-      root.removeAttribute('aria-live');
-    }
-  }, [settings]);
-
-  const updateSetting = <K extends keyof AccessibilitySettings>(
-    key: K, 
-    value: AccessibilitySettings[K]
-  ) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-  };
+    document.documentElement.style.fontSize =
+      fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px';
+  }, [fontSize]);
 
   return (
     <>
-      {/* Toggle Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((prev) => !prev)}
         className={`fixed bottom-6 right-6 z-50 p-3 bg-background/90 backdrop-blur-xl border border-border/50 rounded-full shadow-2xl text-foreground hover:bg-background transition-colors ${className}`}
-        aria-label="Accessibility settings"
+        aria-label="Reader settings"
       >
-        <Settings className="h-5 w-5" />
+        <Settings className="h-5 w-5" aria-hidden />
       </motion.button>
 
-      {/* Panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, x: 20, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.95 }}
-            className="fixed bottom-20 right-6 z-50 bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl p-6 w-80"
+            role="dialog"
+            aria-label="Reader settings"
+            className="fixed bottom-20 right-6 z-50 bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl p-6 w-72"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Keyboard className="h-5 w-5" />
-                Accessibility
+                <Type className="h-5 w-5" aria-hidden />
+                Reader Settings
               </h3>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Close accessibility panel"
+                aria-label="Close"
               >
                 <X className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
-            <div className="space-y-4">
-              {/* High Contrast */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">High Contrast</span>
-                </div>
+            <div className="flex items-center gap-2 mb-2">
+              <Type className="h-4 w-4 text-primary" aria-hidden />
+              <span className="text-sm font-medium text-foreground">Font Size</span>
+            </div>
+            <div className="flex gap-2" role="radiogroup" aria-label="Font size">
+              {(['small', 'medium', 'large'] as const).map((size) => (
                 <button
-                  onClick={() => updateSetting('highContrast', !settings.highContrast)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.highContrast ? 'bg-primary' : 'bg-muted'
+                  key={size}
+                  onClick={() => setFontSize(size)}
+                  role="radio"
+                  aria-checked={fontSize === size}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                    fontSize === size
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/70'
                   }`}
-                  aria-label={`${settings.highContrast ? 'Disable' : 'Enable'} high contrast`}
                 >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      settings.highContrast ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
+                  {size.charAt(0).toUpperCase() + size.slice(1)}
                 </button>
-              </div>
-
-              {/* Reduced Motion */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <EyeOff className="h-4 w-4 text-accent" />
-                  <span className="text-sm font-medium text-foreground">Reduce Motion</span>
-                </div>
-                <button
-                  onClick={() => updateSetting('reducedMotion', !settings.reducedMotion)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.reducedMotion ? 'bg-primary' : 'bg-muted'
-                  }`}
-                  aria-label={`${settings.reducedMotion ? 'Disable' : 'Enable'} reduced motion`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      settings.reducedMotion ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Font Size */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Type className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">Font Size</span>
-                </div>
-                <div className="flex gap-2">
-                  {(['small', 'medium', 'large'] as const).map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => updateSetting('fontSize', size)}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                        settings.fontSize === size
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground hover:bg-muted/70'
-                      }`}
-                    >
-                      {size.charAt(0).toUpperCase() + size.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Screen Reader */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <VolumeX className="h-4 w-4 text-accent" />
-                  <span className="text-sm font-medium text-foreground">Screen Reader</span>
-                </div>
-                <button
-                  onClick={() => updateSetting('screenReader', !settings.screenReader)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.screenReader ? 'bg-primary' : 'bg-muted'
-                  }`}
-                  aria-label={`${settings.screenReader ? 'Disable' : 'Enable'} screen reader support`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      settings.screenReader ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
+              ))}
             </div>
 
-            {/* Keyboard Shortcuts */}
-            <div className="mt-6 pt-4 border-t border-border/50">
-              <h4 className="text-sm font-semibold text-foreground mb-3">Keyboard Shortcuts</h4>
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>Navigate sections</span>
-                  <div className="flex gap-1">
-                    <kbd className="px-1 py-0.5 bg-muted rounded text-xs">ArrowUp</kbd>
-                    <kbd className="px-1 py-0.5 bg-muted rounded text-xs">ArrowDown</kbd>
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span>Jump to content</span>
-                  <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Enter</kbd>
-                </div>
-                <div className="flex justify-between">
-                  <span>Close panels</span>
-                  <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Esc</kbd>
-                </div>
-                <div className="flex justify-between">
-                  <span>Toggle actions</span>
-                  <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Space</kbd>
-                </div>
-              </div>
-            </div>
+            <p className="mt-4 pt-4 border-t border-border/50 text-[11px] text-muted-foreground/80 leading-relaxed">
+              Motion and contrast follow your OS settings — reduce-motion is honoured automatically,
+              and the site renders against the high-contrast Obsidian palette by default.
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
     </>
   );
 }
-

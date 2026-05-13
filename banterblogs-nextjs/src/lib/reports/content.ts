@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { promises as fsp } from 'fs';
 import path from 'path';
 import { renderMarkdownToHtml, extractPrimaryHeading } from '@/lib/episodes';
 import { findReportFolder, toHumanTitle, type ReportLocation } from './locator';
@@ -16,8 +17,8 @@ function isMarkdownFile(fileName: string) {
   return /\.md$/i.test(fileName);
 }
 
-function readFileContent(filePath: string) {
-  return fs.readFileSync(filePath, 'utf8');
+function readFileContent(filePath: string): Promise<string> {
+  return fsp.readFile(filePath, 'utf8');
 }
 
 function sanitizeId(value: string) {
@@ -60,7 +61,7 @@ function rewriteReportLinks(markdown: string): string {
 }
 
 async function buildSection(filePath: string, sourceLabel: string, originKey: string): Promise<ReportSection> {
-  const raw = readFileContent(filePath);
+  const raw = await readFileContent(filePath);
   const fallback = path.basename(filePath, path.extname(filePath));
   const title = extractPrimaryHeading(raw) ?? toHumanTitle(fallback);
   const processed = rewriteReportLinks(raw);
@@ -125,14 +126,13 @@ export async function readReportSections(id: string, locationOverride?: ReportLo
   if (!location) return [];
 
   const files = listMarkdownFiles(location);
-  const sections: ReportSection[] = [];
-  for (const entry of files) {
-    try {
-      const section = await buildSection(entry.path, entry.displayLabel, entry.dedupeKey);
-      sections.push(section);
-    } catch {
-      // ignore malformed markdown files
-    }
-  }
-  return sections;
+  // Parallelise the section reads + renders. Most reports are single-file
+  // so this is a no-op, but multi-section reports (summary.md + report.md)
+  // get a free win, and ISR revalidation gets event-loop relief.
+  const settled = await Promise.allSettled(
+    files.map((entry) => buildSection(entry.path, entry.displayLabel, entry.dedupeKey)),
+  );
+  return settled
+    .filter((r): r is PromiseFulfilledResult<ReportSection> => r.status === 'fulfilled')
+    .map((r) => r.value);
 }

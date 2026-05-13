@@ -1,6 +1,38 @@
+import type { Metadata } from 'next';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeCard } from '@/components/EpisodeCard';
 import { notFound } from 'next/navigation';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tag: string }>;
+}): Promise<Metadata> {
+  const { tag } = await params;
+  const decodedTag = decodeURIComponent(tag);
+  const episodes = await getAllEpisodes();
+  const count = episodes.filter((ep) =>
+    ep.tags.some((t) => t.toLowerCase() === decodedTag.toLowerCase()),
+  ).length;
+  const title = `Tag: ${decodedTag}`;
+  const description = `${count} episode${count !== 1 ? 's' : ''} tagged with "${decodedTag}" across the Chimeraforge dev log.`;
+  const url = `https://chimeraforge.vercel.app/tags/${tag}`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | Chimeraforge`,
+      description,
+      url,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | Chimeraforge`,
+      description,
+    },
+  };
+}
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params;
