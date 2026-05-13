@@ -72,7 +72,7 @@ export default async function AboutPage() {
           <div className="signal-panel p-6">
             <h3 className="font-semibold mb-3">The research</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              752,000+ measurements across 45 technical reports. Not wall-clock approximations —
+              820,000+ measurements across 46 technical reports. Not wall-clock approximations —
               CUDA event timing with defined hardware profiles and statistical methodology. Covers
               model loading, ONNX conversion, TensorRT compilation, KV cache optimization,
               multi-agent coordination, and safety analysis across Ollama, vLLM, and TGI.
@@ -98,7 +98,7 @@ export default async function AboutPage() {
             {
               name: 'Banterhearts',
               lang: 'Python',
-              what: 'ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of 752K+ measurements across 45 technical reports.',
+              what: 'ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of 820K+ measurements across 46 technical reports.',
             },
             {
               name: 'Chimeraforge',
@@ -157,8 +157,8 @@ export default async function AboutPage() {
       <section className="mb-20">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
-            { value: '752K+', label: 'Research Measurements' },
-            { value: '45', label: 'Technical Reports' },
+            { value: '820K+', label: 'Research Measurements' },
+            { value: '46', label: 'Technical Reports' },
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatNumber(stats.totalLinesAdded), label: 'Lines Documented' },
           ].map((stat) => (
@@ -184,7 +184,7 @@ export default async function AboutPage() {
             commentary with four AI personas, and publishes to this Next.js site via GitHub + Vercel.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            The research archive surfaces 45 technical reports with phase grouping, searchable titles,
+            The research archive surfaces 46 technical reports with phase grouping, searchable titles,
             and ISR with 15-minute revalidation. Every report links to real measurements and defined
             methodology.
           </p>

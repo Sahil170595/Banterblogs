@@ -208,7 +208,7 @@ export default function PapersPage() {
           <p className="text-lg text-muted-foreground leading-relaxed">
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
             evaluation. Each paper is backed by reproducible technical reports and artifact-level provenance from a
-            752,000+ measurement program.
+            820,000+ measurement program.
           </p>
           <p className="text-sm text-muted-foreground/80">
             Author: <span className="text-foreground font-medium">Sahil Kadadekar</span> · Independent research
@@ -221,8 +221,8 @@ export default function PapersPage() {
         {[
           { value: '5', label: 'Submitted · NeurIPS 2026' },
           { value: '11', label: 'Papers total' },
-          { value: '45', label: 'Technical Reports' },
-          { value: '752K+', label: 'Measurements' },
+          { value: '46', label: 'Technical Reports' },
+          { value: '820K+', label: 'Measurements' },
         ].map((s) => (
           <div key={s.label} className="signal-panel p-5 text-center">
             <div className="text-2xl md:text-3xl font-bold text-foreground">{s.value}</div>
@@ -276,7 +276,7 @@ export default function PapersPage() {
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
-              45 technical reports with 752,000+ measurements — the evidence layer behind these papers.
+              46 technical reports with 820,000+ measurements — the evidence layer behind these papers.
             </p>
             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
               Browse reports <ArrowRight className="h-3 w-3" />

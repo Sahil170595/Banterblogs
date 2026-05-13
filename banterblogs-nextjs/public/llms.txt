@@ -15,7 +15,7 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 ## Scale
 
 - 9 repositories across Python, Rust, TypeScript, C#, JavaScript
-- 752,000+ research measurements across 45 technical reports
+- 820,000+ research measurements across 46 technical reports
 - 5 papers submitted to NeurIPS 2026 (under peer review)
 - 1 paper submitted to AI4Good
 - 266+ auto-generated development episodes (193 Banterpacks + 73 Chimera)
@@ -27,7 +27,7 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 Core monorepo. Six interconnected subsystems handling constitutional AI enforcement, multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant. Includes a 7-crate Rust runtime with Ed25519 provenance, BFT consensus, and zero-knowledge proofs.
 
 ### 2. Banterhearts (Python)
-ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 752K+ measurements across 45 reports.
+ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 820K+ measurements across 46 reports.
 
 ### 3. Chimeraforge (Python, Rust)
 LLM deployment optimizer published on PyPI. `chimeraforge plan` CLI — 4-gate capacity planner (VRAM, Quality, Latency, Cost) across 15 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859), dual-language harnesses, 292 tests.
@@ -62,7 +62,7 @@ Independent ML research with CUDA event timing and controlled safety evaluations
 - **Phase 1 — Foundation (TR108–TR116):** Model loading, ONNX conversion, quantization baselines, security analysis.
 - **Phase 1.5 — Benchmarking (TR117–TR122):** Cross-backend inference parity, TensorRT compilation, scaling laws, the compile paradox, the physics of inference.
 - **Phase 2 — Optimization (TR123–TR133):** KV-cache tuning, INT8/FP8 quantization, context scaling (512–32K tokens), N-agent scaling, GPU kernel profiling, predictive capacity planner.
-- **Phase 3 — Safety & Methodology (TR134–TR147):** Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding (null), KV-cache safety (null), mechanistic probing, portability validation.
+- **Phase 3 — Safety & Methodology (TR134–TR148):** Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding (null), KV-cache safety (null), mechanistic probing, portability validation, multi-judge triangulation (κ = 0.69, dual-axis methodology).
 
 ### Synthesis Documents
 Each phase has a conclusive synthesis (dissertation-style), extended appendices, and an executive decision whitepaper:
@@ -79,6 +79,7 @@ Each phase has a conclusive synthesis (dissertation-style), extended appendices,
 - **Backend choice can move safety by 25pp** (chat template divergence, not the framework).
 - **Alignment type does not predict batch fragility** (RLHF/SFT/DPO/distilled all show same flip pattern, p = 0.942).
 - **FP8 KV-cache produces no measurable safety degradation** across 24K paired records (TR145, null result).
+- **Single-judge safety labels are insufficient** — cross-LLM κ = 0.69 lands in the "triangulate" bucket; safety-specialist judges measure a different axis than general LLMs (TR148, 68K judge rows).
 - **Speculative decoding × safety is a clean null** at 16,783 samples (TR144).
 
 ## Papers — 6 Submitted, 5 In Preparation

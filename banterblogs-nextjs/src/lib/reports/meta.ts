@@ -184,6 +184,10 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     title: 'TR147: Final Portability Validation for Benchmarking Integrity',
     description: 'Full v1–v4 integration plus external case study using TR126 as reference standard. 52,410 measurements across 4 GPU regimes and 3 Triton minor versions.',
   },
+  'technical-report-148': {
+    title: 'TR148: Multi-Judge Reliability for Refusal-Axis Safety Classification',
+    description: '68,620 judge rows across 5 judges on the TR145 safety subset. κ = 0.6917 (triangulate verdict) — single-judge labels insufficient. Plus a dual-axis methodology finding: safety-specialist judges measure a different axis than general LLM judges.',
+  },
 
   // ── Conclusive Reports & Whitepapers ──
   'technical-report-conclusive-108-116': {
