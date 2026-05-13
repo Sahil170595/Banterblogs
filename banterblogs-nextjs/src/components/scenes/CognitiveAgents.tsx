@@ -521,11 +521,11 @@ function MetaControllerCard({
                 aria-valuemax={100}
                 aria-label={`${r.style} raw confidence`}
               >
-                <motion.div
-                  initial={reducedMotion ? { width: `${pct}%` } : { width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
-                  className={`h-full ${isSelected ? 'bg-primary' : 'bg-accent/60'}`}
+                {/* CSS transition instead of framer-motion — see
+                    _shared/ConfidenceBar.tsx for the SSR-mismatch rationale. */}
+                <div
+                  className={`h-full ${isSelected ? 'bg-primary' : 'bg-accent/60'} ${reducedMotion ? '' : 'transition-[width] duration-500 ease-out'}`}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
               <div className={`font-mono text-xs text-right ${isSelected ? 'text-primary font-bold' : 'text-muted-foreground'}`}>

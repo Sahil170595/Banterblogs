@@ -553,7 +553,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
       {/* Step content + summary */}
       <motion.div
         key={`content-${record.step_id}`}
-        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="signal-panel-strong p-5 md:p-8 mb-6 md:mb-8"
@@ -610,7 +610,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
           <AnimatePresence mode="wait">
             <motion.div
               key={`${record.step_id}-${beatIdx}`}
-              initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
               transition={{ duration: 0.25 }}
@@ -723,7 +723,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.span
                         key={`${ts.tier.id}-${ts.state}`}
-                        initial={reducedMotion ? false : { opacity: 0, scale: 0.6 }}
+                        initial={false}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={reducedMotion ? undefined : { opacity: 0, scale: 0.6 }}
                         transition={{ duration: 0.18 }}
@@ -768,7 +768,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.div
                       key={`${ts.tier.id}-${record.step_id}`}
-                      initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+                      initial={false}
                       animate={{ opacity: 1, y: 0 }}
                       exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
                       transition={{ duration: 0.22 }}
@@ -996,11 +996,12 @@ function SignalGauge({
         aria-valuemax={100}
         aria-label={`${label} ${raw ?? clamped.toFixed(2)}`}
       >
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="h-full bg-accent/70"
+        {/* CSS transition instead of framer-motion: avoids the SSR
+            hydration mismatch where motion's initial={{width:0}}
+            renders a different inline style on server vs client. */}
+        <div
+          className="h-full bg-accent/70 transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%` }}
         />
       </div>
       <div className="font-mono text-[11px] text-foreground">{raw ?? clamped.toFixed(2)}</div>
@@ -1096,7 +1097,7 @@ function AftermathPanel({
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -1111,7 +1112,7 @@ function AftermathPanel({
               …previous reasoning step shipped…
             </div>
             <motion.div
-              initial={reducedMotion ? false : { opacity: 0 }}
+              initial={false}
               animate={{ opacity: 1 }}
               transition={{ delay: reducedMotion ? 0 : 0.2 }}
               className={
@@ -1127,7 +1128,7 @@ function AftermathPanel({
             {isRewind && (
               <>
                 <motion.div
-                  initial={reducedMotion ? false : { opacity: 0, x: -8 }}
+                  initial={false}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: reducedMotion ? 0 : 0.7 }}
                   className="text-primary font-bold"
@@ -1135,7 +1136,7 @@ function AftermathPanel({
                   ← REWIND signaled to host runtime
                 </motion.div>
                 <motion.div
-                  initial={reducedMotion ? false : { opacity: 0 }}
+                  initial={false}
                   animate={{ opacity: 1 }}
                   transition={{ delay: reducedMotion ? 0 : 1.1 }}
                   className="text-muted-foreground italic"
@@ -1146,7 +1147,7 @@ function AftermathPanel({
             )}
             {isDegrade && (
               <motion.div
-                initial={reducedMotion ? false : { opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ delay: reducedMotion ? 0 : 0.6 }}
                 className="text-primary font-bold"
@@ -1156,7 +1157,7 @@ function AftermathPanel({
             )}
             {isPass && (
               <motion.div
-                initial={reducedMotion ? false : { opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ delay: reducedMotion ? 0 : 0.5 }}
                 className="text-accent/90"
