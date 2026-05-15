@@ -64,7 +64,7 @@ const scenes = [
     title: 'Every action, signed and chained',
     blurb:
       'Tool action → SHA-256 → Ed25519 signature → Merkle node → root. Cold-tier archive. Audit trail you can verify in another language.',
-    available: false,
+    available: true,
     spec: 'TDD-004 provenance',
   },
 ];
