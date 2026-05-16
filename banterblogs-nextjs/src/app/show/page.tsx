@@ -46,7 +46,7 @@ const scenes = [
     title: 'Proving alignment without revealing the score',
     blurb:
       'Pedersen commitment over the similarity score. Schnorr OR proofs over the bits. The verifier learns the step is above threshold and nothing else.',
-    available: false,
+    available: true,
     spec: 'TDD-005 zk.rs · P102.9 · P102.18.2',
   },
   {
