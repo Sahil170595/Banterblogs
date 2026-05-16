@@ -1,12 +1,12 @@
 {
   "scene": "provenance-chain",
-  "generated_at": "2026-05-15T19:35:24.915Z",
+  "generated_at": "2026-05-15T19:56:28.164Z",
   "spec_ref": "TDD-004 provenance · tdd005/crates/tdd004_provenance/src/lib.rs:41-330",
   "description": "A signed, chained, Merkle-verifiable audit trail. Every action gets one SHA3-256 hash, one Ed25519 signature, one chain link, one Merkle proof — and the whole thing verifies in any language with crypto primitives. No trusted audit service required.",
   "trace": {
-    "trace_id": "trace-2026-05-12-7f3a",
+    "trace_id": "trace-2026-05-15-7f3a",
     "event_count": 5,
-    "merkle_root_hex": "52376232fa7f2874a40517a854f770ee7bfc4229e76aa29316e265cefc5bc1e5"
+    "merkle_root_hex": "e38439a06313dbba491efbaae328ba78cb85604a1cff2519c4cfd9908de4f0b4"
   },
   "records": [
     {
@@ -16,8 +16,8 @@
       "agent_id": "agent-orchestrator",
       "payload_preview": "spawn cognitive agent (style=Adversarial, domain=security)",
       "plain": "an agent was spawned",
-      "summary": "An agent was spawned. Every artifact below (the canonical bytes, the SHA3-256 hash, the Ed25519 signature, the Merkle path) is real and verifiable.",
-      "aftermath": "The signed event is appended to the per-agent provenance log (jsonl on disk) AND the chain's Merkle root is updated. Hot tier: in-memory + WAL. Warm tier: rotated logs after N events. Cold tier: archived to S3 with the root hash retained.",
+      "summary": "An agent was spawned. Real Ed25519 keypair, real SHA3-256 digest, real Merkle path against the chain root.",
+      "aftermath": "The new agent's public key is added to the trust store and the genesis event hash becomes the anchor that every subsequent action chains off. Hot tier: in-memory log + write-ahead log. Anyone connecting later can ask for the genesis event and verify the public key matches what's expected.",
       "beats": [
         {
           "target_phase": null,
@@ -27,41 +27,41 @@
         {
           "target_phase": "event",
           "dwell_ms": 3800,
-          "copy": "Event content: agent_id \"agent-orchestrator\", trace_id \"trace-2026-05-12-7f3a...\", event_type \"agent.spawn\". Payload hashed to 0eb9efc80f67… — the payload itself stays out of the chain, only its hash."
+          "copy": "Genesis event. There's no agent before this one — agent_id \"agent-orchestrator\" is being created. The payload (the spawn parameters) gets hashed to 0eb9efc80f67…; the spawn arguments themselves stay in the host system, not in the chain."
         },
         {
           "target_phase": "canonical",
           "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: domain tag \"PROV_EVENT_V1\", schema version 1, length-prefixed strings, metadata sorted by key. 174 bytes. Deterministic — re-encoding gives the same bytes byte-for-byte."
+          "copy": "Encode to canonical bytes: 174 bytes. Domain tag PROV_EVENT_V1, schema version 1, length-prefixed strings, metadata sorted by key. Re-encoding the same event always produces these exact bytes — that's what \"canonical\" means."
         },
         {
           "target_phase": "sign",
           "dwell_ms": 4200,
-          "copy": "SHA3-256 hash of the canonical bytes: 1a0d142f385017…. Ed25519 signature over those same bytes: 09b28a9a3dde5f… (64 bytes). Attach the agent's public key: 735dc63d984a… (32 bytes). The signed event is now self-verifying."
+          "copy": "SHA3-256 of the canonical bytes lands on 9c8aaa3c248546…. Ed25519 signs that hash with the agent's private key → 64-byte signature. The 32-byte public key gets attached so anyone can verify without contacting the signer."
         },
         {
           "target_phase": "chain",
           "dwell_ms": 3600,
-          "copy": "Genesis event. prev_event_hash is null — there is no predecessor. The trace starts here."
+          "copy": "Genesis event. prev_event_hash is null — there's no predecessor. The trace starts here, and every later event's chain link points back to this one (eventually)."
         },
         {
           "target_phase": "merkle",
           "dwell_ms": 3800,
-          "copy": "Merkle proof for this event: 3 sibling hashes (~96 bytes total). The verifier walks the path from this leaf to the chain root (52376232fa7f…) using only those siblings. The proof grows logarithmically with the chain length."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
         },
         {
           "target_phase": "verify",
           "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (735dc63d984a…) and the chain root (52376232fa7f…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto."
+          "copy": "Anyone with the agent's public key (0d49ff0d4743…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
         "agent_id": "agent-orchestrator",
-        "trace_id": "trace-2026-05-12-7f3a",
+        "trace_id": "trace-2026-05-15-7f3a",
         "event_type": "agent.spawn",
         "payload_hash_hex": "0eb9efc80f67ea651030a1473962b3736d28360f4cbd7fb55d561a4245694605",
         "prev_event_hash_hex": null,
-        "timestamp_ms": 1715520000000,
+        "timestamp_ms": 1778803200000,
         "metadata": {
           "style": "Adversarial",
           "domain": "security"
@@ -70,17 +70,22 @@
       "crypto": {
         "canonical_bytes_len": 174,
         "canonical_bytes_preview_hex": "50524f565f4556454e545f56310100000001000000120000006167656e742d6f",
-        "leaf_hash_hex": "1a0d142f3850172cc6601201d79f912015d7e71d5fbb422b6ed1ccd9a8bd9d98",
-        "signature_hex": "09b28a9a3dde5f9b736e1121688e74055a784db199b00713e08e443ee99d7a78cba8c635b6e6c69de99ac63931172d5326ca5920fcd5bea71d6a662ac0659a00",
-        "public_key_hex": "735dc63d984ac3fde03bfdc56a3c2ecf55cddb1b80e455cbfcf668c5d763683d",
+        "leaf_hash_hex": "9c8aaa3c2485464af53591bd099d97e54ef830261c83f1121ee0666a50895eea",
+        "signature_hex": "ea445ee14fa980e33c5ebf90c2a548fa3602b6293fcfb5af3ee18251259cbb434f2ccc3a5a07e3abf00c1510e9d147b0a0f7c05aed5aff94a2c1e838b1e79201",
+        "public_key_hex": "0d49ff0d47437ab65ead0200a3856532dd38947ae3c85b186843754871455139",
         "merkle_proof": {
           "leaf_index": 0,
-          "leaf_hash_hex": "1a0d142f3850172cc6601201d79f912015d7e71d5fbb422b6ed1ccd9a8bd9d98",
+          "leaf_hash_hex": "9c8aaa3c2485464af53591bd099d97e54ef830261c83f1121ee0666a50895eea",
           "sibling_count": 3,
           "siblings_hex": [
-            "8f3c860cf3e1f3a9138a27dae0e349bfa0f47b8842db0999c8c69b301153dd78",
-            "f0f796841d93eaad882083aaf7a7768c4d41517cea255c934c30b06cca53be12",
-            "664e64dc4bae0b4a88a4351458384b57e3d6463b3ffec087554f26fa3fdec2a7"
+            "9129fc5936865ef085d35319cbc2091792990baa74fda934d24e06477f198928",
+            "1d2e931d7a149d2e9ab5255c6977856989732ec3673e881b56c386212eca9743",
+            "f2b0f401c37d0c701c3beb186c80a7be007849bfcdd8101bb188c3b42175bf68"
+          ],
+          "sibling_kinds": [
+            "paired",
+            "paired",
+            "paired"
           ]
         }
       },
@@ -92,9 +97,17 @@
         "tampered": false
       },
       "latency": {
-        "actual_total_ms": 0.4,
+        "actual_total_ms": 0.41,
         "naive_total_ms": 25,
-        "saved_pct": 98.4
+        "saved_pct": 98.36,
+        "is_estimate": true,
+        "breakdown": {
+          "canonical_encode_ms": 0.02,
+          "ed25519_sign_ms": 0.15,
+          "ed25519_verify_ms": 0.15,
+          "merkle_steps": 3,
+          "merkle_total_ms": 0.09
+        }
       }
     },
     {
@@ -104,8 +117,8 @@
       "agent_id": "agent-tools",
       "payload_preview": "fs_read(\"/var/data/quarterly_report.md\")",
       "plain": "the agent read a file",
-      "summary": "The agent read a file. Every artifact below (the canonical bytes, the SHA3-256 hash, the Ed25519 signature, the Merkle path) is real and verifiable.",
-      "aftermath": "The signed event is appended to the per-agent provenance log (jsonl on disk) AND the chain's Merkle root is updated. Hot tier: in-memory + WAL. Warm tier: rotated logs after N events. Cold tier: archived to S3 with the root hash retained.",
+      "summary": "The agent read a file. Real Ed25519 keypair, real SHA3-256 digest, real Merkle path against the chain root.",
+      "aftermath": "The read is logged with the file path + byte count, but the file contents are never in the chain — only their hash would be, if we needed to prove what the agent saw. For now the event tells the auditor: this agent, at this position in the trace, read this path. Nothing more, nothing less.",
       "beats": [
         {
           "target_phase": null,
@@ -115,41 +128,41 @@
         {
           "target_phase": "event",
           "dwell_ms": 3800,
-          "copy": "Event content: agent_id \"agent-tools\", trace_id \"trace-2026-05-12-7f3a...\", event_type \"tool.executed\". Payload hashed to 291b1cfc1328… — the payload itself stays out of the chain, only its hash."
+          "copy": "tool.executed event from agent-tools. The file path and byte count go into metadata (visible if you trust the agent) and the payload hash (291b1cfc1328…) is what gets signed and chained."
         },
         {
           "target_phase": "canonical",
           "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: domain tag \"PROV_EVENT_V1\", schema version 1, length-prefixed strings, metadata sorted by key. 237 bytes. Deterministic — re-encoding gives the same bytes byte-for-byte."
+          "copy": "Encode to canonical bytes: 237 bytes. Domain tag PROV_EVENT_V1, schema version 1, length-prefixed strings, metadata sorted by key. Re-encoding the same event always produces these exact bytes — that's what \"canonical\" means."
         },
         {
           "target_phase": "sign",
           "dwell_ms": 4200,
-          "copy": "SHA3-256 hash of the canonical bytes: 8f3c860cf3e1f3…. Ed25519 signature over those same bytes: d4af7421daeb4f… (64 bytes). Attach the agent's public key: d6761a239028… (32 bytes). The signed event is now self-verifying."
+          "copy": "Hash the bytes once with SHA3-256, sign the hash with Ed25519, attach the public key. 96 bytes total (32 + 64 + 32) of cryptographic material per event — a one-time fixed cost regardless of payload size."
         },
         {
           "target_phase": "chain",
           "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = 1a0d142f385017…, which is the leaf hash of event 1. The chain advances. Any reordering or insertion would break this link."
+          "copy": "Chain link: prev_event_hash = 9c8aaa3c248546…, the leaf hash of event 1. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
         },
         {
           "target_phase": "merkle",
           "dwell_ms": 3800,
-          "copy": "Merkle proof for this event: 3 sibling hashes (~96 bytes total). The verifier walks the path from this leaf to the chain root (52376232fa7f…) using only those siblings. The proof grows logarithmically with the chain length."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
         },
         {
           "target_phase": "verify",
           "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (d6761a239028…) and the chain root (52376232fa7f…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto."
+          "copy": "Anyone with the agent's public key (2d6e3d8280f2…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
         "agent_id": "agent-tools",
-        "trace_id": "trace-2026-05-12-7f3a",
+        "trace_id": "trace-2026-05-15-7f3a",
         "event_type": "tool.executed",
         "payload_hash_hex": "291b1cfc1328bf20d9d091ac68aa3a8227854566242073967ed6165318e6d985",
-        "prev_event_hash_hex": "1a0d142f3850172cc6601201d79f912015d7e71d5fbb422b6ed1ccd9a8bd9d98",
-        "timestamp_ms": 1715520001200,
+        "prev_event_hash_hex": "9c8aaa3c2485464af53591bd099d97e54ef830261c83f1121ee0666a50895eea",
+        "timestamp_ms": 1778803201200,
         "metadata": {
           "tool": "fs_read",
           "path": "/var/data/quarterly_report.md",
@@ -159,17 +172,22 @@
       "crypto": {
         "canonical_bytes_len": 237,
         "canonical_bytes_preview_hex": "50524f565f4556454e545f563101000000010000000b0000006167656e742d74",
-        "leaf_hash_hex": "8f3c860cf3e1f3a9138a27dae0e349bfa0f47b8842db0999c8c69b301153dd78",
-        "signature_hex": "d4af7421daeb4fdaba0b9509eab2607688b90b175734dc1e7f2774f1ca513f884df4493ed720ab35fa9312b929ec41adcf67d02c397af308c7186898a675c406",
-        "public_key_hex": "d6761a2390283b043f6136b364095c7138102f954687c704f30165c13b246cc6",
+        "leaf_hash_hex": "9129fc5936865ef085d35319cbc2091792990baa74fda934d24e06477f198928",
+        "signature_hex": "6d6004b5e738d6658835a824c4c70c676c426c9bf3bdb1975ebee4b5f04f73f280a4141fc880603513f5330f8ec348e5d8ffa806c648d3f1b94d035bfd642a0f",
+        "public_key_hex": "2d6e3d8280f20586efe07b37f5ac0f9f6826584f950da9f52520bc8d0b9dfd98",
         "merkle_proof": {
           "leaf_index": 1,
-          "leaf_hash_hex": "8f3c860cf3e1f3a9138a27dae0e349bfa0f47b8842db0999c8c69b301153dd78",
+          "leaf_hash_hex": "9129fc5936865ef085d35319cbc2091792990baa74fda934d24e06477f198928",
           "sibling_count": 3,
           "siblings_hex": [
-            "1a0d142f3850172cc6601201d79f912015d7e71d5fbb422b6ed1ccd9a8bd9d98",
-            "f0f796841d93eaad882083aaf7a7768c4d41517cea255c934c30b06cca53be12",
-            "664e64dc4bae0b4a88a4351458384b57e3d6463b3ffec087554f26fa3fdec2a7"
+            "9c8aaa3c2485464af53591bd099d97e54ef830261c83f1121ee0666a50895eea",
+            "1d2e931d7a149d2e9ab5255c6977856989732ec3673e881b56c386212eca9743",
+            "f2b0f401c37d0c701c3beb186c80a7be007849bfcdd8101bb188c3b42175bf68"
+          ],
+          "sibling_kinds": [
+            "paired",
+            "paired",
+            "paired"
           ]
         }
       },
@@ -181,9 +199,17 @@
         "tampered": false
       },
       "latency": {
-        "actual_total_ms": 0.4,
+        "actual_total_ms": 0.41,
         "naive_total_ms": 25,
-        "saved_pct": 98.4
+        "saved_pct": 98.36,
+        "is_estimate": true,
+        "breakdown": {
+          "canonical_encode_ms": 0.02,
+          "ed25519_sign_ms": 0.15,
+          "ed25519_verify_ms": 0.15,
+          "merkle_steps": 3,
+          "merkle_total_ms": 0.09
+        }
       }
     },
     {
@@ -193,52 +219,52 @@
       "agent_id": "agent-tools",
       "payload_preview": "fs_write(\"/var/output/summary.md\", 2048 bytes)",
       "plain": "the agent wrote a file",
-      "summary": "The agent wrote a file. Every artifact below (the canonical bytes, the SHA3-256 hash, the Ed25519 signature, the Merkle path) is real and verifiable.",
-      "aftermath": "The signed event is appended to the per-agent provenance log (jsonl on disk) AND the chain's Merkle root is updated. Hot tier: in-memory + WAL. Warm tier: rotated logs after N events. Cold tier: archived to S3 with the root hash retained.",
+      "summary": "The agent wrote a file. Real Ed25519 keypair, real SHA3-256 digest, real Merkle path against the chain root.",
+      "aftermath": "The output file's content hash is included in the payload hash, so anyone with the file can verify the agent produced this exact bytes — not a modified version. Hot tier holds the event for ~7 days before rotating to warm storage; the Merkle root persists indefinitely.",
       "beats": [
         {
           "target_phase": null,
           "dwell_ms": 3600,
-          "copy": "The agent wrote a file — event 3 of 5 in this trace. Writes are higher-stakes than reads — and they still get one signed event, one chain link, one Merkle leaf. Same cost. Same proof."
+          "copy": "The agent wrote a file — event 3 of 5 in this trace. Writes are higher-stakes than reads, and they still get one signed event, one chain link, one Merkle leaf. Same cost. Same proof."
         },
         {
           "target_phase": "event",
           "dwell_ms": 3800,
-          "copy": "Event content: agent_id \"agent-tools\", trace_id \"trace-2026-05-12-7f3a...\", event_type \"tool.executed\". Payload hashed to 47ab8e696615… — the payload itself stays out of the chain, only its hash."
+          "copy": "Same agent (agent-tools), different tool. The chain doesn't care whether you read or write — each tool call gets one signed event with its own payload hash, metadata, and Merkle leaf."
         },
         {
           "target_phase": "canonical",
           "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: domain tag \"PROV_EVENT_V1\", schema version 1, length-prefixed strings, metadata sorted by key. 234 bytes. Deterministic — re-encoding gives the same bytes byte-for-byte."
+          "copy": "Encode to canonical bytes: 234 bytes. The first ~32 bytes match the previous event (same domain tag + schema version + agent_id length-prefix), which is correct and deterministic — it's not a copy-paste. The rest of the bytes diverge based on event_type, payload, and metadata."
         },
         {
           "target_phase": "sign",
           "dwell_ms": 4200,
-          "copy": "SHA3-256 hash of the canonical bytes: d33af915373fc6…. Ed25519 signature over those same bytes: 5ede7b477e8a20… (64 bytes). Attach the agent's public key: d6761a239028… (32 bytes). The signed event is now self-verifying."
+          "copy": "The signature here (6b3f5d685cca42…) is a real Ed25519 signature, not a hash truncation or a placeholder. Verifiable with curve25519 implementations in any language — including the one running in your browser."
         },
         {
           "target_phase": "chain",
           "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = 8f3c860cf3e1f3…, which is the leaf hash of event 2. The chain advances. Any reordering or insertion would break this link."
+          "copy": "Chain link: prev_event_hash = 9129fc5936865e…, the leaf hash of event 2. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
         },
         {
           "target_phase": "merkle",
           "dwell_ms": 3800,
-          "copy": "Merkle proof for this event: 3 sibling hashes (~96 bytes total). The verifier walks the path from this leaf to the chain root (52376232fa7f…) using only those siblings. The proof grows logarithmically with the chain length."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
         },
         {
           "target_phase": "verify",
           "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (d6761a239028…) and the chain root (52376232fa7f…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto."
+          "copy": "Anyone with the agent's public key (2d6e3d8280f2…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
         "agent_id": "agent-tools",
-        "trace_id": "trace-2026-05-12-7f3a",
+        "trace_id": "trace-2026-05-15-7f3a",
         "event_type": "tool.executed",
         "payload_hash_hex": "47ab8e6966159a1f7f7f07cc39dab8a7fdffb5e179c4a26fae5fb02fcef96edd",
-        "prev_event_hash_hex": "8f3c860cf3e1f3a9138a27dae0e349bfa0f47b8842db0999c8c69b301153dd78",
-        "timestamp_ms": 1715520002400,
+        "prev_event_hash_hex": "9129fc5936865ef085d35319cbc2091792990baa74fda934d24e06477f198928",
+        "timestamp_ms": 1778803202400,
         "metadata": {
           "tool": "fs_write",
           "path": "/var/output/summary.md",
@@ -248,17 +274,22 @@
       "crypto": {
         "canonical_bytes_len": 234,
         "canonical_bytes_preview_hex": "50524f565f4556454e545f563101000000010000000b0000006167656e742d74",
-        "leaf_hash_hex": "d33af915373fc6996af1215e3b3200a216bdaf3e0a0a2cbbb96568e2d35b4247",
-        "signature_hex": "5ede7b477e8a206604a2c09fa69da32a6456250dbea57f0384bac11b0916f3278b7d614c057bd3dbbaf098b0568dfda9b1bb5313fd1f491c9da1f62f8573ca0f",
-        "public_key_hex": "d6761a2390283b043f6136b364095c7138102f954687c704f30165c13b246cc6",
+        "leaf_hash_hex": "c08c0af1017b810e9c35e1bbefcf859426054b3b71de1a077af6553f8d121910",
+        "signature_hex": "6b3f5d685cca4265f958d38b46ba8baf4f4b3da703d2a6ed76bdf1927433fe2045d0e7ad1f51ac9253050fc28331471da1eaadcce322f1440d7ef3bb5517720c",
+        "public_key_hex": "2d6e3d8280f20586efe07b37f5ac0f9f6826584f950da9f52520bc8d0b9dfd98",
         "merkle_proof": {
           "leaf_index": 2,
-          "leaf_hash_hex": "d33af915373fc6996af1215e3b3200a216bdaf3e0a0a2cbbb96568e2d35b4247",
+          "leaf_hash_hex": "c08c0af1017b810e9c35e1bbefcf859426054b3b71de1a077af6553f8d121910",
           "sibling_count": 3,
           "siblings_hex": [
-            "481f95bbdc7bde0418600ab79c50eea4be14b424713c966a01cef7f78817bdc6",
-            "3fb613bbaecfb04eadcfb17b1dbdb18f404c61f15d90e0fe2b4ee1126d3635ba",
-            "664e64dc4bae0b4a88a4351458384b57e3d6463b3ffec087554f26fa3fdec2a7"
+            "fb5791691eac3d4cbbf64b46204c6364b78c54872e0e0449715a0dc8c020da4e",
+            "6e7dc93d556c18f97753dd09961f69490e398fa94b7c294fc5ad5fe56e6fbdc1",
+            "f2b0f401c37d0c701c3beb186c80a7be007849bfcdd8101bb188c3b42175bf68"
+          ],
+          "sibling_kinds": [
+            "paired",
+            "paired",
+            "paired"
           ]
         }
       },
@@ -270,9 +301,17 @@
         "tampered": false
       },
       "latency": {
-        "actual_total_ms": 0.4,
+        "actual_total_ms": 0.41,
         "naive_total_ms": 25,
-        "saved_pct": 98.4
+        "saved_pct": 98.36,
+        "is_estimate": true,
+        "breakdown": {
+          "canonical_encode_ms": 0.02,
+          "ed25519_sign_ms": 0.15,
+          "ed25519_verify_ms": 0.15,
+          "merkle_steps": 3,
+          "merkle_total_ms": 0.09
+        }
       }
     },
     {
@@ -282,52 +321,52 @@
       "agent_id": "agent-tools",
       "payload_preview": "http_request(\"https://api.example.com\") -> network timeout",
       "plain": "a tool call failed",
-      "summary": "A tool call failed. Every artifact below (the canonical bytes, the SHA3-256 hash, the Ed25519 signature, the Merkle path) is real and verifiable.",
-      "aftermath": "The signed event is appended to the per-agent provenance log (jsonl on disk) AND the chain's Merkle root is updated. Hot tier: in-memory + WAL. Warm tier: rotated logs after N events. Cold tier: archived to S3 with the root hash retained.",
+      "summary": "A tool call failed. Real Ed25519 keypair, real SHA3-256 digest, real Merkle path against the chain root.",
+      "aftermath": "Failures are preserved in the chain with their error trace — the orchestrator can later replay the failed call to debug or analyze retry patterns. Cold tier archives keep failure events alongside successes; there's no separate \"good events\" log to selectively trust.",
       "beats": [
         {
           "target_phase": null,
           "dwell_ms": 3600,
-          "copy": "A tool call failed — event 4 of 5 in this trace. Failures get the same audit treatment as successes. The chain doesn't have a 'happy path' — every event is logged regardless of outcome."
+          "copy": "A tool call failed — event 4 of 5 in this trace. Failures get the same audit treatment as successes. Every event is logged regardless of outcome, so an after-the-fact narrative can't quietly omit the parts that went wrong."
         },
         {
           "target_phase": "event",
           "dwell_ms": 3800,
-          "copy": "Event content: agent_id \"agent-tools\", trace_id \"trace-2026-05-12-7f3a...\", event_type \"tool.failed\". Payload hashed to 0bdd02bfc5ed… — the payload itself stays out of the chain, only its hash."
+          "copy": "tool.failed — yes, failures get the full treatment too. The error_code and timeout duration are in the metadata, signed alongside everything else. No \"happy path\" log to selectively trust."
         },
         {
           "target_phase": "canonical",
           "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: domain tag \"PROV_EVENT_V1\", schema version 1, length-prefixed strings, metadata sorted by key. 252 bytes. Deterministic — re-encoding gives the same bytes byte-for-byte."
+          "copy": "Encode to canonical bytes: 252 bytes. The first ~32 bytes match the previous event (same domain tag + schema version + agent_id length-prefix), which is correct and deterministic — it's not a copy-paste. The rest of the bytes diverge based on event_type, payload, and metadata."
         },
         {
           "target_phase": "sign",
           "dwell_ms": 4200,
-          "copy": "SHA3-256 hash of the canonical bytes: 481f95bbdc7bde…. Ed25519 signature over those same bytes: ef11719e0eca0b… (64 bytes). Attach the agent's public key: d6761a239028… (32 bytes). The signed event is now self-verifying."
+          "copy": "Even though this tool call failed, the failure event gets the same SHA3-256 + Ed25519 + public-key bundle. Failures are first-class citizens of the chain; you can't selectively skip signing the embarrassing ones."
         },
         {
           "target_phase": "chain",
           "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = d33af915373fc6…, which is the leaf hash of event 3. The chain advances. Any reordering or insertion would break this link."
+          "copy": "Chain link: prev_event_hash = c08c0af1017b81…, the leaf hash of event 3. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
         },
         {
           "target_phase": "merkle",
           "dwell_ms": 3800,
-          "copy": "Merkle proof for this event: 3 sibling hashes (~96 bytes total). The verifier walks the path from this leaf to the chain root (52376232fa7f…) using only those siblings. The proof grows logarithmically with the chain length."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
         },
         {
           "target_phase": "verify",
           "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (d6761a239028…) and the chain root (52376232fa7f…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto."
+          "copy": "Anyone with the agent's public key (2d6e3d8280f2…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
         "agent_id": "agent-tools",
-        "trace_id": "trace-2026-05-12-7f3a",
+        "trace_id": "trace-2026-05-15-7f3a",
         "event_type": "tool.failed",
         "payload_hash_hex": "0bdd02bfc5ed8b510df8c6faaa4d43bbe19f134c064e1770bb4b51249d4a2cca",
-        "prev_event_hash_hex": "d33af915373fc6996af1215e3b3200a216bdaf3e0a0a2cbbb96568e2d35b4247",
-        "timestamp_ms": 1715520003600,
+        "prev_event_hash_hex": "c08c0af1017b810e9c35e1bbefcf859426054b3b71de1a077af6553f8d121910",
+        "timestamp_ms": 1778803203600,
         "metadata": {
           "tool": "http_request",
           "url": "https://api.example.com",
@@ -337,17 +376,22 @@
       "crypto": {
         "canonical_bytes_len": 252,
         "canonical_bytes_preview_hex": "50524f565f4556454e545f563101000000010000000b0000006167656e742d74",
-        "leaf_hash_hex": "481f95bbdc7bde0418600ab79c50eea4be14b424713c966a01cef7f78817bdc6",
-        "signature_hex": "ef11719e0eca0b69ea5f5c1972e22883715c87b52c47d80d4b984ee29b91dc9fa65557dd5e7e4016505ca0fba63a7c9f5678c9fec395984e7616c9f2a7010306",
-        "public_key_hex": "d6761a2390283b043f6136b364095c7138102f954687c704f30165c13b246cc6",
+        "leaf_hash_hex": "fb5791691eac3d4cbbf64b46204c6364b78c54872e0e0449715a0dc8c020da4e",
+        "signature_hex": "6eb04cb74cee3222092fedaf433e0e100dcee1b4476e3bc395e895f1ca3ec0ac7b9a0b7a78ba2f3f9baf49a53c5e0f4a9358391273e86d6ea88347e6658ea502",
+        "public_key_hex": "2d6e3d8280f20586efe07b37f5ac0f9f6826584f950da9f52520bc8d0b9dfd98",
         "merkle_proof": {
           "leaf_index": 3,
-          "leaf_hash_hex": "481f95bbdc7bde0418600ab79c50eea4be14b424713c966a01cef7f78817bdc6",
+          "leaf_hash_hex": "fb5791691eac3d4cbbf64b46204c6364b78c54872e0e0449715a0dc8c020da4e",
           "sibling_count": 3,
           "siblings_hex": [
-            "d33af915373fc6996af1215e3b3200a216bdaf3e0a0a2cbbb96568e2d35b4247",
-            "3fb613bbaecfb04eadcfb17b1dbdb18f404c61f15d90e0fe2b4ee1126d3635ba",
-            "664e64dc4bae0b4a88a4351458384b57e3d6463b3ffec087554f26fa3fdec2a7"
+            "c08c0af1017b810e9c35e1bbefcf859426054b3b71de1a077af6553f8d121910",
+            "6e7dc93d556c18f97753dd09961f69490e398fa94b7c294fc5ad5fe56e6fbdc1",
+            "f2b0f401c37d0c701c3beb186c80a7be007849bfcdd8101bb188c3b42175bf68"
+          ],
+          "sibling_kinds": [
+            "paired",
+            "paired",
+            "paired"
           ]
         }
       },
@@ -359,9 +403,17 @@
         "tampered": false
       },
       "latency": {
-        "actual_total_ms": 0.4,
+        "actual_total_ms": 0.41,
         "naive_total_ms": 25,
-        "saved_pct": 98.4
+        "saved_pct": 98.36,
+        "is_estimate": true,
+        "breakdown": {
+          "canonical_encode_ms": 0.02,
+          "ed25519_sign_ms": 0.15,
+          "ed25519_verify_ms": 0.15,
+          "merkle_steps": 3,
+          "merkle_total_ms": 0.09
+        }
       }
     },
     {
@@ -382,41 +434,41 @@
         {
           "target_phase": "event",
           "dwell_ms": 3800,
-          "copy": "Event content: agent_id \"agent-orchestrator\", trace_id \"trace-2026-05-12-7f3a...\", event_type \"agent.despawn\". Payload hashed to 38554786e330… — the payload itself stays out of the chain, only its hash."
+          "copy": "agent.despawn from the orchestrator. The metadata claims 3 tools ran (we'll come back to that). Payload hash 38554786e330… commits to the original event bytes — the signature lives or dies on whether those bytes change."
         },
         {
           "target_phase": "canonical",
           "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: domain tag \"PROV_EVENT_V1\", schema version 1, length-prefixed strings, metadata sorted by key. 209 bytes. Deterministic — re-encoding gives the same bytes byte-for-byte."
+          "copy": "Encode to canonical bytes: 209 bytes. Domain tag PROV_EVENT_V1, schema version 1, length-prefixed strings, metadata sorted by key. Re-encoding the same event always produces these exact bytes — that's what \"canonical\" means."
         },
         {
           "target_phase": "sign",
           "dwell_ms": 4200,
-          "copy": "SHA3-256 hash of the canonical bytes: 0f6ee3cb2891ba…. Ed25519 signature over those same bytes: c1191cb48fcb16… (64 bytes). Attach the agent's public key: 735dc63d984a… (32 bytes). The signed event is now self-verifying."
+          "copy": "Ed25519 signs over the original canonical bytes (before any tampering). That signature commits to a specific byte sequence — changing any field after the fact invalidates the signature even though the public key and the chain link both still match."
         },
         {
           "target_phase": "chain",
           "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = 481f95bbdc7bde…, which is the leaf hash of event 4. The chain advances. Any reordering or insertion would break this link."
+          "copy": "Chain link: prev_event_hash = fb5791691eac3d…, the leaf hash of event 4. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
         },
         {
           "target_phase": "merkle",
           "dwell_ms": 3800,
-          "copy": "Merkle proof for this event: 3 sibling hashes (~96 bytes total). The verifier walks the path from this leaf to the chain root (52376232fa7f…) using only those siblings. The proof grows logarithmically with the chain length."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). 2 of the levels had an odd number of nodes, so the last entry is paired with itself (the \"duplicate-last-for-odd\" rule). The verifier walks each level from leaf to root using these siblings — proof size stays small even when the chain grows large."
         },
         {
           "target_phase": "verify",
           "dwell_ms": 4400,
-          "copy": "This event was signed honestly. Then someone changed \"tools_run\" from \"3\" to \"30\". The signature was over the original bytes — the new bytes are not what got signed. Result: signature FAILS to verify ✗. The Merkle proof itself still verifies against the (tampered) leaf hash — but anyone re-checking the signature catches the lie. No central authority needed. No audit DB you have to trust."
+          "copy": "This event was signed honestly. Then someone changed \"tools_run\" from \"3\" to \"30\" after the fact. The signature was made over the original bytes — the new bytes are not what got signed. Result: signature FAILS to verify ✗. The Merkle proof and chain link still pass, because they prove this event sits in this position of the chain — not what the event contained. The signature is what catches the content tamper, and three independent checks means one failure is enough."
         }
       ],
       "event": {
         "agent_id": "agent-orchestrator",
-        "trace_id": "trace-2026-05-12-7f3a",
+        "trace_id": "trace-2026-05-15-7f3a",
         "event_type": "agent.despawn",
         "payload_hash_hex": "38554786e330792d374c731b20c822353c8364a6547af8d6a50dc70194e94f1f",
-        "prev_event_hash_hex": "481f95bbdc7bde0418600ab79c50eea4be14b424713c966a01cef7f78817bdc6",
-        "timestamp_ms": 1715520004800,
+        "prev_event_hash_hex": "fb5791691eac3d4cbbf64b46204c6364b78c54872e0e0449715a0dc8c020da4e",
+        "timestamp_ms": 1778803204800,
         "metadata": {
           "reason": "trace_complete",
           "tools_run": "30"
@@ -425,17 +477,22 @@
       "crypto": {
         "canonical_bytes_len": 209,
         "canonical_bytes_preview_hex": "50524f565f4556454e545f56310100000001000000120000006167656e742d6f",
-        "leaf_hash_hex": "0f6ee3cb2891ba6062b147631f8e12cd5ead3881fa28362ebf4ee58fbc258cd7",
-        "signature_hex": "c1191cb48fcb16bcd28c86c2ad35a2cae6f1c3b78d539cb95e5404d7ec66d32127adf1849b892f6ed4f5bde176d38bf2351bd53e62be80708667932c4ebad007",
-        "public_key_hex": "735dc63d984ac3fde03bfdc56a3c2ecf55cddb1b80e455cbfcf668c5d763683d",
+        "leaf_hash_hex": "e8d3c7c7568bc4097f83b03690132cd51b5cdeca0673e2b6d886d4a70f144dea",
+        "signature_hex": "11470e1f6619dc33a83bd48f002f562ac7a0cb5071caf311319daed7f37e49635cc48d380dd82a3116d454d53805ab9c34e78fc186d401cd298df6137dbf6201",
+        "public_key_hex": "0d49ff0d47437ab65ead0200a3856532dd38947ae3c85b186843754871455139",
         "merkle_proof": {
           "leaf_index": 4,
-          "leaf_hash_hex": "0f6ee3cb2891ba6062b147631f8e12cd5ead3881fa28362ebf4ee58fbc258cd7",
+          "leaf_hash_hex": "e8d3c7c7568bc4097f83b03690132cd51b5cdeca0673e2b6d886d4a70f144dea",
           "sibling_count": 3,
           "siblings_hex": [
-            "0f6ee3cb2891ba6062b147631f8e12cd5ead3881fa28362ebf4ee58fbc258cd7",
-            "5c24a74d9e523db566362b24b2fe5ae27d060ca1c24a65873f166df4dc7f1b80",
-            "99037257dd6ae571da76899fff42db013e9961dabbe9f8b19ae622d1f0d2d76e"
+            "e8d3c7c7568bc4097f83b03690132cd51b5cdeca0673e2b6d886d4a70f144dea",
+            "dba914f6ab4a758b46c32a092dcff034821a37f9b6461747f9d56777a5ec0320",
+            "6ea6304ef0edcdf8f23decdcf468d5d90f63a16f626fef4be85ebd0ea54622a6"
+          ],
+          "sibling_kinds": [
+            "self",
+            "self",
+            "paired"
           ]
         }
       },
@@ -447,9 +504,17 @@
         "tampered": true
       },
       "latency": {
-        "actual_total_ms": 0.4,
+        "actual_total_ms": 0.41,
         "naive_total_ms": 25,
-        "saved_pct": 98.4
+        "saved_pct": 98.36,
+        "is_estimate": true,
+        "breakdown": {
+          "canonical_encode_ms": 0.02,
+          "ed25519_sign_ms": 0.15,
+          "ed25519_verify_ms": 0.15,
+          "merkle_steps": 3,
+          "merkle_total_ms": 0.09
+        }
       }
     }
   ]

@@ -14,6 +14,7 @@ const MerkleProofSchema = z.object({
   leaf_hash_hex: z.string(),
   sibling_count: z.number(),
   siblings_hex: z.array(z.string()),
+  sibling_kinds: z.array(z.enum(['paired', 'self'])).optional(),
 });
 
 const EventRecordSchema = z.object({
@@ -60,6 +61,16 @@ const EventRecordSchema = z.object({
     actual_total_ms: z.number(),
     naive_total_ms: z.number(),
     saved_pct: z.number(),
+    is_estimate: z.boolean().optional(),
+    breakdown: z
+      .object({
+        canonical_encode_ms: z.number(),
+        ed25519_sign_ms: z.number(),
+        ed25519_verify_ms: z.number(),
+        merkle_steps: z.number(),
+        merkle_total_ms: z.number(),
+      })
+      .optional(),
   }),
 });
 
@@ -252,9 +263,16 @@ export default function ProvenanceChainPage() {
           Banterpacks. It uses Node&apos;s built-in{' '}
           <span className="font-mono text-foreground">node:crypto</span> module — no external crypto
           dependency. Hot/warm/cold lifecycle tiering (WAL → rotated logs → S3 archive) is
-          described in the Rust crate&apos;s{' '}
-          <span className="font-mono text-foreground">wal.rs</span> and the TDD005 CLAUDE.md but is
-          a runtime concern not visualised in this walkthrough.
+          implemented in{' '}
+          <span className="font-mono text-foreground">tdd005/crates/chimera-core/src/util.rs</span>{' '}
+          (env-gated by{' '}
+          <span className="font-mono text-foreground">TDD005_PROVENANCE_HOT_DAYS</span>/
+          <span className="font-mono text-foreground">_WARM_DAYS</span>) with S3 backup via
+          the chimera-core{' '}
+          <span className="font-mono text-foreground">/backup/run</span> handler;{' '}
+          <span className="font-mono text-foreground">tdd004_provenance/src/wal.rs</span> is the
+          per-agent append-only WAL the tiering compacts from. Runtime concern, not visualised
+          in this walkthrough.
         </p>
       </footer>
     </div>

@@ -6,7 +6,6 @@ import {
   useEffect,
   useRef,
   useCallback,
-  useLayoutEffect,
 } from 'react';
 import type { ReactNode, KeyboardEvent } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -23,6 +22,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   CornerDownRight,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 
 // ---- Types (mirror provenance-chain.json shape) ----
@@ -63,6 +64,7 @@ type EventRecord = {
       leaf_hash_hex: string;
       sibling_count: number;
       siblings_hex: string[];
+      sibling_kinds?: ('paired' | 'self')[];
     };
   };
   verification: {
@@ -76,6 +78,14 @@ type EventRecord = {
     actual_total_ms: number;
     naive_total_ms: number;
     saved_pct: number;
+    is_estimate?: boolean;
+    breakdown?: {
+      canonical_encode_ms: number;
+      ed25519_sign_ms: number;
+      ed25519_verify_ms: number;
+      merkle_steps: number;
+      merkle_total_ms: number;
+    };
   };
 };
 
@@ -179,20 +189,24 @@ function fmtHex(hex: string, head = 8, tail = 4) {
   return `${hex.slice(0, head)}…${hex.slice(-tail)}`;
 }
 
-// Vertical timeline node — one per event in the trace. Highlights the
-// active record + verification status (✓ green / ✗ ember).
+// Vertical timeline node — single radio button (v1 audit C7 collapsed
+// the nested button-in-div). Native button with role=radio + aria-checked
+// is widely supported despite the ARIA-spec quibble; the alternative
+// (div+role=radio) loses native focus/keyboard for marginal correctness.
 function TimelineNode({
   rec,
   isActive,
   isPast,
   onClick,
   reducedMotion,
+  tabIndex,
 }: {
   rec: EventRecord;
   isActive: boolean;
   isPast: boolean;
   onClick: () => void;
   reducedMotion: boolean;
+  tabIndex: number;
 }) {
   const tampered = rec.verification.tampered;
   const ring = isActive
@@ -210,11 +224,14 @@ function TimelineNode({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={isActive}
+      tabIndex={tabIndex}
       onClick={onClick}
+      aria-label={`Event ${rec.step_index + 1} of ${5}, ${rec.event.event_type}${tampered ? ', tampered — signature failed' : ', verified'}`}
       className={`group flex items-center gap-3 w-full text-left rounded-lg border ${ring} bg-card/40 backdrop-blur-sm p-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
         isActive ? '' : 'hover:border-border'
       }`}
-      aria-current={isActive ? 'step' : undefined}
     >
       <motion.span
         animate={reducedMotion ? { scale: 1 } : { scale: isActive ? 1.2 : 1 }}
@@ -232,9 +249,10 @@ function TimelineNode({
             event {rec.step_index + 1}
           </span>
           <span
-            className={`font-mono text-[10px] ${
-              tampered ? 'text-primary' : 'text-accent/80'
+            className={`font-mono text-[11px] ${
+              tampered ? 'text-primary' : 'text-accent/90'
             }`}
+            aria-hidden
           >
             {tampered ? 'TAMPERED' : 'verified'}
           </span>
@@ -252,22 +270,40 @@ function TimelineNode({
 }
 
 // Phase card — one per crypto phase. Reveals progressively as the
-// narration walks through the beats.
+// narration walks through the beats. Verify card optionally goes to
+// emphasizedVerify mode (full-width, larger title) when active or when
+// the verify beat is past — v1 audit C11 progressive-focus pattern.
 function PhaseCard({
   phaseId,
   isActive,
   isRevealed,
   reducedMotion,
   children,
+  emphasized = false,
+  failedWrap = false,
 }: {
   phaseId: PhaseId;
   isActive: boolean;
   isRevealed: boolean;
   reducedMotion: boolean;
   children: ReactNode;
+  emphasized?: boolean;
+  failedWrap?: boolean;
 }) {
   const meta = PHASE_META[phaseId];
   const Icon = meta.Icon;
+  // v1 audit C9 — `inert` keeps unrevealed cards out of the tab order
+  // AND hides them from AT consistently. React 19 passes the inert
+  // boolean to the underlying element natively.
+  const inertProp = !isRevealed ? { inert: '' as unknown as boolean } : {};
+  const border = failedWrap
+    ? 'border-primary shadow-[0_0_44px_-10px_hsl(var(--primary)/0.65)]'
+    : isActive
+      ? 'border-primary shadow-[0_0_36px_-12px_hsl(var(--primary)/0.55)]'
+      : 'border-border/40';
+  const bg = failedWrap
+    ? 'bg-primary/[0.06]'
+    : 'bg-card/40';
   return (
     <motion.div
       animate={
@@ -277,25 +313,26 @@ function PhaseCard({
       }
       transition={{ duration: 0.35, ease: 'easeOut' }}
       aria-hidden={!isRevealed}
-      className={`relative rounded-lg border ${
-        isActive
-          ? 'border-primary shadow-[0_0_36px_-12px_hsl(var(--primary)/0.55)]'
-          : 'border-border/40'
-      } bg-card/40 backdrop-blur-sm p-4 md:p-5`}
+      {...inertProp}
+      className={`relative rounded-lg border ${border} ${bg} backdrop-blur-sm ${
+        emphasized ? 'p-5 md:p-7' : 'p-4 md:p-5'
+      }`}
     >
       <div className="flex items-center gap-2 mb-3">
         <Icon
-          className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground/80'}`}
+          className={`${emphasized ? 'h-5 w-5' : 'h-4 w-4'} ${
+            isActive || failedWrap ? 'text-primary' : 'text-muted-foreground/80'
+          }`}
           aria-hidden
         />
         <div
-          className={`font-bold tracking-tight text-[15px] ${
-            isActive ? 'text-primary' : 'text-foreground'
-          }`}
+          className={`font-bold tracking-tight ${
+            emphasized ? 'text-[17px] md:text-[18px]' : 'text-[15px]'
+          } ${isActive || failedWrap ? 'text-primary' : 'text-foreground'}`}
         >
           {meta.name}
         </div>
-        <div className="text-[11px] text-muted-foreground leading-snug ml-2">
+        <div className="text-[12px] text-muted-foreground leading-snug ml-2">
           {meta.plain}
         </div>
       </div>
@@ -304,28 +341,68 @@ function PhaseCard({
   );
 }
 
-// Pretty hex display — fixed-width, monospace, with subtle char grouping.
+// Pretty hex display — truncated by default (head + … + tail) with a
+// click-to-expand affordance. v1 audit C10 — full hex inline reads as a
+// debug terminal dump; Etherscan-style truncation is the industry pattern.
 function HexBlock({
   hex,
   ariaLabel,
   prefix,
+  alwaysExpanded = false,
+  headChars = 16,
+  tailChars = 12,
 }: {
   hex: string;
   ariaLabel: string;
   prefix?: string;
+  alwaysExpanded?: boolean;
+  headChars?: number;
+  tailChars?: number;
 }) {
-  // Group into 4-char chunks separated by thin spaces for legibility.
-  const chunks: string[] = [];
-  for (let i = 0; i < hex.length; i += 4) {
-    chunks.push(hex.slice(i, i + 4));
-  }
+  const [expanded, setExpanded] = useState(alwaysExpanded);
+  const isLong = hex.length > headChars + tailChars + 3;
+  const showExpanded = expanded || !isLong || alwaysExpanded;
+
+  // Group expanded view into 4-char chunks separated by thin spaces.
+  // Memoize so we don't re-split on every render (v1 audit D25).
+  const chunked = useMemo(() => {
+    if (!showExpanded) return '';
+    const chunks: string[] = [];
+    for (let i = 0; i < hex.length; i += 4) chunks.push(hex.slice(i, i + 4));
+    return chunks.join(' ');
+  }, [hex, showExpanded]);
+
+  const collapsed = `${hex.slice(0, headChars)} … ${hex.slice(-tailChars)}`;
+
   return (
     <div
-      className="font-mono text-[10px] md:text-[11px] text-foreground/85 break-all leading-relaxed"
-      aria-label={ariaLabel}
+      className="font-mono text-[11px] md:text-[12px] text-foreground/90 break-all leading-relaxed flex items-baseline gap-1.5"
+      role="group"
+      aria-label={`${ariaLabel} (${hex.length / 2} bytes)`}
     >
       {prefix && <span className="text-muted-foreground/80">{prefix}</span>}
-      {chunks.join(' ')}
+      <span className={showExpanded ? '' : 'tracking-wide'}>
+        {showExpanded ? chunked : collapsed}
+      </span>
+      {isLong && !alwaysExpanded && (
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="shrink-0 ml-1 inline-flex items-center gap-0.5 rounded border border-border/40 hover:border-border bg-background/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-colors"
+          aria-label={expanded ? `Collapse ${ariaLabel}` : `Expand ${ariaLabel} (${hex.length} hex chars)`}
+          aria-expanded={expanded}
+        >
+          {expanded ? (
+            <>
+              <ChevronDown className="h-2.5 w-2.5" aria-hidden /> less
+            </>
+          ) : (
+            <>
+              <ChevronRight className="h-2.5 w-2.5" aria-hidden /> full
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }
@@ -361,41 +438,52 @@ function VerificationRow({
 function JourneyPanel({ record }: { record: EventRecord }) {
   const lat = record.latency;
   const saved = Math.min(99.9, lat.saved_pct);
+  const isEstimate = lat.is_estimate;
   return (
     <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.6fr] gap-4 md:gap-6 items-baseline">
       <div>
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
+        {/* v1 audit C15: sub-labels bumped from text-[9px] muted/70 to
+            text-[11px] muted/90 for AA contrast. */}
+        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
           per-event audit cost
         </div>
         <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           ~{lat.actual_total_ms}ms
+          {isEstimate && (
+            <span
+              className="ml-1.5 align-middle text-[10px] font-mono text-muted-foreground/80 normal-case tracking-normal"
+              title="Estimate from per-phase rust costs, not a benchmark"
+            >
+              (est.)
+            </span>
+          )}
         </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
-          SHA3-256 hash + Ed25519 sign + Merkle proof
+        <div className="text-[11px] text-muted-foreground mt-1.5">
+          SHA3-256 hash + Ed25519 sign + Merkle proof ({lat.breakdown?.merkle_steps ?? '?'} levels)
         </div>
       </div>
       <div>
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
-          centralized audit DB would cost
+        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+          centralized audit DB
         </div>
         <div
-          className="font-mono text-xl md:text-2xl text-muted-foreground/70 line-through font-bold leading-tight"
+          className="font-mono text-xl md:text-2xl text-muted-foreground/80 line-through font-bold leading-tight"
           aria-label={`A centralized audit-log write to a replicated database would cost approximately ${lat.naive_total_ms} milliseconds, shown as crossed-out comparison`}
         >
           ~{lat.naive_total_ms}ms
         </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
-          network + replicated DB write — and you have to trust it
+        <div className="text-[11px] text-muted-foreground mt-1.5">
+          network + replicated DB write — and you have to trust the operator
         </div>
       </div>
       <div className="md:border-l md:border-border/30 md:pl-6">
-        <div className="text-[10px] uppercase tracking-widest text-primary/90 mb-1.5">
+        <div className="text-[11px] uppercase tracking-widest text-primary/95 mb-1.5">
           saved
         </div>
         <div className="font-mono text-5xl md:text-6xl text-primary font-bold leading-none tracking-tight">
           {saved.toFixed(1)}%
         </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-2">
+        <div className="text-[11px] text-muted-foreground mt-2">
           and verifiable in any language with crypto primitives
         </div>
       </div>
@@ -439,15 +527,33 @@ function AftermathPanel({
 // ---- Main component ----
 
 export function ProvenanceChain({ data }: { data: SceneData }) {
+  // v1 audit C1: hydration-safe motion preference. The server renders
+  // with `reducedMotion=true` (motion off) and the client matches on
+  // first paint. Only AFTER mount do we read the real preference. This
+  // prevents React's hydration mismatch error where server emits
+  // initial={false} but client emits initial={{opacity:0, y:8}}.
   const rawReducedMotion = useReducedMotion();
-  const reducedMotion = rawReducedMotion ?? true;
+  const [reducedMotion, setReducedMotion] = useState(true);
+  useEffect(() => {
+    setReducedMotion(rawReducedMotion ?? false);
+  }, [rawReducedMotion]);
 
   const [activeIdx, setActiveIdx] = useState(() => pickEntryIndex(data.records));
   const [beatIdx, setBeatIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  useLayoutEffect(() => {
-    if (rawReducedMotion === false) setPlaying(true);
+  // Start auto-play only AFTER hydration confirms motion preference
+  // is not "reduced." If reduced, the user can opt in via the play
+  // button. v1 audit C14 — also fire a one-shot SR announcement so
+  // screen-reader users know the walkthrough is auto-playing.
+  const [autoplayAnnouncement, setAutoplayAnnouncement] = useState('');
+  useEffect(() => {
+    if (rawReducedMotion === false) {
+      setPlaying(true);
+      setAutoplayAnnouncement(
+        'Walkthrough auto-playing — pause or restart controls available.',
+      );
+    }
   }, [rawReducedMotion]);
 
   const noRecords = data.records.length === 0;
@@ -598,8 +704,11 @@ export function ProvenanceChain({ data }: { data: SceneData }) {
       >
         {activeBeat?.copy ?? ''}
       </span>
-      <span aria-live="polite" className="sr-only">
+      <span role="status" aria-live="polite" className="sr-only">
         {phaseAnnouncement}
+      </span>
+      <span role="status" aria-live="polite" className="sr-only">
+        {autoplayAnnouncement}
       </span>
 
       {/* Trace header — Merkle root + event count, always visible. */}
@@ -645,19 +754,14 @@ export function ProvenanceChain({ data }: { data: SceneData }) {
             className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0"
           >
             {data.records.map((r, idx) => (
-              <div
-                key={r.step_id}
-                role="radio"
-                aria-checked={idx === safeActiveIdx}
-                tabIndex={idx === safeActiveIdx ? 0 : -1}
-                className="min-w-[200px] md:min-w-0"
-              >
+              <div key={r.step_id} className="min-w-[200px] md:min-w-0">
                 <TimelineNode
                   rec={r}
                   isActive={idx === safeActiveIdx}
                   isPast={idx < safeActiveIdx}
                   onClick={() => selectRecord(idx)}
                   reducedMotion={reducedMotion}
+                  tabIndex={idx === safeActiveIdx ? 0 : -1}
                 />
               </div>
             ))}
@@ -787,7 +891,8 @@ export function ProvenanceChain({ data }: { data: SceneData }) {
             </div>
           </div>
 
-          {/* Phase grid */}
+          {/* Phase grid — 6 cards. Verify card spans full-width when
+              revealed (progressive focus, v1 audit C11). */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {/* Event phase */}
             <PhaseCard
@@ -986,30 +1091,36 @@ export function ProvenanceChain({ data }: { data: SceneData }) {
               </div>
             </PhaseCard>
 
-            {/* Verify */}
-            <PhaseCard
-              phaseId="verify"
-              isActive={activePhaseId === 'verify'}
-              isRevealed={revealedPhases.has('verify')}
-              reducedMotion={reducedMotion}
-            >
-              <div className="space-y-2">
-                <VerificationRow label="Ed25519 signature" passed={v.sig_verifies} />
-                <VerificationRow label="Chain link (prev_event_hash)" passed={v.chain_verifies} />
-                <VerificationRow label="Merkle proof against root" passed={v.merkle_verifies} />
+            {/* Verify — full-width, emphasized. The payoff of the
+                phase grid, treated as a verdict not card #6. Ember wash
+                when any check fails (v1 audit C11, C12). */}
+            <div className="md:col-span-2">
+              <PhaseCard
+                phaseId="verify"
+                isActive={activePhaseId === 'verify'}
+                isRevealed={revealedPhases.has('verify')}
+                reducedMotion={reducedMotion}
+                emphasized
+                failedWrap={!v.all_pass && revealedPhases.has('verify')}
+              >
+                <div className="space-y-2 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
+                  <VerificationRow label="Ed25519 signature" passed={v.sig_verifies} />
+                  <VerificationRow label="Chain link (prev_event_hash)" passed={v.chain_verifies} />
+                  <VerificationRow label="Merkle proof against root" passed={v.merkle_verifies} />
+                </div>
                 <div
-                  className={`mt-2 rounded border p-3 text-[11px] md:text-xs leading-relaxed ${
+                  className={`mt-3 rounded border p-3 md:p-4 text-[12px] md:text-[13px] leading-relaxed ${
                     v.all_pass
                       ? 'border-accent/40 bg-accent/10 text-accent/95'
                       : 'border-primary/60 bg-primary/10 text-primary'
                   }`}
                 >
                   {v.all_pass
-                    ? 'All three checks pass. The event is independently verifiable — anyone with the public key and the chain root can confirm it.'
-                    : 'At least one check fails. The tamper is detected without needing a central audit service. Re-running these three checks in any language with crypto primitives gives the same answer.'}
+                    ? 'All three checks pass. The event is independently verifiable — anyone with the public key and the chain root can confirm it, without contacting the system that produced it.'
+                    : 'The signature check fails: this event was signed over different bytes than the ones now sitting in the chain. The chain link and Merkle proof still verify because they prove this event sits at this position — but the signature is what catches content tamper, and one failure is enough.'}
                 </div>
-              </div>
-            </PhaseCard>
+              </PhaseCard>
+            </div>
           </div>
         </div>
       </div>
