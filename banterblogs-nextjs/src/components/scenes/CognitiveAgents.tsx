@@ -756,11 +756,21 @@ function AftermathPanel({
 }
 
 export function CognitiveAgents({ data }: { data: SceneData }) {
+  // SSR-safe useReducedMotion bridge — matches scenes 03/04/05.
+  // useReducedMotion() returns null on the server and the actual
+  // matchMedia value synchronously on the client, so reading it
+  // directly produces different `reducedMotion` values between
+  // SSR and client first paint → React #418 hydration mismatch on
+  // every motion.* prop downstream. Bridge through useState so
+  // both renders start with `true` (motion OFF), then flip via
+  // useEffect after mount when the client value is known. Server
+  // renders without initial style attrs; client re-renders with
+  // motion enabled post-hydration.
   const rawReducedMotion = useReducedMotion();
-  // C4 fix: null is treated as 'prefer reduced' to fail safe. The v2
-  // comment said "fail safe" but the coercion was `?? false` which
-  // means motion ON. Now matches the stated intent.
-  const reducedMotion = rawReducedMotion ?? true;
+  const [reducedMotion, setReducedMotion] = useState(true);
+  useEffect(() => {
+    setReducedMotion(rawReducedMotion ?? false);
+  }, [rawReducedMotion]);
 
   // D5 fix: lazy-initialize via useState callback. useMemo here was
   // overkill for a one-shot computation on stable input.
