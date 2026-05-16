@@ -1,0 +1,1411 @@
+{
+  "scene": "bft-consensus",
+  "generated_at": "2026-05-16T02:20:48.232Z",
+  "spec_ref": "TDD-005 BFT consensus · tdd005/crates/tdd005_orchestrator/src/bft.rs (PBFT, equivocation log, view change)",
+  "description": "Practical Byzantine Fault Tolerance with n=4 replicas, f=1 byzantine fault tolerance, 2f+1=3-vote quorum, Ed25519-signed messages, and equivocation detection. Five scenarios: clean quorum, dissent, equivocation caught, quorum stalled, view change. Real Ed25519 signatures, real SHA3-256 action hashes.",
+  "cluster": {
+    "replicas": [
+      "r0",
+      "r1",
+      "r2",
+      "r3"
+    ],
+    "n": 4,
+    "f": 1,
+    "quorum": 3,
+    "view_timeout_ms": 5000,
+    "pubkeys_hex": {
+      "r0": "c2a3f32b54ac3ca38f0d502e2750b65ad7e3ff3cefc29c1a86f77c0fda642d31",
+      "r1": "a02a6347a9fca71fbd480b3e510758cabe99dabd891fec08b1223c8b39189832",
+      "r2": "18a326a0a6e54e75d3b9fa025f6ea9b6e9f2d6993ca5d1bac6a8292115fad180",
+      "r3": "2f3af1061131e01de33c14e6c42b3f4f83458d380bbe832e3a0d5f1bb966d2a0"
+    }
+  },
+  "phases": [
+    {
+      "id": "pre_prepare",
+      "name": "Pre-prepare",
+      "plain": "leader signs the proposal"
+    },
+    {
+      "id": "prepare",
+      "name": "Prepare",
+      "plain": "replicas independently verify + broadcast"
+    },
+    {
+      "id": "commit",
+      "name": "Commit",
+      "plain": "replicas commit on prepare quorum"
+    },
+    {
+      "id": "view_change",
+      "name": "View change",
+      "plain": "replicas vote to advance view on timeout"
+    },
+    {
+      "id": "new_view",
+      "name": "New view",
+      "plain": "new leader takes over + re-proposes"
+    },
+    {
+      "id": "verdict",
+      "name": "Verdict",
+      "plain": "committed / stalled / equivocation flagged"
+    }
+  ],
+  "records": [
+    {
+      "step_id": "bft-clean-quorum",
+      "step_index": 0,
+      "scenario_id": "clean-quorum",
+      "behavior": "all-agree",
+      "plain": "Clean quorum — all 4 replicas agree",
+      "summary": "Leader (r0) proposes. r1/r2/r3 each verify and prepare. With 3 prepares (= quorum), every replica commits. The action runs.",
+      "aftermath": "The committed action is appended to the chain, the per-instance state machine moves to Executed, and the orchestrator runs the tool. Any replica can prove the commit happened with quorum by presenting the 3 signed Commit messages.",
+      "beats": [
+        {
+          "target_phase": null,
+          "dwell_ms": 4000,
+          "copy": "Clean quorum — all 4 replicas agree. The happy path. The leader proposes an action, three other replicas independently verify and agree, the action commits. Two rounds of voting, no faults, no surprises. This is what PBFT looks like when nothing's wrong."
+        },
+        {
+          "target_phase": "pre_prepare",
+          "dwell_ms": 3800,
+          "copy": "PrePrepare phase. Leader for view 0 is r0 (computed as replicas[view % 4]). r0 signs the proposal (action + action_hash) with its Ed25519 key and broadcasts the PrePrepare to the other 3 replicas. Equivocation log checked: no conflicting hashes for this (replica, sequence) pair."
+        },
+        {
+          "target_phase": "prepare",
+          "dwell_ms": 4400,
+          "copy": "Prepare phase. r1, r2, r3 each independently verify the proposal hash matches the action bytes, sign their Prepares with their Ed25519 keys, and broadcast. Four prepares (including the leader's implicit one) — quorum (3) reached."
+        },
+        {
+          "target_phase": "commit",
+          "dwell_ms": 4200,
+          "copy": "Commit phase. All 4 replicas see the prepare quorum, each signs and broadcasts a Commit. 4 Commits = quorum + 1. Every replica's state machine moves to Executed."
+        },
+        {
+          "target_phase": "verdict",
+          "dwell_ms": 4400,
+          "copy": "Verdict: COMMITTED. 4 prepares, 4 commits, no faults. The orchestrator runs the tool. Any replica can prove the commit happened with quorum by presenting 3+ signed Commit messages — the proof is self-contained, no central authority needed."
+        }
+      ],
+      "action": {
+        "kind": "execute_tool",
+        "tool": "fs_write",
+        "path": "/tmp/report.md",
+        "bytes": 4096
+      },
+      "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+      "view": 0,
+      "view_after": 0,
+      "sequence": 0,
+      "leader": "r0",
+      "leader_after": "r0",
+      "quorum_size": 3,
+      "replica_count": 4,
+      "f_value": 1,
+      "phases": [
+        {
+          "phase": "pre_prepare",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "leader signs the proposal and broadcasts to all replicas",
+          "signature_hex": "82b1b2c6bdd704beb647f91d0acd06e5d8d4e4dfa5eee4f4…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r1",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "b879f140a3d1c235a08ced8df3c4ac05584825080cfa7a4d…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "r2 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "8fb08340202f95cf05f2db814562d55a0f07163a64ab179a…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r3",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "r3 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "7677e840dab580b4add0d6c514841354470589a4a0e89457…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "r0 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "371745249c0f8d92a6bb7ba0373349bc34c1b19780ad626f…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r1",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "r1 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "98c9253369dd1c20e3056d6809b71e9e3b8e8c5c67a5f228…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "r2 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "d931fa8841acfb844ee1d9328de363c167afa9e32d50aff0…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r3",
+          "view": 0,
+          "sequence": 0,
+          "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+          "status": "sent",
+          "reason": "r3 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "32a442e82e92b66aae9ff18077d0842ca20f075b755e6653…",
+          "sig_verifies": true
+        }
+      ],
+      "matrix": {
+        "r0": {
+          "pre_prepare": {
+            "phase": "pre_prepare",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "leader signs the proposal and broadcasts to all replicas",
+            "signature_hex": "82b1b2c6bdd704beb647f91d0acd06e5d8d4e4dfa5eee4f4…",
+            "sig_verifies": true
+          },
+          "prepare": null,
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "r0 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "371745249c0f8d92a6bb7ba0373349bc34c1b19780ad626f…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r1": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r1",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "b879f140a3d1c235a08ced8df3c4ac05584825080cfa7a4d…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r1",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "r1 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "98c9253369dd1c20e3056d6809b71e9e3b8e8c5c67a5f228…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r2": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r2",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "r2 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "8fb08340202f95cf05f2db814562d55a0f07163a64ab179a…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r2",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "r2 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "d931fa8841acfb844ee1d9328de363c167afa9e32d50aff0…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r3": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r3",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "r3 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "7677e840dab580b4add0d6c514841354470589a4a0e89457…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r3",
+            "view": 0,
+            "sequence": 0,
+            "action_hash_hex": "0f64eba132b54b4c48f562748d6941796a629cdc16dec84a40d8787ffd01b4ec",
+            "status": "sent",
+            "reason": "r3 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "32a442e82e92b66aae9ff18077d0842ca20f075b755e6653…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        }
+      },
+      "counts": {
+        "prepares_total": 4,
+        "commits_total": 4,
+        "prepare_quorum_reached": true,
+        "commit_quorum_reached": true
+      },
+      "outcome": {
+        "committed": true,
+        "equivocation_replica": null,
+        "view_changed": false
+      },
+      "latency": {
+        "actual_total_ms": 2.84,
+        "naive_total_ms": 50,
+        "saved_pct": 94.32,
+        "is_estimate": true,
+        "message_count": 8
+      }
+    },
+    {
+      "step_id": "bft-dissent",
+      "step_index": 1,
+      "scenario_id": "dissent",
+      "behavior": "dissent-r3",
+      "plain": "One replica dissents — quorum still reached",
+      "summary": "Leader (r0) proposes a high-risk deploy. r1 and r2 prepare; r3 refuses (its local policy flags it). 3 prepares = quorum. Commits.",
+      "aftermath": "The dissent is recorded in the audit trail but doesn't block the action. r3's signed refusal is preserved — anyone reviewing the consensus history can see one replica disagreed and why, without that vote having veto power.",
+      "beats": [
+        {
+          "target_phase": null,
+          "dwell_ms": 4000,
+          "copy": "One replica dissents — quorum still reached. PBFT tolerates f=1 byzantine fault out of n=4 replicas. One replica voting no doesn't block consensus: the other three still hit the 2f+1=3 quorum threshold. The system commits without the dissenter."
+        },
+        {
+          "target_phase": "pre_prepare",
+          "dwell_ms": 3800,
+          "copy": "PrePrepare phase. Leader for view 0 is r0 (computed as replicas[view % 4]). r0 signs the proposal (action + action_hash) with its Ed25519 key and broadcasts the PrePrepare to the other 3 replicas. Equivocation log checked: no conflicting hashes for this (replica, sequence) pair."
+        },
+        {
+          "target_phase": "prepare",
+          "dwell_ms": 4400,
+          "copy": "Prepare phase. r1 and r2 verify and Prepare. r3's local policy flags the action (deploy production); r3 signs a refusal Prepare with a different hash instead. Three valid Prepares still arrive — quorum (3) reached without r3."
+        },
+        {
+          "target_phase": "commit",
+          "dwell_ms": 4200,
+          "copy": "Commit phase. r0, r1, r2 see the 3-prepare quorum and Commit. r3 doesn't Commit (it refused at Prepare). 3 Commits = quorum. The action runs."
+        },
+        {
+          "target_phase": "verdict",
+          "dwell_ms": 4400,
+          "copy": "Verdict: COMMITTED with r3 dissenting. 3 of 4 replicas voted yes — well above the 2f+1=3 quorum. r3's signed refusal is in the audit trail for any reviewer to see. PBFT tolerates one faulty/dissenting replica out of four; that's the f=1 threshold."
+        }
+      ],
+      "action": {
+        "kind": "execute_tool",
+        "tool": "agent_execute",
+        "command": "deploy production"
+      },
+      "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+      "view": 0,
+      "view_after": 0,
+      "sequence": 1,
+      "leader": "r0",
+      "leader_after": "r0",
+      "quorum_size": 3,
+      "replica_count": 4,
+      "f_value": 1,
+      "phases": [
+        {
+          "phase": "pre_prepare",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+          "status": "sent",
+          "reason": "leader signs the proposal and broadcasts to all replicas",
+          "signature_hex": "1e29890e298bd6b5e577521ed19934a2aa05fde8203e7404…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r1",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+          "status": "sent",
+          "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "75588385b953158c83d54729864ee11cf322992c6f8235e5…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+          "status": "sent",
+          "reason": "r2 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "e15c765af4fc470e7db9c4cd8f263c8ba8839613c01a86e5…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r3",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "3a747ab434f1d2803a562f99260843d2322819eb3c63b00ba63f24d6fbe33349",
+          "status": "rejected",
+          "reason": "r3's local policy flagged the action; signed a refusal Prepare with a different hash",
+          "signature_hex": "9fc5ecdd3ecd21d153d3d165f7c909eeeae94dbc9674a562…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+          "status": "sent",
+          "reason": "r0 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "e0fa7ae97db1f782f669aaaff5526eafa5dce6e2c439083d…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r1",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+          "status": "sent",
+          "reason": "r1 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "93e575fa0802ffe08b65880b0441acbcb19250b52e78612a…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+          "status": "sent",
+          "reason": "r2 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "bcd3e3e49def2d78173c7e839afac751aebf240ba1d33e0e…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r3",
+          "view": 0,
+          "sequence": 1,
+          "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+          "status": "rejected",
+          "reason": "r3 doesn't sign a Commit for an action it refused to Prepare",
+          "signature_hex": null,
+          "sig_verifies": true
+        }
+      ],
+      "matrix": {
+        "r0": {
+          "pre_prepare": {
+            "phase": "pre_prepare",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+            "status": "sent",
+            "reason": "leader signs the proposal and broadcasts to all replicas",
+            "signature_hex": "1e29890e298bd6b5e577521ed19934a2aa05fde8203e7404…",
+            "sig_verifies": true
+          },
+          "prepare": null,
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+            "status": "sent",
+            "reason": "r0 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "e0fa7ae97db1f782f669aaaff5526eafa5dce6e2c439083d…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r1": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r1",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+            "status": "sent",
+            "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "75588385b953158c83d54729864ee11cf322992c6f8235e5…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r1",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+            "status": "sent",
+            "reason": "r1 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "93e575fa0802ffe08b65880b0441acbcb19250b52e78612a…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r2": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r2",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+            "status": "sent",
+            "reason": "r2 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "e15c765af4fc470e7db9c4cd8f263c8ba8839613c01a86e5…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r2",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+            "status": "sent",
+            "reason": "r2 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "bcd3e3e49def2d78173c7e839afac751aebf240ba1d33e0e…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r3": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r3",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "3a747ab434f1d2803a562f99260843d2322819eb3c63b00ba63f24d6fbe33349",
+            "status": "rejected",
+            "reason": "r3's local policy flagged the action; signed a refusal Prepare with a different hash",
+            "signature_hex": "9fc5ecdd3ecd21d153d3d165f7c909eeeae94dbc9674a562…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r3",
+            "view": 0,
+            "sequence": 1,
+            "action_hash_hex": "d2db7273de27a6d9ca52927d087555036b3faf8c8115c8cd28dce2c42f431922",
+            "status": "rejected",
+            "reason": "r3 doesn't sign a Commit for an action it refused to Prepare",
+            "signature_hex": null,
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        }
+      },
+      "counts": {
+        "prepares_total": 3,
+        "commits_total": 3,
+        "prepare_quorum_reached": true,
+        "commit_quorum_reached": true
+      },
+      "outcome": {
+        "committed": true,
+        "equivocation_replica": null,
+        "view_changed": false
+      },
+      "latency": {
+        "actual_total_ms": 2.14,
+        "naive_total_ms": 50,
+        "saved_pct": 95.72,
+        "is_estimate": true,
+        "message_count": 6
+      }
+    },
+    {
+      "step_id": "bft-equivocation",
+      "step_index": 2,
+      "scenario_id": "equivocation",
+      "behavior": "equivocation-r2",
+      "plain": "Equivocation caught — byzantine replica detected, system still commits",
+      "summary": "r0 proposes. r2 sends conflicting Prepare messages — one with action_hash A, another with action_hash B for the same sequence. r2 is flagged byzantine; both its votes are discarded. r0 + r1 + r3 = 3 honest prepares = quorum. The action commits anyway. PBFT survives the fault.",
+      "aftermath": "r2 is marked byzantine in the equivocation log. Its signature key gets the byzantine flag — operator policy decides whether to evict. The action commits cleanly with 3 honest replicas; the byzantine replica's attempt to corrupt the vote is preserved as evidence in the audit trail.",
+      "beats": [
+        {
+          "target_phase": null,
+          "dwell_ms": 4000,
+          "copy": "Equivocation caught — byzantine replica detected, system still commits. A byzantine replica tries to vote two different ways for the same sequence — say yes with action_hash A and yes with action_hash B at the same time. PBFT's equivocation detector tracks (replica_id, sequence) → set-of-action-hashes. The moment a replica's set contains more than one hash, it's flagged byzantine and BOTH of its votes are discarded. The protocol survives because f=1 means we already designed for one byzantine fault."
+        },
+        {
+          "target_phase": "pre_prepare",
+          "dwell_ms": 3800,
+          "copy": "PrePrepare phase. Leader for view 0 is r0 (computed as replicas[view % 4]). r0 signs the proposal (action + action_hash) with its Ed25519 key and broadcasts the PrePrepare to the other 3 replicas. Equivocation log checked: no conflicting hashes for this (replica, sequence) pair."
+        },
+        {
+          "target_phase": "prepare",
+          "dwell_ms": 4400,
+          "copy": "Prepare phase. r1 and r3 verify the proposal hash, sign, and broadcast Prepares. r2 sends TWO Prepares with different action_hashes for the same sequence — the equivocation log catches it on the second one. r2 is flagged byzantine and both of its votes are discarded. r0 (leader, implicit prepare) + r1 + r3 = 3 honest prepares — quorum reached even after excluding r2."
+        },
+        {
+          "target_phase": "commit",
+          "dwell_ms": 4200,
+          "copy": "Commit phase. r2's votes are excluded; the prepare quorum (3) was reached via r0+r1+r3. Each of those three signs and broadcasts a Commit. 3 Commits = quorum. The action commits cleanly — the byzantine replica didn't stop honest consensus."
+        },
+        {
+          "target_phase": "verdict",
+          "dwell_ms": 4400,
+          "copy": "Verdict: COMMITTED, with r2 flagged byzantine. The equivocation is preserved in the audit log — r2's signature key gets the byzantine mark for operator review. This is exactly what \"byzantine fault tolerant\" means: the system reaches the correct answer even when one of the four replicas is actively trying to corrupt the vote. n=3f+1 with f=1 was designed for precisely this case."
+        }
+      ],
+      "action": {
+        "kind": "execute_tool",
+        "tool": "fs_delete",
+        "path": "/var/data/quarterly_report.md"
+      },
+      "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+      "view": 0,
+      "view_after": 0,
+      "sequence": 2,
+      "leader": "r0",
+      "leader_after": "r0",
+      "quorum_size": 3,
+      "replica_count": 4,
+      "f_value": 1,
+      "phases": [
+        {
+          "phase": "pre_prepare",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "sent",
+          "reason": "leader signs the proposal and broadcasts to all replicas",
+          "signature_hex": "9c1462b4ed28391b4a1f9c3b389703f952ba33ced1064c81…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r1",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "sent",
+          "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "75c9ceb64107633dbc86a3e554f7899a4683b00c81c22ab3…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "equivocation",
+          "reason": "r2 sent Prepare with action_hash A (first of two conflicting messages)",
+          "signature_hex": "5119b30a5866daf728b74078c24d18debb2d3af9185bca80…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "c7ec761c55aba7980298639ec13d3f363b73ee503cee2181c20f3e4a45fe69bc",
+          "status": "equivocation",
+          "reason": "r2 sent a SECOND Prepare with conflicting action_hash for the same sequence — equivocation detected; r2 flagged byzantine and BOTH votes discarded",
+          "signature_hex": "855ce0fae67c0e33d8e261f3ab4346355daaca6f32969b04…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r3",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "sent",
+          "reason": "r3 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "cbd0dab3b71a65d991a1f72f5b231f51a58d57b83408bf36…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "sent",
+          "reason": "r0 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "c103b0703c6a47d88f3d5f5cc3dde306f1397b7b61b044a4…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r1",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "sent",
+          "reason": "r1 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "295b580b39d863a70e4be8dc438284811b98a4f7aeeee8d3…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "rejected",
+          "reason": "r2's votes are discarded for this sequence — does not participate in Commit",
+          "signature_hex": null,
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r3",
+          "view": 0,
+          "sequence": 2,
+          "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+          "status": "sent",
+          "reason": "r3 sees the prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "bf4becb64866357a9338984e6ac56ac0b2a6de69391dbe80…",
+          "sig_verifies": true
+        }
+      ],
+      "matrix": {
+        "r0": {
+          "pre_prepare": {
+            "phase": "pre_prepare",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+            "status": "sent",
+            "reason": "leader signs the proposal and broadcasts to all replicas",
+            "signature_hex": "9c1462b4ed28391b4a1f9c3b389703f952ba33ced1064c81…",
+            "sig_verifies": true
+          },
+          "prepare": null,
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+            "status": "sent",
+            "reason": "r0 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "c103b0703c6a47d88f3d5f5cc3dde306f1397b7b61b044a4…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r1": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r1",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+            "status": "sent",
+            "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "75c9ceb64107633dbc86a3e554f7899a4683b00c81c22ab3…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r1",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+            "status": "sent",
+            "reason": "r1 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "295b580b39d863a70e4be8dc438284811b98a4f7aeeee8d3…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r2": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r2",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "c7ec761c55aba7980298639ec13d3f363b73ee503cee2181c20f3e4a45fe69bc",
+            "status": "equivocation",
+            "reason": "r2 sent a SECOND Prepare with conflicting action_hash for the same sequence — equivocation detected; r2 flagged byzantine and BOTH votes discarded",
+            "signature_hex": "855ce0fae67c0e33d8e261f3ab4346355daaca6f32969b04…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r2",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+            "status": "rejected",
+            "reason": "r2's votes are discarded for this sequence — does not participate in Commit",
+            "signature_hex": null,
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r3": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r3",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+            "status": "sent",
+            "reason": "r3 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "cbd0dab3b71a65d991a1f72f5b231f51a58d57b83408bf36…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r3",
+            "view": 0,
+            "sequence": 2,
+            "action_hash_hex": "84f07dce235ed86ed1c09b63f1719bc88b7b38e29f1b2701618e8909f6b0b6b7",
+            "status": "sent",
+            "reason": "r3 sees the prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "bf4becb64866357a9338984e6ac56ac0b2a6de69391dbe80…",
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        }
+      },
+      "counts": {
+        "prepares_total": 3,
+        "commits_total": 3,
+        "prepare_quorum_reached": true,
+        "commit_quorum_reached": true
+      },
+      "outcome": {
+        "committed": true,
+        "equivocation_replica": "r2",
+        "view_changed": false
+      },
+      "latency": {
+        "actual_total_ms": 2.14,
+        "naive_total_ms": 50,
+        "saved_pct": 95.72,
+        "is_estimate": true,
+        "message_count": 6
+      }
+    },
+    {
+      "step_id": "bft-quorum-not-reached",
+      "step_index": 3,
+      "scenario_id": "quorum-not-reached",
+      "behavior": "two-timeouts",
+      "plain": "Quorum not reached — too many replicas offline",
+      "summary": "r0 proposes. r1 prepares. r2 and r3 time out (network partition or process crash). Leader has its own prepare + 1 more = 2 votes. Quorum (3) not reached. Action does not commit.",
+      "aftermath": "The pending consensus instance is held open until either the missing replicas come back or the view timeout fires. No silent rollback — the orchestrator sees \"action not committed, quorum not reached\" and can decide whether to retry, escalate, or fail loud.",
+      "beats": [
+        {
+          "target_phase": null,
+          "dwell_ms": 4000,
+          "copy": "Quorum not reached — too many replicas offline. PBFT needs 2f+1=3 honest replicas voting yes. If two of the four are offline or fail to respond within the view timeout (5000ms), the leader sees only itself + maybe one prepare. 2 votes ≠ quorum. The action doesn't commit. Honest failure surfaces instead of silently rolling forward."
+        },
+        {
+          "target_phase": "pre_prepare",
+          "dwell_ms": 3800,
+          "copy": "PrePrepare phase. Leader for view 0 is r0 (computed as replicas[view % 4]). r0 signs the proposal (action + action_hash) with its Ed25519 key and broadcasts the PrePrepare to the other 3 replicas. Equivocation log checked: no conflicting hashes for this (replica, sequence) pair."
+        },
+        {
+          "target_phase": "prepare",
+          "dwell_ms": 4400,
+          "copy": "Prepare phase. r1 verifies and Prepares. r2 and r3 don't respond within the 5000ms view timeout (offline / partitioned). Leader + r1 = 2 prepares. Quorum (3) NOT reached."
+        },
+        {
+          "target_phase": "commit",
+          "dwell_ms": 4200,
+          "copy": "Commit phase never starts. With only 2 prepares, the prepare quorum threshold wasn't reached — replicas don't progress to Commit. The consensus instance is held open."
+        },
+        {
+          "target_phase": "verdict",
+          "dwell_ms": 4400,
+          "copy": "Verdict: NOT COMMITTED. With 2 replicas offline, the system honestly cannot reach quorum. The pending instance waits — no silent rollback, no quietly-committed-with-fewer-votes. The orchestrator sees \"stalled\" and can retry, escalate, or fail loud."
+        }
+      ],
+      "action": {
+        "kind": "execute_tool",
+        "tool": "fs_read",
+        "path": "/var/data/sensitive.json"
+      },
+      "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+      "view": 0,
+      "view_after": 0,
+      "sequence": 3,
+      "leader": "r0",
+      "leader_after": "r0",
+      "quorum_size": 3,
+      "replica_count": 4,
+      "f_value": 1,
+      "phases": [
+        {
+          "phase": "pre_prepare",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 3,
+          "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+          "status": "sent",
+          "reason": "leader signs the proposal and broadcasts to all replicas",
+          "signature_hex": "6a3d089d32fbc80555a2073b6b49b8ce6252b4bb7e7d1131…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r1",
+          "view": 0,
+          "sequence": 3,
+          "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+          "status": "sent",
+          "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+          "signature_hex": "bcebedb8c69b2b7a7f26116abf712501a2850b8acdb0192d…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r2",
+          "view": 0,
+          "sequence": 3,
+          "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+          "status": "timeout",
+          "reason": "r2 did not respond within the view timeout (5000ms)",
+          "signature_hex": null,
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r3",
+          "view": 0,
+          "sequence": 3,
+          "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+          "status": "timeout",
+          "reason": "r3 did not respond within the view timeout (5000ms)",
+          "signature_hex": null,
+          "sig_verifies": true
+        }
+      ],
+      "matrix": {
+        "r0": {
+          "pre_prepare": {
+            "phase": "pre_prepare",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 3,
+            "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+            "status": "sent",
+            "reason": "leader signs the proposal and broadcasts to all replicas",
+            "signature_hex": "6a3d089d32fbc80555a2073b6b49b8ce6252b4bb7e7d1131…",
+            "sig_verifies": true
+          },
+          "prepare": null,
+          "commit": null,
+          "view_change": null,
+          "new_view": null
+        },
+        "r1": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r1",
+            "view": 0,
+            "sequence": 3,
+            "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+            "status": "sent",
+            "reason": "r1 verified the proposal hashes match the action, signed and broadcast Prepare",
+            "signature_hex": "bcebedb8c69b2b7a7f26116abf712501a2850b8acdb0192d…",
+            "sig_verifies": true
+          },
+          "commit": null,
+          "view_change": null,
+          "new_view": null
+        },
+        "r2": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r2",
+            "view": 0,
+            "sequence": 3,
+            "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+            "status": "timeout",
+            "reason": "r2 did not respond within the view timeout (5000ms)",
+            "signature_hex": null,
+            "sig_verifies": true
+          },
+          "commit": null,
+          "view_change": null,
+          "new_view": null
+        },
+        "r3": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r3",
+            "view": 0,
+            "sequence": 3,
+            "action_hash_hex": "380680a4d79a63d011fb253e5585a2c2d6f754601c951aafa94d79cb5d76525f",
+            "status": "timeout",
+            "reason": "r3 did not respond within the view timeout (5000ms)",
+            "signature_hex": null,
+            "sig_verifies": true
+          },
+          "commit": null,
+          "view_change": null,
+          "new_view": null
+        }
+      },
+      "counts": {
+        "prepares_total": 2,
+        "commits_total": 0,
+        "prepare_quorum_reached": false,
+        "commit_quorum_reached": false
+      },
+      "outcome": {
+        "committed": false,
+        "equivocation_replica": null,
+        "view_changed": false
+      },
+      "latency": {
+        "actual_total_ms": 0.74,
+        "naive_total_ms": 50,
+        "saved_pct": 98.52,
+        "is_estimate": true,
+        "message_count": 2
+      }
+    },
+    {
+      "step_id": "bft-view-change",
+      "step_index": 4,
+      "scenario_id": "view-change",
+      "behavior": "leader-timeout",
+      "plain": "Leader times out — view change elects new leader",
+      "summary": "r0 proposes then goes silent. After 5s view timeout, r1/r2/r3 send ViewChange messages. With 3 votes (quorum), view advances. r1 becomes new leader for view 1, re-proposes, consensus completes under r1.",
+      "aftermath": "The view-change proof (signed ViewChange messages from quorum) is retained — anyone reviewing the audit can see the chain of custody for leadership. The original leader (r0) is marked stale; its reputation score drops in the orchestrator's leader-selection heuristic.",
+      "beats": [
+        {
+          "target_phase": null,
+          "dwell_ms": 4000,
+          "copy": "Leader times out — view change elects new leader. The leader (r0) goes silent for 5 seconds (timeout). Replicas vote to change views. Quorum (3) of them vote yes → view advances from 0 to 1, new leader = replicas[1 % 4] = r1. r1 re-proposes the action under the new view, consensus completes. Liveness preserved despite leader failure."
+        },
+        {
+          "target_phase": "pre_prepare",
+          "dwell_ms": 3800,
+          "copy": "PrePrepare phase. The current leader (r0, view 0) is supposed to propose this action — but r0 has gone silent for 5+ seconds. No PrePrepare message arrives. The view timer is ticking."
+        },
+        {
+          "target_phase": "prepare",
+          "dwell_ms": 4400,
+          "copy": "Prepare phase never starts. The leader's PrePrepare never arrived — there's nothing to verify against."
+        },
+        {
+          "target_phase": "commit",
+          "dwell_ms": 4200,
+          "copy": "Commit phase never starts under view 0. Replicas observe the leader timeout and broadcast ViewChange instead."
+        },
+        {
+          "target_phase": "verdict",
+          "dwell_ms": 4400,
+          "copy": "Verdict: COMMITTED under view 1 after view change. The view-change proof (3 signed ViewChange messages) is retained — anyone reviewing the audit can see the chain of custody for leadership transferred from r0 → r1 cleanly. Liveness preserved despite leader failure."
+        }
+      ],
+      "action": {
+        "kind": "execute_tool",
+        "tool": "fs_write",
+        "path": "/var/output/audit.json",
+        "bytes": 512
+      },
+      "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+      "view": 0,
+      "view_after": 1,
+      "sequence": 4,
+      "leader": "r0",
+      "leader_after": "r1",
+      "quorum_size": 3,
+      "replica_count": 4,
+      "f_value": 1,
+      "phases": [
+        {
+          "phase": "pre_prepare",
+          "from_replica": "r0",
+          "view": 0,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "timeout",
+          "reason": "leader (r0) went silent for 5+ seconds — no PrePrepare delivered",
+          "signature_hex": "7e74c0f671e34a6d208594d09ed690c07bf0c3e76a3a85f8…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "view_change",
+          "from_replica": "r1",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "leader timeout exceeded, voting to advance to view 1 (new leader = r1)",
+          "signature_hex": "3f226c70a5e7a063193540785fb30bc97669d9797aabae6c…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "view_change",
+          "from_replica": "r2",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "leader timeout exceeded, voting to advance to view 1 (new leader = r1)",
+          "signature_hex": "5982b09f0f7676d3b517279b72095b68d0d2bab75c189eaa…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "view_change",
+          "from_replica": "r3",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "leader timeout exceeded, voting to advance to view 1 (new leader = r1)",
+          "signature_hex": "fadc2ca3c7299409e62f124a6e5685c93f20eb95277eb203…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "new_view",
+          "from_replica": "r1",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "r1 takes over as leader for view 1. Announces NewView with the 3 ViewChange proofs attached, then re-proposes the pending action.",
+          "signature_hex": "b8f986855baba77666bbf550faaa54adf7f3ffd227f840f1…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r0",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "r0 verifies the re-proposal under view 1, signs and broadcasts Prepare",
+          "signature_hex": "ba6db98b8066e8caf5e990e82f3a097db60d9b38684a9bda…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r2",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "r2 verifies the re-proposal under view 1, signs and broadcasts Prepare",
+          "signature_hex": "139f11fe2e5c9b1c5a99bc8827837c48cbebcce19aa75f1f…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "prepare",
+          "from_replica": "r3",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "r3 verifies the re-proposal under view 1, signs and broadcasts Prepare",
+          "signature_hex": "f7ad27244d7615821bfcabd271678c02fee5d887650e2a41…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r0",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "timeout",
+          "reason": "r0 (the old leader) is still silent — doesn't participate in the new-view commit",
+          "signature_hex": null,
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r1",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "r1 sees the new-view prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "ffaa23051d996ce933cf1e00e65bd0ad59ea32e535bd070d…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r2",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "r2 sees the new-view prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "e12a672305381c410aaad968b07644cf6f90f7d6c06c1ac7…",
+          "sig_verifies": true
+        },
+        {
+          "phase": "commit",
+          "from_replica": "r3",
+          "view": 1,
+          "sequence": 4,
+          "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+          "status": "sent",
+          "reason": "r3 sees the new-view prepare quorum, signs and broadcasts Commit",
+          "signature_hex": "916bdb1bac29bf57400400286c321ceb70eb2044bb5b4af7…",
+          "sig_verifies": true
+        }
+      ],
+      "matrix": {
+        "r0": {
+          "pre_prepare": {
+            "phase": "pre_prepare",
+            "from_replica": "r0",
+            "view": 0,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "timeout",
+            "reason": "leader (r0) went silent for 5+ seconds — no PrePrepare delivered",
+            "signature_hex": "7e74c0f671e34a6d208594d09ed690c07bf0c3e76a3a85f8…",
+            "sig_verifies": true
+          },
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r0",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "r0 verifies the re-proposal under view 1, signs and broadcasts Prepare",
+            "signature_hex": "ba6db98b8066e8caf5e990e82f3a097db60d9b38684a9bda…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r0",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "timeout",
+            "reason": "r0 (the old leader) is still silent — doesn't participate in the new-view commit",
+            "signature_hex": null,
+            "sig_verifies": true
+          },
+          "view_change": null,
+          "new_view": null
+        },
+        "r1": {
+          "pre_prepare": null,
+          "prepare": null,
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r1",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "r1 sees the new-view prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "ffaa23051d996ce933cf1e00e65bd0ad59ea32e535bd070d…",
+            "sig_verifies": true
+          },
+          "view_change": {
+            "phase": "view_change",
+            "from_replica": "r1",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "leader timeout exceeded, voting to advance to view 1 (new leader = r1)",
+            "signature_hex": "3f226c70a5e7a063193540785fb30bc97669d9797aabae6c…",
+            "sig_verifies": true
+          },
+          "new_view": {
+            "phase": "new_view",
+            "from_replica": "r1",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "r1 takes over as leader for view 1. Announces NewView with the 3 ViewChange proofs attached, then re-proposes the pending action.",
+            "signature_hex": "b8f986855baba77666bbf550faaa54adf7f3ffd227f840f1…",
+            "sig_verifies": true
+          }
+        },
+        "r2": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r2",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "r2 verifies the re-proposal under view 1, signs and broadcasts Prepare",
+            "signature_hex": "139f11fe2e5c9b1c5a99bc8827837c48cbebcce19aa75f1f…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r2",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "r2 sees the new-view prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "e12a672305381c410aaad968b07644cf6f90f7d6c06c1ac7…",
+            "sig_verifies": true
+          },
+          "view_change": {
+            "phase": "view_change",
+            "from_replica": "r2",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "leader timeout exceeded, voting to advance to view 1 (new leader = r1)",
+            "signature_hex": "5982b09f0f7676d3b517279b72095b68d0d2bab75c189eaa…",
+            "sig_verifies": true
+          },
+          "new_view": null
+        },
+        "r3": {
+          "pre_prepare": null,
+          "prepare": {
+            "phase": "prepare",
+            "from_replica": "r3",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "r3 verifies the re-proposal under view 1, signs and broadcasts Prepare",
+            "signature_hex": "f7ad27244d7615821bfcabd271678c02fee5d887650e2a41…",
+            "sig_verifies": true
+          },
+          "commit": {
+            "phase": "commit",
+            "from_replica": "r3",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "r3 sees the new-view prepare quorum, signs and broadcasts Commit",
+            "signature_hex": "916bdb1bac29bf57400400286c321ceb70eb2044bb5b4af7…",
+            "sig_verifies": true
+          },
+          "view_change": {
+            "phase": "view_change",
+            "from_replica": "r3",
+            "view": 1,
+            "sequence": 4,
+            "action_hash_hex": "96ea11a36d9053ef04e7d3cec2b15cb44cf3881355ad5ae85cfbbf7141c9d08f",
+            "status": "sent",
+            "reason": "leader timeout exceeded, voting to advance to view 1 (new leader = r1)",
+            "signature_hex": "fadc2ca3c7299409e62f124a6e5685c93f20eb95277eb203…",
+            "sig_verifies": true
+          },
+          "new_view": null
+        }
+      },
+      "counts": {
+        "prepares_total": 3,
+        "commits_total": 3,
+        "prepare_quorum_reached": true,
+        "commit_quorum_reached": true
+      },
+      "outcome": {
+        "committed": true,
+        "equivocation_replica": null,
+        "view_changed": true
+      },
+      "latency": {
+        "actual_total_ms": 3.54,
+        "naive_total_ms": 50,
+        "saved_pct": 92.92,
+        "is_estimate": true,
+        "message_count": 10
+      }
+    }
+  ]
+}
