@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  CornerDownRight,
   Hourglass,
   ShieldAlert,
   Crown,
@@ -209,53 +208,80 @@ function statusLabel(status: PhaseEvent['status']): string {
 }
 
 // One matrix cell — one (replica, phase) intersection.
+//
+// v1 audit fixes baked in:
+// - A1: cell has role="gridcell" + aria-label="{replica} {phase}: {label}"
+//   so screen readers don't hear naked status words with no context.
+// - V1/V4: BYZANTINE cells get a filled ember treatment (was a faint
+//   tint); SENT cells use a clear accent fill (was almost invisible).
+// - B5: phaseId is now the *actual* phase the cell represents
+//   (including view_change). leaderImplicit only triggers for the
+//   prepare phase.
 function MatrixCell({
   event,
   isLeader,
   phaseId,
   isCurrentPhase,
   reducedMotion,
+  replicaId,
 }: {
   event: PhaseEvent | null;
   isLeader: boolean;
-  phaseId: PhaseId;
+  phaseId: PhaseId | 'view_change';
   isCurrentPhase: boolean;
   reducedMotion: boolean;
+  replicaId: string;
 }) {
-  // Special case: leader's "implicit prepare" — the leader doesn't
-  // send itself a Prepare, it just counts as one. Show the crown.
   const leaderImplicit = phaseId === 'prepare' && isLeader && !event;
   const status = event?.status ?? (leaderImplicit ? 'leader-implicit' : 'empty');
+
+  // V1/V4: punchier saturation per state so the matrix tells the story
+  // without requiring the narration text.
   const tone =
     status === 'sent'
-      ? 'border-accent/50 bg-accent/[0.06]'
+      ? 'border-accent/70 bg-accent/[0.14]'
       : status === 'equivocation'
-        ? 'border-primary/60 bg-primary/[0.1]'
+        ? 'border-primary bg-primary/25 shadow-[0_0_18px_-2px_hsl(var(--primary)/0.55)]'
         : status === 'rejected'
-          ? 'border-primary/30 bg-primary/[0.05]'
+          ? 'border-primary/50 bg-primary/[0.08]'
           : status === 'timeout'
-            ? 'border-border/40 bg-card/30'
+            ? 'border-border/40 bg-card/20 opacity-70'
             : status === 'leader-implicit'
-              ? 'border-accent/40 bg-accent/[0.04]'
-              : 'border-border/30 bg-card/20';
+              ? 'border-accent/50 bg-accent/[0.08]'
+              : 'border-border/25 bg-card/10';
+
+  const phaseName =
+    phaseId === 'view_change' ? 'view change' : PHASE_META[phaseId as PhaseId]?.name ?? phaseId;
+  const labelText = leaderImplicit
+    ? 'leader'
+    : event
+      ? statusLabel(event.status)
+      : '—';
+  const ariaLabel = `${replicaId} ${phaseName}: ${labelText}`;
 
   return (
     <motion.div
+      role="gridcell"
+      aria-label={ariaLabel}
       animate={
         reducedMotion
-          ? { opacity: 1 }
-          : { opacity: 1, scale: isCurrentPhase && event ? 1.02 : 1 }
+          ? { opacity: status === 'timeout' ? 0.7 : 1 }
+          : {
+              opacity: status === 'timeout' ? 0.7 : 1,
+              scale: isCurrentPhase && event && status === 'equivocation' ? 1.05 : isCurrentPhase && event ? 1.02 : 1,
+            }
       }
       transition={{ duration: 0.3 }}
       className={`relative aspect-square min-h-[64px] rounded border ${tone} flex flex-col items-center justify-center gap-1 p-2 text-center`}
     >
       <StatusIcon status={status} className="h-4 w-4 md:h-5 md:w-5" />
-      <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-muted-foreground/90">
-        {leaderImplicit
-          ? 'leader'
-          : event
-            ? statusLabel(event.status)
-            : '—'}
+      <span
+        className={`text-[9px] md:text-[10px] font-mono uppercase tracking-widest ${
+          status === 'equivocation' ? 'text-primary font-bold' : 'text-muted-foreground/90'
+        }`}
+        aria-hidden
+      >
+        {labelText}
       </span>
     </motion.div>
   );
@@ -273,10 +299,15 @@ function VoteCounter({
   reducedMotion: boolean;
 }) {
   const reached = count >= quorum;
+  // v1 audit A2: announce the quorum-reached transition to screen
+  // readers. The animated count by itself isn't a live region; this
+  // sibling sr-only span surfaces the state change.
   return (
     <div
-      className={`rounded border p-3 ${
-        reached ? 'border-accent/60 bg-accent/[0.06]' : 'border-border/40 bg-card/30'
+      className={`rounded border p-3 transition-colors ${
+        reached
+          ? 'border-accent bg-accent/[0.12] shadow-[0_0_24px_-12px_hsl(var(--accent)/0.6)]'
+          : 'border-border/40 bg-card/30'
       }`}
       role="group"
       aria-label={`${label}: ${count} of ${quorum} needed for quorum`}
@@ -301,6 +332,9 @@ function VoteCounter({
       <div className="text-[10px] text-muted-foreground/90 mt-1">
         {reached ? 'quorum reached' : `${quorum - count} more needed`}
       </div>
+      <span role="status" aria-live="polite" className="sr-only">
+        {reached ? `${label} quorum reached: ${count} of ${quorum}` : ''}
+      </span>
     </div>
   );
 }
@@ -327,12 +361,15 @@ function VerdictPanel({
         : 'NOT COMMITTED';
   const Icon =
     kind === 'committed' || kind === 'view-change' ? ShieldCheck : Hourglass;
+  // v1 audit V2: VerdictPanel was the same visual weight as JourneyPanel —
+  // viewers missed the punchline. Stronger ember tone + bigger headline so
+  // the actual answer (committed / not / view-changed) reads first.
   const tone =
     kind === 'committed'
-      ? 'border-accent/60 bg-accent/[0.08] text-accent'
+      ? 'border-accent/70 bg-accent/[0.14] text-accent shadow-[0_0_50px_-12px_hsl(var(--accent)/0.45)]'
       : kind === 'view-change'
-        ? 'border-primary/60 bg-primary/[0.08] text-primary'
-        : 'border-primary/40 bg-primary/[0.05] text-primary/90';
+        ? 'border-primary/70 bg-primary/[0.14] text-primary shadow-[0_0_50px_-12px_hsl(var(--primary)/0.5)]'
+        : 'border-primary/80 bg-primary/[0.18] text-primary shadow-[0_0_60px_-12px_hsl(var(--primary)/0.6)]';
 
   return (
     <AnimatePresence>
@@ -342,22 +379,22 @@ function VerdictPanel({
           animate={{ opacity: 1, y: 0 }}
           exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className={`rounded-xl border-2 ${tone} p-5 md:p-7`}
+          className={`w-full rounded-xl border-2 ${tone} p-6 md:p-8`}
         >
-          <div className="flex items-center gap-3 mb-3">
-            <Icon className="h-6 w-6 md:h-7 md:w-7" aria-hidden />
-            <div className="font-mono text-xl md:text-2xl font-bold tracking-tight">
+          <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4 flex-wrap">
+            <Icon className="h-7 w-7 md:h-9 md:w-9" aria-hidden />
+            <div className="font-mono text-2xl md:text-3xl font-bold tracking-tight leading-none">
               {headline}
             </div>
             {outcome.equivocation_replica && (
-              <span className="ml-auto rounded border border-primary/60 bg-primary/10 text-primary px-2 py-0.5 text-[11px] font-mono uppercase tracking-widest flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" aria-hidden />
+              <span className="ml-auto rounded border border-primary/60 bg-primary/15 text-primary px-2.5 py-1 text-[11px] md:text-xs font-mono uppercase tracking-widest flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
                 {outcome.equivocation_replica} byzantine
               </span>
             )}
           </div>
           {record.summary && (
-            <p className="text-sm md:text-base text-foreground/95 leading-relaxed">
+            <p className="text-base md:text-lg text-foreground/95 leading-relaxed">
               {record.summary}
             </p>
           )}
@@ -402,7 +439,12 @@ function AftermathPanel({
 
 function JourneyPanel({ record }: { record: ScenarioRecord }) {
   const lat = record.latency;
-  const saved = Math.min(99.9, lat.saved_pct);
+  // v1 audit B4: clamp both bounds. v1 audit C3: stalled scenarios
+  // don't get a "faster" comparison — comparing the cost of failure
+  // to a baseline that produced a result is dishonest framing.
+  const saved = Math.max(0, Math.min(99.9, lat.saved_pct));
+  const isStalled = !record.outcome.committed;
+
   return (
     <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.6fr] gap-4 md:gap-6 items-baseline">
       <div>
@@ -411,31 +453,29 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
         </div>
         <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           ~{lat.actual_total_ms}ms
-          {lat.is_estimate && (
-            <span
-              className="ml-1.5 align-middle text-[10px] font-mono text-muted-foreground/80 normal-case tracking-normal"
-              title="Estimate from per-message Rust costs, not a benchmark"
-            >
-              (est.)
-            </span>
-          )}
         </div>
         <div className="text-[11px] text-muted-foreground mt-1.5">
           {lat.message_count} signed messages + state transitions
+          {lat.is_estimate && (
+            <span className="text-muted-foreground/70">
+              {' '}
+              · estimate from per-phase Rust costs, not a benchmark
+            </span>
+          )}
         </div>
       </div>
       <div>
         <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
-          single-leader trust
+          single-trusted-leader
         </div>
         <div
           className="font-mono text-xl md:text-2xl text-muted-foreground/80 line-through font-bold leading-tight"
-          aria-label={`A single-leader trust model would commit in approximately ${lat.naive_total_ms} milliseconds, shown as crossed-out comparison`}
+          aria-label={`A single trusted leader model commits in approximately ${lat.naive_total_ms} milliseconds. Shown crossed out because BFT replaces this trust model.`}
         >
           ~{lat.naive_total_ms}ms
         </div>
         <div className="text-[11px] text-muted-foreground mt-1.5">
-          one signature, no agreement — and the leader is the system
+          one RPC to a service you have to trust
         </div>
       </div>
       <div className="md:border-l md:border-border/30 md:pl-6">
@@ -445,8 +485,11 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
         <div className="font-mono text-5xl md:text-6xl text-primary font-bold leading-none tracking-tight">
           f={record.f_value}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-2">
-          byzantine fault out of n={record.replica_count} replicas — {saved.toFixed(0)}% faster than naive while staying safe
+        <div className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+          byzantine fault out of n={record.replica_count} replicas.{' '}
+          {isStalled
+            ? 'This scenario stalled — no comparison number, the system correctly chose not to commit.'
+            : `Real cost ${saved.toFixed(0)}% lower than a single-trusted-leader RPC, and you don't have to trust the leader.`}
         </div>
       </div>
     </div>
@@ -683,9 +726,11 @@ export function BftConsensus({ data }: { data: SceneData }) {
               const committed = r.outcome.committed;
               const equiv = r.outcome.equivocation_replica;
               const viewChanged = r.outcome.view_changed;
-              const statusLabel = committed
+              // v1 audit B3: rename local to avoid shadowing the
+              // file-scope `statusLabel` function.
+              const statusBadge = committed
                 ? viewChanged
-                  ? 'view→1 ✓'
+                  ? `view→${r.view_after} ✓`
                   : 'committed'
                 : equiv
                   ? `${equiv} byzantine`
@@ -725,7 +770,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
                   <span
                     className={`font-mono text-[10px] uppercase tracking-widest mt-1 ${statusTone}`}
                   >
-                    {statusLabel}
+                    {statusBadge}
                   </span>
                 </button>
               );
@@ -820,7 +865,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
                     setBeatIdx(i);
                     setHasInteracted(true);
                   }}
-                  className="group inline-flex items-center justify-center h-6 w-8 md:w-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
+                  className="group inline-flex items-center justify-center h-8 w-10 md:w-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
                   role="radio"
                   aria-checked={i === beatIdx}
                   aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
@@ -865,49 +910,55 @@ export function BftConsensus({ data }: { data: SceneData }) {
                 );
               })}
             </div>
-            {/* Phase rows */}
-            {(['pre_prepare', 'prepare', 'commit'] as const).map((phaseId) => {
-              const phaseRevealed = revealedPhases.has(phaseId);
-              return (
-                <div
-                  key={phaseId}
-                  className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2"
-                >
+            {/* Phase rows — role=grid/row/cell so AT can navigate
+                this as a real data grid (v1 audit A1). */}
+            <div role="grid" aria-label="PBFT phase by replica matrix">
+              {(['pre_prepare', 'prepare', 'commit'] as const).map((phaseId) => {
+                const phaseRevealed = revealedPhases.has(phaseId);
+                return (
                   <div
-                    className={`flex flex-col justify-center text-left ${
-                      phaseRevealed ? 'opacity-100' : 'opacity-40'
-                    }`}
+                    key={phaseId}
+                    role="row"
+                    className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2"
                   >
-                    <span className="text-[12px] md:text-[13px] font-bold text-foreground/95">
-                      {PHASE_META[phaseId].name}
-                    </span>
-                    <span className="text-[9px] md:text-[10px] text-muted-foreground/80">
-                      {PHASE_META[phaseId].plain}
-                    </span>
+                    <div
+                      role="rowheader"
+                      className={`flex flex-col justify-center text-left ${
+                        phaseRevealed ? 'opacity-100' : 'opacity-40'
+                      }`}
+                    >
+                      <span className="text-[12px] md:text-[13px] font-bold text-foreground/95">
+                        {PHASE_META[phaseId].name}
+                      </span>
+                      <span className="text-[9px] md:text-[10px] text-muted-foreground/80">
+                        {PHASE_META[phaseId].plain}
+                      </span>
+                    </div>
+                    {replicas.map((r) => {
+                      const ev = record.matrix[r]?.[phaseId] ?? null;
+                      const isLeader = r === leaderForRecord;
+                      const isCurrentPhase = activePhaseId === phaseId;
+                      return (
+                        <div
+                          key={`${phaseId}-${r}`}
+                          className={phaseRevealed ? 'opacity-100' : 'opacity-30'}
+                          aria-hidden={!phaseRevealed}
+                        >
+                          <MatrixCell
+                            event={ev}
+                            isLeader={isLeader}
+                            phaseId={phaseId}
+                            isCurrentPhase={isCurrentPhase && phaseRevealed}
+                            reducedMotion={reducedMotion}
+                            replicaId={r}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
-                  {replicas.map((r) => {
-                    const ev = record.matrix[r]?.[phaseId] ?? null;
-                    const isLeader = r === leaderForRecord;
-                    const isCurrentPhase = activePhaseId === phaseId;
-                    return (
-                      <div
-                        key={`${phaseId}-${r}`}
-                        className={phaseRevealed ? 'opacity-100' : 'opacity-30'}
-                        aria-hidden={!phaseRevealed}
-                      >
-                        <MatrixCell
-                          event={ev}
-                          isLeader={isLeader}
-                          phaseId={phaseId}
-                          isCurrentPhase={isCurrentPhase && phaseRevealed}
-                          reducedMotion={reducedMotion}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
             {/* Vote counters */}
             <div className="grid grid-cols-2 gap-2 md:gap-3 mt-4">
               <VoteCounter
@@ -925,17 +976,24 @@ export function BftConsensus({ data }: { data: SceneData }) {
             </div>
           </div>
 
-          {/* View change row (only if relevant) */}
+          {/* View change row (only if relevant). v1 audit B5 + N4:
+              cell phaseId is now "view_change" (not "prepare", which
+              triggered the leader-implicit Crown branch incorrectly).
+              View-from value pulled from record.view, not hardcoded 0. */}
           {record.outcome.view_changed && (
             <div className="signal-panel-strong p-4 md:p-5 border-l-2 border-primary/60">
               <div className="flex items-center gap-2 mb-3">
                 <Vote className="h-4 w-4 text-primary" aria-hidden />
                 <div className="text-[11px] uppercase tracking-[0.2em] text-primary/90 font-mono">
-                  View change · view 0 → {record.view_after}
+                  View change · view {record.view} → {record.view_after}
                 </div>
               </div>
-              <div className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3">
-                <div className="flex flex-col justify-center text-left">
+              <div
+                role="grid"
+                aria-label="View change votes by replica"
+                className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3"
+              >
+                <div role="rowheader" className="flex flex-col justify-center text-left">
                   <span className="text-[12px] font-bold text-foreground/95">View change</span>
                   <span className="text-[10px] text-muted-foreground/80">
                     replicas vote new leader
@@ -948,9 +1006,10 @@ export function BftConsensus({ data }: { data: SceneData }) {
                       <MatrixCell
                         event={ev}
                         isLeader={r === record.leader_after}
-                        phaseId="prepare"
+                        phaseId="view_change"
                         isCurrentPhase={false}
                         reducedMotion={reducedMotion}
+                        replicaId={r}
                       />
                     </div>
                   );
@@ -983,10 +1042,4 @@ export function BftConsensus({ data }: { data: SceneData }) {
   );
 }
 
-// Lint: keep unused-import discipline tight.
 export type { SceneData, ScenarioRecord };
-
-// CornerDownRight is imported but only conditionally used — preserve
-// the import for any future verdict variants without surfacing as a
-// lint warning.
-void CornerDownRight;

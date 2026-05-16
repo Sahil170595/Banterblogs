@@ -89,7 +89,7 @@ type SceneData = ComponentProps<typeof BftConsensus>['data'];
 const sceneData = SceneDataSchema.parse(sceneDataRaw) as unknown as SceneData;
 
 const BFT_DESCRIPTION =
-  'Practical Byzantine Fault Tolerance with 4 replicas, 2-round signed quorum, and equivocation detection. Watch consensus reach the right answer even when one of the four replicas is actively trying to corrupt the vote.';
+  'PBFT-style consensus across 4 replicas — a 2-round signed quorum that still reaches the right answer when one replica is lying, silent, or running a stale view.';
 
 export const metadata: Metadata = {
   title: 'BFT Consensus · Chimera Show',
@@ -144,46 +144,49 @@ export default function BftConsensusPage() {
 
         <p className="text-base md:text-lg text-foreground/80 max-w-3xl leading-relaxed">
           When the orchestrator wants to run a risky action — delete a file, deploy production —
-          one agent saying yes isn&apos;t enough. Four replicas vote in two rounds, signing each
-          message with their own Ed25519 key. Three matching signatures = quorum.{' '}
+          one agent saying yes isn&apos;t enough. Four replicas each hold their own Ed25519 key and
+          vote in two rounds: pre-prepare (the leader proposes), prepare (everyone signs the
+          proposal), commit (everyone signs the prepared set). Three matching signatures in both
+          rounds = action runs.{' '}
           <span className="text-foreground">
-            One replica can lie, time out, or vote against, and the system still reaches the right
-            answer.
+            One replica can lie about which action it saw, sit silent through the timeout, or run a
+            stale view, and the other three still agree on the same answer.
           </span>{' '}
-          That&apos;s what &ldquo;byzantine fault tolerant&rdquo; means, made concrete.
+          That&apos;s what makes the system tolerant of a faulty replica — including a malicious
+          one.
         </p>
 
         <div className="grid grid-cols-3 md:grid-cols-12 gap-2 md:gap-4">
-          <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-1 md:mb-2">
+          <div className="md:col-span-3 rounded-lg border border-border/30 bg-card/20 p-3 md:p-5 opacity-80">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mb-1 md:mb-2">
               Most agents
             </div>
-            <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/80 leading-none mb-1 md:mb-2">
+            <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/70 leading-none mb-1 md:mb-2">
               1 vote
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/60 mb-1 md:mb-2">
               the LLM&apos;s
             </div>
-            <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
+            <p className="hidden md:block text-xs text-muted-foreground/80 leading-relaxed">
               The model decides. If it&apos;s wrong or compromised, the wrong action runs.
             </p>
           </div>
-          <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-1 md:mb-2">
+          <div className="md:col-span-3 rounded-lg border border-border/60 bg-card/40 p-3 md:p-5">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-foreground/70 mb-1 md:mb-2">
               Majority vote
             </div>
-            <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/90 leading-none mb-1 md:mb-2">
+            <div className="text-2xl md:text-4xl font-light tracking-tight text-foreground/85 leading-none mb-1 md:mb-2">
               N votes
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
-              naive quorum
+            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/80 mb-1 md:mb-2">
+              unsigned quorum
             </div>
             <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
-              Replicas vote, majority wins. No signatures, no equivocation detection — one lying
-              replica can corrupt the result.
+              Replicas vote, majority wins. No signatures, no equivocation log — one lying replica
+              can claim two different answers to two different peers and corrupt the count.
             </p>
           </div>
-          <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.08] via-primary/[0.04] to-transparent p-3 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
+          <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.10] via-primary/[0.05] to-transparent p-3 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
             <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-primary/90 mb-1 md:mb-2">
               This system
             </div>
@@ -194,9 +197,11 @@ export default function BftConsensusPage() {
               signed prepares + signed commits
             </div>
             <p className="hidden md:block text-sm text-foreground/90 leading-relaxed">
-              Each replica signs every message with its own Ed25519 key. Equivocation log tracks
-              conflicting hashes; one lying replica gets caught and excluded. n≥3f+1 with f=1 means
-              the system survives any one byzantine fault out of four.
+              Each replica signs every message with its own Ed25519 key. The equivocation log keys
+              on{' '}
+              <span className="font-mono text-xs">(replica, sequence)</span> and catches a replica
+              that signs two different action hashes for the same slot. Tolerates 1 byzantine
+              replica out of 4 — survives lies, silence, and stale views.
             </p>
           </div>
         </div>
@@ -225,15 +230,37 @@ export default function BftConsensusPage() {
           </p>
           <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
             <span className="font-mono text-foreground/80">Scope:</span> the Ed25519 signatures and
-            SHA3-256 action hashes are real (Node&apos;s built-in{' '}
-            <span className="font-mono text-foreground/80">node:crypto</span>). The protocol
-            structure (3f+1 replicas, 2f+1 quorum, leader = replicas[view % n], equivocation log,
-            view change on timeout) mirrors{' '}
+            SHA3-256 action hashes are real — generated here in the browser-build pipeline using
+            Node&apos;s built-in{' '}
+            <span className="font-mono text-foreground/80">node:crypto</span>. The protocol
+            structure (n=4, f=1, quorum=2f+1=3, leader ={' '}
+            <span className="font-mono text-foreground/80">replicas[view % n]</span>, equivocation
+            log keyed on <span className="font-mono text-foreground/80">(replica, sequence)</span>,
+            view change on 5s timeout) is{' '}
+            <span className="text-foreground">protocol-faithful</span> to{' '}
             <span className="font-mono text-foreground/80">
               tdd005/crates/tdd005_orchestrator/src/bft.rs
             </span>{' '}
-            byte-for-byte. This is the in-process VirtualBftCluster pattern (Patch 90), not a
-            production multi-host PBFT deployment.
+            — same constants, same phase ordering, same byzantine detection rule. This is the
+            in-process VirtualBftCluster pattern (Patch 90), not a production multi-host PBFT
+            deployment.
+          </p>
+          <p className="text-xs md:text-sm text-muted-foreground/80 leading-relaxed">
+            <span className="font-mono text-foreground/70">Honest divergence:</span> the action hash
+            shown on screen is{' '}
+            <span className="font-mono text-foreground/70">
+              sha3_256(JSON.stringify(action))
+            </span>{' '}
+            (canonicalised JS object). The Rust runtime hashes{' '}
+            <span className="font-mono text-foreground/70">serde_json::to_vec(&amp;Action)</span>{' '}
+            of its enum, so the two byte strings differ by serializer — what&apos;s preserved is the
+            <em> hash-then-sign </em> structure, not the input bytes. Same goes for replica names:
+            the production cluster names replicas{' '}
+            <span className="font-mono text-foreground/70">analytical</span>,{' '}
+            <span className="font-mono text-foreground/70">creative</span>,{' '}
+            <span className="font-mono text-foreground/70">adversarial</span>,{' '}
+            <span className="font-mono text-foreground/70">domain_expert</span> (the cognitive
+            agents from scene 02). This demo uses r0–r3 for visual room.
           </p>
         </div>
 
