@@ -230,7 +230,9 @@ export default function ProvenanceChainPage() {
             SHA3-256 hashes are real digests; the Merkle proofs verify against the real root. The
             wire format mirrors{' '}
             <span className="font-mono text-foreground/80">tdd004_provenance/src/lib.rs</span>{' '}
-            byte-for-byte (domain tag, schema version, length-prefixed strings, sorted metadata).
+            structurally — same domain tag, schema version, length-prefixed strings, sorted
+            metadata. The JS port has not been diffed against a Rust-produced fixture, so
+            cross-implementation byte-equality is structural intent, not asserted.
           </p>
         </div>
 
@@ -245,17 +247,19 @@ export default function ProvenanceChainPage() {
 
       <footer className="mt-20 border-t border-border/40 pt-8 space-y-3 text-sm text-muted-foreground max-w-3xl">
         <p>
-          The crypto algorithms on this page are deterministic, well-known, and match the Rust
-          implementation in{' '}
-          <span className="font-mono text-foreground">
+          The crypto algorithms on this page are deterministic, well-known, and ported from the
+          Rust implementation in{' '}
+          <span className="font-mono text-foreground break-all">
             tdd005/crates/tdd004_provenance/src/lib.rs
-          </span>{' '}
-          byte-for-byte. The canonical_bytes wire format (domain tag{' '}
+          </span>
+          . The canonical_bytes wire format (domain tag{' '}
           <span className="font-mono text-foreground">PROV_EVENT_V1</span>, schema version 1,
-          length-prefixed UTF-8 strings, sorted metadata) is ported verbatim. The Merkle root and
-          per-event proofs use SHA3-256 with duplicate-last-for-odd, matching the Rust{' '}
+          length-prefixed UTF-8 strings, sorted metadata) follows the same structure. The Merkle
+          root and per-event proofs use SHA3-256 with duplicate-last-for-odd, matching the Rust{' '}
           <span className="font-mono text-foreground">merkle_root()</span> and{' '}
-          <span className="font-mono text-foreground">merkle_proof()</span> exactly.
+          <span className="font-mono text-foreground">merkle_proof()</span> shape. The JS port has
+          not been cross-verified against a Rust-produced fixture; byte-level wire equality is
+          structural intent, not asserted.
         </p>
         <p>
           The build pipeline lives at{' '}
