@@ -55,7 +55,7 @@ const scenes = [
     title: 'Four replicas, one decision',
     blurb:
       'Pre-prepare, prepare, commit. Ed25519 signatures collecting into quorum. Equivocation detection if a replica lies.',
-    available: false,
+    available: true,
     spec: 'TDD-005 bft.rs · P102.18 audit-fix',
   },
   {
