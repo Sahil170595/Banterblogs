@@ -220,7 +220,7 @@ export default function CognitiveAgentsPage() {
         <p>
           The four cognitive agents are not LLM agents. They are deterministic Rust code that runs in under 2ms
           per task. Each algorithm is described inline in{' '}
-          <span className="font-mono text-foreground">tdd005/crates/tdd005_orchestrator/src/cognitive_agent.rs</span>{' '}
+          <span className="font-mono text-foreground break-all">tdd005/crates/tdd005_orchestrator/src/cognitive_agent.rs</span>{' '}
           — the demo&apos;s JS port mirrors the Rust constants verbatim (CWE regex bodies and case-sensitivity,
           entropy thresholds, risk weights, default agent weights, domain taxonomies, verb/ambiguity/contradiction
           lists). Verifiable by grep.

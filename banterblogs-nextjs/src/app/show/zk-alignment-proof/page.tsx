@@ -103,7 +103,7 @@ type SceneData = ComponentProps<typeof ZkAlignmentProof>['data'];
 const sceneData = SceneDataSchema.parse(sceneDataRaw) as unknown as SceneData;
 
 const ZK_DESCRIPTION =
-  'Constitutional alignment proofs on Ristretto255. The verifier learns the action is at-or-above its alignment threshold and learns nothing else — not the score, not the bits, not which Schnorr branch was real.';
+  'Constitutional alignment proofs on Ristretto255. The verifier confirms a valid 14-bit commitment and learns nothing else — not the score, not the bits, not which Schnorr branch was real. Threshold binding is enforced by a prover-side refusal-to-create rule, not the range proof.';
 
 export const metadata: Metadata = {
   title: 'ZK Alignment Proof · Chimera Show',
@@ -162,8 +162,9 @@ export default function ZkAlignmentProofPage() {
           downstream leaks information about how the constitution was tuned — and an attacker who
           watches enough scores can reconstruct the centroid itself.{' '}
           <span className="text-foreground">
-            Zero-knowledge alignment proofs let the verifier confirm &ldquo;score ≥ threshold&rdquo;
-            and learn nothing else.
+            Zero-knowledge alignment proofs let the verifier confirm a valid 14-bit commitment to
+            the score and learn nothing else — threshold binding is enforced by a prover-side
+            refusal-to-create rule, not the range proof itself.
           </span>
         </p>
 
@@ -203,15 +204,16 @@ export default function ZkAlignmentProofPage() {
               This system
             </div>
             <div className="text-3xl md:text-6xl font-bold tracking-tight text-primary leading-none mb-1 md:mb-3">
-              ≥ 0.75 · proven
+              14-bit · proven
             </div>
             <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-primary/80 mb-1 md:mb-3">
               Pedersen + Schnorr OR · 14-bit range
             </div>
             <p className="hidden md:block text-sm text-foreground/90 leading-relaxed">
               The verifier sees 14 Pedersen commitments, 14 Schnorr OR proofs, and one homomorphic
-              sum check. Verifies cryptographically that the hidden score is at-or-above the
-              threshold. Cannot tell 0.76 from 0.92 from 0.99.
+              sum check. Confirms cryptographically that the prover knew a valid 14-bit integer
+              committing to the score. Threshold binding is enforced by a prover-side refusal-to-
+              create rule. Cannot tell 0.76 from 0.92 from 0.99.
             </p>
           </div>
         </div>
@@ -227,8 +229,8 @@ export default function ZkAlignmentProofPage() {
           </p>
           <p>
             <span className="text-primary/80 font-mono">this system:</span> Pedersen + Schnorr OR
-            range proof — &ldquo;score ≥ threshold&rdquo;, mathematically, with nothing else
-            disclosed.
+            range proof — valid 14-bit commitment, mathematically, with nothing else disclosed.
+            Threshold binding by prover refusal-to-create.
           </p>
         </div>
 
@@ -296,7 +298,7 @@ export default function ZkAlignmentProofPage() {
           JARVIS gateway calls it for high-risk tool gating (P89). The build pipeline lives at{' '}
           <span className="font-mono text-foreground">demo/build-data-zk-alignment-proof.mjs</span>{' '}
           in Banterpacks. Cross-implementation byte-compatibility is{' '}
-          <span className="text-foreground">not</span> a goal of this demo — see &ldquo;honest
+          <span className="text-foreground">not</span>{' '}a goal of this demo — see &ldquo;honest
           divergence&rdquo; above.
         </p>
       </footer>
