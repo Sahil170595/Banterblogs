@@ -189,6 +189,16 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: '68,620 judge rows across 5 judges on the TR145 safety subset. κ = 0.6917 (triangulate verdict) — single-judge labels insufficient. Plus a dual-axis methodology finding: safety-specialist judges measure a different axis than general LLM judges.',
   },
 
+  // ── Phase 4 — Serving-State Safety Certification (TR149+) ──
+  'technical-report-149': {
+    title: 'TR149: Standardized Safety Battery — FP16 vs FP8 KV-Cache',
+    description: '7,578 records across 3 models × 4 standardized batteries (HarmBench, JailbreakBench, StrongREJECT, XSTest) × 2 KV-cache dtypes. Replicates TR145’s FP8 null on literature-comparable corpora; corrected paired-odds-ratio estimator. Local-only judging, $0 external API.',
+  },
+  'technical-report-152': {
+    title: 'TR152: The Serving-State Safety Factorial (v1 Local Pilot)',
+    description: 'FP8 KV-cache folded across batch size, prefix-caching, and temperature — 14,400 responses, 7,010 matched pairs. Harmful-prompt refusal invariant under every serving state; only footprint is a sub-percentage-point over-refusal lean on the Qwen family’s XSTest cells. A v1 local pilot, not the definitive Layer 5 result.',
+  },
+
   // ── Conclusive Reports & Whitepapers ──
   'technical-report-conclusive-108-116': {
     title: 'Conclusive Report: Phase 1 (TR108–TR116)',

@@ -2,7 +2,7 @@ import path from "path";
 
 export const siteConfig = {
   name: "Chimeraforge",
-  description: "Personal AI platform — local inference, constitutional AI governance, and 820K+ research measurements across 46 technical reports.",
+  description: "Personal AI platform — local inference, constitutional AI governance, and 841K+ research measurements across 48 technical reports.",
   paths: {
     posts: path.join(process.cwd(), "posts"),
     banterpacks: path.join(process.cwd(), "posts", "banterpacks"),
