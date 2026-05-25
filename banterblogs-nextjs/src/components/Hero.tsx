@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, Package, Copy, Check } from 'lucide-react';
+import { ArrowRight, Zap, Package, Copy, Check, FileText } from 'lucide-react';
 import { useState } from 'react';
 import type { EpisodeSummary } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
@@ -51,10 +51,20 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
             className="space-y-10"
           >
             <div className="space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
-                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                In Beta
-              </span>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  In Beta
+                </span>
+                <Link
+                  href="/papers"
+                  className="group inline-flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-accent font-semibold transition-colors hover:bg-accent/20 hover:border-accent/70"
+                >
+                  <span className="inline-flex h-2 w-2 rounded-full bg-accent" />
+                  Accepted · ICML 2026 Workshop
+                  <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
 
               <h1 className="display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
                 Constitutional AI that proves its reasoning
@@ -99,6 +109,13 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
               >
                 Read the research
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Link>
+              <Link
+                href="/papers"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-foreground transition-all duration-200 hover:border-accent/50 hover:text-accent"
+              >
+                See the papers
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             </div>
 
