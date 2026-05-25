@@ -5,11 +5,11 @@ import { ArrowRight, FileText, Layers } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Papers',
   description:
-    '5 papers submitted to NeurIPS 2026 · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+    '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under review at NeurIPS 2026 · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   openGraph: {
     title: 'Papers | Chimeraforge',
     description:
-      '5 papers submitted to NeurIPS 2026 · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under review at NeurIPS 2026 · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
     url: 'https://chimeraforge.vercel.app/papers',
     type: 'website',
   },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Papers | Chimeraforge',
     description:
-      '5 papers submitted to NeurIPS 2026 · 6 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under review at NeurIPS 2026 · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   },
 };
 
@@ -25,9 +25,20 @@ interface Paper {
   title: string;
   thesis: string;
   venue: string;
-  status: 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
+  status: 'Accepted' | 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
   trs: { label: string; slug: string }[];
 }
+
+const ACCEPTED: Paper[] = [
+  {
+    title: 'Batch Inference Safety Under Non-Determinism',
+    thesis:
+      'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
+    venue: 'ICML 2026 Workshop on Hypothesis Testing',
+    status: 'Accepted',
+    trs: [{ label: 'TR138', slug: 'technical-report-138' }],
+  },
+];
 
 const NEURIPS_2026: Paper[] = [
   {
@@ -80,14 +91,6 @@ const NEURIPS_2026: Paper[] = [
 ];
 
 const IN_PREP: Paper[] = [
-  {
-    title: 'Batch Inference Safety Under Non-Determinism',
-    thesis:
-      'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
-    venue: 'AI4Good',
-    status: 'Submitted',
-    trs: [{ label: 'TR138', slug: 'technical-report-138' }],
-  },
   {
     title: 'Inference Optimization Is Not Safety-Neutral',
     thesis:
@@ -149,6 +152,7 @@ const IN_PREP: Paper[] = [
 
 function StatusBadge({ status }: { status: Paper['status'] }) {
   const styles: Record<Paper['status'], string> = {
+    'Accepted': 'border-accent/60 bg-accent/15 text-accent',
     'Submitted': 'border-primary/60 bg-primary/15 text-primary',
     'In preparation': 'border-border/60 bg-muted/30 text-foreground/80',
     Synthesis: 'border-border/60 bg-muted/30 text-muted-foreground',
@@ -203,12 +207,13 @@ export default function PapersPage() {
         <div className="space-y-5 max-w-3xl">
           <span className="signal-pill">Papers</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            5 papers submitted to NeurIPS 2026 · 6 in preparation
+            1 accepted at an ICML 2026 workshop · 5 under review at NeurIPS 2026
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
-            evaluation. Each paper is backed by reproducible technical reports and artifact-level provenance from a
-            841,000+ measurement program.
+            evaluation. The first paper is accepted to the ICML 2026 Workshop on Hypothesis Testing; five more are
+            under review at NeurIPS 2026, with five in preparation. Each is backed by reproducible technical reports
+            and artifact-level provenance from a 841,000+ measurement program.
           </p>
           <p className="text-sm text-muted-foreground/80">
             Author: <span className="text-foreground font-medium">Sahil Kadadekar</span> · Independent research
@@ -219,9 +224,9 @@ export default function PapersPage() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: '5', label: 'Submitted · NeurIPS 2026' },
+          { value: '1', label: 'Accepted · ICML 2026 Workshop' },
+          { value: '5', label: 'Under review · NeurIPS 2026' },
           { value: '11', label: 'Papers total' },
-          { value: '48', label: 'Technical Reports' },
           { value: '841K+', label: 'Measurements' },
         ].map((s) => (
           <div key={s.label} className="signal-panel p-5 text-center">
@@ -230,6 +235,24 @@ export default function PapersPage() {
           </div>
         ))}
       </div>
+
+      {/* ── Accepted ── */}
+      <section className="mb-16">
+        <div className="mb-8 border-b border-accent/40 pb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-accent flex items-center gap-2">
+            <FileText className="h-4 w-4 text-accent" />
+            Accepted — ICML 2026 Workshop on Hypothesis Testing
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground/70">
+            Accepted 2026-05-22; camera-ready in preparation. The first peer-reviewed acceptance from the program.
+          </p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          {ACCEPTED.map((p) => (
+            <PaperCard key={p.title} paper={p} />
+          ))}
+        </div>
+      </section>
 
       {/* ── NeurIPS 2026 ── */}
       <section className="mb-16">
