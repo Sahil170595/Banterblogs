@@ -28,9 +28,21 @@ import {
 
 type Beat = {
   target_phase: string | null;
-  dwell_ms: number;
   copy: string;
 };
+
+// Per-beat on-screen time, single-sourced from the copy length so the pacing
+// can never drift from the text again. Research-grounded subtitle calibration:
+// ~13 chars/sec is the conservative reading rate for technical copy read while
+// also watching the visualization (the measured 50/50 split-attention point;
+// BBC subtitles run ~15 CPS, Netflix 17-20 for lighter dialogue). +350ms to
+// register the new line; clamped to a 1.5s floor (subtitle minimum ~0.83s,
+// bumped for density) and a 7s ceiling (subtitle maximum). The typewriter runs
+// ~9ms/char (~111 CPS) — far faster than the reading rate — so a length-derived
+// dwell is always long enough for the text to finish typing.
+function computeDwell(copy: string): number {
+  return Math.min(7000, Math.max(1500, Math.round((copy.length / 13) * 1000 + 350)));
+}
 
 type BitProofVerifier = {
   a0_hex: string;
@@ -962,7 +974,7 @@ function useBeatController({
     stop();
     if (!playing || reducedMotion) return;
     if (beatIndex >= beats.length - 1) return;
-    const dwell = beats[beatIndex]?.dwell_ms ?? 800;
+    const dwell = computeDwell(beats[beatIndex]?.copy ?? '');
     timerRef.current = setTimeout(() => setBeatIndex((i) => i + 1), dwell);
     return stop;
   }, [beatIndex, beats, playing, reducedMotion, stop]);

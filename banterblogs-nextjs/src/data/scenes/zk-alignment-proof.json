@@ -46,38 +46,39 @@
       "beats": [
         {
           "target_phase": "prover",
-          "dwell_ms": 800,
-          "copy": "Score on the cosine-similarity side: 0.92. The prover knows this exactly."
+          "copy": "Cosine-similarity score: 0.92 — known only to the prover."
         },
         {
           "target_phase": "prover",
-          "dwell_ms": 700,
-          "copy": "Fixed-point encode: score × 10000 = 9200. Threshold × 10000 = 7500. Fits in 14 bits."
+          "copy": "Fixed-point: score × 10000 = 9200, threshold = 7500."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 900,
-          "copy": "Decompose into 14 bits. For each bit b_i, commit C_i = b_i·G + r_i·H — 14 fresh Pedersen commits, one per bit."
+          "copy": "Decompose into 14 bits; commit each as C_i = b_i·G + r_i·H."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 900,
-          "copy": "Per bit, prove \"b_i is 0 or 1\" with a Schnorr OR proof. One branch is the real proof; the other is simulated with a forced challenge. The verifier cannot tell which."
+          "copy": "Per bit, a Schnorr OR proof shows b_i is 0 or 1 —"
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 800,
-          "copy": "Value commitment = Σ(2^i · C_i). The homomorphism ties the bits together — verifier can re-derive this sum from the bundle."
+          "copy": "one branch real, one simulated, indistinguishable to the verifier."
+        },
+        {
+          "target_phase": "construction",
+          "copy": "Value commitment Σ(2^i · C_i) ties the bits together."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "Verifier receives the bundle. Re-hashes Fiat-Shamir per bit, checks both branch equations, checks the homomorphic sum."
+          "copy": "Verifier re-hashes Fiat-Shamir per bit, checks both branches and the sum."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "All 14 bit-proofs pass. Sum check passes. Cryptographic verdict: prover knew a valid 14-bit score (committed to C_value). Threshold-binding (score ≥ 0.75, well above) is enforced by the prover-side refusal-to-create rule — see \"honest framing\" below."
+          "copy": "All 14 bit-proofs pass. Verdict: a valid 14-bit score, committed to C_value."
+        },
+        {
+          "target_phase": "verifier",
+          "copy": "Threshold-binding (≥ 0.75) is the prover's refusal-to-create rule, not the proof."
         }
       ],
       "action": "read_file:src/index.ts",
@@ -387,38 +388,39 @@
       "beats": [
         {
           "target_phase": "prover",
-          "dwell_ms": 800,
-          "copy": "Score on the cosine-similarity side: 0.76. The prover knows this exactly."
+          "copy": "Cosine-similarity score: 0.76 — known only to the prover."
         },
         {
           "target_phase": "prover",
-          "dwell_ms": 700,
-          "copy": "Fixed-point encode: score × 10000 = 7600. Threshold × 10000 = 7500. Fits in 14 bits."
+          "copy": "Fixed-point: score × 10000 = 7600, threshold = 7500."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 900,
-          "copy": "Decompose into 14 bits. For each bit b_i, commit C_i = b_i·G + r_i·H — 14 fresh Pedersen commits, one per bit."
+          "copy": "Decompose into 14 bits; commit each as C_i = b_i·G + r_i·H."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 900,
-          "copy": "Per bit, prove \"b_i is 0 or 1\" with a Schnorr OR proof. One branch is the real proof; the other is simulated with a forced challenge. The verifier cannot tell which."
+          "copy": "Per bit, a Schnorr OR proof shows b_i is 0 or 1 —"
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 800,
-          "copy": "Value commitment = Σ(2^i · C_i). The homomorphism ties the bits together — verifier can re-derive this sum from the bundle."
+          "copy": "one branch real, one simulated, indistinguishable to the verifier."
+        },
+        {
+          "target_phase": "construction",
+          "copy": "Value commitment Σ(2^i · C_i) ties the bits together."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "Verifier receives the bundle. Re-hashes Fiat-Shamir per bit, checks both branch equations, checks the homomorphic sum."
+          "copy": "Verifier re-hashes Fiat-Shamir per bit, checks both branches and the sum."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "All 14 bit-proofs pass. Sum check passes. Cryptographic verdict: prover knew a valid 14-bit score (committed to C_value). Threshold-binding (score ≥ 0.75, one fixed-point unit above) is enforced by the prover-side refusal-to-create rule — see \"honest framing\" below."
+          "copy": "All 14 bit-proofs pass. Verdict: a valid 14-bit score, committed to C_value."
+        },
+        {
+          "target_phase": "verifier",
+          "copy": "Threshold-binding (≥ 0.75) is the prover's refusal-to-create rule, not the proof."
         }
       ],
       "action": "edit_file:config.yaml",
@@ -728,38 +730,39 @@
       "beats": [
         {
           "target_phase": "prover",
-          "dwell_ms": 800,
-          "copy": "Score on the cosine-similarity side: 0.75. The prover knows this exactly."
+          "copy": "Cosine-similarity score: 0.75 — known only to the prover."
         },
         {
           "target_phase": "prover",
-          "dwell_ms": 700,
-          "copy": "Fixed-point encode: score × 10000 = 7500. Threshold × 10000 = 7500. Fits in 14 bits."
+          "copy": "Fixed-point: score × 10000 = 7500, threshold = 7500."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 900,
-          "copy": "Decompose into 14 bits. For each bit b_i, commit C_i = b_i·G + r_i·H — 14 fresh Pedersen commits, one per bit."
+          "copy": "Decompose into 14 bits; commit each as C_i = b_i·G + r_i·H."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 900,
-          "copy": "Per bit, prove \"b_i is 0 or 1\" with a Schnorr OR proof. One branch is the real proof; the other is simulated with a forced challenge. The verifier cannot tell which."
+          "copy": "Per bit, a Schnorr OR proof shows b_i is 0 or 1 —"
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 800,
-          "copy": "Value commitment = Σ(2^i · C_i). The homomorphism ties the bits together — verifier can re-derive this sum from the bundle."
+          "copy": "one branch real, one simulated, indistinguishable to the verifier."
+        },
+        {
+          "target_phase": "construction",
+          "copy": "Value commitment Σ(2^i · C_i) ties the bits together."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "Verifier receives the bundle. Re-hashes Fiat-Shamir per bit, checks both branch equations, checks the homomorphic sum."
+          "copy": "Verifier re-hashes Fiat-Shamir per bit, checks both branches and the sum."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "All 14 bit-proofs pass. Sum check passes. Cryptographic verdict: prover knew a valid 14-bit score (committed to C_value). Threshold-binding (score ≥ 0.75, exactly at) is enforced by the prover-side refusal-to-create rule — see \"honest framing\" below."
+          "copy": "All 14 bit-proofs pass. Verdict: a valid 14-bit score, committed to C_value."
+        },
+        {
+          "target_phase": "verifier",
+          "copy": "Threshold-binding (≥ 0.75) is the prover's refusal-to-create rule, not the proof."
         }
       ],
       "action": "spawn_subprocess:tests",
@@ -1069,28 +1072,27 @@
       "beats": [
         {
           "target_phase": "prover",
-          "dwell_ms": 800,
-          "copy": "Score on the cosine-similarity side: 0.62. The prover knows this exactly."
+          "copy": "Cosine-similarity score: 0.62 — known only to the prover."
         },
         {
           "target_phase": "prover",
-          "dwell_ms": 700,
-          "copy": "Fixed-point encode: score × 10000 = 6200. Threshold × 10000 = 7500. Fits in 14 bits."
+          "copy": "Fixed-point: score × 10000 = 6200, threshold = 7500."
         },
         {
           "target_phase": "prover",
-          "dwell_ms": 900,
-          "copy": "Pre-check: is 6200 ≥ 7500? No. AlignmentProof::create returns ZkError::ValueOutOfRange."
+          "copy": "Pre-check: is 6200 ≥ 7500? No."
+        },
+        {
+          "target_phase": "prover",
+          "copy": "AlignmentProof::create returns ZkError::ValueOutOfRange."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 800,
-          "copy": "No bundle is constructed and nothing is sent. The verifier sees nothing — that is the strongest possible refusal."
+          "copy": "No bundle is built and nothing is sent. The verifier sees nothing."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "Notice the negative space: a misaligned action never even reaches the wire. The protocol cannot lie about its own score."
+          "copy": "That silence is the strongest refusal: it can't lie about its own score."
         }
       ],
       "action": "delete_file:prod_secrets.env",
@@ -1122,33 +1124,39 @@
       "beats": [
         {
           "target_phase": "prover",
-          "dwell_ms": 800,
-          "copy": "Score on the cosine-similarity side: 0.88. The prover knows this exactly."
+          "copy": "Cosine-similarity score: 0.88 — known only to the prover."
         },
         {
           "target_phase": "prover",
-          "dwell_ms": 700,
-          "copy": "Fixed-point encode: score × 10000 = 8800. Threshold × 10000 = 7500. Fits in 14 bits."
+          "copy": "Fixed-point: score × 10000 = 8800, threshold = 7500."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 900,
-          "copy": "Per bit: commit C_i = b_i·G + r_i·H, then prove b_i ∈ {0,1} with a Schnorr OR — one real branch, one simulated, indistinguishable on the wire."
+          "copy": "Per bit: commit C_i = b_i·G + r_i·H, then a Schnorr OR proof of b_i ∈ {0,1}."
         },
         {
           "target_phase": "construction",
-          "dwell_ms": 800,
-          "copy": "Fiat-Shamir collapses the interactive challenge into one SHA3-512 hash over (C_i, a_0, a_1). All 14 bit proofs ship."
+          "copy": "One real branch, one simulated — indistinguishable on the wire."
+        },
+        {
+          "target_phase": "construction",
+          "copy": "Fiat-Shamir folds the challenge into one SHA3-512 over (C_i, a_0, a_1)."
+        },
+        {
+          "target_phase": "construction",
+          "copy": "All 14 bit-proofs ship to the verifier."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 800,
-          "copy": "Attacker intercepts and swaps bit-3's commitment with a fresh Pedersen point. Same shape, different secret."
+          "copy": "Attacker swaps bit-3's commitment for a fresh point — same shape, new secret."
         },
         {
           "target_phase": "verifier",
-          "dwell_ms": 900,
-          "copy": "Verifier re-derives Fiat-Shamir on bit 3: SHA3-512(C', a_0, a_1) gives a new challenge e'. But the stored e_0 + e_1 was bound to the old C. e_0 + e_1 ≠ e'. Bundle rejected."
+          "copy": "Verifier re-derives Fiat-Shamir on bit 3: SHA3-512(C', a_0, a_1) → e'."
+        },
+        {
+          "target_phase": "verifier",
+          "copy": "But e_0 + e_1 was bound to the old C, so e_0 + e_1 ≠ e'. Bundle rejected."
         }
       ],
       "action": "http_request:api.external.com/exfiltrate",
