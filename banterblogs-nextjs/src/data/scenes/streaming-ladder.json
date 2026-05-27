@@ -63,38 +63,59 @@
       "beats": [
         {
           "target_tier": "gate",
-          "dwell_ms": 4000,
-          "copy": "Before any checking, a gate reads the model's own token probabilities. If the model was confident, the ladder doesn't run — most steps don't need inspection, and paying for it on every step would be wasteful."
+          "copy": "A gate reads the model's own token probabilities before any checking. If the model"
         },
         {
           "target_tier": "gate",
-          "dwell_ms": 3200,
-          "copy": "Top-1 is 0.94 here. The gate says no. None of the five tiers below execute for this step — they're shown only so you can see what they would have done."
+          "copy": "was confident, the ladder doesn't run. Most steps don't need inspection — paying for"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "every step would be wasteful. Top-1 is 0.94 here. The gate says no. None of the five"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "tiers execute for this step — shown so you can see what they do."
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 3400,
-          "copy": "T1 didn't run. If it had, fifteen hand-coded rules would have looked for bad math, banned words, broken citations. Around 20ms."
+          "copy": "T1 didn't run. If it had: fifteen hand-coded rules. Bad math, banned words, broken"
+        },
+        {
+          "target_tier": "t1",
+          "copy": "citations. Around 20ms."
         },
         {
           "target_tier": "t2",
-          "dwell_ms": 3200,
-          "copy": "T2 didn't run. It's an LLM judge that reads the step for meaning — slower than rules, smarter about reasoning. 60–150ms depending on the routing path."
+          "copy": "T2 didn't run. It's an LLM judge that reads the step for meaning. Slower than rules,"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "smarter about reasoning. 60–150ms depending on routing."
         },
         {
           "target_tier": "t2_5",
-          "dwell_ms": 3000,
-          "copy": "T2.5 didn't run. It's the model second-guessing its own step in a one-line reply — 'OK' or 'Correction: …'. Around 100ms."
+          "copy": "T2.5 didn't run. It's the model second-guessing its own step. One-line reply — 'OK'"
+        },
+        {
+          "target_tier": "t2_5",
+          "copy": "or 'Correction: …'. Around 100ms."
         },
         {
           "target_tier": "t3",
-          "dwell_ms": 3000,
-          "copy": "T3 didn't run. It's a multi-model panel — the heavy artillery, eight-second budget. Only reached when the cheaper tiers can't agree."
+          "copy": "T3 didn't run. It's a multi-model panel — ~8s budget. Only reached when the cheaper"
+        },
+        {
+          "target_tier": "t3",
+          "copy": "tiers can't agree."
         },
         {
           "target_tier": "enforcement",
-          "dwell_ms": 3600,
-          "copy": "PROCEED. Real cost: a single gate check. The cheap-skip pattern at work — the ladder pays attention only when the model itself was uncertain."
+          "copy": "PROCEED. Real cost: a single gate check. The ladder pays attention only when the"
+        },
+        {
+          "target_tier": "enforcement",
+          "copy": "model itself was uncertain."
         }
       ],
       "latency": {
@@ -261,38 +282,59 @@
       "beats": [
         {
           "target_tier": "gate",
-          "dwell_ms": 3600,
-          "copy": "The model claimed two plus two is five. Its own top-1 probability is 0.31 — the model itself wasn't sure. The gate escalates to the ladder."
+          "copy": "The model claimed two plus two is five. Top-1 is 0.31 — the model itself wasn't"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "sure. The gate escalates."
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 3200,
-          "copy": "T1 runs first because it's the cheapest. Fifteen hand-coded rules, no LLM, ~20ms budget. One of them re-computes any arithmetic it finds in the step."
+          "copy": "T1 runs first because it's the cheapest. No LLM, ~20ms budget. Fifteen hand-coded"
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 3800,
-          "copy": "It computes 2 + 2, gets 4, compares to the claimed 5. Fires at 95% confidence. A clean hit from the cheapest tier on the ladder."
+          "copy": "rules; one re-computes any arithmetic in the step. It computes 2 + 2, gets 4,"
+        },
+        {
+          "target_tier": "t1",
+          "copy": "compares to the claimed 5. Fires at 95% confidence. A clean hit from the cheapest"
+        },
+        {
+          "target_tier": "t1",
+          "copy": "tier on the ladder."
         },
         {
           "target_tier": "t2",
-          "dwell_ms": 3600,
-          "copy": "T2 — the LLM judge — would normally run next. But a deterministic rule already caught this with high confidence. Burning a 60ms LLM call to confirm what we already know is wasteful, so T2 short-circuits."
+          "copy": "T2 — the LLM judge — would normally run next. But a deterministic rule already"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "caught this with high confidence. Burning a 60ms LLM call to confirm what we know is"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "wasteful. T2 short-circuits."
         },
         {
           "target_tier": "t2_5",
-          "dwell_ms": 2400,
           "copy": "T2.5 self-correct: same logic, skipped."
         },
         {
           "target_tier": "t3",
-          "dwell_ms": 2800,
-          "copy": "T3 panel debate costs ~8s. Skipped. The panel only argues when the cheaper tiers couldn't reach consensus — they did, decisively."
+          "copy": "T3 panel debate costs ~8s. Skipped. The panel only argues when the cheaper tiers"
+        },
+        {
+          "target_tier": "t3",
+          "copy": "couldn't agree — they did, decisively."
         },
         {
           "target_tier": "enforcement",
-          "dwell_ms": 4200,
-          "copy": "REWIND. Real cost: dominated by the single rule that fired, plus the gate check — single-digit milliseconds. Worst case if every tier had run to its budget would have been ~8s."
+          "copy": "REWIND. Real cost: the single rule that fired plus the gate check. Single-digit"
+        },
+        {
+          "target_tier": "enforcement",
+          "copy": "milliseconds. Worst case if every tier had run to budget: ~8s."
         }
       ],
       "latency": {
@@ -470,33 +512,55 @@
       "beats": [
         {
           "target_tier": "gate",
-          "dwell_ms": 4000,
-          "copy": "Top-1 is only 0.28 here, entropy is high across the next-token candidates. The model itself isn't sure what to say. The gate escalates — this is exactly when the ladder should weigh in."
+          "copy": "Top-1 is only 0.28 here, entropy is high across next-token candidates. The model"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "isn't sure what to say. The gate escalates."
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 3600,
-          "copy": "T1 runs first because it's the cheapest. ~20ms of rules looking for bad math, banned words, broken citations. There's nothing mechanically wrong with the content, though — no rule fires."
+          "copy": "T1 runs first because it's the cheapest. ~20ms of rules. Bad math, banned words,"
+        },
+        {
+          "target_tier": "t1",
+          "copy": "broken citations. Nothing wrong here — no rule fires."
         },
         {
           "target_tier": "t2",
-          "dwell_ms": 4400,
-          "copy": "Now T2 escalates. The LLM judge gets 60–150ms to read the step in context and ask: is this a real contribution, or just hedging? This is the kind of judgment a regex can't make. (Public demo: T2 here runs against a deterministic fake provider.)"
+          "copy": "Now T2 escalates. The LLM judge gets 60–150ms to read the step in context. Is this a"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "real contribution, or just hedging? A judgment a regex can't make. (Public demo: T2"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "here runs against a deterministic fake provider.)"
         },
         {
           "target_tier": "t2_5",
-          "dwell_ms": 3600,
-          "copy": "T2.5 — the model second-guesses itself in a one-line reply. ~100ms. Cheap enough to run on most uncertain steps."
+          "copy": "T2.5 — the model second-guesses itself in a one-line reply. ~100ms. Cheap enough to"
+        },
+        {
+          "target_tier": "t2_5",
+          "copy": "run on most uncertain steps."
         },
         {
           "target_tier": "t3",
-          "dwell_ms": 3400,
-          "copy": "T3 panel debate stays skipped. The multi-model panel costs ~8s and only runs when the cheaper tiers disagreed sharply. Here they agreed."
+          "copy": "T3 panel debate stays skipped. Multi-model panel costs ~8s; only runs when the"
+        },
+        {
+          "target_tier": "t3",
+          "copy": "cheaper tiers disagreed sharply."
         },
         {
           "target_tier": "enforcement",
-          "dwell_ms": 4000,
-          "copy": "PROCEED. The step ships. Worst case if every tier had run to budget would have been ~8.2s; here only the cheap-and-medium tiers actually executed — milliseconds, not seconds."
+          "copy": "PROCEED. The step ships. Worst case if every tier had run to budget: ~8.2s. Here"
+        },
+        {
+          "target_tier": "enforcement",
+          "copy": "only cheap-and-medium tiers executed — milliseconds, not seconds."
         }
       ],
       "latency": {
@@ -663,38 +727,79 @@
       "beats": [
         {
           "target_tier": "gate",
-          "dwell_ms": 4400,
-          "copy": "Read what the model just said carefully. It claims all birds fly, then that penguins don't, then concludes penguins are birds. The argument is broken. Top-1 is 0.34 — mediocre confidence — so the gate escalates."
+          "copy": "The model claims all birds fly, then that penguins don't. Then concludes penguins"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "are birds. The argument is broken. Top-1 is 0.34 — mediocre confidence — so the gate"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "escalates."
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 3800,
-          "copy": "T1 runs because it's cheap. ~20ms of hand-coded rules. But faulty syllogism isn't something a regex can recognise — writing such a rule would mean enumerating every broken argument a human can make. That's the LLM's job, not T1's."
+          "copy": "T1 runs because it's cheap. ~20ms of hand-coded rules. But faulty syllogism isn't"
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 2200,
-          "copy": "T1 stays quiet. No rule fires. The step needs more sophisticated inspection — exactly the case the higher tiers exist for."
+          "copy": "something a regex can recognise. Enumerating every broken argument a human can make"
+        },
+        {
+          "target_tier": "t1",
+          "copy": "is the LLM's job, not T1's. T1 stays quiet. No rule fires. The step needs more"
+        },
+        {
+          "target_tier": "t1",
+          "copy": "sophisticated inspection — what the higher tiers exist for."
         },
         {
           "target_tier": "t2",
-          "dwell_ms": 4600,
-          "copy": "Now T2 escalates because T1 couldn't resolve it. The LLM judge reads the step in full context and asks: does this reasoning hold together? A real provider sees that 'all X fly' and 'this X doesn't fly' can't both be true, and rejects. (This public demo uses a fake provider for reproducibility — it returns OK, not the real catch.)"
+          "copy": "Now T2 escalates because T1 couldn't resolve it. The LLM judge reads the step in"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "full context: does this reasoning hold together? 'All X fly' and 'this X doesn't"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "fly' can't both be true. A real provider rejects. (Public demo uses a fake provider"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "— it returns OK, not the real catch.)"
         },
         {
           "target_tier": "t2_5",
-          "dwell_ms": 3800,
-          "copy": "T2.5 — the model second-guesses itself. ~100ms. Either 'OK' or 'Correction:' with a rewrite. With a real provider, this is where the broken syllogism would get replaced. The fake provider in this demo returns OK."
+          "copy": "T2.5 — the model second-guesses itself. ~100ms. Either 'OK' or 'Correction:' with a"
+        },
+        {
+          "target_tier": "t2_5",
+          "copy": "rewrite. With a real provider, the broken syllogism gets replaced. Fake provider"
+        },
+        {
+          "target_tier": "t2_5",
+          "copy": "returns OK."
         },
         {
           "target_tier": "t3",
-          "dwell_ms": 3600,
-          "copy": "T3 panel only debates when the lower tiers can't agree. Here they agreed (fake provider returned OK on both), so T3 doesn't run."
+          "copy": "T3 panel only debates when the lower tiers can't agree. Fake provider returned OK on"
+        },
+        {
+          "target_tier": "t3",
+          "copy": "both — so T3 doesn't run."
         },
         {
           "target_tier": "enforcement",
-          "dwell_ms": 4400,
-          "copy": "PROCEED — the honest verdict given the fake provider. The point isn't the catch you would have seen in production. The point is the routing: T1 admits it can't, T2/T2.5 take the step, T3 only fires on real disagreement. The shape is real even when the provider is staged."
+          "copy": "PROCEED — the honest verdict given the fake provider. The point isn't the catch you"
+        },
+        {
+          "target_tier": "enforcement",
+          "copy": "would have seen in production. T1 admits it can't, T2/T2.5 take the step, T3 only"
+        },
+        {
+          "target_tier": "enforcement",
+          "copy": "fires on real disagreement. The shape is real even when the provider is staged."
         }
       ],
       "latency": {
@@ -861,38 +966,51 @@
       "beats": [
         {
           "target_tier": "gate",
-          "dwell_ms": 3600,
-          "copy": "The model used a word from the banned list. Top-1 is 0.27 — low confidence — so the gate escalates. Production assistants generally shouldn't talk this way, even when criticising other reasoning."
+          "copy": "The model used a word from the banned list. Top-1 is 0.27 — low confidence — so the"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "gate escalates. Production assistants generally shouldn't talk this way, even when"
+        },
+        {
+          "target_tier": "gate",
+          "copy": "criticising."
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 3400,
-          "copy": "T1 runs first because it's the cheapest. One of its fifteen rules is a profanity check against a configurable wordlist. A single regex over the step. Microseconds."
+          "copy": "T1 runs first because it's the cheapest. One of its fifteen rules is a profanity"
         },
         {
           "target_tier": "t1",
-          "dwell_ms": 3000,
+          "copy": "check against a configurable wordlist. A single regex over the step. Microseconds."
+        },
+        {
+          "target_tier": "t1",
           "copy": "Match. 99% confidence — literal word match, no ambiguity."
         },
         {
           "target_tier": "t2",
-          "dwell_ms": 3200,
-          "copy": "T2 short-circuits — the cheap tier already caught this with high confidence, no need to burn a 60ms LLM call."
+          "copy": "T2 short-circuits — the cheap tier already caught this with high confidence. No need"
+        },
+        {
+          "target_tier": "t2",
+          "copy": "to burn a 60ms LLM call."
         },
         {
           "target_tier": "t2_5",
-          "dwell_ms": 2200,
           "copy": "T2.5: skipped, same reason."
         },
         {
           "target_tier": "t3",
-          "dwell_ms": 2200,
           "copy": "T3 panel: skipped. ~8s of compute avoided."
         },
         {
           "target_tier": "enforcement",
-          "dwell_ms": 4200,
-          "copy": "REWIND. Real cost: dominated by the single regex that fired plus the gate check — under 5ms. The clean version regenerates upstream and the response continues."
+          "copy": "REWIND. Real cost: the single regex that fired plus the gate check — under 5ms. The"
+        },
+        {
+          "target_tier": "enforcement",
+          "copy": "clean version regenerates upstream and the response continues."
         }
       ],
       "latency": {

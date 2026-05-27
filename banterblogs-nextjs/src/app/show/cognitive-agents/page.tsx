@@ -26,7 +26,6 @@ const TaskRecordSchema = z.object({
   beats: z.array(
     z.object({
       target_agent: z.string().nullable(),
-      dwell_ms: z.number(),
       copy: z.string(),
     }),
   ),

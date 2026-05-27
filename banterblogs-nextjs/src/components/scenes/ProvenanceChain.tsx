@@ -30,9 +30,18 @@ import {
 
 type Beat = {
   target_phase: string | null;
-  dwell_ms: number;
   copy: string;
 };
+
+// Per-beat on-screen time, single-sourced from copy length so pacing can't
+// drift from the text. ~13 chars/sec is the research-grounded reading rate for
+// technical copy read while watching the viz (50/50 split-attention point; BBC
+// subtitles ~15 CPS). +350ms to register the line; clamped to a 1.5s floor and
+// 7s ceiling (subtitle bounds). The typewriter runs ~9ms/char, far faster than
+// reading, so a length-derived dwell never cuts off the text.
+function computeDwell(copy: string): number {
+  return Math.min(7000, Math.max(1500, Math.round((copy.length / 13) * 1000 + 350)));
+}
 
 type EventRecord = {
   step_id: string;
@@ -566,7 +575,7 @@ export function ProvenanceChain({ data }: { data: SceneData }) {
 
   useEffect(() => {
     if (!playing || !activeBeat) return;
-    const dwell = activeBeat.dwell_ms || 3000;
+    const dwell = computeDwell(activeBeat?.copy ?? '');
     const timer = setTimeout(() => {
       if (beatIdx < beats.length - 1) {
         setBeatIdx((b) => b + 1);

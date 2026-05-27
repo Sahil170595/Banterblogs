@@ -21,38 +21,75 @@
       "beats": [
         {
           "target_phase": null,
-          "dwell_ms": 3600,
-          "copy": "An agent was spawned — event 1 of 5 in this trace. Every audit trail starts somewhere. This is the genesis event — no predecessor, just a public key and a starting hash."
+          "copy": "Event 1 of 5. An agent was spawned — the genesis event. Every audit trail starts"
+        },
+        {
+          "target_phase": null,
+          "copy": "somewhere. No predecessor here, just a public key and a starting hash."
         },
         {
           "target_phase": "event",
-          "dwell_ms": 3800,
-          "copy": "Genesis event. There's no agent before this one — agent_id \"agent-orchestrator\" is being created. The payload (the spawn parameters) gets hashed to 0eb9efc80f67…; the spawn arguments themselves stay in the host system, not in the chain."
+          "copy": "Genesis event. agent_id \"agent-orchestrator\" is being created. Payload hash"
+        },
+        {
+          "target_phase": "event",
+          "copy": "0eb9efc80f67… commits to the spawn parameters. The arguments stay in the host system"
+        },
+        {
+          "target_phase": "event",
+          "copy": "— only the hash chains."
         },
         {
           "target_phase": "canonical",
-          "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: 174 bytes. Domain tag PROV_EVENT_V1, schema version 1, length-prefixed strings, metadata sorted by key. Re-encoding the same event always produces these exact bytes — that's what \"canonical\" means."
+          "copy": "Encode to canonical bytes: 174 bytes. Domain tag PROV_EVENT_V1, schema version 1,"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "length-prefixed strings, metadata sorted by key. Re-encoding the same event always"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "produces these exact bytes."
         },
         {
           "target_phase": "sign",
-          "dwell_ms": 4200,
-          "copy": "SHA3-256 of the canonical bytes lands on 9c8aaa3c248546…. Ed25519 signs that hash with the agent's private key → 64-byte signature. The 32-byte public key gets attached so anyone can verify without contacting the signer."
+          "copy": "SHA3-256 of the canonical bytes: 9c8aaa3c248546…. Ed25519 signs that hash with the"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "agent's private key → 64-byte signature. The 32-byte public key is attached so"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "anyone can verify without contacting the signer."
         },
         {
           "target_phase": "chain",
-          "dwell_ms": 3600,
-          "copy": "Genesis event. prev_event_hash is null — there's no predecessor. The trace starts here, and every later event's chain link points back to this one (eventually)."
+          "copy": "Genesis event. prev_event_hash is null — no predecessor. The trace starts here."
+        },
+        {
+          "target_phase": "chain",
+          "copy": "Every later event chains back to this."
         },
         {
           "target_phase": "merkle",
-          "dwell_ms": 3800,
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (0d49ff0d4743…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
+          "copy": "Public key 0d49ff0d4743…, root e38439a06313…. Signature verifies ✓, chain link clean"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "\"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -122,38 +159,71 @@
       "beats": [
         {
           "target_phase": null,
-          "dwell_ms": 3600,
-          "copy": "The agent read a file — event 2 of 5 in this trace. Every tool the agent runs becomes a signed event. The signature proves which agent did it; the chain link proves when, relative to everything else in this trace."
+          "copy": "Event 2 of 5. The agent read a file. Every tool call becomes a signed event. The"
+        },
+        {
+          "target_phase": null,
+          "copy": "signature names the agent; the chain link places it in time."
         },
         {
           "target_phase": "event",
-          "dwell_ms": 3800,
-          "copy": "tool.executed event from agent-tools. The file path and byte count go into metadata (visible if you trust the agent) and the payload hash (291b1cfc1328…) is what gets signed and chained."
+          "copy": "tool.executed from agent-tools. File path and byte count go into metadata, and"
+        },
+        {
+          "target_phase": "event",
+          "copy": "payload hash 291b1cfc1328… is what gets signed and chained."
         },
         {
           "target_phase": "canonical",
-          "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: 237 bytes. Domain tag PROV_EVENT_V1, schema version 1, length-prefixed strings, metadata sorted by key. Re-encoding the same event always produces these exact bytes — that's what \"canonical\" means."
+          "copy": "Encode to canonical bytes: 237 bytes. Domain tag PROV_EVENT_V1, schema version 1,"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "length-prefixed strings, metadata sorted by key. Re-encoding the same event always"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "produces these exact bytes."
         },
         {
           "target_phase": "sign",
-          "dwell_ms": 4200,
-          "copy": "Hash the bytes once with SHA3-256, sign the hash with Ed25519, attach the public key. 96 bytes total (32 + 64 + 32) of cryptographic material per event — a one-time fixed cost regardless of payload size."
+          "copy": "Hash once with SHA3-256, sign with Ed25519, attach public key. 96 bytes of crypto"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "material per event (32 + 64 + 32) — a one-time fixed cost regardless of payload"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "size."
         },
         {
           "target_phase": "chain",
-          "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = 9c8aaa3c248546…, the leaf hash of event 1. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
+          "copy": "prev_event_hash = 9c8aaa3c248546… (leaf hash of event 1). The chain advances."
+        },
+        {
+          "target_phase": "chain",
+          "copy": "Reordering or inserting an event breaks this link — the next signature won't match."
         },
         {
           "target_phase": "merkle",
-          "dwell_ms": 3800,
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (2d6e3d8280f2…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
+          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…. Signature verifies ✓, chain link clean"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "\"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -224,38 +294,71 @@
       "beats": [
         {
           "target_phase": null,
-          "dwell_ms": 3600,
-          "copy": "The agent wrote a file — event 3 of 5 in this trace. Writes are higher-stakes than reads, and they still get one signed event, one chain link, one Merkle leaf. Same cost. Same proof."
+          "copy": "Event 3 of 5. The agent wrote a file. Writes get the same treatment as reads — one"
+        },
+        {
+          "target_phase": null,
+          "copy": "signed event, one chain link, one Merkle leaf. Same cost."
         },
         {
           "target_phase": "event",
-          "dwell_ms": 3800,
-          "copy": "Same agent (agent-tools), different tool. The chain doesn't care whether you read or write — each tool call gets one signed event with its own payload hash, metadata, and Merkle leaf."
+          "copy": "Same agent (agent-tools), different tool. Each tool call gets its own payload hash,"
+        },
+        {
+          "target_phase": "event",
+          "copy": "metadata, and Merkle leaf — regardless of whether it reads or writes."
         },
         {
           "target_phase": "canonical",
-          "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: 234 bytes. The first ~32 bytes match the previous event (same domain tag + schema version + agent_id length-prefix), which is correct and deterministic — it's not a copy-paste. The rest of the bytes diverge based on event_type, payload, and metadata."
+          "copy": "Encode to canonical bytes: 234 bytes. The first ~32 bytes match the previous event"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "(same domain tag + schema version + agent_id prefix) — correct and deterministic,"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "not a copy-paste. The rest diverge based on event_type, payload, and metadata."
         },
         {
           "target_phase": "sign",
-          "dwell_ms": 4200,
-          "copy": "The signature here (6b3f5d685cca42…) is a real Ed25519 signature, not a hash truncation or a placeholder. Verifiable with curve25519 implementations in any language — including the one running in your browser."
+          "copy": "Signature 6b3f5d685cca42… is a real Ed25519 signature, not a hash truncation or"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "placeholder. Verifiable with curve25519 in any language, including the one running"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "in your browser."
         },
         {
           "target_phase": "chain",
-          "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = 9129fc5936865e…, the leaf hash of event 2. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
+          "copy": "prev_event_hash = 9129fc5936865e… (leaf hash of event 2). The chain advances."
+        },
+        {
+          "target_phase": "chain",
+          "copy": "Reordering or inserting an event breaks this link — the next signature won't match."
         },
         {
           "target_phase": "merkle",
-          "dwell_ms": 3800,
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (2d6e3d8280f2…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
+          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…. Signature verifies ✓, chain link clean"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "\"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -326,38 +429,79 @@
       "beats": [
         {
           "target_phase": null,
-          "dwell_ms": 3600,
-          "copy": "A tool call failed — event 4 of 5 in this trace. Failures get the same audit treatment as successes. Every event is logged regardless of outcome, so an after-the-fact narrative can't quietly omit the parts that went wrong."
+          "copy": "Event 4 of 5. A tool call failed. Failures get the same audit treatment as"
+        },
+        {
+          "target_phase": null,
+          "copy": "successes. Every event is logged — an after-the-fact narrative can't quietly omit"
+        },
+        {
+          "target_phase": null,
+          "copy": "the parts that went wrong."
         },
         {
           "target_phase": "event",
-          "dwell_ms": 3800,
-          "copy": "tool.failed — yes, failures get the full treatment too. The error_code and timeout duration are in the metadata, signed alongside everything else. No \"happy path\" log to selectively trust."
+          "copy": "tool.failed — failures get the full treatment too. error_code and timeout are in"
+        },
+        {
+          "target_phase": "event",
+          "copy": "metadata, signed alongside everything else. No \"happy path\" log to selectively"
+        },
+        {
+          "target_phase": "event",
+          "copy": "trust."
         },
         {
           "target_phase": "canonical",
-          "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: 252 bytes. The first ~32 bytes match the previous event (same domain tag + schema version + agent_id length-prefix), which is correct and deterministic — it's not a copy-paste. The rest of the bytes diverge based on event_type, payload, and metadata."
+          "copy": "Encode to canonical bytes: 252 bytes. The first ~32 bytes match the previous event"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "(same domain tag + schema version + agent_id prefix) — correct and deterministic,"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "not a copy-paste. The rest diverge based on event_type, payload, and metadata."
         },
         {
           "target_phase": "sign",
-          "dwell_ms": 4200,
-          "copy": "Even though this tool call failed, the failure event gets the same SHA3-256 + Ed25519 + public-key bundle. Failures are first-class citizens of the chain; you can't selectively skip signing the embarrassing ones."
+          "copy": "Even though this tool call failed, the failure event gets the same SHA3-256 +"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "Ed25519 + public-key bundle. Failures are first-class citizens of the chain; you"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "can't selectively skip signing the embarrassing ones."
         },
         {
           "target_phase": "chain",
-          "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = c08c0af1017b81…, the leaf hash of event 3. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
+          "copy": "prev_event_hash = c08c0af1017b81… (leaf hash of event 3). The chain advances."
+        },
+        {
+          "target_phase": "chain",
+          "copy": "Reordering or inserting an event breaks this link — the next signature won't match."
         },
         {
           "target_phase": "merkle",
-          "dwell_ms": 3800,
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the chain root (e38439a06313…). Proof size stays small even when the chain grows large."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "dwell_ms": 4400,
-          "copy": "Anyone with the agent's public key (2d6e3d8280f2…) and the chain root (e38439a06313…) can verify: signature verifies ✓, chain link links cleanly ✓, Merkle proof verifies against the chain root ✓. Three independent checks, all local, all crypto. No \"audit service\" in the loop to trust."
+          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…. Signature verifies ✓, chain link clean"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "\"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -428,38 +572,91 @@
       "beats": [
         {
           "target_phase": null,
-          "dwell_ms": 3600,
-          "copy": "The agent despawned — then someone tampered with the record — event 5 of 5 in this trace. This event was signed honestly. Then we mutated the metadata after the fact (someone trying to inflate the activity log). Signature verification catches it: the signature was over the original bytes, and the bytes don't match anymore."
+          "copy": "Event 5 of 5. The agent despawned — then someone tampered with the record. This"
+        },
+        {
+          "target_phase": null,
+          "copy": "event was signed honestly, then metadata was mutated after the fact. Signature"
+        },
+        {
+          "target_phase": null,
+          "copy": "verification catches it."
         },
         {
           "target_phase": "event",
-          "dwell_ms": 3800,
-          "copy": "agent.despawn from the orchestrator. The metadata claims 3 tools ran (we'll come back to that). Payload hash 38554786e330… commits to the original event bytes — the signature lives or dies on whether those bytes change."
+          "copy": "agent.despawn from the orchestrator. Metadata claims 3 tools ran (we'll come back to"
+        },
+        {
+          "target_phase": "event",
+          "copy": "that). Payload hash 38554786e330… commits to the original event bytes. The signature"
+        },
+        {
+          "target_phase": "event",
+          "copy": "lives or dies on whether those bytes change."
         },
         {
           "target_phase": "canonical",
-          "dwell_ms": 4000,
-          "copy": "Encode to canonical bytes: 209 bytes. Domain tag PROV_EVENT_V1, schema version 1, length-prefixed strings, metadata sorted by key. Re-encoding the same event always produces these exact bytes — that's what \"canonical\" means."
+          "copy": "Encode to canonical bytes: 209 bytes. Domain tag PROV_EVENT_V1, schema version 1,"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "length-prefixed strings, metadata sorted by key. Re-encoding the same event always"
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "produces these exact bytes."
         },
         {
           "target_phase": "sign",
-          "dwell_ms": 4200,
-          "copy": "Ed25519 signs over the original canonical bytes (before any tampering). That signature commits to a specific byte sequence — changing any field after the fact invalidates the signature even though the public key and the chain link both still match."
+          "copy": "Ed25519 signs over the original canonical bytes (before any tampering). That"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "signature commits to a specific byte sequence — changing any field after the fact"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "invalidates the signature even if the chain link still matches."
         },
         {
           "target_phase": "chain",
-          "dwell_ms": 3600,
-          "copy": "Chain link: prev_event_hash = fb5791691eac3d…, the leaf hash of event 4. The chain advances. Reordering or inserting an event breaks this link — the next event's signature won't match."
+          "copy": "prev_event_hash = fb5791691eac3d… (leaf hash of event 4). The chain advances."
+        },
+        {
+          "target_phase": "chain",
+          "copy": "Reordering or inserting an event breaks this link — the next signature won't match."
         },
         {
           "target_phase": "merkle",
-          "dwell_ms": 3800,
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). 2 of the levels had an odd number of nodes, so the last entry is paired with itself (the \"duplicate-last-for-odd\" rule). The verifier walks each level from leaf to root using these siblings — proof size stays small even when the chain grows large."
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). 2 levels had odd node counts, so the"
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "last entry is paired with itself (the \"duplicate-last-for-odd\" rule). The verifier"
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "walks each level from leaf to root."
         },
         {
           "target_phase": "verify",
-          "dwell_ms": 4400,
-          "copy": "This event was signed honestly. Then someone changed \"tools_run\" from \"3\" to \"30\" after the fact. The signature was made over the original bytes — the new bytes are not what got signed. Result: signature FAILS to verify ✗. The Merkle proof and chain link still pass, because they prove this event sits in this position of the chain — not what the event contained. The signature is what catches the content tamper, and three independent checks means one failure is enough."
+          "copy": "This event was signed honestly. Then someone changed \"tools_run\" from \"3\" to \"30\""
+        },
+        {
+          "target_phase": "verify",
+          "copy": "after the fact. The signature was made over the original bytes — the new bytes are"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "not what got signed. Result: signature FAILS to verify ✗. Merkle proof and chain"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "link still pass — they prove position, not content. The signature is what catches"
+        },
+        {
+          "target_phase": "verify",
+          "copy": "the content tamper. One failure is enough."
         }
       ],
       "event": {

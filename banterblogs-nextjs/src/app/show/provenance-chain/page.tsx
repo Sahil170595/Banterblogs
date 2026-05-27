@@ -29,7 +29,6 @@ const EventRecordSchema = z.object({
   beats: z.array(
     z.object({
       target_phase: z.string().nullable(),
-      dwell_ms: z.number(),
       copy: z.string(),
     }),
   ),
