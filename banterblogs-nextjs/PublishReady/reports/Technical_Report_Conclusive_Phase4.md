@@ -11,8 +11,8 @@
 | **Hardware Baseline** | NVIDIA RTX consumer GPU, single-GPU inference |
 | **Measurement Corpus** | 74,254 evaluated samples across 4 technical reports |
 | **Primary Sources** | PublishReady/reports/Technical_Report_134.md (Alignment Robustness Under Quantization)<br>PublishReady/reports/Technical_Report_135.md (Multi-Agent Concurrency x Safety)<br>PublishReady/reports/Technical_Report_136.md (Cross-Backend Safety Consistency)<br>PublishReady/reports/Technical_Report_137.md (Synthesis meta-analysis) |
-| **Predecessor Synthesis** | PublishReady/reports/Technical_Report_Conclusive_123-133.md (Phase 2: Performance) |
-| **Predecessor Phase** | PublishReady/reports/Technical_Report_Conclusive_117-122.md (Phase 1: Methodology) |
+| **Predecessor Synthesis** | PublishReady/reports/Technical_Report_Conclusive_Phase3.md (Phase 2: Performance) |
+| **Predecessor Phase** | PublishReady/reports/Technical_Report_Conclusive_Phase2.md (Phase 1: Methodology) |
 
 ---
 
@@ -114,7 +114,7 @@ Operational Defaults (Safety Decision Card)
 52. Appendix AO: Cross-Phase Synthesis Narrative (Phase 1 + Phase 2 + Phase 3)
 
 Supplemental data: `research/tr137/results/20260308_180727/tr137_analysis.json` (73 KB, 18 analysis passes)
-Supplemental material: `PublishReady/reports/Technical_Report_Conclusive_134-137_Extended_Appendices.md`
+Supplemental material: `PublishReady/reports/Technical_Report_Conclusive_Phase4_Extended_Appendices.md`
 
 ---
 
@@ -258,7 +258,7 @@ This report is structured for multiple audiences:
 
 **If you need integration with performance decisions:** Read Section 9 (Integration with Phase 2), which resolves the tension between Phase 2's performance recommendations and Phase 3's safety findings -- most importantly, the conflict between vLLM's throughput advantage (TR130, TR132) and its safety cost (TR136).
 
-**If you need the appendices:** The 40 appendices (A through AO) provide extended material including full deployment matrices, jailbreak compliance tables, bias category details, judge agreement analysis, statistical method documentation, decision trees, playbooks, and cross-phase integration narratives. Extended appendices are mirrored in `Technical_Report_Conclusive_134-137_Extended_Appendices.md`.
+**If you need the appendices:** The 40 appendices (A through AO) provide extended material including full deployment matrices, jailbreak compliance tables, bias category details, judge agreement analysis, statistical method documentation, decision trees, playbooks, and cross-phase integration narratives. Extended appendices are mirrored in `Technical_Report_Conclusive_Phase4_Extended_Appendices.md`.
 
 ---
 
@@ -745,7 +745,7 @@ The jailbreak cross-axis synthesis reveals a clean dichotomy: jailbreaks are amp
 
 The cross-TR validation at anchor configurations (Q4_K_M, N=1, Ollama) reveals that 3 of 15 task-model pairs exceed the 5pp tolerance, indicating some run-to-run variance despite deterministic temperature settings. The exceeding pairs are documented in TR137 Section 12 and likely reflect Ollama's imperfect determinism under different load conditions and cache states. This variance does not invalidate the cross-TR comparison -- the directional findings are robust to 5pp shifts -- but it does mean that specific numerical thresholds (e.g., "93.8% retention at Q4_K_M for Llama 3B") should be treated as estimates with approximately +/-5pp uncertainty, not as exact measurements.
 
-The additive deployment matrix assumes no interaction between axes. For the concurrency axis (where effects are zero), this assumption is trivially satisfied. For the quantization-backend interaction, the assumption is untested and may not hold. It is plausible that heavily quantized models (Q2_K) are more sensitive to template divergence than lightly quantized models (Q8_0), because quantization removes weight redundancy that might otherwise buffer against input variation. Testing this interaction would require a factorial design (multiple quant levels x multiple backends), which is identified as the highest-priority experiment for a future Phase 4.
+The additive deployment matrix assumes no interaction between axes. For the concurrency axis (where effects are zero), this assumption is trivially satisfied. For the quantization-backend interaction, the assumption is untested and may not hold. It is plausible that heavily quantized models (Q2_K) are more sensitive to template divergence than lightly quantized models (Q8_0), because quantization removes weight redundancy that might otherwise buffer against input variation. Testing this interaction would require a factorial design (multiple quant levels x multiple backends), which is identified as the highest-priority experiment for a future Phase 5.
 
 **Opening for cross-axis synthesis.** TR137 provides the effect ranking, heterogeneity statistics, and deployment matrix that enable the cross-report synthesis in Section 6. The per-TR results tell you what each axis does; the synthesis tells you which axes to worry about, which to ignore, and how to integrate safety constraints with Phase 2's performance recommendations.
 
@@ -1140,7 +1140,7 @@ The following changes invalidate specific safety findings and require re-evaluat
 | R7 | Classifier disagreement masking real degradation | Low | Medium (kappa = 0.147) | Dual classifier deployment for high-stakes apps | ML Eng |
 | R8 | Model version update silently changing safety | Medium | Medium (unknown magnitude) | Change management policy (8.9) | ML Eng |
 | R9 | Temperature > 0 invalidating safety profiles | Low | Medium (unquantified interaction) | Restrict to temp=0 for safety-critical; re-profile at temp > 0 | ML Eng |
-| R10 | Additive model underestimating quant-backend interaction | Medium | Medium (worst case <30% retention) | Factorial testing in Phase 4 | Research |
+| R10 | Additive model underestimating quant-backend interaction | Medium | Medium (worst case <30% retention) | Factorial testing in Phase 5 | Research |
 | R11 | Mistral-class model with weak baseline deployed | Low | High (87-100% jailbreak compliance) | Baseline safety check in validation protocol | ML Eng |
 | R12 | Safety regression during software update | Medium | Medium (version-dependent) | Golden benchmark suite in CI pipeline | DevOps |
 
@@ -1203,7 +1203,7 @@ This section makes explicit the boundaries within which the Phase 3 conclusions 
 | TR136 | Only 3 models tested; model set does not fully overlap with TR134 | Heterogeneity captured (I-squared = 99.5%); Llama 1B and 3B anchor both TRs for cross-TR comparison | **Mitigated** |
 | TR136 | TOST fails even for trivial effect sizes (vLLM vs TGI, d < 0.03) | Power issue: sample sizes insufficient for TOST at +/-3pp margin with binary data. Effect sizes confirm trivial differences. | **Open** |
 | TR137 | Only 2 anchor models for cross-axis comparison | I-squared is binary with N=2 (near 0% or near 100%); qualitative interpretation (models agree or disagree) is still valid | **Open** |
-| TR137 | Additive model assumes no axis interactions | Conservative for concurrency (zero effect = zero interaction). Untested for quant-backend interaction. Factorial experiment identified as highest priority for Phase 4. | **Accepted** |
+| TR137 | Additive model assumes no axis interactions | Conservative for concurrency (zero effect = zero interaction). Untested for quant-backend interaction. Factorial experiment identified as highest priority for Phase 5. | **Accepted** |
 
 **Narrative interpretation.** The limitation table reveals two patterns. First, the null findings are the most robust results in the program: TR135's concurrency clearance survives all limitations because the mechanism (serialized inference) is not affected by model count, quantization level, or sample size. Second, the positive findings (quantization degrades safety, backend affects safety) are directionally robust but magnitude-uncertain: the automated classifiers are consistent proxies but not calibrated measurements, and the 2-model anchor set forces binary heterogeneity estimates. The practical implication is that the program's guidance on what to worry about (quantization and backend) is reliable, but the specific numerical thresholds (93% retention at Q4_K_M, 57.5% at Q2_K) should be treated as order-of-magnitude indicators rather than precise cutoffs.
 
@@ -2006,7 +2006,7 @@ Recommendations: [Actions for next quarter]
 | R7 | Classifier disagreement masking real safety degradation | Low | Medium | Dual classifier deployment (regex + LLM judge) for safety-critical applications | ML Eng | Active |
 | R8 | Model version update silently changing safety profile | Medium | Medium | Change management policy (Section 8.9); re-profile after version change | ML Eng | Active |
 | R9 | Temperature > 0 producing different safety behavior | Low | Medium | Safety profiles valid at temp=0 only; restrict or re-profile at higher temperatures | ML Eng | Active |
-| R10 | Additive model underestimating quant-backend interaction | Medium | Medium | Worst-case projection documented (potentially <30%); factorial testing in Phase 4 | Research | Open |
+| R10 | Additive model underestimating quant-backend interaction | Medium | Medium | Worst-case projection documented (potentially <30%); factorial testing in Phase 5 | Research | Open |
 | R11 | Mistral-class model deployed without recognizing weak baseline | Low | High | Baseline jailbreak compliance check (>50% = weak baseline, requires additional layers) | ML Eng | Active |
 | R12 | Software update causing safety regression | Medium | Medium | Golden benchmark suite in CI pipeline; automated comparison against stored baselines | DevOps | Active |
 
@@ -2400,7 +2400,7 @@ TOST failure does not imply difference. It may indicate insufficient statistical
 | TR136 | tr136_analysis.json, scored_samples.jsonl, backend_comparison.csv, chi_squared.json, jaccard_similarity.csv | ~8 MB | research/tr136/results/ |
 | TR137 | tr137_analysis.json (73 KB, 18 analysis passes), deployment_matrix.csv, i_squared.json, veneer_analysis.json, jailbreak_synthesis.csv | ~5 MB | research/tr137/results/ |
 | Reports | Technical_Report_134.md through 137.md | ~200 KB each | PublishReady/reports/ |
-| Conclusive | Technical_Report_Conclusive_134-137.md | ~150 KB | PublishReady/reports/ |
+| Conclusive | Technical_Report_Conclusive_Phase4.md | ~150 KB | PublishReady/reports/ |
 
 ---
 
@@ -2570,6 +2570,6 @@ The Phase 3 evaluation philosophy prioritizes decision utility over measurement 
 
 ---
 
-*Supplemental material will be mirrored in `PublishReady/reports/Technical_Report_Conclusive_134-137_Extended_Appendices.md`.*
+*Supplemental material will be mirrored in `PublishReady/reports/Technical_Report_Conclusive_Phase4_Extended_Appendices.md`.*
 
 *Note: This work has not been externally peer reviewed. All findings represent the output of a single research program without independent expert verification.*

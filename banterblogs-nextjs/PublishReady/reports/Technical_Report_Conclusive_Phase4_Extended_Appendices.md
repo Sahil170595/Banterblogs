@@ -6,7 +6,7 @@
 | **Report Type** | Extended appendices |
 | **Scope** | 134-137 |
 | **Status** | Supplemental |
-| **Main Report** | [Technical_Report_Conclusive_134-137.md](Technical_Report_Conclusive_134-137.md) |
+| **Main Report** | [Technical_Report_Conclusive_Phase4.md](Technical_Report_Conclusive_Phase4.md) |
 
 ---
 
@@ -887,9 +887,9 @@ Specifically:
 - **Concurrency:** Phase 2 showed concurrency scaling follows Amdahl's law for performance. Phase 3 shows concurrency has zero safety effect. Both phases agree: concurrency is a throughput variable, not a correctness or safety variable.
 - **Backend:** Phase 2 showed backend choice is a throughput variable (vLLM 2.25x at N=8) but not a quality variable (0/7 significant). Phase 3 shows backend choice IS a safety variable (0/18 TOST pass). This is the single finding that contradicts a Phase 2 assumption.
 
-### AL.5 What Phase 4 Would Need
+### AL.5 What Phase 5 Would Need
 
-The Phase 3 findings are bounded by design limitations that a hypothetical Phase 4 could address:
+The Phase 3 findings are bounded by design limitations that a hypothetical Phase 5 could address:
 
 1. **Factorial designs.** Phase 3 tests axes independently (TR134: quant only, TR135: concurrency only, TR136: backend only). A factorial design (quant x concurrency x backend) would test axis interactions. The deployment matrix currently assumes additive effects; a factorial design would validate or refute this assumption.
 
@@ -901,8 +901,8 @@ The Phase 3 findings are bounded by design limitations that a hypothetical Phase
 
 5. **Multi-GPU.** All Phase 3 experiments use a single GPU. Tensor parallelism across multiple GPUs changes serving dynamics (attention computation is split, KV-cache is distributed) and could introduce safety-relevant variations. The concurrency null finding in particular may not hold under tensor parallelism, where concurrent requests share GPU resources rather than queuing.
 
-These are not criticisms of Phase 3's design but natural extensions. Each Phase 3 finding is valid within its stated boundary conditions. Phase 4 would expand those boundaries.
+These are not criticisms of Phase 3's design but natural extensions. Each Phase 3 finding is valid within its stated boundary conditions. Phase 5 would expand those boundaries.
 
 ---
 
-*This document is supplemental to the main conclusive report (Technical_Report_Conclusive_134-137.md). For the canonical analysis, claim status table, and full appendix set (Appendix A through Appendix AO), consult the main report.*
+*This document is supplemental to the main conclusive report (Technical_Report_Conclusive_Phase4.md). For the canonical analysis, claim status table, and full appendix set (Appendix A through Appendix AO), consult the main report.*

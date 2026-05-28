@@ -54,7 +54,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'Qwen 2.5 vs Gemma 3 vs Llama 3.1 8B — comprehensive multi-agent performance study.',
   },
 
-  // ── Phase 1.5 — Benchmarking (TR117–TR122) ──
+  // ── Phase 2 — Benchmarking (TR117–TR122) ──
   'technical-report-117': {
     title: 'TR117: Cross-Backend Inference Benchmark',
     description: 'Frontier benchmark comparing eager, JIT, torch.compile, ONNX, and TensorRT across architectures.',
@@ -84,7 +84,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'Establishing the fundamental constraints of LLM execution on consumer hardware.',
   },
 
-  // ── Phase 2 — Optimization (TR123–TR133) ──
+  // ── Phase 3 — Optimization (TR123–TR133) ──
   'technical-report-123': {
     title: 'TR123: KV-Cache Production Economics',
     description: 'Phase-split $/token with cached decode across MHA and GQA architectures.',
@@ -130,7 +130,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'Operationalising 70,000+ measurements into a decision tool for deployment planning.',
   },
 
-  // ── Phase 3 — Safety (TR134–TR137) ──
+  // ── Phase 4 — Safety Pivot (TR134–TR137) ──
   'technical-report-134': {
     title: 'TR134: Alignment Robustness Under Quantization',
     description: 'GGUF + AWQ + GPTQ safety evaluation across 6 models (1.2B–7.6B) — refusal template destabilization and deployment taxonomy.',
@@ -148,9 +148,14 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'Unified synthesis of quantization, concurrency, and backend effects on LLM safety — 74,254 samples.',
   },
 
+  // ── Phase 5 — Attack Surface (TR138–TR143) ──
   'technical-report-138': {
     title: 'TR138: Batch Inference Safety Under Non-Determinism',
-    description: 'Audit-layer flip adjudication and 7,257-sample replication with corrected refusal detector.',
+    description: 'Audit-layer flip adjudication + 7,257-sample reduced replication on enriched 187-prompt subset, with corrected refusal detector (v2.2). Study D batch-invariant-kernel ablation lives as a standalone addendum (`technical-report-138-study-d-addendum`).',
+  },
+  'technical-report-138-study-d-addendum': {
+    title: 'TR138 Study D Addendum: Batch-Invariant Kernel Ablation',
+    description: 'Full-depth mechanism report for batch-conditioned refusal robustness. 110-record H100/vLLM ablation across 55 candidate score-flip pairs: standard vLLM reproduces 22/55 label flips and 25/55 text changes; `VLLM_BATCH_INVARIANT=1` reduces both to 0/55. Kernel-path mechanism evidence outside the original 306,996-sample synthesis.',
   },
   'technical-report-139': {
     title: 'TR139: Multi-Turn Jailbreak Susceptibility Under Quantization',
@@ -189,7 +194,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: '68,620 judge rows across 5 judges on the TR145 safety subset. κ = 0.6917 (triangulate verdict) — single-judge labels insufficient. Plus a dual-axis methodology finding: safety-specialist judges measure a different axis than general LLM judges.',
   },
 
-  // ── Phase 4 — Serving-State Safety Certification (TR149+) ──
+  // ── Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152) — TR144 entry is at end of file for legacy ordering ──
   'technical-report-149': {
     title: 'TR149: Standardized Safety Battery — FP16 vs FP8 KV-Cache',
     description: '7,578 records across 3 models × 4 standardized batteries (HarmBench, JailbreakBench, StrongREJECT, XSTest) × 2 KV-cache dtypes. Replicates TR145’s FP8 null on literature-comparable corpora; corrected paired-odds-ratio estimator. Local-only judging, $0 external API.',
@@ -199,68 +204,84 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'FP8 KV-cache folded across batch size, prefix-caching, and temperature — 14,400 responses, 7,010 matched pairs. Harmful-prompt refusal invariant under every serving state; only footprint is a sub-percentage-point over-refusal lean on the Qwen family’s XSTest cells. A v1 local pilot, not the definitive Layer 5 result.',
   },
 
-  // ── Conclusive Reports & Whitepapers ──
-  'technical-report-conclusive-108-116': {
-    title: 'Conclusive Report: Phase 1 (TR108–TR116)',
+  // ── Conclusive Reports & Whitepapers (Phase 1–6, integer-clean naming) ──
+  // Phase 1 — Foundation
+  'technical-report-conclusive-phase1': {
+    title: 'Conclusive Report: Phase 1 — Foundation (TR108–TR116)',
     description: 'Dissertation-style synthesis — language, architecture, runtime, and model selection for multi-agent LLM systems.',
   },
-  'technical-report-conclusive-108-116-extended-appendices': {
+  'technical-report-conclusive-phase1-extended-appendices': {
     title: 'Phase 1 Extended Appendices',
     description: 'Supplemental material extracted from the Phase 1 conclusive report.',
   },
-  'technical-report-conclusive-108-116-whitepaper': {
+  'technical-report-conclusive-phase1-whitepaper': {
     title: 'Phase 1 Decision Whitepaper',
     description: 'Executive guidance for language, architecture, runtime, and model selection.',
   },
-  'technical-report-conclusive-117-122': {
-    title: 'Conclusive Report: Phase 1.5 (TR117–TR122)',
-    description: 'Dissertation-style synthesis — performance, cost, scaling, compiler behavior, and physical limits.',
+  // Phase 2 — Benchmarking
+  'technical-report-conclusive-phase2': {
+    title: 'Conclusive Report: Phase 2 — Benchmarking (TR117–TR122)',
+    description: 'Dissertation-style synthesis — performance, cost, scaling, compiler behavior, and physical limits of consumer-GPU inference.',
   },
-  'technical-report-conclusive-117-122-extended-appendices': {
-    title: 'Phase 1.5 Extended Appendices',
-    description: 'Supplemental material extracted from the Phase 1.5 conclusive report.',
-  },
-  'technical-report-conclusive-117-122-whitepaper': {
-    title: 'Phase 1.5 Decision Whitepaper',
-    description: 'Executive guidance for deployment leaders — benchmarking phase synthesis.',
-  },
-  'technical-report-conclusive-123-133': {
-    title: 'Conclusive Report: Phase 2 (TR123–TR133)',
-    description: 'Dissertation-style synthesis — economics, quantization, context scaling, serving stacks, and predictive modeling.',
-  },
-  'technical-report-conclusive-123-133-extended-appendices': {
+  'technical-report-conclusive-phase2-extended-appendices': {
     title: 'Phase 2 Extended Appendices',
     description: 'Supplemental material extracted from the Phase 2 conclusive report.',
   },
-  'technical-report-conclusive-123-133-whitepaper': {
+  'technical-report-conclusive-phase2-whitepaper': {
     title: 'Phase 2 Decision Whitepaper',
+    description: 'Executive guidance for deployment leaders — benchmarking phase synthesis.',
+  },
+  // Phase 3 — Optimization
+  'technical-report-conclusive-phase3': {
+    title: 'Conclusive Report: Phase 3 — Optimization (TR123–TR133)',
+    description: 'Dissertation-style synthesis — economics, quantization, context scaling, serving stacks, and predictive modeling.',
+  },
+  'technical-report-conclusive-phase3-extended-appendices': {
+    title: 'Phase 3 Extended Appendices',
+    description: 'Supplemental material extracted from the Phase 3 conclusive report.',
+  },
+  'technical-report-conclusive-phase3-whitepaper': {
+    title: 'Phase 3 Decision Whitepaper',
     description: 'Executive guidance for deployment leaders — optimization phase synthesis.',
   },
-
-  'technical-report-conclusive-134-137': {
-    title: 'Conclusive Report: Phase 3 (TR134–TR137)',
-    description: 'Dissertation-style synthesis — quantization-induced alignment erosion, concurrency invariance, backend template divergence, and safety taxonomy.',
+  // Phase 4 — Safety Pivot (was site Phase 3 / Banterhearts pre-rename Phase 3.5)
+  'technical-report-conclusive-phase4': {
+    title: 'Conclusive Report: Phase 4 — Safety Pivot (TR134–TR137)',
+    description: 'Dissertation-style synthesis — quantization-induced alignment erosion, concurrency invariance, backend-driven template divergence, and cross-axis safety taxonomy.',
   },
-  'technical-report-conclusive-134-137-extended-appendices': {
-    title: 'Phase 3 Extended Appendices',
+  'technical-report-conclusive-phase4-extended-appendices': {
+    title: 'Phase 4 Extended Appendices',
     description: 'Supplemental material for the safety-critical deployment synthesis.',
   },
-  'technical-report-conclusive-134-137-whitepaper': {
-    title: 'Phase 3 Decision Whitepaper',
+  'technical-report-conclusive-phase4-whitepaper': {
+    title: 'Phase 4 Decision Whitepaper',
     description: 'Executive guidance for safety-critical LLM deployment.',
   },
-
-  'technical-report-conclusive-138-143': {
-    title: 'Conclusive Report: Phase 3.5 (TR138–TR143)',
-    description: 'Safety attack-surface synthesis — 306,996 samples across batch perturbation, multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, and composition effects.',
+  // Phase 5 — Attack Surface (was Banterhearts pre-rename Phase 4)
+  'technical-report-conclusive-phase5': {
+    title: 'Conclusive Report: Phase 5 — Attack Surface (TR138–TR143)',
+    description: 'Safety attack-surface synthesis — batch perturbation, multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, quality-safety divergence, and cross-request composition across 306,996 evaluated samples and 18+ models. TR138 Study D batch-invariant-kernel ablation is published as a standalone addendum.',
   },
-  'technical-report-conclusive-138-143-extended-appendices': {
-    title: 'Phase 3.5 Extended Appendices',
+  'technical-report-conclusive-phase5-extended-appendices': {
+    title: 'Phase 5 Extended Appendices',
     description: 'Supplemental material for the safety attack-surface synthesis.',
   },
-  'technical-report-conclusive-138-143-whitepaper': {
-    title: 'Phase 3.5 Decision Whitepaper',
+  'technical-report-conclusive-phase5-whitepaper': {
+    title: 'Phase 5 Decision Whitepaper',
     description: 'Executive guidance for safety attack-surface management in LLM inference.',
+  },
+  // Phase 6 — Serving-State Safety Certification (was Banterhearts pre-rename Phase 4.5)
+  'technical-report-conclusive-phase6': {
+    title: 'Conclusive Report: Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152)',
+    description: 'Measurement-validity substrate (judge triangulation, KV-cache safety null, speculative decoding null, mechanistic probing, portability validation) plus the FP8 KV-cache standardized batteries and serving-state factorial. The inference-flag safety null line for optimized LLM serving.',
+  },
+  'technical-report-conclusive-phase6-extended-appendices': {
+    title: 'Phase 6 Extended Appendices',
+    description: 'Per-report data tables, named-method definitions, and cross-TR ledgers for serving-state safety certification.',
+  },
+  'technical-report-conclusive-phase6-whitepaper': {
+    title: 'Phase 6 Decision Whitepaper',
+    description: 'Executive guidance for serving-state safety certification of optimized LLM inference.',
   },
 
   'technical-report-144': {

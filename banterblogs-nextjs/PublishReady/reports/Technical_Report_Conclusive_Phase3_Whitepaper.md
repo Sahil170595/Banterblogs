@@ -9,7 +9,7 @@
 | **Report Type** | Decision whitepaper |
 | **Audience** | Decision makers, product leaders, ops leaders |
 | **Scope** | TR123, TR124, TR125, TR126, TR127, TR128, TR129, TR130, TR131, TR132, TR133 |
-| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_123-133.md` |
+| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_Phase3.md` |
 
 ---
 
@@ -205,7 +205,7 @@ If any of these change, re-run the core measurement matrix and re-validate artif
 
 ## References
 
-- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_123-133.md`
+- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_Phase3.md`
 - TR123: `PublishReady/reports/Technical_Report_123.md` (KV-Cache Production Economics)
 - TR124: `PublishReady/reports/Technical_Report_124.md` (Quality & Accuracy Baseline)
 - TR125: `PublishReady/reports/Technical_Report_125.md` (Quantization Decision Matrix)

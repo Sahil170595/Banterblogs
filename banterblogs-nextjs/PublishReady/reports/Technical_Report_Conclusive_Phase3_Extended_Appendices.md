@@ -6,7 +6,7 @@
 | **Report Type** | Extended appendices |
 | **Scope** | 123-133 |
 | **Status** | Supplemental |
-| **Main Report** | [Technical_Report_Conclusive_123-133.md](Technical_Report_Conclusive_123-133.md) |
+| **Main Report** | [Technical_Report_Conclusive_Phase3.md](Technical_Report_Conclusive_Phase3.md) |
 
 ---
 
@@ -577,4 +577,4 @@ With Ollama Q4_K_M (quantization reduces memory bandwidth demand): approximately
 
 ---
 
-*This document is supplemental to the main conclusive report (Technical_Report_Conclusive_123-133.md). For the canonical analysis, claim status table, and full appendix set (Appendix A through Appendix BH), consult the main report.*
+*This document is supplemental to the main conclusive report (Technical_Report_Conclusive_Phase3.md). For the canonical analysis, claim status table, and full appendix set (Appendix A through Appendix BH), consult the main report.*

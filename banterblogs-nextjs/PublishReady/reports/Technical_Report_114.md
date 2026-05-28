@@ -939,7 +939,7 @@ contention_risk = "Very Low"
 - Decommission Python infrastructure
 - **Goal:** Full migration, realize cost savings
 
-**Phase 4: Hybrid Evolution (Months 9-12+)**
+**Phase 5: Hybrid Evolution (Months 9-12+)**
 - **Option A:** Stay with Rust multi-agent (lower TCO, proven)
 - **Option B:** Evolve to hybrid (Python orchestrator + Rust workers)
   - Refactor Rust multi-agent -> Rust single-agent workers

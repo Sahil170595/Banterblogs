@@ -108,7 +108,7 @@ Operational Defaults (Decision Card)
 72. Appendix BG: Evaluation Philosophy and Limitations
 73. Appendix BH: Additional Notes on Documentation and Communication
 
-Supplemental material remains mirrored in `PublishReady/reports/Technical_Report_Conclusive_117-122_Extended_Appendices.md`.
+Supplemental material remains mirrored in `PublishReady/reports/Technical_Report_Conclusive_Phase2_Extended_Appendices.md`.
 
 ---
 

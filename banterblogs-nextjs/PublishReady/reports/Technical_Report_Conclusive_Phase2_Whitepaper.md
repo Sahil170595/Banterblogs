@@ -9,7 +9,7 @@
 | **Report Type** | Decision whitepaper |
 | **Audience** | Decision makers, product leaders, ops leaders |
 | **Scope** | TR117, TR118_v2.2, TR119v1, TR120, TR121v1, TR122 |
-| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_117-122.md` |
+| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_Phase2.md` |
 
 ---
 
@@ -166,7 +166,7 @@ Invalidates guidance
 
 ## References
 
-- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_117-122.md`
+- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_Phase2.md`
 - TR117: `PublishReady/reports/Technical_Report_117.md`
 - TR118_v2.2: `PublishReady/reports/Technical_Report_118_v2.2.md`
 - TR119v1: `PublishReady/reports/Technical_Report_119v1.md`

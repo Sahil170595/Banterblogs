@@ -9,7 +9,7 @@
 | **Report Type** | Decision whitepaper |
 | **Audience** | Decision makers, product leaders, ML ops leaders |
 | **Scope** | TR134 (Alignment Under Quantization), TR135 (Concurrency x Safety), TR136 (Cross-Backend Safety), TR137 (Safety Tax Synthesis) |
-| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_134-137.md` |
+| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_Phase4.md` |
 
 ---
 
@@ -210,12 +210,12 @@ Avoiding Q2_K for Llama 1B eliminates all critical risk. Using Q4_K_M or higher 
 
 ## References
 
-- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_134-137.md`
+- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_Phase4.md`
 - TR134: `PublishReady/reports/Technical_Report_134.md` (Alignment Under Quantization)
 - TR135: `PublishReady/reports/Technical_Report_135.md` (Concurrency x Safety)
 - TR136: `PublishReady/reports/Technical_Report_136.md` (Cross-Backend Safety)
 - TR137: `PublishReady/reports/Technical_Report_137.md` (Safety Tax Synthesis)
-- Prior phase whitepaper: `PublishReady/reports/Technical_Report_Conclusive_123-133_Whitepaper.md`
+- Prior phase whitepaper: `PublishReady/reports/Technical_Report_Conclusive_Phase3_Whitepaper.md`
 
 ---
 

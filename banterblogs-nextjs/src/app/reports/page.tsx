@@ -39,7 +39,7 @@ function extractTRNumber(slug: string): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-type ReportCategory = 'whitepaper' | 'conclusive' | 'appendix' | 'phase4' | 'phase3' | 'phase2' | 'phase1.5' | 'phase1' | 'other';
+type ReportCategory = 'whitepaper' | 'conclusive' | 'appendix' | 'phase6' | 'phase5' | 'phase4' | 'phase3' | 'phase2' | 'phase1' | 'other';
 
 function classifyReport(slug: string): ReportCategory {
   const lower = slug.toLowerCase();
@@ -49,10 +49,11 @@ function classifyReport(slug: string): ReportCategory {
   const tr = extractTRNumber(slug);
   if (tr !== null) {
     if (tr <= 116) return 'phase1';
-    if (tr <= 122) return 'phase1.5';
-    if (tr <= 133) return 'phase2';
-    if (tr <= 148) return 'phase3';
-    return 'phase4';
+    if (tr <= 122) return 'phase2';
+    if (tr <= 133) return 'phase3';
+    if (tr <= 137) return 'phase4';
+    if (tr <= 143) return 'phase5';
+    return 'phase6';
   }
   return 'other';
 }
@@ -60,29 +61,34 @@ function classifyReport(slug: string): ReportCategory {
 // Featured reports pinned to the top — executive-level entry points
 const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = [
   {
-    slug: 'technical-report-conclusive-108-116-whitepaper',
+    slug: 'technical-report-conclusive-phase1-whitepaper',
     label: 'Phase 1 Whitepaper',
     summary: 'Foundation synthesis — model loading, ONNX conversion, quantization baselines, and security analysis across 9 technical reports.',
   },
   {
-    slug: 'technical-report-conclusive-117-122-whitepaper',
-    label: 'Phase 1.5 Whitepaper',
+    slug: 'technical-report-conclusive-phase2-whitepaper',
+    label: 'Phase 2 Whitepaper',
     summary: 'Benchmarking synthesis — cross-backend inference parity, TensorRT compilation, and scaling laws across 6 reports.',
   },
   {
-    slug: 'technical-report-conclusive-123-133-whitepaper',
-    label: 'Phase 2 Whitepaper',
+    slug: 'technical-report-conclusive-phase3-whitepaper',
+    label: 'Phase 3 Whitepaper',
     summary: 'Optimization synthesis — KV cache tuning, INT8/FP8 quantization, context scaling, and deployment pipeline across 11 reports.',
   },
   {
-    slug: 'technical-report-conclusive-134-137-whitepaper',
-    label: 'Phase 3 Whitepaper',
-    summary: 'Safety synthesis — alignment erosion under quantization, concurrency invariance, and backend template divergence across 4 reports.',
+    slug: 'technical-report-conclusive-phase4-whitepaper',
+    label: 'Phase 4 Whitepaper',
+    summary: 'Safety-pivot synthesis — alignment erosion under quantization, concurrency invariance, and backend template divergence across 4 reports.',
   },
   {
-    slug: 'technical-report-conclusive-138-143-whitepaper',
-    label: 'Phase 3.5 Whitepaper',
-    summary: 'Attack-surface synthesis — batch perturbation, multi-turn jailbreaks, cross-architecture fragility, and composition effects across 306K+ samples.',
+    slug: 'technical-report-conclusive-phase5-whitepaper',
+    label: 'Phase 5 Whitepaper',
+    summary: 'Attack-surface synthesis — batch perturbation, multi-turn jailbreaks, cross-architecture fragility, and composition effects across 306K+ samples. TR138 Study D batch-invariant-kernel ablation as standalone addendum.',
+  },
+  {
+    slug: 'technical-report-conclusive-phase6-whitepaper',
+    label: 'Phase 6 Whitepaper',
+    summary: 'Serving-state safety certification — measurement-validity substrate (judge triangulation, KV-cache safety, speculative decoding null, mechanistic probing) + FP8 KV-cache standardized batteries + serving-state factorial.',
   },
 ];
 
@@ -122,12 +128,13 @@ export default async function ReportsIndex() {
   const technicalByPhase = new Map<string, ReportEntry[]>();
 
   const PHASE_META: Record<string, { label: string; description: string; order: number }> = {
-    'phase4': { label: 'Phase 4 — Serving-State Safety Certification (TR149+)', description: 'FP8 KV-cache safety on standardized batteries and across the serving-state factorial — batch, prefix-caching, speculative decoding, and temperature.', order: 0 },
-    'phase3': { label: 'Phase 3 — Safety & Methodology (TR134–TR148)', description: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding, KV-cache safety, mechanistic probing, portability validation, multi-judge triangulation.', order: 1 },
-    'phase2': { label: 'Phase 2 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 2 },
-    'phase1.5': { label: 'Phase 1.5 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 3 },
-    'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 4 },
-    'other': { label: 'Additional Reports', description: 'Model-specific analyses and supplementary research.', order: 5 },
+    'phase6': { label: 'Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152)', description: 'Measurement-validity substrate (judge triangulation, KV-cache safety null, speculative decoding null, mechanistic probing, portability validation) plus the FP8 KV-cache standardized batteries and serving-state factorial.', order: 0 },
+    'phase5': { label: 'Phase 5 — Attack Surface (TR138–TR143)', description: 'Batch perturbation, multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, quality-safety divergence, and cross-request composition. TR138 Study D batch-invariant-kernel ablation as standalone addendum.', order: 1 },
+    'phase4': { label: 'Phase 4 — Safety Pivot (TR134–TR137)', description: 'Alignment under quantization, AWQ/GPTQ safety, backend-driven template divergence, and cross-axis safety taxonomy.', order: 2 },
+    'phase3': { label: 'Phase 3 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 3 },
+    'phase2': { label: 'Phase 2 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 4 },
+    'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 5 },
+    'other': { label: 'Additional Reports', description: 'Model-specific analyses and supplementary research.', order: 6 },
   };
 
   for (const report of reports) {

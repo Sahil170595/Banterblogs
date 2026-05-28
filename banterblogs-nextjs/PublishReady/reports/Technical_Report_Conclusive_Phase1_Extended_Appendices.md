@@ -6,7 +6,7 @@
 | **Report Type** | Extended appendices |
 | **Scope** | 108-116 |
 | **Status** | Supplemental |
-| **Main Report** | [Technical_Report_Conclusive_108-116.md](Technical_Report_Conclusive_108-116.md) |
+| **Main Report** | [Technical_Report_Conclusive_Phase1.md](Technical_Report_Conclusive_Phase1.md) |
 
 ---
 
@@ -651,7 +651,7 @@ Phase 2 asked whether Rust could match Python's performance while providing oper
 
 Phase 3 produced the program's most important finding. TR113 tested Rust multi-agent with a single Ollama instance and observed only 82.2% efficiency with 63% contention -- initially interpreted as a Rust async runtime limitation. TR114 proved this interpretation wrong: deploying dual Ollama instances eliminated the bottleneck entirely, achieving 99.396% efficiency. The insight was architectural: Ollama's single-instance serialization, not Rust's async runtime, was the bottleneck. This discovery reframed the program's understanding: infrastructure architecture dominates over language runtime for multi-agent LLM workloads.
 
-### U.4 Phase 4: Runtime Selection (TR115)
+### U.4 Phase 5: Runtime Selection (TR115)
 
 With the architectural question settled, TR115 optimized within the Rust ecosystem by comparing five async runtimes. The finding that all functional runtimes achieve approximately 100% peak efficiency (99.87-99.99%) shifted the selection criterion from "which is fastest" to "which is most consistent." Tokio-default won on consistency (1.21pp sigma), producing the production recommendation.
 

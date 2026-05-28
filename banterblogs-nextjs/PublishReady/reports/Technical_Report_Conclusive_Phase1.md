@@ -157,7 +157,7 @@ Operational Defaults (Decision Card)
 34. Appendix U: Program Evolution Narrative
 35. Appendix V: Cost Modeling and Break-Even Analysis
 
-Supplemental material remains mirrored in `PublishReady/reports/Technical_Report_Conclusive_108-116_Extended_Appendices.md`.
+Supplemental material remains mirrored in `PublishReady/reports/Technical_Report_Conclusive_Phase1_Extended_Appendices.md`.
 
 ---
 
@@ -520,7 +520,7 @@ The matrix implies a strict ordering that reflects the research program's logica
 
 **Phase 3: Rust Single-Agent Validation (TR111_v2 -> TR112_v2).** TR111_v2 depends on TR109's workflow definition to ensure apples-to-apples comparison. TR112_v2 then synthesizes TR109 (Python) and TR111_v2 (Rust) into a direct cross-language comparison. The dependency is strict: TR112_v2's +15.2% throughput claim is valid only because TR111_v2 and TR109 share identical workflow complexity, validated through artifact inspection.
 
-**Phase 4: Rust Multi-Agent and Architecture (TR113 -> TR114_v2 -> TR115_v2).** TR113 depends on TR110's Python gold standard to contextualize Rust's 82.2% multi-agent efficiency. TR114_v2 depends on TR113's bottleneck diagnosis to motivate the dual-Ollama architecture. TR115_v2 depends on TR114_v2's validated architecture to isolate the async runtime as the remaining variable. This chain is strictly sequential: each report addresses the failure mode identified by its predecessor.
+**Phase 5: Rust Multi-Agent and Architecture (TR113 -> TR114_v2 -> TR115_v2).** TR113 depends on TR110's Python gold standard to contextualize Rust's 82.2% multi-agent efficiency. TR114_v2 depends on TR113's bottleneck diagnosis to motivate the dual-Ollama architecture. TR115_v2 depends on TR114_v2's validated architecture to isolate the async runtime as the remaining variable. This chain is strictly sequential: each report addresses the failure mode identified by its predecessor.
 
 **Phase 5: Cross-Model Generalization (TR116).** TR116 depends on the full chain (TR108 through TR115_v2) to validate that measured advantages are not artifacts of a single model. It closes the generalizability gap that would otherwise limit every preceding finding to Gemma3:latest.
 
@@ -1715,7 +1715,7 @@ The immediate continuation of this research is documented in TR117 through TR122
 - **TR121v1:** Scaling regimes across model sizes, identifying where parameter count predicts throughput and where it does not.
 - **TR122:** Physics-based measurement, defining measurement resolution limits and energy attribution boundaries.
 
-These reports are synthesized in a separate conclusive document (`Technical_Report_Conclusive_117-122.md`).
+These reports are synthesized in a separate conclusive document (`Technical_Report_Conclusive_Phase2.md`).
 
 ### 11.2 Continuation into TR123-TR133
 
@@ -1726,7 +1726,7 @@ The second continuation extends into quantization economics, quality baselines, 
 - **TR125:** Quantization decision matrix with systematic evaluation of Q2_K through FP16 across four model families, addressing the quantization specificity limitation identified in Section 9.6.
 - **TR126-TR133:** Extended investigations into backend equivalence, sampling variance, and production readiness criteria.
 
-These reports are synthesized in a separate conclusive document (`Technical_Report_Conclusive_123-133.md`).
+These reports are synthesized in a separate conclusive document (`Technical_Report_Conclusive_Phase3.md`).
 
 ### 11.3 Suggested investigations not yet covered
 
@@ -1792,9 +1792,9 @@ This synthesis is decision-grade within the measured stack. It is not a universa
 
 ### 13.3 Continuation reports
 
-[14] Technical Report Conclusive 117-122: From Benchmarking to Decision-Grade Inference. December 2025. `PublishReady/reports/Technical_Report_Conclusive_117-122.md`
+[14] Technical Report Conclusive 117-122: From Benchmarking to Decision-Grade Inference. December 2025. `PublishReady/reports/Technical_Report_Conclusive_Phase2.md`
 
-[15] Technical Report Conclusive 123-133: Quantization Economics, Quality Baselines, and Capacity Planning. 2026. `PublishReady/reports/Technical_Report_Conclusive_123-133.md`
+[15] Technical Report Conclusive 123-133: Quantization Economics, Quality Baselines, and Capacity Planning. 2026. `PublishReady/reports/Technical_Report_Conclusive_Phase3.md`
 
 ### 13.4 Hardware and platform references
 

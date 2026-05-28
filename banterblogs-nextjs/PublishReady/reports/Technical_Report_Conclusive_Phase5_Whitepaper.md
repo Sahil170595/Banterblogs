@@ -9,8 +9,9 @@
 | **Report Type** | Decision whitepaper |
 | **Audience** | Decision makers, product leaders, ML ops leaders, safety teams |
 | **Scope** | TR138 (Batch Safety), TR139 (Multi-Turn Jailbreak x Quantization), TR140 (Many-Shot Long-Context), TR141 (Cross-Architecture Batch Fragility), TR142 (Quality-Safety Correlation), TR143 (Batch Composition) |
-| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_138-143.md` |
-| **Predecessor** | `PublishReady/reports/Technical_Report_Conclusive_134-137_Whitepaper.md` (Phase 3 decisions) |
+| **Primary Source** | `PublishReady/reports/Technical_Report_Conclusive_Phase5.md` |
+| **Post-Report Source** | `PublishReady/reports/Technical_Report_138_Study_D_Addendum.md` |
+| **Predecessor** | `PublishReady/reports/Technical_Report_Conclusive_Phase4_Whitepaper.md` (Phase 3 decisions) |
 
 ---
 
@@ -18,7 +19,9 @@
 
 Consumer-grade LLMs run on hardware that millions of people own, but the safety evaluation infrastructure for local deployment does not exist. A user who quantizes a model to fit their GPU has no way to know whether that optimization degraded refusal behavior, amplified jailbreak vulnerability, or introduced demographic bias. This whitepaper builds that infrastructure.
 
-It distills six technical reports (TR138-TR143) and 306,996 evaluated samples into deployment policy for the safety attack surface of optimized LLM inference on consumer hardware. Phase 3 (TR134-TR137) established WHICH optimization axes degrade safety (quantization, backend) and which do not (concurrency). This Phase 3.5/4 synthesis asks: what additional attack modalities exist beyond single-turn evaluation, how severe are they relative to each other, and what categorical shortcuts (alignment type, quality metrics, batch composition) can operators rely on? Outcome: nine shippable decisions covering batch perturbation, multi-turn jailbreaks, many-shot exploitation, cross-architecture variation, quality-safety divergence, and batch composition -- backed by human adjudication, cross-architecture replication across 18+ models, and convergent evidence from 6 independent studies.
+It distills six technical reports (TR138-TR143) and 306,996 evaluated samples into deployment policy for the safety attack surface of optimized LLM inference on consumer hardware. Phase 3 (TR134-TR137) established WHICH optimization axes degrade safety (quantization, backend) and which do not (concurrency). This Phase 4/4 synthesis asks: what additional attack modalities exist beyond single-turn evaluation, how severe are they relative to each other, and what categorical shortcuts (alignment type, quality metrics, batch composition) can operators rely on? Outcome: nine shippable decisions covering batch perturbation, multi-turn jailbreaks, many-shot exploitation, cross-architecture variation, quality-safety divergence, and batch composition -- backed by human adjudication, cross-architecture replication across 18+ models, and convergent evidence from 6 independent studies.
+
+**Post-report Study D addendum.** A later TR138 addendum adds a 110-record H100/vLLM batch-invariant-kernel ablation over 55 current score-flip candidates. Standard vLLM reproduces 22/55 label flips; `VLLM_BATCH_INVARIANT=1` reproduces 0/55. The original 306,996-sample total remains the six-TR synthesis total before this addendum.
 
 ---
 
@@ -31,6 +34,7 @@ This guidance is valid only under the measured boundary:
 - Quantization via GGUF k-quant (Q2_K through Q8_0) for TR139/TR140; FP16 via vLLM for TR138/TR141/TR143
 - Serving backends: Ollama (TR139/TR140), vLLM Docker (TR138/TR141/TR143)
 - Safety scored by automated classifiers (RefusalDetector, BiasDetector, TruthfulnessScorer) with human adjudication on 63 TR138 rows (27% genuine flip rate)
+- Post-report kernel addendum: H100/vLLM 0.19.1, 55 selected TR138 P1/P4 score-flip candidates, standard vs `VLLM_BATCH_INVARIANT=1`
 - Temperature 0 (deterministic sampling) throughout
 - 4 alignment types tested: RLHF, SFT, DPO, Distilled
 - 8 multi-turn jailbreak strategies, 5 many-shot counts, 5 batch composition conditions
@@ -63,6 +67,19 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 
 9. **Do not assume alignment type predicts batch safety.** ANOVA F = 0.13, p = 0.942 with balanced groups across 15 models and 4 alignment types (TR141 v3). The earlier p = 0.008 from TR141 v2.1 was a false positive from pseudoreplication with n = 1 per category.
 
+**Post-report decision note.** If the production serving stack offers a batch-invariant kernel path, validate safety under that exact path. TR138 Study D shows the current candidate flips appear under standard vLLM on H100 and disappear under the tested batch-invariant path. This is a reproducibility/mechanism control, not a replacement for per-model safety profiling.
+
+### Post-report decision from Study D
+
+10. **Treat kernel path as part of the deployment configuration.** Study D does not make batching a deployment blocker, but it does change what "same setting" means. For batch-served safety evaluation, the tested setting must include the kernel path. If production uses standard vLLM, evaluate standard vLLM. If production uses `VLLM_BATCH_INVARIANT=1`, evaluate that path. If a migration changes kernel path, rerun the batch-refusal screen.
+
+| Question | Study D answer | Executive consequence |
+|----------|----------------|----------------------|
+| Did Study D raise batch-risk severity? | No; it is candidate-selected and does not change full-population prevalence. | Keep batch risk in monitor/validate tier, not block tier. |
+| Did Study D strengthen the mechanism? | Yes; 22/55 standard flips and 25/55 text changes collapse to 0/55 and 0/55 under invariant mode. | Exact-stack validation is mandatory for batch-sensitive claims. |
+| Does invariant mode solve deployment safety? | Not proven; only 55 candidates, 3 small models, H100, vLLM 0.19.1. | Benchmark invariant mode before relying on it. |
+| What changes for operators? | Kernel path becomes a logged and tested safety variable. | Add it to release checklists and regression manifests. |
+
 ---
 
 ## Decision matrix (one-glance policy)
@@ -75,6 +92,7 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 | Message-array format at low quant | **HIGH** | Restrict or sanitize at API gateway | TR140 (92% vs 0% ASR) |
 | Quality used as sole safety proxy | **HIGH** | Add safety-specific benchmarks | TR142 (opposite-sign correlations by model) |
 | Batch size > 1 (safety-critical) | **LOW** | Screen output instability; monitor if > 15% | TR141 (r = 0.91) |
+| Kernel-path mismatch | **LOW/METHOD** | Validate exact served kernel path when available | TR138 Study D (22/55 standard -> 0/55 invariant) |
 | Batch composition | **NEGLIGIBLE** | No action required | TR143 (aggregate null, all tests p > 0.05) |
 | Alignment type as predictor | **INVALID** | Do not use; profile each model individually | TR141 v3 (p = 0.942) |
 
@@ -84,11 +102,13 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 
 - **Quantization is the dominant risk by two orders of magnitude.** Quantization effects are measured in tens of percentage points (up to 100% ASR at Q2_K). Batch effects are measured in tenths of a percentage point (0.16% genuine flip rate). An operator who addresses batch composition before validating quantization is misallocating resources by 100x.
 
-- **Human adjudication deflates automated flip rates by approximately 3x in TR138.** Of 63 TR138 candidate rows reviewed by a single human annotator, only 17 (27%, 90% CI: 17-40%) represent genuine behavioral flips. The remaining 73% are regex artifacts from rephrased refusals. This calibration is specific to TR138's batch-perturbation phenomenon; artifact rates for other TRs (which test different attack types) have not been measured. The general principle — that automated classifiers can substantially overestimate small effects — likely applies broadly, but the specific 73% rate should not be assumed for TR139-TR143.
+- **Human adjudication deflates automated flip rates by approximately 3x in TR138.** Of 63 TR138 candidate rows reviewed by a single human annotator, only 17 (27%, 90% CI: 17-40%) represent genuine behavioral flips. The remaining 73% are regex artifacts from rephrased refusals. This calibration is specific to TR138's batch-perturbation phenomenon; artifact rates for other TRs (which test different attack types) have not been measured. The general principle -- that automated classifiers can substantially overestimate small effects -- likely applies broadly, but the specific 73% rate should not be assumed for TR139-TR143.
 
 - **Output instability is the most reliable predictor tested for batch fragility.** Across 15 models and 4 alignment types, output change rate correlates with safety flip rate at r = 0.91 (R-squared = 0.83). Among tested categorical predictors, alignment type is uninformative (ANOVA p = 0.942) and baseline refusal rate is uninformative (r = 0.028, p = 0.919). Other potential predictors (e.g., specific architectural properties, training data composition) were not tested.
 
-- **Multi-turn jailbreaks interact with quantization but not selectively.** All 8 strategy ANOVAs reject quantization-independence (all p < 1e-4, η² = 0.031-0.153), but multi-turn strategies are not more quantization-sensitive than direct attacks (Welch p = 0.702). Quantization degrades safety broadly, not through a multi-turn-specific mechanism. Caveat: ASR values carry measurement uncertainty of approximately ±15pp due to inter-judge agreement of kappa = 0.104; relative rankings between conditions are more reliable than absolute thresholds.
+- **Study D strengthens the kernel-path mechanism claim for TR138 candidates.** On the 55 current P1/P4 score-flip candidates, standard vLLM on H100 yields 22 label flips and 25 text changes, while batch-invariant vLLM yields 0 label flips and 0 text changes. This supports exact-stack validation: measure the serving path you will deploy.
+
+- **Multi-turn jailbreaks interact with quantization but not selectively.** All 8 strategy ANOVAs reject quantization-independence (all p < 1e-4, eta^2 = 0.031-0.153), but multi-turn strategies are not more quantization-sensitive than direct attacks (Welch p = 0.702). Quantization degrades safety broadly, not through a multi-turn-specific mechanism. Caveat: ASR values carry measurement uncertainty of approximately +/-15pp due to inter-judge agreement of kappa = 0.104; relative rankings between conditions are more reliable than absolute thresholds.
 
 - **Format matters more than shot count for many-shot attacks.** Message-array format produces 92% ASR versus 0% for faux-dialogue format on the same model (TR140). Variance decomposition: residual (per-behavior) = 65.7%, quantization = 17.9%, model = 12.6%, shot count = 2.7%. Prompt format, not shot count, is the dominant variable.
 
@@ -120,6 +140,8 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 ### Batch configuration policy (new)
 
 - **Policy:** Measure output instability per-model at the production batch size. Screen threshold: 15% change rate.
+- **Policy:** Record and validate serving kernel path for batch-sensitive safety checks. Standard vLLM and batch-invariant vLLM are distinct safety configurations.
+- **Policy:** If `VLLM_BATCH_INVARIANT=1` or another invariant path is available, run a paired standard-vs-invariant check on any model whose batch screen shows candidate flips before deciding whether to accept, monitor, or migrate.
 - **Policy:** Batch composition routing is not required. Aggregate composition effect is null.
 - **Policy:** Static and continuous batching produce identical safety outcomes (TR143 Phase 3B, p = 1.0). Scheduler mode is not a safety-relevant variable.
 
@@ -139,6 +161,7 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 2. **Multi-turn jailbreak x quantization:** All 8 strategy ANOVAs significant. Peak 100% ASR. HIGH but addressed by quantization floor.
 3. **Many-shot format exploitation:** 92% ASR via message-array format. HIGH but mitigable via format restriction.
 4. **Batch perturbation:** 0.16% genuine flip rate (human-adjudicated). LOW. Predictable via output instability (r = 0.91).
+4a. **Kernel-path mismatch:** LOW/METHOD. Not a primary safety threat, but a validation threat: the same candidates can differ across standard and invariant serving paths.
 5. **Batch composition:** Aggregate null. NEGLIGIBLE. No engineering action required.
 
 ### Worst-case combinations
@@ -164,6 +187,7 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 
 - NEW: Add message-array format detection to API gateway. Block or transform message-array inputs for safety-sensitive endpoints.
 - NEW: Measure output instability at production batch size for each deployed model. If > 15%, add batch-level safety monitoring.
+- NEW: Add kernel path to the deployment safety manifest. For any batch screen with candidate flips, run the exact served path and, where available, a batch-invariant comparison.
 - Confirm Q2_K ban is enforced across all deployments (extended from Llama-1B-only to universal).
 
 **Days 15-21: Add safety-specific benchmarks alongside quality metrics**
@@ -192,6 +216,7 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 - **Two-model TR142.** Quality-safety divergence finding based on 2 models. Opposite-sign correlations establish the possibility but not the distribution of model-dependent correlation directions.
 - **Temperature = 0 only.** Batch-perturbation findings depend on deterministic decoding. At temperature > 0, the epsilon is dominated by sampling noise. Quantization findings likely hold regardless of temperature.
 - **No adaptive adversaries.** Jailbreak strategies are pre-scripted. Adaptive adversaries would likely achieve higher ASR. Reported values are lower bounds.
+- **Study D is a targeted candidate-surface ablation.** The 22/55 -> 0/55 result applies to selected current TR138 score-flip candidates on H100/vLLM 0.19.1. It does not prove universal batch invariance across all prompts, models, GPUs, or schedulers.
 
 ### What invalidates this guidance
 
@@ -212,13 +237,16 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 | Q2_K ban (universal) | `research/tr139/results/20260314_012503/tr139_analysis.json` | 100% ASR on qwen2.5-1.5b/Q2_K/attention_shift |
 | Multi-turn x quant interaction | `research/tr139/results/20260314_012503/tr139_analysis.json` | 8/8 ANOVAs p < 1e-4 |
 | Format vulnerability | `research/tr140/results/20260316_164907/tr140_analysis.json` | 92% vs 0% ASR by format |
-| Output instability predictor | `research/tr141/results/20260318_194013/tr141_combined_analysis.json` | r = 0.909, R² = 0.827 |
+| Output instability predictor | `research/tr141/results/20260318_194013/tr141_combined_analysis.json` | r = 0.909, R^2 = 0.827 |
 | Alignment type not predictive | `research/tr141/results/20260318_194013/tr141_combined_analysis.json` | F = 0.13, p = 0.942 |
 | Quality-safety divergence | `research/tr142/results/20260316_143936/tr142_analysis.json` | 13.9x at Q3_K_S |
 | Human adjudication correction | `human_review/tr138/flipped_safety_rows_adjudicated.csv` | 17/63 genuine (27%) |
 | Batch composition null | `research/tr143/results/20260320_024547/tr143_analysis.json` | All McNemar p > 0.125, all Cochran's Q p > 0.34 |
 | Directional asymmetry | `research/tr143/results/20260320_024547/tr143_analysis.json` | 88-92% toward unsafe, p = 0.006 |
 | Batch perturbation magnitude | `research/tr138/results/20260313_184600/tr138_analysis.json` | 0.6% regex, 0.16% human-adjudicated |
+| Batch-invariant kernel addendum | `research/tr138_kernel_ablation/results/20260524_172010/summary.json` | 22/55 standard flips, 0/55 invariant flips |
+| Batch-invariant paired text result | `research/tr138_kernel_ablation/results/20260524_172010/vllm_records.jsonl` | 25/55 standard text changes, 0/55 invariant text changes |
+| Full Study D decision basis | `PublishReady/reports/Technical_Report_138_Study_D_Addendum.md` | Mechanism report with paired stats and limitations |
 | Cross-architecture fragility | `research/tr141/results/20260318_194013/tr141_combined_analysis.json` | 0.00% to 2.39% (6.3x range) |
 | Phase 2 Q4_K_M confirmation | TR139 + TR140 convergence | Llama models safe at Q4_K_M under multi-turn and many-shot |
 
@@ -226,15 +254,17 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 
 ## References
 
-- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_138-143.md`
+- Conclusive report: `PublishReady/reports/Technical_Report_Conclusive_Phase5.md`
 - TR138: `PublishReady/reports/Technical_Report_138_v2.md` (Batch Safety Under Non-Determinism)
+- TR138 Study D addendum: `research/tr138_kernel_ablation/results/20260524_172010/summary.json`
+- TR138 Study D full report: `PublishReady/reports/Technical_Report_138_Study_D_Addendum.md`
 - TR139: `PublishReady/reports/Technical_Report_139.md` (Multi-Turn Jailbreak x Quantization)
 - TR140: `PublishReady/reports/Technical_Report_140.md` (Many-Shot Long-Context Jailbreak)
 - TR141: `PublishReady/reports/Technical_Report_141.md` (Cross-Architecture Refusal Fragility)
 - TR142: `PublishReady/reports/Technical_Report_142.md` (Quality-Safety Correlation)
 - TR143: `PublishReady/reports/Technical_Report_143.md` (Cross-Request Composition)
-- Phase 3 whitepaper: `PublishReady/reports/Technical_Report_Conclusive_134-137_Whitepaper.md`
-- Phase 3 conclusive: `PublishReady/reports/Technical_Report_Conclusive_134-137.md`
+- Phase 3 whitepaper: `PublishReady/reports/Technical_Report_Conclusive_Phase4_Whitepaper.md`
+- Phase 3 conclusive: `PublishReady/reports/Technical_Report_Conclusive_Phase4.md`
 
 ---
 
@@ -242,7 +272,7 @@ If any of these change, re-run the relevant safety evaluation and re-validate be
 
 Phase 3 (TR134-TR137) delivered 6 decisions covering quantization floor, concurrency clearance, backend migration, per-model profiling, Q2_K ban, and jailbreak monitoring. This whitepaper adds 3 new decisions (quality-safety, multi-turn testing, format restriction) and extends 3 existing ones (Q2_K ban to universal, per-model profiling strengthened, quantization floor confirmed under new modalities).
 
-The Phase 3 decisions remain valid and are confirmed by convergent evidence. The Phase 3.5/4 decisions address attack modalities that Phase 3 could not test: multi-turn strategies, many-shot exploitation, batch composition, cross-architecture variation, and the quality-safety relationship. Together, the two whitepapers cover the characterized optimization-safety attack surface for consumer-hardware LLM deployment (18+ models, ≤14.8B, GGUF k-quant, temperature=0, NVIDIA consumer GPUs). Gaps remain: temperature > 0, models > 14.8B, non-GGUF quantization, adaptive adversaries, and multi-GPU serving.
+The Phase 3 decisions remain valid and are confirmed by convergent evidence. The Phase 4/4 decisions address attack modalities that Phase 3 could not test: multi-turn strategies, many-shot exploitation, batch composition, cross-architecture variation, and the quality-safety relationship. Together, the two whitepapers cover the characterized optimization-safety attack surface for consumer-hardware LLM deployment (18+ models, <=14.8B, GGUF k-quant, temperature=0, NVIDIA consumer GPUs). Gaps remain: temperature > 0, models > 14.8B, non-GGUF quantization, adaptive adversaries, and multi-GPU serving.
 
 ---
 

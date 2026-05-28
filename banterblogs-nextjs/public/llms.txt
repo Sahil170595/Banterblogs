@@ -60,18 +60,20 @@ Independent ML research with CUDA event timing and controlled safety evaluations
 
 ### Phases
 - **Phase 1 — Foundation (TR108–TR116):** Model loading, ONNX conversion, quantization baselines, security analysis.
-- **Phase 1.5 — Benchmarking (TR117–TR122):** Cross-backend inference parity, TensorRT compilation, scaling laws, the compile paradox, the physics of inference.
-- **Phase 2 — Optimization (TR123–TR133):** KV-cache tuning, INT8/FP8 quantization, context scaling (512–32K tokens), N-agent scaling, GPU kernel profiling, predictive capacity planner.
-- **Phase 3 — Safety & Methodology (TR134–TR148):** Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding (null), KV-cache safety (null), mechanistic probing, portability validation, multi-judge triangulation (κ = 0.69, dual-axis methodology).
-- **Phase 4 — Serving-State Safety Certification (TR149+):** Standardized FP16-vs-FP8 KV-cache battery on HarmBench/JailbreakBench/StrongREJECT/XSTest (TR149, replicates the FP8 null), and the serving-state safety factorial across batch, prefix-caching, and temperature (TR152, v1 local pilot).
+- **Phase 2 — Benchmarking (TR117–TR122):** Cross-backend inference parity, TensorRT compilation, scaling laws, the compile paradox, the physics of inference.
+- **Phase 3 — Optimization (TR123–TR133):** KV-cache tuning, INT8/FP8 quantization, context scaling (512–32K tokens), N-agent scaling, GPU kernel profiling, predictive capacity planner.
+- **Phase 4 — Safety Pivot (TR134–TR137):** Alignment under quantization, AWQ/GPTQ safety, backend-driven template divergence, cross-axis safety taxonomy.
+- **Phase 5 — Attack Surface (TR138–TR143):** Batch perturbation (TR138 + Study D batch-invariant-kernel ablation), multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, quality-safety divergence, cross-request composition. 306,996+ samples, 18+ models.
+- **Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152):** Speculative decoding null (TR144), KV-cache safety null (TR145), mechanistic probing (TR146), portability validation (TR147), multi-judge triangulation (TR148, κ = 0.69, dual-axis methodology), standardized FP16-vs-FP8 KV-cache battery (TR149), serving-state factorial across batch / prefix-caching / temperature (TR152 v2 — 45,000 records, 20,754 matched pairs).
 
 ### Synthesis Documents
 Each phase has a conclusive synthesis (dissertation-style), extended appendices, and an executive decision whitepaper:
 - Phase 1 (TR108–TR116): Language, architecture, runtime, and model selection
-- Phase 1.5 (TR117–TR122): Performance, cost, scaling, compiler behavior
-- Phase 2 (TR123–TR133): Economics, quantization, context scaling, serving stacks
-- Phase 3 (TR134–TR137): Quantization-induced alignment erosion, concurrency invariance, backend template divergence
-- Phase 3.5 (TR138–TR143): Safety attack-surface synthesis, 306,996 samples, 18+ models, 10+ architecture families
+- Phase 2 (TR117–TR122): Performance, cost, scaling, compiler behavior
+- Phase 3 (TR123–TR133): Economics, quantization, context scaling, serving stacks
+- Phase 4 (TR134–TR137): Quantization-induced alignment erosion, concurrency invariance, backend template divergence
+- Phase 5 (TR138–TR143): Safety attack-surface synthesis, 306,996+ samples, 18+ models, 10+ architecture families; TR138 Study D batch-invariant-kernel addendum
+- Phase 6 (TR144–TR149+TR152): Serving-state safety certification — measurement-validity substrate + FP8 KV-cache batteries + serving-state factorial
 
 ### Headline Findings
 - **Q4_K_M is the universal quantization sweet spot** (-4.1pp accuracy max across 5 models, 30-67% cost savings).

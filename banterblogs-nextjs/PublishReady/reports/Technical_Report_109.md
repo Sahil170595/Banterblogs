@@ -467,7 +467,7 @@ Model warmth benefits were **negated** by:
 # Measure: Quality scores, creativity
 # Select: Balance quality and diversity
 
-# Phase 4: Statistical validation (>=3 runs)
+# Phase 5: Statistical validation (>=3 runs)
 # Confirm: Performance gains replicate
 ```
 
