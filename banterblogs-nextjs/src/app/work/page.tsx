@@ -5,11 +5,11 @@ import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Link
 export const metadata: Metadata = {
   title: 'Work',
   description:
-    'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 841K+ measurements.',
+    'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 1.04M+ measurements.',
   openGraph: {
     title: 'Work | Chimeraforge',
     description:
-      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 841K+ measurements.',
+      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 1.04M+ measurements.',
     url: 'https://chimeraforge.vercel.app/work',
     type: 'profile',
   },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Work | Chimeraforge',
     description:
-      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 841K+ measurements.',
+      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 1.04M+ measurements.',
   },
 };
 
@@ -176,7 +176,7 @@ export default function WorkPage() {
           <p className="text-lg text-muted-foreground leading-relaxed">
             Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
             A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 more under peer review,
-            48 technical reports, 841,000+ empirical measurements, and a constitutional AI ecosystem spanning
+            48 technical reports, 1,040,000+ empirical measurements, and a constitutional AI ecosystem spanning
             9 repositories and 5 languages.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">

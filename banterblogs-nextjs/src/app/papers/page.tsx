@@ -228,7 +228,7 @@ export default function PapersPage() {
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
             evaluation. The first paper is accepted to the ICML 2026 Workshop on Hypothesis Testing; five more are
             under peer review at top ML venues, with five in preparation. Each is backed by reproducible technical reports
-            and artifact-level provenance from a 841,000+ measurement program.
+            and artifact-level provenance from a 1,040,000+ measurement program.
           </p>
           <p className="text-sm text-muted-foreground/80">
             Author: <span className="text-foreground font-medium">Sahil Kadadekar</span> · Independent research
@@ -242,7 +242,7 @@ export default function PapersPage() {
           { value: '1', label: 'Accepted · ICML 2026 Workshop' },
           { value: '5', label: 'Under peer review' },
           { value: '11', label: 'Papers total' },
-          { value: '841K+', label: 'Measurements' },
+          { value: '1.04M+', label: 'Measurements' },
         ].map((s) => (
           <div key={s.label} className="signal-panel p-5 text-center">
             <div className="text-2xl md:text-3xl font-bold text-foreground">{s.value}</div>
@@ -314,7 +314,7 @@ export default function PapersPage() {
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
-              48 technical reports with 841,000+ measurements — the evidence layer behind these papers.
+              48 technical reports with 1,040,000+ measurements — the evidence layer behind these papers.
             </p>
             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
               Browse reports <ArrowRight className="h-3 w-3" />

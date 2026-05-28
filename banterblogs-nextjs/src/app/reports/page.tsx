@@ -8,11 +8,11 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 export const metadata: Metadata = {
   title: 'Research Archive',
   description:
-    'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers under peer review.',
+    'Independent LLM safety research · 48 technical reports · 1,040,000+ empirical measurements · 5 papers under peer review.',
   openGraph: {
     title: 'Research Archive | Chimeraforge',
     description:
-      'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers under peer review.',
+      'Independent LLM safety research · 48 technical reports · 1,040,000+ empirical measurements · 5 papers under peer review.',
     url: 'https://chimeraforge.vercel.app/reports',
     type: 'website',
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Research Archive | Chimeraforge',
     description:
-      'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers under peer review.',
+      'Independent LLM safety research · 48 technical reports · 1,040,000+ empirical measurements · 5 papers under peer review.',
   },
 };
 
@@ -187,7 +187,7 @@ export default async function ReportsIndex() {
       {/* ── Stats Ribbon ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: '841,000+', label: 'Research Measurements' },
+          { value: '1,040,000+', label: 'Research Measurements' },
           { value: '48', label: 'Technical Reports' },
           { value: '5', label: 'Synthesis Whitepapers' },
           { value: '9', label: 'Repositories' },

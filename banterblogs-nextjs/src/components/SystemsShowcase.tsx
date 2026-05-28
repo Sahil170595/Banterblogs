@@ -19,7 +19,7 @@ const coreEngines = [
     role: 'ML Research Backbone',
     description:
       'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 48 technical reports.',
-    stats: ['841K+ measurements', '48 reports', '4 compilation backends'],
+    stats: ['1.04M+ measurements', '48 reports', '4 compilation backends'],
     href: '/reports',
     icon: <Cpu className="h-6 w-6" />,
   },
