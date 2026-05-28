@@ -51,19 +51,30 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
             className="space-y-10"
           >
             <div className="space-y-6">
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-start gap-3">
                 <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
                   <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                   In Beta
                 </span>
-                <Link
-                  href="/papers"
-                  className="group inline-flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-accent font-semibold transition-colors hover:bg-accent/20 hover:border-accent/70"
-                >
-                  <span className="inline-flex h-2 w-2 rounded-full bg-accent" />
-                  Accepted · ICML 2026 Workshop
-                  <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                </Link>
+                <div className="flex flex-col items-start gap-1.5">
+                  <Link
+                    href="/papers"
+                    className="group inline-flex items-center gap-2 rounded-full border border-primary/50 bg-primary/10 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-primary font-semibold transition-colors hover:bg-primary/20 hover:border-primary/70"
+                  >
+                    <span className="inline-flex h-2 w-2 rounded-full bg-primary" />
+                    Accepted · ICML 2026 Workshop
+                    <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                  <Link
+                    href="https://arxiv.org/abs/2605.27763"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group/arx ml-4 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-mono text-muted-foreground/70 transition-colors hover:text-primary"
+                  >
+                    arXiv:2605.27763
+                    <ArrowRight className="h-2.5 w-2.5 transition-transform group-hover/arx:translate-x-0.5" />
+                  </Link>
+                </div>
               </div>
 
               <h1 className="display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
@@ -97,22 +108,22 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               <Link
-                href="/episodes"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-2xl hover:shadow-primary/30"
-              >
-                See the build log
-                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Link>
-              <Link
                 href="/reports"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-foreground transition-all duration-200 hover:border-primary/50 hover:text-primary"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-2xl hover:shadow-primary/30"
               >
                 Read the research
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
               <Link
+                href="/episodes"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-foreground transition-all duration-200 hover:border-primary/50 hover:text-primary"
+              >
+                See the build log
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Link>
+              <Link
                 href="/papers"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-foreground transition-all duration-200 hover:border-accent/50 hover:text-accent"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold text-foreground transition-all duration-200 hover:border-primary/50 hover:text-primary"
               >
                 See the papers
                 <FileText className="h-4 w-4 sm:h-5 sm:w-5" />

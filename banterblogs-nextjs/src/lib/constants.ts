@@ -3,6 +3,8 @@
  */
 
 export const GITHUB_URLS = {
+  // Identity / nav GitHub links should point at the profile README, not this repo
+  PROFILE: 'https://github.com/Sahil170595',
   BANTERBLOGS: 'https://github.com/Sahil170595/Banterblogs',
   CHIMERAFORGE: 'https://github.com/Sahil170595/Chimeraforge',
   // Banterpacks repository is private

@@ -130,7 +130,8 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 
 - Site: https://chimeraforge.vercel.app
 - PyPI: https://pypi.org/project/chimeraforge/
-- GitHub (site source): https://github.com/Sahil170595/Banterblogs
+- GitHub (profile / canonical README): https://github.com/Sahil170595
+- GitHub (this site's source): https://github.com/Sahil170595/Banterblogs
 - GitHub (Chimeraforge tools): https://github.com/Sahil170595/Chimeraforge
 - Research Archive: https://chimeraforge.vercel.app/reports
 - Papers: https://chimeraforge.vercel.app/papers

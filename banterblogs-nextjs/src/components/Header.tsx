@@ -55,7 +55,7 @@ export function Header() {
             ))}
             <div className="ml-2 flex items-center gap-1 border-l border-border/40 pl-2">
               <Link
-                href={GITHUB_URLS.BANTERBLOGS}
+                href={GITHUB_URLS.PROFILE}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
@@ -102,7 +102,7 @@ export function Header() {
               </Link>
             ))}
             <Link
-              href={GITHUB_URLS.BANTERBLOGS}
+              href={GITHUB_URLS.PROFILE}
               target="_blank"
               rel="noopener noreferrer"
               className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"

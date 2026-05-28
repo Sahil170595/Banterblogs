@@ -15,7 +15,7 @@ const FOOTER_LINKS = {
     { href: 'https://pypi.org/project/chimeraforge/', label: 'PyPI Package' },
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
-    { href: 'https://github.com/Sahil170595/Banterblogs', label: 'GitHub' },
+    { href: 'https://github.com/Sahil170595', label: 'GitHub' },
     { href: 'https://substack.com/@sahilkadadekar', label: 'Substack' },
     { href: 'https://linkedin.com/in/sahilkadadekar', label: 'LinkedIn' },
   ],
@@ -36,7 +36,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
               <Link
-                href="https://github.com/Sahil170595/Banterblogs"
+                href="https://github.com/Sahil170595"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
