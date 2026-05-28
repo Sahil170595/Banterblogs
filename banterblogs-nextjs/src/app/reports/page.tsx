@@ -8,11 +8,11 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 export const metadata: Metadata = {
   title: 'Research Archive',
   description:
-    'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers submitted to NeurIPS 2026.',
+    'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers under peer review.',
   openGraph: {
     title: 'Research Archive | Chimeraforge',
     description:
-      'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers submitted to NeurIPS 2026.',
+      'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers under peer review.',
     url: 'https://chimeraforge.vercel.app/reports',
     type: 'website',
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Research Archive | Chimeraforge',
     description:
-      'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers submitted to NeurIPS 2026.',
+      'Independent LLM safety research · 48 technical reports · 841,000+ empirical measurements · 5 papers under peer review.',
   },
 };
 

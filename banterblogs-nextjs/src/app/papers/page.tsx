@@ -5,11 +5,11 @@ import { ArrowRight, FileText, Layers } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Papers',
   description:
-    '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under review at NeurIPS 2026 · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+    '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   openGraph: {
     title: 'Papers | Chimeraforge',
     description:
-      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under review at NeurIPS 2026 · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
     url: 'https://chimeraforge.vercel.app/papers',
     type: 'website',
   },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Papers | Chimeraforge',
     description:
-      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under review at NeurIPS 2026 · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   },
 };
 
@@ -47,7 +47,7 @@ const NEURIPS_2026: Paper[] = [
     title: 'Compile-Stack Attribution',
     thesis:
       'Independent upstream bugs in PyTorch and Triton jointly produce the torch.compile decode crash. Triton minor-version ablation on the same GPU flips the conclusion. Benchmark identity is a 5-tuple (GPU, Triton, PyTorch, cache, compile mode). Companion to upstream PR #175562.',
-    venue: 'NeurIPS 2026',
+    venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [
       { label: 'TR126', slug: 'technical-report-126' },
@@ -58,7 +58,7 @@ const NEURIPS_2026: Paper[] = [
     title: 'Quality-Safety Correlation Under Quantization',
     thesis:
       "Simpson's paradox in the safety-quality relationship. Refusal Template Stability Index calibrated with LOOCV across 51 model-format cells (GGUF + AWQ + GPTQ), inter-judge κ = 0.873.",
-    venue: 'NeurIPS 2026',
+    venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [
       { label: 'TR125', slug: 'technical-report-125' },
@@ -70,7 +70,7 @@ const NEURIPS_2026: Paper[] = [
     title: 'Many-Shot Jailbreak Under Quantization',
     thesis:
       'Q2_K is the recurring vulnerability threshold for many-shot and long-context attacks. Message-array vs faux-dialogue prompt formatting (92% vs 0% ASR) across 4 model families. Format mediates effect more strongly than quantization alone.',
-    venue: 'NeurIPS 2026',
+    venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [{ label: 'TR140', slug: 'technical-report-140' }],
   },
@@ -78,7 +78,7 @@ const NEURIPS_2026: Paper[] = [
     title: 'Speculative Decoding Safety — Null Result',
     thesis:
       '16,783 samples across production-scale 70B target + 8B draft pairs (adversarial draft, quantized draft, non-greedy decoding). Zero measurable safety degradation, contradicting the SSD premise. Strong null result.',
-    venue: 'NeurIPS 2026',
+    venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [{ label: 'TR144', slug: 'technical-report-144' }],
   },
@@ -86,7 +86,7 @@ const NEURIPS_2026: Paper[] = [
     title: 'Multi-Turn Jailbreak × Quantization',
     thesis:
       '8 attack strategies × 4 models × 6 quantization levels: 10,600 conversations, 37,825 judge labels. Threshold-specific shift in risk rather than universal multi-turn amplification.',
-    venue: 'NeurIPS 2026',
+    venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [{ label: 'TR139', slug: 'technical-report-139' }],
   },
@@ -222,12 +222,12 @@ export default function PapersPage() {
         <div className="space-y-5 max-w-3xl">
           <span className="signal-pill">Papers</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            1 accepted at an ICML 2026 workshop · 5 under review at NeurIPS 2026
+            1 accepted at an ICML 2026 workshop · 5 under peer review
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
             evaluation. The first paper is accepted to the ICML 2026 Workshop on Hypothesis Testing; five more are
-            under review at NeurIPS 2026, with five in preparation. Each is backed by reproducible technical reports
+            under peer review at top ML venues, with five in preparation. Each is backed by reproducible technical reports
             and artifact-level provenance from a 841,000+ measurement program.
           </p>
           <p className="text-sm text-muted-foreground/80">
@@ -240,7 +240,7 @@ export default function PapersPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
           { value: '1', label: 'Accepted · ICML 2026 Workshop' },
-          { value: '5', label: 'Under review · NeurIPS 2026' },
+          { value: '5', label: 'Under peer review' },
           { value: '11', label: 'Papers total' },
           { value: '841K+', label: 'Measurements' },
         ].map((s) => (
@@ -269,12 +269,12 @@ export default function PapersPage() {
         </div>
       </section>
 
-      {/* ── NeurIPS 2026 ── */}
+      {/* ── Under Peer Review ── */}
       <section className="mb-16">
         <div className="mb-8 border-b border-border/40 pb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            NeurIPS 2026 — Submitted · Under Review
+            Under Peer Review
           </h2>
           <p className="mt-2 text-sm text-muted-foreground/70">
             5 papers submitted with PDFs, artifact manifests, and venue checklists complete. Now under peer review.
