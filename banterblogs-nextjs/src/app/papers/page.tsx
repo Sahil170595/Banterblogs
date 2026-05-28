@@ -27,16 +27,18 @@ interface Paper {
   venue: string;
   status: 'Accepted' | 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
   trs: { label: string; slug: string }[];
+  arxiv?: string;
 }
 
 const ACCEPTED: Paper[] = [
   {
-    title: 'Batch Inference Safety Under Non-Determinism',
+    title: 'A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving',
     thesis:
       'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
     venue: 'ICML 2026 Workshop on Hypothesis Testing',
     status: 'Accepted',
     trs: [{ label: 'TR138', slug: 'technical-report-138' }],
+    arxiv: 'https://arxiv.org/abs/2605.27763',
   },
 ];
 
@@ -181,6 +183,19 @@ function PaperCard({ paper }: { paper: Paper }) {
         <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">Target:</span>
         <span className="text-foreground/80 font-medium">{paper.venue}</span>
       </div>
+      {paper.arxiv && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">arXiv:</span>
+          <Link
+            href={paper.arxiv}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-border/60 px-2.5 py-0.5 font-mono text-foreground/80 transition hover:border-primary/60 hover:text-primary"
+          >
+            {paper.arxiv.replace(/^https?:\/\/arxiv\.org\/abs\//, '')}
+          </Link>
+        </div>
+      )}
       {paper.trs.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/30 pt-4 text-xs">
           <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">Evidence:</span>
