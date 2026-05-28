@@ -24,9 +24,17 @@ export async function GET() {
       urlEntry(`${BASE}/episodes`, now, 'daily', 0.9),
       urlEntry(`${BASE}/reports`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/reports/compendium`, now, 'monthly', 0.85),
+      urlEntry(`${BASE}/papers`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/platform`, now, 'weekly', 0.8),
+      urlEntry(`${BASE}/work`, now, 'monthly', 0.7),
       urlEntry(`${BASE}/tags`, now, 'weekly', 0.7),
+      urlEntry(`${BASE}/show`, now, 'weekly', 0.7),
     ];
+
+    // /show scenes — update this list when a scene is added/removed.
+    for (const scene of ['cognitive-agents', 'provenance-chain', 'bft-consensus', 'zk-alignment-proof', 'streaming-ladder']) {
+      urls.push(urlEntry(`${BASE}/show/${scene}`, now, 'monthly', 0.6));
+    }
 
     for (const slug of reportSlugs) {
       urls.push(urlEntry(`${BASE}/reports/${slug}`, now, 'monthly', 0.7));
