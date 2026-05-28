@@ -1453,12 +1453,12 @@ At ±3pp: 9/22 equivalent (40.9%). At ±5pp (a looser deployment-tolerance setti
 12. Banterhearts TR125 (2026). **Weight-Quantization Safety: 9-Format Comparison.** Internal report.
 13. Banterhearts TR134 (2026). **Quantization Calibration Sensitivity.** Internal report.
 14. Banterhearts TR138 (2026). **Batch-Inference Safety.** Accepted, ICML 2026 Workshop on Hypothesis Testing.
-15. Banterhearts TR140 (2026). **Many-Shot Jailbreak under Quantization (JTP).** Under peer review.
-16. Banterhearts TR141 (2026). **Refusal-Template Fragility under Quantization.** AI4GOOD ICML 2026.
-17. Banterhearts TR142 (2026). **Refusal Template Stability Index (RTSI).** Under peer review.
+15. Banterhearts TR140 (2026). **Many-Shot Jailbreak under Quantization (JTP).**
+16. Banterhearts TR141 (2026). **Refusal-Template Fragility under Quantization.**
+17. Banterhearts TR142 (2026). **Refusal Template Stability Index (RTSI).**
 18. Banterhearts TR143 (2026). **Cross-Architecture Safety.** Internal report.
-19. Banterhearts TR144 (2026). **Speculative Decoding Safety (TAIS).** Under peer review.
-20. Banterhearts TR147 (2026). **Compile Reproducibility Index (CRI).** Under peer review.
+19. Banterhearts TR144 (2026). **Speculative Decoding Safety (TAIS).**
+20. Banterhearts TR147 (2026). **Compile Reproducibility Index (CRI).**
 
 ---
 
