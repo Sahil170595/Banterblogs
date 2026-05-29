@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, FlaskConical } from 'lucide-react';
-import { PHASE_DEFINITIONS } from '@/lib/reports/phases';
+import { PHASE_DEFINITIONS, phaseRangeLabel } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 // Derived from the single PHASE_DEFINITIONS source so phase renames and additions
@@ -13,10 +13,7 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 // only in the /reports archive, not in the homepage 6-card lane.
 const highlights = PHASE_DEFINITIONS.filter((p) => p.minTR !== undefined).map((p) => ({
   label: p.label.split(' (')[0], // "Phase 1 — Foundation"
-  range:
-    p.maxTR === Infinity
-      ? `TR${p.minTR}+`
-      : `TR${p.minTR}–TR${p.maxTR}`,
+  range: phaseRangeLabel(p.key),
   summary: p.featuredSummary,
 }));
 

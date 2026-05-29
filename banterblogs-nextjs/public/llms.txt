@@ -15,7 +15,7 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 ## Scale
 
 - 9 repositories across Python, Rust, TypeScript, C#, JavaScript
-- 1,040,000+ research measurements across 48 technical reports
+- 1,041,000+ research measurements across 48 technical reports
 - 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing (workshop, not the main conference)
 - 5 papers under peer review (target: top ML venues)
 - 266+ auto-generated development episodes (193 Banterpacks + 73 Chimera)
@@ -50,7 +50,7 @@ This site (https://chimeraforge.vercel.app). Auto-generated episodes from git co
 ### 9. Project Wyvern
 Embodied autonomy extension of the constitutional architecture. Governed mission-execution plane between Chimera control and PX4/ArduPilot, with a 5-tier authority hierarchy, cryptographic mission replay, and OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP on PX4 + ROS 2 + Gazebo in progress.
 
-## Research Program — 1,040,000+ Measurements
+## Research Program — 1,041,000+ Measurements
 
 Independent ML research with CUDA event timing and controlled safety evaluations. All measurements are reproducible with defined hardware profiles, statistical methodology, and raw data.
 

@@ -139,3 +139,90 @@ export function phaseForSlug(slug: string): PhaseKey | null {
 export function phaseNumber(key: PhaseKey): string {
   return PHASE_DEFINITIONS.find((p) => p.key === key)?.number ?? '?';
 }
+
+/**
+ * Slug-classifier shared across `/reports/page.tsx`, `/reports/[id]/page.tsx`,
+ * and `/reports.json/route.ts`. Prior to consolidation each file had its own
+ * near-identical copy and they drifted on edge cases (compendium keyword in
+ * detail page but not in index, addendum-readiness, etc).
+ *
+ * Order matters: whitepaper/appendix/conclusive substring checks first because
+ * those slugs also encode a phase key (`technical-report-conclusive-phase1-whitepaper`)
+ * and would otherwise classify as the phase rather than its synthesis doc.
+ */
+export type ReportCategory = 'whitepaper' | 'conclusive' | 'appendix' | 'compendium' | PhaseKey | 'other';
+
+export function classifyReportSlug(slug: string): ReportCategory {
+  const lower = slug.toLowerCase();
+  if (lower.includes('whitepaper')) return 'whitepaper';
+  if (lower.includes('appendix') || lower.includes('appendices')) return 'appendix';
+  if (lower.includes('conclusive')) return 'conclusive';
+  if (lower.includes('compendium')) return 'compendium';
+  const pinned = phaseForSlug(slug);
+  if (pinned) return pinned;
+  const tr = extractTRNumber(slug);
+  if (tr !== null) return phaseForTR(tr) ?? 'other';
+  return 'other';
+}
+
+/**
+ * Sort rank for prev/next navigation and manifest ordering. Lower rank = earlier
+ * in the reading order. Phase 0 baselines (Sep-Oct 2025) sort BEFORE TR108
+ * because they chronologically predate the TR-numbered program — without this
+ * the rank() in [id]/page.tsx and the comparator in reports.json/route.ts both
+ * sink Phase 0 to ~20_000 (alongside 'other'), inverting the timeline.
+ */
+export function reportSortRank(slug: string): number {
+  const cat = classifyReportSlug(slug);
+  if (cat === 'phase0') return -1; // Pre-TR baselines: chronologically first.
+  const tr = extractTRNumber(slug);
+  if (tr !== null && cat !== 'whitepaper' && cat !== 'appendix' && cat !== 'conclusive') return tr;
+  if (cat === 'conclusive' || cat === 'whitepaper' || cat === 'appendix') return 10_000;
+  if (cat === 'compendium') return 15_000;
+  return 20_000;
+}
+
+/**
+ * Canonical slug for a phase's conclusive whitepaper. Single point of truth
+ * for the `technical-report-conclusive-<key>-whitepaper` URL convention so
+ * an upstream Banterhearts rename can't silently break the FEATURED_REPORTS
+ * cards on /reports while everything else (which discovers from disk) keeps
+ * working.
+ */
+export function phaseWhitepaperSlug(key: PhaseKey): string {
+  return `technical-report-conclusive-${key}-whitepaper`;
+}
+
+/** Display label for a phase's TR range, e.g. "TR108–TR116" or "TR144+". */
+export function phaseRangeLabel(key: PhaseKey): string {
+  const p = PHASE_DEFINITIONS.find((x) => x.key === key);
+  if (!p || p.minTR === undefined) return '';
+  if (p.maxTR === Infinity || p.maxTR === undefined) return `TR${p.minTR}+`;
+  return `TR${p.minTR}–TR${p.maxTR}`;
+}
+
+/**
+ * Build-time assertion that every slug-pinned phase (Phase 0 today) actually
+ * resolves to a discovered report on disk. Catches silent drift where a file
+ * gets renamed or moved but `PHASE_DEFINITIONS[i].slugs` is not updated — the
+ * phase tab would otherwise quietly lose entries with no build error.
+ *
+ * Call from a build-time consumer (e.g. the /reports.json route, which is
+ * `force-static` so it runs once at build).
+ */
+export function assertPhaseSlugsResolved(discoveredSlugs: ReadonlySet<string>): void {
+  const missing: { phase: PhaseKey; slug: string }[] = [];
+  for (const p of PHASE_DEFINITIONS) {
+    if (!p.slugs) continue;
+    for (const s of p.slugs) {
+      if (!discoveredSlugs.has(s)) missing.push({ phase: p.key, slug: s });
+    }
+  }
+  if (missing.length > 0) {
+    const lines = missing.map((m) => `  - phase=${m.phase} slug=${m.slug}`).join('\n');
+    throw new Error(
+      `[phases.ts] PHASE_DEFINITIONS.slugs references reports that don't exist on disk:\n${lines}\n` +
+        `Either restore the file under PublishReady/reports/ or remove the slug from PHASE_DEFINITIONS.`,
+    );
+  }
+}

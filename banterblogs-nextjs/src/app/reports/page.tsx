@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { discoverReports, toHumanTitle, type ReportLocation } from '@/lib/reports/locator';
+import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs';
-import { PHASE_DEFINITIONS, extractTRNumber, phaseForTR, phaseForSlug, type PhaseKey } from '@/lib/reports/phases';
+import { PHASE_DEFINITIONS, classifyReportSlug, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · 5 papers under peer review.`;
@@ -35,28 +35,11 @@ interface ReportEntry {
   source: string;
 }
 
-type ReportCategory = 'whitepaper' | 'conclusive' | 'appendix' | PhaseKey | 'other';
-
-function classifyReport(slug: string): ReportCategory {
-  const lower = slug.toLowerCase();
-  if (lower.includes('whitepaper')) return 'whitepaper';
-  if (lower.includes('appendix') || lower.includes('appendices')) return 'appendix';
-  if (lower.includes('conclusive')) return 'conclusive';
-  // Slug-pinned phases (Phase 0 baselines) first — these have no TR number.
-  const pinned = phaseForSlug(slug);
-  if (pinned) return pinned;
-  const tr = extractTRNumber(slug);
-  if (tr !== null) {
-    return phaseForTR(tr) ?? 'other';
-  }
-  return 'other';
-}
-
-// PHASE_META and FEATURED_REPORTS derived from the single PHASE_DEFINITIONS source.
-// Module-level so they allocate once at parse time, not per ReportsIndex render.
+// PHASE_META derived from the single PHASE_DEFINITIONS source. Module-level so
+// it allocates once at parse time, not per ReportsIndex render. Newest phase
+// first (order 0) so the tab list defaults to the latest research.
 const PHASE_META: Record<string, { label: string; description: string; order: number }> = (() => {
   const meta: Record<string, { label: string; description: string; order: number }> = {};
-  // Newest phase first (order 0 = newest, so the tab list defaults to the latest research).
   const reversed = [...PHASE_DEFINITIONS].reverse();
   reversed.forEach((p, i) => {
     meta[p.key] = { label: p.label, description: p.description, order: i };
@@ -69,11 +52,11 @@ const PHASE_META: Record<string, { label: string; description: string; order: nu
   return meta;
 })();
 
-// Featured reports pinned to the top — Phase 1-N whitepaper entry points, derived
-// from PHASE_DEFINITIONS so adding a phase auto-creates its featured card. Skip phases
+// Featured reports pinned to the top — Phase N whitepaper entry points. Skip phases
 // without a whitepaper (Phase 0 baselines) — they get their own tab instead.
+// Uses phaseWhitepaperSlug() so the URL convention is owned by phases.ts.
 const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = PHASE_DEFINITIONS.filter((p) => p.hasWhitepaper).map((p) => ({
-  slug: `technical-report-conclusive-${p.key}-whitepaper`,
+  slug: phaseWhitepaperSlug(p.key),
   label: `Phase ${p.number} Whitepaper`,
   summary: p.featuredSummary,
 }));
@@ -84,21 +67,7 @@ export default async function ReportsIndex() {
     notFound();
   }
 
-  const entries = discoverReports();
-
-  const unique = new Map<string, ReportLocation>();
-  for (const entry of entries) {
-    const existing = unique.get(entry.slug);
-    if (!existing) {
-      unique.set(entry.slug, entry);
-      continue;
-    }
-    if (existing.kind === 'file' && entry.kind === 'directory') {
-      unique.set(entry.slug, entry);
-    }
-  }
-
-  const reports: ReportEntry[] = Array.from(unique.values()).map((entry) => {
+  const reports: ReportEntry[] = discoverReportsUnique().map((entry) => {
     const meta = readReportMeta(entry.slug);
     return {
       slug: entry.slug,
@@ -108,13 +77,13 @@ export default async function ReportsIndex() {
     };
   });
 
-  // Build three top-level tabs (PHASE_META is module-level, derived from PHASE_DEFINITIONS)
+  // Build three top-level tabs using the shared slug classifier from phases.ts.
   const whitepapers: ReportEntry[] = [];
   const conclusive: ReportEntry[] = [];
   const technicalByPhase = new Map<string, ReportEntry[]>();
 
   for (const report of reports) {
-    const cat = classifyReport(report.slug);
+    const cat = classifyReportSlug(report.slug);
     if (cat === 'whitepaper') {
       whitepapers.push(report);
     } else if (cat === 'conclusive' || cat === 'appendix') {

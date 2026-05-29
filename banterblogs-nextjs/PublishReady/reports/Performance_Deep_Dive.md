@@ -4,7 +4,7 @@
 **Last Updated:** October 10, 2025  
 **Hardware:** NVIDIA RTX 4080 (12GB VRAM, 9,728 CUDA cores), Intel Core i9-13980HX  
 **Framework:** Banterhearts Optimization Suite v2.0  
-**Related:** [TR108](../reports/Technical_Report_108.md), [TR109](../reports/Technical_Report_109.md), [TR110](../banterhearts/demo_multiagent/reports/Technical_Report_110.md)
+**Related:** [TR108](/reports/technical-report-108), [TR109](/reports/technical-report-109), [TR110](/reports/technical-report-110), [Ollama Benchmark](/reports/ollama-benchmark-report), [Gemma 3 Benchmark](/reports/gemma3)
 
 ---
 

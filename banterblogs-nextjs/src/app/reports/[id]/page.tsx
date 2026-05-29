@@ -6,10 +6,28 @@ import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
-import { discoverReports, toHumanTitle } from '@/lib/reports/locator';
-import { extractTRNumber } from '@/lib/reports/phases';
+import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
+import { classifyReportSlug, reportSortRank } from '@/lib/reports/phases';
 import { extractHeadings } from '@/lib/episodes';
 import { reportJsonLd } from './schema.org.json';
+
+// Visual badge styling for each category surfaced by classifyReportSlug.
+// Lives next to the JSX consumer (this page) but keys off the canonical
+// classifier so adding a category in phases.ts auto-fails type-check here.
+const REPORT_TYPE_BADGE: Record<ReturnType<typeof classifyReportSlug>, { label: string; color: string }> = {
+  whitepaper: { label: 'Whitepaper', color: 'text-primary border-primary/40 bg-primary/10' },
+  appendix: { label: 'Appendices', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  conclusive: { label: 'Conclusive Report', color: 'text-accent border-accent/40 bg-accent/10' },
+  compendium: { label: 'Compendium', color: 'text-primary border-primary/40 bg-primary/10' },
+  phase0: { label: 'Pre-TR Baseline', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase1: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase2: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase3: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase4: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase5: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase6: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  other: { label: 'Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+};
 
 export const runtime = 'nodejs';
 export const revalidate = 900;
@@ -34,24 +52,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export function generateStaticParams() {
-  const seen = new Set<string>();
-  return discoverReports()
-    .filter((entry) => {
-      if (seen.has(entry.slug)) return false;
-      seen.add(entry.slug);
-      return true;
-    })
-    .map((entry) => ({ id: entry.slug }));
+  return discoverReportsUnique().map((entry) => ({ id: entry.slug }));
 }
 
-function getReportType(slug: string): { label: string; color: string } {
-  const lower = slug.toLowerCase();
-  if (lower.includes('whitepaper')) return { label: 'Whitepaper', color: 'text-primary border-primary/40 bg-primary/10' };
-  if (lower.includes('appendix') || lower.includes('appendices')) return { label: 'Appendices', color: 'text-muted-foreground border-border/60 bg-muted/30' };
-  if (lower.includes('conclusive')) return { label: 'Conclusive Report', color: 'text-accent border-accent/40 bg-accent/10' };
-  if (lower.includes('compendium')) return { label: 'Compendium', color: 'text-primary border-primary/40 bg-primary/10' };
-  return { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' };
-}
 
 export default async function ReportDetail({ params }: { params: Promise<{ id: string }> }) {
   const reportsEnabled = process.env.REPORTS_ENABLED !== 'false';
@@ -67,23 +70,13 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
 
   const meta = readReportMeta(id) || { title: id.replace(/[-_]/g, ' ') };
   const headings = report.sections.flatMap((s) => extractHeadings(s.markdown));
-  const reportType = getReportType(id);
+  const reportType = REPORT_TYPE_BADGE[classifyReportSlug(id)];
 
-  // Prev/next navigation — sort so technical reports flow in TR-number order
-  // first (TR108 → TR109 → ... → TR152), then conclusive synthesis docs, then
-  // anything else. Default alphabetical sort from locator.ts interleaves
-  // 'technical-report-conclusive-phase1' between 'technical-report-108' and
-  // '-200', breaking sequential reading flow through the TR archive.
-  const uniqueReports = [...new Map(discoverReports().map((r) => [r.slug, r])).values()];
-  const rank = (slug: string): number => {
-    const lower = slug.toLowerCase();
-    const tr = extractTRNumber(lower);
-    if (tr !== null && !lower.includes('conclusive')) return tr; // technical reports: 108..152, addenda included
-    if (lower.includes('conclusive')) return 10_000; // synthesis docs after TRs
-    return 20_000; // gemma3 and anything else last
-  };
-  const allSlugs = uniqueReports
-    .sort((a, b) => rank(a.slug) - rank(b.slug) || a.slug.localeCompare(b.slug))
+  // Prev/next nav: sorted by reportSortRank (Phase 0 baselines first as they
+  // chronologically predate TR108 → TR108..TR152 → conclusive synthesis docs).
+  // Shared with /reports.json so the manifest and the in-page nav agree on order.
+  const allSlugs = discoverReportsUnique()
+    .sort((a, b) => reportSortRank(a.slug) - reportSortRank(b.slug) || a.slug.localeCompare(b.slug))
     .map((r) => r.slug);
   const currentIndex = allSlugs.indexOf(id);
   const prevSlug = currentIndex > 0 ? allSlugs[currentIndex - 1] : null;

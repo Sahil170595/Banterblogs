@@ -310,7 +310,36 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     title: 'Performance Deep Dive: Quantization & Kernel Optimization',
     description: 'CUDA kernel deep-dive across quantization schemes on an RTX 4080 — the baseline characterization that anchored the TR123-133 optimization phase.',
   },
+
+  // ── Compendium (rendered by /reports/compendium, sourced from PublishReady/research_compendium.md) ──
+  'compendium': {
+    title: 'Chimeraforge Whitepaper: High-Performance LLM Agent Orchestration',
+    description: 'Rust vs. Python for production AI orchestration — hybrid architecture and Dual Ollama pattern achieving 58% latency reduction.',
+  },
 };
+
+/**
+ * Build-time assertion: every discovered report slug MUST have a REPORT_CATALOG
+ * entry. Without this, missing entries silently fall through to `summarizeMarkdown`
+ * which renders junk titles like "**Date:**". Call once from a build-time route
+ * (e.g. /reports.json) which already enumerates the full slug set.
+ *
+ * Keep this separate from `readReportMeta` (which retains the soft fallback for
+ * resilience) — we want the contract enforced at build, not on every render.
+ */
+export function assertCatalogComplete(slugs: ReadonlySet<string>): void {
+  const missing: string[] = [];
+  for (const slug of slugs) {
+    if (!(slug in REPORT_CATALOG)) missing.push(slug);
+  }
+  if (missing.length > 0) {
+    const lines = missing.map((s) => `  - '${s}': { title: '...', description: '...' },`).join('\n');
+    throw new Error(
+      `[meta.ts] REPORT_CATALOG is missing entries for ${missing.length} discovered report slug(s):\n${lines}\n` +
+        `Add them to REPORT_CATALOG so /reports doesn't render scraped junk titles.`,
+    );
+  }
+}
 
 function summarizeFile(filePath: string, fallbackTitle: string) {
   try {
@@ -326,18 +355,21 @@ function summarizeFile(filePath: string, fallbackTitle: string) {
 }
 
 export function readReportMeta(id: string): ReportMeta | null {
-  const locations = findReportLocations(id);
-  if (!locations.length) return null;
-
-  // 1. Check static catalog first — always authoritative.
+  // 1. Check static catalog first — always authoritative, and works for synthetic
+  // entries (e.g. 'compendium') whose source markdown lives outside PublishReady/reports/
+  // and therefore has no findReportLocations() result.
   const catalogEntry = REPORT_CATALOG[id];
   if (catalogEntry) {
+    const locations = findReportLocations(id);
     return {
       title: catalogEntry.title,
       description: catalogEntry.description,
-      source: locations[0].source,
+      source: locations[0]?.source,
     };
   }
+
+  const locations = findReportLocations(id);
+  if (!locations.length) return null;
 
   // 2. Look for explicit metadata in directory locations.
   for (const location of locations) {

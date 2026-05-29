@@ -88,6 +88,33 @@ export function discoverReports(): ReportLocation[] {
   return cachedDiscover;
 }
 
+/**
+ * Dedupe `discoverReports()` by slug. Three consumers (the /reports page, the
+ * /reports/[id] detail prev/next nav, and the /reports.json manifest) all need
+ * the same operation; consolidating here so a future scanner change updates
+ * one place instead of three slightly-different copies.
+ *
+ * `preferDirectory` (default: true): when a slug exists as both a `.md` file
+ * AND a same-named directory, keep the directory entry — multi-section reports
+ * (summary.md + report.md inside a folder) need the directory location so
+ * `readReportSections` walks the folder. Without this preference the alphabetical
+ * `.md` would win and the second section silently drops.
+ */
+export function discoverReportsUnique({ preferDirectory = true }: { preferDirectory?: boolean } = {}): ReportLocation[] {
+  const out: Record<string, ReportLocation> = {};
+  for (const entry of discoverReports()) {
+    const existing = out[entry.slug];
+    if (!existing) {
+      out[entry.slug] = entry;
+      continue;
+    }
+    if (preferDirectory && existing.kind === 'file' && entry.kind === 'directory') {
+      out[entry.slug] = entry;
+    }
+  }
+  return Object.values(out);
+}
+
 export function findReportFolder(id: string): ReportLocation | null {
   const target = normalizeSlug(id);
   if (!target) return null;
