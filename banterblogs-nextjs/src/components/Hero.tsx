@@ -6,6 +6,7 @@ import { ArrowRight, Zap, Package, Copy, Check, FileText } from 'lucide-react';
 import { useState } from 'react';
 import type { EpisodeSummary } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
+import { MEASUREMENTS } from '@/lib/constants';
 
 interface HeroStats {
   totalEpisodes: number;
@@ -141,7 +142,7 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
                 patches shipped
               </div>
               <div>
-                <span className="text-lg font-bold text-foreground">1.04M+</span>{' '}
+                <span className="text-lg font-bold text-foreground">{MEASUREMENTS.SHORT}</span>{' '}
                 research measurements
               </div>
               <div>

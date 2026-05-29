@@ -14,6 +14,15 @@ export interface ReportMeta {
  * Static catalog — authoritative titles and one-line descriptions for every
  * report.  Checked first so the index page never shows junk like "**Date:**".
  * Keys are normalised slugs (same transform as locator.ts).
+ *
+ * MAINTENANCE CONTRACT: every report file in PublishReady/reports/ MUST have a
+ * matching catalog entry here. Adding a new TR/conclusive/addendum without a
+ * catalog entry falls through to `summarizeMarkdown` and renders whatever the
+ * scraper happens to pick (frequently "**Date:**" from the metadata table).
+ * Future work (deferred): drive titles/descriptions from per-report meta.json
+ * sidecars or a YAML manifest co-authored in Banterhearts, so catalog updates
+ * happen at report-promote time rather than as a separate site-side step.
+ * Until then, every report-sync pass MUST verify catalog coverage.
  */
 const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   // ── Phase 1 — Foundation (TR108–TR116) ──
@@ -151,11 +160,11 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   // ── Phase 5 — Attack Surface (TR138–TR143) ──
   'technical-report-138': {
     title: 'TR138: Batch Inference Safety Under Non-Determinism',
-    description: 'Audit-layer flip adjudication + 7,257-sample reduced replication on enriched 187-prompt subset, with corrected refusal detector (v2.2). Study D batch-invariant-kernel ablation lives as a standalone addendum (`technical-report-138-study-d-addendum`).',
+    description: 'Audit-layer flip adjudication + 7,257-sample reduced replication on enriched 187-prompt subset, with corrected refusal detector (v2.2). Study D batch-invariant-kernel ablation lives as a standalone addendum.',
   },
   'technical-report-138-study-d-addendum': {
     title: 'TR138 Study D Addendum: Batch-Invariant Kernel Ablation',
-    description: 'Full-depth mechanism report for batch-conditioned refusal robustness. 110-record H100/vLLM ablation across 55 candidate score-flip pairs: standard vLLM reproduces 22/55 label flips and 25/55 text changes; `VLLM_BATCH_INVARIANT=1` reduces both to 0/55. Kernel-path mechanism evidence outside the original 306,996-sample synthesis.',
+    description: 'Full-depth mechanism report for batch-conditioned refusal robustness. 110-record H100/vLLM ablation across 55 candidate score-flip pairs: standard vLLM reproduces 22/55 label flips and 25/55 text changes; the VLLM_BATCH_INVARIANT=1 environment flag reduces both to 0/55. Kernel-path mechanism evidence outside the original 306,996-sample synthesis.',
   },
   'technical-report-139': {
     title: 'TR139: Multi-Turn Jailbreak Susceptibility Under Quantization',
@@ -194,14 +203,18 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: '68,620 judge rows across 5 judges on the TR145 safety subset. κ = 0.6917 (triangulate verdict) — single-judge labels insufficient. Plus a dual-axis methodology finding: safety-specialist judges measure a different axis than general LLM judges.',
   },
 
-  // ── Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152) — TR144 entry is at end of file for legacy ordering ──
+  // ── Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152) ──
+  'technical-report-144': {
+    title: 'TR144: Speculative Decoding x Safety',
+    description: 'Protocol and publication contract — does speculative decoding change safety outcomes via draft model token shaping?',
+  },
   'technical-report-149': {
     title: 'TR149: Standardized Safety Battery — FP16 vs FP8 KV-Cache',
     description: '7,578 records across 3 models × 4 standardized batteries (HarmBench, JailbreakBench, StrongREJECT, XSTest) × 2 KV-cache dtypes. Replicates TR145’s FP8 null on literature-comparable corpora; corrected paired-odds-ratio estimator. Local-only judging, $0 external API.',
   },
   'technical-report-152': {
-    title: 'TR152: The Serving-State Safety Factorial (v1 Local Pilot)',
-    description: 'FP8 KV-cache folded across batch size, prefix-caching, and temperature — 14,400 responses, 7,010 matched pairs. Harmful-prompt refusal invariant under every serving state; only footprint is a sub-percentage-point over-refusal lean on the Qwen family’s XSTest cells. A v1 local pilot, not the definitive Layer 5 result.',
+    title: 'TR152: The Serving-State Safety Factorial (v2 Local Expansion)',
+    description: 'FP8 KV-cache folded across batch size, prefix-caching, and temperature — 45,000 responses, 20,754 matched FP16-vs-FP8 pairs across 5 models × 4 batteries × 6 serving-state contexts (XSTest uncapped to 450/cell). Harmful-prompt refusal perfectly invariant under every serving state (0/8,976 discordant pairs); only footprint is a sub-percentage-point over-refusal lean on the Qwen family on XSTest (Mantel–Haenszel pooled OR 1.88 [1.32, 2.69]). 117/120 cells TOST-equivalent at ±3pp.',
   },
 
   // ── Conclusive Reports & Whitepapers (Phase 1–6, integer-clean naming) ──
@@ -282,11 +295,6 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   'technical-report-conclusive-phase6-whitepaper': {
     title: 'Phase 6 Decision Whitepaper',
     description: 'Executive guidance for serving-state safety certification of optimized LLM inference.',
-  },
-
-  'technical-report-144': {
-    title: 'TR144: Speculative Decoding x Safety',
-    description: 'Protocol and publication contract — does speculative decoding change safety outcomes via draft model token shaping?',
   },
 
   // ── Other ──

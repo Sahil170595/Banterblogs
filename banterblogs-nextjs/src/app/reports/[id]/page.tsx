@@ -7,6 +7,7 @@ import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportTo
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
 import { discoverReports, toHumanTitle } from '@/lib/reports/locator';
+import { extractTRNumber } from '@/lib/reports/phases';
 import { extractHeadings } from '@/lib/episodes';
 import { reportJsonLd } from './schema.org.json';
 
@@ -68,8 +69,22 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
   const headings = report.sections.flatMap((s) => extractHeadings(s.markdown));
   const reportType = getReportType(id);
 
-  // Prev/next navigation
-  const allSlugs = [...new Set(discoverReports().map((r) => r.slug))];
+  // Prev/next navigation — sort so technical reports flow in TR-number order
+  // first (TR108 → TR109 → ... → TR152), then conclusive synthesis docs, then
+  // anything else. Default alphabetical sort from locator.ts interleaves
+  // 'technical-report-conclusive-phase1' between 'technical-report-108' and
+  // '-200', breaking sequential reading flow through the TR archive.
+  const uniqueReports = [...new Map(discoverReports().map((r) => [r.slug, r])).values()];
+  const rank = (slug: string): number => {
+    const lower = slug.toLowerCase();
+    const tr = extractTRNumber(lower);
+    if (tr !== null && !lower.includes('conclusive')) return tr; // technical reports: 108..152, addenda included
+    if (lower.includes('conclusive')) return 10_000; // synthesis docs after TRs
+    return 20_000; // gemma3 and anything else last
+  };
+  const allSlugs = uniqueReports
+    .sort((a, b) => rank(a.slug) - rank(b.slug) || a.slug.localeCompare(b.slug))
+    .map((r) => r.slug);
   const currentIndex = allSlugs.indexOf(id);
   const prevSlug = currentIndex > 0 ? allSlugs[currentIndex - 1] : null;
   const nextSlug = currentIndex >= 0 && currentIndex < allSlugs.length - 1 ? allSlugs[currentIndex + 1] : null;

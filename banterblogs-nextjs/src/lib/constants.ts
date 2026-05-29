@@ -24,9 +24,29 @@ export const EXTERNAL_LINKS = {
   LINKEDIN: 'https://linkedin.com/in/sahilkadadekar',
 } as const;
 
+/**
+ * Research-program headline counts — single source of truth.
+ * Bump these when Banterhearts BANTERHEARTS_MEASUREMENT_COUNT.md changes;
+ * every public surface (Hero, RoadmapRail, SystemsShowcase, /about, /papers,
+ * /platform, /reports, /reports/compendium, /work, llms.txt, rss.xml) imports
+ * these constants instead of carrying its own literal copy.
+ */
+export const MEASUREMENTS = {
+  /** Long-form display, e.g. metadata descriptions and prose. */
+  DISPLAY: '1,040,000+',
+  /** Short-form display for stat tiles and pills. */
+  SHORT: '1.04M+',
+} as const;
+
+export const REPORTS = {
+  /** Headline technical-report count. Excludes Study D Addendum (TR138 follow-up) and conclusive synthesis docs. */
+  COUNT: 48,
+  DISPLAY: '48',
+} as const;
+
 export const SITE_CONFIG = {
   NAME: 'Chimeraforge',
-  DESCRIPTION: 'Personal AI platform running on your hardware — local inference, constitutional AI governance, and 1.04M+ research measurements.',
+  DESCRIPTION: `Personal AI platform running on your hardware — local inference, constitutional AI governance, and ${MEASUREMENTS.SHORT} research measurements.`,
   AUTHOR: 'Sahil Kadadekar',
   TWITTER_HANDLE: '@sahilkadadekar',
 } as const;

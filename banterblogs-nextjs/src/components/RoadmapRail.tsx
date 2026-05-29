@@ -3,29 +3,20 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, FlaskConical } from 'lucide-react';
+import { PHASE_DEFINITIONS } from '@/lib/reports/phases';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-const highlights = [
-  {
-    label: 'Phase 1 — Foundation',
-    range: 'TR108–TR116',
-    summary: 'Model loading, ONNX conversion, quantization baselines, security analysis.',
-  },
-  {
-    label: 'Phase 1.5 — Benchmarking',
-    range: 'TR117–TR122',
-    summary: 'Cross-backend inference parity, TensorRT compilation, scaling laws.',
-  },
-  {
-    label: 'Phase 2 — Optimization',
-    range: 'TR123–TR133',
-    summary: 'KV cache tuning, INT8/FP8 quantization, context scaling, capacity planning.',
-  },
-  {
-    label: 'Phase 3 — Safety',
-    range: 'TR134–TR148',
-    summary: 'Alignment under quantization, AWQ/GPTQ safety, batch perturbation, multi-turn jailbreaks, cross-architecture fragility, speculative decoding, KV-cache safety, multi-judge triangulation.',
-  },
-];
+// Derived from the single PHASE_DEFINITIONS source so phase renames and additions
+// land on the homepage without a second edit. Brief label drops the TR range
+// (which is shown separately as the `range` field) for a cleaner card heading.
+const highlights = PHASE_DEFINITIONS.map((p) => ({
+  label: p.label.split(' (')[0], // "Phase 1 — Foundation"
+  range:
+    p.maxTR === Infinity
+      ? `TR${p.minTR}+`
+      : `TR${p.minTR}–TR${p.maxTR}`,
+  summary: p.featuredSummary,
+}));
 
 export function RoadmapRail() {
   return (
@@ -35,7 +26,7 @@ export function RoadmapRail() {
           Research Program
         </p>
         <h2 className="mt-3 text-3xl md:text-4xl font-bold leading-tight display">
-          1,040,000+ measurements across 48 technical reports
+          {MEASUREMENTS.DISPLAY} measurements across {REPORTS.DISPLAY} technical reports
         </h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed mx-auto">
           Independent ML research with CUDA event timing and controlled safety evaluations.
@@ -43,7 +34,7 @@ export function RoadmapRail() {
         </p>
       </div>
 
-      <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {highlights.map((phase, index) => (
           <motion.div
             key={phase.label}

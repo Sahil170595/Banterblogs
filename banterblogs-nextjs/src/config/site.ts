@@ -1,8 +1,9 @@
 import path from "path";
+import { MEASUREMENTS, REPORTS } from "@/lib/constants";
 
 export const siteConfig = {
   name: "Chimeraforge",
-  description: "Personal AI platform — local inference, constitutional AI governance, and 1.04M+ research measurements across 48 technical reports.",
+  description: `Personal AI platform — local inference, constitutional AI governance, and ${MEASUREMENTS.SHORT} research measurements across ${REPORTS.DISPLAY} technical reports.`,
   paths: {
     posts: path.join(process.cwd(), "posts"),
     banterpacks: path.join(process.cwd(), "posts", "banterpacks"),

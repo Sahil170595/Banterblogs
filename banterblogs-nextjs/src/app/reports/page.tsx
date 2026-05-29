@@ -4,23 +4,24 @@ import { notFound } from 'next/navigation';
 import { discoverReports, toHumanTitle, type ReportLocation } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs';
+import { PHASE_DEFINITIONS, extractTRNumber, phaseForTR, type PhaseKey } from '@/lib/reports/phases';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+
+const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · 5 papers under peer review.`;
 
 export const metadata: Metadata = {
   title: 'Research Archive',
-  description:
-    'Independent LLM safety research · 48 technical reports · 1,040,000+ empirical measurements · 5 papers under peer review.',
+  description: METADATA_DESCRIPTION,
   openGraph: {
     title: 'Research Archive | Chimeraforge',
-    description:
-      'Independent LLM safety research · 48 technical reports · 1,040,000+ empirical measurements · 5 papers under peer review.',
+    description: METADATA_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/reports',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Research Archive | Chimeraforge',
-    description:
-      'Independent LLM safety research · 48 technical reports · 1,040,000+ empirical measurements · 5 papers under peer review.',
+    description: METADATA_DESCRIPTION,
   },
 };
 
@@ -34,12 +35,7 @@ interface ReportEntry {
   source: string;
 }
 
-function extractTRNumber(slug: string): number | null {
-  const match = slug.match(/(?:^|-)(?:tr|technical-report-)(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
-}
-
-type ReportCategory = 'whitepaper' | 'conclusive' | 'appendix' | 'phase6' | 'phase5' | 'phase4' | 'phase3' | 'phase2' | 'phase1' | 'other';
+type ReportCategory = 'whitepaper' | 'conclusive' | 'appendix' | PhaseKey | 'other';
 
 function classifyReport(slug: string): ReportCategory {
   const lower = slug.toLowerCase();
@@ -48,49 +44,35 @@ function classifyReport(slug: string): ReportCategory {
   if (lower.includes('conclusive')) return 'conclusive';
   const tr = extractTRNumber(slug);
   if (tr !== null) {
-    if (tr <= 116) return 'phase1';
-    if (tr <= 122) return 'phase2';
-    if (tr <= 133) return 'phase3';
-    if (tr <= 137) return 'phase4';
-    if (tr <= 143) return 'phase5';
-    return 'phase6';
+    return phaseForTR(tr) ?? 'other';
   }
   return 'other';
 }
 
-// Featured reports pinned to the top — executive-level entry points
-const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = [
-  {
-    slug: 'technical-report-conclusive-phase1-whitepaper',
-    label: 'Phase 1 Whitepaper',
-    summary: 'Foundation synthesis — model loading, ONNX conversion, quantization baselines, and security analysis across 9 technical reports.',
-  },
-  {
-    slug: 'technical-report-conclusive-phase2-whitepaper',
-    label: 'Phase 2 Whitepaper',
-    summary: 'Benchmarking synthesis — cross-backend inference parity, TensorRT compilation, and scaling laws across 6 reports.',
-  },
-  {
-    slug: 'technical-report-conclusive-phase3-whitepaper',
-    label: 'Phase 3 Whitepaper',
-    summary: 'Optimization synthesis — KV cache tuning, INT8/FP8 quantization, context scaling, and deployment pipeline across 11 reports.',
-  },
-  {
-    slug: 'technical-report-conclusive-phase4-whitepaper',
-    label: 'Phase 4 Whitepaper',
-    summary: 'Safety-pivot synthesis — alignment erosion under quantization, concurrency invariance, and backend template divergence across 4 reports.',
-  },
-  {
-    slug: 'technical-report-conclusive-phase5-whitepaper',
-    label: 'Phase 5 Whitepaper',
-    summary: 'Attack-surface synthesis — batch perturbation, multi-turn jailbreaks, cross-architecture fragility, and composition effects across 306K+ samples. TR138 Study D batch-invariant-kernel ablation as standalone addendum.',
-  },
-  {
-    slug: 'technical-report-conclusive-phase6-whitepaper',
-    label: 'Phase 6 Whitepaper',
-    summary: 'Serving-state safety certification — measurement-validity substrate (judge triangulation, KV-cache safety, speculative decoding null, mechanistic probing) + FP8 KV-cache standardized batteries + serving-state factorial.',
-  },
-];
+// PHASE_META and FEATURED_REPORTS derived from the single PHASE_DEFINITIONS source.
+// Module-level so they allocate once at parse time, not per ReportsIndex render.
+const PHASE_META: Record<string, { label: string; description: string; order: number }> = (() => {
+  const meta: Record<string, { label: string; description: string; order: number }> = {};
+  // Newest phase first (order 0 = newest, so the tab list defaults to the latest research).
+  const reversed = [...PHASE_DEFINITIONS].reverse();
+  reversed.forEach((p, i) => {
+    meta[p.key] = { label: p.label, description: p.description, order: i };
+  });
+  meta.other = {
+    label: 'Additional Reports',
+    description: 'Model-specific analyses and supplementary research.',
+    order: reversed.length,
+  };
+  return meta;
+})();
+
+// Featured reports pinned to the top — Phase 1-N whitepaper entry points, derived
+// from PHASE_DEFINITIONS so adding a phase auto-creates its featured card.
+const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = PHASE_DEFINITIONS.map((p) => ({
+  slug: `technical-report-conclusive-${p.key}-whitepaper`,
+  label: `Phase ${p.number} Whitepaper`,
+  summary: p.featuredSummary,
+}));
 
 export default async function ReportsIndex() {
   const reportsEnabled = process.env.REPORTS_ENABLED !== 'false';
@@ -122,20 +104,10 @@ export default async function ReportsIndex() {
     };
   });
 
-  // Build three top-level tabs
+  // Build three top-level tabs (PHASE_META is module-level, derived from PHASE_DEFINITIONS)
   const whitepapers: ReportEntry[] = [];
   const conclusive: ReportEntry[] = [];
   const technicalByPhase = new Map<string, ReportEntry[]>();
-
-  const PHASE_META: Record<string, { label: string; description: string; order: number }> = {
-    'phase6': { label: 'Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152)', description: 'Measurement-validity substrate (judge triangulation, KV-cache safety null, speculative decoding null, mechanistic probing, portability validation) plus the FP8 KV-cache standardized batteries and serving-state factorial.', order: 0 },
-    'phase5': { label: 'Phase 5 — Attack Surface (TR138–TR143)', description: 'Batch perturbation, multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, quality-safety divergence, and cross-request composition. TR138 Study D batch-invariant-kernel ablation as standalone addendum.', order: 1 },
-    'phase4': { label: 'Phase 4 — Safety Pivot (TR134–TR137)', description: 'Alignment under quantization, AWQ/GPTQ safety, backend-driven template divergence, and cross-axis safety taxonomy.', order: 2 },
-    'phase3': { label: 'Phase 3 — Optimization (TR123–TR133)', description: 'KV cache, quantization, multi-backend compilation, context scaling, concurrency, deployment.', order: 3 },
-    'phase2': { label: 'Phase 2 — Benchmarking (TR117–TR122)', description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.', order: 4 },
-    'phase1': { label: 'Phase 1 — Foundation (TR108–TR116)', description: 'Model loading, ONNX conversion, tokenization, quantization, security, monitoring, serving.', order: 5 },
-    'other': { label: 'Additional Reports', description: 'Model-specific analyses and supplementary research.', order: 6 },
-  };
 
   for (const report of reports) {
     const cat = classifyReport(report.slug);
@@ -187,9 +159,9 @@ export default async function ReportsIndex() {
       {/* ── Stats Ribbon ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: '1,040,000+', label: 'Research Measurements' },
-          { value: '48', label: 'Technical Reports' },
-          { value: '5', label: 'Synthesis Whitepapers' },
+          { value: MEASUREMENTS.DISPLAY, label: 'Research Measurements' },
+          { value: REPORTS.DISPLAY, label: 'Technical Reports' },
+          { value: String(FEATURED_REPORTS.length), label: 'Synthesis Whitepapers' },
           { value: '9', label: 'Repositories' },
         ].map((stat) => (
           <div key={stat.label} className="signal-panel p-5 text-center">
@@ -227,8 +199,8 @@ export default async function ReportsIndex() {
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
         </Link>
 
-        {/* Featured report cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Featured report cards — grid columns scale with FEATURED_REPORTS length so a future Phase 7 doesn't orphan a card. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {FEATURED_REPORTS.map((feat) => (
             <Link
               key={feat.slug}

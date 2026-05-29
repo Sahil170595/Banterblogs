@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'About Chimera',
@@ -72,7 +73,7 @@ export default async function AboutPage() {
           <div className="signal-panel p-6">
             <h3 className="font-semibold mb-3">The research</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              1,040,000+ measurements across 48 technical reports. Not wall-clock approximations —
+              {MEASUREMENTS.DISPLAY} measurements across {REPORTS.DISPLAY} technical reports. Not wall-clock approximations —
               CUDA event timing with defined hardware profiles and statistical methodology. Covers
               model loading, ONNX conversion, TensorRT compilation, KV cache optimization,
               multi-agent coordination, and safety analysis across Ollama, vLLM, and TGI.
@@ -98,7 +99,7 @@ export default async function AboutPage() {
             {
               name: 'Banterhearts',
               lang: 'Python',
-              what: 'ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of 1.04M+ measurements across 48 technical reports.',
+              what: `ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of ${MEASUREMENTS.SHORT} measurements across ${REPORTS.DISPLAY} technical reports.`,
             },
             {
               name: 'Chimeraforge',
@@ -157,8 +158,8 @@ export default async function AboutPage() {
       <section className="mb-20">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
-            { value: '1.04M+', label: 'Research Measurements' },
-            { value: '48', label: 'Technical Reports' },
+            { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
+            { value: REPORTS.DISPLAY, label: 'Technical Reports' },
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatNumber(stats.totalLinesAdded), label: 'Lines Documented' },
           ].map((stat) => (
@@ -184,7 +185,7 @@ export default async function AboutPage() {
             commentary with four AI personas, and publishes to this Next.js site via GitHub + Vercel.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            The research archive surfaces 48 technical reports with phase grouping, searchable titles,
+            The research archive surfaces {REPORTS.DISPLAY} technical reports with phase grouping, searchable titles,
             and ISR with 15-minute revalidation. Every report links to real measurements and defined
             methodology.
           </p>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Radio, Cpu, BrainCircuit, BarChart3, Smartphone, BookOpen, Rocket } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 const coreEngines = [
   {
@@ -18,8 +19,8 @@ const coreEngines = [
     name: 'Banterhearts',
     role: 'ML Research Backbone',
     description:
-      'Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across 48 technical reports.',
-    stats: ['1.04M+ measurements', '48 reports', '4 compilation backends'],
+      `Production research platform with CUDA event timing, quantization pipelines, TensorRT compilation, and capacity planning across ${REPORTS.DISPLAY} technical reports.`,
+    stats: [`${MEASUREMENTS.SHORT} measurements`, `${REPORTS.DISPLAY} reports`, '4 compilation backends'],
     href: '/reports',
     icon: <Cpu className="h-6 w-6" />,
   },

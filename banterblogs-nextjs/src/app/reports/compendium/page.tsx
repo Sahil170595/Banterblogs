@@ -4,6 +4,7 @@ import path from 'path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { renderMarkdownToHtml } from '@/lib/episodes';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 import type { Metadata } from 'next';
 
@@ -52,7 +53,7 @@ export default async function CompendiumPage() {
                         <div className="rounded-xl border border-border/50 bg-muted/20 p-6">
                             <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Source Data</h3>
                             <p className="text-sm text-muted-foreground mb-4">
-                                Access all 48 technical reports, 1.04M+ measurements, and phase whitepapers.
+                                Access all {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.SHORT} measurements, and phase whitepapers.
                             </p>
                             <Link href="/reports" className="text-sm text-primary hover:underline flex items-center gap-1">
                                 View Technical Archives <span>&rarr;</span>

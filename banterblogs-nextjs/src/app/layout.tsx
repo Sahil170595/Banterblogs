@@ -15,6 +15,7 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-displ
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://chimeraforge.vercel.app"),
   title: {
     default: "Chimeraforge",
     template: "%s | Chimeraforge",

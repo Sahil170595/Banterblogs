@@ -1,23 +1,23 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Linkedin } from 'lucide-react';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+
+const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
 
 export const metadata: Metadata = {
   title: 'Work',
-  description:
-    'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 1.04M+ measurements.',
+  description: METADATA_DESCRIPTION,
   openGraph: {
     title: 'Work | Chimeraforge',
-    description:
-      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 1.04M+ measurements.',
+    description: METADATA_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/work',
     type: 'profile',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Work | Chimeraforge',
-    description:
-      'ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 48 technical reports, 1.04M+ measurements.',
+    description: METADATA_DESCRIPTION,
   },
 };
 
@@ -176,7 +176,7 @@ export default function WorkPage() {
           <p className="text-lg text-muted-foreground leading-relaxed">
             Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
             A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 more under peer review,
-            48 technical reports, 1,040,000+ empirical measurements, and a constitutional AI ecosystem spanning
+            {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.DISPLAY} empirical measurements, and a constitutional AI ecosystem spanning
             9 repositories and 5 languages.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
