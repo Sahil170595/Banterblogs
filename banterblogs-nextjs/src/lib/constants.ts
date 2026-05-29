@@ -32,16 +32,25 @@ export const EXTERNAL_LINKS = {
  * these constants instead of carrying its own literal copy.
  */
 export const MEASUREMENTS = {
-  /** Long-form display, e.g. metadata descriptions and prose. */
-  DISPLAY: '1,040,000+',
-  /** Short-form display for stat tiles and pills. */
+  /** Long-form display, e.g. metadata descriptions and prose. Mirrors Banterhearts canonical exactly. */
+  DISPLAY: '1,041,000+',
+  /** Short-form display for stat tiles and pills (1.041M rounds to 1.04M; floor still holds). */
   SHORT: '1.04M+',
 } as const;
 
 export const REPORTS = {
-  /** Headline technical-report count. Excludes Study D Addendum (TR138 follow-up) and conclusive synthesis docs. */
-  COUNT: 48,
-  DISPLAY: '48',
+  /**
+   * Headline technical-report count. Ground-truthed from `ls PublishReady/reports/Technical_Report_*.md`
+   * minus conclusive/whitepaper/appendices entries on 2026-05-28.
+   *
+   * 45 = TR108-TR148 (41) + TR117_multi_agent variant + TR138 Study D Addendum + TR149 + TR152.
+   *
+   * Prior "48" was a 3-report inflation inherited from a stale baseline and propagated through
+   * the TR149+TR152 sync commit (9984bc8). The auto-generated /reports.json manifest's
+   * counts.technical_reports filter (phase-bucket entries) is the canonical check — they must match.
+   */
+  COUNT: 45,
+  DISPLAY: '45',
 } as const;
 
 export const SITE_CONFIG = {
