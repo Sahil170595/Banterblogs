@@ -297,10 +297,18 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'Executive guidance for serving-state safety certification of optimized LLM inference.',
   },
 
-  // ── Other ──
+  // ── Phase 0 — Pre-TR Baselines (Sep–Oct 2025, predate the TR108+ numbering scheme) ──
   'gemma3': {
     title: 'Gemma 3 Benchmark Report',
     description: 'Performance benchmarks for Google Gemma 3 models — baseline measurements, parameter tuning, and quantization.',
+  },
+  'ollama-benchmark-report': {
+    title: 'Ollama LLM Benchmark: Quantization & Runtime Analysis',
+    description: 'Llama 3.1 8B across q4_0 / q5_K_M / q8_0 quantizations — runtime characterization on consumer GPU that motivated the TR108+ Rust-vs-Python program.',
+  },
+  'performance-deep-dive': {
+    title: 'Performance Deep Dive: Quantization & Kernel Optimization',
+    description: 'CUDA kernel deep-dive across quantization schemes on an RTX 4080 — the baseline characterization that anchored the TR123-133 optimization phase.',
   },
 };
 

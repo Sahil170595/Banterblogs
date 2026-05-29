@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { discoverReports, toHumanTitle, type ReportLocation } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs';
-import { PHASE_DEFINITIONS, extractTRNumber, phaseForTR, type PhaseKey } from '@/lib/reports/phases';
+import { PHASE_DEFINITIONS, extractTRNumber, phaseForTR, phaseForSlug, type PhaseKey } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · 5 papers under peer review.`;
@@ -42,6 +42,9 @@ function classifyReport(slug: string): ReportCategory {
   if (lower.includes('whitepaper')) return 'whitepaper';
   if (lower.includes('appendix') || lower.includes('appendices')) return 'appendix';
   if (lower.includes('conclusive')) return 'conclusive';
+  // Slug-pinned phases (Phase 0 baselines) first — these have no TR number.
+  const pinned = phaseForSlug(slug);
+  if (pinned) return pinned;
   const tr = extractTRNumber(slug);
   if (tr !== null) {
     return phaseForTR(tr) ?? 'other';
@@ -67,8 +70,9 @@ const PHASE_META: Record<string, { label: string; description: string; order: nu
 })();
 
 // Featured reports pinned to the top — Phase 1-N whitepaper entry points, derived
-// from PHASE_DEFINITIONS so adding a phase auto-creates its featured card.
-const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = PHASE_DEFINITIONS.map((p) => ({
+// from PHASE_DEFINITIONS so adding a phase auto-creates its featured card. Skip phases
+// without a whitepaper (Phase 0 baselines) — they get their own tab instead.
+const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = PHASE_DEFINITIONS.filter((p) => p.hasWhitepaper).map((p) => ({
   slug: `technical-report-conclusive-${p.key}-whitepaper`,
   label: `Phase ${p.number} Whitepaper`,
   summary: p.featuredSummary,

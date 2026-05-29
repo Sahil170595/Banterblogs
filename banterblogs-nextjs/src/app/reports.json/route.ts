@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { discoverReports } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
-import { extractTRNumber, phaseForTR } from '@/lib/reports/phases';
+import { extractTRNumber, phaseForTR, phaseForSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 /**
@@ -28,6 +28,9 @@ function classify(slug: string): string {
   if (lower.includes('whitepaper')) return 'whitepaper';
   if (lower.includes('appendix') || lower.includes('appendices')) return 'appendix';
   if (lower.includes('conclusive')) return 'conclusive';
+  // Slug-pinned phases (Phase 0 baselines) first — these predate TR numbering.
+  const pinned = phaseForSlug(slug);
+  if (pinned) return pinned;
   const tr = extractTRNumber(slug);
   if (tr !== null) return phaseForTR(tr) ?? 'other';
   return 'other';

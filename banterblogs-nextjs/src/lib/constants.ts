@@ -40,17 +40,20 @@ export const MEASUREMENTS = {
 
 export const REPORTS = {
   /**
-   * Headline technical-report count. Ground-truthed from `ls PublishReady/reports/Technical_Report_*.md`
-   * minus conclusive/whitepaper/appendices entries on 2026-05-28.
+   * Headline technical-report count. Ground-truthed from /reports.json manifest on 2026-05-28
+   * AFTER pulling the 2 stranded Phase 0 baseline reports out of PublishReady/docs/.
    *
-   * 45 = TR108-TR148 (41) + TR117_multi_agent variant + TR138 Study D Addendum + TR149 + TR152.
+   * 48 = 45 TR-numbered reports + 3 Phase 0 pre-TR baselines:
+   *   - 45 TR: TR108-TR148 (41) + TR117_multi_agent + TR138_Study_D_Addendum + TR149 + TR152
+   *   - 3 Phase 0: gemma3 + ollama-benchmark-report + performance-deep-dive (Sep-Oct 2025)
    *
-   * Prior "48" was a 3-report inflation inherited from a stale baseline and propagated through
-   * the TR149+TR152 sync commit (9984bc8). The auto-generated /reports.json manifest's
-   * counts.technical_reports filter (phase-bucket entries) is the canonical check — they must match.
+   * History: a prior pass undercounted to 45 by filtering only `Technical_Report_*.md` and
+   * missing the 2 reports that lived in PublishReady/docs/ (since moved to /reports/). The
+   * "48" was historically correct catalog count even when 2 reports were stranded from rendering.
+   * /reports.json `counts.technical_reports` + `counts.phase0` should sum to this number.
    */
-  COUNT: 45,
-  DISPLAY: '45',
+  COUNT: 48,
+  DISPLAY: '48',
 } as const;
 
 export const SITE_CONFIG = {
