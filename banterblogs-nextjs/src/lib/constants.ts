@@ -33,27 +33,26 @@ export const EXTERNAL_LINKS = {
  */
 export const MEASUREMENTS = {
   /** Long-form display, e.g. metadata descriptions and prose. Mirrors Banterhearts canonical exactly. */
-  DISPLAY: '1,041,000+',
-  /** Short-form display for stat tiles and pills (1.041M rounds to 1.04M; floor still holds). */
-  SHORT: '1.04M+',
+  DISPLAY: '1,119,000+',
+  /** Short-form display for stat tiles and pills (1.119M rounds to 1.12M; floor still holds). */
+  SHORT: '1.12M+',
 } as const;
 
 export const REPORTS = {
   /**
-   * Headline technical-report count. Ground-truthed from /reports.json manifest on 2026-05-28
-   * AFTER pulling the 2 stranded Phase 0 baseline reports out of PublishReady/docs/.
+   * Headline technical-report count. Ground-truthed from /reports.json manifest on 2026-06-06
+   * after adding TR163 (Phase 7) + TR164 (Phase 8) from the Banterhearts sync.
    *
-   * 48 = 45 TR-numbered reports + 3 Phase 0 pre-TR baselines:
-   *   - 45 TR: TR108-TR148 (41) + TR117_multi_agent + TR138_Study_D_Addendum + TR149 + TR152
+   * 50 = 47 TR-numbered reports + 3 Phase 0 pre-TR baselines:
+   *   - 47 TR: TR108-TR148 (41) + TR117_multi_agent + TR138_Study_D_Addendum + TR149 + TR152 + TR163 + TR164
    *   - 3 Phase 0: gemma3 + ollama-benchmark-report + performance-deep-dive (Sep-Oct 2025)
    *
    * History: a prior pass undercounted to 45 by filtering only `Technical_Report_*.md` and
-   * missing the 2 reports that lived in PublishReady/docs/ (since moved to /reports/). The
-   * "48" was historically correct catalog count even when 2 reports were stranded from rendering.
+   * missing the 2 reports that lived in PublishReady/docs/ (since moved to /reports/).
    * /reports.json `counts.technical_reports` + `counts.phase0` should sum to this number.
    */
-  COUNT: 48,
-  DISPLAY: '48',
+  COUNT: 50,
+  DISPLAY: '50',
 } as const;
 
 export const SITE_CONFIG = {

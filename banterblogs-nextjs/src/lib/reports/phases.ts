@@ -10,7 +10,7 @@
  * Adding a new phase: add ONE entry to PHASE_DEFINITIONS below. Everything else
  * derives. Matches the integer-clean Banterhearts naming (commit c3d051bb).
  */
-export type PhaseKey = 'phase0' | 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'phase6';
+export type PhaseKey = 'phase0' | 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'phase6' | 'phase7' | 'phase8';
 
 export interface PhaseDefinition {
   key: PhaseKey;
@@ -107,8 +107,32 @@ export const PHASE_DEFINITIONS: PhaseDefinition[] = [
     featuredSummary:
       'Serving-state safety certification — measurement-validity substrate (judge triangulation, KV-cache safety null, speculative decoding null, mechanistic probing, portability validation) + FP8 KV-cache standardized batteries + serving-state factorial.',
     minTR: 144,
-    maxTR: Infinity,
+    maxTR: 152,
     hasWhitepaper: true,
+  },
+  {
+    key: 'phase7',
+    number: '7',
+    label: 'Phase 7 — Mitigation Turn (TR155–TR163)',
+    description:
+      'First applied defenses against the failure modes Phases 4–6 detected: RTSI-gated quantization routing, attention-sink eviction × refusal, and refusal-direction geometry. Proof-of-mechanism pilots — paper-grade expansion in progress.',
+    featuredSummary:
+      'Mitigation turn — RTSI-gated quantization routing and serving-state defenses against quantization-induced refusal loss. Proof-of-mechanism pilots; paper-grade expansion in progress.',
+    minTR: 155,
+    maxTR: 163,
+    hasWhitepaper: false,
+  },
+  {
+    key: 'phase8',
+    number: '8',
+    label: 'Phase 8 — Serving-Stack Mechanism Isolation (TR164–TR165)',
+    description:
+      'Serving-stack physics on consumer GPUs: breakdown boundaries, GIL-attributable concurrency collapse, and deterministic cell-shape hangs under in-process inference, with cross-backend (PyTorch / vLLM / SGLang / TGI) validation. In flight — conclusive synthesis pending.',
+    featuredSummary:
+      'Serving-stack mechanism isolation — breakdown boundaries and GIL-attributable concurrency collapse across PyTorch / vLLM / SGLang / TGI. In flight.',
+    minTR: 164,
+    maxTR: Infinity,
+    hasWhitepaper: false,
   },
 ];
 

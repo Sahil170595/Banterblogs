@@ -9,9 +9,10 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 // Derived from the single PHASE_DEFINITIONS source so phase renames and additions
 // land on the homepage without a second edit. Brief label drops the TR range
 // (which is shown separately as the `range` field) for a cleaner card heading.
-// Filter to TR-numbered phases — Phase 0 baselines predate TR numbering and live
-// only in the /reports archive, not in the homepage 6-card lane.
-const highlights = PHASE_DEFINITIONS.filter((p) => p.minTR !== undefined).map((p) => ({
+// Filter to phases with a conclusive whitepaper — Phase 0 baselines predate TR
+// numbering, and the in-flight phases (7 Mitigation Turn, 8 Serving-Stack Isolation)
+// have no synthesis yet; all live in the /reports archive, not the homepage lane.
+const highlights = PHASE_DEFINITIONS.filter((p) => p.minTR !== undefined && p.hasWhitepaper).map((p) => ({
   label: p.label.split(' (')[0], // "Phase 1 — Foundation"
   range: phaseRangeLabel(p.key),
   summary: p.featuredSummary,

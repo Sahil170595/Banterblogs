@@ -26,6 +26,8 @@ const REPORT_TYPE_BADGE: Record<ReturnType<typeof classifyReportSlug>, { label: 
   phase4: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
   phase5: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
   phase6: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase7: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
+  phase8: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
   other: { label: 'Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
 };
 

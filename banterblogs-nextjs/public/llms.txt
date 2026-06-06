@@ -15,7 +15,7 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 ## Scale
 
 - 9 repositories across Python, Rust, TypeScript, C#, JavaScript
-- 1,041,000+ research measurements across 48 technical reports
+- 1,119,000+ research measurements across 50 technical reports
 - 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing (workshop, not the main conference)
 - 5 papers under peer review (target: top ML venues)
 - 266+ auto-generated development episodes (193 Banterpacks + 73 Chimera)
@@ -27,7 +27,7 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 Core monorepo. Six interconnected subsystems handling constitutional AI enforcement, multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant. Includes a 7-crate Rust runtime with Ed25519 provenance, BFT consensus, and zero-knowledge proofs.
 
 ### 2. Banterhearts (Python)
-ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 1.04M+ measurements across 48 reports.
+ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 1.12M+ measurements across 50 reports.
 
 ### 3. Chimeraforge (Python, Rust)
 LLM deployment optimizer published on PyPI. `chimeraforge plan` CLI — 4-gate capacity planner (VRAM, Quality, Latency, Cost) across 15 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859), dual-language harnesses, 292 tests.
@@ -45,12 +45,12 @@ Messaging channel adapters — Slack and Discord bridges to JARVIS with session 
 Web console for JARVIS — chat with streaming, control room dashboard, cognitive agent ELO, tool catalog, workflow management, memory browser.
 
 ### 8. Banterblogs / Chimeraforge Site (TypeScript / Next.js)
-This site (https://chimeraforge.vercel.app). Auto-generated episodes from git commits across all repos, research archive of 48 technical reports with phase whitepapers + conclusive synthesis docs + extended appendices. Next.js 16 with SSG + ISR.
+This site (https://chimeraforge.vercel.app). Auto-generated episodes from git commits across all repos, research archive of 50 technical reports with phase whitepapers + conclusive synthesis docs + extended appendices. Next.js 16 with SSG + ISR.
 
 ### 9. Project Wyvern
 Embodied autonomy extension of the constitutional architecture. Governed mission-execution plane between Chimera control and PX4/ArduPilot, with a 5-tier authority hierarchy, cryptographic mission replay, and OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP on PX4 + ROS 2 + Gazebo in progress.
 
-## Research Program — 1,041,000+ Measurements
+## Research Program — 1,119,000+ Measurements
 
 Independent ML research with CUDA event timing and controlled safety evaluations. All measurements are reproducible with defined hardware profiles, statistical methodology, and raw data.
 
@@ -65,9 +65,11 @@ Independent ML research with CUDA event timing and controlled safety evaluations
 - **Phase 4 — Safety Pivot (TR134–TR137):** Alignment under quantization, AWQ/GPTQ safety, backend-driven template divergence, cross-axis safety taxonomy.
 - **Phase 5 — Attack Surface (TR138–TR143):** Batch perturbation (TR138 + Study D batch-invariant-kernel ablation), multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, quality-safety divergence, cross-request composition. 306,996+ samples, 18+ models.
 - **Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152):** Speculative decoding null (TR144), KV-cache safety null (TR145), mechanistic probing (TR146), portability validation (TR147), multi-judge triangulation (TR148, κ = 0.69, dual-axis methodology), standardized FP16-vs-FP8 KV-cache battery (TR149), serving-state factorial across batch / prefix-caching / temperature (TR152 v2 — 45,000 records, 20,754 matched pairs).
+- **Phase 7 — Mitigation Turn (TR155–TR163):** First applied defenses against the failure modes Phases 4–6 detected — RTSI-gated quantization routing (TR163), attention-sink eviction and refusal (TR155), refusal-direction geometry (TR160). Proof-of-mechanism pilots; paper-grade expansion in progress.
+- **Phase 8 — Serving-Stack Mechanism Isolation (TR164–TR165):** Serving-stack physics on consumer GPUs — breakdown boundaries, GIL-attributable concurrency collapse, deterministic cell-shape hangs, and cross-backend (PyTorch/vLLM/SGLang/TGI) validation. In flight.
 
 ### Synthesis Documents
-Each phase has a conclusive synthesis (dissertation-style), extended appendices, and an executive decision whitepaper:
+Each completed phase (1–6) has a conclusive synthesis (dissertation-style), extended appendices, and an executive decision whitepaper:
 - Phase 1 (TR108–TR116): Language, architecture, runtime, and model selection
 - Phase 2 (TR117–TR122): Performance, cost, scaling, compiler behavior
 - Phase 3 (TR123–TR133): Economics, quantization, context scaling, serving stacks

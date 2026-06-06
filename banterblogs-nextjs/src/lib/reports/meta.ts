@@ -217,6 +217,18 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: 'FP8 KV-cache folded across batch size, prefix-caching, and temperature — 45,000 responses, 20,754 matched FP16-vs-FP8 pairs across 5 models × 4 batteries × 6 serving-state contexts (XSTest uncapped to 450/cell). Harmful-prompt refusal perfectly invariant under every serving state (0/8,976 discordant pairs); only footprint is a sub-percentage-point over-refusal lean on the Qwen family on XSTest (Mantel–Haenszel pooled OR 1.88 [1.32, 2.69]). 117/120 cells TOST-equivalent at ±3pp.',
   },
 
+  // ── Phase 7 — Mitigation Turn (TR155–TR163) ──
+  'technical-report-163': {
+    title: 'TR163: RTSI-Gated Quantization Routing',
+    description: 'Offline LOOCV feasibility study over the TR142 RTSI table — routing the highest-instability (model × quantization) configurations to a safe baseline recovers ~76% of the quantization refusal-loss gap at ~20% of configs rerouted (out-of-sample ROC-AUC 0.84). A proof-of-mechanism defense, circularity disclosed; paper-grade expansion specified.',
+  },
+
+  // ── Phase 8 — Serving-Stack Mechanism Isolation (TR164–TR165) ──
+  'technical-report-164': {
+    title: 'TR164: Serving-Stack Physics — GIL-Attributable Concurrency Collapse',
+    description: '346-cell matched study across 3 model tiers × 4 workloads × 5 concurrency levels on a consumer RTX 4080: a uniform parallel-efficiency breakdown at N=2, P95 latency multipliers up to 1446×, and six deterministic N=16 hangs attributed to Python GIL serialization, with kernel-level nsys evidence and cross-backend (vLLM / SGLang / TGI) validation.',
+  },
+
   // ── Conclusive Reports & Whitepapers (Phase 1–6, integer-clean naming) ──
   // Phase 1 — Foundation
   'technical-report-conclusive-phase1': {

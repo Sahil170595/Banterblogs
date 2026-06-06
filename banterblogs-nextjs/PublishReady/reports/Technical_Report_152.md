@@ -98,7 +98,7 @@ TR152 is the interaction study. Its design question is not "does FP8 change safe
 
 This is the Layer 5 anchor of the serving-state-safety-certification bridge paper: the layer that justifies (or refuses) a serving-state-independent FP8 certificate.
 
-**Operational hypothesis structure (criteria fixed in `research/PHASE5_RESEARCH_AGENDA.md` and the design's `config_v2_local.yaml` before sampling).** The design's analyze pipeline operationalizes the design question into three competing hypotheses on the FP8 contrast:
+**Operational hypothesis structure (criteria fixed in `research/PHASE7_RESEARCH_AGENDA.md` and the design's `config_v2_local.yaml` before sampling).** The design's analyze pipeline operationalizes the design question into three competing hypotheses on the FP8 contrast:
 
 - **H0 (the null the study tries to retire):** $\Delta(s)$ is flat across all six serving-state contexts $s$ — i.e., the FP8 contrast is *independent* of the serving state. Operationalized as a Mantel–Haenszel pooled OR bracketing 1.0 **and** an FP8-interaction spread within ±3 pp **and** zero per-cell Holm-significant cells.
 - **H1 (the interesting positive — interaction):** some serving-state axis $s^\star$ modulates $\Delta$ — i.e., the FP8 verdict is *conditional* on $s^\star$. Operationalized as an interaction spread exceeding ±3 pp, with at least one Holm-significant cell on $s^\star$ and an axis-level main effect.
@@ -791,7 +791,7 @@ Layer 5 of the serving-state-safety-certification protocol asks whether an FP8 K
 - **Layer 4: Cloud-scale validity.** Anchor: TR151 (7B–72B matrix, scale companion). Currently deferred.
 - **Layer 5: Serving-state validity.** Anchor: **TR152 v2 (this report)**. The certification layer the bridge paper is building toward.
 
-TR152 v2's role in this stack is Layer 5's only data anchor. The layer cannot be skipped (a certificate without serving-state validity is not deployment-licensed), and TR152 v2 is the data the layer requires. The bridge paper's submission scenario (NeurIPS 2027 main / D&B or MLSys 2028 stretch, gated on the 2026-10-24 GO/NO-GO trigger) reads this v2 report as the Layer 5 chapter.
+TR152 v2's role in this stack is Layer 5's only data anchor. The layer cannot be skipped (a certificate without serving-state validity is not deployment-licensed), and TR152 v2 is the data the layer requires. The bridge paper's submission scenario (a top-tier external venue, gated on the 2026-10-24 GO/NO-GO trigger) reads this v2 report as the Layer 5 chapter.
 
 ---
 
