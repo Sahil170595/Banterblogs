@@ -140,6 +140,7 @@ interface OpenSourceItem {
   label: string;
   href: string;
   detail: string;
+  evidence?: { label: string; href: string };
 }
 
 const OPEN_SOURCE: OpenSourceItem[] = [
@@ -159,7 +160,8 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'PyTorch PR #175562 — merged to PyTorch main',
     href: 'https://github.com/pytorch/pytorch/pull/175562',
     detail:
-      'Authored an upstream PyTorch fix, merged to main (2026-06-04), replacing a hard assertion with a warning in cudagraph_trees deallocation — surfaced while diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered deallocation errors during compiled inference. The decode-path fix is now in review upstream (PR #184102).',
+      'Authored an upstream PyTorch fix, merged to main (2026-06-04), replacing a hard assertion with a warning in cudagraph_trees deallocation — surfaced while diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered deallocation errors during compiled inference. Also validated the maintainer\'s in-review decode-path fix (PR #184102) on a real HF gpt2 decode and reported a multi-partition coverage gap it leaves open.',
+    evidence: { label: 'Validation gist + repro (PR #184102)', href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb' },
   },
 ];
 
@@ -289,21 +291,34 @@ export default function WorkPage() {
         </h2>
         <div className="space-y-4">
           {OPEN_SOURCE.map((item) => (
-            <Link
+            <div
               key={item.href}
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block group signal-panel p-5 hover:border-primary/40 transition-all"
+              className="group signal-panel p-5 hover:border-primary/40 transition-all"
             >
               <div className="flex items-start justify-between gap-4 mb-2">
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                <Link
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-foreground group-hover:text-primary transition-colors"
+                >
                   {item.label}
-                </h3>
+                </Link>
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/60 mt-1 shrink-0" />
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
-            </Link>
+              {item.evidence && (
+                <Link
+                  href={item.evidence.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  {item.evidence.label}
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
           ))}
         </div>
       </section>
