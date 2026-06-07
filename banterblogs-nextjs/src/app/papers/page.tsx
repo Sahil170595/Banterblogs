@@ -47,7 +47,7 @@ const NEURIPS_2026: Paper[] = [
   {
     title: 'Compile-Stack Attribution',
     thesis:
-      'Independent upstream bugs in PyTorch and Triton jointly produce the torch.compile decode crash. Triton minor-version ablation on the same GPU flips the conclusion. Benchmark identity is a 5-tuple (GPU, Triton, PyTorch, cache, compile mode). Companion to upstream PR #175562.',
+      'Independent upstream bugs in PyTorch and Triton jointly produce the torch.compile decode crash. Triton minor-version ablation on the same GPU flips the conclusion. Benchmark identity is a 5-tuple (GPU, Triton, PyTorch, cache, compile mode). Companion to upstream PR #175562 (merged to PyTorch main).',
     venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [

@@ -156,10 +156,10 @@ const OPEN_SOURCE: OpenSourceItem[] = [
       '11 quantized (AWQ + GPTQ 4-bit) across Llama 3.2, Qwen 2.5, Mistral 7B, Phi-2, plus 4 custom GPT-2 scaling variants from the model scaling study.',
   },
   {
-    label: 'PyTorch PR #175562 — torch.compile decode failure',
+    label: 'PyTorch PR #175562 — merged to PyTorch main',
     href: 'https://github.com/pytorch/pytorch/pull/175562',
     detail:
-      'Triaged upstream PR diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered cudagraph_trees deallocation errors during compiled inference.',
+      'Authored an upstream PyTorch fix, merged to main (2026-06-04), replacing a hard assertion with a warning in cudagraph_trees deallocation — surfaced while diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered deallocation errors during compiled inference. The decode-path fix is now in review upstream (PR #184102).',
   },
 ];
 
