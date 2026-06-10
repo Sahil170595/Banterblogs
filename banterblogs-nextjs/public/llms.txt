@@ -94,7 +94,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 
 ### Under peer review (target: top ML venues)
 1. Compile-Stack Attribution (TR126, TR147)
-2. Quality-Safety Correlation Under Quantization (TR125, TR134, TR142)
+2. Quality Is Not a Safety Proxy Under Quantization (TR125, TR134, TR142) — arXiv:2606.10154
 3. Many-Shot Jailbreak Under Quantization (TR140)
 4. Speculative Decoding Safety — Null Result (TR144)
 5. Multi-Turn Jailbreak × Quantization (TR139)

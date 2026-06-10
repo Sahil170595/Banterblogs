@@ -56,9 +56,9 @@ const NEURIPS_2026: Paper[] = [
     ],
   },
   {
-    title: 'Quality-Safety Correlation Under Quantization',
+    title: 'Quality Is Not a Safety Proxy Under Quantization',
     thesis:
-      "Simpson's paradox in the safety-quality relationship. Refusal Template Stability Index calibrated with LOOCV across 51 model-format cells (GGUF + AWQ + GPTQ), inter-judge κ = 0.873.",
+      'Across a 51-row matrix (6 models, 4 families, a 7-level GGUF ladder + AWQ/GPTQ INT4), retained quality does not waive direct safety testing: 9 hidden-danger rows (plus 1 near-hidden) hold quality steady or better while refusal falls 12-68pp. A calibrated refusal-template-drift screen (RTSI) routes all 10 to direct safety testing; Claude Sonnet 4 relabels 11,470 items and agrees with the gemma3:12b judge on 89.9% of rows (κ = 0.873).',
     venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [
@@ -66,6 +66,7 @@ const NEURIPS_2026: Paper[] = [
       { label: 'TR134', slug: 'technical-report-134' },
       { label: 'TR142', slug: 'technical-report-142' },
     ],
+    arxiv: 'https://arxiv.org/abs/2606.10154',
   },
   {
     title: 'Many-Shot Jailbreak Under Quantization',
