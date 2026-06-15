@@ -10,7 +10,7 @@
  * Adding a new phase: add ONE entry to PHASE_DEFINITIONS below. Everything else
  * derives. Matches the integer-clean Banterhearts naming (commit c3d051bb).
  */
-export type PhaseKey = 'phase0' | 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'phase6' | 'phase7' | 'phase8';
+export type PhaseKey = 'phase0' | 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'phase6' | 'phase7' | 'phase8' | 'phase9';
 
 export interface PhaseDefinition {
   key: PhaseKey;
@@ -131,6 +131,18 @@ export const PHASE_DEFINITIONS: PhaseDefinition[] = [
     featuredSummary:
       'Serving-stack mechanism isolation — breakdown boundaries and GIL-attributable concurrency collapse across PyTorch / vLLM / SGLang / TGI. In flight.',
     minTR: 164,
+    maxTR: 165,
+    hasWhitepaper: false,
+  },
+  {
+    key: 'phase9',
+    number: '9',
+    label: 'Phase 9 — Predictive-Validity Follow-ups (TR166–TR168)',
+    description:
+      "v2 predictive-validity tests of the program's three named methodological screens — RTSIv2 (TR166), JTPv2 (TR167), CRIv2 (TR168): does each calibrated index predict its target on a disjoint hold-out, not just fit in-sample? In flight — only TR167 promoted so far.",
+    featuredSummary:
+      'Predictive-validity follow-ups — whether the RTSI / JTP / CRI screens predict their targets out-of-sample, not just calibrate in-sample. In flight.',
+    minTR: 166,
     maxTR: Infinity,
     hasWhitepaper: false,
   },

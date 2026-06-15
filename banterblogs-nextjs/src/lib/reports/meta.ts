@@ -229,6 +229,21 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: '346-cell matched study across 3 model tiers × 4 workloads × 5 concurrency levels on a consumer RTX 4080: a uniform parallel-efficiency breakdown at N=2, P95 latency multipliers up to 1446×, and six deterministic N=16 hangs attributed to Python GIL serialization, with kernel-level nsys evidence and cross-backend (vLLM / SGLang / TGI) validation.',
   },
 
+  'technical-report-165': {
+    title: 'TR165: Python GIL Ablation for Direct PyTorch Inference Boundaries',
+    description: "Matched-pair nogil falsification of TR164 V1's GIL-attribution hypothesis — same hardware/models/workloads under a Python 3.14t free-threaded build, one knob flipped. Verdict H2_partial: removing the GIL recovers ~+17.9pp of N=2 parallel efficiency (19/24 combinations) and resolves 2 of 6 deterministic hangs, so the GIL is a mechanism behind the breakdown, not the sole cause.",
+  },
+  'technical-report-164-v3': {
+    title: 'TR164 V3: Cross-Backend Serving-Stack Boundary Matrix (vLLM vs SGLang)',
+    description: "Matched A100 80GB PCIe head-to-head — 5 models × 5 workloads × 6 concurrency levels × 2 phases per backend (1,800 cells / 189,000 rows, ok_rate 1.0). Continuous batching holds 0.47–0.62 parallel efficiency at N=32, an order-of-magnitude shift up from V1 pytorch_direct's 0.056 collapse. vLLM/SGLang deltas are small (1.5–7.6pp) but Holm-significant on 4 of 5 workloads — a workload-conditional routing signal, not an engine ranking.",
+  },
+
+  // ── Phase 9 — Predictive-Validity Follow-ups (TR166–TR168) ──
+  'technical-report-167': {
+    title: 'TR167: JTPv2 — Predictive Validity of Cheap Pre-Rejudge Signals',
+    description: "Predictive-validity follow-up to the Judge Triangulation Protocol (TR148): can a cheap pre-rejudge signal predict a cell's judge-sensitivity on a leave-one-family-out hold-out before paying for the second-judge pass? On the GGUF-local rlhf-only hold-out the class label saturates (all-positive → AUC undefined) — a structural property of JTP on production-quantization substrate, not a power failure; directional signs and a pool-robustness secondary finding hold.",
+  },
+
   // ── Conclusive Reports & Whitepapers (Phase 1–6, integer-clean naming) ──
   // Phase 1 — Foundation
   'technical-report-conclusive-phase1': {

@@ -2,7 +2,8 @@
 
 # Chimeraforge
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
@@ -14,12 +15,15 @@
 
 ## Overview
 
-This is the Next.js application that powers [chimeraforge.vercel.app](https://chimeraforge.vercel.app). It serves as the development log and research archive for the Chimera ecosystem — a suite of repositories building real-time AI tools for streamers.
+This is the Next.js application that powers [chimeraforge.vercel.app](https://chimeraforge.vercel.app). It serves as the development log and research archive for the Chimera ecosystem — a constitutional AI enforcement architecture spanning 9 repositories across Python, Rust, TypeScript, C#, and JavaScript.
 
-The site publishes two types of content:
+The site publishes three types of content:
 
-- **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why.
-- **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, and multi-agent orchestration. 60+ reports with 70,000+ data points.
+- **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why. 266 episodes across Banterpacks (193) and Chimera Engine (73).
+- **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, constitutional AI, and safety evaluation. 50 reports with 1.12M+ empirical measurements.
+- **Papers** — independent research write-ups. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 5 in preparation.
+
+Headline counts (episodes / reports / measurements) are single-sourced from `src/lib/constants.ts` — update there, not in this README.
 
 ---
 
@@ -29,12 +33,14 @@ The site publishes two types of content:
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router), React Server Components, Static Site Generation |
-| Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS 3.4, Framer Motion |
+| Framework | Next.js 16 (App Router), React 19 Server Components, Static Site Generation + ISR |
+| Language | TypeScript 5.9 (strict mode) |
+| Styling | Tailwind CSS 3.4, Framer Motion 12, Radix UI primitives |
 | Markdown | remark, rehype, highlight.js |
 | Search | Fuse.js |
 | Fonts | Manrope (body), Space Grotesk (headings), JetBrains Mono (code) |
+| Testing | Vitest + Testing Library |
+| Analytics | Vercel Analytics + Speed Insights |
 | Hosting | Vercel |
 
 ### Design System
@@ -62,17 +68,27 @@ Reports can be standalone markdown files or directories containing `meta.json`, 
 | Route | Description |
 |---|---|
 | `/` | Landing page with episode highlights and platform stats |
-| `/episodes` | Searchable, filterable list of all 266+ episodes |
+| `/episodes` | Searchable, filterable list of all episodes across both lines |
 | `/episodes/[slug]` | Individual episode with reading progress, social sharing |
+| `/banterpacks` | Banterpacks-only episode timeline (production monorepo) |
+| `/chimera` | Chimera Engine episode timeline (constitutional AI debate engine) |
 | `/reports` | Research report archive |
 | `/reports/[id]` | Individual report with prev/next navigation |
 | `/reports/compendium` | Full research compendium reader |
-| `/platform` | Overview of the six Chimera ecosystem repositories |
+| `/reports.json` | Machine-readable manifest of every report (build-time generated) |
+| `/papers` | Independent research papers — accepted, under review, in preparation |
+| `/work` | CV-style page — experience, education, skills, open-source |
+| `/show` | Interactive scenes from the Chimera ecosystem (BFT, ZK, cognitive agents, provenance, streaming ladder) |
+| `/show/[slug]` | Individual interactive scene |
+| `/platform` | Overview of the nine Chimera ecosystem repositories |
 | `/about` | Project background and character introductions |
 | `/tags` | Browse episodes by tag |
 | `/roadmap` | Development roadmap |
+| `/benchmarks` | Redirect → `/reports` (legacy) |
+| `/technology` | Redirect → `/platform` (legacy) |
 | `/sitemap.xml` | XML sitemap with XSLT stylesheet |
 | `/rss.xml` | RSS feed with XSLT stylesheet |
+| `/api/webhook` | HMAC-authenticated revalidation endpoint |
 
 ---
 

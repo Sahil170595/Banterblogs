@@ -29,6 +29,7 @@ interface Paper {
   status: 'Accepted' | 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
   trs: { label: string; slug: string }[];
   arxiv?: string;
+  demo?: { label: string; href: string };
 }
 
 const ACCEPTED: Paper[] = [
@@ -67,6 +68,7 @@ const NEURIPS_2026: Paper[] = [
       { label: 'TR142', slug: 'technical-report-142' },
     ],
     arxiv: 'https://arxiv.org/abs/2606.10154',
+    demo: { label: 'QuantSafe Certifier (HF Space)', href: 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier' },
   },
   {
     title: 'Many-Shot Jailbreak Under Quantization',
@@ -195,6 +197,19 @@ function PaperCard({ paper }: { paper: Paper }) {
             className="rounded-full border border-border/60 px-2.5 py-0.5 font-mono text-foreground/80 transition hover:border-primary/60 hover:text-primary"
           >
             {paper.arxiv.replace(/^https?:\/\/arxiv\.org\/abs\//, '')}
+          </Link>
+        </div>
+      )}
+      {paper.demo && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">Demo:</span>
+          <Link
+            href={paper.demo.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-border/60 px-2.5 py-0.5 text-foreground/80 transition hover:border-primary/60 hover:text-primary"
+          >
+            {paper.demo.label}
           </Link>
         </div>
       )}

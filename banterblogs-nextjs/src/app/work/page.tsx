@@ -140,7 +140,7 @@ interface OpenSourceItem {
   label: string;
   href: string;
   detail: string;
-  evidence?: { label: string; href: string };
+  evidence?: { label: string; href: string }[];
 }
 
 const OPEN_SOURCE: OpenSourceItem[] = [
@@ -151,17 +151,28 @@ const OPEN_SOURCE: OpenSourceItem[] = [
       '6 validated predictive models (VRAM R²=0.968, throughput R²=0.859), dual-language harnesses (Python + Rust), 292 tests. 2,000+ installs in 2 months.',
   },
   {
-    label: 'HuggingFace — 15 model releases',
+    label: 'HuggingFace — 16 model releases',
     href: 'https://huggingface.co/Crusadersk',
     detail:
-      '11 quantized (AWQ + GPTQ 4-bit) across Llama 3.2, Qwen 2.5, Mistral 7B, Phi-2, plus 4 custom GPT-2 scaling variants from the model scaling study.',
+      '11 quantized (AWQ + GPTQ 4-bit) across Llama 3.2, Qwen 2.5, Mistral 7B, Phi-2, plus 4 custom GPT-2 scaling variants from the model scaling study, plus quantsafe-refusal-modernbert (the refusal classifier behind the QuantSafe Certifier).',
   },
   {
     label: 'PyTorch PR #175562 — merged to PyTorch main',
     href: 'https://github.com/pytorch/pytorch/pull/175562',
     detail:
       'Authored an upstream PyTorch fix, merged to main (2026-06-04), replacing a hard assertion with a warning in cudagraph_trees deallocation — surfaced while diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered deallocation errors during compiled inference. Also validated the maintainer\'s in-review decode-path fix (PR #184102) on a real HF gpt2 decode and reported a multi-partition coverage gap it leaves open.',
-    evidence: { label: 'Validation gist + repro (PR #184102)', href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb' },
+    evidence: [{ label: 'Validation gist + repro (PR #184102)', href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb' }],
+  },
+  {
+    label: 'QuantSafe Certifier — signed release-gate for quantized models',
+    href: 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier',
+    detail:
+      'A live HuggingFace Space that issues Ed25519-signed, tamper-evident release-screen records for quantized models: it runs the RTSI triage from arXiv:2606.10154 to route a configuration to clear / review / direct-safety-eval, then emits a content-addressed evidence manifest. Ships a fine-tuned refusal classifier (quantsafe-refusal-modernbert). Backyard-AI hackathon submission (OpenAI / Modal / NVIDIA sponsors).',
+    evidence: [
+      { label: 'HF blog', href: 'https://huggingface.co/blog/build-small-hackathon/quantsafe' },
+      { label: 'LinkedIn', href: 'https://www.linkedin.com/posts/sahilkadadekar_quantsafe-certifier-a-hugging-face-space-activity-7472355496486711296-Rgl9' },
+      { label: 'X thread', href: 'https://x.com/KadadekarSahil/status/2066592448172720210' },
+    ],
   },
 ];
 
@@ -307,16 +318,21 @@ export default function WorkPage() {
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/60 mt-1 shrink-0" />
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
-              {item.evidence && (
-                <Link
-                  href={item.evidence.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                >
-                  {item.evidence.label}
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
+              {item.evidence && item.evidence.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {item.evidence.map((ev) => (
+                    <Link
+                      key={ev.href}
+                      href={ev.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    >
+                      {ev.label}
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  ))}
+                </div>
               )}
             </div>
           ))}
