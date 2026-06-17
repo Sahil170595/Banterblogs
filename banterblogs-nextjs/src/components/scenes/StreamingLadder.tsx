@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   CheckCircle2,
@@ -9,9 +9,6 @@ import {
   ShieldCheck,
   Circle,
   CornerDownRight,
-  Play,
-  Pause,
-  RotateCcw,
   Gauge,
   Regex,
   Cpu,
@@ -19,6 +16,14 @@ import {
   Users,
   Scale,
 } from 'lucide-react';
+import {
+  Typewriter,
+  NarrationLiveRegion,
+  ConfidenceBar,
+  JourneyPanel,
+  PlaybackControls,
+  useArrowRovingTabindex,
+} from './_shared';
 
 type RuleVerdict = {
   rule_name: string;
@@ -420,76 +425,6 @@ function StateIcon({ state, className }: { state: TierState; className?: string 
   return <Circle className={className} aria-hidden />;
 }
 
-// Char-by-char typewriter. All timer handles tracked in a ref so prop
-// changes cancel cleanly. Wrapped in an aria-live region; the live
-// region holds the FULL text so screen readers announce the completed
-// sentence once instead of stuttering per character. Respects
-// prefers-reduced-motion — renders the full text immediately.
-function Typewriter({ text, onDone }: { text: string; onDone?: () => void }) {
-  const [shown, setShown] = useState('');
-  const reducedMotion = useReducedMotion();
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const onDoneRef = useRef(onDone);
-  useEffect(() => {
-    onDoneRef.current = onDone;
-  }, [onDone]);
-
-  useEffect(() => {
-    // Clear any pending timers from the previous text.
-    timersRef.current.forEach((t) => clearTimeout(t));
-    timersRef.current = [];
-
-    if (reducedMotion) {
-      setShown(text);
-      onDoneRef.current?.();
-      return () => {};
-    }
-
-    setShown('');
-    let idx = 0;
-    let stopped = false;
-    function tick() {
-      if (stopped) return;
-      if (idx >= text.length) {
-        onDoneRef.current?.();
-        return;
-      }
-      idx += 1;
-      setShown(text.slice(0, idx));
-      const ch = text[idx - 1];
-      const delay = ch === '.' || ch === '?' || ch === '!' ? 180 : ch === ',' || ch === ';' ? 80 : 18;
-      const t = setTimeout(tick, delay);
-      timersRef.current.push(t);
-    }
-    const first = setTimeout(tick, 60);
-    timersRef.current.push(first);
-    return () => {
-      stopped = true;
-      timersRef.current.forEach((t) => clearTimeout(t));
-      timersRef.current = [];
-    };
-  }, [text, reducedMotion]);
-
-  return (
-    <>
-      {/* Visible char-by-char output. */}
-      <span aria-hidden>
-        {shown}
-        {!reducedMotion && shown.length < text.length && (
-          <span className="inline-block w-[0.5ch] -mb-0.5 ml-0.5 bg-primary animate-pulse">
-            &nbsp;
-          </span>
-        )}
-      </span>
-      {/* Screen reader gets the completed sentence as a polite live
-          region — announced once when the text settles, not per char. */}
-      <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {text}
-      </span>
-    </>
-  );
-}
-
 // Find the index of the strongest "first impression" record — prefer a
 // record where T1 fires so cold visitors see the catch payoff. Falls
 // back to 0 if no such record exists.
@@ -504,13 +439,20 @@ function pickEntryIndex(records: StepRecord[]): number {
 }
 
 export function StreamingLadder({ data }: { data: SceneData }) {
-  const reducedMotion = useReducedMotion();
-  const entryIdx = useMemo(() => pickEntryIndex(data.records), [data.records]);
-  const [activeIdx, setActiveIdx] = useState(entryIdx);
+  // Fail-safe null coercion: useReducedMotion can return null pre-
+  // hydration. Treat null as "prefer reduced" so SSR doesn't render
+  // a motion-enabled first frame for reduced-motion users (playbook
+  // §8 + scene-02 v2 audit finding #C4).
+  const rawReducedMotion = useReducedMotion();
+  const reducedMotion = rawReducedMotion ?? true;
+  const [activeIdx, setActiveIdx] = useState(() => pickEntryIndex(data.records));
   const [beatIdx, setBeatIdx] = useState(0);
-  // Reduced motion: don't auto-play. User can opt in.
-  const [playing, setPlaying] = useState(!reducedMotion);
+  // Start paused; flip to playing only when reduced-motion resolves false.
+  const [playing, setPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  useEffect(() => {
+    if (rawReducedMotion === false) setPlaying(true);
+  }, [rawReducedMotion]);
 
   // Defensive bounds — clamp to a valid index even on empty arrays so
   // the hooks below always have a non-null record to memo against.
@@ -566,6 +508,20 @@ export function StreamingLadder({ data }: { data: SceneData }) {
     setHasInteracted(true);
   }, []);
 
+  // Arrow-key roving tabindex for both scrubbers (was: task scrubber had
+  // no arrow nav and beat dots were role=tab w/o tabpanel — playbook
+  // sins #16/§8.4). Both now use the shared hook.
+  const handleScrubberKey = useArrowRovingTabindex(
+    safeActiveIdx,
+    data.records.length,
+    selectRecord,
+  );
+  const setBeatIdxInteracted = useCallback((idx: number) => {
+    setBeatIdx(idx);
+    setHasInteracted(true);
+  }, []);
+  const handleBeatKey = useArrowRovingTabindex(beatIdx, beats.length, setBeatIdxInteracted);
+
   const tierClassifications = useMemo(
     () => data.tiers.map((t) => ({ tier: t, ...classifyTier(record, t.id) })),
     [data.tiers, record],
@@ -596,11 +552,17 @@ export function StreamingLadder({ data }: { data: SceneData }) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" id="demo">
+      {/* Persistent sr-only live region for the typewriter narration.
+          OUTSIDE the AnimatePresence below — otherwise the region
+          unmounts per beat and SR announcements stop firing (playbook
+          §10 sin #17). */}
+      <NarrationLiveRegion text={activeBeat?.copy ?? ''} />
+
       {/* Step content + summary */}
       <motion.div
         key={`content-${record.step_id}`}
-        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="signal-panel-strong p-5 md:p-8 mb-6 md:mb-8"
@@ -650,40 +612,31 @@ export function StreamingLadder({ data }: { data: SceneData }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={togglePlay}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
-            >
-              {playing ? <Pause className="h-3.5 w-3.5" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
-            </button>
-            <button
-              onClick={restart}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label="Restart walkthrough"
-            >
-              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          </div>
+          <PlaybackControls playing={playing} onToggle={togglePlay} onRestart={restart} />
         </div>
 
         <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[5rem] md:min-h-[4.5rem]">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${record.step_id}-${beatIdx}`}
-              initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
               transition={{ duration: 0.25 }}
             >
-              <Typewriter text={activeBeat?.copy ?? ''} />
+              <Typewriter text={activeBeat?.copy ?? ''} reducedMotion={reducedMotion} />
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Beat dots — each wrapped in a 24x24 hit target for WCAG 2.5.5. */}
-        <div className="mt-4 flex gap-0.5 flex-wrap" role="tablist" aria-label="Beat selector">
+        {/* Beat scrubber — radiogroup pattern (was role=tab w/o tabpanel,
+            playbook sin #16). Arrow keys + roving tabindex from _shared. */}
+        <div
+          className="mt-4 flex gap-0.5 flex-wrap"
+          role="radiogroup"
+          aria-label="Beat selector"
+          onKeyDown={handleBeatKey}
+        >
           {beats.map((_, i) => (
             <button
               key={`${record.step_id}-${i}`}
@@ -692,9 +645,10 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                 setHasInteracted(true);
               }}
               className="group inline-flex items-center justify-center h-6 w-8 md:w-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
-              role="tab"
-              aria-selected={i === beatIdx}
+              role="radio"
+              aria-checked={i === beatIdx}
               aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
+              tabIndex={i === beatIdx ? 0 : -1}
             >
               <span
                 className={`h-1 w-full rounded-full transition-all ${
@@ -778,7 +732,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.span
                         key={`${ts.tier.id}-${ts.state}`}
-                        initial={reducedMotion ? false : { opacity: 0, scale: 0.6 }}
+                        initial={false}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={reducedMotion ? undefined : { opacity: 0, scale: 0.6 }}
                         transition={{ duration: 0.18 }}
@@ -823,7 +777,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.div
                       key={`${ts.tier.id}-${record.step_id}`}
-                      initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+                      initial={false}
                       animate={{ opacity: 1, y: 0 }}
                       exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
                       transition={{ duration: 0.22 }}
@@ -847,7 +801,15 @@ export function StreamingLadder({ data }: { data: SceneData }) {
 
                       <TierBody record={record} tier={ts.tier} state={ts.state} />
 
-                      <ConfidenceBar value={ts.confidence_for_bar} barClass={theme.bar} label={ts.label} />
+                      {ts.confidence_for_bar != null && (
+                        <ConfidenceBar
+                          value={ts.confidence_for_bar}
+                          label={ts.label}
+                          reducedMotion={reducedMotion}
+                          barClass={theme.bar}
+                          className="mt-3"
+                        />
+                      )}
                     </motion.div>
                   </AnimatePresence>
                 </motion.div>
@@ -863,12 +825,12 @@ export function StreamingLadder({ data }: { data: SceneData }) {
         key={`aftermath-${record.step_id}`}
         record={record}
         visible={revealedTierIds.has('enforcement')}
-        reducedMotion={Boolean(reducedMotion)}
+        reducedMotion={reducedMotion}
       />
 
       {/* Journey panel — production cost estimate vs naive worst case. */}
       <div className="mt-8 md:mt-10">
-        <JourneyPanel record={record} />
+        <StreamingJourneyPanel record={record} />
       </div>
 
       {/* Record scrubber — radio-group semantics, not toggle. */}
@@ -876,7 +838,12 @@ export function StreamingLadder({ data }: { data: SceneData }) {
         <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Try a different reasoning step · {data.records.length} scenarios
         </div>
-        <div role="radiogroup" aria-label="Reasoning step scenarios" className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div
+          role="radiogroup"
+          aria-label="Reasoning step scenarios"
+          className="grid grid-cols-2 md:grid-cols-5 gap-2"
+          onKeyDown={handleScrubberKey}
+        >
           {data.records.map((r, idx) => {
             const isActive = idx === safeActiveIdx;
             const enf = (r.enforcement?.outcome || 'pending').toLowerCase();
@@ -1009,28 +976,6 @@ function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; sta
   return null;
 }
 
-function ConfidenceBar({ value, barClass, label }: { value: number | null; barClass: string; label?: string }) {
-  if (value == null) return null;
-  const pct = Math.min(100, Math.max(0, value * 100));
-  return (
-    <div
-      className="mt-3 h-1 w-full rounded-full bg-border/30 overflow-hidden"
-      role="progressbar"
-      aria-valuenow={Math.round(pct)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={label ? `${label} confidence` : 'Confidence'}
-    >
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${pct}%` }}
-        transition={{ duration: 0.55, ease: 'easeOut', delay: 0.1 }}
-        className={`h-full ${barClass}`}
-      />
-    </div>
-  );
-}
-
 // Signal gauge — fills proportional to value (0..1). role=progressbar
 // surfaces the value to assistive tech; tooltip is keyboard-reachable
 // via focus-within.
@@ -1060,11 +1005,12 @@ function SignalGauge({
         aria-valuemax={100}
         aria-label={`${label} ${raw ?? clamped.toFixed(2)}`}
       >
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="h-full bg-accent/70"
+        {/* CSS transition instead of framer-motion: avoids the SSR
+            hydration mismatch where motion's initial={{width:0}}
+            renders a different inline style on server vs client. */}
+        <div
+          className="h-full bg-accent/70 transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%` }}
         />
       </div>
       <div className="font-mono text-[11px] text-foreground">{raw ?? clamped.toFixed(2)}</div>
@@ -1115,52 +1061,27 @@ function fmtMs(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-// Compact stat panel: production cost estimate vs naive worst case.
-function JourneyPanel({ record }: { record: StepRecord }) {
+// Streaming-ladder-specific wrapper around the shared JourneyPanel.
+function StreamingJourneyPanel({ record }: { record: StepRecord }) {
   const lat = record.latency;
   if (!lat) return null;
   const actual = lat.actual_total_ms;
   const naive = lat.naive_total_ms;
-  // Cap displayed savings at 99.9% — even when actual is sub-ms, we
-  // never want to show 100.0% which reads as a gamed metric.
-  const saved_pct_raw = naive > 0 ? Math.max(0, 100 - (actual / naive) * 100) : 0;
-  const saved_pct = Math.min(99.9, saved_pct_raw);
+  const saved_pct = naive > 0 ? Math.max(0, 100 - (actual / naive) * 100) : 0;
   return (
-    <div className="signal-panel-strong p-4 md:p-5 mb-6 md:mb-8 grid grid-cols-3 gap-3 md:gap-4">
-      <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
-          this step cost
-        </div>
-        <div className="font-mono text-xl md:text-2xl text-foreground font-bold leading-tight">
-          {fmtMs(actual)}
-        </div>
-        <div className="text-[11px] text-muted-foreground mt-0.5">
-          production estimate
-        </div>
-      </div>
-      <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
-          worst case
-        </div>
-        <div className="font-mono text-xl md:text-2xl text-muted-foreground/80 line-through font-bold leading-tight">
-          {fmtMs(naive)}
-        </div>
-        <div className="text-[11px] text-muted-foreground mt-0.5">
-          if every tier ran to budget
-        </div>
-      </div>
-      <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
-          saved
-        </div>
-        <div className="font-mono text-xl md:text-2xl text-primary font-bold leading-tight">
-          {saved_pct.toFixed(1)}%
-        </div>
-        <div className="text-[11px] text-muted-foreground mt-0.5">
-          by short-circuiting
-        </div>
-      </div>
-    </div>
+    <JourneyPanel
+      actualLabel="this step cost"
+      actualValue={fmtMs(actual)}
+      actualSublabel="production estimate"
+      naiveLabel="worst case"
+      naiveValue={fmtMs(naive)}
+      naiveSublabel="if every tier ran to budget"
+      naive_aria_label={`Worst case if every tier ran to its full budget would have been approximately ${fmtMs(
+        naive,
+      )}, shown as crossed-out comparison`}
+      savedPct={saved_pct}
+      savedSublabel="by short-circuiting"
+    />
   );
 }
 
@@ -1185,7 +1106,7 @@ function AftermathPanel({
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -1200,7 +1121,7 @@ function AftermathPanel({
               …previous reasoning step shipped…
             </div>
             <motion.div
-              initial={reducedMotion ? false : { opacity: 0 }}
+              initial={false}
               animate={{ opacity: 1 }}
               transition={{ delay: reducedMotion ? 0 : 0.2 }}
               className={
@@ -1216,7 +1137,7 @@ function AftermathPanel({
             {isRewind && (
               <>
                 <motion.div
-                  initial={reducedMotion ? false : { opacity: 0, x: -8 }}
+                  initial={false}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: reducedMotion ? 0 : 0.7 }}
                   className="text-primary font-bold"
@@ -1224,7 +1145,7 @@ function AftermathPanel({
                   ← REWIND signaled to host runtime
                 </motion.div>
                 <motion.div
-                  initial={reducedMotion ? false : { opacity: 0 }}
+                  initial={false}
                   animate={{ opacity: 1 }}
                   transition={{ delay: reducedMotion ? 0 : 1.1 }}
                   className="text-muted-foreground italic"
@@ -1235,7 +1156,7 @@ function AftermathPanel({
             )}
             {isDegrade && (
               <motion.div
-                initial={reducedMotion ? false : { opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ delay: reducedMotion ? 0 : 0.6 }}
                 className="text-primary font-bold"
@@ -1245,7 +1166,7 @@ function AftermathPanel({
             )}
             {isPass && (
               <motion.div
-                initial={reducedMotion ? false : { opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ delay: reducedMotion ? 0 : 0.5 }}
                 className="text-accent/90"

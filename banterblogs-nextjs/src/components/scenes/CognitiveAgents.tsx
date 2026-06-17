@@ -8,21 +8,26 @@ import {
   useCallback,
   useLayoutEffect,
 } from 'react';
-import type { ReactNode, KeyboardEvent } from 'react';
+import type { ReactNode } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
-  Play,
-  Pause,
-  RotateCcw,
   Brain,
   Lightbulb,
   ShieldAlert,
   Compass,
   Scale,
-  Flag,
   CornerDownRight,
   ShieldCheck,
 } from 'lucide-react';
+import {
+  Typewriter,
+  NarrationLiveRegion,
+  FlagBadge,
+  ConfidenceBar,
+  JourneyPanel,
+  PlaybackControls,
+  useArrowRovingTabindex,
+} from './_shared';
 
 type AnalyticalVerdict = {
   style: 'analytical';
@@ -167,97 +172,10 @@ const AGENT_VISUAL: Record<AgentId, { Icon: typeof Brain; ring: string; icon: st
   },
 };
 
-// Char-by-char typewriter. Pace ~9ms/char (halved from v2's 18ms — TikTok-
-// conditioned attention bounces at ~3 seconds otherwise). Single
-// in-flight timer handle. Respects prefers-reduced-motion.
-function Typewriter({ text, reducedMotion }: { text: string; reducedMotion: boolean }) {
-  const [shown, setShown] = useState('');
-  // D2 fix: single handle, not an unbounded array. Only one timer is
-  // ever pending at a time per tick().
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-
-    if (reducedMotion) {
-      setShown(text);
-      return () => {};
-    }
-
-    setShown('');
-    let idx = 0;
-    let stopped = false;
-    function tick() {
-      if (stopped) return;
-      if (idx >= text.length) return;
-      idx += 1;
-      setShown(text.slice(0, idx));
-      const ch = text[idx - 1];
-      const delay = ch === '.' || ch === '?' || ch === '!' ? 110 : ch === ',' || ch === ';' ? 55 : 9;
-      timerRef.current = setTimeout(tick, delay);
-    }
-    timerRef.current = setTimeout(tick, 40);
-    return () => {
-      stopped = true;
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [text, reducedMotion]);
-
-  // C6 fix: the sr-only live region used to live HERE (inside the
-  // Typewriter, which is wrapped in AnimatePresence in the parent). On
-  // every beat the motion.div unmounted and remounted the live region,
-  // so announcements stopped firing after beat 1. The live region is
-  // now hoisted up to the main component body where it persists.
-  return (
-    <span aria-hidden>
-      {shown}
-      {!reducedMotion && shown.length < text.length && (
-        <span className="inline-block w-[0.5ch] -mb-0.5 ml-0.5 bg-primary animate-pulse">&nbsp;</span>
-      )}
-    </span>
-  );
-}
-
+// Scene-specific helpers (everything else now imported from ./_shared).
 function pickEntryIndex(records: TaskRecord[]): number {
   const idx = records.findIndex((r) => r.meta.selected_style === 'adversarial');
   return idx >= 0 ? idx : 0;
-}
-
-function ConfidenceBar({
-  value,
-  label,
-  isSelected,
-  reducedMotion,
-}: {
-  value: number;
-  label: string;
-  isSelected: boolean;
-  reducedMotion: boolean;
-}) {
-  const pct = Math.round(Math.min(100, Math.max(0, value * 100)));
-  return (
-    <div
-      className="mt-2 h-1 w-full rounded-full bg-border/30 overflow-hidden"
-      role="progressbar"
-      aria-valuenow={pct}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={`${label} confidence`}
-    >
-      <motion.div
-        initial={reducedMotion ? { width: `${pct}%` } : { width: 0 }}
-        animate={{ width: `${pct}%` }}
-        transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-        className={`h-full ${isSelected ? 'bg-primary' : 'bg-accent/70'}`}
-      />
-    </div>
-  );
 }
 
 function SignalRow({
@@ -278,34 +196,8 @@ function SignalRow({
         <span className="text-muted-foreground/90">{label}</span>
         <span className="text-foreground/90">{pct}%</span>
       </div>
-      <div
-        className="h-1 w-full rounded-full bg-border/30 overflow-hidden"
-        role="progressbar"
-        aria-valuenow={pct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={`${agentLabel} ${label}`}
-      >
-        <motion.div
-          initial={reducedMotion ? { width: `${pct}%` } : { width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
-          className="h-full bg-accent/70"
-        />
-      </div>
+      <ConfidenceBar value={value} label={`${agentLabel} ${label}`} reducedMotion={reducedMotion} />
     </div>
-  );
-}
-
-function FlagBadge({ children, tone = 'risk' }: { children: ReactNode; tone?: 'risk' | 'info' }) {
-  const cls = tone === 'risk'
-    ? 'border-primary/60 bg-primary/10 text-primary'
-    : 'border-accent/40 bg-accent/10 text-accent';
-  return (
-    <span className={`inline-flex items-center gap-1 rounded border ${cls} px-1.5 py-0.5 text-[11px] font-mono`}>
-      <Flag className="h-2.5 w-2.5" aria-hidden />
-      {children}
-    </span>
   );
 }
 
@@ -569,7 +461,13 @@ function AgentCard({
         )}
       </div>
       {children}
-      <ConfidenceBar value={confidence} label={title} isSelected={isSelected} reducedMotion={reducedMotion} />
+      <ConfidenceBar
+        value={confidence}
+        label={title}
+        isSelected={isSelected}
+        reducedMotion={reducedMotion}
+        className="mt-2"
+      />
     </motion.div>
   );
 }
@@ -632,11 +530,11 @@ function MetaControllerCard({
                 aria-valuemax={100}
                 aria-label={`${r.style} raw confidence`}
               >
-                <motion.div
-                  initial={reducedMotion ? { width: `${pct}%` } : { width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
-                  className={`h-full ${isSelected ? 'bg-primary' : 'bg-accent/60'}`}
+                {/* CSS transition instead of framer-motion — see
+                    _shared/ConfidenceBar.tsx for the SSR-mismatch rationale. */}
+                <div
+                  className={`h-full ${isSelected ? 'bg-primary' : 'bg-accent/60'} ${reducedMotion ? '' : 'transition-[width] duration-500 ease-out'}`}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
               <div className={`font-mono text-xs text-right ${isSelected ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
@@ -660,53 +558,21 @@ function MetaControllerCard({
   );
 }
 
-function JourneyPanel({ record, agentCount }: { record: TaskRecord; agentCount: number }) {
+function CognitiveJourneyPanel({ record, agentCount }: { record: TaskRecord; agentCount: number }) {
   const lat = record.latency;
-  const saved = Math.min(99.9, lat.saved_pct);
-  // D4 fix: use the precomputed per-agent value from the data, not
-  // a derived guess.
   const perAgentMs = Math.round(lat.naive_total_ms / Math.max(1, agentCount));
   return (
-    <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.6fr] gap-4 md:gap-6 items-baseline">
-      <div>
-        {/* D12 fix: smaller, lighter sub-labels so the dominant number
-            in each column is the actual content, not the label. */}
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
-          this task cost
-        </div>
-        <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
-          {lat.actual_total_ms}ms
-        </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
-          {agentCount} structural agents in parallel + meta
-        </div>
-      </div>
-      <div>
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
-          {agentCount}-LLM ensemble would cost
-        </div>
-        <div
-          className="font-mono text-xl md:text-2xl text-muted-foreground/70 line-through font-bold leading-tight"
-          aria-label={`${agentCount}-LLM ensemble running in parallel would cost approximately ${lat.naive_total_ms} milliseconds wall-clock, shown as crossed-out comparison`}
-        >
-          ~{lat.naive_total_ms}ms
-        </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
-          parallel LLM calls, ~{perAgentMs}ms each
-        </div>
-      </div>
-      <div className="md:border-l md:border-border/30 md:pl-6">
-        <div className="text-[10px] uppercase tracking-widest text-primary/90 mb-1.5">
-          saved
-        </div>
-        <div className="font-mono text-5xl md:text-6xl text-primary font-bold leading-none tracking-tight">
-          {saved.toFixed(1)}%
-        </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-2">
-          no LLM, no API bill
-        </div>
-      </div>
-    </div>
+    <JourneyPanel
+      actualLabel="this task cost"
+      actualValue={`${lat.actual_total_ms}ms`}
+      actualSublabel={`${agentCount} structural agents in parallel + meta`}
+      naiveLabel={`${agentCount}-LLM ensemble would cost`}
+      naiveValue={`~${lat.naive_total_ms}ms`}
+      naiveSublabel={`parallel LLM calls, ~${perAgentMs}ms each`}
+      naive_aria_label={`${agentCount}-LLM ensemble running in parallel would cost approximately ${lat.naive_total_ms} milliseconds wall-clock, shown as crossed-out comparison`}
+      savedPct={lat.saved_pct}
+      savedSublabel="no LLM, no API bill"
+    />
   );
 }
 
@@ -832,43 +698,17 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
     setHasInteracted(true);
   }, []);
 
-  // Roving-tabindex arrow-key handler factory.
-  const handleArrowKeys = useCallback(
-    (currentIdx: number, count: number, setter: (idx: number) => void) =>
-      (e: KeyboardEvent<HTMLDivElement>) => {
-        if (count === 0) return;
-        let next: number | null = null;
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-          next = (currentIdx + 1) % count;
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-          next = (currentIdx - 1 + count) % count;
-        } else if (e.key === 'Home') {
-          next = 0;
-        } else if (e.key === 'End') {
-          next = count - 1;
-        }
-        if (next !== null) {
-          e.preventDefault();
-          setter(next);
-        }
-      },
-    [],
+  // Roving-tabindex arrow-key handlers — shared hook from _shared/.
+  const handleScrubberKey = useArrowRovingTabindex(
+    safeActiveIdx,
+    data.records.length,
+    selectRecord,
   );
-
-  const handleScrubberKey = useMemo(
-    () => handleArrowKeys(safeActiveIdx, data.records.length, selectRecord),
-    [handleArrowKeys, safeActiveIdx, data.records.length, selectRecord],
-  );
-
-  // C5 fix: beat scrubber gets arrow-key navigation too.
-  const handleBeatKey = useMemo(
-    () =>
-      handleArrowKeys(beatIdx, beats.length, (idx) => {
-        setBeatIdx(idx);
-        setHasInteracted(true);
-      }),
-    [handleArrowKeys, beatIdx, beats.length],
-  );
+  const setBeatIdxInteracted = useCallback((idx: number) => {
+    setBeatIdx(idx);
+    setHasInteracted(true);
+  }, []);
+  const handleBeatKey = useArrowRovingTabindex(beatIdx, beats.length, setBeatIdxInteracted);
 
   const revealedAgents = useMemo(() => {
     const set = new Set<string>();
@@ -930,11 +770,12 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
   const selectedStyle = record.meta.selected_style;
   return (
     <div className="relative" id="demo">
-      {/* C6 fix: persistent sr-only live regions OUTSIDE AnimatePresence.
-          Updated via state so they survive every beat transition. */}
-      <span aria-live="polite" aria-atomic="true" className="sr-only">
-        {activeBeat?.copy ?? ''}
-      </span>
+      {/* Persistent sr-only live regions OUTSIDE AnimatePresence
+          (playbook §10 sin #17). Updated via state — survive every
+          beat transition. NarrationLiveRegion is the shared primitive
+          for the typewriter text; the other two are scene-specific
+          announcers (agent reveals + aftermath). */}
+      <NarrationLiveRegion text={activeBeat?.copy ?? ''} />
       <span aria-live="polite" className="sr-only">
         {revealAnnouncement}
       </span>
@@ -984,22 +825,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={togglePlay}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
-            >
-              {playing ? <Pause className="h-3.5 w-3.5" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
-            </button>
-            <button
-              onClick={restart}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label="Restart walkthrough"
-            >
-              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          </div>
+          <PlaybackControls playing={playing} onToggle={togglePlay} onRestart={restart} />
         </div>
 
         <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[5rem] md:min-h-[5rem]">
@@ -1090,7 +916,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
 
       <div className="mt-8 md:mt-10">
         {/* D3 fix: agentCount derived from data instead of hardcoded. */}
-        <JourneyPanel record={record} agentCount={data.agents.filter((a) => a.id !== 'meta').length} />
+        <CognitiveJourneyPanel record={record} agentCount={data.agents.filter((a) => a.id !== 'meta').length} />
       </div>
 
       <div className="mt-6 md:mt-8">
