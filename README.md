@@ -15,10 +15,11 @@
 
 ## What is Chimeraforge
 
-Chimeraforge is the public-facing site for the Chimera ecosystem — a constitutional AI enforcement architecture spanning 8 repositories across Python, Rust, TypeScript, and C#. The site publishes two things:
+Chimeraforge is the public-facing site for the Chimera ecosystem — a constitutional AI enforcement architecture spanning 9 repositories across Python, Rust, TypeScript, C#, and JavaScript. The site publishes three things:
 
 - **Episodes** — narrative write-ups generated from git commits across the ecosystem. Each episode is written as a roundtable discussion between four AI personas, turning raw development activity into readable stories.
-- **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and safety alignment. 36 reports spanning 555,000+ measurements.
+- **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and safety alignment. 54 reports spanning 1.34M+ measurements.
+- **Papers** — independent research write-ups. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 5 in preparation.
 
 The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) with 266 episodes and counting.
 
@@ -26,17 +27,18 @@ The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) w
 
 ## The Chimera Ecosystem
 
-Chimeraforge documents work across eight repositories:
+Chimeraforge documents work across nine repositories:
 
 | Repository | Purpose |
 |---|---|
 | **Banterpacks** | Core monorepo — JARVIS gateway, constitutional router (TDD002), debate engine (Chimera), Rust runtime (TDD005) with ZK proofs + BFT, RLAIF alignment loop, authoring. |
-| **Banterhearts** | ML research platform — inference API, benchmarking, AutoOpt agent, safety evaluation. 555K+ measurements. |
-| **Chimeraforge** | LLM deployment optimizer on PyPI. Capacity planning across 15 GPU profiles. |
+| **Banterhearts** | ML research platform — inference API, benchmarking, AutoOpt agent, safety evaluation. 1.34M+ measurements. |
+| **Chimeraforge (PyPI)** | LLM deployment optimizer on PyPI (v0.3.0). 5-gate capacity planner — VRAM, quality, safety (opt-in), latency, cost — across 15 GPU profiles. |
 | **Chimera Multi-Agent** | Muse Protocol — 6-agent content pipeline + observability control plane (OTel, ClickHouse, Datadog). |
 | **Chimeradroid** | Unity/C# Android companion — voice, chat, tool approval, session handoff, mesh networking. |
 | **Echo** | Messaging channel adapters — Slack and Discord bridges to JARVIS. |
 | **JARVIS Console** | Next.js web console — chat, control room, cognitive ELO dashboard, admin panels. |
+| **Project Wyvern** | Embodied autonomy — governed mission-execution plane between Chimera control and PX4/ArduPilot. SIM-ONLY MVP on PX4 + ROS 2 + Gazebo. |
 | **Banterblogs** | This repository. Development log and research archive. |
 
 ---
@@ -57,9 +59,9 @@ Banterblogs/
 
 ## Tech Stack
 
-- **Next.js 15** (App Router) with React Server Components and Static Site Generation
+- **Next.js 16** (App Router) with React 19 Server Components and Static Site Generation
 - **TypeScript** in strict mode
-- **Tailwind CSS 3.4** with a custom dark theme ("Obsidian & Aurora")
+- **Tailwind CSS 3.4** with a custom dark theme ("Obsidian & Ember" — single hot-copper accent)
 - **Framer Motion** for animations
 - Markdown pipeline: remark, rehype, highlight.js
 - Search: Fuse.js
