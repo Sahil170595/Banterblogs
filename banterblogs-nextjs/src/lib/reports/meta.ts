@@ -238,6 +238,11 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
     description: "Matched A100 80GB PCIe head-to-head — 5 models × 5 workloads × 6 concurrency levels × 2 phases per backend (1,800 cells / 189,000 rows, ok_rate 1.0). Continuous batching holds 0.47–0.62 parallel efficiency at N=32, an order-of-magnitude shift up from V1 pytorch_direct's 0.056 collapse. vLLM/SGLang deltas are small (1.5–7.6pp) but Holm-significant on 4 of 5 workloads — a workload-conditional routing signal, not an engine ranking.",
   },
 
+  'technical-report-164-v4': {
+    title: 'TR164 V4: The Amortization-Breakdown Surface — A Predictive Bandwidth Model for Continuous Batching',
+    description: "A 672-cell offline static-batch grid (3 models × A100-80GB + H100 × vLLM 0.10.2, 2,016 timed decode generations, ok_rate 1.0) showing the continuous-batching free lunch is bounded by KV-cache read bandwidth. A one-parameter model η(B) = (1+r)/(1+Br) fits the 96 efficiency curves at median R² 0.93, and its zero-fitted-parameter architectural form predicts the breakdown knee at Spearman ρ = 0.84 — off only by a GPU-specific compute-overlap factor (0.52 A100, 0.33 H100). Complements V3's closed-loop boundary — grounds it, does not revise it.",
+  },
+
   // ── Phase 9 — Predictive-Validity Follow-ups (TR166–TR168) ──
   'technical-report-167': {
     title: 'TR167: JTPv2 — Predictive Validity of Cheap Pre-Rejudge Signals',

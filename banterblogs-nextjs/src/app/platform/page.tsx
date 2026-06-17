@@ -199,8 +199,8 @@ export default async function PlatformPage() {
               <h3 className="text-sm font-semibold">Chimeraforge</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              LLM deployment optimizer on PyPI. 4-gate capacity planner (VRAM, Quality, Latency, Cost)
-              across 15 GPU profiles.
+              LLM deployment optimizer on PyPI. 5-gate capacity planner (VRAM, Quality, Safety, Latency,
+              Cost) across 15 GPU profiles.
             </p>
             <Link
               href="https://pypi.org/project/chimeraforge/"

@@ -40,19 +40,19 @@ export const MEASUREMENTS = {
 
 export const REPORTS = {
   /**
-   * Headline technical-report count. Ground-truthed from /reports.json manifest on 2026-06-15
-   * after the Banterhearts Phase 8/9 sync (TR165, TR164 V3, TR167).
+   * Headline technical-report count. Ground-truthed from /reports.json manifest on 2026-06-17
+   * after the Banterhearts Phase 8/9 sync + TR164 V4.
    *
-   * 53 = 50 TR-numbered reports + 3 Phase 0 pre-TR baselines:
-   *   - 50 TR: TR108-TR148 (41) + TR117_multi_agent + TR138_Study_D_Addendum + TR149 + TR152 + TR163 + TR164 + TR164_V3 + TR165 + TR167
+   * 54 = 51 TR-numbered reports + 3 Phase 0 pre-TR baselines:
+   *   - 51 TR: TR108-TR148 (41) + TR117_multi_agent + TR138_Study_D_Addendum + TR149 + TR152 + TR163 + TR164 + TR164_V3 + TR164_V4 + TR165 + TR167
    *   - 3 Phase 0: gemma3 + ollama-benchmark-report + performance-deep-dive (Sep-Oct 2025)
    *
    * History: a prior pass undercounted to 45 by filtering only `Technical_Report_*.md` and
    * missing the 2 reports that lived in PublishReady/docs/ (since moved to /reports/).
    * /reports.json `counts.technical_reports` + `counts.phase0` should sum to this number.
    */
-  COUNT: 53,
-  DISPLAY: '53',
+  COUNT: 54,
+  DISPLAY: '54',
 } as const;
 
 export const SITE_CONFIG = {

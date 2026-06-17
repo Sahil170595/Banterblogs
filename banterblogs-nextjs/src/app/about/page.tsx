@@ -104,7 +104,7 @@ export default async function AboutPage() {
             {
               name: 'Chimeraforge',
               lang: 'Python, Rust',
-              what: 'LLM deployment optimizer on PyPI. 4-gate capacity planner (VRAM, Quality, Latency, Cost) across 15 GPU profiles.',
+              what: 'LLM deployment optimizer on PyPI. 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) across 15 GPU profiles.',
             },
             {
               name: 'Chimera Multi-Agent',

@@ -31,7 +31,7 @@ Core monorepo. Six interconnected subsystems handling constitutional AI enforcem
 ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 1.34M+ measurements across 53 reports.
 
 ### 3. Chimeraforge (Python, Rust)
-LLM deployment optimizer published on PyPI. `chimeraforge plan` CLI — 4-gate capacity planner (VRAM, Quality, Latency, Cost) across 15 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859), dual-language harnesses, 292 tests.
+LLM deployment optimizer published on PyPI. `chimeraforge plan` CLI — 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) across 15 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 323 tests.
 
 ### 4. Chimera Multi-Agent (Python)
 Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the ecosystem observability layer (OpenTelemetry, Datadog, dead-letter queue with 102 tests).
@@ -125,11 +125,11 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 ## PyPI Package
 
 - Package: chimeraforge
-- Version: 0.2.1
+- Version: 0.3.0
 - Install: `pip install chimeraforge`
 - Python: >=3.10
 - License: MIT
-- CLI: `chimeraforge plan` — capacity planner for LLM deployment
+- CLI: `chimeraforge plan` — 5-gate capacity planner (VRAM, quality, safety [opt-in], latency, cost) for LLM deployment; 0.3.0 adds an opt-in safety gate (TR134 refusal + TR142 RTSI)
 - URL: https://pypi.org/project/chimeraforge/
 
 ## Links

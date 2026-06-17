@@ -148,7 +148,7 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'Chimeraforge — PyPI capacity-planning CLI',
     href: 'https://pypi.org/project/chimeraforge/',
     detail:
-      '6 validated predictive models (VRAM R²=0.968, throughput R²=0.859), dual-language harnesses (Python + Rust), 292 tests. 2,000+ installs in 2 months.',
+      '6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus a new opt-in safety gate (TR134 refusal + TR142 RTSI), dual-language harnesses (Python + Rust), 323 tests. 2,000+ downloads on PyPI.',
   },
   {
     label: 'HuggingFace — 16 model releases',

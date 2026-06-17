@@ -37,7 +37,7 @@ const supportingSystems = [
   {
     name: 'Chimeraforge',
     role: 'On PyPI — pip install chimeraforge',
-    description: 'LLM deployment optimizer. 4-gate capacity planner across model, quant, backend, and agent count for 15 GPUs.',
+    description: 'LLM deployment optimizer. 5-gate capacity planner (VRAM, quality, safety, latency, cost) across model, quant, and backend choices for 15 GPUs.',
     href: 'https://pypi.org/project/chimeraforge/',
     icon: <BarChart3 className="h-5 w-5" />,
   },
