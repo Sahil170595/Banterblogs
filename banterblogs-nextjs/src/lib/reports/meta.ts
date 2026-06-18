@@ -240,7 +240,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
 
   'technical-report-164-v4': {
     title: 'TR164 V4: The Amortization-Breakdown Surface — A Predictive Bandwidth Model for Continuous Batching',
-    description: "A 672-cell offline static-batch grid (3 models × A100-80GB + H100 × vLLM 0.10.2, 2,016 timed decode generations, ok_rate 1.0) showing the continuous-batching free lunch is bounded by KV-cache read bandwidth. A one-parameter model η(B) = (1+r)/(1+Br) fits the 96 efficiency curves at median R² 0.93, and its zero-fitted-parameter architectural form predicts the breakdown knee at Spearman ρ = 0.84 — off only by a GPU-specific compute-overlap factor (0.52 A100, 0.33 H100). Complements V3's closed-loop boundary — grounds it, does not revise it.",
+    description: "A 672-cell offline static-batch grid (3 models × A100-80GB + H100 × vLLM 0.10.2, 2,016 timed decode generations, ok_rate 1.0) showing the continuous-batching free lunch is bounded by KV-cache read bandwidth. A one-parameter model η(B) = (1+r)/(1+Br) fits the 96 efficiency curves at median R² 0.93, and its zero-fitted-parameter architectural form predicts the breakdown knee at Spearman ρ = 0.84 — off only by a GPU-specific batch-saturation factor α (0.52 A100, 0.33 H100; a roofline check rules out compute-overlap and VRAM-capacity). Complements V3's closed-loop boundary — grounds it, does not revise it.",
   },
 
   // ── Phase 9 — Predictive-Validity Follow-ups (TR166–TR168) ──
