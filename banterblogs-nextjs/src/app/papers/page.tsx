@@ -6,11 +6,11 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 export const metadata: Metadata = {
   title: 'Papers',
   description:
-    '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+    '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 6 under peer review · 4 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   openGraph: {
     title: 'Papers | Chimeraforge',
     description:
-      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 6 under peer review · 4 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
     url: 'https://chimeraforge.vercel.app/papers',
     type: 'website',
   },
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Papers | Chimeraforge',
     description:
-      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
+      '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 6 under peer review · 4 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   },
 };
 
@@ -94,6 +94,18 @@ const NEURIPS_2026: Paper[] = [
     status: 'Submitted',
     trs: [{ label: 'TR139', slug: 'technical-report-139' }],
   },
+  {
+    title: 'Serving-Stack Physics: A Predictive Bandwidth-Amortization Model for Continuous Batching',
+    thesis:
+      'When continuous batching stops paying is predictable from model architecture: a one-parameter KV-bandwidth model η(B)=(1+r)/(1+Br) fits 96 efficiency curves at median R² 0.93 and predicts the breakdown knee at ρ=0.84 with zero fitted parameters — validated cross-backend (vLLM/SGLang) on matched A100/H100 and against a served SGLang knee.',
+    venue: 'TMLR (under review)',
+    status: 'Submitted',
+    trs: [
+      { label: 'TR164', slug: 'technical-report-164' },
+      { label: 'TR130', slug: 'technical-report-130' },
+      { label: 'TR132', slug: 'technical-report-132' },
+    ],
+  },
 ];
 
 const IN_PREP: Paper[] = [
@@ -132,18 +144,6 @@ const IN_PREP: Paper[] = [
       { label: 'TR112', slug: 'technical-report-112' },
       { label: 'TR114', slug: 'technical-report-114' },
       { label: 'TR115', slug: 'technical-report-115' },
-    ],
-  },
-  {
-    title: 'Serving Stacks, Continuous Batching & the Physics of Throughput',
-    thesis:
-      'LLM serving-stack differences are mechanistic, not benchmark trivia. Continuous batching drives throughput scaling with agent count via 77-80% kernel reduction. Backends differ in effective serial fraction. 2.25× throughput gain at N=8 explained mechanistically.',
-    venue: 'Systems venue',
-    status: 'Synthesis',
-    trs: [
-      { label: 'TR129', slug: 'technical-report-129' },
-      { label: 'TR130', slug: 'technical-report-130' },
-      { label: 'TR132', slug: 'technical-report-132' },
     ],
   },
   {
@@ -239,12 +239,12 @@ export default function PapersPage() {
         <div className="space-y-5 max-w-3xl">
           <span className="signal-pill">Papers</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            1 accepted at an ICML 2026 workshop · 5 under peer review
+            1 accepted at an ICML 2026 workshop · 6 under peer review
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
             evaluation. The first paper is accepted to the ICML 2026 Workshop on Hypothesis Testing; five more are
-            under peer review at top ML venues, with five in preparation. Each is backed by reproducible technical reports
+            under peer review (five at top ML venues, one at TMLR), with four in preparation. Each is backed by reproducible technical reports
             and artifact-level provenance from a {MEASUREMENTS.DISPLAY} measurement program.
           </p>
           <p className="text-sm text-muted-foreground/80">
@@ -257,7 +257,7 @@ export default function PapersPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
           { value: '1', label: 'Accepted · ICML 2026 Workshop' },
-          { value: '5', label: 'Under peer review' },
+          { value: '6', label: 'Under peer review' },
           { value: '11', label: 'Papers total' },
           { value: MEASUREMENTS.SHORT, label: 'Measurements' },
         ].map((s) => (
@@ -294,7 +294,7 @@ export default function PapersPage() {
             Under Peer Review
           </h2>
           <p className="mt-2 text-sm text-muted-foreground/70">
-            5 papers submitted with PDFs, artifact manifests, and venue checklists complete. Now under peer review.
+            6 papers under peer review — five at top ML venues under blind review, plus one (serving-stack physics) submitted to TMLR (open review).
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">

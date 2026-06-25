@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Linkedin } from 'lucide-react';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
+const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 6 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
 
 export const metadata: Metadata = {
   title: 'Work',
@@ -148,7 +148,7 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'Chimeraforge — PyPI capacity-planning CLI',
     href: 'https://pypi.org/project/chimeraforge/',
     detail:
-      '6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus a new opt-in safety gate (TR134 refusal + TR142 RTSI), dual-language harnesses (Python + Rust), 323 tests. 2,000+ downloads on PyPI.',
+      'Model-agnostic 5-gate planner (v0.5.0 plans any registry / Ollama / HuggingFace model); 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) + opt-in safety gate (TR134 refusal + TR142 RTSI), dual-language harnesses (Python + Rust), 450 tests. 2,000+ downloads on PyPI.',
   },
   {
     label: 'HuggingFace — 16 model releases',
@@ -188,7 +188,7 @@ export default function WorkPage() {
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
-            A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 more under peer review,
+            A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 6 more under peer review,
             {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.DISPLAY} empirical measurements, and a constitutional AI ecosystem spanning
             9 repositories and 5 languages.
           </p>
