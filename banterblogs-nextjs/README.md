@@ -20,7 +20,7 @@ This is the Next.js application that powers [chimeraforge.vercel.app](https://ch
 The site publishes three types of content:
 
 - **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why. 266 episodes across Banterpacks (193) and Chimera Engine (73).
-- **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, constitutional AI, and safety evaluation. 50 reports with 1.12M+ empirical measurements.
+- **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, constitutional AI, and safety evaluation. 55 reports with 1.34M+ empirical measurements.
 - **Papers** — independent research write-ups. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 5 in preparation.
 
 Headline counts (episodes / reports / measurements) are single-sourced from `src/lib/constants.ts` — update there, not in this README.
@@ -45,9 +45,9 @@ Headline counts (episodes / reports / measurements) are single-sourced from `src
 
 ### Design System
 
-The site uses a custom dark theme called "Obsidian & Aurora" — defined through CSS variables in `globals.css`. Key characteristics:
+The site uses a custom dark theme called "Obsidian & Ember" — defined through CSS variables in `globals.css`. Key characteristics:
 
-- High-contrast dark palette with ember (primary) and cyan (accent) highlights
+- High-contrast near-black palette with a single hot-copper ember accent (the cyan accent was dropped — "torch in a cave")
 - Backdrop blur on panels and cards
 - Magnetic cursor interactions on buttons and episode cards
 - Framer Motion transitions throughout

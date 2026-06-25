@@ -17,7 +17,7 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 - 9 repositories across Python, Rust, TypeScript, C#, JavaScript
 - 1,348,000+ research measurements across 55 technical reports
 - 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing (workshop, not the main conference)
-- 6 papers under peer review (5 at top ML venues under blind review + serving-stack physics at TMLR)
+- 5 papers under peer review (target: top ML venues)
 - 266+ auto-generated development episodes (193 Banterpacks + 73 Chimera)
 - PyPI package: `pip install chimeraforge`
 - QuantSafe Certifier — live HuggingFace Space: signed release-gate for quantized models (RTSI + Ed25519), built on arXiv:2606.10154
@@ -67,7 +67,7 @@ Independent ML research with CUDA event timing and controlled safety evaluations
 - **Phase 5 — Attack Surface (TR138–TR143):** Batch perturbation (TR138 + Study D batch-invariant-kernel ablation), multi-turn jailbreaks, long-context exploitation, cross-architecture fragility, quality-safety divergence, cross-request composition. 306,996+ samples, 18+ models.
 - **Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152):** Speculative decoding null (TR144), KV-cache safety null (TR145), mechanistic probing (TR146), portability validation (TR147), multi-judge triangulation (TR148, κ = 0.69, dual-axis methodology), standardized FP16-vs-FP8 KV-cache battery (TR149), serving-state factorial across batch / prefix-caching / temperature (TR152 v2 — 45,000 records, 20,754 matched pairs).
 - **Phase 7 — Mitigation Turn (TR155–TR163):** First applied defenses against the failure modes Phases 4–6 detected — RTSI-gated quantization routing (TR163), attention-sink eviction and refusal (TR155), refusal-direction geometry (TR160). Proof-of-mechanism pilots; paper-grade expansion in progress.
-- **Phase 8 — Serving-Stack Mechanism Isolation (TR164–TR165):** Serving-stack physics on consumer GPUs. TR164 V1: a sharp N=2 parallel-efficiency breakdown on in-process pytorch_direct, GIL-attributed. TR165 (Python 3.14t nogil ablation): the GIL is a mechanism (~+17.9pp at N=2, 2/6 hangs resolved) but not the sole cause — verdict H2_partial. TR164 V3 (matched A100 80GB cross-backend, vLLM vs SGLang, 189,000 rows): continuous batching holds 0.47–0.62 parallel efficiency at N=32, a workload-conditional vLLM/SGLang routing signal. TR164 V4 (672-cell A100/H100 amortization grid): a one-parameter KV-bandwidth model η(B)=(1+r)/(1+Br) predicts the batching breakdown knee (ρ=0.84, zero fitted params); V5 adds served-SGLang validation + weight-axis evidence closure. The serving-stack-physics paper from this line is submitted to TMLR.
+- **Phase 8 — Serving-Stack Mechanism Isolation (TR164–TR165):** Serving-stack physics on consumer GPUs. TR164 V1: a sharp N=2 parallel-efficiency breakdown on in-process pytorch_direct, GIL-attributed. TR165 (Python 3.14t nogil ablation): the GIL is a mechanism (~+17.9pp at N=2, 2/6 hangs resolved) but not the sole cause — verdict H2_partial. TR164 V3 (matched A100 80GB cross-backend, vLLM vs SGLang, 189,000 rows): continuous batching holds 0.47–0.62 parallel efficiency at N=32, a workload-conditional vLLM/SGLang routing signal. TR164 V4 (672-cell A100/H100 amortization grid): a one-parameter KV-bandwidth model η(B)=(1+r)/(1+Br) predicts the batching breakdown knee (ρ=0.84, zero fitted params); V5 adds served-SGLang validation + weight-axis evidence closure. The serving-stack-physics paper from this line is in revision for resubmission.
 - **Phase 9 — Predictive-Validity Follow-ups (TR166–TR168):** v2 tests of the program's three named methodological screens — RTSIv2 (TR166), JTPv2 (TR167), CRIv2 (TR168): does each calibrated index predict its target on a disjoint hold-out, not just fit in-sample? TR167 lands a structural-degenerate-class finding for JTP on production-quantization substrate. In flight — only TR167 promoted so far.
 
 ### Synthesis Documents
@@ -89,7 +89,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - **Single-judge safety labels are insufficient** — cross-LLM κ = 0.69 lands in the "triangulate" bucket; safety-specialist judges measure a different axis than general LLMs (TR148, 68K judge rows).
 - **Speculative decoding × safety is a clean null** at 16,783 samples (TR144).
 
-## Papers — 1 Accepted, 6 Under Peer Review, 4 In Preparation
+## Papers — 1 Accepted, 5 Under Peer Review, 5 In Preparation
 
 ### Accepted — ICML 2026 Workshop on Hypothesis Testing
 - A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving (TR138; working title "Batch Inference Safety Under Non-Determinism") — accepted 2026-05-22; camera-ready in preparation. arXiv: https://arxiv.org/abs/2605.27763 (cs.LG). This is a workshop acceptance, not the ICML 2026 main conference.
@@ -100,13 +100,13 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 3. Many-Shot Jailbreak Under Quantization (TR140)
 4. Speculative Decoding Safety — Null Result (TR144)
 5. Multi-Turn Jailbreak × Quantization (TR139)
-6. Serving-Stack Physics — Predictive Bandwidth-Amortization Model for Continuous Batching (TR164, TR130, TR132) — submitted to TMLR (open review, nameable)
 
 ### In Preparation
 - Inference Optimization Is Not Safety-Neutral (TR134, TR135, TR136, TR137 synthesis)
 - Empirical Capacity Planning for Local LLM Inference (TR123, TR127, TR133)
 - Multi-Agent Runtime Architecture (TR112, TR114, TR115)
 - KV-Cache Quantization and Safety (TR145)
+- Serving-Stack Physics: When Continuous Batching Stops Amortizing (TR164, TR130, TR132) — bandwidth-amortization model; revising for resubmission
 
 ## JARVIS Gateway
 

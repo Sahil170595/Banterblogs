@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Linkedin } from 'lucide-react';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 6 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
+const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
 
 export const metadata: Metadata = {
   title: 'Work',
@@ -188,7 +188,7 @@ export default function WorkPage() {
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
-            A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 6 more under peer review,
+            A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 more under peer review,
             {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.DISPLAY} empirical measurements, and a constitutional AI ecosystem spanning
             9 repositories and 5 languages.
           </p>
