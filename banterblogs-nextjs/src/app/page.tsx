@@ -1,45 +1,49 @@
 import { Hero } from '@/components/Hero';
-import { EpisodeSpotlight } from '@/components/EpisodeSpotlight';
 import { SystemsShowcase } from '@/components/SystemsShowcase';
+import { ResearchSpotlight, type ReportTeaser } from '@/components/ResearchSpotlight';
 import { RoadmapRail } from '@/components/RoadmapRail';
-import { getAllEpisodes, getEpisodeStats, toEpisodeSummary, type EpisodeSummary } from '@/lib/episodes';
+import { discoverReportsUnique } from '@/lib/reports/locator';
+import { readReportMeta } from '@/lib/reports/meta';
+import { extractTRNumber, classifyReportSlug } from '@/lib/reports/phases';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default async function HomePage() {
-  let stats = {
-    totalEpisodes: 0,
-    totalFilesChanged: 0,
-    totalLinesAdded: 0,
-    avgComplexity: 0,
-    totalReadingTime: 0
-  };
-
-  let latestEpisode: EpisodeSummary | undefined = undefined;
-  let spotlightEpisodes: EpisodeSummary[] = [];
+  // Homepage leads with research: the latest technical reports (TR-numbered, newest
+  // first, deduped by TR number so the TR164 V3/V4/V5 family shows once). Episodes
+  // moved off the landing page — the /episodes archive still exists.
+  let latestReports: ReportTeaser[] = [];
 
   try {
-    const episodes = await getAllEpisodes();
-    stats = getEpisodeStats(episodes);
-    latestEpisode = episodes.length > 0 ? toEpisodeSummary(episodes[episodes.length - 1]) : undefined;
-    spotlightEpisodes = episodes.slice(-6).reverse().map(toEpisodeSummary);
+    const trEntries = discoverReportsUnique()
+      .map((d) => ({ slug: d.slug, tr: extractTRNumber(d.slug), cat: classifyReportSlug(d.slug) }))
+      .filter((d) => d.tr !== null && d.cat.startsWith('phase') && d.cat !== 'phase0')
+      .sort((a, b) => (b.tr ?? 0) - (a.tr ?? 0) || b.slug.localeCompare(a.slug));
+
+    const seen = new Set<number>();
+    for (const entry of trEntries) {
+      const tr = entry.tr ?? 0;
+      if (seen.has(tr)) continue;
+      seen.add(tr);
+      const meta = readReportMeta(entry.slug);
+      latestReports.push({
+        slug: entry.slug,
+        title: meta?.title ?? entry.slug,
+        description: meta?.description ?? '',
+      });
+      if (latestReports.length >= 6) break;
+    }
   } catch (error) {
-    console.error('Error loading episodes for homepage:', error);
-    // Fallback to static values if loading fails
-    stats = {
-      totalEpisodes: 266,
-      totalFilesChanged: 18123,
-      totalLinesAdded: 1915908,
-      avgComplexity: 50,
-      totalReadingTime: 1533
-    };
+    console.error('Error loading reports for homepage:', error);
   }
+
+  const latestReport = latestReports[0];
 
   return (
     <ErrorBoundary>
       <div className="flex flex-col">
-        <Hero stats={stats} latestEpisode={latestEpisode} />
+        <Hero latestReport={latestReport} />
         <SystemsShowcase />
-        <EpisodeSpotlight episodes={spotlightEpisodes} />
+        <ResearchSpotlight reports={latestReports} />
         <RoadmapRail />
       </div>
     </ErrorBoundary>

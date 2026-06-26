@@ -4,21 +4,16 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Package, Copy, Check, FileText } from 'lucide-react';
 import { useState } from 'react';
-import type { EpisodeSummary } from '@/lib/episodes';
-import { formatNumber } from '@/lib/formatUtils';
-import { MEASUREMENTS } from '@/lib/constants';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-interface HeroStats {
-  totalEpisodes: number;
-  totalFilesChanged: number;
-  totalLinesAdded: number;
-  avgComplexity: number;
-  totalReadingTime: number;
+interface LatestReport {
+  slug: string;
+  title: string;
+  description: string;
 }
 
 interface HeroProps {
-  stats: HeroStats;
-  latestEpisode?: EpisodeSummary;
+  latestReport?: LatestReport;
 }
 
 function CopyButton() {
@@ -35,7 +30,7 @@ function CopyButton() {
   );
 }
 
-export function Hero({ stats, latestEpisode }: HeroProps) {
+export function Hero({ latestReport }: HeroProps) {
   return (
     <section className="relative overflow-hidden border-b border-border/50">
       {/* Background — single subtle radial, no particles */}
@@ -134,8 +129,8 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
             {/* Compact stats — product-relevant, not code metrics */}
             <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm text-muted-foreground">
               <div>
-                <span className="text-lg font-bold text-foreground">{stats.totalEpisodes}</span>{' '}
-                episodes shipped
+                <span className="text-lg font-bold text-foreground">{REPORTS.DISPLAY}</span>{' '}
+                technical reports
               </div>
               <div>
                 <span className="text-lg font-bold text-foreground">89</span>{' '}
@@ -162,56 +157,39 @@ export function Hero({ stats, latestEpisode }: HeroProps) {
             <div className="rounded-2xl border border-border/60 bg-card/70 p-6 sm:p-8 shadow-2xl shadow-primary/5 backdrop-blur">
               <div className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                Latest Drop
+                Latest Research
               </div>
 
-              {latestEpisode ? (
+              {latestReport ? (
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground/80">
-                      Episode {latestEpisode.id}
+                      Technical Report
                     </p>
                     <h2 className="text-2xl font-semibold leading-tight text-foreground">
-                      {latestEpisode.title}
+                      {latestReport.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground">{latestEpisode.subtitle}</p>
-                  </div>
-
-                  <div className="grid gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-foreground/80">Files changed</span>
-                      <span>{latestEpisode.filesChanged}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-foreground/80">Lines added</span>
-                      <span>{formatNumber(latestEpisode.linesAdded)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-foreground/80">Complexity</span>
-                      <span>{latestEpisode.complexity}/100</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-foreground/80">Read time</span>
-                      <span>{latestEpisode.readingTime} min</span>
-                    </div>
+                    {latestReport.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-4">{latestReport.description}</p>
+                    )}
                   </div>
 
                   <Link
-                    href={`/episodes/${latestEpisode.slug}`}
+                    href={`/reports/${latestReport.slug}`}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/40 px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground transition-all duration-200 hover:border-primary/50 hover:text-primary"
                   >
-                    Read Episode {latestEpisode.id}
+                    Read the report
                     <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Link>
                 </div>
               ) : (
                 <div className="space-y-4 text-sm text-muted-foreground">
-                  <p>No episodes yet.</p>
+                  <p>Research loading.</p>
                   <Link
-                    href="/episodes"
+                    href="/reports"
                     className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-6 py-3 text-sm font-semibold text-foreground transition hover:border-primary/50 hover:text-primary"
                   >
-                    View archive
+                    Browse the archive
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
