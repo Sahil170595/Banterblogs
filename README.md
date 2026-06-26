@@ -21,7 +21,7 @@ Chimeraforge is the public-facing site for the Chimera ecosystem — a constitut
 - **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and safety alignment. 55 reports spanning 1.34M+ measurements.
 - **Papers** — independent research write-ups. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 5 in preparation.
 
-The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) with 266 episodes and counting.
+The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) with 268 episodes. The per-commit episode stream is now archived — the final episode in each line is a full retrospective, and ongoing work is documented through the research reports.
 
 ---
 
@@ -49,7 +49,7 @@ Chimeraforge documents work across nine repositories:
 Banterblogs/
   banterblogs-nextjs/     # The active Next.js application
     src/                  # App source (pages, components, lib)
-    posts/                # 266 episode markdown files
+    posts/                # 268 episode markdown files (stream archived)
     reports/              # Technical report data (benchmarks, analysis)
     PublishReady/         # Processed reports ready for rendering
   legacy_archive/         # Original static site (archived, read-only)

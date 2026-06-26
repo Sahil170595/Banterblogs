@@ -19,7 +19,7 @@ This is the Next.js application that powers [chimeraforge.vercel.app](https://ch
 
 The site publishes three types of content:
 
-- **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why. 266 episodes across Banterpacks (193) and Chimera Engine (73).
+- **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why. 268 episodes across Banterpacks (194) and Chimera Engine (74). The per-commit episode stream is now archived — the final episode in each line is a full retrospective; ongoing work is documented through the research reports.
 - **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, constitutional AI, and safety evaluation. 55 reports with 1.34M+ empirical measurements.
 - **Papers** — independent research write-ups. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 5 in preparation.
 
