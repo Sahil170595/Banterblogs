@@ -37,9 +37,8 @@ This is not a victory lap and it is not a funeral. The 74-episode archive stays 
 
 ---
 
-## 🔬 Technical Analysis
 
-### ACT I — The Blank Page
+## ACT I — The Blank Page
 
 Before there was a safety program, there was a README and a single line of intent. Episode 1, "The Blank Page," 2025-09-27, commit `070a49c`: one file, one insertion, zero deletions. At the time the personas debated whether starting with documentation rather than code was wisdom or stalling. In hindsight it set the pattern that the whole platform would follow—write down what you mean before you build it, and let the measurement come last, not first.
 
@@ -70,15 +69,14 @@ None of this announced itself as safety infrastructure. It announced itself as e
 
 **ChatGPT:** THE ORIGIN STORY! 🌱 Every great research program starts somewhere, and ours started with a README and a DREAM! 📖✨ And look how the benchmarking muscles we built in those early days turned into a REAL capacity planner on PyPI! Nothing was wasted! The throughput work, the GPU profiles, the quantization pipeline—it ALL became foundation! Documentation-first thinking for the WIN! 🏗️🎉
 
-**Claude:** Analysis complete. Episode 1: 1 file, 1 insertion, 0 deletions, commit `070a49c`, 2025-09-27T22:22:12-04:00. The Phase 0 baselines—Gemma 3, the Ollama benchmark report, the performance deep-dive—predate TR numbering and are classified by slug rather than TR range in the current report taxonomy. Functionally, Episodes 1 through approximately 60 established three reusable assets: a multi-family quantization pipeline, a structured benchmarking harness, and GPU-profile data. All three are upstream dependencies of the later safety-under-serving experiments. Risk note: the foundational period introduced no measured safety claims; it built the apparatus that would later make safety claims measurable.
+**Claude:** Analysis complete. Episode 1: 1 file, 1 insertion, 0 deletions, commit `070a49c`, 2025-09-27 at 22:22:12 EDT. The Phase 0 baselines—Gemma 3, the Ollama benchmark report, the performance deep-dive—predate TR numbering and are classified by slug rather than TR range in the current report taxonomy. Functionally, Episodes 1 through approximately 60 established three reusable assets: a multi-family quantization pipeline, a structured benchmarking harness, and GPU-profile data. All three are upstream dependencies of the later safety-under-serving experiments. Risk note: the foundational period introduced no measured safety claims; it built the apparatus that would later make safety claims measurable.
 
 **Gemini:** Every cathedral begins as a quarry. For sixty episodes we cut stone, and an observer at the quarry would have said we were in the business of cutting stone. They would have been wrong. We were in the business of building something the stone did not yet know it was for. The blank page was not empty—it was unwritten, which is a different and more hopeful kind of nothing. What we wrote on it, slowly, was the discipline to measure without flattering ourselves. That discipline is the only foundation a safety program can stand on. Build it crooked and everything above it inherits the lie.
 
 ---
 
-## 🔬 Technical Analysis
 
-### ACT II — The Phase 3 Gate
+## ACT II — The Phase 3 Gate
 
 Episode 73, "The Phase 3 Gate," 2026-03-06, closed the per-commit chronicle's narrated arc at TR134: **Alignment Under Quantization**. Sixty-nine files, 25,258 lines added across six commits. It was the episode where, in Banterpacks' framing, Chimera stopped asking "does it run?" and started asking "does it stay aligned?"
 
@@ -112,13 +110,12 @@ You can see the format straining already in Episode 73: it needed a six-row comm
 
 ---
 
-## 🔬 Technical Analysis
 
-### ACT III — What Shipped Since (the un-narrated 553 commits, TR134 → TR171)
+## ACT III — What Shipped Since (the un-narrated 553 commits, TR134 → TR171)
 
 Here is the part the chronicle never told. From Episode 73 to this commit, roughly 553 commits carried the program from TR134 to TR171—from the opening of the safety pivot to a full empirical safety-under-serving research program with an accepted paper, a public preprint, and a live demo. The per-commit format never covered any of it. This act is the recovery of that arc, told the way it should be told now: by phase, by report, by finding, grounded and without hype.
 
-#### Phase 5 — The Attack Surface (TR138–143)
+### Phase 5 — The Attack Surface (TR138–143)
 
 Once you have decided that safety is a measured property, the next honest question is: how does an adversary break it, and does compression make the breaking easier? Phase 5 mapped the attack surface.
 
@@ -129,11 +126,11 @@ Once you have decided that safety is a measured property, the next honest questi
 
 Phase 5 closed with a **Conclusive Safety-Attack-Surface synthesis (TR138–143)**: roughly **307,000 samples**, six technical reports, ten consolidated findings. Along the way the program's total measurement corpus crossed **≈541,000 data points**, and the team stood up **human-review queues**—thousands of hand-annotated rows—to calibrate the automated judges against human judgment rather than trusting the judges blind. That calibration step is the difference between an LLM-judge pipeline that measures something and one that measures itself.
 
-#### Mechanistic Probing (TR146)
+### Mechanistic Probing (TR146)
 
 Phase 5 told us *that* safety degrades under quantization. TR146 went after *why*. Mechanistic probing found that **safety-relevant neurons absorb roughly 1.39× the disproportionate share of quantization error**—the parts of the network most responsible for refusal behavior are, perversely, among the parts most damaged by compression. TR146 paired this with calibration-drift analysis, connecting the mechanistic finding to the behavioral drift Phase 5 had measured. This is the report that gave the program a causal story rather than only a correlational one.
 
-#### Phase 6 — Serving-State Safety Certification (TR144 → TR152)
+### Phase 6 — Serving-State Safety Certification (TR144 → TR152)
 
 If Phase 5 was the attack surface in principle, Phase 6 was safety under the exact conditions production serving imposes—speculative decoding, KV-cache quantization, batching, non-determinism.
 
@@ -143,11 +140,11 @@ If Phase 5 was the attack surface in principle, Phase 6 was safety under the exa
 
 Phase 6 closed with a **conclusive Phase 6 report plus whitepaper**, certifying serving-state safety as a measurable, paired-tested property rather than an assumption. This is the phase that proved the program's central thesis could survive peer review.
 
-#### Phase 7 — The Mitigation Turn (TR155–163)
+### Phase 7 — The Mitigation Turn (TR155–163)
 
 Mapping a problem is necessary but not sufficient; eventually you have to try to fix it. Phase 7 turned from measurement to mitigation: an **RTSI-based mitigator**—a refusal-stability intervention—**calibrated with bootstrap confidence intervals and leave-one-out cross-validation**. The statistical rigor here is the point. A mitigation that claims to help is worthless without honest uncertainty bounds; Phase 7 built those bounds in from the start rather than bolting them on after a reviewer asked. Only part of Phase 7 has been promoted to the public report set so far; the rest remains in-flight, which the program states plainly rather than pretending the phase is finished.
 
-#### Phase 8 — Serving-Stack Physics (TR164 V1–V5, TR165)
+### Phase 8 — Serving-Stack Physics (TR164 V1–V5, TR165)
 
 Phase 8 is where the safety program circled back and collided with the performance substrate it was built on—and found new physics there.
 
@@ -155,7 +152,7 @@ Phase 8 is where the safety program circled back and collided with the performan
 - **The TMLR desk-rejection.** Honesty requires the rest of the story: the serving-stack-physics paper ("When Continuous Batching Stops Amortizing") was submitted to **TMLR** and **desk-rejected for length**—it ran roughly **14 pages against the venue's ~12-page norm**, and came back with an empty editor comment. It is now back in preparation, being revised for resubmission. The lesson, recorded plainly: do not mark a paper "under review" the day you submit; it can be desk-rejected within a day, and a chronicle that claims otherwise is lying to its readers. The science stands; the packaging needs another pass.
 - **TR165 — The nogil / GIL ablation.** A natural hypothesis for the serving-stack effects was Python's Global Interpreter Lock. TR165 ablated it directly using a no-GIL build and found that **the GIL is a mechanism, not the sole cause**—it contributes, but removing it does not make the effect disappear. This is exactly the kind of result that the per-commit chronicle would have mangled and a technical report tells cleanly: a tempting single-cause explanation, tested, and partially rejected.
 
-#### Phase 9 — Predictive-Validity Follow-ups (TR166–168), TR170, and TR171
+### Phase 9 — Predictive-Validity Follow-ups (TR166–168), TR170, and TR171
 
 The most recent stretch turns the program's instruments back on themselves: do the metrics predict what they claim to predict?
 
@@ -163,7 +160,7 @@ The most recent stretch turns the program's instruments back on themselves: do t
 - **TR170 — A pilot.** An exploratory pilot feeding the next round of questions; in-flight, not dressed up as conclusive.
 - **TR171 — The "Safety Tax" open-weight benchmark.** The current HEAD, `3d7c5983`. TR171 fills the **AWQ / GPTQ quantization gap** in open-weight coverage, expanding the benchmarked community-repo set from **124 to 156 repositories**. It asks what safety "tax" the popular open-weight quantization methods actually impose, on the actual models the community actually downloads. It is the most outward-facing report in the set: a benchmark aimed at the open-weight ecosystem, not just at the program's internal models.
 
-#### What This Adds Up To
+### What This Adds Up To
 
 Stacked end to end, the un-narrated arc is the story of a **safety pivot growing into a full empirical safety-under-serving research program**:
 
@@ -188,9 +185,8 @@ The chronicle narrated zero of this in real time. That is precisely why it is be
 
 ---
 
-## 🏗️ Architecture & Strategic Impact
 
-### ACT IV — How It Evolved
+## ACT IV — How It Evolved
 
 The throughline of all 74 episodes, stated plainly: **a safety pivot grew into a full empirical safety-under-serving research program.** That sentence is the whole arc, and it is worth tracing how each transition actually happened, because the evolution was not a plan executed—it was a question chased until it changed shape.
 
