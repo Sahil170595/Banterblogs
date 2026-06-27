@@ -16,10 +16,10 @@ interface HeroProps {
   latestReport?: LatestReport;
 }
 
-function CopyButton() {
+function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
-    navigator.clipboard.writeText('pip install chimeraforge');
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -84,22 +84,41 @@ export function Hero({ latestReport }: HeroProps) {
               </p>
             </div>
 
-            {/* Install command */}
-            <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
-                <Package className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-muted-foreground">$</span>
-                <code className="text-foreground">pip install chimeraforge</code>
-                <CopyButton />
+            {/* Install commands — two shipped CLIs (chimeraforge is the deployment
+                planner; quantfit is a standalone quantization CLI, not a Chimera repo) */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
+                  <Package className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-muted-foreground">$</span>
+                  <code className="text-foreground">pip install chimeraforge</code>
+                  <CopyButton text="pip install chimeraforge" />
+                </div>
+                <Link
+                  href="https://pypi.org/project/chimeraforge/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  v0.5.0 on PyPI
+                </Link>
               </div>
-              <Link
-                href="https://pypi.org/project/chimeraforge/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                v0.5.0 on PyPI
-              </Link>
+              <div className="flex items-center gap-3">
+                <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
+                  <Package className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-muted-foreground">$</span>
+                  <code className="text-foreground">pip install quantfit</code>
+                  <CopyButton text="pip install quantfit" />
+                </div>
+                <Link
+                  href="https://pypi.org/project/quantfit/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  v0.1.0 on PyPI
+                </Link>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">

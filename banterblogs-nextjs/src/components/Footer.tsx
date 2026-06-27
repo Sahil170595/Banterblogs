@@ -12,7 +12,8 @@ const FOOTER_LINKS = {
     { href: '/about', label: 'About' },
   ],
   Resources: [
-    { href: 'https://pypi.org/project/chimeraforge/', label: 'PyPI Package' },
+    { href: 'https://pypi.org/project/chimeraforge/', label: 'chimeraforge (PyPI)' },
+    { href: 'https://pypi.org/project/quantfit/', label: 'quantfit (PyPI)' },
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
     { href: 'https://github.com/Sahil170595', label: 'GitHub' },

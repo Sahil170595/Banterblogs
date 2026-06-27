@@ -7,6 +7,7 @@
 - **Chimera** is the constitutional AI architecture itself: debate engine, multi-model consensus, embedding-based safety routing, BFT/Ed25519 provenance, ZK proofs, RLAIF self-improving loop.
 - **Chimeraforge** is the public site (https://chimeraforge.vercel.app) and the PyPI package (`pip install chimeraforge`, an LLM deployment optimizer CLI).
 - The two names are distinct on purpose. Do not collapse them.
+- **quantfit** (`pip install quantfit`) is a separate, standalone CLI — a GPU-aware quantization tool with a built-in safety-tax check. It is NOT part of the Chimera ecosystem; it is an independent tool that productizes the safety-under-quantization research line.
 
 ## What This Is
 
@@ -132,10 +133,22 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 - CLI: `chimeraforge plan` — model-agnostic 5-gate capacity planner (VRAM, quality, safety [opt-in], latency, cost) for any registry / Ollama / HuggingFace model; plus `suggest` / `catalog` / `measure` (v0.5.0 adds model-agnostic planning; 0.3.0 added the opt-in safety gate)
 - URL: https://pypi.org/project/chimeraforge/
 
+## Companion CLI: quantfit (standalone — NOT part of the Chimera ecosystem)
+
+- Package: quantfit
+- Version: 0.1.0 (Alpha)
+- Install: `pip install quantfit`
+- Python: >=3.10
+- License: Apache-2.0
+- CLI: `quantfit check` (will a model fit the GPU? no download) · `quantfit quantize --method awq|gptq|smoothquant|fp8|rtn|gguf` · `quantfit verify-safety` (did quantization break refusals?) — reports the safety tax as a two-axis vector (refusal-robustness + over-refusal, per zone) judged by the QuantSafe refusal classifier
+- URL: https://pypi.org/project/quantfit/
+- GitHub: https://github.com/Sahil170595/quantfit
+
 ## Links
 
 - Site: https://chimeraforge.vercel.app
 - PyPI: https://pypi.org/project/chimeraforge/
+- PyPI (quantfit, standalone CLI): https://pypi.org/project/quantfit/
 - GitHub (profile / canonical README): https://github.com/Sahil170595
 - GitHub (this site's source): https://github.com/Sahil170595/Banterblogs
 - GitHub (Chimeraforge tools): https://github.com/Sahil170595/Chimeraforge
