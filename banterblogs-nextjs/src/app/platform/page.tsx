@@ -276,6 +276,42 @@ export default async function PlatformPage() {
         </div>
       </section>
 
+      {/* ── Standalone Tools (shipped outside the 9-repo Chimera ecosystem) ── */}
+      <section className="mb-20">
+        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+          Standalone Tools
+        </h2>
+        <p className="text-xs text-muted-foreground/70 mb-8 max-w-2xl">
+          Independent CLIs shipped outside the Chimera ecosystem — their own repositories, not
+          counted among the nine.
+        </p>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="signal-panel p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Wrench className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold">quantfit</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              GPU-aware quantization CLI with a built-in safety-tax check. Quantizes across the SOTA
+              matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF), routes by GPU capacity
+              (in-GPU / CPU-offload / refuse), and measures whether quantization broke refusals —
+              a two-axis vector (refusal-robustness + over-refusal) via the QuantSafe classifier.
+            </p>
+            <Link
+              href="https://pypi.org/project/quantfit/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              pip install quantfit
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── Key Numbers ── */}
       <section className="mb-20">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
