@@ -1,17 +1,11 @@
-import path from "path";
 import { MEASUREMENTS, REPORTS } from "@/lib/constants";
 
 export const siteConfig = {
   name: "Chimeraforge",
   description: `Personal AI platform — local inference, constitutional AI governance, and ${MEASUREMENTS.SHORT} research measurements across ${REPORTS.DISPLAY} technical reports.`,
-  paths: {
-    posts: path.join(process.cwd(), "posts"),
-    banterpacks: path.join(process.cwd(), "posts", "banterpacks"),
-    chimera: path.join(process.cwd(), "posts", "chimera"),
-    reports: path.join(process.cwd(), "reports"),
-    publishReady: path.join(process.cwd(), "PublishReady"),
-    banterhearts: path.join(process.cwd(), "..", "Banterhearts"),
-  },
+  // NOTE: a dead `paths` block was removed 2026-07-04 — nothing consumed it,
+  // and it included a `../Banterhearts` cross-repo filesystem path (banned by
+  // the ecosystem standards). episodes.ts/locator.ts own their real paths.
   platformOffsets: {
     banterpacks: 0,
     chimera: 10_000,

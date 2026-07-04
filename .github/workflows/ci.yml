@@ -33,3 +33,10 @@ jobs:
       - name: Run Tests
         working-directory: ./banterblogs-nextjs
         run: npm test -- --run # Run once, not in watch mode
+
+      # Type-checking and the build-time invariants (reports.json count
+      # reconciliation, catalog completeness, phase-slug resolution) only run
+      # inside `next build` — without this step they never gate a merge.
+      - name: Build
+        working-directory: ./banterblogs-nextjs
+        run: npm run build

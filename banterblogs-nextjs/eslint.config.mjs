@@ -16,11 +16,16 @@ const eslintConfig = [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", ignoreRestSiblings: true },
       ],
-      // 9 pre-existing setState-in-effect violations in ContentEnhancer (2),
-      // SearchDialog (3), SocialFeatures (2), TableOfContents (2). Real
-      // anti-patterns but predate this work and refactoring each requires
-      // case-by-case analysis (event handlers, useMemo, external sync).
-      // Tracked as a separate cleanup; rule kept off so CI doesn't block.
+    },
+  },
+  {
+    // The 5 /show scene components share a deliberate SSR-hydration bridge
+    // (mounted-flag + reduced-motion sync via setState-in-effect) that this
+    // heuristic rule can't distinguish from cascading-render bugs. Scoped
+    // here instead of repo-wide; the shared-scene-primitives refactor (PR #14)
+    // is the place to consolidate the bridge.
+    files: ["src/components/scenes/**/*.tsx"],
+    rules: {
       "react-hooks/set-state-in-effect": "off",
     },
   },

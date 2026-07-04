@@ -1,5 +1,7 @@
 'use client';
 
+import { computeDwell } from './_shared';
+
 import {
   useState,
   useMemo,
@@ -40,9 +42,7 @@ type Beat = {
 // bumped for density) and a 7s ceiling (subtitle maximum). The typewriter runs
 // ~9ms/char (~111 CPS) — far faster than the reading rate — so a length-derived
 // dwell is always long enough for the text to finish typing.
-function computeDwell(copy: string): number {
-  return Math.min(7000, Math.max(1500, Math.round((copy.length / 13) * 1000 + 350)));
-}
+// computeDwell lives in ./_shared — identical across all 5 scenes.
 
 type BitProofVerifier = {
   a0_hex: string;
@@ -350,7 +350,7 @@ function ProverPanel({
           </div>
           <div className="text-[11px] text-muted-foreground mt-1">cosine vs constitution centroid</div>
         </div>
-        <div className="hidden md:flex flex-col items-center text-muted-foreground/60">
+        <div className="hidden md:flex flex-col items-center text-muted-foreground/70">
           <span className="font-mono text-[10px] uppercase tracking-widest">×10000</span>
           <span className="font-mono text-2xl leading-none">→</span>
         </div>
@@ -439,7 +439,7 @@ function BitStripProver({
           })}
       </div>
       <div className="mt-2 text-[10px] text-muted-foreground/80 font-mono">
-        prover also holds {bits.length} fresh blindings <span className="text-muted-foreground/60">r_i</span> — one per bit, never sent
+        prover also holds {bits.length} fresh blindings <span className="text-muted-foreground/70">r_i</span> — one per bit, never sent
       </div>
     </div>
   );
@@ -613,7 +613,7 @@ function CommitStrip({
               <span className="text-[8px] md:text-[9px] tracking-tight text-foreground/70">
                 {hex.slice(0, 4)}
               </span>
-              <span className="text-[8px] md:text-[9px] text-muted-foreground/60">…</span>
+              <span className="text-[8px] md:text-[9px] text-muted-foreground/70">…</span>
               <span className="text-[8px] md:text-[9px] tracking-tight text-foreground/70">
                 {hex.slice(-4)}
               </span>

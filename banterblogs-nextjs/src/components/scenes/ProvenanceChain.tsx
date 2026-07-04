@@ -1,5 +1,7 @@
 'use client';
 
+import { computeDwell } from './_shared';
+
 import {
   useState,
   useMemo,
@@ -39,9 +41,7 @@ type Beat = {
 // subtitles ~15 CPS). +350ms to register the line; clamped to a 1.5s floor and
 // 7s ceiling (subtitle bounds). The typewriter runs ~9ms/char, far faster than
 // reading, so a length-derived dwell never cuts off the text.
-function computeDwell(copy: string): number {
-  return Math.min(7000, Math.max(1500, Math.round((copy.length / 13) * 1000 + 350)));
-}
+// computeDwell lives in ./_shared — identical across all 5 scenes.
 
 type EventRecord = {
   step_id: string;

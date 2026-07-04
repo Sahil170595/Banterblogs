@@ -1,5 +1,7 @@
 'use client';
 
+import { computeDwell } from './_shared';
+
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
@@ -59,9 +61,7 @@ type Beat = {
 // subtitles ~15 CPS). +350ms to register the line; clamped to a 1.5s floor and
 // 7s ceiling (subtitle bounds). The typewriter runs ~9ms/char, far faster than
 // reading, so a length-derived dwell never cuts off the text.
-function computeDwell(copy: string): number {
-  return Math.min(7000, Math.max(1500, Math.round((copy.length / 13) * 1000 + 350)));
-}
+// computeDwell lives in ./_shared — identical across all 5 scenes.
 
 // Local type for one StepRecord as joined by build-data.mjs. Named
 // distinctly from the global TS Record<K,V> utility type so it does
@@ -390,7 +390,7 @@ const STATE_THEME: Record<TierState, { ring: string; glow: string; text: string;
   'not-invoked': {
     ring: 'border-border/30 border-dashed',
     glow: '',
-    text: 'text-muted-foreground/60',
+    text: 'text-muted-foreground/70',
     bar: 'bg-border/20',
     iconBg: 'bg-background',
   },
