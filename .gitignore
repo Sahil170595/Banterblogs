@@ -57,7 +57,7 @@ out/
 # TypeScript
 *.tsbuildinfo
 
-# Package manager files
-package-lock.json
+# Package manager files (NOTE: banterblogs-nextjs/package-lock.json is
+# tracked and load-bearing for CI npm ci — do not re-add it here)
 yarn.lock
 pnpm-lock.yaml
