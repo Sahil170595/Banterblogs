@@ -2,11 +2,15 @@
 
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { Episode } from '@/lib/episodes';
+
+interface EpisodeLink {
+  slug: string;
+  title: string;
+}
 
 interface EpisodeNavigationProps {
-  prevEpisode: Episode | null;
-  nextEpisode: Episode | null;
+  prevEpisode: EpisodeLink | null;
+  nextEpisode: EpisodeLink | null;
 }
 
 export function EpisodeNavigation({ prevEpisode, nextEpisode }: EpisodeNavigationProps) {

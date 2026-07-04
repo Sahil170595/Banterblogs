@@ -1,63 +1,33 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef } from 'react';
-import { 
-  ChevronRight, 
-  Hash, 
-  Eye, 
-  EyeOff,
-  BookOpen,
-  Target
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronRight, Hash, Eye, EyeOff, BookOpen } from 'lucide-react';
+import type { TocEntry } from '@/lib/episodes';
+
+// Fixed-position table of contents for episode pages.
+//
+// Receives the headings (with the real rehype-slug ids) from the server page
+// instead of the full article HTML — the previous version parsed a detached
+// DOM copy and invented `heading-N` ids that never existed in the rendered
+// document, so clicking a TOC entry did nothing.
 
 interface TableOfContentsProps {
-  content: string;
+  headings: TocEntry[];
   className?: string;
 }
 
-interface TocItem {
-  id: string;
-  title: string;
-  level: number;
-  element: HTMLElement;
-}
+const SHOW_DELAY_MS = 1000;
 
-export function TableOfContents({ content, className = '' }: TableOfContentsProps) {
-  const [tocItems, setTocItems] = useState<TocItem[]>([]);
+export function TableOfContents({ headings, className = '' }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>('');
   const [isExpanded, setIsExpanded] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    // Extract headings from content
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-    
-    const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    const items: TocItem[] = [];
-    
-    headings.forEach((heading, index) => {
-      const id = `heading-${index}`;
-      heading.id = id;
-      
-      items.push({
-        id,
-        title: heading.textContent || '',
-        level: parseInt(heading.tagName.charAt(1)),
-        element: heading as HTMLElement
-      });
-    });
-    
-    setTocItems(items);
+    if (headings.length === 0) return;
 
-    // Set up intersection observer for active section tracking
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    observerRef.current = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -65,74 +35,41 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
           }
         });
       },
-      {
-        rootMargin: '-20% 0px -80% 0px',
-        threshold: 0
-      }
+      { rootMargin: '-20% 0px -80% 0px', threshold: 0 },
     );
 
-    // Observe all headings
-    items.forEach((item) => {
+    headings.forEach((item) => {
       const element = document.getElementById(item.id);
-      if (element && observerRef.current) {
-        observerRef.current.observe(element);
-      }
+      if (element) observer.observe(element);
     });
 
-    // Show TOC after a delay
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 1000);
+    const timer = setTimeout(() => setIsVisible(true), SHOW_DELAY_MS);
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
+      observer.disconnect();
       clearTimeout(timer);
     };
-  }, [content]);
+  }, [headings]);
 
   const scrollToHeading = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-  };
-
-  const getLevelIcon = (level: number) => {
-    switch (level) {
-      case 1:
-        return <Hash className="h-3 w-3" />;
-      case 2:
-        return <Hash className="h-3 w-3" />;
-      case 3:
-        return <Hash className="h-3 w-3" />;
-      default:
-        return <ChevronRight className="h-3 w-3" />;
-    }
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const getLevelColor = (level: number) => {
     switch (level) {
-      case 1:
-        return 'text-primary';
       case 2:
-        return 'text-accent';
-      case 3:
-        return 'text-green-400';
-      case 4:
-        return 'text-accent';
-      case 5:
         return 'text-primary';
+      case 3:
+        return 'text-accent';
       default:
         return 'text-muted-foreground';
     }
   };
 
-  if (tocItems.length === 0) return null;
+  if (headings.length === 0) return null;
+
+  const activeIndex = headings.findIndex((item) => item.id === activeId);
+  const progressPct = Math.round(((activeIndex + 1) / headings.length) * 100);
 
   return (
     <AnimatePresence>
@@ -144,21 +81,24 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
           transition={{ duration: 0.5 }}
           className={`fixed left-6 top-1/2 transform -translate-y-1/2 z-30 hidden xl:block ${className}`}
         >
-          <div className="bg-background/90 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl max-w-xs">
+          <nav
+            aria-label="Table of contents"
+            className="bg-background/90 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl max-w-xs"
+          >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50">
               <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
+                <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
                 <h3 className="text-sm font-semibold text-foreground">Contents</h3>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={() => setIsExpanded(!isExpanded)}
+                aria-expanded={isExpanded}
+                aria-label={isExpanded ? 'Collapse table of contents' : 'Expand table of contents'}
                 className="p-1 rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
               >
-                {isExpanded ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </motion.button>
+                {isExpanded ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+              </button>
             </div>
 
             {/* Content */}
@@ -173,29 +113,25 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
                 >
                   <div className="p-4 max-h-96 overflow-y-auto">
                     <div className="space-y-1">
-                      {tocItems.map((item, index) => (
-                        <motion.button
+                      {headings.map((item) => (
+                        <button
                           key={item.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
                           onClick={() => scrollToHeading(item.id)}
+                          aria-current={activeId === item.id ? 'location' : undefined}
                           className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
                             activeId === item.id
                               ? 'bg-primary/10 text-primary border border-primary/20'
                               : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
                           }`}
-                          style={{ paddingLeft: `${(item.level - 1) * 0.75 + 0.5}rem` }}
+                          style={{ paddingLeft: `${(item.level - 2) * 0.75 + 0.5}rem` }}
                         >
                           <div className="flex items-center gap-2">
-                            <div className={getLevelColor(item.level)}>
-                              {getLevelIcon(item.level)}
+                            <div className={getLevelColor(item.level)} aria-hidden="true">
+                              {item.level <= 3 ? <Hash className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                             </div>
-                            <span className="text-sm font-medium truncate">
-                              {item.title}
-                            </span>
+                            <span className="text-sm font-medium truncate">{item.text}</span>
                           </div>
-                        </motion.button>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -207,125 +143,19 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
             <div className="p-4 border-t border-border/50">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span>Reading Progress</span>
-                <span>{Math.round((tocItems.findIndex(item => item.id === activeId) + 1) / tocItems.length * 100)}%</span>
+                <span>{progressPct}%</span>
               </div>
               <div className="w-full h-1 bg-muted/50 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-                  style={{ 
-                    width: `${(tocItems.findIndex(item => item.id === activeId) + 1) / tocItems.length * 100}%` 
-                  }}
+                  style={{ width: `${progressPct}%` }}
                   transition={{ duration: 0.3 }}
                 />
               </div>
             </div>
-          </div>
+          </nav>
         </motion.div>
       )}
     </AnimatePresence>
-  );
-}
-
-interface ContentHighlighterProps {
-  content: string;
-  searchTerm?: string;
-  className?: string;
-}
-
-export function ContentHighlighter({ content, searchTerm, className = '' }: ContentHighlighterProps) {
-  const [highlightedContent, setHighlightedContent] = useState(content);
-
-  useEffect(() => {
-    if (!searchTerm) {
-      setHighlightedContent(content);
-      return;
-    }
-
-    // Create a regex pattern for the search term
-    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    
-    // Replace the content with highlighted version
-    const highlighted = content.replace(regex, '<mark class="search-highlight">$1</mark>');
-    setHighlightedContent(highlighted);
-  }, [content, searchTerm]);
-
-  return (
-    <div 
-      className={`content-highlighter ${className}`}
-      dangerouslySetInnerHTML={{ __html: highlightedContent }}
-    />
-  );
-}
-
-type ContentSearchHandler = (value: string) => void;
-
-interface ContentSearchProps {
-  onSearch: ContentSearchHandler;
-  className?: string;
-}
-
-export function ContentSearch({ onSearch, className = '' }: ContentSearchProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isVisible, setIsVisible] = useState(false);
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    onSearch(term);
-  };
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    onSearch('');
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.8 }}
-      className={`content-search ${className}`}
-    >
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Search in content..."
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          onFocus={() => setIsVisible(true)}
-          onBlur={() => setTimeout(() => setIsVisible(false), 200)}
-          className="w-full px-4 py-2 pl-10 pr-10 bg-background/50 border border-border/50 rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-        />
-        
-        <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        
-        {searchTerm && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={clearSearch}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
-          >
-            X
-          </motion.button>
-        )}
-      </div>
-
-      {/* Search Results */}
-      <AnimatePresence>
-        {isVisible && searchTerm && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="mt-2 p-3 bg-background/90 border border-border/50 rounded-lg backdrop-blur"
-          >
-            <div className="text-sm text-muted-foreground">
-              Searching for: <span className="text-primary font-medium">&ldquo;{searchTerm}&rdquo;</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
   );
 }

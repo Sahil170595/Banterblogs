@@ -57,8 +57,8 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredEpisodes.map((episode, index) => (
-          <EpisodeCard key={episode.id} episode={episode} index={index} />
+        {filteredEpisodes.map((episode) => (
+          <EpisodeCard key={episode.id} episode={episode} />
         ))}
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Share2,
@@ -26,6 +26,39 @@ interface SocialShareProps {
   className?: string;
 }
 
+interface ShareOption {
+  name: string;
+  icon: ReactNode;
+  color: string;
+  url?: string;
+  action?: 'copy';
+}
+
+const BOOKMARKS_KEY = 'episode-bookmarks';
+const LIKES_KEY = 'episode-likes';
+
+// localStorage JSON can be corrupt (manual edits, old formats) — never let a
+// bad value crash the component.
+function readSlugList(key: string): string[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
+  } catch (error) {
+    console.error(`[SocialFeatures] corrupt localStorage value for ${key}, resetting:`, error);
+    return [];
+  }
+}
+
+function writeSlugList(key: string, slugs: string[]) {
+  localStorage.setItem(key, JSON.stringify(slugs));
+}
+
+function toggleSlugInList(key: string, slug: string, present: boolean): void {
+  const list = readSlugList(key).filter((s) => s !== slug);
+  if (present) list.push(slug);
+  writeSlugList(key, list);
+}
+
 export function SocialShare({ episode, className = '' }: SocialShareProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -35,7 +68,7 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
   const episodeUrl = `https://chimeraforge.vercel.app/episodes/${episode.slug}`;
   const shareText = `Check out this episode: ${episode.title}`;
 
-  const shareOptions = [
+  const shareOptions: ShareOption[] = [
     {
       name: 'Twitter',
       icon: <Twitter className="h-4 w-4" />,
@@ -62,7 +95,7 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
     }
   ];
 
-  const handleShare = async (option: any) => {
+  const handleShare = async (option: ShareOption) => {
     if (option.action === 'copy') {
       try {
         await navigator.clipboard.writeText(episodeUrl);
@@ -77,25 +110,24 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
   };
 
   const handleLike = () => {
-    setLiked(!liked);
+    const next = !liked;
+    setLiked(next);
+    toggleSlugInList(LIKES_KEY, episode.slug, next);
   };
 
   const handleBookmark = () => {
-    const newBookmarked = !bookmarked;
-    setBookmarked(newBookmarked);
-    const bookmarks = JSON.parse(localStorage.getItem('episode-bookmarks') || '[]');
-    if (newBookmarked) {
-      bookmarks.push(episode.slug);
-      localStorage.setItem('episode-bookmarks', JSON.stringify(bookmarks));
-    } else {
-      const updated = bookmarks.filter((slug: string) => slug !== episode.slug);
-      localStorage.setItem('episode-bookmarks', JSON.stringify(updated));
-    }
+    const next = !bookmarked;
+    setBookmarked(next);
+    toggleSlugInList(BOOKMARKS_KEY, episode.slug, next);
   };
 
   useEffect(() => {
-    const bookmarks = JSON.parse(localStorage.getItem('episode-bookmarks') || '[]');
-    setBookmarked(bookmarks.includes(episode.slug));
+    // Hydration-safe localStorage read: the server render can't know client
+    // state, so the first client pass must sync it — setState here is the
+    // intended pattern, not a cascading-render bug.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBookmarked(readSlugList(BOOKMARKS_KEY).includes(episode.slug));
+    setLiked(readSlugList(LIKES_KEY).includes(episode.slug));
   }, [episode.slug]);
 
   return (
@@ -177,14 +209,15 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const savedBookmarks = JSON.parse(localStorage.getItem('episode-bookmarks') || '[]');
-    setBookmarks(savedBookmarks);
+    // Hydration-safe localStorage read (see SocialShare note above).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBookmarks(readSlugList(BOOKMARKS_KEY));
   }, []);
 
   const removeBookmark = (slug: string) => {
     const updated = bookmarks.filter(s => s !== slug);
     setBookmarks(updated);
-    localStorage.setItem('episode-bookmarks', JSON.stringify(updated));
+    writeSlugList(BOOKMARKS_KEY, updated);
   };
 
   return (
@@ -195,6 +228,7 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
         aria-label={`Bookmarks (${bookmarks.length})`}
+        aria-expanded={isOpen}
       >
         <Bookmark className="h-4 w-4" />
         {bookmarks.length > 0 && (
@@ -216,9 +250,10 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
               <h3 className="text-sm font-semibold text-foreground">Bookmarks</h3>
               <button
                 onClick={() => setIsOpen(false)}
+                aria-label="Close bookmarks"
                 className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 

@@ -2,8 +2,16 @@ import 'highlight.js/styles/github-dark.css';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 export const runtime = 'nodejs';
-import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
+// Prerender all episode pages at build; the archive is final so on-demand
+// renders only re-run for ISR refreshes, not first visits.
+export const revalidate = 900;
+import { getAllEpisodes, toEpisodeSummary, extractHtmlHeadings, computeContentStats } from '@/lib/episodes';
 import { EpisodeNavigation } from '@/components/EpisodeNavigation';
+
+export async function generateStaticParams() {
+  const episodes = await getAllEpisodes();
+  return episodes.map((episode) => ({ slug: episode.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -43,7 +51,8 @@ export async function generateMetadata({
 }
 import { EpisodeStats } from '@/components/EpisodeStats';
 import { TableOfContents } from '@/components/TableOfContents';
-import { ContentEnhancer, ContentStats } from '@/components/ContentEnhancer';
+import { ArticleEnhancements } from '@/components/ContentEnhancer';
+import { ContentStats } from '@/components/ContentStats';
 import { MobileNavigation } from '@/components/MobileOptimization';
 import { EpisodeFloatingUI } from '@/components/EpisodeFloatingUI';
 import { EpisodeRecommendationsClient } from '@/components/EpisodeRecommendationsClient';
@@ -89,13 +98,23 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
   const displayId = episode.displayId ?? episode.id;
   const platformLabel = episode.platform === 'chimera' ? 'Chimera' : episode.platform === 'benchmark' ? 'Benchmarks' : 'Banterpacks';
 
+  // Derive TOC headings and stats server-side so the article HTML rides the
+  // RSC payload exactly once (the server-rendered body below) instead of four
+  // times as client-component props.
+  const headings = extractHtmlHeadings(episode.content);
+  const contentStats = computeContentStats(episode.content);
+  const summary = toEpisodeSummary(episode);
+
   return (
     <>
-      <TableOfContents content={episode.content} />
+      <TableOfContents headings={headings} />
 
-      <EpisodeFloatingUI episode={episode} />
+      <EpisodeFloatingUI episode={summary} />
 
-      <MobileNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
+      <MobileNavigation
+        prevEpisode={prevEpisode && { slug: prevEpisode.slug, title: prevEpisode.title }}
+        nextEpisode={nextEpisode && { slug: nextEpisode.slug, title: nextEpisode.title }}
+      />
 
       <div className="container py-16">
         <div className="max-w-5xl mx-auto">
@@ -124,7 +143,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="signal-panel mb-10 p-6">
-            <ContentStats content={episode.content} />
+            <ContentStats stats={contentStats} />
           </div>
 
           <div
@@ -147,10 +166,15 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
             prose-th:bg-muted prose-th:font-semibold prose-th:text-foreground
             prose-td:border prose-td:border-border prose-td:text-muted-foreground"
           >
-            <ContentEnhancer content={episode.content} />
+            {/* Server-rendered article body — SEO/no-JS complete on first paint. */}
+            <div id="episode-article" dangerouslySetInnerHTML={{ __html: episode.content }} />
+            <ArticleEnhancements articleId="episode-article" />
           </div>
 
-          <EpisodeNavigation prevEpisode={prevEpisode} nextEpisode={nextEpisode} />
+          <EpisodeNavigation
+            prevEpisode={prevEpisode && { slug: prevEpisode.slug, title: prevEpisode.title }}
+            nextEpisode={nextEpisode && { slug: nextEpisode.slug, title: nextEpisode.title }}
+          />
 
           <div className="mt-16">
             <EpisodeRecommendationsClient

@@ -73,6 +73,9 @@ export function extractPrimaryHeading(markdown: string): string | undefined {
   return match ? match[1].trim() : undefined;
 }
 
+// Average adult reading speed used for the "min read" estimate.
+const WORDS_PER_MINUTE = 200;
+
 export interface TocEntry {
   id: string;
   text: string;
@@ -98,6 +101,48 @@ export function extractHeadings(markdown: string): TocEntry[] {
     headings.push({ id, text, level });
   }
   return headings;
+}
+
+/**
+ * Extract headings from ALREADY-RENDERED HTML (episode.content), reading the
+ * real ids rehype-slug emitted. Server-side companion to extractHeadings for
+ * consumers that only hold the rendered document (episode TOC).
+ */
+export function extractHtmlHeadings(html: string): TocEntry[] {
+  const headings: TocEntry[] = [];
+  const re = /<h([2-4])[^>]*\sid="([^"]+)"[^>]*>([\s\S]*?)<\/h\1>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html)) !== null) {
+    const text = match[3].replace(/<[^>]+>/g, '').trim();
+    if (text) headings.push({ id: match[2], text, level: Number(match[1]) });
+  }
+  return headings;
+}
+
+export interface ContentStatsSummary {
+  wordCount: number;
+  readingTime: number;
+  headingCount: number;
+  imageCount: number;
+  codeBlockCount: number;
+  linkCount: number;
+}
+
+/**
+ * Server-side content stats over rendered HTML. Replaces the old client-side
+ * DOM-parse (which forced the full article into a client component's props).
+ */
+export function computeContentStats(html: string): ContentStatsSummary {
+  const text = html.replace(/<[^>]+>/g, ' ');
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  return {
+    wordCount,
+    readingTime: Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE)),
+    headingCount: (html.match(/<h[1-6][\s>]/gi) ?? []).length,
+    imageCount: (html.match(/<img[\s>]/gi) ?? []).length,
+    codeBlockCount: (html.match(/<pre[\s>]/gi) ?? []).length,
+    linkCount: (html.match(/<a[\s>]/gi) ?? []).length,
+  };
 }
 
 export function summarizeMarkdown(markdown: string, fallbackTitle?: string) {
@@ -247,7 +292,7 @@ async function processEpisodeFile(
   const tags = buildTags(content, metadata.tags);
 
   const wordCount = content.split(/\s+/).filter(Boolean).length;
-  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+  const readingTime = Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE));
 
   const defaultSlug = createDefaultSlug(metadata.platform, metadata.displayId);
   const slug = sanitizeSlugCandidate(metadata.slug, defaultSlug);

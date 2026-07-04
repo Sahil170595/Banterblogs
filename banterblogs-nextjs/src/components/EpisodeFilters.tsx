@@ -12,11 +12,19 @@ interface EpisodeFiltersProps {
 
 type SortKey = 'date' | 'title' | 'complexity' | 'files';
 
+// Incremental rendering: SSR-ing all 268 cards produced a ~2MB HTML document.
+// Render a page at a time; "Load more" extends the window, and any filter
+// change resets it (keyed on the filter signature — no setState-in-effect).
+const PAGE_SIZE = 36;
+
 export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedTag, setSelectedTag] = useState<string>('');
+  const filterKey = `${searchQuery}|${selectedTag}|${sortBy}|${sortOrder}`;
+  const [visible, setVisible] = useState({ key: filterKey, count: PAGE_SIZE });
+  const visibleCount = visible.key === filterKey ? visible.count : PAGE_SIZE;
 
   const searchInstance = useMemo(() => new EpisodeSearch(episodes), [episodes]);
 
@@ -79,6 +87,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
               <input
                 type="text"
                 placeholder="Search episodes, tags, or systems..."
+                aria-label="Search episodes, tags, or systems"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-xl border border-input bg-background/60 px-10 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -100,9 +109,10 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
 
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                aria-label={sortOrder === 'asc' ? 'Sorted ascending — switch to descending' : 'Sorted descending — switch to ascending'}
                 className="flex items-center justify-center rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" aria-hidden="true" /> : <SortDesc className="h-4 w-4" aria-hidden="true" />}
               </button>
             </div>
           </div>
@@ -144,11 +154,23 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
           No episodes match your filters yet. Try adjusting the search or tag selection.
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEpisodes.map((episode, index) => (
-            <EpisodeCard key={episode.id} episode={episode} index={index} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredEpisodes.slice(0, visibleCount).map((episode) => (
+              <EpisodeCard key={episode.id} episode={episode} />
+            ))}
+          </div>
+          {filteredEpisodes.length > visibleCount && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => setVisible({ key: filterKey, count: visibleCount + PAGE_SIZE })}
+                className="rounded-xl border border-input bg-background/60 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                Load more ({filteredEpisodes.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

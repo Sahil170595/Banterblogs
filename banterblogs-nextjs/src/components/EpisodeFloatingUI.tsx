@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { Episode } from '@/lib/episodes';
+import type { EpisodeSummary } from '@/lib/episodes';
 
 // Floating action UI on /episodes/[slug] (bottom-right corner). Pulls
 // framer-motion + 11 lucide icons. Not visible above the fold and only
@@ -20,7 +20,7 @@ const BookmarkManager = dynamic(
 );
 
 interface EpisodeFloatingUIProps {
-  episode: Episode;
+  episode: EpisodeSummary;
 }
 
 export function EpisodeFloatingUI({ episode }: EpisodeFloatingUIProps) {
