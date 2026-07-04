@@ -22,6 +22,8 @@ export async function GET() {
       urlEntry(BASE, now, 'daily', 1.0),
       urlEntry(`${BASE}/about`, now, 'monthly', 0.8),
       urlEntry(`${BASE}/episodes`, now, 'daily', 0.9),
+      urlEntry(`${BASE}/banterpacks`, now, 'monthly', 0.7),
+      urlEntry(`${BASE}/chimera`, now, 'monthly', 0.7),
       urlEntry(`${BASE}/reports`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/reports/compendium`, now, 'monthly', 0.85),
       urlEntry(`${BASE}/papers`, now, 'weekly', 0.9),
