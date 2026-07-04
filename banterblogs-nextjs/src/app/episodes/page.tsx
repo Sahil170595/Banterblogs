@@ -6,7 +6,7 @@ import { EpisodeFilters } from '@/components/EpisodeFilters';
 
 export const metadata: Metadata = {
   title: 'Episodes',
-  description: 'Full development timeline across Banterpacks and Chimera Engine — 266+ episodes from raw commits to benchmarked outcomes.',
+  description: 'Full development timeline across Banterpacks and Chimera Engine — 268 episodes from raw commits to benchmarked outcomes, now archived.',
 };
 
 export const runtime = 'nodejs';
@@ -14,11 +14,11 @@ export const runtime = 'nodejs';
 export default async function EpisodesPage() {
   const episodes = await getAllEpisodes();
 
-  const banterpacksCount = episodes.filter(
-    (ep) => ep.slug.startsWith('episode-') && !ep.slug.startsWith('chimera-episode-'),
-  ).length;
-
-  const chimeraCount = episodes.filter((ep) => ep.slug.startsWith('chimera-episode-')).length;
+  // Count by the frontmatter platform field, not slug prefix — custom slugs
+  // like 'preliminary-data-review' (ep-001, platform: banterpacks) fall out of
+  // prefix matching and made the labels sum to 267 instead of 268.
+  const chimeraCount = episodes.filter((ep) => ep.platform === 'chimera').length;
+  const banterpacksCount = episodes.length - chimeraCount;
 
   return (
     <div className="container py-16">

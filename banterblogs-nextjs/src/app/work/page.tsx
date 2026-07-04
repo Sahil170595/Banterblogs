@@ -154,7 +154,7 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'quantfit — PyPI quantization CLI with a safety-tax check',
     href: 'https://pypi.org/project/quantfit/',
     detail:
-      'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), is honest about whether a model fits the GPU (3-tier: in-GPU / CPU-offload / refuse), and uniquely measures the safety tax of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) judged by the QuantSafe refusal classifier. v0.1.0 (Alpha), Apache-2.0.',
+      'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), is honest about whether a model fits the GPU (3-tier: in-GPU / CPU-offload / refuse), and measures the safety tax of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) judged by the QuantSafe refusal classifier. v0.1.0 (Alpha), Apache-2.0.',
   },
   {
     label: 'HuggingFace — 16 model releases',
@@ -275,7 +275,7 @@ export default function WorkPage() {
               <p className="text-sm text-muted-foreground">{edu.degree}</p>
               <div className="mt-3 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground/80">{edu.detail}</span>
-                <span className="text-muted-foreground/60">{edu.dates}</span>
+                <span className="text-muted-foreground/70">{edu.dates}</span>
               </div>
             </div>
           ))}
@@ -321,7 +321,7 @@ export default function WorkPage() {
                 >
                   {item.label}
                 </Link>
-                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/60 mt-1 shrink-0" />
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70 mt-1 shrink-0" />
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
               {item.evidence && item.evidence.length > 0 && (

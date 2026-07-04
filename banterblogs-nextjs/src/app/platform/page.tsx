@@ -255,8 +255,8 @@ export default async function PlatformPage() {
               <h3 className="text-sm font-semibold">This Site</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Auto-generated episodes from git commits across all repos. Research archive
-              with {REPORTS.DISPLAY} technical reports. Next.js 16 with SSG + ISR.
+              268 auto-generated episodes from git commits (stream archived 2026-06-26). Research
+              archive with {REPORTS.DISPLAY} technical reports. Next.js 16 with SSG + ISR.
             </p>
             <span className="text-[10px] text-muted-foreground/70">TypeScript &middot; Vercel</span>
           </div>
@@ -399,7 +399,7 @@ export default async function PlatformPage() {
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Episode Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
-              {stats.totalEpisodes}+ episodes documenting every commit, decision, and telemetry data point.
+              {stats.totalEpisodes} archived episodes documenting commits, decisions, and telemetry data points.
             </p>
             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
               Browse episodes <ArrowRight className="h-3 w-3" />

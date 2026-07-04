@@ -180,9 +180,10 @@ export default async function AboutPage() {
 
         <div className="signal-panel p-6 w-full">
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            Episodes are auto-generated from git commits across all nine repositories. A multi-agent
-            pipeline (Chimera Multi-Agent) ingests commits and benchmark data, generates roundtable-style
-            commentary with four AI personas, and publishes to this Next.js site via GitHub + Vercel.
+            268 episodes were auto-generated from git commits across the nine repositories (per-commit stream
+            archived 2026-06-26; each stream closes with a full retrospective). A multi-agent pipeline
+            (Chimera Multi-Agent) ingested commits and benchmark data, generated roundtable-style
+            commentary with four AI personas, and published to this Next.js site via GitHub + Vercel.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
             The research archive surfaces {REPORTS.DISPLAY} technical reports with phase grouping, searchable titles,

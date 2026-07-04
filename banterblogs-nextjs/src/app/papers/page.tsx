@@ -44,7 +44,7 @@ const ACCEPTED: Paper[] = [
   },
 ];
 
-const NEURIPS_2026: Paper[] = [
+const UNDER_REVIEW_PAPERS: Paper[] = [
   {
     title: 'Compile-Stack Attribution',
     thesis:
@@ -276,7 +276,7 @@ export default function PapersPage() {
             Accepted — ICML 2026 Workshop on Hypothesis Testing
           </h2>
           <p className="mt-2 text-sm text-muted-foreground/70">
-            Accepted 2026-05-22; camera-ready in preparation. The first peer-reviewed acceptance from the program.
+            Accepted 2026-05-22; camera-ready submitted. The first peer-reviewed acceptance from the program.
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
@@ -298,7 +298,7 @@ export default function PapersPage() {
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
-          {NEURIPS_2026.map((p) => (
+          {UNDER_REVIEW_PAPERS.map((p) => (
             <PaperCard key={p.title} paper={p} />
           ))}
         </div>

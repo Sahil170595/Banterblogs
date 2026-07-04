@@ -56,7 +56,7 @@ The site uses a custom dark theme called "Obsidian & Ember" — defined through 
 
 Reports flow through a multi-stage pipeline:
 
-1. **Discovery** (`lib/reports/locator.ts`) — scans `PublishReady/reports/` and `reports/` for markdown files and directory-based reports with `meta.json` metadata.
+1. **Discovery** (`lib/reports/locator.ts`) — scans `PublishReady/reports/` for markdown files and directory-based reports with `meta.json` metadata.
 2. **Rendering** (`app/reports/[id]/page.tsx`) — server-renders markdown with syntax highlighting and serves it with ISR (15-minute revalidation).
 
 Reports can be standalone markdown files or directories containing `meta.json`, a markdown body, and optional chart data.
