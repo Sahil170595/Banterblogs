@@ -10,7 +10,7 @@
 | **Scope** | TR134 (Alignment Robustness Under Quantization), TR135 (Concurrency x Safety), TR136 (Cross-Backend Safety Consistency), TR137 (Safety Tax Synthesis) |
 | **Hardware Baseline** | NVIDIA RTX consumer GPU, single-GPU inference |
 | **Measurement Corpus** | 74,254 evaluated samples across 4 technical reports |
-| **Primary Sources** | PublishReady/reports/Technical_Report_134.md (Alignment Robustness Under Quantization)<br>PublishReady/reports/Technical_Report_135.md (Multi-Agent Concurrency x Safety)<br>PublishReady/reports/Technical_Report_136.md (Cross-Backend Safety Consistency)<br>PublishReady/reports/Technical_Report_137.md (Synthesis meta-analysis) |
+| **Primary Sources** | PublishReady/reports/Technical_Report_134.md (Alignment Robustness Under Quantization); PublishReady/reports/Technical_Report_135.md (Multi-Agent Concurrency x Safety); PublishReady/reports/Technical_Report_136.md (Cross-Backend Safety Consistency); PublishReady/reports/Technical_Report_137.md (Synthesis meta-analysis) |
 | **Predecessor Synthesis** | PublishReady/reports/Technical_Report_Conclusive_Phase3.md (Phase 2: Performance) |
 | **Predecessor Phase** | PublishReady/reports/Technical_Report_Conclusive_Phase2.md (Phase 1: Methodology) |
 

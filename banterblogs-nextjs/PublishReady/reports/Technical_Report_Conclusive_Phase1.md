@@ -8,7 +8,7 @@
 | **Author** | Research Team |
 | **Report Type** | Conclusive synthesis across TR108-TR116 (artifact-backed) |
 | **Scope** | TR108, TR109, TR110, TR111_v2, TR112_v2, TR113, TR114_v2, TR115_v2, TR116 |
-| **Primary Sources** | PublishReady/reports/Technical_Report_108.md<br>PublishReady/reports/Technical_Report_109.md<br>PublishReady/reports/Technical_Report_110.md<br>PublishReady/reports/Technical_Report_111_v2.md<br>PublishReady/reports/Technical_Report_112_v2.md<br>PublishReady/reports/Technical_Report_113.md<br>PublishReady/reports/Technical_Report_114_v2.md<br>PublishReady/reports/Technical_Report_115_v2.md<br>PublishReady/reports/Technical_Report_116.md |
+| **Primary Sources** | PublishReady/reports/Technical_Report_108.md; PublishReady/reports/Technical_Report_109.md; PublishReady/reports/Technical_Report_110.md; PublishReady/reports/Technical_Report_111_v2.md; PublishReady/reports/Technical_Report_112_v2.md; PublishReady/reports/Technical_Report_113.md; PublishReady/reports/Technical_Report_114_v2.md; PublishReady/reports/Technical_Report_115_v2.md; PublishReady/reports/Technical_Report_116.md |
 
 ---
 

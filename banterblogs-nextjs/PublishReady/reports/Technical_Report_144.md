@@ -12,7 +12,7 @@
 | **Status** | Complete |
 | **Report Type** | Full-depth |
 | **Core Run Directory** | `research/tr144/results/20260412_metrics_rerun/` |
-| **Expansion Run Directories** | E1: `research/tr144/results/e1_70b_pair/20260416_230204/`<br>E2: `research/tr144/results/e2_adversarial/20260417_014425/`<br>E3: `research/tr144/expansion/results/20260417_071116/e3/`<br>E4: `research/tr144/expansion/results/20260417_130159/e4/{seed_123,seed_456}/<pair>/`<br>E5: `research/tr144/expansion/results/20260417_130159/e5/<pair>/` |
+| **Expansion Run Directories** | E1: `research/tr144/results/e1_70b_pair/20260416_230204/`; E2: `research/tr144/results/e2_adversarial/20260417_014425/`; E3: `research/tr144/expansion/results/20260417_071116/e3/`; E4: `research/tr144/expansion/results/20260417_130159/e4/{seed_123,seed_456}/<pair>/`; E5: `research/tr144/expansion/results/20260417_130159/e5/<pair>/` |
 | **Total Samples** | **64,855** (16,783 core + 48,072 expansion) |
 | **Phase 1 Samples** | 4,765 (5 models x 953 prompts) |
 | **Phase 2 Samples** | 2,859 (3 pairs x 953 prompts, rejection sampling) |

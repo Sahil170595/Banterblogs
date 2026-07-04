@@ -10,7 +10,7 @@
 | **Report Type** | Corrected Multi-Scale ONNX/TensorRT Analysis |
 | **Test Duration** | 720 total benchmark runs (360 prefill + 360 generate) |
 | **Related Work** | [TR118](Technical_Report_118.md) (Pipeline Validation), [TR117](Technical_Report_117.md) (Cross-Backend Baseline), [TR115_v2](Technical_Report_115_v2.md) (Runtime Analysis) |
-| **v2.2 Corrections from v2.1** | Verified run counts and degradation rates from JSONL data (200/720 degraded, 27.8%)<br>Re-fit crossover power-law with 9 data points (5M, 25M, 50M, 75M, 100M, 45M validation)<br>Corrected tiny-gpt2 specs (vocab size 50,257; n_embd=2; perplexity interpretation)<br>Classified TensorRT failures as hard profile mismatches (no timeouts observed)<br>Fixed amortization math and token break-even calculation |
+| **v2.2 Corrections from v2.1** | Verified run counts and degradation rates from JSONL data (200/720 degraded, 27.8%); Re-fit crossover power-law with 9 data points (5M, 25M, 50M, 75M, 100M, 45M validation); Corrected tiny-gpt2 specs (vocab size 50,257; n_embd=2; perplexity interpretation); Classified TensorRT failures as hard profile mismatches (no timeouts observed); Fixed amortization math and token break-even calculation |
 
 ---
 
