@@ -9,6 +9,7 @@ import { KeyboardNavigation, FocusIndicator } from "@/components/AccessibilitySh
 import { AccessibilityPanelClient } from "@/components/AccessibilityPanelClient";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { MotionConfig } from "framer-motion";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
@@ -49,9 +50,8 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: '/favicon.ico',
-  },
+  // Icons + OG/Twitter images come from file conventions in src/app/
+  // (favicon.ico, apple-icon.png, opengraph-image.png, twitter-image.png).
 };
 
 export default function RootLayout({
@@ -62,20 +62,31 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-background text-foreground antialiased`}>
+        {/* WCAG 2.4.1: let keyboard users bypass the header on every page. */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+        >
+          Skip to content
+        </a>
         <ErrorBoundary>
-          <KeyboardNavigation>
-            <FocusIndicator />
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1 chimera-shell">
-                {children}
-              </main>
-              <Footer />
-              
-              {/* Global UI Components — heavy panel lazy-loaded via client wrapper */}
-              <AccessibilityPanelClient />
-            </div>
-          </KeyboardNavigation>
+          {/* reducedMotion="user" makes every framer-motion animation respect
+              prefers-reduced-motion globally (scenes add their own handling). */}
+          <MotionConfig reducedMotion="user">
+            <KeyboardNavigation>
+              <FocusIndicator />
+              <div className="relative flex min-h-screen flex-col">
+                <Header />
+                <main id="main-content" className="flex-1 chimera-shell">
+                  {children}
+                </main>
+                <Footer />
+
+                {/* Global UI Components — heavy panel lazy-loaded via client wrapper */}
+                <AccessibilityPanelClient />
+              </div>
+            </KeyboardNavigation>
+          </MotionConfig>
         </ErrorBoundary>
         <Analytics />
         <SpeedInsights />

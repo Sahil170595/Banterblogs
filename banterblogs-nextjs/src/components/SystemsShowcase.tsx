@@ -165,7 +165,7 @@ export function SystemsShowcase() {
       </div>
 
       {/* Subtle engineering depth strip */}
-      <div className="mt-10 text-center text-sm text-muted-foreground/60">
+      <div className="mt-10 text-center text-sm text-muted-foreground/70">
         9 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
       </div>
     </section>

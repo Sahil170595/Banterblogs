@@ -175,7 +175,7 @@ export default function ZkAlignmentProofPage() {
             <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/70 leading-none mb-1 md:mb-2">
               0.92
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/60 mb-1 md:mb-2">
+            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
               full reveal
             </div>
             <p className="hidden md:block text-xs text-muted-foreground/80 leading-relaxed">

@@ -20,7 +20,7 @@
   --secondary: 220 16% 12%;
   --secondary-foreground: 36 18% 97%;
   --muted: 220 16% 12%;
-  --muted-foreground: 220 8% 62%;
+  --muted-foreground: 220 8% 68%; /* raised from 62% so text-muted-foreground/70 clears WCAG AA 4.5:1 on the obsidian bg */
   --accent: 36 12% 86%;
   --accent-foreground: 220 32% 4%;
   --destructive: 0 62.8% 30.6%;

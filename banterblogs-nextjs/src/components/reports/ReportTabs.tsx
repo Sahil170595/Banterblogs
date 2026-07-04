@@ -28,10 +28,27 @@ export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex gap-1 overflow-x-auto border-b border-border/40 mb-10 pb-px scrollbar-none">
+      <div
+        role="tablist"
+        aria-label="Report categories"
+        className="flex gap-1 overflow-x-auto border-b border-border/40 mb-10 pb-px scrollbar-none"
+        onKeyDown={(e) => {
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+          e.preventDefault();
+          const idx = groups.findIndex((g) => g.key === activeTab);
+          const next = e.key === 'ArrowRight' ? (idx + 1) % groups.length : (idx - 1 + groups.length) % groups.length;
+          setActiveTab(groups[next].key);
+          document.getElementById(`report-tab-${groups[next].key}`)?.focus();
+        }}
+      >
         {groups.map((group) => (
           <button
             key={group.key}
+            id={`report-tab-${group.key}`}
+            role="tab"
+            aria-selected={activeTab === group.key}
+            aria-controls={`report-panel-${group.key}`}
+            tabIndex={activeTab === group.key ? 0 : -1}
             onClick={() => setActiveTab(group.key)}
             className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors relative ${
               activeTab === group.key
@@ -40,7 +57,7 @@ export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
             }`}
           >
             {group.label}
-            <span className="ml-1.5 text-xs text-muted-foreground/60">
+            <span className="ml-1.5 text-xs text-muted-foreground/70">
               {group.reports.filter((r) => !featuredSet.has(r.slug)).length}
             </span>
             {activeTab === group.key && (
@@ -56,12 +73,17 @@ export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
         const visibleReports = group.reports.filter((r) => !featuredSet.has(r.slug));
 
         return (
-          <div key={group.key}>
+          <div
+            key={group.key}
+            id={`report-panel-${group.key}`}
+            role="tabpanel"
+            aria-labelledby={`report-tab-${group.key}`}
+          >
             {group.description && (
               <p className="text-sm text-muted-foreground/70 mb-8 max-w-2xl">{group.description}</p>
             )}
             {visibleReports.length === 0 ? (
-              <p className="text-sm text-muted-foreground/50 italic">
+              <p className="text-sm text-muted-foreground/70 italic">
                 All reports in this category are featured above.
               </p>
             ) : (

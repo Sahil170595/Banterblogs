@@ -45,7 +45,7 @@ export default async function CompendiumPage() {
                             <p className="text-sm text-muted-foreground mb-4">
                                 This whitepaper synthesizes the foundational Phase 1 research (TR108-TR116) — the Rust vs. Python comparison that shaped the platform architecture.
                             </p>
-                            <div className="text-xs text-muted-foreground/60">
+                            <div className="text-xs text-muted-foreground/70">
                                 Published: November 2025 &middot; Sahil Kadadekar
                             </div>
                         </div>

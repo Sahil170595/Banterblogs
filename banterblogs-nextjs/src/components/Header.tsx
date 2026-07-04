@@ -79,14 +79,16 @@ export function Header() {
             className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition hover:text-foreground hover:bg-accent/10 lg:hidden"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label="Toggle navigation"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav"
           >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
         </div>
       </div>
 
       {isMenuOpen && (
-        <div className="border-t border-border/60 bg-background/95 backdrop-blur lg:hidden">
+        <div id="mobile-nav" className="border-t border-border/60 bg-background/95 backdrop-blur lg:hidden">
           <div className="container space-y-1 py-6">
             <div className="mb-4">
               <SearchDialog />
