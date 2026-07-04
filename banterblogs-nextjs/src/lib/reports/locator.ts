@@ -32,7 +32,7 @@ const ROOT_CANDIDATES: ReportRoot[] = [
 let cachedDiscover: ReportLocation[] | null = null;
 const cachedLookups = new Map<string, ReportLocation[]>();
 
-function normalizeSlug(value: string): string {
+export function normalizeSlug(value: string): string {
   return value
     .trim()
     .toLowerCase()
@@ -44,7 +44,9 @@ function normalizeSlug(value: string): string {
 function listEntries(root: string) {
   try {
     return fs.readdirSync(root, { withFileTypes: true });
-  } catch {
+  } catch (error) {
+    // A missing/unreadable root empties the entire /reports surface — surface it.
+    console.error(`[reports/locator] cannot read report root ${root}:`, error);
     return [];
   }
 }

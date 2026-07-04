@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { summarizeMarkdown } from '@/lib/episodes';
-import { findReportLocations, toHumanTitle } from './locator';
+import { findReportLocations, normalizeSlug, toHumanTitle } from './locator';
 
 export interface ReportMeta {
   title?: string;
@@ -386,12 +386,17 @@ function summarizeFile(filePath: string, fallbackTitle: string) {
       title: summary.title ?? fallbackTitle,
       description: summary.description,
     };
-  } catch {
+  } catch (error) {
+    console.error(`[reports/meta] cannot summarize ${filePath}:`, error);
     return { title: fallbackTitle, description: undefined };
   }
 }
 
-export function readReportMeta(id: string): ReportMeta | null {
+export function readReportMeta(rawId: string): ReportMeta | null {
+  // Normalize first: catalog keys are normalized slugs, but callers can pass raw
+  // URL params (e.g. /reports/Technical_Report_134) — a raw lookup misses the
+  // catalog and falls through to scraped junk metadata.
+  const id = normalizeSlug(rawId);
   // 1. Check static catalog first — always authoritative, and works for synthetic
   // entries (e.g. 'compendium') whose source markdown lives outside PublishReady/reports/
   // and therefore has no findReportLocations() result.
@@ -417,8 +422,8 @@ export function readReportMeta(id: string): ReportMeta | null {
       const raw = fs.readFileSync(metaPath, 'utf8');
       const parsed = JSON.parse(raw) as ReportMeta;
       return { ...parsed, source: location.source };
-    } catch {
-      // ignore invalid JSON and continue searching
+    } catch (error) {
+      console.error(`[reports/meta] invalid meta.json at ${metaPath}, continuing:`, error);
     }
   }
 

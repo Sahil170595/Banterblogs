@@ -2,7 +2,7 @@ import fs from 'fs';
 import { promises as fsp } from 'fs';
 import path from 'path';
 import { renderMarkdownToHtml, extractPrimaryHeading } from '@/lib/episodes';
-import { findReportFolder, toHumanTitle, type ReportLocation } from './locator';
+import { findReportFolder, normalizeSlug, toHumanTitle, type ReportLocation } from './locator';
 
 export interface ReportSection {
   id: string;
@@ -43,28 +43,40 @@ function sectionWeight(fileName: string) {
 // to absolute /reports/<slug> routes.
 // Strips:
 //   - any path prefix (../../reports/, etc.)
-//   - any version marker matching [_]?v\d+(\.\d+)? (handles _v2, _v2.2, v1)
 //   - the .md extension
-// Site has one canonical file per TR; all version variants resolve to the same slug.
+//   - any version marker matching [_]?v\d+(\.\d+)? — UNLESS the versioned slug
+//     is itself a canonical report on disk (TR164_V3/V4/V5 are distinct reports,
+//     not stale variants of technical-report-164).
 function rewriteReportLinks(markdown: string): string {
   return markdown.replace(/\(([^)]*Technical_Report_[^)]+\.md)\)/gi, (_match, target: string) => {
-    const basename = target.replace(/^.*[\\/]/, '');
-    const stripped = basename
-      .replace(/\.md$/i, '')
-      .replace(/_?v\d+(\.\d+)?/gi, '');
-    const slug = stripped
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const basename = target.replace(/^.*[\\/]/, '').replace(/\.md$/i, '');
+    const versionedSlug = normalizeSlug(basename);
+    if (findReportFolder(versionedSlug)) {
+      return `(/reports/${versionedSlug})`;
+    }
+    const slug = normalizeSlug(basename.replace(/_?v\d+(\.\d+)?/gi, ''));
     return `(/reports/${slug})`;
   });
+}
+
+// Markdown image refs into upstream research trees (../../scripts/…,
+// ../data/…, ../../research/…) can never resolve on the site — relative
+// report-adjacent files have no static route, and the plots live in the
+// source research repo. Render an honest placeholder instead of a broken
+// <img> with a dangling caption (39 such refs across TR119/120/122/123).
+function rewriteDanglingFigures(markdown: string): string {
+  return markdown.replace(
+    /!\[([^\]]*)\]\((?!https?:\/\/|\/)[^)]+\)/gi,
+    (_match, alt: string) =>
+      `*[Figure \`${alt || 'plot'}\` — artifact lives in the upstream research repository and is not bundled with the web build.]*`,
+  );
 }
 
 async function buildSection(filePath: string, sourceLabel: string, originKey: string): Promise<ReportSection> {
   const raw = await readFileContent(filePath);
   const fallback = path.basename(filePath, path.extname(filePath));
   const title = extractPrimaryHeading(raw) ?? toHumanTitle(fallback);
-  const processed = rewriteReportLinks(raw);
+  const processed = rewriteDanglingFigures(rewriteReportLinks(raw));
   const html = await renderMarkdownToHtml(processed);
   return {
     id: sanitizeId(title) || sanitizeId(fallback),
@@ -98,7 +110,8 @@ function listMarkdownFiles(location: ReportLocation): MarkdownEntry[] {
   let entries: fs.Dirent[] = [];
   try {
     entries = fs.readdirSync(location.path, { withFileTypes: true });
-  } catch {
+  } catch (error) {
+    console.error(`[reports/content] cannot read report directory ${location.path}:`, error);
     return [];
   }
 
@@ -132,6 +145,12 @@ export async function readReportSections(id: string, locationOverride?: ReportLo
   const settled = await Promise.allSettled(
     files.map((entry) => buildSection(entry.path, entry.displayLabel, entry.dedupeKey)),
   );
+  settled.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      // A dropped section renders a 200 page with silently missing content — log it.
+      console.error(`[reports/content] section failed for ${id} (${files[i]?.path}):`, r.reason);
+    }
+  });
   return settled
     .filter((r): r is PromiseFulfilledResult<ReportSection> => r.status === 'fulfilled')
     .map((r) => r.value);

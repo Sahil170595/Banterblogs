@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
-import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
+import { discoverReportsUnique, findReportFolder, toHumanTitle } from '@/lib/reports/locator';
 import { classifyReportSlug, reportSortRank } from '@/lib/reports/phases';
 import { extractHeadings } from '@/lib/episodes';
 import { reportJsonLd } from './schema.org.json';
@@ -65,7 +65,19 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
     notFound();
   }
 
-  const { id } = await params;
+  const { id: rawId } = await params;
+  // Canonicalize slug aliases (e.g. /reports/Technical_Report_134): without this,
+  // aliases render as duplicate-content 200s with degraded metadata and a broken
+  // prev/next index. Redirect once to the canonical slug instead.
+  const location = findReportFolder(rawId);
+  if (!location) {
+    notFound();
+  }
+  const id = location.slug;
+  if (id !== rawId) {
+    permanentRedirect(`/reports/${id}`);
+  }
+
   const report = await loadReportData(id);
   if (!report) {
     notFound();
