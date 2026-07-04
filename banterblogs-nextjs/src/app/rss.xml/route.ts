@@ -8,7 +8,13 @@ export async function GET() {
   try {
     const episodes = await getAllEpisodes();
 
-    const items = episodes.slice(0, 20).map(episode =>
+    // getAllEpisodes() sorts ascending by id — re-sort newest-first so the
+    // feed carries the latest 20 episodes, not the Sep-2025 backfill.
+    const newest = [...episodes].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() || b.id - a.id,
+    );
+
+    const items = newest.slice(0, 20).map(episode =>
       `    <item>\n      <title><![CDATA[${episode.title}]]></title>\n      <description><![CDATA[${episode.preview}]]></description>\n      <link>${BASE}/episodes/${episode.slug}</link>\n      <guid isPermaLink="true">${BASE}/episodes/${episode.slug}</guid>\n      <pubDate>${new Date(episode.date).toUTCString()}</pubDate>\n      <category>Development</category>\n    </item>`
     );
 

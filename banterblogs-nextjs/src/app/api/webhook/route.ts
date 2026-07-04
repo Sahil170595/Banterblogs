@@ -1,23 +1,25 @@
 import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 import { revalidatePath } from 'next/cache';
+import { timingSafeEqual } from 'crypto';
 
 // Simple webhook authentication
 function verifyWebhookSignature(request: Request): boolean {
   const authHeader = request.headers.get('authorization');
   const secretToken = process.env.WEBHOOK_SECRET_TOKEN;
-  
+
   if (!secretToken) {
     console.warn('WEBHOOK_SECRET_TOKEN not configured');
     return false;
   }
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return false;
   }
-  
-  const token = authHeader.substring(7);
-  return token === secretToken;
+
+  const token = Buffer.from(authHeader.substring(7));
+  const secret = Buffer.from(secretToken);
+  return token.length === secret.length && timingSafeEqual(token, secret);
 }
 
 export async function POST(request: Request) {
@@ -25,12 +27,13 @@ export async function POST(request: Request) {
     // Verify authentication
     if (!verifyWebhookSignature(request)) {
       return NextResponse.json(
-        { error: 'Unauthorized' }, 
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    await request.json();
+    // The request body is unused — a bare authenticated POST is enough to
+    // trigger revalidation, so don't parse (empty bodies used to 500 here).
 
     // Revalidate the episodes pages
     revalidatePath('/episodes');
