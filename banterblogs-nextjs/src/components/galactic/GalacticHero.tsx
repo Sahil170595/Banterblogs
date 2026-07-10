@@ -1,0 +1,65 @@
+import Link from 'next/link';
+import { ArrowRight, ChevronDown } from 'lucide-react';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { GalacticBackdrop } from './GalacticBackdrop';
+
+// Full-viewport galactic-center hero. The copy is server-rendered (SEO/LCP
+// unaffected by the 3D island behind it); the scene is decoration with a
+// thesis: nine repositories in orbit around one platform.
+
+export function GalacticHero() {
+  return (
+    <section className="relative h-[100svh] min-h-[560px] overflow-hidden border-b border-border/50">
+      <GalacticBackdrop />
+
+      {/* readability scrim over the left column */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/85 via-background/30 to-transparent"
+        aria-hidden="true"
+      />
+
+      <div className="container relative flex h-full flex-col justify-center">
+        <div className="max-w-xl space-y-7">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
+            Constitutional AI · LLM serving-safety research
+          </p>
+          <h1 className="display text-5xl font-bold tracking-tight text-foreground md:text-7xl">
+            Chimeraforge
+          </h1>
+          <p className="text-lg leading-relaxed text-muted-foreground">
+            Nine repositories in orbit around one platform — {REPORTS.DISPLAY} technical
+            reports and {MEASUREMENTS.DISPLAY} measurements deep. The disk is the work;
+            the orbits are real Kepler.
+          </p>
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <Link
+              href="/reports"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Research archive
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/platform"
+              className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-6 py-3 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              The platform
+            </Link>
+          </div>
+        </div>
+
+        {/* the quotable physics caption */}
+        <p className="absolute bottom-24 right-4 hidden max-w-[240px] text-right font-mono text-[10px] leading-relaxed text-muted-foreground/70 lg:block">
+          Orbits: Keplerian, solved per frame.
+          <br />
+          Disk: T ∝ r<sup>-3/4</sup>, doppler-beamed.
+        </p>
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground/70">
+          <ChevronDown className="h-5 w-5 animate-bounce motion-reduce:animate-none" aria-hidden="true" />
+          <span className="sr-only">Scroll for content</span>
+        </div>
+      </div>
+    </section>
+  );
+}

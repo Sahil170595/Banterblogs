@@ -1,4 +1,5 @@
 import { Hero } from '@/components/Hero';
+import { GalacticHero } from '@/components/galactic/GalacticHero';
 import { SystemsShowcase } from '@/components/SystemsShowcase';
 import { ResearchSpotlight, type ReportTeaser } from '@/components/ResearchSpotlight';
 import { RoadmapRail } from '@/components/RoadmapRail';
@@ -41,6 +42,7 @@ export default async function HomePage() {
   return (
     <ErrorBoundary>
       <div className="flex flex-col">
+        <GalacticHero />
         <Hero latestReport={latestReport} />
         <SystemsShowcase />
         <ResearchSpotlight reports={latestReports} />
