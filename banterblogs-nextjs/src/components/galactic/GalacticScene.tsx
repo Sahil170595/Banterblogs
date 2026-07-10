@@ -12,8 +12,8 @@ import type { GalacticSelection } from './systems';
 // Camera rig: slow ambient drift + pointer parallax, eased. The black hole
 // sits right-of-center (camera target offset) so hero copy owns the left.
 
-const CAMERA_BASE = new THREE.Vector3(0, 8.5, 31);
-const TARGET_OFFSET = new THREE.Vector3(5, 0.5, 0);
+const CAMERA_BASE = new THREE.Vector3(0, 7.5, 28);
+const TARGET_OFFSET = new THREE.Vector3(3, 0.5, 0);
 
 function CameraRig() {
   const { camera, pointer } = useThree();
@@ -54,7 +54,7 @@ export default function GalacticScene({ onSelect }: GalacticSceneProps) {
         <StarSystems onSelect={onSelect} />
       </group>
       <EffectComposer>
-        <Bloom intensity={1.15} luminanceThreshold={0.38} luminanceSmoothing={0.25} mipmapBlur />
+        <Bloom intensity={0.95} luminanceThreshold={0.5} luminanceSmoothing={0.25} mipmapBlur />
       </EffectComposer>
     </Canvas>
   );

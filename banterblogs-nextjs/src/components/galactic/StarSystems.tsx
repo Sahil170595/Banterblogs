@@ -6,6 +6,16 @@ import { Line, Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { STAR_SYSTEMS, type GalacticSelection, type StarSystemDef } from './systems';
 import { Sun } from './Sun';
+import { blackbodyToRGB } from './blackbody';
+
+// Star-chart typography: labels render in a serif (the Times-family star
+// atlas look) tinted to each sun's blackbody color.
+const CHART_FONT = '"Times New Roman", Times, Georgia, serif';
+
+function starCss(tempK: number): string {
+  const [r, g, b] = blackbodyToRGB(tempK);
+  return `rgb(${Math.round(r * 255)} ${Math.round(g * 255)} ${Math.round(b * 255)})`;
+}
 
 // Nine repos on real Keplerian orbits — the interactive layer of the scene.
 // Positions come from solving Kepler's equation (Newton iterations on the
@@ -80,21 +90,32 @@ function Star({ def, onSelect }: StarProps) {
       >
         <sphereGeometry args={[Math.max(def.size * 3.2, 1.15), 8, 8]} />
       </mesh>
-      {hovered && (
-        <Html
-          position={[0, def.size + 0.6, 0]}
-          center
-          distanceFactor={26}
-          style={{ pointerEvents: 'none' }}
+      {/* always-on star-atlas tag: transparent block, serif, sun-colored */}
+      <Html
+        position={[0, def.size + 0.7, 0]}
+        center
+        distanceFactor={24}
+        style={{ pointerEvents: 'none' }}
+        zIndexRange={[10, 0]}
+      >
+        <div
+          className="whitespace-nowrap rounded border px-2 py-0.5 backdrop-blur-[2px] transition-all duration-200"
+          // width: max-content beats the Html wrapper's constraint — no mid-name wraps
+          style={{
+            width: 'max-content',
+            fontFamily: CHART_FONT,
+            color: starCss(def.tempK),
+            borderColor: `${starCss(def.tempK)}44`,
+            background: 'rgb(4 6 10 / 0.25)',
+            textShadow: '0 0 12px rgb(0 0 0 / 0.9)',
+          }}
         >
-          <div className="w-52 rounded-lg border border-border/60 bg-background/90 px-3 py-2 backdrop-blur">
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground">
-              {def.name}
-            </p>
-            <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{def.blurb}</p>
-          </div>
-        </Html>
-      )}
+          <span className="text-[12px] italic tracking-[0.08em]">{def.name}</span>
+          {hovered && (
+            <span className="ml-2 text-[10px] not-italic opacity-80">{def.blurb}</span>
+          )}
+        </div>
+      </Html>
     </group>
   );
 }

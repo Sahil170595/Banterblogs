@@ -85,10 +85,10 @@ const DISK_FRAG = /* glsl */ `
 
     // radial envelope: hard bright inner edge, long soft outer falloff
     float inner = smoothstep(uInner, uInner * 1.12, r);
-    float outer = 1.0 - smoothstep(uOuter * 0.45, uOuter, r);
+    float outer = 1.0 - smoothstep(uOuter * 0.55, uOuter, r);
     float alpha = inner * outer * (0.8 + 0.35 * bands);
 
-    col *= uIgnite * (2.2 * temp + 0.4);
+    col *= uIgnite * (1.5 * temp + 0.25);
     gl_FragColor = vec4(col, alpha * uIgnite);
   }
 `;

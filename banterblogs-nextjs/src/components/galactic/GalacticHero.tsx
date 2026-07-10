@@ -3,48 +3,45 @@ import { ArrowRight } from 'lucide-react';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { GalacticBackdrop } from './GalacticBackdrop';
 
-// Full-page galactic-center landing. The copy is server-rendered (SEO/LCP
-// unaffected by the 3D island behind it); the scene is the navigation:
-// the black hole is Chimera, the nine orbiting systems are the repos.
-// Height = viewport minus the 72px sticky header so nothing scrolls.
+// Full-page galactic-center landing. The scene owns the whole viewport (the
+// nav floats transparent above it); the title sits tiny in the top-left like
+// a star-chart annotation. The black hole is Chimera, the nine orbiting
+// systems are the repos. Copy stays server-rendered for SEO/LCP.
 
 export function GalacticHero() {
   return (
-    <section className="relative h-[calc(100svh-73px)] min-h-[560px] overflow-hidden">
+    <section className="relative h-[100svh] min-h-[560px] overflow-hidden">
       <GalacticBackdrop />
 
-      {/* readability scrim over the left column */}
+      {/* faint top vignette so the transparent nav stays legible */}
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/85 via-background/30 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/70 to-transparent"
         aria-hidden="true"
       />
 
       {/* pointer-events-none so the scene receives hover/click everywhere
           except the actual controls, which re-enable them */}
-      <div className="pointer-events-none container relative flex h-full flex-col justify-center">
-        <div className="max-w-xl space-y-7">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
-            Constitutional AI · LLM serving-safety research
-          </p>
-          <h1 className="display text-5xl font-bold tracking-tight text-foreground md:text-7xl">
+      <div className="pointer-events-none relative flex h-full flex-col">
+        {/* tiny corner title — a chart annotation, not a billboard */}
+        <div className="ml-6 mt-24 max-w-xs space-y-2 md:ml-10">
+          <h1 className="display text-lg font-semibold tracking-tight text-foreground/90">
             Chimeraforge
           </h1>
-          <p className="text-lg leading-relaxed text-muted-foreground">
-            Nine repositories in orbit around one platform — {REPORTS.DISPLAY} technical
-            reports and {MEASUREMENTS.DISPLAY} measurements deep. The disk is the work;
-            the orbits are real Kepler.
+          <p className="text-[11px] leading-relaxed text-muted-foreground/80">
+            Nine repositories orbiting one platform — {REPORTS.DISPLAY} technical reports,{' '}
+            {MEASUREMENTS.DISPLAY} measurements.
           </p>
-          <div className="pointer-events-auto flex flex-wrap items-center gap-4 pt-2">
+          <div className="pointer-events-auto flex items-center gap-4 pt-1 text-[11px] font-semibold">
             <Link
               href="/reports"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex items-center gap-1 text-primary transition-colors hover:text-primary/80"
             >
               Research archive
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
             <Link
               href="/home"
-              className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-6 py-3 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:border-primary/40 hover:text-primary"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Site overview
             </Link>
@@ -52,7 +49,7 @@ export function GalacticHero() {
         </div>
 
         {/* the quotable physics caption */}
-        <p className="absolute bottom-24 right-4 hidden max-w-[240px] text-right font-mono text-[10px] leading-relaxed text-muted-foreground/70 lg:block">
+        <p className="absolute bottom-16 right-4 hidden max-w-[240px] text-right font-mono text-[10px] leading-relaxed text-muted-foreground/70 lg:block">
           Orbits: Keplerian, solved per frame.
           <br />
           Disk: T ∝ r<sup>-3/4</sup>, doppler-beamed.

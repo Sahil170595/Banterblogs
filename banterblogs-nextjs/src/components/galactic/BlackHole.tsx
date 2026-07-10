@@ -18,7 +18,7 @@ import type { GalacticSelection } from './systems';
 
 // Schwarzschild shadow is ~1.3x the horizon; we size the sphere to the
 // SHADOW so the silhouette is what the camera reads.
-const SHADOW_RADIUS = 2.6;
+const SHADOW_RADIUS = 3.4;
 
 interface BlackHoleProps {
   onSelect: (selection: GalacticSelection) => void;
@@ -52,8 +52,8 @@ export function BlackHole({ onSelect }: BlackHoleProps) {
 
       {/* Front band: the real disk, nearly in-plane; camera elevation gives
           the razor ellipse and the halo supplies the lensed far side */}
-      <group rotation={[THREE.MathUtils.degToRad(12), 0, THREE.MathUtils.degToRad(-6)]}>
-        <AccretionDisk inner={SHADOW_RADIUS * 1.15} outer={10.5} />
+      <group rotation={[THREE.MathUtils.degToRad(6), 0, THREE.MathUtils.degToRad(-4)]}>
+        <AccretionDisk inner={SHADOW_RADIUS * 1.15} outer={9.5} />
       </group>
     </group>
   );
