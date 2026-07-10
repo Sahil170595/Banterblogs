@@ -78,8 +78,8 @@ const HALO_FRAG = /* glsl */ `
     float streaks = fbm(vec2(r * 4.0, theta * 6.0 - uTime * 0.6));
 
     // photon ring: razor-thin, brightest element in the scene
-    float ringD = (r - uShadow * 1.02) / (uShadow * 0.035);
-    float ring = exp(-ringD * ringD);
+    float ringD = (r - uShadow * 1.03) / (uShadow * 0.024);
+    float ring = exp(-ringD * ringD) * (0.7 + 0.4 * smoothstep(-0.2, 0.6, p.y / uShadow));
 
     // primary image: far side of the disk lensed over the top
     float over = arcBand(p, uShadow * 1.55, uShadow * 1.38, 0.20, 1.0);
@@ -90,11 +90,11 @@ const HALO_FRAG = /* glsl */ `
     float beam = 1.0 + 0.45 * cos(theta + 3.14159);
 
     float glow = (over + under) * (0.7 + 0.5 * streaks) * beam;
-    vec3 col = emberRamp(clamp(0.55 + 0.45 * streaks, 0.0, 1.0)) * glow * 3.0;
-    col += vec3(1.0, 0.9, 0.75) * ring * 3.0;
+    vec3 col = emberRamp(clamp(0.55 + 0.45 * streaks, 0.0, 1.0)) * glow * 2.2;
+    col += vec3(1.0, 0.9, 0.75) * ring * 2.2;
 
     // nothing renders inside the shadow — silhouette stays pure black
-    float mask = smoothstep(uShadow * 0.99, uShadow * 1.04, r);
+    float mask = smoothstep(uShadow * 1.0, uShadow * 1.09, r);
     float alpha = clamp((glow * 0.9 + ring), 0.0, 1.0) * mask * uIgnite;
 
     gl_FragColor = vec4(col * uIgnite, alpha);
