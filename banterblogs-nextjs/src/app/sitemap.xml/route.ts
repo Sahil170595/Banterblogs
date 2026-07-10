@@ -20,6 +20,7 @@ export async function GET() {
 
     const urls: string[] = [
       urlEntry(BASE, now, 'daily', 1.0),
+      urlEntry(`${BASE}/home`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/about`, now, 'monthly', 0.8),
       urlEntry(`${BASE}/episodes`, now, 'daily', 0.9),
       urlEntry(`${BASE}/banterpacks`, now, 'monthly', 0.7),

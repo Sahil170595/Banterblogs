@@ -88,7 +88,7 @@ const DISK_FRAG = /* glsl */ `
     float outer = 1.0 - smoothstep(uOuter * 0.45, uOuter, r);
     float alpha = inner * outer * (0.8 + 0.35 * bands);
 
-    col *= uIgnite * (1.85 * temp + 0.32);
+    col *= uIgnite * (2.2 * temp + 0.4);
     gl_FragColor = vec4(col, alpha * uIgnite);
   }
 `;

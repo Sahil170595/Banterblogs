@@ -4,6 +4,7 @@ import { JetBrains_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { KeyboardNavigation, FocusIndicator } from "@/components/AccessibilityShell";
 import { AccessibilityPanelClient } from "@/components/AccessibilityPanelClient";
@@ -80,7 +81,9 @@ export default function RootLayout({
                 <main id="main-content" className="flex-1 chimera-shell">
                   {children}
                 </main>
-                <Footer />
+                <RouteGate hideOn={["/"]}>
+                  <Footer />
+                </RouteGate>
 
                 {/* Global UI Components — heavy panel lazy-loaded via client wrapper */}
                 <AccessibilityPanelClient />

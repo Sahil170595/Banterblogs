@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Line, Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { STAR_SYSTEMS, type GalacticSelection, type StarSystemDef } from './systems';
-import { blackbodyToRGB } from './blackbody';
+import { Sun } from './Sun';
 
 // Nine repos on real Keplerian orbits — the interactive layer of the scene.
 // Positions come from solving Kepler's equation (Newton iterations on the
@@ -57,18 +57,6 @@ function Star({ def, onSelect }: StarProps) {
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
 
-  // modest over-unity so bloom lifts the star without clipping its
-  // blackbody hue to white
-  const color = useMemo(() => {
-    const [r, g, b] = blackbodyToRGB(def.tempK);
-    return new THREE.Color(r * 1.8, g * 1.8, b * 1.8);
-  }, [def.tempK]);
-
-  const haloColor = useMemo(() => {
-    const [r, g, b] = blackbodyToRGB(def.tempK);
-    return new THREE.Color(r, g, b);
-  }, [def.tempK]);
-
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
     groupRef.current.position.copy(orbitalPosition(def, clock.elapsedTime, scratch));
@@ -76,32 +64,7 @@ function Star({ def, onSelect }: StarProps) {
 
   return (
     <group ref={groupRef}>
-      <mesh
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={() => setHovered(false)}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect({ kind: 'star', system: def });
-        }}
-      >
-        <sphereGeometry args={[def.size * 1.05, 24, 24]} />
-        <meshBasicMaterial color={color} toneMapped={false} />
-      </mesh>
-      {/* blackbody-tinted corona — carries the temperature read */}
-      <mesh scale={2.1}>
-        <sphereGeometry args={[def.size * 1.05, 16, 16]} />
-        <meshBasicMaterial
-          color={haloColor}
-          transparent
-          opacity={0.3}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </mesh>
+      <Sun tempK={def.tempK} size={def.size * 1.05} seed={def.a + def.e * 10} />
       {/* generous invisible hit target — the star itself is a few pixels */}
       <mesh
         visible={false}

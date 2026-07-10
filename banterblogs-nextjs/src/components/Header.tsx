@@ -8,6 +8,7 @@ import { SearchDialog } from './SearchDialog';
 import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
 
 const NAV_ITEMS = [
+  { href: '/home', label: 'Overview' },
   { href: '/platform', label: 'Platform' },
   { href: '/reports', label: 'Research' },
   { href: '/papers', label: 'Papers' },

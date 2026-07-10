@@ -1,15 +1,16 @@
 import Link from 'next/link';
-import { ArrowRight, ChevronDown } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { GalacticBackdrop } from './GalacticBackdrop';
 
-// Full-viewport galactic-center hero. The copy is server-rendered (SEO/LCP
-// unaffected by the 3D island behind it); the scene is decoration with a
-// thesis: nine repositories in orbit around one platform.
+// Full-page galactic-center landing. The copy is server-rendered (SEO/LCP
+// unaffected by the 3D island behind it); the scene is the navigation:
+// the black hole is Chimera, the nine orbiting systems are the repos.
+// Height = viewport minus the 72px sticky header so nothing scrolls.
 
 export function GalacticHero() {
   return (
-    <section className="relative h-[100svh] min-h-[560px] overflow-hidden border-b border-border/50">
+    <section className="relative h-[calc(100svh-73px)] min-h-[560px] overflow-hidden">
       <GalacticBackdrop />
 
       {/* readability scrim over the left column */}
@@ -42,10 +43,10 @@ export function GalacticHero() {
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link
-              href="/platform"
+              href="/home"
               className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-6 py-3 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:border-primary/40 hover:text-primary"
             >
-              The platform
+              Site overview
             </Link>
           </div>
         </div>
@@ -57,10 +58,9 @@ export function GalacticHero() {
           Disk: T ∝ r<sup>-3/4</sup>, doppler-beamed.
         </p>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground/70">
-          <ChevronDown className="h-5 w-5 animate-bounce motion-reduce:animate-none" aria-hidden="true" />
-          <span className="sr-only">Scroll for content</span>
-        </div>
+        <p className="absolute bottom-6 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground/60">
+          Click a star · Click the core
+        </p>
       </div>
     </section>
   );
