@@ -7,11 +7,12 @@ import * as THREE from 'three';
 import { BlackHole } from './BlackHole';
 import { StarSystems } from './StarSystems';
 import { Starfield } from './Starfield';
+import type { GalacticSelection } from './systems';
 
 // Camera rig: slow ambient drift + pointer parallax, eased. The black hole
 // sits right-of-center (camera target offset) so hero copy owns the left.
 
-const CAMERA_BASE = new THREE.Vector3(0, 9, 34);
+const CAMERA_BASE = new THREE.Vector3(0, 8.5, 31);
 const TARGET_OFFSET = new THREE.Vector3(5, 0.5, 0);
 
 function CameraRig() {
@@ -32,23 +33,28 @@ function CameraRig() {
   return null;
 }
 
-export default function GalacticScene() {
+interface GalacticSceneProps {
+  onSelect: (selection: GalacticSelection | null) => void;
+}
+
+export default function GalacticScene({ onSelect }: GalacticSceneProps) {
   return (
     <Canvas
       camera={{ position: CAMERA_BASE.toArray(), fov: 42, near: 0.1, far: 400 }}
       dpr={[1, 1.75]}
       gl={{ antialias: false, powerPreference: 'high-performance' }}
       style={{ background: 'transparent' }}
+      onPointerMissed={() => onSelect(null)}
     >
       <color attach="background" args={['#04060a']} />
       <CameraRig />
       <Starfield />
       <group position={TARGET_OFFSET.toArray()}>
-        <BlackHole />
-        <StarSystems />
+        <BlackHole onSelect={onSelect} />
+        <StarSystems onSelect={onSelect} />
       </group>
       <EffectComposer>
-        <Bloom intensity={1.2} luminanceThreshold={0.32} luminanceSmoothing={0.25} mipmapBlur />
+        <Bloom intensity={1.1} luminanceThreshold={0.42} luminanceSmoothing={0.25} mipmapBlur />
       </EffectComposer>
     </Canvas>
   );

@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
+import { useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { AccretionDisk } from './AccretionDisk';
 import { GargantuaHalo } from './GargantuaHalo';
+import type { GalacticSelection } from './systems';
 
 // The gravitational center, four strokes (the Gargantua grammar):
 //   1. flat disk band crossing in front (real 3D plane, Kepler-sheared)
@@ -10,17 +13,37 @@ import { GargantuaHalo } from './GargantuaHalo';
 //   3. fainter secondary image lensed UNDER the shadow  } billboard
 //   4. razor photon ring hugging the silhouette         }
 // The shadow itself is an opaque black sphere — negative space carved out
-// of the brightest object on screen.
+// of the brightest object on screen. Clicking it selects the core: the
+// black hole IS Chimera, the architecture everything else orbits.
 
 // Schwarzschild shadow is ~1.3x the horizon; we size the sphere to the
 // SHADOW so the silhouette is what the camera reads.
-const SHADOW_RADIUS = 1.9;
+const SHADOW_RADIUS = 2.6;
 
-export function BlackHole() {
+interface BlackHoleProps {
+  onSelect: (selection: GalacticSelection) => void;
+}
+
+export function BlackHole({ onSelect }: BlackHoleProps) {
+  const [hovered, setHovered] = useState(false);
+  useCursor(hovered);
+
   return (
     <group>
-      {/* Shadow — pure black, occludes disk and starfield behind it */}
-      <mesh renderOrder={1}>
+      {/* Shadow — pure black, occludes disk and starfield behind it.
+          Also the click target for the core. */}
+      <mesh
+        renderOrder={1}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
+        onPointerOut={() => setHovered(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect({ kind: 'core' });
+        }}
+      >
         <sphereGeometry args={[SHADOW_RADIUS, 48, 48]} />
         <meshBasicMaterial color="#000000" toneMapped={false} />
       </mesh>
@@ -30,7 +53,7 @@ export function BlackHole() {
       {/* Front band: the real disk, nearly in-plane; camera elevation gives
           the razor ellipse and the halo supplies the lensed far side */}
       <group rotation={[THREE.MathUtils.degToRad(12), 0, THREE.MathUtils.degToRad(-6)]}>
-        <AccretionDisk inner={SHADOW_RADIUS * 1.18} outer={9} />
+        <AccretionDisk inner={SHADOW_RADIUS * 1.15} outer={10.5} />
       </group>
     </group>
   );

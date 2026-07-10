@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { SelectionCard } from './SelectionCard';
+import type { GalacticSelection } from './systems';
 
 // Client island for the 3D scene. The scene chunk (three + fiber + drei)
 // loads only in capable, motion-permitted browsers; everyone else gets the
@@ -34,6 +36,7 @@ function Poster() {
 
 export function GalacticBackdrop() {
   const [mode, setMode] = useState<'pending' | 'scene' | 'poster'>('pending');
+  const [selection, setSelection] = useState<GalacticSelection | null>(null);
 
   useEffect(() => {
     // Hydration-safe capability probe: the server can't know motion
@@ -48,8 +51,11 @@ export function GalacticBackdrop() {
   if (mode !== 'scene') return <Poster />;
 
   return (
-    <div className="absolute inset-0" aria-hidden="true">
-      <GalacticScene />
-    </div>
+    <>
+      <div className="absolute inset-0" aria-hidden="true">
+        <GalacticScene onSelect={setSelection} />
+      </div>
+      {selection && <SelectionCard selection={selection} onClose={() => setSelection(null)} />}
+    </>
   );
 }

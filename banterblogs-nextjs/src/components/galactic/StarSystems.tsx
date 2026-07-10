@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Line, Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
-import { STAR_SYSTEMS, type StarSystemDef } from './systems';
+import { STAR_SYSTEMS, type GalacticSelection, type StarSystemDef } from './systems';
 import { blackbodyToRGB } from './blackbody';
 
 // Nine repos on real Keplerian orbits — the interactive layer of the scene.
@@ -46,7 +46,12 @@ function orbitPath(def: StarSystemDef, segments = 128): THREE.Vector3[] {
   return points;
 }
 
-function Star({ def }: { def: StarSystemDef }) {
+interface StarProps {
+  def: StarSystemDef;
+  onSelect: (selection: GalacticSelection) => void;
+}
+
+function Star({ def, onSelect }: StarProps) {
   const groupRef = useRef<THREE.Group>(null);
   const scratch = useMemo(() => new THREE.Vector3(), []);
   const [hovered, setHovered] = useState(false);
@@ -57,6 +62,11 @@ function Star({ def }: { def: StarSystemDef }) {
   const color = useMemo(() => {
     const [r, g, b] = blackbodyToRGB(def.tempK);
     return new THREE.Color(r * 1.8, g * 1.8, b * 1.8);
+  }, [def.tempK]);
+
+  const haloColor = useMemo(() => {
+    const [r, g, b] = blackbodyToRGB(def.tempK);
+    return new THREE.Color(r, g, b);
   }, [def.tempK]);
 
   useFrame(({ clock }) => {
@@ -74,11 +84,23 @@ function Star({ def }: { def: StarSystemDef }) {
         onPointerOut={() => setHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
-          window.open(def.href, '_blank', 'noopener,noreferrer');
+          onSelect({ kind: 'star', system: def });
         }}
       >
-        <sphereGeometry args={[def.size * 0.62, 24, 24]} />
+        <sphereGeometry args={[def.size * 1.05, 24, 24]} />
         <meshBasicMaterial color={color} toneMapped={false} />
+      </mesh>
+      {/* blackbody-tinted corona — carries the temperature read */}
+      <mesh scale={2.1}>
+        <sphereGeometry args={[def.size * 1.05, 16, 16]} />
+        <meshBasicMaterial
+          color={haloColor}
+          transparent
+          opacity={0.3}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
       {/* generous invisible hit target — the star itself is a few pixels */}
       <mesh
@@ -88,8 +110,12 @@ function Star({ def }: { def: StarSystemDef }) {
           setHovered(true);
         }}
         onPointerOut={() => setHovered(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect({ kind: 'star', system: def });
+        }}
       >
-        <sphereGeometry args={[Math.max(def.size * 3.2, 0.9), 8, 8]} />
+        <sphereGeometry args={[Math.max(def.size * 3.2, 1.15), 8, 8]} />
       </mesh>
       {hovered && (
         <Html
@@ -110,7 +136,11 @@ function Star({ def }: { def: StarSystemDef }) {
   );
 }
 
-export function StarSystems() {
+interface StarSystemsProps {
+  onSelect: (selection: GalacticSelection) => void;
+}
+
+export function StarSystems({ onSelect }: StarSystemsProps) {
   const paths = useMemo(() => STAR_SYSTEMS.map((def) => orbitPath(def)), []);
 
   return (
@@ -119,7 +149,7 @@ export function StarSystems() {
         <group key={def.name}>
           {/* near-invisible until you look for them — emptiness budget */}
           <Line points={paths[i]} color="#8a8f99" transparent opacity={0.05} linewidth={1} />
-          <Star def={def} />
+          <Star def={def} onSelect={onSelect} />
         </group>
       ))}
     </group>

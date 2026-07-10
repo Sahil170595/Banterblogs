@@ -18,7 +18,9 @@ export function GalacticHero() {
         aria-hidden="true"
       />
 
-      <div className="container relative flex h-full flex-col justify-center">
+      {/* pointer-events-none so the scene receives hover/click everywhere
+          except the actual controls, which re-enable them */}
+      <div className="pointer-events-none container relative flex h-full flex-col justify-center">
         <div className="max-w-xl space-y-7">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
             Constitutional AI · LLM serving-safety research
@@ -31,7 +33,7 @@ export function GalacticHero() {
             reports and {MEASUREMENTS.DISPLAY} measurements deep. The disk is the work;
             the orbits are real Kepler.
           </p>
-          <div className="flex flex-wrap items-center gap-4 pt-2">
+          <div className="pointer-events-auto flex flex-wrap items-center gap-4 pt-2">
             <Link
               href="/reports"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"

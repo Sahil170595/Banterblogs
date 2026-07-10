@@ -25,6 +25,20 @@ export interface StarSystemDef {
   size: number;
 }
 
+// What a click in the scene selected: the core (Chimera, the architecture
+// everything orbits) or one of the nine repo star systems.
+export type GalacticSelection = { kind: 'core' } | { kind: 'star'; system: StarSystemDef };
+
+export const CORE_SELECTION = {
+  name: 'Chimera',
+  eyebrow: 'Gravitational core',
+  blurb:
+    'The constitutional AI architecture everything here orbits — debate engine, multi-model consensus, embedding-based safety routing, BFT/Ed25519 provenance, ZK proofs, RLAIF self-improvement.',
+  stats: '9 repositories · 55 technical reports · 1,348,000+ measurements',
+  href: '/platform',
+  cta: 'Explore the platform',
+} as const;
+
 const KEPLER_K = 14; // seconds of period for a=10 — tuned for watchable motion
 
 function period(a: number): number {
