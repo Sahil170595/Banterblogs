@@ -6,13 +6,33 @@ import { Line, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { STAR_SYSTEMS, type GalacticSelection, type StarSystemDef } from './systems';
 import { Sun } from './Sun';
-import { SHADOW_RADIUS } from './BlackHole';
+import { SHADOW_RADIUS, DISK_INNER_RADIUS, DISK_OUTER_RADIUS } from './BlackHole';
 import { blackbodyToRGB } from './blackbody';
+import {
+  solveEccentricAnomaly,
+  segmentOccludedBySphere,
+  segmentCrossesDiskAnnulus,
+} from './galacticMath';
 
+// Label sprite rendering
 const LABEL_TEXTURE_HEIGHT = 64;
 const LABEL_WORLD_HEIGHT = 0.5;
 const LABEL_REFERENCE_DISTANCE = 27;
 const LABEL_FONT = '600 20px monospace';
+// Resting visibility: anchors carry the atlas at rest; quiet systems stay
+// faint-but-perceivable (0 made the map read as wallpaper — blind review H2)
+const LABEL_RESTING_ANCHOR = 0.72;
+const LABEL_RESTING_QUIET = 0.35;
+// Orbit lines: perceivable at rest, lit on hover
+const ORBIT_OPACITY_RESTING = 0.07;
+const ORBIT_OPACITY_HOVER = 0.22;
+// Interaction geometry
+const HIT_TARGET_SCALE = 3.2; // stars are a few pixels — hit sphere is generous
+const HIT_TARGET_MIN_RADIUS = 1.15;
+const SHADOW_OCCLUSION_MARGIN = 0.98; // slightly inside the silhouette edge
+// NDC region reserved for the hero copy block (top-left)
+const SAFE_ZONE_NDC_X = -0.3;
+const SAFE_ZONE_NDC_Y = 0.22;
 
 function starRgb(tempK: number): [number, number, number] {
   const [r, g, b] = blackbodyToRGB(tempK);
@@ -24,15 +44,15 @@ function starCss(tempK: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function createLabelTexture(name: string, tempK: number): THREE.CanvasTexture {
+function createLabelTexture(name: string, tempK: number): THREE.CanvasTexture | null {
   const canvas = document.createElement('canvas');
   const measureContext = canvas.getContext('2d');
-  if (!measureContext) throw new Error(`Unable to measure label texture for ${name}`);
+  if (!measureContext) return null; // no 2D context: skip the label, keep the scene alive
   measureContext.font = LABEL_FONT;
   canvas.width = Math.ceil(measureContext.measureText(name.toUpperCase()).width + name.length * 3 + 52);
   canvas.height = LABEL_TEXTURE_HEIGHT;
   const context = canvas.getContext('2d');
-  if (!context) throw new Error(`Unable to create label texture for ${name}`);
+  if (!context) return null;
 
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.textBaseline = 'middle';
@@ -52,18 +72,6 @@ function createLabelTexture(name: string, tempK: number): THREE.CanvasTexture {
   texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = false;
   return texture;
-}
-
-const NEWTON_ITERATIONS = 5;
-
-function solveEccentricAnomaly(meanAnomaly: number, e: number): number {
-  let eccentricAnomaly = meanAnomaly;
-  for (let i = 0; i < NEWTON_ITERATIONS; i++) {
-    eccentricAnomaly -=
-      (eccentricAnomaly - e * Math.sin(eccentricAnomaly) - meanAnomaly) /
-      (1 - e * Math.cos(eccentricAnomaly));
-  }
-  return eccentricAnomaly;
 }
 
 function orbitalPosition(
@@ -105,44 +113,50 @@ function Star({ def, hovered, onHoverChange, onSelect }: StarProps) {
   const labelMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const scratch = useMemo(() => new THREE.Vector3(), []);
   const camLocal = useMemo(() => new THREE.Vector3(), []);
-  const rayDir = useMemo(() => new THREE.Vector3(), []);
-  const closest = useMemo(() => new THREE.Vector3(), []);
   const projected = useMemo(() => new THREE.Vector3(), []);
   const orientation = useMemo(
     () => new THREE.Quaternion().setFromEuler(new THREE.Euler(def.inc, def.node, 0, 'YXZ')),
     [def.inc, def.node],
   );
-  const labelTexture = useMemo(() => createLabelTexture(def.name, def.tempK), [def.name, def.tempK]);
-  const labelAspect = labelTexture.image.width / labelTexture.image.height;
-  useEffect(() => () => labelTexture.dispose(), [labelTexture]);
+  // Effect-owned texture: StrictMode double-invokes useMemo and would leak a
+  // GPU-backed canvas texture per star per mount (blind review L1)
+  const [labelTexture, setLabelTexture] = useState<THREE.CanvasTexture | null>(null);
+  useEffect(() => {
+    const texture = createLabelTexture(def.name, def.tempK);
+    // canvas textures only exist client-side post-mount; effect-owned so the
+    // cleanup disposes GPU memory (StrictMode-safe)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLabelTexture(texture);
+    return () => texture?.dispose();
+  }, [def.name, def.tempK]);
+  const labelAspect = labelTexture ? labelTexture.image.width / labelTexture.image.height : 1;
   useCursor(hovered);
+
+  const restingOpacity = def.labelTier === 'anchor' ? LABEL_RESTING_ANCHOR : LABEL_RESTING_QUIET;
 
   useFrame(({ clock, camera }) => {
     const group = groupRef.current;
     const label = labelRef.current;
     const labelMaterial = labelMaterialRef.current;
-    if (!group || !label || !labelMaterial || !group.parent) return;
+    if (!group || !group.parent) return;
     group.position.copy(orbitalPosition(def, orientation, clock.elapsedTime, scratch));
+    if (!label || !labelMaterial) return;
 
     camLocal.copy(camera.position);
     group.parent.worldToLocal(camLocal);
-    rayDir.copy(group.position).sub(camLocal);
-    const lengthSq = rayDir.lengthSq();
-    const t = lengthSq > 0 ? -camLocal.dot(rayDir) / lengthSq : 0;
-    const behindShadow =
-      t > 0 &&
-      t < 1 &&
-      closest.copy(rayDir).multiplyScalar(t).add(camLocal).length() < SHADOW_RADIUS * 0.98;
+    // Hide the label when the star sits behind the shadow OR behind the
+    // opaque disk sheet — a floating tag over a hidden star is an orphan
+    const occluded =
+      segmentOccludedBySphere(camLocal, group.position, SHADOW_RADIUS * SHADOW_OCCLUSION_MARGIN) ||
+      segmentCrossesDiskAnnulus(camLocal, group.position, DISK_INNER_RADIUS, DISK_OUTER_RADIUS);
 
     projected.copy(group.position);
     group.parent.localToWorld(projected);
     const cameraDistance = camera.position.distanceTo(projected);
     const distanceScale = THREE.MathUtils.clamp(cameraDistance / LABEL_REFERENCE_DISTANCE, 0.7, 1.35);
     projected.project(camera);
-    const insideCopySafeZone = projected.x < -0.3 && projected.y > 0.22;
-    const restingOpacity = def.labelTier === 'anchor' ? 0.72 : 0;
-    labelMaterial.opacity =
-      behindShadow || insideCopySafeZone ? 0 : hovered ? 1 : restingOpacity;
+    const insideCopySafeZone = projected.x < SAFE_ZONE_NDC_X && projected.y > SAFE_ZONE_NDC_Y;
+    labelMaterial.opacity = occluded || insideCopySafeZone ? 0 : hovered ? 1 : restingOpacity;
     label.scale.set(
       labelAspect * LABEL_WORLD_HEIGHT * distanceScale,
       LABEL_WORLD_HEIGHT * distanceScale,
@@ -165,20 +179,22 @@ function Star({ def, hovered, onHoverChange, onSelect }: StarProps) {
           onSelect({ kind: 'star', system: def });
         }}
       >
-        <sphereGeometry args={[Math.max(def.size * 3.2, 1.15), 8, 8]} />
+        <sphereGeometry args={[Math.max(def.size * HIT_TARGET_SCALE, HIT_TARGET_MIN_RADIUS), 8, 8]} />
       </mesh>
 
-      <sprite ref={labelRef} position={[0, def.size + 0.72, 0]} renderOrder={4}>
-        <spriteMaterial
-          ref={labelMaterialRef}
-          map={labelTexture}
-          transparent
-          opacity={def.labelTier === 'anchor' ? 0.72 : 0}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </sprite>
+      {labelTexture && (
+        <sprite ref={labelRef} position={[0, def.size + 0.72, 0]} renderOrder={4}>
+          <spriteMaterial
+            ref={labelMaterialRef}
+            map={labelTexture}
+            transparent
+            opacity={restingOpacity}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </sprite>
+      )}
     </group>
   );
 }
@@ -198,7 +214,7 @@ function System({ def, path, onSelect }: SystemProps) {
         points={path}
         color={hovered ? starCss(def.tempK) : '#8a8f99'}
         transparent
-        opacity={hovered ? 0.22 : 0.012}
+        opacity={hovered ? ORBIT_OPACITY_HOVER : ORBIT_OPACITY_RESTING}
         linewidth={1}
         depthWrite={false}
       />

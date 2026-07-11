@@ -132,11 +132,13 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
   {
     // The S2 analog: embodied autonomy on a high-eccentricity plunge orbit —
     // periapsis passes skim the disk the way S-stars skim Sagittarius A*.
+    // e chosen so periapsis (a·(1−e) ≈ 4.2) stays outside the ISCO at 3.465 —
+    // the dive crosses the bright annulus, not the disk-shadow gap.
     name: 'Project Wyvern',
     blurb: 'Embodied autonomy — governed PX4/ROS 2 mission plane (sim-only MVP)',
     href: GITHUB_URLS.PROJECT_WYVERN,
     ctaLabel: 'Open Project Wyvern on GitHub',
-    a: 19, e: 0.82, inc: 0.36, node: 5.8, phase: 5.9, period: period(19),
+    a: 19, e: 0.78, inc: 0.36, node: 5.8, phase: 5.9, period: period(19),
     tempK: 9500, size: 0.26, labelTier: 'quiet',
   },
 ];

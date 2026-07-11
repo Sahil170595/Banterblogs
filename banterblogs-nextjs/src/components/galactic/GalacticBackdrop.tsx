@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { SelectionCard } from './SelectionCard';
 import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems';
@@ -36,10 +36,17 @@ function Poster() {
   );
 }
 
-const NAV_BUTTON_CLASS =
+// Scene mode: links reveal on keyboard focus. Poster mode: the same links are
+// VISIBLE chips — sighted mouse/touch users without WebGL (or with reduced
+// motion) can still select systems, so the "select a system" hint never lies.
+const NAV_LINK_SCENE_CLASS =
   'sr-only focus:not-sr-only focus:absolute focus:bottom-24 focus:left-4 focus:z-40 focus:block ' +
   'focus:rounded-lg focus:border focus:border-border/60 focus:bg-background/95 focus:px-4 focus:py-2 ' +
   'focus:text-sm focus:text-foreground focus:shadow-xl';
+const NAV_LINK_POSTER_CLASS =
+  'inline-block rounded-full border border-border/60 bg-background/80 px-3 py-1.5 font-mono ' +
+  'text-[10px] uppercase tracking-[0.08em] text-muted-foreground backdrop-blur transition-colors ' +
+  'hover:border-primary/50 hover:text-primary focus-visible:border-primary/50 focus-visible:text-primary';
 
 export function GalacticBackdrop() {
   const [mode, setMode] = useState<'pending' | 'scene' | 'poster'>('pending');
@@ -57,6 +64,15 @@ export function GalacticBackdrop() {
     setMode(reducedMotion || !webgl ? 'poster' : 'scene');
   }, []);
 
+  const isPoster = mode !== 'scene';
+  const select = (event: MouseEvent<HTMLAnchorElement>, next: GalacticSelection) => {
+    // plain click opens the card; modified/middle clicks keep native
+    // link behavior so the hrefs stay real for users and crawlers
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey) return;
+    event.preventDefault();
+    setSelection(next);
+  };
+
   return (
     <>
       {mode === 'scene' ? (
@@ -68,22 +84,34 @@ export function GalacticBackdrop() {
       )}
 
       {/* Keyboard / screen-reader / no-WebGL path to the same cards the
-          canvas drives. Buttons reveal on focus for sighted keyboard users. */}
-      <nav aria-label="Systems orbiting the Chimera core" className="pointer-events-auto">
-        <ul>
-          <li>
-            <button className={NAV_BUTTON_CLASS} onClick={() => setSelection({ kind: 'core' })}>
+          canvas drives — real anchors, so crawlers get the destinations. */}
+      <nav
+        aria-label="Systems orbiting the Chimera core"
+        className={
+          isPoster
+            ? 'pointer-events-auto absolute inset-x-4 bottom-20 z-30 sm:inset-x-8'
+            : 'pointer-events-auto'
+        }
+      >
+        <ul className={isPoster ? 'flex flex-wrap gap-2' : undefined}>
+          <li className={isPoster ? undefined : 'contents'}>
+            <a
+              href={CORE_SELECTION.href}
+              className={isPoster ? NAV_LINK_POSTER_CLASS : NAV_LINK_SCENE_CLASS}
+              onClick={(e) => select(e, { kind: 'core' })}
+            >
               {CORE_SELECTION.name} — {CORE_SELECTION.eyebrow}
-            </button>
+            </a>
           </li>
           {STAR_SYSTEMS.map((system) => (
-            <li key={system.name}>
-              <button
-                className={NAV_BUTTON_CLASS}
-                onClick={() => setSelection({ kind: 'star', system })}
+            <li key={system.name} className={isPoster ? undefined : 'contents'}>
+              <a
+                href={system.href}
+                className={isPoster ? NAV_LINK_POSTER_CLASS : NAV_LINK_SCENE_CLASS}
+                onClick={(e) => select(e, { kind: 'star', system })}
               >
-                {system.name} — {system.blurb}
-              </button>
+                {isPoster ? system.name : `${system.name} — ${system.blurb}`}
+              </a>
             </li>
           ))}
         </ul>

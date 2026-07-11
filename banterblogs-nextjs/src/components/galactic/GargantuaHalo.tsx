@@ -57,6 +57,8 @@ const HALO_FRAG = /* glsl */ `
     float ringD = (r - uShadow * 1.015) / (uShadow * 0.022);
     float ring = exp(-ringD * ringD) * (0.7 + 0.4 * smoothstep(-0.2, 0.6, p.y / uShadow));
     ring *= smoothstep(uShadow * 0.99, uShadow * 1.005, r);
+    // slow breathing pulse — the idle affordance that the core is interactive
+    ring *= 1.0 + 0.12 * sin(uTime * 1.1);
 
     // primary image: far side of the disk lensed over the top
     float over = arcBand(p, uShadow * 1.66, uShadow * 1.46, 0.20, 1.0);
@@ -108,7 +110,8 @@ export function GargantuaHalo({ shadowRadius }: GargantuaHaloProps) {
 
   return (
     <Billboard>
-      <mesh renderOrder={2}>
+      {/* vertex-shader-scaled geometry — see AccretionDisk culling note */}
+      <mesh renderOrder={2} frustumCulled={false}>
         <planeGeometry args={[2, 2]} />
         <shaderMaterial
           ref={materialRef}

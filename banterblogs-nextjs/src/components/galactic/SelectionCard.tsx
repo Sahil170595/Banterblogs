@@ -33,7 +33,7 @@ export function SelectionCard({ selection, onClose }: SelectionCardProps) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isTypingTarget(e.target)) onClose();
+      if (e.key === 'Escape' && !e.defaultPrevented && !isTypingTarget(e.target)) onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

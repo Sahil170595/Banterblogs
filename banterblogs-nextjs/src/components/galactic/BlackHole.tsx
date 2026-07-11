@@ -19,6 +19,10 @@ import type { GalacticSelection } from './systems';
 // Schwarzschild shadow is ~1.3x the horizon; we size the sphere to the
 // SHADOW so the silhouette is what the camera reads.
 export const SHADOW_RADIUS = 3.0;
+// ISCO at 1.155 R (3 r_s / 2.6 r_s); 5x span keeps the outer ellipse in
+// frame. Exported so label occlusion can test against the opaque sheet.
+export const DISK_INNER_RADIUS = SHADOW_RADIUS * 1.155;
+export const DISK_OUTER_RADIUS = SHADOW_RADIUS * 5;
 
 interface BlackHoleProps {
   onSelect: (selection: GalacticSelection) => void;
@@ -53,9 +57,7 @@ export function BlackHole({ onSelect }: BlackHoleProps) {
       {/* Front band: the real disk, nearly in-plane; camera elevation gives
           the razor ellipse and the halo supplies the lensed far side */}
       <group rotation={[THREE.MathUtils.degToRad(6), 0, THREE.MathUtils.degToRad(-4)]}>
-        {/* ISCO at 1.155 R (Schwarzschild: 3 r_s / 2.6 r_s); 5x span keeps the outer
-            ellipse in frame so the object reads composed (blind-review C1) */}
-        <AccretionDisk inner={SHADOW_RADIUS * 1.155} outer={SHADOW_RADIUS * 5} />
+        <AccretionDisk inner={DISK_INNER_RADIUS} outer={DISK_OUTER_RADIUS} />
       </group>
     </group>
   );

@@ -105,8 +105,10 @@ export function AccretionDisk({ inner = 1.6, outer = 7.5 }: AccretionDiskProps) 
     mat.uniforms.uIgnite.value = THREE.MathUtils.damp(mat.uniforms.uIgnite.value, 1, 1.4, delta);
   });
 
+  // geometry is scaled in the vertex shader (uOuter), so the CPU-side
+  // bounding sphere is wrong — culling would pop the disk out of view
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} frustumCulled={false}>
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
         ref={materialRef}

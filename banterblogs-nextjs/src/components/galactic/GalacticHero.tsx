@@ -6,8 +6,6 @@ import { GalacticBackdrop } from './GalacticBackdrop';
 export function GalacticHero() {
   return (
     <section className="relative h-[100svh] min-h-[560px] overflow-hidden">
-      <GalacticBackdrop />
-
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_56%_48%,transparent_0%,transparent_33%,rgba(2,4,8,0.18)_62%,rgba(2,4,8,0.72)_100%)]"
         aria-hidden="true"
@@ -31,7 +29,7 @@ export function GalacticHero() {
             <br />
             <span className="text-foreground/45">One constitutional core.</span>
           </h1>
-          <p className="mt-3 max-w-xs text-[10px] leading-relaxed text-muted-foreground/75 sm:text-[11px]">
+          <p className="mt-3 max-w-xs text-[11px] leading-relaxed text-muted-foreground sm:text-[12px]">
             {REPORTS.DISPLAY} technical reports and {MEASUREMENTS.DISPLAY} measurements in orbit.
           </p>
           <div className="pointer-events-auto mt-4 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-[11px]">
@@ -52,7 +50,7 @@ export function GalacticHero() {
         </div>
 
         <p
-          className="absolute bottom-8 right-20 hidden max-w-[280px] text-right font-mono text-[9px] uppercase leading-relaxed tracking-[0.08em] text-muted-foreground/55 lg:block"
+          className="absolute bottom-8 right-20 hidden max-w-[280px] text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.08em] text-muted-foreground lg:block"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
           Orbits: Keplerian, solved per frame.
@@ -61,13 +59,17 @@ export function GalacticHero() {
         </p>
 
         <p
-          className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/55 backdrop-blur-sm"
+          className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/80 backdrop-blur-sm"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
           <span className="h-1 w-1 animate-pulse rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))]" />
           Select a system
         </p>
       </div>
+
+      {/* rendered after the copy so tab order runs copy links -> systems nav
+          (visual stacking is unchanged — controlled by z-index) */}
+      <GalacticBackdrop />
     </section>
   );
 }
