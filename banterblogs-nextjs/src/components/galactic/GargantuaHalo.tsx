@@ -4,6 +4,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
+import { NOISE_GLSL, EMBER_RAMP_GLSL } from './shaderChunks';
 
 // The lensed halo — the two strokes that make a black hole read as a black
 // hole (blackholesimulation.web.app grammar): the far side of the disk bent
@@ -28,34 +29,8 @@ const HALO_FRAG = /* glsl */ `
   uniform float uShadow;   // shadow radius (photon-sphere silhouette)
   uniform float uIgnite;
 
-  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
-  float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
-  }
-  float fbm(vec2 p) {
-    float v = 0.0;
-    float amp = 0.55;
-    for (int i = 0; i < 4; i++) {
-      v += amp * noise(p);
-      p = p * 2.1 + vec2(13.7, 7.3);
-      amp *= 0.5;
-    }
-    return v;
-  }
-
-  vec3 emberRamp(float t) {
-    vec3 c1 = vec3(0.28, 0.05, 0.01);
-    vec3 c2 = vec3(0.976, 0.322, 0.082);
-    vec3 c3 = vec3(1.0, 0.72, 0.35);
-    vec3 c4 = vec3(1.0, 0.96, 0.90);
-    if (t < 0.4) return mix(c1, c2, t / 0.4);
-    if (t < 0.75) return mix(c2, c3, (t - 0.4) / 0.35);
-    return mix(c3, c4, (t - 0.75) / 0.25);
-  }
+  ${NOISE_GLSL}
+  ${EMBER_RAMP_GLSL}
 
   // One lensed arc: a bright band hugging an ellipse around the shadow,
   // masked to one vertical side, fading toward the horizontal plane where
@@ -100,7 +75,7 @@ const HALO_FRAG = /* glsl */ `
     float mask = smoothstep(uShadow * 1.0, uShadow * 1.09, r);
     float alpha = clamp((glow * 0.9 * mask + ring), 0.0, 1.0) * uIgnite;
 
-    gl_FragColor = vec4(col * uIgnite, alpha);
+    gl_FragColor = vec4(col, alpha);
   }
 `;
 
@@ -124,11 +99,11 @@ export function GargantuaHalo({ shadowRadius }: GargantuaHaloProps) {
     [shadowRadius, scale],
   );
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     const mat = materialRef.current;
     if (!mat) return;
     mat.uniforms.uTime.value = clock.elapsedTime;
-    mat.uniforms.uIgnite.value = THREE.MathUtils.damp(mat.uniforms.uIgnite.value, 1, 1.4, 0.016);
+    mat.uniforms.uIgnite.value = THREE.MathUtils.damp(mat.uniforms.uIgnite.value, 1, 1.4, delta);
   });
 
   return (

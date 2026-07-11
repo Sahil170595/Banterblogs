@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { blackbodyToRGB } from './blackbody';
+import { NOISE_GLSL } from './shaderChunks';
 
 // High-fidelity sun: shader surface with animated fbm granulation and limb
 // darkening (edges cooler/darker, like a real photosphere), a two-layer
@@ -33,24 +34,7 @@ const SUN_FRAG = /* glsl */ `
   uniform vec3 uColor;
   uniform vec3 uHot;
 
-  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
-  float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
-  }
-  float fbm(vec2 p) {
-    float v = 0.0;
-    float amp = 0.55;
-    for (int i = 0; i < 4; i++) {
-      v += amp * noise(p);
-      p = p * 2.15 + vec2(11.3, 5.7);
-      amp *= 0.5;
-    }
-    return v;
-  }
+  ${NOISE_GLSL}
 
   void main() {
     vec3 n = normalize(vPos);

@@ -22,10 +22,12 @@ export function GalacticHero() {
       {/* pointer-events-none so the scene receives hover/click everywhere
           except the actual controls, which re-enable them */}
       <div className="pointer-events-none relative flex h-full flex-col">
-        {/* tiny corner title — a chart annotation, not a billboard */}
+        {/* tiny corner annotation — the header already carries the wordmark,
+            so the h1 is screen-reader/SEO only (blind-review L8) */}
         <div className="ml-6 mt-24 max-w-xs space-y-2 md:ml-10">
-          <h1 className="display text-lg font-semibold tracking-tight text-foreground/90">
-            Chimeraforge
+          <h1 className="sr-only">
+            Chimeraforge — the Chimera galactic center: nine repositories orbiting one
+            constitutional AI platform
           </h1>
           <p className="text-[11px] leading-relaxed text-muted-foreground/80">
             Nine repositories orbiting one platform — {REPORTS.DISPLAY} technical reports,{' '}

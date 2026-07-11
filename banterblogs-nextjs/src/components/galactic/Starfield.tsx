@@ -16,10 +16,9 @@ interface StarfieldProps {
 export function Starfield({ count = 7000 }: StarfieldProps) {
   const pointsRef = useRef<THREE.Points>(null);
 
-  const { positions, colors, sizes } = useMemo(() => {
+  const { positions, colors } = useMemo(() => {
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
     const rand = mulberry32(0xc0ffee); // seeded: same sky every visit
 
     for (let i = 0; i < count; i++) {
@@ -44,9 +43,8 @@ export function Starfield({ count = 7000 }: StarfieldProps) {
       colors[i * 3 + 1] = cg * brightness;
       colors[i * 3 + 2] = cb * brightness;
 
-      sizes[i] = 0.3 + rand() * 1.1;
     }
-    return { positions, colors, sizes };
+    return { positions, colors };
   }, [count]);
 
   useFrame((_, delta) => {
@@ -60,7 +58,6 @@ export function Starfield({ count = 7000 }: StarfieldProps) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
-        <bufferAttribute attach="attributes-size" args={[sizes, 1]} />
       </bufferGeometry>
       <pointsMaterial
         size={0.42}

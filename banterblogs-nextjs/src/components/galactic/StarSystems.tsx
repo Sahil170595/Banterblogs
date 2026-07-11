@@ -6,6 +6,7 @@ import { Line, Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { STAR_SYSTEMS, type GalacticSelection, type StarSystemDef } from './systems';
 import { Sun } from './Sun';
+import { SHADOW_RADIUS } from './BlackHole';
 import { blackbodyToRGB } from './blackbody';
 
 // Star-chart typography: labels render in a serif (the Times-family star
@@ -33,14 +34,18 @@ function solveEccentricAnomaly(meanAnomaly: number, e: number): number {
   return E;
 }
 
-function orbitalPosition(def: StarSystemDef, tSeconds: number, out: THREE.Vector3): THREE.Vector3 {
+function orbitalPosition(
+  def: StarSystemDef,
+  orientation: THREE.Quaternion,
+  tSeconds: number,
+  out: THREE.Vector3,
+): THREE.Vector3 {
   const M = def.phase + (2 * Math.PI * tSeconds) / def.period;
   const E = solveEccentricAnomaly(M % (2 * Math.PI), def.e);
   const x = def.a * (Math.cos(E) - def.e);
   const z = def.a * Math.sqrt(1 - def.e * def.e) * Math.sin(E);
-  out.set(x, 0, z);
-  out.applyEuler(new THREE.Euler(def.inc, def.node, 0, 'YXZ'));
-  return out;
+  // orientation is the precomputed inc/node rotation - no per-frame allocation
+  return out.set(x, 0, z).applyQuaternion(orientation);
 }
 
 function orbitPath(def: StarSystemDef, segments = 128): THREE.Vector3[] {
@@ -63,13 +68,39 @@ interface StarProps {
 
 function Star({ def, onSelect }: StarProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const scratch = useMemo(() => new THREE.Vector3(), []);
+  const camLocal = useMemo(() => new THREE.Vector3(), []);
+  const rayDir = useMemo(() => new THREE.Vector3(), []);
+  const closest = useMemo(() => new THREE.Vector3(), []);
+  const orientation = useMemo(
+    () => new THREE.Quaternion().setFromEuler(new THREE.Euler(def.inc, def.node, 0, 'YXZ')),
+    [def.inc, def.node],
+  );
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
 
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-    groupRef.current.position.copy(orbitalPosition(def, clock.elapsedTime, scratch));
+  useFrame(({ clock, camera }) => {
+    const group = groupRef.current;
+    if (!group) return;
+    group.position.copy(orbitalPosition(def, orientation, clock.elapsedTime, scratch));
+
+    // Hide the label while the star transits BEHIND the shadow (the black
+    // hole sits at this group's parent origin): closest-approach test of the
+    // camera->star segment against the shadow sphere. DOM opacity toggled
+    // directly — no React re-render on the frame loop.
+    const label = labelRef.current;
+    if (!label || !group.parent) return;
+    camLocal.copy(camera.position);
+    group.parent.worldToLocal(camLocal);
+    rayDir.copy(group.position).sub(camLocal);
+    const lengthSq = rayDir.lengthSq();
+    const t = lengthSq > 0 ? -camLocal.dot(rayDir) / lengthSq : 0;
+    const behindShadow =
+      t > 0 &&
+      t < 1 &&
+      closest.copy(rayDir).multiplyScalar(t).add(camLocal).length() < SHADOW_RADIUS * 0.98;
+    label.style.opacity = behindShadow ? '0' : '1';
   });
 
   return (
@@ -99,6 +130,7 @@ function Star({ def, onSelect }: StarProps) {
         zIndexRange={[10, 0]}
       >
         <div
+          ref={labelRef}
           className="whitespace-nowrap transition-all duration-200"
           // width: max-content beats the Html wrapper's constraint — no mid-name wraps
           style={{
@@ -130,7 +162,7 @@ export function StarSystems({ onSelect }: StarSystemsProps) {
       {STAR_SYSTEMS.map((def, i) => (
         <group key={def.name}>
           {/* near-invisible until you look for them — emptiness budget */}
-          <Line points={paths[i]} color="#8a8f99" transparent opacity={0.05} linewidth={1} />
+          <Line points={paths[i]} color="#8a8f99" transparent opacity={0.035} linewidth={1} />
           <Star def={def} onSelect={onSelect} />
         </group>
       ))}

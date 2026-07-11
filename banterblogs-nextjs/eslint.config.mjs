@@ -22,7 +22,17 @@ const eslintConfig = [
     // React Three Fiber's render loop is imperative by design — useFrame
     // mutates three.js objects (camera, positions, uniforms) every frame.
     // react-hooks/immutability cannot model that and flags all of it.
-    files: ["src/components/galactic/**/*.tsx"],
+    // only the R3F render-loop files need the exemption; plain DOM components
+    // (SelectionCard, GalacticHero, GalacticBackdrop) do not
+    files: [
+      "src/components/galactic/GalacticScene.tsx",
+      "src/components/galactic/BlackHole.tsx",
+      "src/components/galactic/AccretionDisk.tsx",
+      "src/components/galactic/GargantuaHalo.tsx",
+      "src/components/galactic/StarSystems.tsx",
+      "src/components/galactic/Sun.tsx",
+      "src/components/galactic/Starfield.tsx",
+    ],
     rules: {
       "react-hooks/immutability": "off",
     },

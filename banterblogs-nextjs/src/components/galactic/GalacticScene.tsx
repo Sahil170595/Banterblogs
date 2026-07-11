@@ -12,20 +12,20 @@ import type { GalacticSelection } from './systems';
 // Camera rig: slow ambient drift + pointer parallax, eased. The black hole
 // sits right-of-center (camera target offset) so hero copy owns the left.
 
-const CAMERA_BASE = new THREE.Vector3(0, 5, 26);
+const CAMERA_BASE = new THREE.Vector3(0, 6, 28.5);
 const TARGET_OFFSET = new THREE.Vector3(3, 0, 0);
 
 function CameraRig() {
   const { camera, pointer } = useThree();
   const look = useRef(new THREE.Vector3().copy(TARGET_OFFSET));
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     const t = clock.elapsedTime;
     const driftX = Math.sin(t * 0.05) * 2.2;
     const driftY = Math.sin(t * 0.033) * 1.1;
 
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, CAMERA_BASE.x + driftX + pointer.x * 1.6, 1.2, 0.016);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, CAMERA_BASE.y + driftY - pointer.y * 1.0, 1.2, 0.016);
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, CAMERA_BASE.x + driftX + pointer.x * 1.6, 1.2, delta);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, CAMERA_BASE.y + driftY - pointer.y * 1.0, 1.2, delta);
     camera.position.z = CAMERA_BASE.z;
     camera.lookAt(look.current);
   });
@@ -53,8 +53,10 @@ export default function GalacticScene({ onSelect }: GalacticSceneProps) {
         <BlackHole onSelect={onSelect} />
         <StarSystems onSelect={onSelect} />
       </group>
-      <EffectComposer>
-        <Bloom intensity={0.7} luminanceThreshold={0.55} luminanceSmoothing={0.2} mipmapBlur />
+      {/* multisampling off: EffectComposer defaults to 8x MSAA in WebGL2,
+          silently negating antialias:false; bloom hides aliasing anyway */}
+      <EffectComposer multisampling={0}>
+        <Bloom intensity={0.55} luminanceThreshold={0.6} luminanceSmoothing={0.2} mipmapBlur />
       </EffectComposer>
     </Canvas>
   );

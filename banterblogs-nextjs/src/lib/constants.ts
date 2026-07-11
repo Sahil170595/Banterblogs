@@ -7,7 +7,13 @@ export const GITHUB_URLS = {
   PROFILE: 'https://github.com/Sahil170595',
   BANTERBLOGS: 'https://github.com/Sahil170595/Banterblogs',
   CHIMERAFORGE: 'https://github.com/Sahil170595/Chimeraforge',
-  // Banterpacks repository is private
+  // Public repo URLs (visibility verified 2026-07-10 via the GitHub API).
+  // Banterpacks, Banterhearts, and Chimera Multi-Agent are PRIVATE — surfaces
+  // must link their on-site pages instead of promising a repo.
+  JARVIS_CONSOLE: 'https://github.com/Sahil170595/JARVIS-Console',
+  ECHO: 'https://github.com/Sahil170595/Echo',
+  CHIMERADROID: 'https://github.com/Sahil170595/Chimeradroid',
+  PROJECT_WYVERN: 'https://github.com/Sahil170595/ProjectWyvern',
 } as const;
 
 export const PYPI_URL = 'https://pypi.org/project/chimeraforge/' as const;
