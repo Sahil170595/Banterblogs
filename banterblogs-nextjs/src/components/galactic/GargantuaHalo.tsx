@@ -77,9 +77,11 @@ const HALO_FRAG = /* glsl */ `
     // material, bent — not a separate glow
     float streaks = fbm(vec2(r * 4.0, theta * 6.0 - uTime * 0.6));
 
-    // photon ring: razor-thin, brightest element in the scene
-    float ringD = (r - uShadow * 1.03) / (uShadow * 0.024);
+    // photon ring: razor-thin at the shadow edge (1.0 R), brightest stroke;
+    // own cutoff so the arc mask doesn't attenuate it
+    float ringD = (r - uShadow * 1.015) / (uShadow * 0.022);
     float ring = exp(-ringD * ringD) * (0.7 + 0.4 * smoothstep(-0.2, 0.6, p.y / uShadow));
+    ring *= smoothstep(uShadow * 0.99, uShadow * 1.005, r);
 
     // primary image: far side of the disk lensed over the top
     float over = arcBand(p, uShadow * 1.66, uShadow * 1.46, 0.20, 1.0);
@@ -93,9 +95,10 @@ const HALO_FRAG = /* glsl */ `
     vec3 col = emberRamp(clamp(0.55 + 0.45 * streaks, 0.0, 1.0)) * glow * 2.2;
     col += vec3(1.0, 0.9, 0.75) * ring * 2.2;
 
-    // nothing renders inside the shadow — silhouette stays pure black
+    // nothing renders inside the shadow — silhouette stays pure black;
+    // mask applies to the arcs, the ring carries its own cutoff above
     float mask = smoothstep(uShadow * 1.0, uShadow * 1.09, r);
-    float alpha = clamp((glow * 0.9 + ring), 0.0, 1.0) * mask * uIgnite;
+    float alpha = clamp((glow * 0.9 * mask + ring), 0.0, 1.0) * uIgnite;
 
     gl_FragColor = vec4(col * uIgnite, alpha);
   }

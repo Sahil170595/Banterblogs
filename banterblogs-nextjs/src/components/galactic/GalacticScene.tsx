@@ -54,7 +54,7 @@ export default function GalacticScene({ onSelect }: GalacticSceneProps) {
         <StarSystems onSelect={onSelect} />
       </group>
       <EffectComposer>
-        <Bloom intensity={0.8} luminanceThreshold={0.56} luminanceSmoothing={0.22} mipmapBlur />
+        <Bloom intensity={0.7} luminanceThreshold={0.55} luminanceSmoothing={0.2} mipmapBlur />
       </EffectComposer>
     </Canvas>
   );

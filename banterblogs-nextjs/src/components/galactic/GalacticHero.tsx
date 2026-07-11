@@ -49,13 +49,19 @@ export function GalacticHero() {
         </div>
 
         {/* the quotable physics caption */}
-        <p className="absolute bottom-16 right-4 hidden max-w-[240px] text-right font-mono text-[10px] leading-relaxed text-muted-foreground/70 lg:block">
+        <p
+          className="absolute bottom-16 right-4 hidden max-w-[240px] text-right font-mono text-[10px] leading-relaxed text-muted-foreground lg:block"
+          style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
+        >
           Orbits: Keplerian, solved per frame.
           <br />
           Disk: T ∝ r<sup>-3/4</sup>, doppler-beamed.
         </p>
 
-        <p className="absolute bottom-6 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground/60">
+        <p
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground"
+          style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
+        >
           Click a star · Click the core
         </p>
       </div>
