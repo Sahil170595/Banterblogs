@@ -99,15 +99,13 @@ function Star({ def, onSelect }: StarProps) {
         zIndexRange={[10, 0]}
       >
         <div
-          className="whitespace-nowrap rounded border px-2 py-0.5 transition-all duration-200"
+          className="whitespace-nowrap transition-all duration-200"
           // width: max-content beats the Html wrapper's constraint — no mid-name wraps
           style={{
             width: 'max-content',
             fontFamily: CHART_FONT,
             color: starCss(def.tempK),
-            borderColor: `${starCss(def.tempK)}38`,
-            background: 'transparent',
-            textShadow: '0 1px 14px rgb(0 0 0), 0 0 4px rgb(0 0 0)',
+            textShadow: '0 1px 14px rgb(0 0 0), 0 0 5px rgb(0 0 0)',
           }}
         >
           <span className="text-[12px] italic tracking-[0.08em]">{def.name}</span>

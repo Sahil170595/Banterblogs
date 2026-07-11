@@ -82,7 +82,7 @@ const HALO_FRAG = /* glsl */ `
     float ring = exp(-ringD * ringD) * (0.7 + 0.4 * smoothstep(-0.2, 0.6, p.y / uShadow));
 
     // primary image: far side of the disk lensed over the top
-    float over = arcBand(p, uShadow * 1.55, uShadow * 1.38, 0.20, 1.0);
+    float over = arcBand(p, uShadow * 1.66, uShadow * 1.46, 0.20, 1.0);
     // secondary image: fainter, tighter, under the shadow
     float under = arcBand(p, uShadow * 1.28, uShadow * 1.18, 0.10, -1.0) * 0.55;
 
@@ -109,7 +109,7 @@ export function GargantuaHalo({ shadowRadius }: GargantuaHaloProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   // billboard plane needs to cover the over-arc's reach
-  const scale = shadowRadius * 3.6;
+  const scale = shadowRadius * 4.0;
 
   const uniforms = useMemo(
     () => ({

@@ -58,7 +58,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     name: 'Banterpacks',
     blurb: 'Core monorepo — JARVIS gateway, constitutional router, debate engine, Rust provenance',
     href: 'https://github.com/Sahil170595',
-    a: 11.8, e: 0.10, inc: 0.10, node: 0.4, phase: 1.1, period: period(11.8),
+    a: 11.8, e: 0.10, inc: 0.22, node: 0.4, phase: 1.1, period: period(11.8),
     tempK: 6500, size: 0.50,
   },
   {
@@ -66,7 +66,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     name: 'Banterhearts',
     blurb: 'ML research platform — source of the 1.34M+ measurements',
     href: 'https://github.com/Sahil170595',
-    a: 14, e: 0.28, inc: 0.22, node: 2.1, phase: 3.9, period: period(14),
+    a: 14, e: 0.28, inc: 0.30, node: 2.1, phase: 3.9, period: period(14),
     tempK: 11000, size: 0.44,
   },
   {

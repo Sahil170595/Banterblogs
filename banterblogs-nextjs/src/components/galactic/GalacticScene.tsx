@@ -12,7 +12,7 @@ import type { GalacticSelection } from './systems';
 // Camera rig: slow ambient drift + pointer parallax, eased. The black hole
 // sits right-of-center (camera target offset) so hero copy owns the left.
 
-const CAMERA_BASE = new THREE.Vector3(0, 5, 28);
+const CAMERA_BASE = new THREE.Vector3(0, 5, 26);
 const TARGET_OFFSET = new THREE.Vector3(3, 0, 0);
 
 function CameraRig() {
