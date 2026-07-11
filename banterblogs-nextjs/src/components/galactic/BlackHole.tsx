@@ -53,7 +53,8 @@ export function BlackHole({ onSelect }: BlackHoleProps) {
       {/* Front band: the real disk, nearly in-plane; camera elevation gives
           the razor ellipse and the halo supplies the lensed far side */}
       <group rotation={[THREE.MathUtils.degToRad(6), 0, THREE.MathUtils.degToRad(-4)]}>
-        <AccretionDisk inner={SHADOW_RADIUS * 1.2} outer={14} />
+        {/* disk span 6x the shadow — per art direction */}
+        <AccretionDisk inner={SHADOW_RADIUS * 1.2} outer={SHADOW_RADIUS * 6} />
       </group>
     </group>
   );
