@@ -20,7 +20,7 @@ export function GalacticHero() {
       />
 
       <div className="pointer-events-none relative z-10 flex h-full flex-col">
-        <div className="ml-5 mt-24 max-w-[300px] border-l border-primary/60 bg-gradient-to-r from-black/60 via-black/30 to-transparent py-2 pl-4 pr-8 sm:ml-8 sm:mt-28 md:max-w-md md:pl-5">
+        <div className="ml-5 mt-24 max-w-[300px] border-l border-primary/60 bg-gradient-to-r from-black/70 via-black/45 to-black/15 py-2 pl-4 pr-8 backdrop-blur-[2px] rounded-r-lg sm:ml-8 sm:mt-28 md:max-w-md md:pl-5">
           <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.28em] text-primary/85">
             Chimera / system atlas 001
           </p>
@@ -42,7 +42,7 @@ export function GalacticHero() {
             </Link>
             <Link
               href="/home"
-              className="text-muted-foreground transition-colors hover:text-foreground"
+              className="text-foreground/90 transition-colors hover:text-primary"
             >
               Overview
             </Link>
