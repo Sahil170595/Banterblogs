@@ -34,6 +34,8 @@ export interface StarSystemDef {
   tempK: number;
   /** star radius, world units */
   size: number;
+  /** persistent atlas labels are reserved for the three architectural anchors */
+  labelTier: 'anchor' | 'quiet';
 }
 
 // What a click in the scene selected: the core (Chimera, the architecture
@@ -65,7 +67,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: '/banterpacks',
     ctaLabel: 'Read the Banterpacks dev log',
     a: 11.8, e: 0.10, inc: 0.22, node: 0.4, phase: 1.1, period: period(11.8),
-    tempK: 6500, size: 0.50,
+    tempK: 6500, size: 0.50, labelTier: 'anchor',
   },
   {
     // The research furnace — its measurements ARE the archive. Repo private.
@@ -74,7 +76,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: '/reports',
     ctaLabel: 'Browse the research archive',
     a: 14, e: 0.28, inc: 0.30, node: 2.1, phase: 3.9, period: period(14),
-    tempK: 11000, size: 0.44,
+    tempK: 11000, size: 0.44, labelTier: 'anchor',
   },
   {
     // Observability control plane. Repo private; the Chimera dev log is on-site.
@@ -83,7 +85,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: '/chimera',
     ctaLabel: 'Read the Chimera dev log',
     a: 16, e: 0.18, inc: 0.30, node: 1.2, phase: 5.0, period: period(16),
-    tempK: 5200, size: 0.30,
+    tempK: 5200, size: 0.30, labelTier: 'anchor',
   },
   {
     name: 'JARVIS Console',
@@ -91,7 +93,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: GITHUB_URLS.JARVIS_CONSOLE,
     ctaLabel: 'Open JARVIS Console on GitHub',
     a: 18, e: 0.14, inc: 0.12, node: 0.9, phase: 0.8, period: period(18),
-    tempK: 7500, size: 0.27,
+    tempK: 7500, size: 0.27, labelTier: 'quiet',
   },
   {
     name: 'Chimeraforge',
@@ -99,7 +101,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: PYPI_URL,
     ctaLabel: 'Open chimeraforge on PyPI',
     a: 20, e: 0.05, inc: 0.06, node: 5.2, phase: 0.2, period: period(20),
-    tempK: 3800, size: 0.28,
+    tempK: 3800, size: 0.28, labelTier: 'quiet',
   },
   {
     // Thin channel adapters — the red dwarf of the system.
@@ -108,7 +110,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: GITHUB_URLS.ECHO,
     ctaLabel: 'Open Echo on GitHub',
     a: 21.5, e: 0.08, inc: 0.42, node: 4.4, phase: 4.2, period: period(21.5),
-    tempK: 3200, size: 0.16,
+    tempK: 3200, size: 0.16, labelTier: 'quiet',
   },
   {
     name: 'Chimeradroid',
@@ -116,7 +118,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: GITHUB_URLS.CHIMERADROID,
     ctaLabel: 'Open Chimeradroid on GitHub',
     a: 23, e: 0.10, inc: 0.16, node: 3.6, phase: 2.4, period: period(23),
-    tempK: 4200, size: 0.22,
+    tempK: 4200, size: 0.22, labelTier: 'quiet',
   },
   {
     // The documentation layer — outermost stable orbit, sees everything.
@@ -125,7 +127,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: GITHUB_URLS.BANTERBLOGS,
     ctaLabel: "Open this site's source",
     a: 25, e: 0.06, inc: 0.20, node: 2.9, phase: 2.0, period: period(25),
-    tempK: 5800, size: 0.24,
+    tempK: 5800, size: 0.24, labelTier: 'quiet',
   },
   {
     // The S2 analog: embodied autonomy on a high-eccentricity plunge orbit —
@@ -135,6 +137,6 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
     href: GITHUB_URLS.PROJECT_WYVERN,
     ctaLabel: 'Open Project Wyvern on GitHub',
     a: 19, e: 0.82, inc: 0.36, node: 5.8, phase: 5.9, period: period(19),
-    tempK: 9500, size: 0.26,
+    tempK: 9500, size: 0.26, labelTier: 'quiet',
   },
 ];

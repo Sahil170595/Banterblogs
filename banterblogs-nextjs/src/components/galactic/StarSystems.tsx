@@ -1,37 +1,69 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Line, Html, useCursor } from '@react-three/drei';
+import { Line, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { STAR_SYSTEMS, type GalacticSelection, type StarSystemDef } from './systems';
 import { Sun } from './Sun';
 import { SHADOW_RADIUS } from './BlackHole';
 import { blackbodyToRGB } from './blackbody';
 
-// Star-chart typography: labels render in a serif (the Times-family star
-// atlas look) tinted to each sun's blackbody color.
-const CHART_FONT = '"Times New Roman", Times, Georgia, serif';
+const LABEL_TEXTURE_HEIGHT = 64;
+const LABEL_WORLD_HEIGHT = 0.5;
+const LABEL_REFERENCE_DISTANCE = 27;
+const LABEL_FONT = '600 20px monospace';
 
-function starCss(tempK: number): string {
+function starRgb(tempK: number): [number, number, number] {
   const [r, g, b] = blackbodyToRGB(tempK);
-  return `rgb(${Math.round(r * 255)} ${Math.round(g * 255)} ${Math.round(b * 255)})`;
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-// Nine repos on real Keplerian orbits — the interactive layer of the scene.
-// Positions come from solving Kepler's equation (Newton iterations on the
-// eccentric anomaly) so eccentric systems genuinely accelerate through
-// periapsis — Project Wyvern's e=0.82 plunge is the S2-around-Sgr A* moment.
-// Hover names a system; click opens it.
+function starCss(tempK: number): string {
+  const [r, g, b] = starRgb(tempK);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function createLabelTexture(name: string, tempK: number): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  const measureContext = canvas.getContext('2d');
+  if (!measureContext) throw new Error(`Unable to measure label texture for ${name}`);
+  measureContext.font = LABEL_FONT;
+  canvas.width = Math.ceil(measureContext.measureText(name.toUpperCase()).width + name.length * 3 + 52);
+  canvas.height = LABEL_TEXTURE_HEIGHT;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error(`Unable to create label texture for ${name}`);
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.textBaseline = 'middle';
+  context.font = LABEL_FONT;
+  context.letterSpacing = '3px';
+  context.shadowColor = 'rgba(0, 0, 0, 0.95)';
+  context.shadowBlur = 10;
+  context.fillStyle = starCss(tempK);
+  context.beginPath();
+  context.arc(18, canvas.height / 2, 4, 0, Math.PI * 2);
+  context.fill();
+  context.fillText(name.toUpperCase(), 34, canvas.height / 2 + 1);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  return texture;
+}
 
 const NEWTON_ITERATIONS = 5;
 
 function solveEccentricAnomaly(meanAnomaly: number, e: number): number {
-  let E = meanAnomaly;
+  let eccentricAnomaly = meanAnomaly;
   for (let i = 0; i < NEWTON_ITERATIONS; i++) {
-    E = E - (E - e * Math.sin(E) - meanAnomaly) / (1 - e * Math.cos(E));
+    eccentricAnomaly -=
+      (eccentricAnomaly - e * Math.sin(eccentricAnomaly) - meanAnomaly) /
+      (1 - e * Math.cos(eccentricAnomaly));
   }
-  return E;
+  return eccentricAnomaly;
 }
 
 function orbitalPosition(
@@ -40,57 +72,58 @@ function orbitalPosition(
   tSeconds: number,
   out: THREE.Vector3,
 ): THREE.Vector3 {
-  const M = def.phase + (2 * Math.PI * tSeconds) / def.period;
-  const E = solveEccentricAnomaly(M % (2 * Math.PI), def.e);
-  const x = def.a * (Math.cos(E) - def.e);
-  const z = def.a * Math.sqrt(1 - def.e * def.e) * Math.sin(E);
-  // orientation is the precomputed inc/node rotation - no per-frame allocation
+  const meanAnomaly = def.phase + (2 * Math.PI * tSeconds) / def.period;
+  const eccentricAnomaly = solveEccentricAnomaly(meanAnomaly % (2 * Math.PI), def.e);
+  const x = def.a * (Math.cos(eccentricAnomaly) - def.e);
+  const z = def.a * Math.sqrt(1 - def.e * def.e) * Math.sin(eccentricAnomaly);
   return out.set(x, 0, z).applyQuaternion(orientation);
 }
 
 function orbitPath(def: StarSystemDef, segments = 128): THREE.Vector3[] {
   const points: THREE.Vector3[] = [];
   for (let i = 0; i <= segments; i++) {
-    const E = (i / segments) * Math.PI * 2;
-    const x = def.a * (Math.cos(E) - def.e);
-    const z = def.a * Math.sqrt(1 - def.e * def.e) * Math.sin(E);
-    const v = new THREE.Vector3(x, 0, z);
-    v.applyEuler(new THREE.Euler(def.inc, def.node, 0, 'YXZ'));
-    points.push(v);
+    const eccentricAnomaly = (i / segments) * Math.PI * 2;
+    const x = def.a * (Math.cos(eccentricAnomaly) - def.e);
+    const z = def.a * Math.sqrt(1 - def.e * def.e) * Math.sin(eccentricAnomaly);
+    points.push(
+      new THREE.Vector3(x, 0, z).applyEuler(new THREE.Euler(def.inc, def.node, 0, 'YXZ')),
+    );
   }
   return points;
 }
 
 interface StarProps {
   def: StarSystemDef;
+  hovered: boolean;
+  onHoverChange: (hovered: boolean) => void;
   onSelect: (selection: GalacticSelection) => void;
 }
 
-function Star({ def, onSelect }: StarProps) {
+function Star({ def, hovered, onHoverChange, onSelect }: StarProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const labelRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<THREE.Sprite>(null);
+  const labelMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const scratch = useMemo(() => new THREE.Vector3(), []);
   const camLocal = useMemo(() => new THREE.Vector3(), []);
   const rayDir = useMemo(() => new THREE.Vector3(), []);
   const closest = useMemo(() => new THREE.Vector3(), []);
+  const projected = useMemo(() => new THREE.Vector3(), []);
   const orientation = useMemo(
     () => new THREE.Quaternion().setFromEuler(new THREE.Euler(def.inc, def.node, 0, 'YXZ')),
     [def.inc, def.node],
   );
-  const [hovered, setHovered] = useState(false);
+  const labelTexture = useMemo(() => createLabelTexture(def.name, def.tempK), [def.name, def.tempK]);
+  const labelAspect = labelTexture.image.width / labelTexture.image.height;
+  useEffect(() => () => labelTexture.dispose(), [labelTexture]);
   useCursor(hovered);
 
   useFrame(({ clock, camera }) => {
     const group = groupRef.current;
-    if (!group) return;
+    const label = labelRef.current;
+    const labelMaterial = labelMaterialRef.current;
+    if (!group || !label || !labelMaterial || !group.parent) return;
     group.position.copy(orbitalPosition(def, orientation, clock.elapsedTime, scratch));
 
-    // Hide the label while the star transits BEHIND the shadow (the black
-    // hole sits at this group's parent origin): closest-approach test of the
-    // camera->star segment against the shadow sphere. DOM opacity toggled
-    // directly — no React re-render on the frame loop.
-    const label = labelRef.current;
-    if (!label || !group.parent) return;
     camLocal.copy(camera.position);
     group.parent.worldToLocal(camLocal);
     rayDir.copy(group.position).sub(camLocal);
@@ -100,52 +133,76 @@ function Star({ def, onSelect }: StarProps) {
       t > 0 &&
       t < 1 &&
       closest.copy(rayDir).multiplyScalar(t).add(camLocal).length() < SHADOW_RADIUS * 0.98;
-    label.style.opacity = behindShadow ? '0' : '1';
+
+    projected.copy(group.position);
+    group.parent.localToWorld(projected);
+    const cameraDistance = camera.position.distanceTo(projected);
+    const distanceScale = THREE.MathUtils.clamp(cameraDistance / LABEL_REFERENCE_DISTANCE, 0.7, 1.35);
+    projected.project(camera);
+    const insideCopySafeZone = projected.x < -0.3 && projected.y > 0.22;
+    const restingOpacity = def.labelTier === 'anchor' ? 0.72 : 0;
+    labelMaterial.opacity =
+      behindShadow || insideCopySafeZone ? 0 : hovered ? 1 : restingOpacity;
+    label.scale.set(
+      labelAspect * LABEL_WORLD_HEIGHT * distanceScale,
+      LABEL_WORLD_HEIGHT * distanceScale,
+      1,
+    );
   });
 
   return (
     <group ref={groupRef}>
       <Sun tempK={def.tempK} size={def.size * 1.05} seed={def.a + def.e * 10} />
-      {/* generous invisible hit target — the star itself is a few pixels */}
       <mesh
         visible={false}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          onHoverChange(true);
         }}
-        onPointerOut={() => setHovered(false)}
-        onClick={(e) => {
-          e.stopPropagation();
+        onPointerOut={() => onHoverChange(false)}
+        onClick={(event) => {
+          event.stopPropagation();
           onSelect({ kind: 'star', system: def });
         }}
       >
         <sphereGeometry args={[Math.max(def.size * 3.2, 1.15), 8, 8]} />
       </mesh>
-      {/* always-on star-atlas tag: transparent block, serif, sun-colored */}
-      <Html
-        position={[0, def.size + 0.7, 0]}
-        center
-        distanceFactor={24}
-        style={{ pointerEvents: 'none' }}
-        zIndexRange={[10, 0]}
-      >
-        <div
-          ref={labelRef}
-          className="whitespace-nowrap transition-all duration-200"
-          // width: max-content beats the Html wrapper's constraint — no mid-name wraps
-          style={{
-            width: 'max-content',
-            fontFamily: CHART_FONT,
-            color: starCss(def.tempK),
-            textShadow: '0 1px 14px rgb(0 0 0), 0 0 5px rgb(0 0 0)',
-          }}
-        >
-          <span className="text-[12px] italic tracking-[0.08em]">{def.name}</span>
-          {hovered && (
-            <span className="ml-2 text-[10px] not-italic opacity-80">{def.blurb}</span>
-          )}
-        </div>
-      </Html>
+
+      <sprite ref={labelRef} position={[0, def.size + 0.72, 0]} renderOrder={4}>
+        <spriteMaterial
+          ref={labelMaterialRef}
+          map={labelTexture}
+          transparent
+          opacity={def.labelTier === 'anchor' ? 0.72 : 0}
+          depthTest={false}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </sprite>
+    </group>
+  );
+}
+
+interface SystemProps {
+  def: StarSystemDef;
+  path: THREE.Vector3[];
+  onSelect: (selection: GalacticSelection) => void;
+}
+
+function System({ def, path, onSelect }: SystemProps) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <group>
+      <Line
+        points={path}
+        color={hovered ? starCss(def.tempK) : '#8a8f99'}
+        transparent
+        opacity={hovered ? 0.22 : 0.012}
+        linewidth={1}
+        depthWrite={false}
+      />
+      <Star def={def} hovered={hovered} onHoverChange={setHovered} onSelect={onSelect} />
     </group>
   );
 }
@@ -159,12 +216,8 @@ export function StarSystems({ onSelect }: StarSystemsProps) {
 
   return (
     <group>
-      {STAR_SYSTEMS.map((def, i) => (
-        <group key={def.name}>
-          {/* near-invisible until you look for them — emptiness budget */}
-          <Line points={paths[i]} color="#8a8f99" transparent opacity={0.035} linewidth={1} />
-          <Star def={def} onSelect={onSelect} />
-        </group>
+      {STAR_SYSTEMS.map((def, index) => (
+        <System key={def.name} def={def} path={paths[index]} onSelect={onSelect} />
       ))}
     </group>
   );

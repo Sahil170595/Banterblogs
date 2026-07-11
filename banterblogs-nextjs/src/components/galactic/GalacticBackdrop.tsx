@@ -24,11 +24,11 @@ function Poster() {
       className="absolute inset-0"
       style={{
         background: [
-          // photon ring + disk glow, right-of-center like the live scene
-          'radial-gradient(ellipse 42% 10% at 62% 52%, hsl(16 95% 53% / 0.55), transparent 60%)',
-          'radial-gradient(circle 90px at 62% 50%, transparent 54px, hsl(28 90% 62% / 0.5) 58px, transparent 66px)',
-          'radial-gradient(circle at 62% 50%, #000 52px, transparent 54px)',
-          'radial-gradient(ellipse at 30% 20%, hsl(220 30% 8%), transparent 70%)',
+          'radial-gradient(ellipse 34% 5% at 58% 53%, hsl(25 92% 58% / 0.72), transparent 72%)',
+          'radial-gradient(ellipse 22% 18% at 58% 49%, transparent 50%, hsl(27 95% 72% / 0.28) 55%, transparent 66%)',
+          'radial-gradient(circle 112px at 58% 51%, transparent 65px, hsl(31 92% 72% / 0.75) 68px, transparent 72px)',
+          'radial-gradient(circle at 58% 51%, #000 65px, transparent 67px)',
+          'radial-gradient(ellipse at 52% 25%, hsl(28 35% 10% / 0.45), transparent 55%)',
           '#04060a',
         ].join(', '),
       }}
@@ -60,7 +60,7 @@ export function GalacticBackdrop() {
   return (
     <>
       {mode === 'scene' ? (
-        <div className="absolute inset-0" aria-hidden="true">
+        <div className="absolute inset-0 z-0 isolate overflow-hidden" aria-hidden="true">
           <GalacticScene onSelect={setSelection} />
         </div>
       ) : (

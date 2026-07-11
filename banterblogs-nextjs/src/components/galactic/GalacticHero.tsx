@@ -3,37 +3,38 @@ import { ArrowRight } from 'lucide-react';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { GalacticBackdrop } from './GalacticBackdrop';
 
-// Full-page galactic-center landing. The scene owns the whole viewport (the
-// nav floats transparent above it); the title sits tiny in the top-left like
-// a star-chart annotation. The black hole is Chimera, the nine orbiting
-// systems are the repos. Copy stays server-rendered for SEO/LCP.
-
 export function GalacticHero() {
   return (
     <section className="relative h-[100svh] min-h-[560px] overflow-hidden">
       <GalacticBackdrop />
 
-      {/* faint top vignette so the transparent nav stays legible */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/70 to-transparent"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_56%_48%,transparent_0%,transparent_33%,rgba(2,4,8,0.18)_62%,rgba(2,4,8,0.72)_100%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background/85 via-background/30 to-transparent"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background/75 to-transparent"
         aria-hidden="true"
       />
 
-      {/* pointer-events-none so the scene receives hover/click everywhere
-          except the actual controls, which re-enable them */}
-      <div className="pointer-events-none relative flex h-full flex-col">
-        {/* tiny corner annotation — the header already carries the wordmark,
-            so the h1 is screen-reader/SEO only (blind-review L8) */}
-        <div className="ml-6 mt-24 max-w-xs space-y-2 md:ml-10">
-          <h1 className="sr-only">
-            Chimeraforge — the Chimera galactic center: nine repositories orbiting one
-            constitutional AI platform
-          </h1>
-          <p className="text-[11px] leading-relaxed text-muted-foreground/80">
-            Nine repositories orbiting one platform — {REPORTS.DISPLAY} technical reports,{' '}
-            {MEASUREMENTS.DISPLAY} measurements.
+      <div className="pointer-events-none relative z-10 flex h-full flex-col">
+        <div className="ml-5 mt-24 max-w-[300px] border-l border-primary/60 bg-gradient-to-r from-black/60 via-black/30 to-transparent py-2 pl-4 pr-8 sm:ml-8 sm:mt-28 md:max-w-md md:pl-5">
+          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.28em] text-primary/85">
+            Chimera / system atlas 001
           </p>
-          <div className="pointer-events-auto flex items-center gap-4 pt-1 text-[11px] font-semibold">
+          <h1 className="display mt-3 text-xl font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-2xl md:text-3xl">
+            Nine systems.
+            <br />
+            <span className="text-foreground/45">One constitutional core.</span>
+          </h1>
+          <p className="mt-3 max-w-xs text-[10px] leading-relaxed text-muted-foreground/75 sm:text-[11px]">
+            {REPORTS.DISPLAY} technical reports and {MEASUREMENTS.DISPLAY} measurements in orbit.
+          </p>
+          <div className="pointer-events-auto mt-4 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-[11px]">
             <Link
               href="/reports"
               className="inline-flex items-center gap-1 text-primary transition-colors hover:text-primary/80"
@@ -45,26 +46,26 @@ export function GalacticHero() {
               href="/home"
               className="text-muted-foreground transition-colors hover:text-foreground"
             >
-              Site overview
+              Overview
             </Link>
           </div>
         </div>
 
-        {/* the quotable physics caption */}
         <p
-          className="absolute bottom-16 right-4 hidden max-w-[240px] text-right font-mono text-[10px] leading-relaxed text-muted-foreground lg:block"
+          className="absolute bottom-8 right-20 hidden max-w-[280px] text-right font-mono text-[9px] uppercase leading-relaxed tracking-[0.08em] text-muted-foreground/55 lg:block"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
           Orbits: Keplerian, solved per frame.
           <br />
-          Disk: T ∝ r<sup>-3/4</sup>, doppler-beamed.
+          Disk: T &#8733; r<sup>-3/4</sup>, doppler-beamed.
         </p>
 
         <p
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground"
+          className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/55 backdrop-blur-sm"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
-          Click a star · Click the core
+          <span className="h-1 w-1 animate-pulse rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))]" />
+          Select a system
         </p>
       </div>
     </section>

@@ -45,11 +45,11 @@ export function Header() {
         </Link>
 
         <div className="flex flex-1 items-center justify-end gap-4">
-          <div className="hidden flex-1 md:block lg:max-w-[180px] xl:max-w-xs 2xl:max-w-sm">
+          <div className={isLanding ? 'hidden' : 'hidden flex-1 md:block lg:max-w-[180px] xl:max-w-xs 2xl:max-w-sm'}>
             <SearchDialog />
           </div>
 
-          <nav className="hidden items-center gap-1 text-sm font-semibold text-muted-foreground lg:flex">
+          <nav className={`hidden items-center gap-1 font-semibold text-muted-foreground lg:flex ${isLanding ? 'font-mono text-[10px] uppercase tracking-[0.1em]' : 'text-sm'}`}>
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}

@@ -63,7 +63,7 @@ export function SelectionCard({ selection, onClose }: SelectionCardProps) {
       role="dialog"
       aria-modal="false"
       aria-label={`${name} details`}
-      className="pointer-events-auto absolute bottom-24 left-4 right-4 z-20 mx-auto max-w-sm rounded-2xl border border-border/60 bg-background/90 p-5 shadow-2xl backdrop-blur-xl md:left-auto md:right-10 md:top-1/2 md:bottom-auto md:mx-0 md:w-96 md:max-w-none md:-translate-y-1/2"
+      className="pointer-events-auto absolute bottom-24 left-4 right-4 z-20 mx-auto max-w-sm rounded-2xl border border-white/10 bg-[#05070a]/90 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.65)] backdrop-blur-2xl md:left-auto md:right-10 md:top-1/2 md:bottom-auto md:mx-0 md:w-96 md:max-w-none md:-translate-y-1/2"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
