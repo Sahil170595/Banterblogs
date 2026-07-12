@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { GalacticHero } from '@/components/galactic/GalacticHero';
+import { landingJsonLd } from '@/components/galactic/landingJsonLd';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
@@ -16,6 +17,10 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <ErrorBoundary>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(landingJsonLd()) }}
+      />
       <GalacticHero />
     </ErrorBoundary>
   );

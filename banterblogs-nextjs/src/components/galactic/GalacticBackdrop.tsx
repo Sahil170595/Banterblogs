@@ -9,8 +9,9 @@ import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems'
 // loads only in capable, motion-permitted browsers; everyone else gets the
 // CSS poster. The accessible systems nav below renders in ALL modes — it is
 // the keyboard/screen-reader/no-WebGL path to the same selection cards the
-// canvas drives, and it puts the nine system names in the server-rendered
-// HTML for crawlers.
+// canvas drives, and it puts the nine system names AND blurbs in the
+// server-rendered HTML (SSR emits the poster branch, so the sr-only spans
+// there are what crawlers and text-only agents read).
 
 const GalacticScene = dynamic(() => import('./GalacticScene'), {
   ssr: false,
@@ -101,6 +102,9 @@ export function GalacticBackdrop() {
               onClick={(e) => select(e, { kind: 'core' })}
             >
               {CORE_SELECTION.name} — {CORE_SELECTION.eyebrow}
+              {/* always sr-only: keeps the scene focus chip compact while the
+                  blurb stays in SSR text for crawlers and screen readers */}
+              <span className="sr-only">. {CORE_SELECTION.blurb}</span>
             </a>
           </li>
           {STAR_SYSTEMS.map((system) => (
@@ -110,7 +114,11 @@ export function GalacticBackdrop() {
                 className={isPoster ? NAV_LINK_POSTER_CLASS : NAV_LINK_SCENE_CLASS}
                 onClick={(e) => select(e, { kind: 'star', system })}
               >
-                {isPoster ? system.name : `${system.name} — ${system.blurb}`}
+                {system.name}
+                {/* poster chips show the bare name; the blurb rides along
+                    sr-only so it is in the SSR HTML. Scene mode renders it
+                    plain — visible in the focus-reveal chip, as before. */}
+                <span className={isPoster ? 'sr-only' : undefined}> — {system.blurb}</span>
               </a>
             </li>
           ))}
