@@ -144,6 +144,13 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 - URL: https://pypi.org/project/quantfit/
 - GitHub: https://github.com/Sahil170595/quantfit
 
+## Upstream Contributions
+
+- PyTorch PR #175562 (merged 2026-06-04) — cudagraph_trees deallocation: hard assert → warning; surfaced via torch.compile decode diagnosis
+- vLLM PR #45207 (merged 2026-07-07) — pad Mamba page size instead of scaling block_size in unify_kv_cache_spec_page_size (hybrid attention/Mamba KV layout fix)
+- Triton PR #10819 (merged 2026-07-08) — tl.flip compile-time crash on documented default dim=None
+- Triton PR #10822 (under review) — shared-memory gather fallback when no warp-local layout exists
+
 ## Links
 
 - Site: https://chimeraforge.vercel.app

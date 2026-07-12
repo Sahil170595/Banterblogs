@@ -170,6 +170,19 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     evidence: [{ label: 'Validation gist + repro (PR #184102)', href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb' }],
   },
   {
+    label: 'vLLM PR #45207 — merged to vLLM main',
+    href: 'https://github.com/vllm-project/vllm/pull/45207',
+    detail:
+      'Authored an upstream vLLM bugfix, merged 2026-07-07 (fixes #43626): unify_kv_cache_spec_page_size unified differing KV page sizes by scaling block_size — a no-op for Mamba layers, whose page size is set by their state shapes. The fix pads the Mamba page size directly so hybrid attention/Mamba models get a consistent KV-cache layout (+101/−5 with regression tests).',
+  },
+  {
+    label: 'Triton PR #10819 — merged to triton-lang/triton',
+    href: 'https://github.com/triton-lang/triton/pull/10819',
+    detail:
+      'Authored an upstream Triton frontend fix, merged 2026-07-08: tl.flip crashed at compile time on its documented default (dim=None) because the bounds-check static_assert ran before dim resolution. A second, backend PR (#10822, under review) fixes a compiler abort in tl.gather when the index tensor is much longer than the source along the gather axis (issue #5836), by falling back to a shared-memory gather when no warp-local layout exists.',
+    evidence: [{ label: 'PR #10822 — backend gather fallback (under review)', href: 'https://github.com/triton-lang/triton/pull/10822' }],
+  },
+  {
     label: 'QuantSafe Certifier — signed release-gate for quantized models',
     href: 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier',
     detail:
