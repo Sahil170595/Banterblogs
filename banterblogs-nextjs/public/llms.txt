@@ -47,7 +47,7 @@ Messaging channel adapters — Slack and Discord bridges to JARVIS with session 
 Web console for JARVIS — chat with streaming, control room dashboard, cognitive agent ELO, tool catalog, workflow management, memory browser.
 
 ### 8. Banterblogs / Chimeraforge Site (TypeScript / Next.js)
-This site (https://chimeraforge.vercel.app). 268 auto-generated episodes from git commits (per-commit stream archived 2026-06-26), research archive of 55 technical reports with phase whitepapers + conclusive synthesis docs + extended appendices. Next.js 16 with SSG + ISR.
+This site (https://chimeraforge.vercel.app). The landing page is an interactive 3D galactic-center map of the ecosystem (the black hole is the Chimera core; the nine orbiting star systems are the repos — Keplerian orbits, Shakura-Sunyaev disk); the classic overview lives at /home. 268 auto-generated episodes from git commits (per-commit stream archived 2026-06-26), research archive of 55 technical reports with phase whitepapers + conclusive synthesis docs + extended appendices. Next.js 16 with SSG + ISR.
 
 ### 9. Project Wyvern
 Embodied autonomy extension of the constitutional architecture. Governed mission-execution plane between Chimera control and PX4/ArduPilot, with a 5-tier authority hierarchy, cryptographic mission replay, and OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP on PX4 + ROS 2 + Gazebo in progress.
@@ -154,6 +154,7 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 ## Links
 
 - Site: https://chimeraforge.vercel.app
+- Overview (classic homepage): https://chimeraforge.vercel.app/home
 - PyPI: https://pypi.org/project/chimeraforge/
 - PyPI (quantfit, standalone CLI): https://pypi.org/project/quantfit/
 - GitHub (profile / canonical README): https://github.com/Sahil170595

@@ -19,6 +19,25 @@ const eslintConfig = [
     },
   },
   {
+    // React Three Fiber's render loop is imperative by design — useFrame
+    // mutates three.js objects (camera, positions, uniforms) every frame.
+    // react-hooks/immutability cannot model that and flags all of it.
+    // only the R3F render-loop files need the exemption; plain DOM components
+    // (SelectionCard, GalacticHero, GalacticBackdrop) do not
+    files: [
+      "src/components/galactic/GalacticScene.tsx",
+      "src/components/galactic/BlackHole.tsx",
+      "src/components/galactic/AccretionDisk.tsx",
+      "src/components/galactic/GargantuaHalo.tsx",
+      "src/components/galactic/StarSystems.tsx",
+      "src/components/galactic/Sun.tsx",
+      "src/components/galactic/Starfield.tsx",
+    ],
+    rules: {
+      "react-hooks/immutability": "off",
+    },
+  },
+  {
     // The 5 /show scene components share a deliberate SSR-hydration bridge
     // (mounted-flag + reduced-motion sync via setState-in-effect) that this
     // heuristic rule can't distinguish from cascading-render bugs. Scoped

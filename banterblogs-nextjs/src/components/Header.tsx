@@ -8,6 +8,7 @@ import { SearchDialog } from './SearchDialog';
 import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
 
 const NAV_ITEMS = [
+  { href: '/home', label: 'Overview' },
   { href: '/platform', label: 'Platform' },
   { href: '/reports', label: 'Research' },
   { href: '/papers', label: 'Papers' },
@@ -20,9 +21,19 @@ const NAV_ITEMS = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  // On the galactic landing the nav floats transparent over the scene —
+  // full-bleed space, nothing boxed off. Everywhere else it's the standard
+  // sticky blurred bar.
+  const isLanding = pathname === '/';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/60 after:to-transparent">
+    <header
+      className={
+        isLanding
+          ? 'fixed top-0 z-50 w-full bg-transparent'
+          : 'sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/60 after:to-transparent'
+      }
+    >
       <div className="container flex h-[72px] items-center justify-between gap-6">
         <Link href="/" className="flex items-center gap-2 sm:gap-3">
           <span className="inline-flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm sm:text-base font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">
@@ -34,11 +45,11 @@ export function Header() {
         </Link>
 
         <div className="flex flex-1 items-center justify-end gap-4">
-          <div className="hidden flex-1 md:block lg:max-w-[180px] xl:max-w-xs 2xl:max-w-sm">
+          <div className={isLanding ? 'hidden' : 'hidden flex-1 md:block lg:max-w-[180px] xl:max-w-xs 2xl:max-w-sm'}>
             <SearchDialog />
           </div>
 
-          <nav className="hidden items-center gap-1 text-sm font-semibold text-muted-foreground lg:flex">
+          <nav className={`hidden items-center gap-1 font-semibold text-muted-foreground lg:flex ${isLanding ? 'font-mono text-[10px] uppercase tracking-[0.1em]' : 'text-sm'}`}>
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
