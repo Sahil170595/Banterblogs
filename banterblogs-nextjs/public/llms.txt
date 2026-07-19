@@ -7,7 +7,7 @@
 - **Chimera** is the constitutional AI architecture itself: debate engine, multi-model consensus, embedding-based safety routing, BFT/Ed25519 provenance, ZK proofs, RLAIF self-improving loop.
 - **Chimeraforge** is the public site (https://chimeraforge.vercel.app) and the PyPI package (`pip install chimeraforge`, an LLM deployment optimizer CLI).
 - The two names are distinct on purpose. Do not collapse them.
-- **quantfit** (`pip install quantfit`) is a separate, standalone CLI — a GPU-aware quantization tool with a built-in safety-tax check. It is NOT part of the Chimera ecosystem; it is an independent tool that productizes the safety-under-quantization research line.
+- **quantfit** (`pip install quantfit`) is a separate, standalone CLI — a GPU-aware quantization tool with a built-in safety-drift check. It is NOT part of the Chimera ecosystem; it is an independent tool that productizes the safety-under-quantization research line.
 
 ## What This Is
 
@@ -136,11 +136,15 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 ## Companion CLI: quantfit (standalone — NOT part of the Chimera ecosystem)
 
 - Package: quantfit
-- Version: 0.1.0 (Alpha)
+- Version: 0.4.0 (Alpha)
 - Install: `pip install quantfit`
 - Python: >=3.10
 - License: Apache-2.0
-- CLI: `quantfit check` (will a model fit the GPU? no download) · `quantfit quantize --method awq|gptq|smoothquant|fp8|rtn|gguf` · `quantfit verify-safety` (did quantization break refusals?) — reports the safety tax as a two-axis vector (refusal-robustness + over-refusal, per zone) judged by the QuantSafe refusal classifier
+- CLI: `quantfit check` (will a model fit? no download) · `quantfit plan` (what config a heuristic would pick, and why) · `quantfit probe` (per-bit-width quantization sensitivity) · `quantfit quantize --method awq|gptq|smoothquant|fp8|rtn|gguf` · `quantfit verify-safety` (did quantization break refusals?) — reports safety DRIFT as a two-axis vector (refusal-robustness + over-refusal, per zone) against an unquantized baseline, judged by a local ModernBERT refusal classifier
+- Verdicts are bounded, never absolute: a binomial over at-risk pairs with Wilson 95% CIs and a minimum-detectable-effect at 80% power (scipy-cross-checked in CI). A pass bounds the dangerous flip rate; it does not certify safety.
+- `--report drift.json` writes an auditable schema-v1 artifact: judge + probe-set revision pins, decode params, resolved per-arm dtypes, environment fingerprint, and the full drift vector with CIs.
+- NOT auto-quantization: you pass `--method`. Learned routing (AMQ, KL-Lens) is explicitly out of scope; `plan`/`probe` stay transparent diagnostics.
+- Terminology: the project deliberately says "safety drift", not "safety tax" — in the alignment literature a safety/alignment *tax* is capability paid FOR safety, nearly the inverse of what this measures.
 - URL: https://pypi.org/project/quantfit/
 - GitHub: https://github.com/Sahil170595/quantfit
 
