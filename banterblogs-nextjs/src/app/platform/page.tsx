@@ -294,10 +294,11 @@ export default async function PlatformPage() {
               <h3 className="text-sm font-semibold">quantfit</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              GPU-aware quantization CLI with a built-in safety-tax check. Quantizes across the SOTA
-              matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF), routes by GPU capacity
-              (in-GPU / CPU-offload / refuse), and measures whether quantization broke refusals —
-              a two-axis vector (refusal-robustness + over-refusal) via the QuantSafe classifier.
+              GPU-aware quantization CLI with a built-in safety-drift check (v0.4.0). Quantizes across
+              the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF), refuses honestly when a
+              model will not fit, and measures whether quantization broke refusals — a two-axis vector
+              (refusal-robustness + over-refusal) against an unquantized baseline, with bounded
+              Wilson-CI verdicts and an auditable drift report.
             </p>
             <Link
               href="https://pypi.org/project/quantfit/"

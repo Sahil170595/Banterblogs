@@ -151,10 +151,10 @@ const OPEN_SOURCE: OpenSourceItem[] = [
       'Model-agnostic 5-gate planner (v0.5.0 plans any registry / Ollama / HuggingFace model); 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) + opt-in safety gate (TR134 refusal + TR142 RTSI), dual-language harnesses (Python + Rust), 450 tests. 2,000+ downloads on PyPI.',
   },
   {
-    label: 'quantfit — PyPI quantization CLI with a safety-tax check',
+    label: 'quantfit — PyPI quantization CLI with a safety-drift check',
     href: 'https://pypi.org/project/quantfit/',
     detail:
-      'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), is honest about whether a model fits the GPU (3-tier: in-GPU / CPU-offload / refuse), and measures the safety tax of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) judged by the QuantSafe refusal classifier. v0.1.0 (Alpha), Apache-2.0.',
+      'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), refuses honestly when a model will not fit (capacity read from HF metadata, no download), and measures the safety drift of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) against an unquantized baseline, judged by a local ModernBERT refusal classifier. Verdicts are bounded, not absolute: a binomial over at-risk pairs with Wilson 95% CIs and a minimum-detectable-effect at 80% power, cross-checked against scipy in CI; `--report drift.json` emits an auditable schema-v1 artifact (judge/probe revision pins, decode params, resolved dtypes, environment fingerprint). Ships transparent `plan` / `probe` diagnostics rather than auto-quantization. v0.4.0 (Alpha), Apache-2.0.',
   },
   {
     label: 'HuggingFace — 16 model releases',
