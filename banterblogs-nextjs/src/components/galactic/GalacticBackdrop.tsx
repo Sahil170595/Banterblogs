@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { SelectionCard } from './SelectionCard';
+import { TrackingTicker, TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
 import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems';
 
 // Client island for the 3D scene. The scene chunk (three + fiber + drei)
@@ -52,6 +53,44 @@ const NAV_LINK_POSTER_CLASS =
 export function GalacticBackdrop() {
   const [mode, setMode] = useState<'pending' | 'scene' | 'poster'>('pending');
   const [selection, setSelection] = useState<GalacticSelection | null>(null);
+  // Tracking-ticker tour: -1 = pre-start (scene gets its cold open first)
+  const [featuredIndex, setFeaturedIndex] = useState(-1);
+  const [hoveredName, setHoveredName] = useState<string | null>(null);
+  // latest-value ref so the interval callback sees pause state without resubscribing
+  const tickerPausedRef = useRef(false);
+
+  useEffect(() => {
+    // user intent wins: never advance the tour under an open card or a hover
+    tickerPausedRef.current = selection !== null || hoveredName !== null;
+  }, [selection, hoveredName]);
+
+  useEffect(() => {
+    if (mode !== 'scene') return;
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const start = setTimeout(() => {
+      setFeaturedIndex(0);
+      interval = setInterval(() => {
+        if (tickerPausedRef.current) return;
+        setFeaturedIndex((index) => (index + 1) % STAR_SYSTEMS.length);
+      }, TICKER_INTERVAL_MS);
+    }, TICKER_START_DELAY_MS);
+    return () => {
+      clearTimeout(start);
+      clearInterval(interval);
+    };
+  }, [mode]);
+
+  // pointerOver on star B can fire before pointerOut on star A — only the
+  // owning star may clear its own hover
+  const handleStarHover = (name: string, hovering: boolean) =>
+    setHoveredName((prev) => (hovering ? name : prev === name ? null : prev));
+
+  const hoveredSystem = hoveredName
+    ? (STAR_SYSTEMS.find((system) => system.name === hoveredName) ?? null)
+    : null;
+  const featuredSystem = featuredIndex >= 0 ? STAR_SYSTEMS[featuredIndex] : null;
+  // hover overrides the tour; an open card silences the readout entirely
+  const tickerSystem = selection ? null : (hoveredSystem ?? featuredSystem);
 
   useEffect(() => {
     // Hydration-safe capability probe: the server can't know motion
@@ -78,10 +117,22 @@ export function GalacticBackdrop() {
     <>
       {mode === 'scene' ? (
         <div className="absolute inset-0 z-0 isolate overflow-hidden" aria-hidden="true">
-          <GalacticScene onSelect={setSelection} />
+          <GalacticScene
+            onSelect={setSelection}
+            featuredName={tickerSystem?.name ?? null}
+            onStarHover={handleStarHover}
+          />
         </div>
       ) : (
         <Poster />
+      )}
+
+      {mode === 'scene' && tickerSystem && (
+        <TrackingTicker
+          system={tickerSystem}
+          position={STAR_SYSTEMS.indexOf(tickerSystem) + 1}
+          total={STAR_SYSTEMS.length}
+        />
       )}
 
       {/* Keyboard / screen-reader / no-WebGL path to the same cards the

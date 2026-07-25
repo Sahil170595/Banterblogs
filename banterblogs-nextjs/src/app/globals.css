@@ -486,6 +486,13 @@ html {
   50% { background-color: hsl(var(--primary) / 0.4); }
 }
 
+/* Galactic landing: tracking-ticker system change (neutralized by the
+   global prefers-reduced-motion block below) */
+@keyframes galactic-ticker-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Enhanced Content Styles */
 .enhanced-content {
   position: relative;

@@ -42,9 +42,12 @@ function CameraRig() {
 
 interface GalacticSceneProps {
   onSelect: (selection: GalacticSelection | null) => void;
+  /** system narrated by the tracking ticker — its label/orbit glow like a hover */
+  featuredName: string | null;
+  onStarHover: (name: string, hovering: boolean) => void;
 }
 
-export default function GalacticScene({ onSelect }: GalacticSceneProps) {
+export default function GalacticScene({ onSelect, featuredName, onStarHover }: GalacticSceneProps) {
   const [dpr, setDpr] = useState(1.5);
 
   return (
@@ -65,7 +68,7 @@ export default function GalacticScene({ onSelect }: GalacticSceneProps) {
       <Starfield />
       <group position={TARGET_OFFSET.toArray()}>
         <BlackHole onSelect={onSelect} />
-        <StarSystems onSelect={onSelect} />
+        <StarSystems featuredName={featuredName} onSelect={onSelect} onHover={onStarHover} />
       </group>
       {/* multisampling off: EffectComposer defaults to 8x MSAA in WebGL2,
           silently negating antialias:false; bloom hides aliasing anyway */}
