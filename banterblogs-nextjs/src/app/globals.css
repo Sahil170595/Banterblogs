@@ -502,6 +502,26 @@ html {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.galactic-system-rail {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.galactic-rail-link::after {
+  content: "";
+  position: absolute;
+  inset: -1px 0 auto;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: currentColor;
+  transition: transform 240ms ease;
+}
+
+.galactic-rail-link:hover::after,
+.galactic-rail-link[aria-current="step"]::after {
+  transform: scaleX(1);
+}
+
 /* Enhanced Content Styles */
 .enhanced-content {
   position: relative;

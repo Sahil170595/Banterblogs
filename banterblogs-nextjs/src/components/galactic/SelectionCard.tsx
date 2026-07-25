@@ -14,6 +14,7 @@ import { blackbodyToRGB } from './blackbody';
 interface SelectionCardProps {
   selection: GalacticSelection;
   onClose: () => void;
+  restoreFocusTo?: HTMLElement | null;
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -21,15 +22,17 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 }
 
-export function SelectionCard({ selection, onClose }: SelectionCardProps) {
+export function SelectionCard({ selection, onClose, restoreFocusTo }: SelectionCardProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    restoreRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    restoreRef.current =
+      restoreFocusTo ??
+      (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     closeRef.current?.focus();
     return () => restoreRef.current?.focus();
-  }, [selection]);
+  }, [restoreFocusTo]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

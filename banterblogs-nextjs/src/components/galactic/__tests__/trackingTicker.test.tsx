@@ -33,8 +33,20 @@ describe('tracking ticker readout', () => {
       );
       expect(html).toContain(system.name);
       expect(html).toContain(system.blurb);
-      expect(html).toContain(`${index + 1} / ${STAR_SYSTEMS.length}`);
+      expect(html).toContain(
+        `${String(index + 1).padStart(2, '0')} / ${String(STAR_SYSTEMS.length).padStart(2, '0')}`,
+      );
     });
+  });
+
+  it('keeps the complete system blurb visible instead of ellipsizing it', () => {
+    const html = renderToStaticMarkup(
+      <TrackingTicker system={STAR_SYSTEMS[0]} position={1} total={STAR_SYSTEMS.length} />,
+    );
+
+    expect(html).not.toContain('truncate');
+    expect(html).not.toContain('text-ellipsis');
+    expect(html).not.toContain('overflow-hidden');
   });
 
   it('stays out of the accessibility tree — the systems nav is the SR path', () => {
