@@ -49,7 +49,9 @@ export function Header() {
             <SearchDialog />
           </div>
 
-          <nav className={`hidden items-center gap-1 font-semibold text-muted-foreground lg:flex ${isLanding ? 'font-mono text-[10px] uppercase tracking-[0.1em]' : 'text-sm'}`}>
+          {/* one nav language on every page — the landing's mono-uppercase is
+              the site's editorial register, not a landing-only costume */}
+          <nav className="hidden items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:flex">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
@@ -108,7 +110,7 @@ export function Header() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                className="block rounded-lg px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.label}
