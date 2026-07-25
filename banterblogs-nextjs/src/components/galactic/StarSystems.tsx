@@ -6,7 +6,13 @@ import { Line, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { STAR_SYSTEMS, type GalacticSelection, type StarSystemDef } from './systems';
 import { Sun } from './Sun';
-import { SHADOW_RADIUS, DISK_INNER_RADIUS, DISK_OUTER_RADIUS } from './BlackHole';
+import {
+  SHADOW_RADIUS,
+  DISK_INNER_RADIUS,
+  DISK_OUTER_RADIUS,
+  DISK_TILT_X,
+  DISK_TILT_Z,
+} from './BlackHole';
 import { blackbodyToRGB } from './blackbody';
 import {
   solveEccentricAnomaly,
@@ -21,20 +27,26 @@ const LABEL_REFERENCE_DISTANCE = 27;
 const LABEL_FONT = '600 20px monospace';
 // Resting visibility: anchors carry the atlas at rest; quiet systems stay
 // faint-but-perceivable (0 made the map read as wallpaper — blind review H2)
-const LABEL_RESTING_ANCHOR = 0.72;
-const LABEL_RESTING_QUIET = 0.35;
+const LABEL_RESTING_ANCHOR = 0.5;
+const LABEL_RESTING_QUIET = 0.14;
 // Tracked-by-ticker glow — just under hover's 1.0 so pointer intent still reads
-const LABEL_FEATURED = 0.92;
+const LABEL_FEATURED = 0.98;
 // Orbit lines: perceivable at rest, lit on hover
-const ORBIT_OPACITY_RESTING = 0.07;
-const ORBIT_OPACITY_HOVER = 0.22;
+const ORBIT_OPACITY_RESTING = 0.022;
+const ORBIT_OPACITY_HOVER = 0.34;
 // Interaction geometry
 const HIT_TARGET_SCALE = 3.2; // stars are a few pixels — hit sphere is generous
 const HIT_TARGET_MIN_RADIUS = 1.15;
 const SHADOW_OCCLUSION_MARGIN = 0.98; // slightly inside the silhouette edge
 // NDC region reserved for the hero copy block (top-left)
-const SAFE_ZONE_NDC_X = -0.3;
-const SAFE_ZONE_NDC_Y = 0.22;
+const SAFE_ZONE_NDC_X = 0.06;
+const SAFE_ZONE_NDC_Y = -0.55;
+const MOBILE_SAFE_ZONE_NDC_Y = 0.12;
+const INTERFACE_SAFE_ZONE_NDC_Y = -0.58;
+const MOBILE_VIEWPORT_BREAKPOINT_PX = 768;
+const DISK_OCCLUSION_ORIENTATION = new THREE.Quaternion().setFromEuler(
+  new THREE.Euler(DISK_TILT_X, 0, DISK_TILT_Z),
+);
 
 function starRgb(tempK: number): [number, number, number] {
   const [r, g, b] = blackbodyToRGB(tempK);
@@ -137,13 +149,12 @@ function Star({ def, hovered, featured, onHoverChange, onSelect }: StarProps) {
 
   const restingOpacity = def.labelTier === 'anchor' ? LABEL_RESTING_ANCHOR : LABEL_RESTING_QUIET;
 
-  useFrame(({ clock, camera }) => {
+  useFrame(({ clock, camera, size }) => {
     const group = groupRef.current;
     const label = labelRef.current;
     const labelMaterial = labelMaterialRef.current;
     if (!group || !group.parent) return;
     group.position.copy(orbitalPosition(def, orientation, clock.elapsedTime, scratch));
-    if (!label || !labelMaterial) return;
 
     camLocal.copy(camera.position);
     group.parent.worldToLocal(camLocal);
@@ -151,16 +162,34 @@ function Star({ def, hovered, featured, onHoverChange, onSelect }: StarProps) {
     // opaque disk sheet — a floating tag over a hidden star is an orphan
     const occluded =
       segmentOccludedBySphere(camLocal, group.position, SHADOW_RADIUS * SHADOW_OCCLUSION_MARGIN) ||
-      segmentCrossesDiskAnnulus(camLocal, group.position, DISK_INNER_RADIUS, DISK_OUTER_RADIUS);
+      segmentCrossesDiskAnnulus(
+        camLocal,
+        group.position,
+        DISK_INNER_RADIUS,
+        DISK_OUTER_RADIUS,
+        DISK_OCCLUSION_ORIENTATION,
+      );
 
     projected.copy(group.position);
     group.parent.localToWorld(projected);
     const cameraDistance = camera.position.distanceTo(projected);
     const distanceScale = THREE.MathUtils.clamp(cameraDistance / LABEL_REFERENCE_DISTANCE, 0.7, 1.35);
     projected.project(camera);
-    const insideCopySafeZone = projected.x < SAFE_ZONE_NDC_X && projected.y > SAFE_ZONE_NDC_Y;
+    const insideCopySafeZone =
+      size.width < MOBILE_VIEWPORT_BREAKPOINT_PX
+        ? projected.y > MOBILE_SAFE_ZONE_NDC_Y
+        : projected.x < SAFE_ZONE_NDC_X && projected.y > SAFE_ZONE_NDC_Y;
+    const insideInterfaceSafeZone = projected.y < INTERFACE_SAFE_ZONE_NDC_Y;
+    group.visible = !(insideCopySafeZone || insideInterfaceSafeZone);
+    if (!label || !labelMaterial) return;
     labelMaterial.opacity =
-      occluded || insideCopySafeZone ? 0 : hovered ? 1 : featured ? LABEL_FEATURED : restingOpacity;
+      occluded || insideCopySafeZone || insideInterfaceSafeZone
+        ? 0
+        : hovered
+          ? 1
+          : featured
+            ? LABEL_FEATURED
+            : restingOpacity;
     label.scale.set(
       labelAspect * LABEL_WORLD_HEIGHT * distanceScale,
       LABEL_WORLD_HEIGHT * distanceScale,
@@ -170,9 +199,8 @@ function Star({ def, hovered, featured, onHoverChange, onSelect }: StarProps) {
 
   return (
     <group ref={groupRef}>
-      <Sun tempK={def.tempK} size={def.size * 1.05} seed={def.a + def.e * 10} />
+      <Sun tempK={def.tempK} size={def.size * 1.05} />
       <mesh
-        visible={false}
         onPointerOver={(event) => {
           event.stopPropagation();
           onHoverChange(true);
@@ -184,6 +212,13 @@ function Star({ def, hovered, featured, onHoverChange, onSelect }: StarProps) {
         }}
       >
         <sphereGeometry args={[Math.max(def.size * HIT_TARGET_SCALE, HIT_TARGET_MIN_RADIUS), 8, 8]} />
+        <meshBasicMaterial
+          transparent
+          opacity={0}
+          colorWrite={false}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
 
       {labelTexture && (

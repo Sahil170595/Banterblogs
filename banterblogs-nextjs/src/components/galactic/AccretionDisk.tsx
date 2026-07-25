@@ -28,7 +28,8 @@ const DISK_FRAG = /* glsl */ `
   uniform float uTime;
   uniform float uInner;
   uniform float uOuter;
-  uniform float uIgnite;
+  const float ALPHA_DEPTH_CUTOFF = 0.012;
+  const float DISPLAY_EMISSION_GAIN = 1.85;
 
   ${NOISE_GLSL}
   ${EMBER_RAMP_GLSL}
@@ -67,15 +68,20 @@ const DISK_FRAG = /* glsl */ `
     // ramp under-driven so the peak is warm-gold, never clipped white; tiny
     // emissive floor (8%) keeps the opaque body from going grey while the
     // r^-3 flux gradient stays visually dominant (blind-review C1)
-    vec3 col = emberRamp(clamp(tNorm * 0.72, 0.0, 1.0)) * (0.08 + 2.9 * flux);
+    vec3 col =
+      emberRamp(clamp(tNorm * 0.72, 0.0, 1.0)) *
+      (0.06 + DISPLAY_EMISSION_GAIN * flux);
 
     // OPAQUE body — thin disks are optically thick. Alpha is 1 everywhere
     // except a 2% feather at the ISCO and the matter running out at the rim.
     float innerFeather = smoothstep(uInner, uInner * 1.02, r);
     float outerFeather = 1.0 - smoothstep(uOuter * 0.8, uOuter, r);
     float alpha = innerFeather * outerFeather;
+    // Transparent fragments can still write depth. Discard the vanishing
+    // feather so a numerically present disk cannot invisibly hide a star.
+    if (alpha < ALPHA_DEPTH_CUTOFF) discard;
 
-    gl_FragColor = vec4(col, alpha * uIgnite);
+    gl_FragColor = vec4(col, alpha);
   }
 `;
 
@@ -92,17 +98,14 @@ export function AccretionDisk({ inner = 1.6, outer = 7.5 }: AccretionDiskProps) 
       uTime: { value: 0 },
       uInner: { value: inner },
       uOuter: { value: outer },
-      uIgnite: { value: 0 },
     }),
     [inner, outer],
   );
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock }) => {
     const mat = materialRef.current;
     if (!mat) return;
     mat.uniforms.uTime.value = clock.elapsedTime;
-    // ignition: the disk lights up over the first ~1.8s (torch in a cave)
-    mat.uniforms.uIgnite.value = THREE.MathUtils.damp(mat.uniforms.uIgnite.value, 1, 1.4, delta);
   });
 
   // geometry is scaled in the vertex shader (uOuter), so the CPU-side

@@ -33,7 +33,9 @@ describe('tracking ticker readout', () => {
       );
       expect(html).toContain(system.name);
       expect(html).toContain(system.blurb);
-      expect(html).toContain(`${index + 1} / ${STAR_SYSTEMS.length}`);
+      expect(html).toContain(
+        `${String(index + 1).padStart(2, '0')} / ${String(STAR_SYSTEMS.length).padStart(2, '0')}`,
+      );
     });
   });
 

@@ -22,6 +22,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 export function SelectionCard({ selection, onClose }: SelectionCardProps) {
+  const asideRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
 
@@ -34,6 +35,21 @@ export function SelectionCard({ selection, onClose }: SelectionCardProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !e.defaultPrevented && !isTypingTarget(e.target)) onClose();
+      if (e.key !== 'Tab' || e.defaultPrevented) return;
+
+      const focusable = asideRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -56,14 +72,15 @@ export function SelectionCard({ selection, onClose }: SelectionCardProps) {
         .join(' ')})`;
 
   const ctaClass =
-    'inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90';
+    'inline-flex min-h-11 items-center gap-2 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90';
 
   return (
     <aside
+      ref={asideRef}
       role="dialog"
-      aria-modal="false"
+      aria-modal="true"
       aria-label={`${name} details`}
-      className="pointer-events-auto absolute bottom-24 left-4 right-4 z-20 mx-auto max-w-sm rounded-2xl border border-white/10 bg-[#05070a]/90 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.65)] backdrop-blur-2xl md:left-auto md:right-10 md:top-1/2 md:bottom-auto md:mx-0 md:w-96 md:max-w-none md:-translate-y-1/2"
+      className="pointer-events-auto absolute inset-x-0 bottom-0 z-40 border-x-0 border-b-0 border-t border-white/15 bg-[#05070a]/95 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-5 shadow-[0_-24px_80px_rgba(0,0,0,0.72)] backdrop-blur-2xl md:inset-x-auto md:bottom-auto md:right-[var(--landing-gutter)] md:top-1/2 md:w-[420px] md:-translate-y-1/2 md:border md:p-6"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -80,7 +97,7 @@ export function SelectionCard({ selection, onClose }: SelectionCardProps) {
           ref={closeRef}
           onClick={onClose}
           aria-label="Close details"
-          className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          className="inline-flex h-11 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>

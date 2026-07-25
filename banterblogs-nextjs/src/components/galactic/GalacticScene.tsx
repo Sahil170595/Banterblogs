@@ -3,38 +3,103 @@
 import { useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import {
+  Bloom,
+  EffectComposer,
+  SMAA,
+  ToneMapping,
+  Vignette,
+} from '@react-three/postprocessing';
+import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { BlackHole } from './BlackHole';
 import { StarSystems } from './StarSystems';
 import { Starfield } from './Starfield';
+import {
+  CAMERA_OPENING,
+  SYSTEM_ORIGIN,
+  cameraBaseAt,
+  cameraFovAt,
+  cameraTargetForViewport,
+  cinematicRevealProgress,
+} from './sceneChoreography';
 import type { GalacticSelection } from './systems';
 
-// Camera rig: slow ambient drift + pointer parallax, eased. The black hole
-// sits right-of-center (camera target offset) so hero copy owns the left.
+const PARALLAX_X = 1.15;
+const PARALLAX_Y = 0.72;
+const AMBIENT_DRIFT_X = 0.42;
+const AMBIENT_DRIFT_Y = 0.22;
+const POINTER_DAMPING = 2.6;
+const TARGET_DAMPING = 3.2;
 
-const CAMERA_BASE = new THREE.Vector3(0, 6, 28.5);
-const TARGET_OFFSET = new THREE.Vector3(3, 0, 0);
-// pointer parallax reach, world units at full deflection
-const PARALLAX_X = 1.6;
-const PARALLAX_Y = 1.0;
-// adaptive resolution: step down when the GPU can't hold framerate
-const DPR_MAX = 1.75;
-const DPR_MIN = 1;
+type QualityTier = 'low' | 'medium' | 'high';
+
+const QUALITY = {
+  low: { dpr: 1, starCount: 2800, bloomLevels: 3 },
+  medium: { dpr: 1.35, starCount: 4600, bloomLevels: 4 },
+  high: { dpr: 1.6, starCount: 6800, bloomLevels: 5 },
+} as const satisfies Record<
+  QualityTier,
+  { dpr: number; starCount: number; bloomLevels: number }
+>;
+
+function lowerQuality(tier: QualityTier): QualityTier {
+  if (tier === 'high') return 'medium';
+  return 'low';
+}
 
 function CameraRig() {
-  const { camera, pointer } = useThree();
-  const look = useRef(new THREE.Vector3().copy(TARGET_OFFSET));
+  const { camera, pointer, size } = useThree();
+  const parallax = useRef(new THREE.Vector2());
+  const lookTarget = useRef(
+    new THREE.Vector3(...cameraTargetForViewport(size.width)),
+  );
 
   useFrame(({ clock }, delta) => {
-    const t = clock.elapsedTime;
-    const driftX = Math.sin(t * 0.05) * 2.2;
-    const driftY = Math.sin(t * 0.033) * 1.1;
+    const elapsed = clock.elapsedTime;
+    const reveal = cinematicRevealProgress(elapsed);
+    const base = cameraBaseAt(elapsed);
+    const target = cameraTargetForViewport(size.width);
 
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, CAMERA_BASE.x + driftX + pointer.x * PARALLAX_X, 1.2, delta);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, CAMERA_BASE.y + driftY - pointer.y * PARALLAX_Y, 1.2, delta);
-    camera.position.z = CAMERA_BASE.z;
-    camera.lookAt(look.current);
+    parallax.current.x = THREE.MathUtils.damp(
+      parallax.current.x,
+      pointer.x * PARALLAX_X * reveal,
+      POINTER_DAMPING,
+      delta,
+    );
+    parallax.current.y = THREE.MathUtils.damp(
+      parallax.current.y,
+      -pointer.y * PARALLAX_Y * reveal,
+      POINTER_DAMPING,
+      delta,
+    );
+
+    const driftX = Math.sin(elapsed * 0.11) * AMBIENT_DRIFT_X * reveal;
+    const driftY = Math.sin(elapsed * 0.071) * AMBIENT_DRIFT_Y * reveal;
+    camera.position.set(
+      base[0] + driftX + parallax.current.x,
+      base[1] + driftY + parallax.current.y,
+      base[2],
+    );
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = cameraFovAt(elapsed);
+      camera.updateProjectionMatrix();
+    }
+
+    lookTarget.current.x = THREE.MathUtils.damp(
+      lookTarget.current.x,
+      target[0],
+      TARGET_DAMPING,
+      delta,
+    );
+    lookTarget.current.y = THREE.MathUtils.damp(
+      lookTarget.current.y,
+      target[1],
+      TARGET_DAMPING,
+      delta,
+    );
+    lookTarget.current.z = target[2];
+    camera.lookAt(lookTarget.current);
   });
 
   return null;
@@ -42,38 +107,70 @@ function CameraRig() {
 
 interface GalacticSceneProps {
   onSelect: (selection: GalacticSelection | null) => void;
-  /** system narrated by the tracking ticker — its label/orbit glow like a hover */
   featuredName: string | null;
   onStarHover: (name: string, hovering: boolean) => void;
+  onReady: () => void;
+  onUnavailable: () => void;
 }
 
-export default function GalacticScene({ onSelect, featuredName, onStarHover }: GalacticSceneProps) {
-  const [dpr, setDpr] = useState(1.5);
+export default function GalacticScene({
+  onSelect,
+  featuredName,
+  onStarHover,
+  onReady,
+  onUnavailable,
+}: GalacticSceneProps) {
+  const [quality, setQuality] = useState<QualityTier>('medium');
+  const settings = QUALITY[quality];
 
   return (
     <Canvas
-      camera={{ position: CAMERA_BASE.toArray(), fov: 42, near: 0.1, far: 400 }}
-      dpr={dpr}
+      camera={{ position: [...CAMERA_OPENING], fov: 38, near: 0.1, far: 400 }}
+      dpr={settings.dpr}
       gl={{ antialias: false, powerPreference: 'high-performance' }}
-      style={{ background: 'transparent' }}
+      style={{ background: '#020305' }}
       onPointerMissed={() => onSelect(null)}
+      onCreated={({ gl }) => {
+        gl.domElement.addEventListener(
+          'webglcontextlost',
+          (event) => {
+            event.preventDefault();
+            onUnavailable();
+          },
+          { once: true },
+        );
+        requestAnimationFrame(() => requestAnimationFrame(onReady));
+      }}
     >
-      {/* integrated GPUs get a resolution step-down instead of permanent jank */}
       <PerformanceMonitor
-        onIncline={() => setDpr(DPR_MAX)}
-        onDecline={() => setDpr(DPR_MIN)}
+        onIncline={() => setQuality('high')}
+        onDecline={() => setQuality((current) => lowerQuality(current))}
+        onFallback={() => setQuality('low')}
       />
-      <color attach="background" args={['#04060a']} />
+      <color attach="background" args={['#020305']} />
       <CameraRig />
-      <Starfield />
-      <group position={TARGET_OFFSET.toArray()}>
+      <Starfield count={settings.starCount} />
+      <group position={[...SYSTEM_ORIGIN]}>
         <BlackHole onSelect={onSelect} />
-        <StarSystems featuredName={featuredName} onSelect={onSelect} onHover={onStarHover} />
+        <StarSystems
+          featuredName={featuredName}
+          onSelect={onSelect}
+          onHover={onStarHover}
+        />
       </group>
-      {/* multisampling off: EffectComposer defaults to 8x MSAA in WebGL2,
-          silently negating antialias:false; bloom hides aliasing anyway */}
+
       <EffectComposer multisampling={0}>
-        <Bloom intensity={0.5} luminanceThreshold={0.62} luminanceSmoothing={0.18} mipmapBlur radius={0.55} levels={5} />
+        <Bloom
+          intensity={0.38}
+          luminanceThreshold={1.02}
+          luminanceSmoothing={0.16}
+          mipmapBlur
+          radius={0.32}
+          levels={settings.bloomLevels}
+        />
+        <SMAA />
+        <ToneMapping mode={ToneMappingMode.AGX} />
+        <Vignette eskil={false} offset={0.24} darkness={0.54} />
       </EffectComposer>
     </Canvas>
   );

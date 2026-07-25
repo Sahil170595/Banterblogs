@@ -33,7 +33,7 @@ export function TrackingTicker({ system, position, total }: TrackingTickerProps)
       // rotating copy would spam screen readers; the same info lives in the
       // systems nav (sr-only anchors), so this readout is purely visual
       aria-hidden="true"
-      className="pointer-events-none absolute bottom-8 left-5 z-20 hidden max-w-[320px] sm:left-8 md:block"
+      className="pointer-events-none max-w-[420px]"
       style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
     >
       {/* hierarchy over flat scale: the system NAME carries the readout —
@@ -43,17 +43,19 @@ export function TrackingTicker({ system, position, total }: TrackingTickerProps)
         className="font-mono uppercase leading-relaxed tracking-[0.08em]"
         style={{ animation: 'galactic-ticker-in 0.45s ease-out both' }}
       >
-        <p className="text-[10px] text-primary/85">
-          Tracking · {position} / {total}
+        <p className="text-[9px] text-primary/85 sm:text-[10px]">
+          Tracking · {String(position).padStart(2, '0')} / {String(total).padStart(2, '0')}
         </p>
-        <p className="mt-1.5 text-[16px] font-semibold tracking-[0.1em]">
+        <p className="mt-1 text-[13px] font-semibold tracking-[0.1em] sm:text-[16px]">
           <span
-            className="mr-2.5 inline-block h-2 w-2 rounded-full align-middle"
+            className="mr-2 inline-block h-1.5 w-1.5 rounded-full align-middle sm:mr-2.5 sm:h-2 sm:w-2"
             style={{ backgroundColor: tint, boxShadow: `0 0 10px ${tint}` }}
           />
           <span style={{ color: tint }}>{system.name}</span>
         </p>
-        <p className="mt-1.5 text-[12px] normal-case text-muted-foreground">{system.blurb}</p>
+        <p className="mt-1 hidden truncate text-[11px] normal-case text-muted-foreground sm:block md:text-[12px]">
+          {system.blurb}
+        </p>
       </div>
     </div>
   );

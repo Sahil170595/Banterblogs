@@ -27,7 +27,8 @@ const HALO_FRAG = /* glsl */ `
   varying vec2 vPos;
   uniform float uTime;
   uniform float uShadow;   // shadow radius (photon-sphere silhouette)
-  uniform float uIgnite;
+  const float LENSED_IMAGE_GAIN = 1.28;
+  const float PHOTON_RING_GAIN = 3.0;
 
   ${NOISE_GLSL}
   ${EMBER_RAMP_GLSL}
@@ -50,32 +51,34 @@ const HALO_FRAG = /* glsl */ `
 
     // streak texture shared with the disk so the arcs read as the SAME
     // material, bent — not a separate glow
-    float streaks = fbm(vec2(r * 4.0, theta * 6.0 - uTime * 0.6));
+    float localInner = uShadow * 1.155;
+    float omega = 3.2 * pow(max(r / localInner, 1.0), -1.5);
+    float streaks = fbm(vec2(r * 4.0, theta * 6.0 - uTime * omega));
 
     // photon ring: razor-thin at the shadow edge (1.0 R), brightest stroke;
     // own cutoff so the arc mask doesn't attenuate it
-    float ringD = (r - uShadow * 1.015) / (uShadow * 0.022);
+    float ringD = (r - uShadow * 1.015) / (uShadow * 0.014);
     float ring = exp(-ringD * ringD) * (0.7 + 0.4 * smoothstep(-0.2, 0.6, p.y / uShadow));
     ring *= smoothstep(uShadow * 0.99, uShadow * 1.005, r);
-    // slow breathing pulse — the idle affordance that the core is interactive
-    ring *= 1.0 + 0.12 * sin(uTime * 1.1);
-
     // primary image: far side of the disk lensed over the top
-    float over = arcBand(p, uShadow * 1.66, uShadow * 1.46, 0.20, 1.0);
+    float over = arcBand(p, uShadow * 1.66, uShadow * 1.46, 0.14, 1.0);
     // secondary image: fainter, tighter, under the shadow
-    float under = arcBand(p, uShadow * 1.28, uShadow * 1.18, 0.10, -1.0) * 0.55;
+    float under = arcBand(p, uShadow * 1.28, uShadow * 1.18, 0.075, -1.0) * 0.55;
 
     // doppler asymmetry — approaching (left) limb brighter, matching the disk
     float beam = 1.0 + 0.45 * cos(theta + 3.14159);
 
-    float glow = (over + under) * (0.7 + 0.5 * streaks) * beam;
-    vec3 col = emberRamp(clamp(0.55 + 0.45 * streaks, 0.0, 1.0)) * glow * 2.2;
-    col += vec3(1.0, 0.9, 0.75) * ring * 2.2;
+    float glow = (over + under) * (0.84 + 0.26 * streaks) * beam;
+    vec3 col =
+      emberRamp(clamp(0.55 + 0.45 * streaks, 0.0, 1.0)) *
+      glow *
+      LENSED_IMAGE_GAIN;
+    col += vec3(1.0, 0.9, 0.75) * ring * PHOTON_RING_GAIN;
 
     // nothing renders inside the shadow — silhouette stays pure black;
     // mask applies to the arcs, the ring carries its own cutoff above
     float mask = smoothstep(uShadow * 1.0, uShadow * 1.09, r);
-    float alpha = clamp((glow * 0.9 * mask + ring), 0.0, 1.0) * uIgnite;
+    float alpha = clamp((glow * 0.9 * mask + ring), 0.0, 1.0);
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -96,16 +99,14 @@ export function GargantuaHalo({ shadowRadius }: GargantuaHaloProps) {
       uTime: { value: 0 },
       uShadow: { value: shadowRadius },
       uScale: { value: scale },
-      uIgnite: { value: 0 },
     }),
     [shadowRadius, scale],
   );
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock }) => {
     const mat = materialRef.current;
     if (!mat) return;
     mat.uniforms.uTime.value = clock.elapsedTime;
-    mat.uniforms.uIgnite.value = THREE.MathUtils.damp(mat.uniforms.uIgnite.value, 1, 1.4, delta);
   });
 
   return (

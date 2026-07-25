@@ -72,6 +72,16 @@ describe('segmentCrossesDiskAnnulus', () => {
     const star = new THREE.Vector3(5, 2, 5);
     expect(segmentCrossesDiskAnnulus(cam, star, INNER, OUTER)).toBe(false);
   });
+
+  it('intersects the actual tilted disk plane in disk-local coordinates', () => {
+    const orientation = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(THREE.MathUtils.degToRad(6), 0, THREE.MathUtils.degToRad(-4)),
+    );
+    const cam = new THREE.Vector3(0, 6, 28).applyQuaternion(orientation);
+    const star = new THREE.Vector3(0, -6, -4).applyQuaternion(orientation);
+
+    expect(segmentCrossesDiskAnnulus(cam, star, INNER, OUTER, orientation)).toBe(true);
+  });
 });
 
 describe('blackbodyToRGB', () => {

@@ -18,6 +18,9 @@ export function solveEccentricAnomaly(meanAnomaly: number, e: number): number {
 
 const scratchClosest = new THREE.Vector3();
 const scratchDir = new THREE.Vector3();
+const scratchLocalCam = new THREE.Vector3();
+const scratchLocalPoint = new THREE.Vector3();
+const scratchInverseOrientation = new THREE.Quaternion();
 
 /**
  * True when the segment camera→point passes through a sphere at the origin —
@@ -37,23 +40,31 @@ export function segmentOccludedBySphere(
 }
 
 /**
- * True when the segment camera→point crosses the (opaque) accretion-disk
- * annulus in the y=0 plane between camera and point. The real disk carries a
- * ~6° tilt; at our camera distances the flat-plane approximation is within a
- * fraction of the disk's thickness feather.
+ * True when the segment camera→point crosses the optically thick accretion
+ * annulus between camera and point. When an orientation is supplied the ray
+ * is transformed into the rendered disk's exact local plane.
  */
 export function segmentCrossesDiskAnnulus(
   cam: THREE.Vector3,
   point: THREE.Vector3,
   innerRadius: number,
   outerRadius: number,
+  diskOrientation?: THREE.Quaternion,
 ): boolean {
-  const dy = point.y - cam.y;
+  const localCam = scratchLocalCam.copy(cam);
+  const localPoint = scratchLocalPoint.copy(point);
+  if (diskOrientation) {
+    scratchInverseOrientation.copy(diskOrientation).invert();
+    localCam.applyQuaternion(scratchInverseOrientation);
+    localPoint.applyQuaternion(scratchInverseOrientation);
+  }
+
+  const dy = localPoint.y - localCam.y;
   if (dy === 0) return false; // parallel to the plane
-  const t = -cam.y / dy;
+  const t = -localCam.y / dy;
   if (t <= 0 || t >= 1) return false; // crossing not between camera and point
-  const x = cam.x + (point.x - cam.x) * t;
-  const z = cam.z + (point.z - cam.z) * t;
+  const x = localCam.x + (localPoint.x - localCam.x) * t;
+  const z = localCam.z + (localPoint.z - localCam.z) * t;
   const r = Math.hypot(x, z);
   return r > innerRadius && r < outerRadius;
 }

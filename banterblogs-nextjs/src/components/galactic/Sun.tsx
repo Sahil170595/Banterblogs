@@ -8,9 +8,12 @@ import { blackbodyToRGB } from './blackbody';
 import { NOISE_GLSL } from './shaderChunks';
 
 // High-fidelity sun: shader surface with animated fbm granulation and limb
-// darkening (edges cooler/darker, like a real photosphere), a two-layer
-// additive corona, and optional tiny planets on fast local orbits so each
-// repo reads as a SYSTEM, not a dot.
+// darkening (edges cooler/darker, like a real photosphere), and a soft
+// additive corona. Architectural mass controls the stellar radius; no
+// invented satellites or orbital data are introduced here.
+
+const STELLAR_SURFACE_RADIANCE = 2.2;
+const STELLAR_HOTSPOT_RADIANCE = 4.1;
 
 const SUN_VERT = /* glsl */ `
   varying vec3 vNormal;
@@ -59,12 +62,10 @@ const CORONA_FRAG = /* glsl */ `
   precision highp float;
   varying vec2 vUv;
   uniform vec3 uColor;
-  uniform float uTime;
   void main() {
     vec2 p = vUv - 0.5;
     float r = length(p) * 2.0;
-    float pulse = 1.0 + 0.06 * sin(uTime * 1.7);
-    float a = exp(-r * r * 6.5 * pulse);
+    float a = exp(-r * r * 6.5);
     gl_FragColor = vec4(uColor * 1.4, a);
   }
 `;
@@ -77,30 +78,24 @@ const CORONA_VERT = /* glsl */ `
   }
 `;
 
-interface PlanetDef {
-  radius: number;
-  orbit: number;
-  speed: number;
-  phase: number;
-}
-
 interface SunProps {
   tempK: number;
   size: number;
-  /** deterministic per-system seed for planet layout */
-  seed: number;
 }
 
-export function Sun({ tempK, size, seed }: SunProps) {
+export function Sun({ tempK, size }: SunProps) {
   const sunMat = useRef<THREE.ShaderMaterial>(null);
-  const coronaMat = useRef<THREE.ShaderMaterial>(null);
-  const planetRefs = useRef<(THREE.Mesh | null)[]>([]);
 
   const { color, hot } = useMemo(() => {
     const [r, g, b] = blackbodyToRGB(tempK);
+    const linearColor = new THREE.Color()
+      .setRGB(r, g, b, THREE.SRGBColorSpace)
+      .multiplyScalar(STELLAR_SURFACE_RADIANCE);
     return {
-      color: new THREE.Color(r, g, b),
-      hot: new THREE.Color(Math.min(1.6, r * 1.5), Math.min(1.6, g * 1.5), Math.min(1.6, b * 1.4)),
+      color: linearColor,
+      hot: linearColor
+        .clone()
+        .multiplyScalar(STELLAR_HOTSPOT_RADIANCE / STELLAR_SURFACE_RADIANCE),
     };
   }, [tempK]);
 
@@ -114,35 +109,12 @@ export function Sun({ tempK, size, seed }: SunProps) {
   );
 
   const coronaUniforms = useMemo(
-    () => ({ uColor: { value: color }, uTime: { value: 0 } }),
+    () => ({ uColor: { value: color } }),
     [color],
   );
 
-  // 2 tiny planets for the larger systems, deterministic per seed
-  const planets = useMemo<PlanetDef[]>(() => {
-    if (size < 0.22) return [];
-    const rand = (i: number) => {
-      const x = Math.sin(seed * 91.7 + i * 47.3) * 43758.5453;
-      return x - Math.floor(x);
-    };
-    return [0, 1].map((i) => ({
-      radius: size * (0.16 + 0.1 * rand(i)),
-      orbit: size * (3.2 + 2.2 * i + rand(i + 2)),
-      speed: 0.9 - 0.35 * i + 0.3 * rand(i + 4),
-      phase: rand(i + 6) * Math.PI * 2,
-    }));
-  }, [size, seed]);
-
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    if (sunMat.current) sunMat.current.uniforms.uTime.value = t;
-    if (coronaMat.current) coronaMat.current.uniforms.uTime.value = t + seed;
-    planets.forEach((p, i) => {
-      const mesh = planetRefs.current[i];
-      if (!mesh) return;
-      const a = p.phase + t * p.speed;
-      mesh.position.set(Math.cos(a) * p.orbit, Math.sin(a * 0.3) * p.orbit * 0.12, Math.sin(a) * p.orbit);
-    });
+    if (sunMat.current) sunMat.current.uniforms.uTime.value = clock.elapsedTime;
   });
 
   return (
@@ -163,7 +135,6 @@ export function Sun({ tempK, size, seed }: SunProps) {
         <mesh scale={size * 5.2} renderOrder={3}>
           <planeGeometry args={[1, 1]} />
           <shaderMaterial
-            ref={coronaMat}
             vertexShader={CORONA_VERT}
             fragmentShader={CORONA_FRAG}
             uniforms={coronaUniforms}
@@ -174,18 +145,6 @@ export function Sun({ tempK, size, seed }: SunProps) {
           />
         </mesh>
       </Billboard>
-
-      {planets.map((p, i) => (
-        <mesh
-          key={i}
-          ref={(m) => {
-            planetRefs.current[i] = m;
-          }}
-        >
-          <sphereGeometry args={[p.radius, 10, 10]} />
-          <meshBasicMaterial color="#5b6470" toneMapped={false} />
-        </mesh>
-      ))}
     </group>
   );
 }
