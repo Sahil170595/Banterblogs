@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { SelectionCard } from './SelectionCard';
-import { TrackingTicker, TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
+import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
+import { SystemRail } from './SystemRail';
 import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems';
 
 // Client island for the 3D scene. The scene chunk (three + fiber + drei)
@@ -56,6 +57,7 @@ export function GalacticBackdrop() {
   // Tracking-ticker tour: -1 = pre-start (scene gets its cold open first)
   const [featuredIndex, setFeaturedIndex] = useState(-1);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
+  const [selectionOpener, setSelectionOpener] = useState<HTMLElement | null>(null);
   // latest-value ref so the interval callback sees pause state without resubscribing
   const tickerPausedRef = useRef(false);
 
@@ -110,6 +112,11 @@ export function GalacticBackdrop() {
     // link behavior so the hrefs stay real for users and crawlers
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey) return;
     event.preventDefault();
+    setSelectionOpener(event.currentTarget);
+    setSelection(next);
+  };
+  const selectFromScene = (next: GalacticSelection | null) => {
+    setSelectionOpener(null);
     setSelection(next);
   };
 
@@ -118,7 +125,7 @@ export function GalacticBackdrop() {
       {mode === 'scene' ? (
         <div className="absolute inset-0 z-0 isolate overflow-hidden" aria-hidden="true">
           <GalacticScene
-            onSelect={setSelection}
+            onSelect={selectFromScene}
             featuredName={tickerSystem?.name ?? null}
             onStarHover={handleStarHover}
           />
@@ -127,56 +134,75 @@ export function GalacticBackdrop() {
         <Poster />
       )}
 
-      {mode === 'scene' && tickerSystem && (
-        <TrackingTicker
-          system={tickerSystem}
-          position={STAR_SYSTEMS.indexOf(tickerSystem) + 1}
-          total={STAR_SYSTEMS.length}
-        />
+      {mode === 'scene' && (
+        <div
+          className={`transition-opacity ${selection ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+          aria-hidden={selection ? true : undefined}
+          inert={selection ? true : undefined}
+        >
+          <SystemRail
+            activeSystem={tickerSystem}
+            onPreview={handleStarHover}
+            onSelect={(system, trigger) => {
+              setSelectionOpener(trigger);
+              setSelection({ kind: 'star', system });
+            }}
+          />
+        </div>
       )}
 
       {/* Keyboard / screen-reader / no-WebGL path to the same cards the
           canvas drives — real anchors, so crawlers get the destinations. */}
-      <nav
-        aria-label="Systems orbiting the Chimera core"
-        className={
-          isPoster
-            ? 'pointer-events-auto absolute inset-x-4 bottom-20 z-30 sm:inset-x-8'
-            : 'pointer-events-auto'
-        }
-      >
-        <ul className={isPoster ? 'flex flex-wrap gap-2' : undefined}>
-          <li className={isPoster ? undefined : 'contents'}>
-            <a
-              href={CORE_SELECTION.href}
-              className={isPoster ? NAV_LINK_POSTER_CLASS : NAV_LINK_SCENE_CLASS}
-              onClick={(e) => select(e, { kind: 'core' })}
-            >
-              {CORE_SELECTION.name} — {CORE_SELECTION.eyebrow}
-              {/* always sr-only: keeps the scene focus chip compact while the
-                  blurb stays in SSR text for crawlers and screen readers */}
-              <span className="sr-only">. {CORE_SELECTION.blurb}</span>
-            </a>
-          </li>
-          {STAR_SYSTEMS.map((system) => (
-            <li key={system.name} className={isPoster ? undefined : 'contents'}>
+      {isPoster ? (
+        <nav
+          aria-label="Systems orbiting the Chimera core"
+          className="pointer-events-auto absolute inset-x-4 bottom-20 z-30 sm:inset-x-8"
+        >
+          <ul className="flex flex-wrap gap-2">
+            <li>
               <a
-                href={system.href}
-                className={isPoster ? NAV_LINK_POSTER_CLASS : NAV_LINK_SCENE_CLASS}
-                onClick={(e) => select(e, { kind: 'star', system })}
+                href={CORE_SELECTION.href}
+                className={NAV_LINK_POSTER_CLASS}
+                onClick={(event) => select(event, { kind: 'core' })}
               >
-                {system.name}
-                {/* poster chips show the bare name; the blurb rides along
-                    sr-only so it is in the SSR HTML. Scene mode renders it
-                    plain — visible in the focus-reveal chip, as before. */}
-                <span className={isPoster ? 'sr-only' : undefined}> — {system.blurb}</span>
+                {CORE_SELECTION.name} — {CORE_SELECTION.eyebrow}
+                <span className="sr-only">. {CORE_SELECTION.blurb}</span>
               </a>
             </li>
-          ))}
-        </ul>
-      </nav>
+            {STAR_SYSTEMS.map((system) => (
+              <li key={system.name}>
+                <a
+                  href={system.href}
+                  className={NAV_LINK_POSTER_CLASS}
+                  onClick={(event) => select(event, { kind: 'star', system })}
+                >
+                  {system.name}
+                  <span className="sr-only"> — {system.blurb}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : (
+        <div className="pointer-events-auto">
+          <a
+            href={CORE_SELECTION.href}
+            className={NAV_LINK_SCENE_CLASS}
+            onClick={(event) => select(event, { kind: 'core' })}
+          >
+            {CORE_SELECTION.name} — {CORE_SELECTION.eyebrow}
+            <span className="sr-only">. {CORE_SELECTION.blurb}</span>
+          </a>
+        </div>
+      )}
 
-      {selection && <SelectionCard selection={selection} onClose={() => setSelection(null)} />}
+      {selection && (
+        <SelectionCard
+          selection={selection}
+          onClose={() => setSelection(null)}
+          restoreFocusTo={selectionOpener}
+        />
+      )}
     </>
   );
 }
