@@ -149,7 +149,7 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'Chimeraforge — PyPI capacity-planning CLI',
     href: 'https://pypi.org/project/chimeraforge/',
     detail:
-      `Model-agnostic 5-gate planner (v${CHIMERAFORGE_TOOL.version} plans any registry / Ollama / HuggingFace model across 22 GPU profiles); 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) + opt-in safety gate (TR134 refusal + TR142 RTSI); an MCP server that serves the planner to AI assistants; dual-language harnesses (Python + Rust), 549 tests. 2,000+ downloads on PyPI.`,
+      `Model-agnostic 5-gate planner (v${CHIMERAFORGE_TOOL.version} plans any registry / Ollama / HuggingFace model across 22 GPU profiles); 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) + opt-in safety gate (TR134 refusal + TR142 RTSI); an MCP server that serves the planner to AI assistants; dual-language harnesses (Python + Rust), 549 tests. ${CHIMERAFORGE_TOOL.downloads} downloads on PyPI.`,
   },
   {
     label: 'quantfit — PyPI quantization CLI with a safety-drift check',

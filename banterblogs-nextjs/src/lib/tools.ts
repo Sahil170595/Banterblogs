@@ -54,6 +54,12 @@ export interface ToolDef {
    * must not move because a tool page exists.
    */
   ecosystem: boolean;
+  /**
+   * Display form of the PyPI download count, always phrased as a floor.
+   * Moves on its own between releases — re-check at pepy.tech rather than
+   * assuming the last value still holds.
+   */
+  downloads?: string;
   /** the honesty commitment each tool leads with — its actual differentiator */
   principle: { title: string; body: string };
   commands: ToolCommand[];
@@ -78,6 +84,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/Chimeraforge',
   changelog: 'https://github.com/Sahil170595/Chimeraforge/blob/main/CHANGELOG.md',
   ecosystem: true,
+  downloads: '12,000+',
   principle: {
     title: 'The trust principle',
     body: 'Every number is labeled measured, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are computed from real model architecture. Throughput is a measured lookup when one exists, otherwise an explicit bandwidth roofline, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',

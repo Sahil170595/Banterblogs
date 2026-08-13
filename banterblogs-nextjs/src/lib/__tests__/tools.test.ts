@@ -59,7 +59,7 @@ describe('tools data module', () => {
 });
 
 describe('no hard-coded package versions outside the module', () => {
-  it('keeps every surface reading versions from tools.ts', () => {
+  it('keeps every TS/TSX surface reading versions from tools.ts', () => {
     const offenders: string[] = [];
     for (const file of sourceFiles(SRC)) {
       if (file.endsWith(path.join('lib', 'tools.ts'))) continue;
@@ -71,6 +71,34 @@ describe('no hard-coded package versions outside the module', () => {
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  // llms.txt and the READMEs are hand-maintained (no imports to bind them to
+  // the module), and they are exactly where the drift went unnoticed before.
+  // They cannot be auto-wired, so assert they at least state the CURRENT
+  // version — this fails on the next release until they are refreshed.
+  it('keeps the hand-maintained scraper surfaces current', () => {
+    const manual = [
+      path.join(process.cwd(), 'public', 'llms.txt'),
+      path.join(process.cwd(), 'README.md'),
+      path.join(process.cwd(), '..', 'README.md'),
+    ].filter((file) => fs.existsSync(file));
+
+    const stale: string[] = [];
+    for (const file of manual) {
+      const source = fs.readFileSync(file, 'utf8');
+      for (const tool of TOOLS) {
+        // Only police files that discuss the PACKAGE. A bare slug match would
+        // false-positive on the domain (chimeraforge.vercel.app), so require an
+        // install line or a PyPI project URL.
+        const describesPackage =
+          source.includes(tool.install) || source.includes(`pypi.org/project/${tool.slug}`);
+        if (describesPackage && !source.includes(tool.version)) {
+          stale.push(`${path.basename(file)} describes ${tool.slug} but not v${tool.version}`);
+        }
+      }
+    }
+    expect(stale).toEqual([]);
   });
 });
 

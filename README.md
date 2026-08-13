@@ -33,13 +33,23 @@ Chimeraforge documents work across nine repositories:
 |---|---|
 | **Banterpacks** | Core monorepo — JARVIS gateway, constitutional router (TDD002), debate engine (Chimera), Rust runtime (TDD005) with ZK proofs + BFT, RLAIF alignment loop, authoring. |
 | **Banterhearts** | ML research platform — inference API, benchmarking, AutoOpt agent, safety evaluation. 1.34M+ measurements. |
-| **Chimeraforge (PyPI)** | LLM deployment optimizer on PyPI (v0.5.0). Model-agnostic 5-gate capacity planner (VRAM, quality, safety opt-in, latency, cost) — plans any registry / Ollama / HuggingFace model across 15 GPU profiles. |
+| **Chimeraforge (PyPI)** | LLM deployment optimizer on PyPI (v0.12.3). Model-agnostic 5-gate capacity planner (VRAM, quality, safety opt-in, latency, cost) — plans any registry / Ollama / HuggingFace model across 22 GPU profiles, and serves the same numbers to AI assistants over MCP. Every number labeled `measured` / `estimated` / `unknown`. |
 | **Chimera Multi-Agent** | Muse Protocol — 6-agent content pipeline + observability control plane (OTel, ClickHouse, Datadog). |
 | **Chimeradroid** | Unity/C# Android companion — voice, chat, tool approval, session handoff, mesh networking. |
 | **Echo** | Messaging channel adapters — Slack and Discord bridges to JARVIS. |
 | **JARVIS Console** | Next.js web console — chat, control room, cognitive ELO dashboard, admin panels. |
 | **Project Wyvern** | Embodied autonomy — governed mission-execution plane between Chimera control and PX4/ArduPilot. SIM-ONLY MVP on PX4 + ROS 2 + Gazebo. |
 | **Banterblogs** | This repository. Development log and research archive. |
+
+### Standalone tools
+
+Not part of the nine — independent CLIs that productize the research line:
+
+| Tool | Purpose |
+|---|---|
+| **quantfit** (PyPI) | Quantize an LLM and check it still refuses what it should (v0.6.1, Apache-2.0). AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF, honest 3-tier capacity refusal, and a two-axis safety-drift check (refusal-robustness + over-refusal) against an unquantized baseline. |
+
+Both shipped CLIs have pages at [/tools](https://chimeraforge.vercel.app/tools).
 
 ---
 
