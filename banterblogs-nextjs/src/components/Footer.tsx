@@ -6,14 +6,17 @@ const FOOTER_LINKS = {
     { href: '/platform', label: 'Platform' },
     { href: '/reports', label: 'Research' },
     { href: '/papers', label: 'Papers' },
+    { href: '/tools', label: 'Tools' },
     { href: '/show', label: 'Show' },
     { href: '/episodes', label: 'Episodes' },
     { href: '/work', label: 'Work' },
     { href: '/about', label: 'About' },
   ],
   Resources: [
-    { href: 'https://pypi.org/project/chimeraforge/', label: 'chimeraforge (PyPI)' },
-    { href: 'https://pypi.org/project/quantfit/', label: 'quantfit (PyPI)' },
+    // the tool pages carry the install line, evidence, and PyPI link — send
+    // people there rather than straight off-site
+    { href: '/tools/chimeraforge', label: 'chimeraforge (CLI)' },
+    { href: '/tools/quantfit', label: 'quantfit (CLI)' },
     { href: '/rss.xml', label: 'RSS Feed' },
     { href: '/sitemap.xml', label: 'Sitemap' },
     { href: 'https://github.com/Sahil170595', label: 'GitHub' },

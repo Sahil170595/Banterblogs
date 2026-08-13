@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAllEpisodes } from '@/lib/episodes';
 import { discoverReports } from '@/lib/reports/locator';
+import { TOOLS } from '@/lib/tools';
 
 const BASE = 'https://chimeraforge.vercel.app';
 
@@ -32,7 +33,13 @@ export async function GET() {
       urlEntry(`${BASE}/work`, now, 'monthly', 0.7),
       urlEntry(`${BASE}/tags`, now, 'weekly', 0.7),
       urlEntry(`${BASE}/show`, now, 'weekly', 0.7),
+      urlEntry(`${BASE}/tools`, now, 'weekly', 0.8),
     ];
+
+    // tool pages come from the same module the pages render from
+    for (const tool of TOOLS) {
+      urls.push(urlEntry(`${BASE}/tools/${tool.slug}`, now, 'weekly', 0.8));
+    }
 
     // /show scenes — update this list when a scene is added/removed.
     for (const scene of ['cognitive-agents', 'provenance-chain', 'bft-consensus', 'zk-alignment-proof', 'streaming-ladder']) {

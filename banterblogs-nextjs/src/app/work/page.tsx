@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Linkedin } from 'lucide-react';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 
 const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
 
@@ -148,13 +149,13 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'Chimeraforge — PyPI capacity-planning CLI',
     href: 'https://pypi.org/project/chimeraforge/',
     detail:
-      'Model-agnostic 5-gate planner (v0.5.0 plans any registry / Ollama / HuggingFace model); 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) + opt-in safety gate (TR134 refusal + TR142 RTSI), dual-language harnesses (Python + Rust), 450 tests. 2,000+ downloads on PyPI.',
+      `Model-agnostic 5-gate planner (v${CHIMERAFORGE_TOOL.version} plans any registry / Ollama / HuggingFace model across 22 GPU profiles); 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) + opt-in safety gate (TR134 refusal + TR142 RTSI); an MCP server that serves the planner to AI assistants; dual-language harnesses (Python + Rust), 549 tests. 2,000+ downloads on PyPI.`,
   },
   {
     label: 'quantfit — PyPI quantization CLI with a safety-drift check',
     href: 'https://pypi.org/project/quantfit/',
     detail:
-      'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), refuses honestly when a model will not fit (capacity read from HF metadata, no download), and measures the safety drift of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) against an unquantized baseline, judged by a local ModernBERT refusal classifier. Verdicts are bounded, not absolute: a binomial over at-risk pairs with Wilson 95% CIs and a minimum-detectable-effect at 80% power, cross-checked against scipy in CI; `--report drift.json` emits an auditable schema-v1 artifact (judge/probe revision pins, decode params, resolved dtypes, environment fingerprint). Ships transparent `plan` / `probe` diagnostics rather than auto-quantization. v0.4.0 (Alpha), Apache-2.0.',
+      'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), refuses honestly when a model will not fit (capacity read from HF metadata, no download), and measures the safety drift of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) against an unquantized baseline, judged by a local ModernBERT refusal classifier. Verdicts are bounded, not absolute: a binomial over at-risk pairs with Wilson 95% CIs and a minimum-detectable-effect at 80% power, cross-checked against scipy in CI; `--report drift.json` emits an auditable schema-v1 artifact (judge/probe revision pins, decode params, resolved dtypes, environment fingerprint). Ships transparent `plan` / `probe` diagnostics rather than auto-quantization. v' + QUANTFIT_TOOL.version + ', Apache-2.0.',
   },
   {
     label: 'HuggingFace — 16 model releases',

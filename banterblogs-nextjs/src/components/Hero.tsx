@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, Package, Copy, Check, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowRight, Zap, Package, FileText } from 'lucide-react';
+import { CopyButton } from '@/components/CopyButton';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { TOOLS } from '@/lib/tools';
 
 interface LatestReport {
   slug: string;
@@ -14,20 +15,6 @@ interface LatestReport {
 
 interface HeroProps {
   latestReport?: LatestReport;
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <button onClick={handleCopy} className="text-muted-foreground hover:text-primary transition-colors" aria-label="Copy install command">
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-    </button>
-  );
 }
 
 export function Hero({ latestReport }: HeroProps) {
@@ -84,41 +71,25 @@ export function Hero({ latestReport }: HeroProps) {
               </p>
             </div>
 
-            {/* Install commands — two shipped CLIs (chimeraforge is the deployment
-                planner; quantfit is a standalone quantization CLI, not a Chimera repo) */}
+            {/* Install commands — the shipped CLIs, rendered from lib/tools.ts so
+                versions here can never drift from PyPI (they once sat 7 releases behind) */}
             <div className="flex flex-col gap-2.5">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
-                  <Package className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-muted-foreground">$</span>
-                  <code className="text-foreground">pip install chimeraforge</code>
-                  <CopyButton text="pip install chimeraforge" />
+              {TOOLS.map((tool) => (
+                <div key={tool.slug} className="flex items-center gap-3">
+                  <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
+                    <Package className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground">$</span>
+                    <code className="text-foreground">{tool.install}</code>
+                    <CopyButton text={tool.install} label={`${tool.name} install command`} />
+                  </div>
+                  <Link
+                    href={`/tools/${tool.slug}`}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    v{tool.version}
+                  </Link>
                 </div>
-                <Link
-                  href="https://pypi.org/project/chimeraforge/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  v0.5.0 on PyPI
-                </Link>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
-                  <Package className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-muted-foreground">$</span>
-                  <code className="text-foreground">pip install quantfit</code>
-                  <CopyButton text="pip install quantfit" />
-                </div>
-                <Link
-                  href="https://pypi.org/project/quantfit/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  v0.4.0 on PyPI
-                </Link>
-              </div>
+              ))}
             </div>
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">

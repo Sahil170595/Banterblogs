@@ -32,7 +32,7 @@ Core monorepo. Six interconnected subsystems handling constitutional AI enforcem
 ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 1.34M+ measurements across 55 reports.
 
 ### 3. Chimeraforge (Python, Rust)
-LLM deployment optimizer published on PyPI (v0.5.0). `chimeraforge plan` CLI — model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 15 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 450 tests.
+LLM deployment optimizer published on PyPI (v0.12.3). `chimeraforge plan` CLI — model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 22 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 549 tests. Every number is labeled measured / estimated / unknown; an MCP server (`chimeraforge mcp`) serves the planner to AI assistants.
 
 ### 4. Chimera Multi-Agent (Python)
 Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the ecosystem observability layer (OpenTelemetry, Datadog, dead-letter queue with 102 tests).
@@ -126,17 +126,19 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 ## PyPI Package
 
 - Package: chimeraforge
-- Version: 0.5.0
+- Version: 0.12.3
 - Install: `pip install chimeraforge`
 - Python: >=3.10
 - License: MIT
-- CLI: `chimeraforge plan` — model-agnostic 5-gate capacity planner (VRAM, quality, safety [opt-in], latency, cost) for any registry / Ollama / HuggingFace model; plus `suggest` / `catalog` / `measure` (v0.5.0 adds model-agnostic planning; 0.3.0 added the opt-in safety gate)
+- CLI (11 commands): `chimeraforge plan` — model-agnostic 5-gate capacity planner (VRAM, quality, safety [opt-in], latency, cost) for any registry / Ollama / HuggingFace model; plus `suggest` / `catalog` / `measure` / `safety` / `bench` / `eval` / `compare` / `refit` / `report` / `mcp`
+- Trust principle: every number is labeled `measured`, `estimated`, or `unknown`; a zero-result plan names the gate that rejected every candidate
+- Page: https://chimeraforge.vercel.app/tools/chimeraforge
 - URL: https://pypi.org/project/chimeraforge/
 
 ## Companion CLI: quantfit (standalone — NOT part of the Chimera ecosystem)
 
 - Package: quantfit
-- Version: 0.4.0 (Alpha)
+- Version: 0.6.1
 - Install: `pip install quantfit`
 - Python: >=3.10
 - License: Apache-2.0
@@ -145,6 +147,8 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 - `--report drift.json` writes an auditable schema-v1 artifact: judge + probe-set revision pins, decode params, resolved per-arm dtypes, environment fingerprint, and the full drift vector with CIs.
 - NOT auto-quantization: you pass `--method`. Learned routing (AMQ, KL-Lens) is explicitly out of scope; `plan`/`probe` stay transparent diagnostics.
 - Terminology: the project deliberately says "safety drift", not "safety tax" — in the alignment literature a safety/alignment *tax* is capability paid FOR safety, nearly the inverse of what this measures.
+- Also: `quantfit gate` (pre-release CI check) · `quantfit screen` (run a target set to QSR spec) · `quantfit reproduce` (does one report reproduce another?) · `quantfit audit` (holds the docs to the code, exit 3 on drift)
+- Page: https://chimeraforge.vercel.app/tools/quantfit
 - URL: https://pypi.org/project/quantfit/
 - GitHub: https://github.com/Sahil170595/quantfit
 

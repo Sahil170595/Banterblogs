@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 import {
   ArrowRight,
   Brain,
@@ -199,13 +200,12 @@ export default async function PlatformPage() {
               <h3 className="text-sm font-semibold">Chimeraforge</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              LLM deployment optimizer on PyPI (v0.5.0). Model-agnostic 5-gate capacity planner (VRAM, Quality,
-              Safety, Latency, Cost) — any registry / Ollama / HuggingFace model across 15 GPU profiles.
+              LLM deployment optimizer on PyPI (v{CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner
+              (VRAM, Quality, Safety, Latency, Cost) — any registry / Ollama / HuggingFace model across 22 GPU
+              profiles, plus an MCP server that serves the same numbers to AI assistants.
             </p>
             <Link
-              href="https://pypi.org/project/chimeraforge/"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/tools/chimeraforge"
               className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               pip install chimeraforge
@@ -294,16 +294,14 @@ export default async function PlatformPage() {
               <h3 className="text-sm font-semibold">quantfit</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              GPU-aware quantization CLI with a built-in safety-drift check (v0.4.0). Quantizes across
+              GPU-aware quantization CLI with a built-in safety-drift check (v{QUANTFIT_TOOL.version}). Quantizes across
               the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF), refuses honestly when a
               model will not fit, and measures whether quantization broke refusals — a two-axis vector
               (refusal-robustness + over-refusal) against an unquantized baseline, with bounded
               Wilson-CI verdicts and an auditable drift report.
             </p>
             <Link
-              href="https://pypi.org/project/quantfit/"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/tools/quantfit"
               className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               pip install quantfit

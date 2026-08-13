@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/platform', label: 'Platform' },
   { href: '/reports', label: 'Research' },
   { href: '/papers', label: 'Papers' },
+  { href: '/tools', label: 'Tools' },
   { href: '/show', label: 'Show' },
   { href: '/episodes', label: 'Episodes' },
   { href: '/work', label: 'Work' },
