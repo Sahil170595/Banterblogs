@@ -78,9 +78,11 @@ const AGENTS_DESCRIPTION =
   'Four agents inspect the same task in parallel — each with a structurally different algorithm, none making LLM calls.';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/show/cognitive-agents' },
   title: 'Cognitive Agents · Chimera Show',
   description: AGENTS_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Cognitive Agents · Chimera Show | Chimeraforge',
     description: AGENTS_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/show/cognitive-agents',

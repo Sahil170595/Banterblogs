@@ -94,6 +94,7 @@ export const metadata: Metadata = {
   title: 'BFT Consensus · Chimera Show',
   description: BFT_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'BFT Consensus · Chimera Show | Chimeraforge',
     description: BFT_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/show/bft-consensus',

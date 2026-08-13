@@ -4,10 +4,12 @@ import { ArrowRight, FileText, Layers } from 'lucide-react';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/papers' },
   title: 'Papers',
   description:
     '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Papers | Chimeraforge',
     description:
       '1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing · 5 under peer review · 5 in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.',

@@ -5,6 +5,7 @@ import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/chimera' },
   title: 'Chimera Engine Episodes',
   description: 'Development episodes covering the constitutional AI debate engine — heat-based escalation, multi-model consensus, and the RLAIF alignment loop.',
 };

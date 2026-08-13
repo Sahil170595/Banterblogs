@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Tag } from 'lucide-react';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/tags' },
   title: 'Tags',
   description: 'Browse episodes by topic — AI, benchmarks, deployment, architecture, and more.',
 };

@@ -18,6 +18,10 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chimeraforge.vercel.app"),
+  // Root canonical. Pages override with their own route; without this, query
+  // variants (?utm_source=...) and the legacy banterblogs.vercel.app host each
+  // index as separate URLs and split ranking signal.
+  alternates: { canonical: "/" },
   title: {
     default: "Chimeraforge",
     template: "%s | Chimeraforge",

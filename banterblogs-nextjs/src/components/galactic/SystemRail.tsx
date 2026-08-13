@@ -14,6 +14,37 @@ function isModifiedClick(event: MouseEvent<HTMLAnchorElement>): boolean {
   return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
 }
 
+// Focus that lands within this window of a pointer press is treated as
+// pointer-driven, not keyboard navigation.
+const POINTER_FOCUS_WINDOW_MS = 400;
+let lastPointerDownAt = -Infinity;
+
+if (typeof document !== 'undefined') {
+  document.addEventListener(
+    'pointerdown',
+    () => {
+      lastPointerDownAt = performance.now();
+    },
+    { capture: true, passive: true },
+  );
+}
+
+/**
+ * True when focus arrived by keyboard rather than a pointer press.
+ *
+ * Closing a selection card restores focus to the rail anchor that opened it.
+ * On the mouse path that restored focus previously fired onPreview and pinned
+ * the ticker's pause flag forever — no blur ever follows, so the nine-system
+ * tour froze for the rest of the visit. Keyboard focus SHOULD still hold the
+ * tour, so this distinguishes the two rather than dropping the pause.
+ *
+ * :focus-visible would be the natural test, but jsdom reports false for it,
+ * which would silently disable the keyboard path in tests.
+ */
+function isKeyboardFocus(): boolean {
+  return performance.now() - lastPointerDownAt > POINTER_FOCUS_WINDOW_MS;
+}
+
 export function SystemRail({ activeSystem, onPreview, onSelect }: SystemRailProps) {
   const activeIndex = activeSystem ? STAR_SYSTEMS.indexOf(activeSystem) : -1;
 
@@ -57,7 +88,15 @@ export function SystemRail({ activeSystem, onPreview, onSelect }: SystemRailProp
                   }`}
                   onMouseEnter={() => onPreview(system.name, true)}
                   onMouseLeave={() => onPreview(system.name, false)}
-                  onFocus={() => onPreview(system.name, true)}
+                  onFocus={() => {
+                    // Only KEYBOARD focus should hold the tour. Closing a card
+                    // restores focus to this anchor programmatically; on the
+                    // mouse path that is not :focus-visible, and pausing there
+                    // froze the auto-tour permanently (no blur ever follows).
+                    if (isKeyboardFocus()) {
+                      onPreview(system.name, true);
+                    }
+                  }}
                   onBlur={() => onPreview(system.name, false)}
                   onClick={(event) => {
                     if (isModifiedClick(event)) return;

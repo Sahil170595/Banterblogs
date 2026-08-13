@@ -8,9 +8,11 @@ const LADDER_DESCRIPTION =
   'When a language model writes a reasoning step, five staged checks run on it before it can affect the next sentence. Watch one step go through the ladder.';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/show/streaming-ladder' },
   title: 'Streaming Ladder · Chimera Show',
   description: LADDER_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Streaming Ladder · Chimera Show | Chimeraforge',
     description: LADDER_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/show/streaming-ladder',

@@ -20,13 +20,15 @@ import { formatReadingTime } from '@/lib/formatUtils';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/platform' },
   title: 'Platform',
   description:
-    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 5 languages, sub-20ms P95 on the fast path.',
+    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Platform Architecture | Chimeraforge',
     description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 5 languages, sub-20ms P95 on the fast path.',
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
     url: 'https://chimeraforge.vercel.app/platform',
     type: 'website',
   },
@@ -34,7 +36,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Platform Architecture | Chimeraforge',
     description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 5 languages, sub-20ms P95 on the fast path.',
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
   },
 };
 
@@ -320,7 +322,7 @@ export default async function PlatformPage() {
             { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
             { value: formatReadingTime(stats.totalReadingTime), label: 'Total Reading Time' },
             { value: '89', label: 'Patches Shipped' },
-            { value: '5', label: 'Languages' },
+            { value: '4', label: 'Languages' },
             { value: '99%', label: 'Fast-Path Routing' },
             { value: '<100ms', label: 'Inference Target' },
           ].map((item) => (
@@ -368,7 +370,9 @@ export default async function PlatformPage() {
                   <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-xs font-bold text-foreground">
                     {step.step}
                   </span>
-                  <h4 className="font-semibold text-foreground">{step.title}</h4>
+                  {/* h3, not h4 — the section heading above is an h2 and
+                      skipping a level breaks the document outline */}
+                  <h3 className="font-semibold text-foreground">{step.title}</h3>
                 </div>
                 <p className="text-xs leading-relaxed">{step.text}</p>
               </div>

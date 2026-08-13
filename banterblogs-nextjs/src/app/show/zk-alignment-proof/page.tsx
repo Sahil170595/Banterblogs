@@ -105,9 +105,11 @@ const ZK_DESCRIPTION =
   'Constitutional alignment proofs on Ristretto255. The verifier confirms a valid 14-bit commitment and learns nothing else — not the score, not the bits, not which Schnorr branch was real. Threshold binding is enforced by a prover-side refusal-to-create rule, not the range proof.';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/show/zk-alignment-proof' },
   title: 'ZK Alignment Proof · Chimera Show',
   description: ZK_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'ZK Alignment Proof · Chimera Show | Chimeraforge',
     description: ZK_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/show/zk-alignment-proof',
