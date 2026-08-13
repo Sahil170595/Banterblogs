@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { CHIMERAFORGE_TOOL } from '@/lib/tools';
 
 export const metadata: Metadata = {
   title: 'About Chimera',
@@ -104,7 +105,7 @@ export default async function AboutPage() {
             {
               name: 'Chimeraforge',
               lang: 'Python, Rust',
-              what: 'LLM deployment optimizer on PyPI (v0.5.0). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — plans any registry / Ollama / HuggingFace model across 15 GPU profiles.',
+              what: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — plans any registry / Ollama / HuggingFace model across 22 GPU profiles, and serves the same numbers to AI assistants over MCP.`,
             },
             {
               name: 'Chimera Multi-Agent',
