@@ -12,11 +12,25 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 // scene; this page carries the full narrative: hero, systems, latest
 // research, roadmap.
 
+const METADATA_DESCRIPTION =
+  'The Chimera platform overview — systems, latest technical reports, and the research roadmap.';
+
 export const metadata: Metadata = {
   alternates: { canonical: '/home' },
   title: 'Overview',
-  description:
-    'The Chimera platform overview — systems, latest technical reports, and the research roadmap.',
+  description: METADATA_DESCRIPTION,
+  openGraph: {
+    images: ['/opengraph-image.png'],
+    title: 'Overview | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/home',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Overview | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+  },
 };
 
 export default async function OverviewPage() {

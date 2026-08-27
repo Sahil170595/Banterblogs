@@ -10,9 +10,26 @@ import type { Metadata } from 'next';
 
 export const runtime = 'nodejs';
 
+const METADATA_TITLE = 'Chimeraforge Whitepaper: High-Performance LLM Agent Orchestration';
+const METADATA_DESCRIPTION =
+    'Rust vs. Python for production AI orchestration — hybrid architecture and Dual Ollama pattern achieving 58% latency reduction.';
+
 export const metadata: Metadata = {
-    title: 'Chimeraforge Whitepaper: High-Performance LLM Agent Orchestration',
-    description: 'Rust vs. Python for production AI orchestration — hybrid architecture and Dual Ollama pattern achieving 58% latency reduction.',
+    alternates: { canonical: '/reports/compendium' },
+    title: METADATA_TITLE,
+    description: METADATA_DESCRIPTION,
+    openGraph: {
+        images: ['/opengraph-image.png'],
+        title: `${METADATA_TITLE} | Chimeraforge`,
+        description: METADATA_DESCRIPTION,
+        url: 'https://chimeraforge.vercel.app/reports/compendium',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: `${METADATA_TITLE} | Chimeraforge`,
+        description: METADATA_DESCRIPTION,
+    },
 };
 
 export default async function CompendiumPage() {

@@ -4,11 +4,25 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { CopyButton } from '@/components/CopyButton';
 import { TOOLS } from '@/lib/tools';
 
+const METADATA_DESCRIPTION =
+  'Two shipped command-line tools from the Chimera research program — Chimeraforge, an LLM deployment planner, and quantfit, a quantization CLI that measures whether quantization broke refusals.';
+
 export const metadata: Metadata = {
+  alternates: { canonical: '/tools' },
   title: 'Tools',
-  description:
-    'Two shipped command-line tools from the Chimera research program — Chimeraforge, an LLM deployment planner, and quantfit, a quantization CLI that measures whether quantization broke refusals.',
-  alternates: { canonical: 'https://chimeraforge.vercel.app/tools' },
+  description: METADATA_DESCRIPTION,
+  openGraph: {
+    images: ['/opengraph-image.png'],
+    title: 'Tools | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/tools',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tools | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+  },
 };
 
 export default function ToolsIndexPage() {
