@@ -375,6 +375,41 @@ export default async function PlatformPage() {
         </div>
       </section>
 
+      {/* ── See it run ── */}
+      <section className="mb-20">
+        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+          See it run
+        </h2>
+
+        <div className="signal-panel p-6 md:p-8">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            The subsystems above are not diagrams on{' '}
+            <Link href="/show" className="text-primary transition-colors hover:text-primary/80">
+              /show
+            </Link>
+            . Each scene replays pre-computed records from the Banterpacks pipeline — real Ed25519
+            signatures, real Pedersen commitments, real tier verdicts — and labels the one
+            deterministic stand-in where the public demo uses it.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Start with the{' '}
+            <Link href="/show/streaming-ladder" className="text-primary transition-colors hover:text-primary/80">
+              five-tier streaming ladder
+            </Link>
+            , the{' '}
+            <Link href="/show/zk-alignment-proof" className="text-primary transition-colors hover:text-primary/80">
+              zero-knowledge alignment proof
+            </Link>
+            , or{' '}
+            <Link href="/show/bft-consensus" className="text-primary transition-colors hover:text-primary/80">
+              BFT consensus across four replicas
+            </Link>
+            .
+          </p>
+        </div>
+      </section>
+
       {/* ── Explore ── */}
       <section>
         <div className="grid gap-4 md:grid-cols-3">
