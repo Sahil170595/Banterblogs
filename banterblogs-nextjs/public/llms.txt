@@ -32,7 +32,7 @@ Core monorepo. Six interconnected subsystems handling constitutional AI enforcem
 ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 1.34M+ measurements across 55 reports.
 
 ### 3. Chimeraforge (Python, Rust)
-LLM deployment optimizer published on PyPI (v0.12.3). `chimeraforge plan` CLI — model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 22 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 549 tests. Every number is labeled measured / estimated / unknown; an MCP server (`chimeraforge mcp`) serves the planner to AI assistants.
+LLM deployment optimizer published on PyPI (v0.30.1). `chimeraforge plan` CLI — model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 22 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 549 tests. Every number is labeled measured / estimated / unknown; an MCP server (`chimeraforge mcp`) serves the planner to AI assistants.
 
 ### 4. Chimera Multi-Agent (Python)
 Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the ecosystem observability layer (OpenTelemetry, Datadog, dead-letter queue with 102 tests).
