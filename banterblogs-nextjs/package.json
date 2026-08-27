@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify": "eslint . && vitest --run && next build"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
