@@ -314,11 +314,10 @@ export default async function PlatformPage() {
 
       {/* ── Key Numbers ── */}
       <section className="mb-20">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2">
           {[
             { value: '9', label: 'Repositories' },
             { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
-            { value: '99%', label: 'Fast-Path Routing' },
           ].map((item) => (
             <div key={item.label} className="signal-panel p-5 text-center">
               <div className="text-2xl md:text-3xl font-bold text-foreground">{item.value}</div>

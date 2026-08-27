@@ -7,7 +7,7 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 import { PHASE_DEFINITIONS, classifyReportSlug, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · 5 papers under peer review.`;
+const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · papers under peer review and an accepted ICML 2026 workshop paper.`;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/reports' },

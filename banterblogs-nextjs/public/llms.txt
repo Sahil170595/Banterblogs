@@ -18,7 +18,8 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 - 9 repositories across Python, Rust, TypeScript, and C#
 - 1,348,000+ research measurements across 55 technical reports
 - 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing (workshop, not the main conference)
-- 5 papers under peer review (target: top ML venues)
+- 4 papers under peer review (3 at top ML venues, 1 at a workshop)
+- 1 public preprint: Typical-Acceptance Invariance Screen for Speculative Decoding Safety (arXiv:2606.25097)
 - 268 development episodes (194 Banterpacks + 74 Chimera) — per-commit episode stream now archived; the final episode in each stream is a full retrospective, and ongoing work is documented in the research reports
 - PyPI package: `pip install chimeraforge`
 - QuantSafe Certifier — live HuggingFace Space: signed release-gate for quantized models (RTSI + Ed25519), built on arXiv:2606.10154
@@ -32,7 +33,7 @@ Core monorepo. Six interconnected subsystems handling constitutional AI enforcem
 ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 1.34M+ measurements across 55 reports.
 
 ### 3. Chimeraforge (Python, Rust)
-LLM deployment optimizer published on PyPI (v0.30.1). `chimeraforge plan` CLI — model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 22 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 549 tests. Every number is labeled measured / estimated / unknown; an MCP server (`chimeraforge mcp`) serves the planner to AI assistants.
+LLM deployment optimizer published on PyPI (v0.30.1). `chimeraforge plan` CLI — model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 22 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 1,343 tests. Every number is labeled measured / estimated / unknown; an MCP server (`chimeraforge mcp`) serves the planner to AI assistants.
 
 ### 4. Chimera Multi-Agent (Python)
 Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the ecosystem observability layer (OpenTelemetry, Datadog, dead-letter queue with 102 tests).
@@ -90,17 +91,19 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - **Single-judge safety labels are insufficient** — cross-LLM κ = 0.69 lands in the "triangulate" bucket; safety-specialist judges measure a different axis than general LLMs (TR148, 68K judge rows).
 - **Speculative decoding × safety is a clean null** at 16,783 samples (TR144).
 
-## Papers — 1 Accepted, 5 Under Peer Review, 5 In Preparation
+## Papers — 12 Total: 1 Accepted, 1 Public Preprint, 4 Under Peer Review, 6 In Preparation
 
 ### Accepted — ICML 2026 Workshop on Hypothesis Testing
 - A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving (TR138; working title "Batch Inference Safety Under Non-Determinism") — accepted 2026-05-22; camera-ready submitted 2026-05-29. arXiv: https://arxiv.org/abs/2605.27763 (cs.LG). This is a workshop acceptance, not the ICML 2026 main conference.
 
-### Under peer review (target: top ML venues)
-1. Compile-Stack Attribution (TR126, TR147)
-2. Quality Is Not a Safety Proxy Under Quantization (TR125, TR134, TR142) — arXiv:2606.10154 · live demo: QuantSafe Certifier (https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier)
-3. Many-Shot Jailbreak Under Quantization (TR140)
-4. Speculative Decoding Safety — Null Result (TR144)
-5. Multi-Turn Jailbreak × Quantization (TR139)
+### Public preprint
+- Typical-Acceptance Invariance Screen for Speculative Decoding Safety (TR144) — arXiv:2606.25097. No detectable safety divergence under speculative decoding at temperature zero across 60,849 matched samples; max |Cohen's h| = 0.024; 25/27 per-task TOST contrasts within ±3pp. Withdrawn from venue review and released as a public preprint.
+
+### Under peer review
+1. Quality Is Not a Safety Proxy Under Quantization (TR125, TR134, TR142) — target: top ML venue · arXiv:2606.10154 · live demo: QuantSafe Certifier (https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier)
+2. Many-Shot Jailbreak Under Quantization (TR140) — target: top ML venue
+3. Multi-Turn Jailbreak × Quantization (TR139) — target: top ML venue
+4. A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety — workshop submission (2026-08). One-class safe-centroid routing does not hold up: AUC 0.358-0.545 across 3 corpora and 4 encoders; the failure traces to topic confounding, and a supervised safe-minus-unsafe direction learned from labeled and debate pairs replaces it. From the Chimera constitutional-routing work, not the Banterhearts TR archive.
 
 ### In Preparation
 - Inference Optimization Is Not Safety-Neutral (TR134, TR135, TR136, TR137 synthesis)
@@ -108,6 +111,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - Multi-Agent Runtime Architecture (TR112, TR114, TR115)
 - KV-Cache Quantization and Safety (TR145)
 - Serving-Stack Physics: When Continuous Batching Stops Amortizing (TR164, TR130, TR132) — bandwidth-amortization model; revising for resubmission
+- Compile-Stack Attribution (TR126, TR147) — withdrawn from venue review; revising for resubmission
 
 ## JARVIS Gateway
 
@@ -115,7 +119,7 @@ Multi-modal AI gateway with multi-provider routing (Anthropic, OpenAI, Gemini, O
 
 ## Constitutional AI
 
-Embedding-based fast-path router classifies 99% of queries in <10ms via cosine similarity with calibration (isotonic/Platt). Uncertain queries escalate to a multi-model debate engine with heat-based escalation and three consensus algorithms (weighted, ranked-choice, Condorcet). Self-improving via debate-outcome DPO training pairs with statistical drift detection (Welch's t-test, Cohen's d, KS, PSI, ADWIN) and a canary deployment controller with auto-rollback.
+An embedding fast-path router handles routine queries and escalates uncertain ones to a multi-model debate engine with heat-based escalation and three consensus algorithms (weighted, ranked-choice, Condorcet). Self-improving via debate-outcome DPO training pairs with statistical drift detection (Welch's t-test, Cohen's d, KS, PSI, ADWIN) and a canary deployment controller with auto-rollback.
 
 ## Design System
 
