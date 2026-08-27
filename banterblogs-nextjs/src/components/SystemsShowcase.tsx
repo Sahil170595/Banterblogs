@@ -11,7 +11,7 @@ const coreEngines = [
     name: 'Banterpacks',
     role: 'Constitutional AI Core',
     description:
-      'Constitutional enforcement architecture — embedding-based safety routing (99% fast-path), multi-model debate engine, Rust runtime with Ed25519 provenance and ZK proofs, RLAIF self-improving alignment loop, and the JARVIS AI gateway.',
+      'Constitutional enforcement architecture — embedding-based safety routing, multi-model debate engine, Rust runtime with Ed25519 provenance and ZK proofs, RLAIF self-improving alignment loop, and the JARVIS AI gateway.',
     stats: ['6 subsystems', '7 Rust crates'],
     href: '/platform',
     icon: <Radio className="h-6 w-6" />,
