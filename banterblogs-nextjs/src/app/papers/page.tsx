@@ -139,7 +139,7 @@ const IN_PREP: Paper[] = [
   {
     title: 'Compile-Stack Attribution',
     thesis:
-      'Independent upstream bugs in PyTorch and Triton jointly produce the torch.compile decode crash. Triton minor-version ablation on the same GPU flips the conclusion. Benchmark identity is a 5-tuple (GPU, Triton, PyTorch, cache, compile mode). Companion to upstream PR #175562 (merged to PyTorch main). Revising for resubmission.',
+      'Independent upstream bugs in PyTorch and Triton jointly produce the torch.compile decode crash. Triton minor-version ablation on the same GPU flips the conclusion. Benchmark identity is a 5-tuple (GPU, Triton, PyTorch, cache, compile mode). Companion to upstream PR #175562 (merged to PyTorch main). Withdrawn from venue review.',
     venue: 'Revising for resubmission',
     status: 'In preparation',
     trs: [
