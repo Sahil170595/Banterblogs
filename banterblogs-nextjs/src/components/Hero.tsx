@@ -123,16 +123,8 @@ export function Hero({ latestReport }: HeroProps) {
                 technical reports
               </div>
               <div>
-                <span className="text-lg font-bold text-foreground">89</span>{' '}
-                patches shipped
-              </div>
-              <div>
                 <span className="text-lg font-bold text-foreground">{MEASUREMENTS.SHORT}</span>{' '}
                 research measurements
-              </div>
-              <div>
-                <span className="text-lg font-bold text-foreground">5</span>{' '}
-                languages
               </div>
             </div>
           </motion.div>

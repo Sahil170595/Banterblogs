@@ -127,7 +127,6 @@ export function Footer() {
               new Date().getFullYear() can mismatch across timezones / build
               boundaries and tripped React #418 in prod. Bump yearly. */}
           <span>(c) 2026 Chimeraforge. Crafted in public, powered by local AI.</span>
-          <span>9 repos. One ecosystem.</span>
         </div>
       </div>
     </footer>

@@ -16,19 +16,18 @@ import {
   Wrench,
 } from 'lucide-react';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
-import { formatReadingTime } from '@/lib/formatUtils';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/platform' },
   title: 'Platform',
   description:
-    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
+    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
   openGraph: {
     images: ['/opengraph-image.png'],
     title: 'Platform Architecture | Chimeraforge',
     description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
     url: 'https://chimeraforge.vercel.app/platform',
     type: 'website',
   },
@@ -36,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Platform Architecture | Chimeraforge',
     description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
   },
 };
 
@@ -102,7 +101,7 @@ export default async function PlatformPage() {
               ))}
             </div>
             <div className="text-xs text-muted-foreground/70">
-              RLAIF self-improving loop &middot; 3-stage tool approval &middot; 89 patches shipped
+              RLAIF self-improving loop &middot; 3-stage tool approval
             </div>
           </div>
 
@@ -315,16 +314,11 @@ export default async function PlatformPage() {
 
       {/* ── Key Numbers ── */}
       <section className="mb-20">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
           {[
             { value: '9', label: 'Repositories' },
             { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
-            { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
-            { value: formatReadingTime(stats.totalReadingTime), label: 'Total Reading Time' },
-            { value: '89', label: 'Patches Shipped' },
-            { value: '4', label: 'Languages' },
             { value: '99%', label: 'Fast-Path Routing' },
-            { value: '<100ms', label: 'Inference Target' },
           ].map((item) => (
             <div key={item.label} className="signal-panel p-5 text-center">
               <div className="text-2xl md:text-3xl font-bold text-foreground">{item.value}</div>

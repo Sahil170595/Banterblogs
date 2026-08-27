@@ -132,12 +132,11 @@ export default async function ReportsIndex() {
       </div>
 
       {/* ── Stats Ribbon ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-16">
         {[
           { value: MEASUREMENTS.DISPLAY, label: 'Research Measurements' },
           { value: REPORTS.DISPLAY, label: 'Technical Reports' },
           { value: String(FEATURED_REPORTS.length), label: 'Synthesis Whitepapers' },
-          { value: '9', label: 'Repositories' },
         ].map((stat) => (
           <div key={stat.label} className="signal-panel p-5 text-center">
             <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>

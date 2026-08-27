@@ -12,7 +12,7 @@ const coreEngines = [
     role: 'Constitutional AI Core',
     description:
       'Constitutional enforcement architecture — embedding-based safety routing (99% fast-path), multi-model debate engine, Rust runtime with Ed25519 provenance and ZK proofs, RLAIF self-improving alignment loop, and the JARVIS AI gateway.',
-    stats: ['6 subsystems', '7 Rust crates', '89 patches'],
+    stats: ['6 subsystems', '7 Rust crates'],
     href: '/platform',
     icon: <Radio className="h-6 w-6" />,
   },
@@ -167,7 +167,7 @@ export function SystemsShowcase() {
 
       {/* Subtle engineering depth strip */}
       <div className="mt-10 text-center text-sm text-muted-foreground/70">
-        9 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
+        9 repositories &middot; Python, Rust, TypeScript, C#
       </div>
     </section>
   );
