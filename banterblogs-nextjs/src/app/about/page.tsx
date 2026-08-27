@@ -33,7 +33,7 @@ export default function AboutPage() {
         <div className="space-y-5 w-full">
           <span className="signal-pill">About</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Constitutional AI that proves its reasoning.
+            Constitutional AI with signed, replayable decision traces.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Chimera is a constitutional AI enforcement architecture. Every action routes through

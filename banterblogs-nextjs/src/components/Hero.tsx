@@ -35,10 +35,6 @@ export function Hero({ latestReport }: HeroProps) {
           >
             <div className="space-y-6">
               <div className="flex flex-wrap items-start gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  In Beta
-                </span>
                 <div className="flex flex-col items-start gap-1.5">
                   <Link
                     href="/papers"
@@ -61,7 +57,7 @@ export function Hero({ latestReport }: HeroProps) {
               </div>
 
               <h1 className="display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                Constitutional AI that proves its reasoning
+                Constitutional AI with signed, replayable decision traces
               </h1>
 
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
