@@ -86,7 +86,7 @@ const RESEARCH: ResearchItem[] = [
   {
     label: 'quantfit — quantization safety measurement CLI',
     href: 'https://pypi.org/project/quantfit/',
-    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads ?? '6,000+'} downloads · 1,340 tests`,
+    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 1,340 tests`,
     bullets: [
       'Implements QSR spec v0, a versioned quantization-safety measurement protocol, across AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF; its two-axis release gate (refusal robustness + over-refusal) uses at-risk denominators, Wilson CIs/power, revision-pinned artifacts, exact-engine provenance, stable JSON/exit codes, and JUnit where unmeasured axes skip rather than pass.',
       'Completed a 15-target screen (14 measured; 0 dangerous-axis regressions across 12 GGUF + 2 compressed-tensor targets) with a passing sensitivity control; calibrated and replaced a judge with 56.2% false positives, then human-adjudicated 11 flags (6 real, 5 judge errors), preventing an approximately 2× overclaim. Cross-hardware T0 replications invalidated an apparent safety breach, so I voided the result rather than publish it.',
