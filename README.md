@@ -19,9 +19,9 @@ Chimeraforge is the public-facing site for the Chimera ecosystem — a constitut
 
 - **Episodes** — narrative write-ups generated from git commits across the ecosystem. Each episode is written as a roundtable discussion between four AI personas, turning raw development activity into readable stories.
 - **Research reports** — technical benchmarks covering LLM performance, quantization, inference optimization, and safety alignment. Current counts: https://chimeraforge.vercel.app/reports.json
-- **Papers** — independent research write-ups. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 5 in preparation.
+- **Papers** — independent research write-ups. One paper accepted at the ICML 2026 Workshop on Hypothesis Testing, one public arXiv preprint, more under blind review and in preparation. Current roster: https://chimeraforge.vercel.app/papers
 
-The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app) with 268 episodes. The per-commit episode stream is now archived — the final episode in each line is a full retrospective, and ongoing work is documented through the research reports.
+The site is live at [chimeraforge.vercel.app](https://chimeraforge.vercel.app). It carries an archived episode log (268 entries, retired 2026-06-26) — the final episode in each line is a full retrospective, and ongoing work is documented through the research reports.
 
 ---
 
@@ -59,7 +59,7 @@ Both shipped CLIs have pages at [/tools](https://chimeraforge.vercel.app/tools).
 Banterblogs/
   banterblogs-nextjs/     # The active Next.js application
     src/                  # App source (pages, components, lib)
-    posts/                # 268 episode markdown files (stream archived)
+    posts/                # archived episode log (268 entries, retired 2026-06-26)
     reports/              # Technical report data (benchmarks, analysis)
     PublishReady/         # Processed reports ready for rendering
   legacy_archive/         # Original static site (archived, read-only)
