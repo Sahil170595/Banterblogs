@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getAllEpisodes } from '@/lib/episodes';
 import { discoverReports } from '@/lib/reports/locator';
 import { TOOLS } from '@/lib/tools';
 
@@ -11,7 +10,6 @@ function urlEntry(loc: string, lastmod: string, changefreq: string, priority: nu
 
 export async function GET() {
   try {
-    const episodes = await getAllEpisodes();
     const now = new Date().toISOString();
 
     const reportSlugs = new Set<string>();
@@ -23,15 +21,14 @@ export async function GET() {
       urlEntry(BASE, now, 'weekly', 1.0),
       urlEntry(`${BASE}/home`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/about`, now, 'monthly', 0.8),
-      urlEntry(`${BASE}/episodes`, now, 'daily', 0.9),
-      urlEntry(`${BASE}/banterpacks`, now, 'monthly', 0.7),
-      urlEntry(`${BASE}/chimera`, now, 'monthly', 0.7),
+      // The episode archive keeps its index entry; the per-episode, per-tag,
+      // /tags, /banterpacks, and /chimera URLs are noindex and stay out.
+      urlEntry(`${BASE}/episodes`, now, 'monthly', 0.5),
       urlEntry(`${BASE}/reports`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/reports/compendium`, now, 'monthly', 0.85),
       urlEntry(`${BASE}/papers`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/platform`, now, 'weekly', 0.8),
       urlEntry(`${BASE}/work`, now, 'monthly', 0.7),
-      urlEntry(`${BASE}/tags`, now, 'weekly', 0.7),
       urlEntry(`${BASE}/show`, now, 'weekly', 0.7),
       urlEntry(`${BASE}/tools`, now, 'weekly', 0.8),
     ];
@@ -48,15 +45,6 @@ export async function GET() {
 
     for (const slug of reportSlugs) {
       urls.push(urlEntry(`${BASE}/reports/${slug}`, now, 'monthly', 0.7));
-    }
-
-    for (const episode of episodes) {
-      urls.push(urlEntry(`${BASE}/episodes/${episode.slug}`, new Date(episode.date).toISOString(), 'weekly', 0.6));
-    }
-
-    const tags = new Set(episodes.flatMap(e => e.tags));
-    for (const tag of tags) {
-      urls.push(urlEntry(`${BASE}/tags/${encodeURIComponent(tag)}`, now, 'weekly', 0.5));
     }
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;

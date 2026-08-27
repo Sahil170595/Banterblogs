@@ -4,10 +4,27 @@ import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
 
+const METADATA_DESCRIPTION =
+  'Development episodes covering the constitutional AI debate engine — heat-based escalation, multi-model consensus, and the RLAIF alignment loop.';
+
 export const metadata: Metadata = {
   alternates: { canonical: '/chimera' },
   title: 'Chimera Engine Episodes',
-  description: 'Development episodes covering the constitutional AI debate engine — heat-based escalation, multi-model consensus, and the RLAIF alignment loop.',
+  description: METADATA_DESCRIPTION,
+  // Archived blog stratum: keep the URLs, keep them out of the index.
+  robots: { index: false, follow: true },
+  openGraph: {
+    images: ['/opengraph-image.png'],
+    title: 'Chimera Engine Episodes | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/chimera',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Chimera Engine Episodes | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+  },
 };
 
 export const runtime = 'nodejs';

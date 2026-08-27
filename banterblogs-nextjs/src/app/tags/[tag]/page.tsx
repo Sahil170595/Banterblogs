@@ -20,6 +20,8 @@ export async function generateMetadata({
   return {
     title,
     description,
+    // Archived blog stratum: keep the URLs, keep them out of the index.
+    robots: { index: false, follow: true },
     openGraph: {
       images: ['/opengraph-image.png'],
       title: `${title} | Chimeraforge`,

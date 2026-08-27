@@ -8,9 +8,9 @@ const FOOTER_LINKS = {
     { href: '/papers', label: 'Papers' },
     { href: '/tools', label: 'Tools' },
     { href: '/show', label: 'Show' },
-    { href: '/episodes', label: 'Episodes' },
     { href: '/work', label: 'Work' },
     { href: '/about', label: 'About' },
+    { href: '/episodes', label: 'Archive' },
   ],
   Resources: [
     // the tool pages carry the install line, evidence, and PyPI link — send

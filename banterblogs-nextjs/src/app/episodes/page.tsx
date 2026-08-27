@@ -4,9 +4,25 @@ import { ArrowRight, Cpu, Radio, Sparkles } from 'lucide-react';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
 
+const METADATA_DESCRIPTION =
+  'Full development timeline across Banterpacks and Chimera Engine — 268 episodes from raw commits to benchmarked outcomes, now archived.';
+
 export const metadata: Metadata = {
+  alternates: { canonical: '/episodes' },
   title: 'Episodes',
-  description: 'Full development timeline across Banterpacks and Chimera Engine — 268 episodes from raw commits to benchmarked outcomes, now archived.',
+  description: METADATA_DESCRIPTION,
+  openGraph: {
+    images: ['/opengraph-image.png'],
+    title: 'Episodes | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/episodes',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Episodes | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+  },
 };
 
 export const runtime = 'nodejs';
@@ -23,13 +39,22 @@ export default async function EpisodesPage() {
   return (
     <div className="container py-16">
       <div className="signal-panel-strong mb-12 p-8 md:p-10">
+        <p className="mb-6 rounded-xl border border-border/60 bg-card/60 px-5 py-4 text-sm leading-relaxed text-muted-foreground">
+          Archived 2026-06-26. These episodes were generated from git commits by a multi-persona
+          pipeline between September 2025 and June 2026. The pipeline is retired; the research
+          program continues at{' '}
+          <Link href="/reports" className="text-primary underline-offset-4 hover:underline">
+            /reports
+          </Link>
+          .
+        </p>
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="space-y-4">
             <span className="signal-pill">
               <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-              Chimera Timeline
+              Archive
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">All Episodes</h1>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Episode Archive</h1>
             <p className="text-lg text-muted-foreground">
               The full development narrative across Banterpacks and Chimera Engine, from raw commits to benchmarked outcomes.
             </p>

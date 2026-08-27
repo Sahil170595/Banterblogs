@@ -3,10 +3,27 @@ import { getAllEpisodes } from '@/lib/episodes';
 import Link from 'next/link';
 import { Tag } from 'lucide-react';
 
+const METADATA_DESCRIPTION =
+  'Browse episodes by topic — AI, benchmarks, deployment, architecture, and more.';
+
 export const metadata: Metadata = {
   alternates: { canonical: '/tags' },
   title: 'Tags',
-  description: 'Browse episodes by topic — AI, benchmarks, deployment, architecture, and more.',
+  description: METADATA_DESCRIPTION,
+  // Archived blog stratum: keep the URLs, keep them out of the index.
+  robots: { index: false, follow: true },
+  openGraph: {
+    images: ['/opengraph-image.png'],
+    title: 'Tags | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+    url: 'https://chimeraforge.vercel.app/tags',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tags | Chimeraforge',
+    description: METADATA_DESCRIPTION,
+  },
 };
 
 export default async function TagsPage() {
