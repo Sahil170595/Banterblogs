@@ -87,7 +87,7 @@ export default function ShowPage() {
           Most AI demos are a chat box and a chart. These aren&apos;t. Each scene visualises the
           actual cryptographic, consensus, or verifier internals of a running system —
           deterministic data, real signatures, real Pedersen commitments. Pre-computed from the
-          Banterpacks pipeline, rendered here. Real code paths and real signatures; where the
+          Banterpacks pipeline, rendered here. Where the
           public demo substitutes a deterministic provider (the T2 judge in the streaming
           ladder), the scene says so.
         </p>
