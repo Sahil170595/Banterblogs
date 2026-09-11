@@ -68,14 +68,6 @@ const UNDER_REVIEW_PAPERS: Paper[] = [
     status: 'Submitted',
     trs: [{ label: 'TR139', slug: 'technical-report-139' }],
   },
-  {
-    title: 'A Safe Prototype Is Not a Safety Direction',
-    thesis:
-      'Reference dependence and prompt confounds in response-safety. One-class safe-centroid routing does not hold up: across 3 corpora and 4 encoders, AUC lands at 0.358–0.545. The failure traces to topic confounding, and a supervised safe-minus-unsafe direction learned from labeled and debate pairs replaces it.',
-    venue: 'Workshop (under review)',
-    status: 'Submitted',
-    trs: [],
-  },
 ];
 
 const IN_PREP: Paper[] = [
@@ -153,7 +145,7 @@ const IN_PREP: Paper[] = [
 // the arrays the page actually renders.
 // Workshop submissions still in double-blind review; their titles stay off
 // public pages until decisions land.
-const WITHHELD_WORKSHOP_SUBMISSIONS = 4;
+const WITHHELD_WORKSHOP_SUBMISSIONS = 5;
 const UNDER_REVIEW_COUNT = UNDER_REVIEW_PAPERS.length + WITHHELD_WORKSHOP_SUBMISSIONS;
 const IN_PREP_COUNT = IN_PREP.length;
 const TOTAL_PAPERS = ACCEPTED.length + PUBLIC_PREPRINTS.length + UNDER_REVIEW_COUNT + IN_PREP_COUNT;
@@ -330,8 +322,8 @@ export default function PapersPage() {
           ))}
         </div>
         <p className="mt-5 text-sm text-muted-foreground">
-          Plus {WITHHELD_WORKSHOP_SUBMISSIONS} further workshop submissions under double-blind review. Their titles
-          are withheld until decisions land.
+          Plus {WITHHELD_WORKSHOP_SUBMISSIONS} workshop submissions under double-blind review. Their titles are
+          withheld until decisions land.
         </p>
       </section>
 

@@ -103,8 +103,11 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 1. Quality Is Not a Safety Proxy Under Quantization (TR125, TR134, TR142) — target: top ML venue · arXiv:2606.10154 · live demo: QuantSafe Certifier (https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier)
 2. Many-Shot Jailbreak Under Quantization (TR140) — target: top ML venue
 3. Multi-Turn Jailbreak × Quantization (TR139) — target: top ML venue
-4. A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety — workshop submission (2026-08). One-class safe-centroid routing does not hold up: AUC 0.358-0.545 across 3 corpora and 4 encoders; the failure traces to topic confounding, and a supervised safe-minus-unsafe direction learned from labeled and debate pairs replaces it. From the Chimera constitutional-routing work, not the Banterhearts TR archive.
-5. Four further workshop submissions — titles withheld during double-blind review.
+4. Five workshop submissions — titles withheld during double-blind review.
+
+### Reviewing
+- Reviewer for three ML workshops (2026).
+- Reviewer for Advances in Artificial Intelligence and Machine Learning (AAIML; ISSN 2582-9793), a Scopus- and Web of Science-indexed journal.
 
 ### In Preparation
 - Inference Optimization Is Not Safety-Neutral (TR134, TR135, TR136, TR137 synthesis)
