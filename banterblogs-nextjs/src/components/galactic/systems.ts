@@ -122,7 +122,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
   },
   {
     // The documentation layer — outermost stable orbit, sees everything.
-    name: 'Chimeraforge Site',
+    name: 'This Site',
     blurb: `This site — research archive, ${REPORTS.DISPLAY} technical reports`,
     href: GITHUB_URLS.BANTERBLOGS,
     ctaLabel: "Open this site's source",

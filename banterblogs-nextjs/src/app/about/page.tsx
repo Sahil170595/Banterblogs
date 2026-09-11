@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
-import { formatNumber } from '@/lib/formatUtils';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { CHIMERAFORGE_TOOL } from '@/lib/tools';
 
@@ -27,10 +25,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function AboutPage() {
-  const episodes = await getAllEpisodes();
-  const stats = getEpisodeStats(episodes);
-
+export default function AboutPage() {
   return (
     <div className="container py-16">
       {/* ── Hero ── */}
@@ -38,7 +33,7 @@ export default async function AboutPage() {
         <div className="space-y-5 w-full">
           <span className="signal-pill">About</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Constitutional AI that proves its reasoning.
+            Constitutional AI with signed, replayable decision traces.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Chimera is a constitutional AI enforcement architecture. Every action routes through
@@ -64,9 +59,9 @@ export default async function AboutPage() {
           <div className="signal-panel p-6">
             <h3 className="font-semibold mb-3">The architecture</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              A constitutional AI enforcement system spanning Python and Rust. The fast-path router
-              classifies 99% of queries in &lt;10ms via embedding cosine similarity. Uncertain queries
-              escalate to a multi-model debate engine with heat-based escalation and three consensus
+              A constitutional AI enforcement system spanning Python and Rust. An embedding
+              fast-path router handles routine queries and escalates uncertain ones to a
+              multi-model debate engine with heat-based escalation and three consensus
               algorithms. The Rust runtime (7 crates) provides Ed25519 provenance chains, BFT consensus,
               and zero-knowledge proofs for cross-trust-boundary communication. JARVIS is the agent layer —
               multi-provider chat, voice (Whisper/Piper), semantic memory, tool execution with
@@ -153,18 +148,16 @@ export default async function AboutPage() {
         </div>
 
         <div className="mt-6 text-center text-sm text-muted-foreground/70">
-          9 repositories &middot; Python, Rust, TypeScript, C# &middot; 89 patches shipped
+          9 repositories &middot; Python, Rust, TypeScript, C#
         </div>
       </section>
 
       {/* ── Numbers ── */}
       <section className="mb-20">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2">
           {[
             { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
             { value: REPORTS.DISPLAY, label: 'Technical Reports' },
-            { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
-            { value: formatNumber(stats.totalLinesAdded), label: 'Lines Documented' },
           ].map((stat) => (
             <div key={stat.label} className="signal-panel p-5 text-center">
               <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>

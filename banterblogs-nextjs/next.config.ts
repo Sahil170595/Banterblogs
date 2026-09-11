@@ -19,12 +19,20 @@ const CONCLUSIVE_REDIRECTS = [
   }))
 );
 
+// /benchmarks, /roadmap, and /technology were `redirect()` page stubs (307 at
+// runtime); they are redirects proper now, so the destination is cacheable.
+const STUB_ROUTE_REDIRECTS = [
+  { source: '/benchmarks', destination: '/reports', permanent: true },
+  { source: '/roadmap', destination: '/platform', permanent: true },
+  { source: '/technology', destination: '/platform', permanent: true },
+];
+
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
   async redirects() {
-    return CONCLUSIVE_REDIRECTS;
+    return [...CONCLUSIVE_REDIRECTS, ...STUB_ROUTE_REDIRECTS];
   },
 };
 

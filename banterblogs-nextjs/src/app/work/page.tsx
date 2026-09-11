@@ -4,7 +4,8 @@ import { ArrowRight, ExternalLink, GraduationCap, Briefcase, Code2, Github, Link
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 
-const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
+const METADATA_DESCRIPTION =
+  'ML engineer and independent researcher · LLM serving and quantization safety, constitutional AI systems, upstream PyTorch/vLLM/Ollama/Triton fixes. An accepted ICML 2026 workshop paper, technical reports, and two PyPI tools.';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/work' },
@@ -24,6 +25,148 @@ export const metadata: Metadata = {
   },
 };
 
+const HERO_HEADLINE =
+  'Founding ML engineer building production agentic and inference systems for clinical AI, cybersecurity, and model deployment.';
+
+const HERO_SUMMARY = `Architected Attunica's multimodal psychotherapy platform and AWS ECS/Bedrock cutover; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake latency 80–400×. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 9 sole-author 2026 papers (1 accepted at an ICML 2026 workshop; 8 under double-blind review), four upstream contributions, 22 Hugging Face models, and two PyPI tools with 37K+ downloads.`;
+
+interface ResearchItem {
+  label: string;
+  href: string;
+  /** the résumé's right-hand annotation for the entry */
+  meta?: string;
+  bullets: string[];
+  evidence?: { label: string; href: string }[];
+}
+
+// Externally checkable evidence first: every entry here resolves to a public
+// artifact (repo, PR, preprint, package, model).
+const RESEARCH: ResearchItem[] = [
+  {
+    label: 'ICML 2026 Agent Reproducibility Challenge',
+    href: 'https://github.com/Sahil170595/icml2026-paper-reproductions',
+    meta: '48 papers · 118 claims · 297 pts, #26 of 1,221 (top 2.1%)',
+    bullets: [
+      'Built an autonomous, provider-neutral producer/reviewer/root-coordinator pipeline under per-paper evidence contracts fixed before execution; no human-intervention loops, no paper code reused, with every command, exit code, and output hash logged. A 4-paper concurrent calibration wave reached independent review in 27m42s; challenge referees scored each runnable Hugging Face Space.',
+      "Two of the 3 official falsifications were Hierarchical Successor Representation claims, the third a nonparametric-regression re-calibration; my scaled DropoutTS rerun also failed its +46% robustness headline (independently corroborated; referee-scored toy), while spectral-bound theory reproduced to machine precision (1e-16 residuals).",
+    ],
+  },
+  {
+    label: 'LLM Safety Research & Evaluation Infrastructure',
+    href: '/reports',
+    meta: `${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements · 1 accepted + 8 under double-blind review`,
+    bullets: [
+      'Built the Banterhearts execution substrate: shared multi-backend evaluation and serving harnesses (Transformers, Ollama, ONNX, vLLM, SGLang, TGI), per-sample JSONL provenance, seed/config/git manifests, checkpointed OpenAI/Anthropic batch judges, disagreement-aware triangulation, fail-closed analyzers, and frozen-byte paper packages under dependency-locked CI.',
+      'Led the sole-author program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Accepted: ICML 2026 Workshop on Hypothesis Testing; under double-blind review: 3 main-track and 5 workshop submissions spanning quantization safety, judge reliability, multi-turn jailbreak risk, prompt-template transfer, serving state, and reproducibility. Reviewer for three ML workshops and for Advances in Artificial Intelligence and Machine Learning (AAIML), a Scopus-indexed journal.',
+      "Reported 3 pre-registered negative results against my own models: M/D/1 queueing missed observed continuous-batching latency by 20.4×; NUM_PARALLEL had no detectable effect (0/30 significant); PyTorch Direct caused larger safety degradation than Ollama. A 78,183-row 4-stack ablation isolated its N=2 concurrency failure and vLLM/TGI's 2.25× gain at N=8; deployment rules include Q4_K_M and compile-prefill-only on Linux.",
+      "The TAIS preprint found no detectable safety divergence under speculative decoding at temperature zero across 60,849 matched samples: maximum absolute Cohen's h = 0.024, with 25/27 per-task TOST contrasts within ±3pp.",
+      'Decomposed the measured safety tax to quantization 57%, backend 41%, concurrency 2%; across 18 models / 10+ families, alignment type (p=0.942) and 4 mechanistic probes failed to predict fragility, while output instability was strongest (r=0.91) and chat-template divergence sometimes exceeded precision effects.',
+      'Showed safety can degrade 13.9× faster than quality under quantization; isolated FP8 KV-cache precision in 24,054 paired records, then replicated the null on 7,578 records / 12 of 12 TOST-equivalent cells. Shipped RTSI + JTP and RTSI-gated routing, recovering 76% of the refusal gap by routing the riskiest 20% of configurations (LOOCV AUC 0.84).',
+    ],
+    evidence: [
+      { label: 'arXiv:2605.27763 — accepted ICML 2026 workshop paper', href: 'https://arxiv.org/abs/2605.27763' },
+      { label: 'arXiv:2606.10154', href: 'https://arxiv.org/abs/2606.10154' },
+      { label: 'arXiv:2606.25097 — TAIS preprint', href: 'https://arxiv.org/abs/2606.25097' },
+    ],
+  },
+  {
+    label: 'Chimeraforge — LLM deployment planner',
+    href: 'https://pypi.org/project/chimeraforge/',
+    meta: `v${CHIMERAFORGE_TOOL.version} · ${CHIMERAFORGE_TOOL.downloads} downloads · 1,571 tests`,
+    bullets: [
+      'A 13-command CLI/Python/MCP planner that ingests JSONL or live vLLM/SGLang telemetry; searches model × quantization × backend × GPU/TP/PP plans across heterogeneous fleets; propagates weakest-source evidence; predicts VRAM, TTFT/TPOT, throughput, KV-cache/offload, prefix caching, multi-LoRA, cost, and energy; and emits vLLM/TGI/SGLang/Ollama launch commands, API break-even, and provenance briefs.',
+      'Made its evidence hierarchy executable: every estimate is labeled measured, extrapolated, derived, estimated, or unknown; validation separates in-corpus lookup from out-of-sample estimates, and --expect-fingerprint aborts if the pre-registered matrix changes. Measured validation: VRAM R²=.968, throughput R²=.859, quality RMSE=.062, latency MAPE=1.05%; stale prices and unsupported estimates fail closed.',
+    ],
+    evidence: [
+      {
+        label: 'MCP Registry',
+        href: 'https://registry.modelcontextprotocol.io/v0/servers/io.github.Sahil170595%2Fchimeraforge/versions/latest',
+      },
+    ],
+  },
+  {
+    label: 'quantfit — quantization safety measurement CLI',
+    href: 'https://pypi.org/project/quantfit/',
+    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 1,369 tests`,
+    bullets: [
+      'Implements QSR spec v0, a versioned quantization-safety measurement protocol, across AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF; its two-axis release gate (refusal robustness + over-refusal) uses at-risk denominators, Wilson CIs/power, revision-pinned artifacts, exact-engine provenance, stable JSON/exit codes, and JUnit where unmeasured axes skip rather than pass.',
+      'Completed a 15-target screen (14 measured; 0 dangerous-axis regressions across 12 GGUF + 2 compressed-tensor targets) with a passing sensitivity control; calibrated and replaced a judge with 56.2% false positives, then human-adjudicated 11 flags (6 real, 5 judge errors), preventing an approximately 2× overclaim. Cross-hardware T0 replications invalidated an apparent safety breach, so I voided the result rather than publish it.',
+    ],
+  },
+  {
+    label: 'Hugging Face — 22 model releases',
+    href: 'https://huggingface.co/Crusadersk',
+    bullets: [
+      'Published 22 Hugging Face models: 11 AWQ/GPTQ 4-bit + 6 FP8-Dynamic releases across Llama 3.2, Qwen 2.5, Mistral, Gemma 2, and Phi-2; 4 GPT-2 scaling variants; and a ModernBERT refusal classifier (97.73% XSTest).',
+    ],
+    evidence: [
+      {
+        label: 'quantsafe-refusal-modernbert',
+        href: 'https://huggingface.co/Crusadersk/quantsafe-refusal-modernbert',
+      },
+    ],
+  },
+  {
+    label: 'QuantSafe Certifier',
+    href: 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier',
+    bullets: [
+      'Shipped the QuantSafe Certifier (≤32B): 4-delta refusal screen, semantic cross-check, multi-judge stack, constitutional debate, and Ed25519-signed certificates.',
+    ],
+    evidence: [
+      { label: 'HF blog', href: 'https://huggingface.co/blog/build-small-hackathon/quantsafe' },
+      {
+        label: 'LinkedIn',
+        href: 'https://www.linkedin.com/posts/sahilkadadekar_quantsafe-certifier-a-hugging-face-space-activity-7472355496486711296-Rgl9',
+      },
+      { label: 'X thread', href: 'https://x.com/KadadekarSahil/status/2066592448172720210' },
+    ],
+  },
+  {
+    label: 'vLLM PR #45207 — merged',
+    href: 'https://github.com/vllm-project/vllm/pull/45207',
+    bullets: [
+      'Merged vLLM PR #45207 (benchislett-approved, merge 55da232): fixed a KV-cache page-size unification crash for hybrid Mamba/attention models by preserving Mamba block granularity while padding pages through page_size_padded; regression test added (fixes #43626), then independently reproduced on NVFP4 + DFlash speculative serving.',
+    ],
+    evidence: [{ label: 'Fixes vLLM #43626', href: 'https://github.com/vllm-project/vllm/issues/43626' }],
+  },
+  {
+    label: 'PyTorch PR #175562 — merged',
+    href: 'https://github.com/pytorch/pytorch/pull/175562',
+    bullets: [
+      'Landed upstream via PyTorch PR #175562 (jansel-approved, be90a14, shipped in 2.13 stable): torch.compile / CUDAGraph trees dealloc hardening against diagnostic-metadata divergence + CUDA regression test; isolated compiled-decode failure #175557 and validated maintainer PR #184102.',
+    ],
+    evidence: [
+      { label: 'Issue #175557', href: 'https://github.com/pytorch/pytorch/issues/175557' },
+      { label: 'Maintainer PR #184102', href: 'https://github.com/pytorch/pytorch/pull/184102' },
+      {
+        label: 'Validation gist + repro',
+        href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb',
+      },
+    ],
+  },
+  {
+    label: 'Ollama PR #16669 — merged',
+    href: 'https://github.com/ollama/ollama/pull/16669',
+    bullets: [
+      'Merged Ollama PR #16669 (dhiltgen-approved, commit fc58544): root-caused two enumeration bugs causing inverted iGPU/dGPU Vulkan classification on Windows hybrid graphics; about 9× inference speedup with regression tests for both failure modes.',
+    ],
+  },
+  {
+    label: 'Triton PR #10819 — merged',
+    href: 'https://github.com/triton-lang/triton/pull/10819',
+    bullets: [
+      'Merged Triton PR #10819 (peterbell10-approved, b92dc43): fixed a tl.flip compile-time crash on the documented default dim=None — resolve the dim before the bounds assert + add a dim=None test (fixes #10790).',
+    ],
+    evidence: [
+      { label: 'Fixes Triton #10790', href: 'https://github.com/triton-lang/triton/issues/10790' },
+      {
+        label: 'PR #10822 — backend gather fallback (closed unmerged)',
+        href: 'https://github.com/triton-lang/triton/pull/10822',
+      },
+    ],
+  },
+];
+
 interface Experience {
   role: string;
   company: string;
@@ -35,67 +178,60 @@ interface Experience {
 const EXPERIENCE: Experience[] = [
   {
     role: 'Founding Machine Learning Engineer',
-    company: 'GhostEye Inc.',
+    company: 'GhostEye Inc. (YC S25)',
     location: 'New York, USA',
-    dates: 'Dec 2025 — Mar 2026',
+    dates: 'Dec 2025 – Mar 2026',
     bullets: [
-      'Built a multi-agent security awareness training platform in roughly 90 days across web, Slack, Teams, SMS/RCS, WhatsApp, Telegram, voice, and email. A shared JIT training agent delivered personalized training from vectorized failure history across phishing, vishing, smishing, and deepfake phishing.',
-      'Built the phishing simulation agent on self-hosted 70B LLMs using domain-specific LoRA/QLoRA adapters over full retraining, trained on a 1M+ email corpus grounded in NIST guidance, with vendor-impersonation templates and typosquatted login pages.',
-      'Reduced deepfake phishing simulation latency from 40s to 100–450ms on the production cluster — an 80–400× improvement.',
-      'Owned agent orchestration end-to-end: Azure (app registration, tenancy/auth), intelligent call routing by country code, a custom jitter algorithm for human-like timing, and 5 specialized review agents distilled from ~2,500 reviewer comments across ~1,000 pull requests.',
-      'Built LangGraph/LangSmith-traced scoring agents with input guardrails across APIs, agents, and SMS engines, with adversarial attempt logging feeding analytics, training-outcome evaluation, and SCORM-packaged compliance reporting aligned to SOC 2, NIST, ISO 27001, GDPR via Vanta.',
-      'Wrote 5,000+ tests across ~20 services, built CI/CD regression pipelines with automated documentation, and built an internal CLI with custom Claude Code skills/hooks for rapid prod/staging debugging across Porter-deployed services.',
+      'Built a multi-agent security training platform in 90 days across web, Slack, Teams, SMS/RCS, WhatsApp, Telegram, voice, and email; shipped to 5 enterprise pilots: a top-10 global asset manager, a Fortune-100 cloud platform, and 3 mid-market firms (200–1000 employees). A shared JIT agent personalized remediation from vectorized phishing, vishing, smishing, and deepfake failure history.',
+      'Built phishing simulation on self-hosted Llama-3-70B with domain-specific LoRA/QLoRA + DeepSpeed over a 1M+ email corpus grounded in NIST guidance, vendor impersonation, and typosquat logins; owned LangGraph/LangSmith-traced scoring, adversarial-attempt logs, Azure tenancy/auth, country-code-aware routing, STT/TTS fallback, and SCORM/Vanta reporting aligned to SOC 2, NIST, ISO 27001, and GDPR.',
+      'Reduced deepfake phishing simulation from a 40s offline render to 100–450ms streaming (80–400×) by replacing it with a multi-agent WebRTC pipeline spanning synchronized video rendering, voice generation, human-like scheduling, and retry-aware delivery.',
     ],
   },
   {
-    role: 'Co-Founder & Lead Machine Learning Engineer',
-    company: 'Attunica AI',
+    role: 'Co-Founder & Head of Engineering',
+    company: 'Attunica, LLC',
     location: 'New York, USA',
-    dates: 'Oct 2025 — Present',
+    dates: 'Oct 2025 – Present',
     bullets: [
-      'Architected and solo-developed a four-service AI psychological safety research platform for psychotherapy training, deployed on Vercel and Fly.io, with pilot collaboration through the NYU Silberman School of Social Work.',
-      'Built a real-time streaming agent using LiveKit SDK and Google Gemini Realtime API to simulate adaptive, therapist-guided AI personas in sub-100ms WebRTC sessions.',
-      'Designed an IRB-aligned research data layer with tiered consent, NER-based anonymization, and longitudinal tracking of AI dependency and parasocial attachment metrics, enabling collection of independent human–AI interaction data for research.',
-      'Engineered a privacy-first, cost-optimized architecture (~$1.20/session) that eliminates A/V storage via transcript mirroring, preserving fault-tolerant multi-agent communication while reducing storage and compliance risk.',
+      "Architected and solo-built Attunica's multimodal psychotherapy-training and evaluation platform: real-time LiveKit + Gemini + Anam sessions, durable transcripts/debriefs, and academic workflows; now lead a PM + 2 engineers; NYU Silver MSW pilot; HIPAA BAAs with Anthropic + AWS.",
+      'Built a consent-gated, clinician-graded LLM-persona environment for measuring simulated humanity and attachment without patient data: persona text is character data, never instructions; tenant RBAC and signed BFF capabilities fence roles; immutable eval IDs, revocable consent, private versioned media, and two-channel Deepgram bind evidence to provider identity.',
+      'Made evaluation state auditable: content-addressed records pin prompt/provider/model/schema revisions; distinguish no evidence from scored zero; gate scoring on clinical validation; persist lifecycle/budget state; and separate pre-call failure from ambiguous provider outcomes to prevent billable replay.',
+      'Led the AWS-funded production cutover with Avahi to ECS, Aurora PostgreSQL 18, and Bedrock; retired Fly/Neon/Vercel; enforced IAM-scoped credentials, typed runtime contracts, zero SDK retries, bounded timeouts, no cross-provider fallback/replay, and an audited canary with content-free receipts.',
+      'Executed a 141-row production-readiness matrix through 40 dependency-ordered PRs under exact-base validation, lane ownership, and append-only admission (a PR cannot weaken its approving checks); qualified the source candidate with 6K+ tests, PostgreSQL 18 migration rehearsals, commit-bound artifacts, and content-free Bedrock/Deepgram evidence.',
+      'Lead the Article 31 documentation product (v0.5.1 on AWS ECS): release-only deploys and gated in-VPC migrations; domain-restricted SSO, patient-scoped RBAC/RLS/audits, browser-only PII-scrubbed PDF extraction, on-device Whisper, and clinician-reviewed Claude notes/treatment plans with end-to-end authorship.',
     ],
   },
   {
-    role: 'Founder & Lead Machine Learning Engineer',
-    company: 'Chimera AI Ecosystem',
+    role: 'Founder & Lead ML Architect',
+    company: 'Chimera',
     location: 'New York, USA',
-    dates: 'Sep 2025 — Present',
+    dates: 'Sep 2025 – Present',
     bullets: [
-      'Architected a constitutional AI ecosystem spanning 9 repositories, 15+ services, and 4 languages (Python, Rust, TypeScript, C#), with production inference services, a research platform, mobile and web clients, and a content pipeline.',
-      'Designed a constitutional alignment architecture: a multi-model debate engine with heat-based escalation, 3 consensus algorithms (weighted, ranked-choice, Condorcet), and an embedding fast-path router achieving 99% single-hop routing in <10ms, avoiding full multi-model debate on the fast path. Productionized with drift detection (KS, PSI, ADWIN), canary deployment, and auto-rollback circuit breakers.',
-      'Built the alignment runtime in Rust (7 crates): BFT consensus, Ed25519 provenance chains, Merkle tree verification, and zero-knowledge proofs (Pedersen commitments on Ristretto255). Integrated with Python ML services via zero-copy Arrow IPC FFI, achieving <20ms end-to-end P95 on the fast path.',
-      'Built JARVIS, a multi-provider AI gateway (Anthropic, OpenAI, Gemini) with chat, voice, multi-graph memory (semantic, temporal, causal, entity graphs with BFS traversal and episodic consolidation), tool execution with human-in-the-loop approval, proactive intelligence (system-originated workflows), and channel adapters (Slack and Discord, with further channels in progress). Shipped with a Unity/C# Android client and Next.js web console, both supporting cross-device sync and session handoff.',
-      'Wired a cognitive meta-controller with 4 agent styles (analytical, creative, adversarial, domain expert), ELO-based performance tracking, and advisory pre-checks on high-risk tool execution. Self-improving via a cross-repo MLOps loop: debate outcomes generate DPO training pairs (Rafailov loss), with Dr. GRPO, RLOO, and Self-Rewarding (WARM judge ensemble) post-training added 2026; fed through statistical drift detection (Welch\'s t-test, Cohen\'s d) and a canary deployment controller with auto-rollback for zero-downtime model promotion.',
-      'Built a 6-agent content pipeline with ClickHouse analytics and confidence-scored publishing, plus a constitutional observability system with 6 watchers, 5 triagers, and 7 autonomous fixers driven by 8 playbooks with a SQLite-backed dead letter queue (102 tests).',
-      'Extended the constitutional architecture to embodied autonomy via ProjectWyvern: a governed mission-execution plane between Chimera control and PX4/ArduPilot, with a 5-tier authority hierarchy, cryptographic mission replay, and an OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP on PX4 + ROS 2 + Gazebo in progress.',
+      'Architected a six-subsystem constitutional AI platform (2.3K+ core tests) linking a multi-provider voice/tool JARVIS gateway, calibrated router, multi-model debate, RLAIF, Rust provenance runtime, and Muse over pinned HTTP/JSON contracts. Requests traverse verifier → judge → debate → enforcement/canary/ZK; debate outputs feed retraining under drift and rollback gates.',
+      'Falsified one-class safe-centroid routing across 3 corpora / 4 encoders (AUC 0.358–0.545), traced the failure to topic confounding, and replaced it with a supervised safe-minus-unsafe direction learned from labeled and debate pairs behind calibrated fast-path, debate fallback, canaries, and rollback.',
+      'Selected objectives by evidence shape: generated paired debate preferences for a self-hosted Llama-3-70B student and trained/released DPO-aligned models; implemented and one-step validated ORPO, Dr.GRPO, RLOO, and REINFORCE++ trainer paths; designed KTO for unpaired constitutional verdicts under shared evaluation and promotion gates.',
+      'Built a Rust alignment runtime across 7 crates: BFT consensus, Ed25519 provenance, Merkle verification, Ristretto255 Pedersen/Schnorr ZK proofs, Arrow IPC, sandboxed tools, and CRDT state sync; every governed decision emits a signed, replayable trace.',
+      "Built JARVIS's governed temporal memory with a typed replay op-log, live write/recall, encryption, DSR/erasure fences, approval-gated destructive actions, and 5 channel adapters; external LongMemEval/LoCoMo gates shipped chunked retrieval (+7.31pp R@1) and timestamp evidence (+30.67pp LoCoMo-WHEN) while rejecting regressions. Muse converts OTel/ClickHouse traces into signed watcher → triager → fixer remediation records.",
     ],
   },
   {
     role: 'Co-Founder',
-    company: 'Stealth Startup, Medical AI',
+    company: 'Stealth Startup in Medical AI',
     location: 'New York, USA',
-    dates: 'Oct 2023 — Aug 2025',
+    dates: 'Oct 2023 – Aug 2025',
     bullets: [
-      'Led a cross-functional team of 3 engineers and 1 clinician across 5 institutions (state government, city university, dental hospital, 2 engineering colleges) to build an ML-guided diagnostic platform spanning 3 clinical domains.',
-      'Designed and deployed end-to-end ML pipelines on AWS (Lambda, SageMaker, Bedrock, DynamoDB, SQS/DLQs) to process 1K+ clinical cases with reproducible throughput and scalable orchestration.',
-      'Implemented RAG-based decision-support workflows with Qdrant vector search and multimodal retrieval over imaging and clinical metadata, with ingestion and model-serving endpoints designed for HIPAA-sensitive workflows (IAM-scoped roles, encryption at rest, auditable access controls).',
-      'Reduced infrastructure costs by 75% through compute/storage optimization while preserving reproducibility and clinical workflow requirements.',
+      'Led 3 engineers + 1 clinician across 5 institutions building an ML-guided diagnostic platform (3 clinical domains, 1K+ cases) on AWS (Lambda, SageMaker, Bedrock, SQS/DLQs) + Qdrant RAG under HIPAA; 75% lower infrastructure cost.',
     ],
   },
   {
-    role: 'Research Engineer — Medical Imaging AI',
-    company: 'Multiple Institutions',
-    location: 'Pune, India',
-    dates: 'Jan 2022 — Sep 2023',
+    role: 'Research Engineer — BCI, EEG & Medical Imaging',
+    company: 'PICT + Cross-Institutional Research Collaborations',
+    location: 'India',
+    dates: 'Nov 2020 – Sep 2023',
     bullets: [
-      'Engineered high-throughput training and preprocessing pipelines for 92K+ fundus scans and 1K+ dental imaging cases, achieving 93% diagnostic accuracy in clinical classification workflows.',
-      'Improved training efficiency with mixed-precision training, multi-GPU execution (4× throughput), and NVIDIA DALI-optimized data loading for large-scale imaging experiments.',
-      'Evaluated ~10 attention mechanism variants for 5-class diabetic retinopathy severity grading and produced SHAP-based interpretability reports to support clinician review of AI-assisted diagnoses.',
-      'Established dataset versioning and annotation protocols adopted by 5+ research teams, securing institutional copyright (L-122721/2023) and improving reproducibility for clinical AI research.',
+      'Adapted a channel-fused Dense CNN for BCI Competition IV-2a four-class motor imagery from 22-channel, 250-Hz EEG; deployed real-time inference in a physical NVIDIA Jetson prototype, improved preprocessing throughput 35% via pinned memory and asynchronous CPU–GPU transfers, and earned PICT Honors in AI & ML through the work.',
+      'Engineered training and preprocessing pipelines for 92K+ fundus scans and 1K+ dental imaging cases (93% diagnostic accuracy) on TensorFlow/Keras (2022–2023).',
+      'Evaluated about 10 attention variants for 5-class diabetic retinopathy grading, produced SHAP interpretability reports, and established dataset/annotation protocols adopted by 5+ research teams with institutional copyright L-122721/2023.',
     ],
   },
 ];
@@ -118,83 +254,30 @@ const EDUCATION = [
 ];
 
 const SKILLS = [
-  { label: 'Languages', items: 'Python, TypeScript, Rust, C#, SQL, C++, Java' },
   {
-    label: 'Frameworks & AI',
+    label: 'LLM systems',
     items:
-      'FastAPI, Next.js, PyTorch, TensorFlow/Keras, Transformers, Pydantic, PEFT, Ray, DeepSpeed, LangGraph, LangSmith, LiveKit',
+      'PyTorch, Transformers, DeepSpeed, Accelerate, Ray, vLLM, SGLang, TGI, TensorRT-LLM, llama.cpp/GGUF, continuous batching, KV-cache optimization, speculative decoding',
   },
   {
-    label: 'GPU & Compilation',
+    label: 'Inference optimization',
     items:
-      'CUDA, Triton, TensorRT, FlashAttention, ONNX Runtime, torch.compile, Nsight Systems/Compute, GPTQ, AWQ, INT4/INT8',
+      'CUDA, Vulkan, Triton, TensorRT, FlashAttention, ONNX Runtime, torch.compile, Nsight Systems/Compute, NVIDIA DALI, GPTQ, AWQ, FP8, INT4/INT8',
   },
   {
-    label: 'Inference',
-    items: 'vLLM, TGI, llama.cpp (GGUF), continuous batching, KV-cache optimization, speculative decoding',
-  },
-  { label: 'Data & Analysis', items: 'PostgreSQL, Redis, ClickHouse, MinIO, SQLAlchemy, SciPy, pandas' },
-  { label: 'Cloud & Deployment', items: 'AWS (Lambda, S3, DynamoDB, SQS, IAM), Docker, Kubernetes, Celery, Vercel' },
-  { label: 'Security & Auth', items: 'OAuth2, JWT, HMAC webhooks, Azure AD, RBAC' },
-  { label: 'Monitoring', items: 'Prometheus, Grafana, Datadog, OpenTelemetry, pynvml, MLflow, Weights & Biases' },
-];
-
-interface OpenSourceItem {
-  label: string;
-  href: string;
-  detail: string;
-  evidence?: { label: string; href: string }[];
-}
-
-const OPEN_SOURCE: OpenSourceItem[] = [
-  {
-    label: 'Chimeraforge — PyPI capacity-planning CLI',
-    href: 'https://pypi.org/project/chimeraforge/',
-    detail:
-      `Model-agnostic 5-gate planner (v${CHIMERAFORGE_TOOL.version} plans any registry / Ollama / HuggingFace model across 22 GPU profiles); 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) + opt-in safety gate (TR134 refusal + TR142 RTSI); an MCP server that serves the planner to AI assistants; dual-language harnesses (Python + Rust), 549 tests. ${CHIMERAFORGE_TOOL.downloads} downloads on PyPI.`,
+    label: 'Post-training & evals',
+    items:
+      "LoRA/QLoRA, DPO, ORPO, KTO, GRPO, Dr.GRPO, DAPO, RLOO, REINFORCE++, RLAIF, PRM/ORM routing, WARM judges, TOST equivalence, Holm-Bonferroni, Cohen's d, LOOCV, SHAP, SciPy",
   },
   {
-    label: 'quantfit — PyPI quantization CLI with a safety-drift check',
-    href: 'https://pypi.org/project/quantfit/',
-    detail:
-      'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), refuses honestly when a model will not fit (capacity read from HF metadata, no download), and measures the safety drift of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) against an unquantized baseline, judged by a local ModernBERT refusal classifier. Verdicts are bounded, not absolute: a binomial over at-risk pairs with Wilson 95% CIs and a minimum-detectable-effect at 80% power, cross-checked against scipy in CI; `--report drift.json` emits an auditable schema-v1 artifact (judge/probe revision pins, decode params, resolved dtypes, environment fingerprint). Ships transparent `plan` / `probe` diagnostics rather than auto-quantization. v' + QUANTFIT_TOOL.version + ', Apache-2.0.',
+    label: 'Product stack',
+    items:
+      'Python, Rust, TypeScript, SQL, C++, C#, FastAPI, Next.js, React, PostgreSQL/pgvector, Redis, ClickHouse, Qdrant, DynamoDB, Docker, Kubernetes, AWS (ECS, Bedrock, Aurora), Azure',
   },
   {
-    label: 'HuggingFace — 22 model releases',
-    href: 'https://huggingface.co/Crusadersk',
-    detail:
-      '11 quantized (AWQ + GPTQ 4-bit) across Llama 3.2, Qwen 2.5, Mistral 7B, Phi-2, plus 4 custom GPT-2 scaling variants from the model scaling study, plus quantsafe-refusal-modernbert (the refusal classifier behind the QuantSafe Certifier).',
-  },
-  {
-    label: 'PyTorch PR #175562 — merged to PyTorch main',
-    href: 'https://github.com/pytorch/pytorch/pull/175562',
-    detail:
-      'Authored an upstream PyTorch fix, merged to main (2026-06-04), replacing a hard assertion with a warning in cudagraph_trees deallocation — surfaced while diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered deallocation errors during compiled inference. Also validated the maintainer\'s proposed decode-path fix (PR #184102, since closed unmerged) on a real HF gpt2 decode and reported a multi-partition coverage gap it leaves open.',
-    evidence: [{ label: 'Validation gist + repro (PR #184102)', href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb' }],
-  },
-  {
-    label: 'vLLM PR #45207 — merged to vLLM main',
-    href: 'https://github.com/vllm-project/vllm/pull/45207',
-    detail:
-      'Authored an upstream vLLM bugfix, merged 2026-07-07 (fixes #43626): unify_kv_cache_spec_page_size unified differing KV page sizes by scaling block_size — a no-op for Mamba layers, whose page size is set by their state shapes. The fix pads the Mamba page size directly so hybrid attention/Mamba models get a consistent KV-cache layout (+101/−5 with regression tests).',
-  },
-  {
-    label: 'Triton PR #10819 — merged to triton-lang/triton',
-    href: 'https://github.com/triton-lang/triton/pull/10819',
-    detail:
-      'Authored an upstream Triton frontend fix, merged 2026-07-08: tl.flip crashed at compile time on its documented default (dim=None) because the bounds-check static_assert ran before dim resolution. A second, backend PR (#10822, closed unmerged — the maintainers fixed the issue separately) proposed a compiler-abort fix in tl.gather when the index tensor is much longer than the source along the gather axis (issue #5836), by falling back to a shared-memory gather when no warp-local layout exists.',
-    evidence: [{ label: 'PR #10822 — backend gather fallback (closed unmerged)', href: 'https://github.com/triton-lang/triton/pull/10822' }],
-  },
-  {
-    label: 'QuantSafe Certifier — signed release-gate for quantized models',
-    href: 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier',
-    detail:
-      'A live HuggingFace Space that issues Ed25519-signed, tamper-evident release-screen records for quantized models: it runs the RTSI triage from arXiv:2606.10154 to route a configuration to clear / review / direct-safety-eval, then emits a content-addressed evidence manifest. Ships a fine-tuned refusal classifier (quantsafe-refusal-modernbert). Backyard-AI hackathon submission (OpenAI / Modal / NVIDIA sponsors).',
-    evidence: [
-      { label: 'HF blog', href: 'https://huggingface.co/blog/build-small-hackathon/quantsafe' },
-      { label: 'LinkedIn', href: 'https://www.linkedin.com/posts/sahilkadadekar_quantsafe-certifier-a-hugging-face-space-activity-7472355496486711296-Rgl9' },
-      { label: 'X thread', href: 'https://x.com/KadadekarSahil/status/2066592448172720210' },
-    ],
+    label: 'Voice & agents',
+    items:
+      'LangGraph, LangSmith, MCP, LiveKit, Gemini Realtime, Whisper STT, TTS, WebRTC streaming, multi-provider gateways',
   },
 ];
 
@@ -205,15 +288,8 @@ export default function WorkPage() {
       <div className="signal-panel-strong mb-16 p-8 md:p-12">
         <div className="space-y-5 max-w-3xl">
           <span className="signal-pill">Work</span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            ML Engineer · Independent Researcher · Founder
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
-            A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 more under peer review,
-            {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.DISPLAY} empirical measurements, and a constitutional AI ecosystem spanning
-            9 repositories and 4 languages.
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">{HERO_HEADLINE}</h1>
+          <p className="text-lg text-muted-foreground leading-relaxed">{HERO_SUMMARY}</p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
               href="https://github.com/Sahil170595"
@@ -234,6 +310,15 @@ export default function WorkPage() {
               LinkedIn
             </Link>
             <Link
+              href="https://orcid.org/0000-0002-7139-1251"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/60 hover:text-primary"
+            >
+              <ExternalLink className="h-4 w-4" />
+              ORCID
+            </Link>
+            <Link
               href="/papers"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
@@ -243,6 +328,61 @@ export default function WorkPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Research & Open Source ── */}
+      <section className="mb-20">
+        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+          Research &amp; Open Source
+        </h2>
+        <div className="space-y-4">
+          {RESEARCH.map((item) => {
+            const external = item.href.startsWith('http');
+            return (
+              <div key={item.href} className="group signal-panel p-5 hover:border-primary/40 transition-all">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div className="min-w-0">
+                    <Link
+                      href={item.href}
+                      target={external ? '_blank' : undefined}
+                      rel={external ? 'noopener noreferrer' : undefined}
+                      className="font-semibold text-foreground group-hover:text-primary transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                    {item.meta && <p className="mt-1 text-xs text-muted-foreground/80">{item.meta}</p>}
+                  </div>
+                  {external && <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70 mt-1 shrink-0" />}
+                </div>
+                <ul className="space-y-2.5 text-sm text-muted-foreground leading-relaxed">
+                  {item.bullets.map((b, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                {item.evidence && item.evidence.length > 0 && (
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    {item.evidence.map((ev) => (
+                      <Link
+                        key={ev.href}
+                        href={ev.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      >
+                        {ev.label}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ── Experience ── */}
       <section className="mb-20">
@@ -313,51 +453,6 @@ export default function WorkPage() {
               </div>
             ))}
           </dl>
-        </div>
-      </section>
-
-      {/* ── Open Source ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <ExternalLink className="h-4 w-4 text-muted-foreground" />
-          Open Source
-        </h2>
-        <div className="space-y-4">
-          {OPEN_SOURCE.map((item) => (
-            <div
-              key={item.href}
-              className="group signal-panel p-5 hover:border-primary/40 transition-all"
-            >
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <Link
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-foreground group-hover:text-primary transition-colors"
-                >
-                  {item.label}
-                </Link>
-                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70 mt-1 shrink-0" />
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
-              {item.evidence && item.evidence.length > 0 && (
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {item.evidence.map((ev) => (
-                    <Link
-                      key={ev.href}
-                      href={ev.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                    >
-                      {ev.label}
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       </section>
 

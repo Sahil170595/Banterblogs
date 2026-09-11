@@ -7,7 +7,7 @@ import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs
 import { PHASE_DEFINITIONS, classifyReportSlug, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · 5 papers under peer review.`;
+const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · papers under peer review and an accepted ICML 2026 workshop paper.`;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/reports' },
@@ -79,16 +79,16 @@ export default async function ReportsIndex() {
     };
   });
 
-  // Build three top-level tabs using the shared slug classifier from phases.ts.
-  const whitepapers: ReportEntry[] = [];
+  // Build the top-level tabs using the shared slug classifier from phases.ts.
   const conclusive: ReportEntry[] = [];
   const technicalByPhase = new Map<string, ReportEntry[]>();
 
   for (const report of reports) {
     const cat = classifyReportSlug(report.slug);
-    if (cat === 'whitepaper') {
-      whitepapers.push(report);
-    } else if (cat === 'conclusive' || cat === 'appendix') {
+    // Phase whitepapers are the FEATURED_REPORTS cards above — skipping them
+    // here keeps them out of the phase tabs and off a second, duplicate list.
+    if (cat === 'whitepaper') continue;
+    if (cat === 'conclusive' || cat === 'appendix') {
       conclusive.push(report);
     } else {
       if (!technicalByPhase.has(cat)) technicalByPhase.set(cat, []);
@@ -132,16 +132,25 @@ export default async function ReportsIndex() {
       </div>
 
       {/* ── Stats Ribbon ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-16">
         {[
           { value: MEASUREMENTS.DISPLAY, label: 'Research Measurements' },
-          { value: REPORTS.DISPLAY, label: 'Technical Reports' },
+          {
+            value: REPORTS.DISPLAY,
+            label: 'Technical Reports',
+            // 47 distinct TR numbers + 3 pre-series baselines + 5 revised
+            // versions filed as their own reports (TR117 multi-agent,
+            // TR138 Study D, TR164 V3/V4/V5)
+            note: '47 TR numbers · 3 baselines · versions counted',
+          },
           { value: String(FEATURED_REPORTS.length), label: 'Synthesis Whitepapers' },
-          { value: '9', label: 'Repositories' },
         ].map((stat) => (
           <div key={stat.label} className="signal-panel p-5 text-center">
             <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>
             <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</div>
+            {stat.note && (
+              <div className="mt-1.5 text-[10px] leading-snug text-muted-foreground/70">{stat.note}</div>
+            )}
           </div>
         ))}
       </div>
@@ -279,39 +288,6 @@ export default async function ReportsIndex() {
           ))}
         </div>
       </section>
-
-      {/* ── Whitepapers ── */}
-      {whitepapers.length > 0 && (
-        <section className="mb-20">
-          <div className="mb-8 border-b border-border/40 pb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Whitepapers
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground/70">
-              Executive-level decision documents. Start here if you need the bottom line.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {whitepapers.map((r) => (
-                <Link
-                  key={r.slug}
-                  href={`/reports/${r.slug}`}
-                  className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-all"
-                >
-                  <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
-                    {r.title}
-                  </div>
-                  {r.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>
-                  )}
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Read <span>&rarr;</span>
-                  </span>
-                </Link>
-              ))}
-          </div>
-        </section>
-      )}
 
       {/* ── Conclusive Reports ── */}
       {conclusive.length > 0 && (

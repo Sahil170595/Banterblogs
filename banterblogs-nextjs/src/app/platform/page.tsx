@@ -16,19 +16,18 @@ import {
   Wrench,
 } from 'lucide-react';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
-import { formatReadingTime } from '@/lib/formatUtils';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/platform' },
   title: 'Platform',
   description:
-    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
+    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
   openGraph: {
     images: ['/opengraph-image.png'],
     title: 'Platform Architecture | Chimeraforge',
     description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
     url: 'https://chimeraforge.vercel.app/platform',
     type: 'website',
   },
@@ -36,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Platform Architecture | Chimeraforge',
     description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages, sub-20ms P95 on the fast path.',
+      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
   },
 };
 
@@ -88,7 +87,7 @@ export default async function PlatformPage() {
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
                 { icon: Brain, label: 'JARVIS Gateway', detail: 'AI agent layer — chat, voice, semantic memory, tools, proactive intelligence, smart home' },
-                { icon: Shield, label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), 99% fast-path routing' },
+                { icon: Shield, label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), calibrated fast-path routing' },
                 { icon: Cpu, label: 'Debate Engine', detail: 'Chimera — heat-based escalation, weighted voting, ranked choice, Condorcet consensus' },
                 { icon: Wrench, label: 'Rust Runtime', detail: 'TDD005 — Ed25519 provenance, BFT consensus, ZK proofs, cognitive agents with ELO' },
               ].map((item) => (
@@ -102,7 +101,7 @@ export default async function PlatformPage() {
               ))}
             </div>
             <div className="text-xs text-muted-foreground/70">
-              RLAIF self-improving loop &middot; 3-stage tool approval &middot; 89 patches shipped
+              RLAIF self-improving loop &middot; 3-stage tool approval
             </div>
           </div>
 
@@ -315,16 +314,10 @@ export default async function PlatformPage() {
 
       {/* ── Key Numbers ── */}
       <section className="mb-20">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2">
           {[
             { value: '9', label: 'Repositories' },
             { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
-            { value: String(stats.totalEpisodes), label: 'Episodes Shipped' },
-            { value: formatReadingTime(stats.totalReadingTime), label: 'Total Reading Time' },
-            { value: '89', label: 'Patches Shipped' },
-            { value: '4', label: 'Languages' },
-            { value: '99%', label: 'Fast-Path Routing' },
-            { value: '<100ms', label: 'Inference Target' },
           ].map((item) => (
             <div key={item.label} className="signal-panel p-5 text-center">
               <div className="text-2xl md:text-3xl font-bold text-foreground">{item.value}</div>
@@ -378,6 +371,41 @@ export default async function PlatformPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── See it run ── */}
+      <section className="mb-20">
+        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+          See it run
+        </h2>
+
+        <div className="signal-panel p-6 md:p-8">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            The subsystems above are not diagrams on{' '}
+            <Link href="/show" className="text-primary transition-colors hover:text-primary/80">
+              /show
+            </Link>
+            . Each scene replays pre-computed records from the Banterpacks pipeline — real Ed25519
+            signatures, real Pedersen commitments, real tier verdicts — and labels the one
+            deterministic stand-in where the public demo uses it.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Start with the{' '}
+            <Link href="/show/streaming-ladder" className="text-primary transition-colors hover:text-primary/80">
+              five-tier streaming ladder
+            </Link>
+            , the{' '}
+            <Link href="/show/zk-alignment-proof" className="text-primary transition-colors hover:text-primary/80">
+              zero-knowledge alignment proof
+            </Link>
+            , or{' '}
+            <Link href="/show/bft-consensus" className="text-primary transition-colors hover:text-primary/80">
+              BFT consensus across four replicas
+            </Link>
+            .
+          </p>
         </div>
       </section>
 

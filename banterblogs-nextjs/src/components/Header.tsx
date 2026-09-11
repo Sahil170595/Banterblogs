@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { href: '/papers', label: 'Papers' },
   { href: '/tools', label: 'Tools' },
   { href: '/show', label: 'Show' },
-  { href: '/episodes', label: 'Episodes' },
   { href: '/work', label: 'Work' },
   { href: '/about', label: 'About' },
 ];

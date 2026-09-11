@@ -20,8 +20,8 @@ This is the Next.js application that powers [chimeraforge.vercel.app](https://ch
 The site publishes three types of content:
 
 - **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why. 268 episodes across Banterpacks (194) and Chimera Engine (74). The per-commit episode stream is now archived — the final episode in each line is a full retrospective; ongoing work is documented through the research reports.
-- **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, constitutional AI, and safety evaluation. 55 reports with 1.34M+ empirical measurements.
-- **Papers** — independent research write-ups. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, 5 in preparation.
+- **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, constitutional AI, and safety evaluation. Current counts: https://chimeraforge.vercel.app/reports.json
+- **Papers** — independent research write-ups. One paper accepted at the ICML 2026 Workshop on Hypothesis Testing, one public arXiv preprint, more under blind review and in preparation. Current roster: https://chimeraforge.vercel.app/papers
 
 Headline counts (episodes / reports / measurements) are single-sourced from `src/lib/constants.ts` — update there, not in this README.
 
@@ -68,24 +68,24 @@ Reports can be standalone markdown files or directories containing `meta.json`, 
 | Route | Description |
 |---|---|
 | `/` | Landing page with episode highlights and platform stats |
-| `/episodes` | Searchable, filterable list of all episodes across both lines |
-| `/episodes/[slug]` | Individual episode with reading progress, social sharing |
+| `/episodes` | Archived episode index — searchable and filterable (detail pages are noindex) |
+| `/episodes/[slug]` | Individual archived episode with reading progress, social sharing |
 | `/banterpacks` | Banterpacks-only episode timeline (production monorepo) |
 | `/chimera` | Chimera Engine episode timeline (constitutional AI debate engine) |
 | `/reports` | Research report archive |
 | `/reports/[id]` | Individual report with prev/next navigation |
 | `/reports/compendium` | Full research compendium reader |
 | `/reports.json` | Machine-readable manifest of every report (build-time generated) |
-| `/papers` | Independent research papers — accepted, under review, in preparation |
+| `/papers` | Independent research papers — published, under review, in preparation |
 | `/work` | CV-style page — experience, education, skills, open-source |
+| `/tools` | Both shipped PyPI CLIs — chimeraforge and quantfit |
+| `/tools/[slug]` | Individual tool page — install, commands, evidence, limits |
 | `/show` | Interactive scenes from the Chimera ecosystem (BFT, ZK, cognitive agents, provenance, streaming ladder) |
 | `/show/[slug]` | Individual interactive scene |
 | `/platform` | Overview of the nine Chimera ecosystem repositories |
 | `/about` | Project background and character introductions |
 | `/tags` | Browse episodes by tag |
-| `/roadmap` | Development roadmap |
-| `/benchmarks` | Redirect → `/reports` (legacy) |
-| `/technology` | Redirect → `/platform` (legacy) |
+| `/roadmap` · `/benchmarks` · `/technology` | Legacy routes — permanent redirects to `/platform`, `/reports`, and `/platform` (no route directories) |
 | `/sitemap.xml` | XML sitemap with XSLT stylesheet |
 | `/rss.xml` | RSS feed with XSLT stylesheet |
 | `/api/webhook` | HMAC-authenticated revalidation endpoint |

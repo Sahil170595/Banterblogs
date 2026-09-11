@@ -8,9 +8,9 @@ const FOOTER_LINKS = {
     { href: '/papers', label: 'Papers' },
     { href: '/tools', label: 'Tools' },
     { href: '/show', label: 'Show' },
-    { href: '/episodes', label: 'Episodes' },
     { href: '/work', label: 'Work' },
     { href: '/about', label: 'About' },
+    { href: '/episodes', label: 'Archive' },
   ],
   Resources: [
     // the tool pages carry the install line, evidence, and PyPI link — send
@@ -127,7 +127,6 @@ export function Footer() {
               new Date().getFullYear() can mismatch across timezones / build
               boundaries and tripped React #418 in prod. Bump yearly. */}
           <span>(c) 2026 Chimeraforge. Crafted in public, powered by local AI.</span>
-          <span>9 repos. One ecosystem.</span>
         </div>
       </div>
     </footer>
