@@ -76,7 +76,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   tagline: 'LLM deployment planner',
   summary:
     'Turns "which model, quantization, GPU, and backend — how many, will it fit, will it hit my SLO, what will it cost" into a fast, measured answer from your shell, your Python, or your AI assistant.',
-  version: '0.30.1',
+  version: '0.30.10',
   license: 'MIT',
   python: '3.10 – 3.14',
   install: 'pip install chimeraforge',
@@ -85,7 +85,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/Chimeraforge',
   changelog: 'https://github.com/Sahil170595/Chimeraforge/blob/main/CHANGELOG.md',
   ecosystem: true,
-  downloads: '17,000+',
+  downloads: '25,000+',
   principle: {
     title: 'The trust principle',
     body: 'Every number is labeled measured, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are computed from real model architecture. Throughput is a measured lookup when one exists, otherwise an explicit bandwidth roofline, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
@@ -94,6 +94,8 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
     { name: 'plan', summary: 'predictive capacity planner' },
     { name: 'suggest', summary: 'discover and rank models that fit' },
     { name: 'measure', summary: 'benchmark live, plan on real numbers' },
+    { name: 'workload', summary: 'derive plan inputs from real traffic' },
+    { name: 'validate', summary: 'audit predictions against measurements' },
     { name: 'catalog', summary: 'local model catalog' },
     { name: 'safety', summary: 'live refusal screen' },
     { name: 'bench', summary: 'live inference benchmarking' },
@@ -156,7 +158,7 @@ export const QUANTFIT_TOOL: ToolDef = {
   tagline: 'Quantization + safety-drift CLI',
   summary:
     'Quantize an LLM — and check it still refuses what it should. Quantization makes a model cheaper to serve and can quietly strip safety behavior; a 4-bit model that answers what the full-precision model refused is a regression no perplexity number will show you.',
-  version: '0.12.2',
+  version: '0.12.16',
   license: 'Apache-2.0',
   python: '3.10 – 3.14',
   install: 'pip install quantfit',
@@ -165,7 +167,7 @@ export const QUANTFIT_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/quantfit',
   changelog: 'https://github.com/Sahil170595/quantfit/blob/main/CHANGELOG.md',
   ecosystem: false,
-  downloads: '6,000+',
+  downloads: '12,000+',
   principle: {
     title: 'Safety drift is a vector, not a number',
     body: 'verify-safety generates from both the unquantized baseline and the quantized model over a curated probe set, judges each response with a local classifier, and reports two axes: refusal-robustness drift (did the quant start complying with what should be refused — the dangerous direction) and over-refusal drift (did it start refusing what should be answered — the usability direction). A scalar refusal-delta can read zero while both axes move in opposite directions. Verdicts are bounded, never absolute: a no-detection result bounds the drift, it does not certify safety.',

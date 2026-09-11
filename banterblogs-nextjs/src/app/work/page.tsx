@@ -25,9 +25,10 @@ export const metadata: Metadata = {
   },
 };
 
-const HERO_HEADLINE = 'Founding ML engineer building and hardening agentic AI systems in consequential domains.';
+const HERO_HEADLINE =
+  'Founding ML engineer building production agentic and inference systems for clinical AI, cybersecurity, and model deployment.';
 
-const HERO_SUMMARY = `Architected Attunica's multimodal clinical platform and its AWS/Bedrock migration; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake latency 80–400×. Independently built Chimera, a six-subsystem constitutional AI and inference-safety platform: ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, an accepted ICML 2026 workshop paper, and sole-author submissions under blind review at a top ML venue. Machine-checked 118 claims across 48 ICML papers (#26 of 1,221); merged upstream into PyTorch, vLLM, Ollama, and Triton; released 22 Hugging Face models and two PyPI tools (23K+ downloads).`;
+const HERO_SUMMARY = `Architected Attunica's multimodal psychotherapy platform and AWS ECS/Bedrock cutover; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake latency 80–400×. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 9 sole-author 2026 papers (1 accepted at an ICML 2026 workshop; 8 under double-blind review), four upstream contributions, 22 Hugging Face models, and two PyPI tools with 37K+ downloads.`;
 
 interface ResearchItem {
   label: string;
@@ -47,16 +48,16 @@ const RESEARCH: ResearchItem[] = [
     meta: '48 papers · 118 claims · 297 pts, #26 of 1,221 (top 2.1%)',
     bullets: [
       'Built an autonomous, provider-neutral producer/reviewer/root-coordinator pipeline under per-paper evidence contracts fixed before execution; no human-intervention loops, no paper code reused, with every command, exit code, and output hash logged. A 4-paper concurrent calibration wave reached independent review in 27m42s; challenge referees scored each runnable Hugging Face Space.',
-      "All 3 official falsifications were Hierarchical Successor Representation claims (3/3); separately, DropoutTS's headline +46% robustness failed to reproduce at scale in my rerun (independently corroborated; referee-scored toy), while spectral-bound theory reproduced to machine precision (residuals at 1e-16).",
+      "Two of the 3 official falsifications were Hierarchical Successor Representation claims, the third a nonparametric-regression re-calibration; my scaled DropoutTS rerun also failed its +46% robustness headline (independently corroborated; referee-scored toy), while spectral-bound theory reproduced to machine precision (1e-16 residuals).",
     ],
   },
   {
     label: 'LLM Safety Research & Evaluation Infrastructure',
     href: '/reports',
-    meta: `${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements · accepted ICML 2026 workshop paper · sole-author submissions under blind review at a top ML venue`,
+    meta: `${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements · 1 accepted + 8 under double-blind review`,
     bullets: [
-      'Built the Banterhearts execution substrate: shared multi-backend evaluation and serving harnesses (Transformers, Ollama, ONNX, vLLM, SGLang, TGI), per-sample JSONL provenance, seed/config/git manifests, resume-safe OpenAI/Anthropic batch judges, disagreement-aware triangulation, fail-closed analyzers, and frozen-byte paper packages under dependency-locked CI.',
-      'Led the sole-author program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST equivalence, and Holm-Bonferroni. Accepted: ICML 2026 Workshop on Hypothesis Testing; sole-author submissions under blind review at a top ML venue, spanning quantization safety, judge reliability, and multi-turn jailbreak risk; plus a separate workshop submission.',
+      'Built the Banterhearts execution substrate: shared multi-backend evaluation and serving harnesses (Transformers, Ollama, ONNX, vLLM, SGLang, TGI), per-sample JSONL provenance, seed/config/git manifests, checkpointed OpenAI/Anthropic batch judges, disagreement-aware triangulation, fail-closed analyzers, and frozen-byte paper packages under dependency-locked CI.',
+      'Led the sole-author program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Accepted: ICML 2026 Workshop on Hypothesis Testing; under double-blind review: 3 main-track and 5 workshop submissions spanning quantization safety, judge reliability, multi-turn jailbreak risk, prompt-template transfer, serving state, and reproducibility; reviewer for three ML workshops.',
       "Reported 3 pre-registered negative results against my own models: M/D/1 queueing missed observed continuous-batching latency by 20.4×; NUM_PARALLEL had no detectable effect (0/30 significant); PyTorch Direct caused larger safety degradation than Ollama. A 78,183-row 4-stack ablation isolated its N=2 concurrency failure and vLLM/TGI's 2.25× gain at N=8; deployment rules include Q4_K_M and compile-prefill-only on Linux.",
       "The TAIS preprint found no detectable safety divergence under speculative decoding at temperature zero across 60,849 matched samples: maximum absolute Cohen's h = 0.024, with 25/27 per-task TOST contrasts within ±3pp.",
       'Decomposed the measured safety tax to quantization 57%, backend 41%, concurrency 2%; across 18 models / 10+ families, alignment type (p=0.942) and 4 mechanistic probes failed to predict fragility, while output instability was strongest (r=0.91) and chat-template divergence sometimes exceeded precision effects.',
@@ -71,10 +72,10 @@ const RESEARCH: ResearchItem[] = [
   {
     label: 'Chimeraforge — LLM deployment planner',
     href: 'https://pypi.org/project/chimeraforge/',
-    meta: `v${CHIMERAFORGE_TOOL.version} · ${CHIMERAFORGE_TOOL.downloads} downloads · 1,343 tests`,
+    meta: `v${CHIMERAFORGE_TOOL.version} · ${CHIMERAFORGE_TOOL.downloads} downloads · 1,571 tests`,
     bullets: [
-      'Ingests JSONL or live vLLM/SGLang telemetry, then searches model × quantization × backend × GPU/TP/PP plans, including heterogeneous fleets with weakest-provenance propagation, against VRAM, TTFT/TPOT, throughput, KV-cache/CPU offload, prefix caching, multi-LoRA, cost, and energy; emits vLLM/TGI/SGLang/Ollama launch commands, API-vs-self-host comparisons, and provenance-backed briefs through CLI/Python/MCP.',
-      'Made its evidence hierarchy executable: every number is labeled exact, measured, estimated, derived, or unknown; validation fingerprints the pre-registered matrix and separates in-corpus lookup from out-of-sample estimates. Measured validation: VRAM R²=.968, throughput R²=.859, quality RMSE=.062, latency MAPE=1.05%; stale prices and unsupported estimates fail closed.',
+      'A 13-command CLI/Python/MCP planner that ingests JSONL or live vLLM/SGLang telemetry; searches model × quantization × backend × GPU/TP/PP plans across heterogeneous fleets; propagates weakest-source evidence; predicts VRAM, TTFT/TPOT, throughput, KV-cache/offload, prefix caching, multi-LoRA, cost, and energy; and emits vLLM/TGI/SGLang/Ollama launch commands, API break-even, and provenance briefs.',
+      'Made its evidence hierarchy executable: every estimate is labeled measured, extrapolated, derived, estimated, or unknown; validation separates in-corpus lookup from out-of-sample estimates, and --expect-fingerprint aborts if the pre-registered matrix changes. Measured validation: VRAM R²=.968, throughput R²=.859, quality RMSE=.062, latency MAPE=1.05%; stale prices and unsupported estimates fail closed.',
     ],
     evidence: [
       {
@@ -86,7 +87,7 @@ const RESEARCH: ResearchItem[] = [
   {
     label: 'quantfit — quantization safety measurement CLI',
     href: 'https://pypi.org/project/quantfit/',
-    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 1,340 tests`,
+    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 1,369 tests`,
     bullets: [
       'Implements QSR spec v0, a versioned quantization-safety measurement protocol, across AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF; its two-axis release gate (refusal robustness + over-refusal) uses at-risk denominators, Wilson CIs/power, revision-pinned artifacts, exact-engine provenance, stable JSON/exit codes, and JUnit where unmeasured axes skip rather than pass.',
       'Completed a 15-target screen (14 measured; 0 dangerous-axis regressions across 12 GGUF + 2 compressed-tensor targets) with a passing sensitivity control; calibrated and replaced a judge with 56.2% false positives, then human-adjudicated 11 flags (6 real, 5 judge errors), preventing an approximately 2× overclaim. Cross-hardware T0 replications invalidated an apparent safety breach, so I voided the result rather than publish it.',
@@ -192,12 +193,12 @@ const EXPERIENCE: Experience[] = [
     location: 'New York, USA',
     dates: 'Oct 2025 – Present',
     bullets: [
-      "Architected and solo-built Attunica's multimodal psychotherapy-training and evaluation platform for measuring how LLM personas simulate humanity and evoke emotional attachment: Next.js + FastAPI, LiveKit + Gemini Realtime + Anam voice-avatar sessions, durable transcripts/debriefs, course/roster/assignment workflows, and consent-tiered research export; now lead a PM + 2 engineers; NYU Silver MSW pilot; HIPAA BAAs executed with Anthropic + AWS.",
-      'Built the role-integrity and tenancy boundary: tenant-scoped RBAC, signed BFF capabilities, and instructor-authored persona text pinned as character data, never instructions; immutable module, avatar, and rubric identities plus consent/revocation barriers prevent cross-role and cross-tenant drift.',
-      'Made evaluation state auditable: content-addressed records pin rubric, policy, prompt, provider, model, and schema revisions; distinguish no evidence from scored zero; gate scoring on clinical validation; persist session, evaluation, admission, and budget state; and separate pre-call failures from ambiguous provider outcomes to prevent replay of billable side effects.',
-      'Led AWS-funded enterprise hardening with Avahi; migrating generation/evaluation to AWS Bedrock using IAM-scoped credentials, typed runtime contracts, zero SDK retries, bounded timeouts, no cross-provider fallback/replay, reproducible dependency locks, and source-pinned CI.',
-      'Executed a 127-row compliance matrix through 40 dependency-ordered PRs under append-only validator attestation (a PR cannot weaken the checks that approve it), with proof-gated cutovers, receipted approvals, and deterministic E2E evidence.',
-      'Hardened an Article 31 documentation product with domain-restricted Google SSO, patient-scoped RBAC/audit trails, browser-only PDF extraction and PII scrubbing, on-device Whisper dictation, and clinician-reviewed Claude note/treatment-plan drafting.',
+      "Architected and solo-built Attunica's multimodal psychotherapy-training and evaluation platform: real-time LiveKit + Gemini + Anam sessions, durable transcripts/debriefs, and academic workflows; now lead a PM + 2 engineers; NYU Silver MSW pilot; HIPAA BAAs with Anthropic + AWS.",
+      'Built a consent-gated, clinician-graded LLM-persona environment for measuring simulated humanity and attachment without patient data: persona text is character data, never instructions; tenant RBAC and signed BFF capabilities fence roles; immutable eval IDs, revocable consent, private versioned media, and two-channel Deepgram bind evidence to provider identity.',
+      'Made evaluation state auditable: content-addressed records pin prompt/provider/model/schema revisions; distinguish no evidence from scored zero; gate scoring on clinical validation; persist lifecycle/budget state; and separate pre-call failure from ambiguous provider outcomes to prevent billable replay.',
+      'Led the AWS-funded production cutover with Avahi to ECS, Aurora PostgreSQL 18, and Bedrock; retired Fly/Neon/Vercel; enforced IAM-scoped credentials, typed runtime contracts, zero SDK retries, bounded timeouts, no cross-provider fallback/replay, and an audited canary with content-free receipts.',
+      'Executed a 141-row production-readiness matrix through 40 dependency-ordered PRs under exact-base validation, lane ownership, and append-only admission (a PR cannot weaken its approving checks); qualified the source candidate with 6K+ tests, PostgreSQL 18 migration rehearsals, commit-bound artifacts, and content-free Bedrock/Deepgram evidence.',
+      'Lead the Article 31 documentation product (v0.5.1 on AWS ECS): release-only deploys and gated in-VPC migrations; domain-restricted SSO, patient-scoped RBAC/RLS/audits, browser-only PII-scrubbed PDF extraction, on-device Whisper, and clinician-reviewed Claude notes/treatment plans with end-to-end authorship.',
     ],
   },
   {
@@ -228,7 +229,7 @@ const EXPERIENCE: Experience[] = [
     location: 'India',
     dates: 'Nov 2020 – Sep 2023',
     bullets: [
-      'Adapted a channel-fused Dense CNN for BCI Competition IV-2a, decoding four-class motor imagery (left/right hand, feet, tongue) from 22-channel, 250-Hz EEG; deployed real-time inference on NVIDIA Jetson edge hardware in a physical BCI prototype, improved preprocessing throughput 35% via pinned memory and asynchronous CPU–GPU transfers, and earned PICT Honors in AI & ML through the work.',
+      'Adapted a channel-fused Dense CNN for BCI Competition IV-2a four-class motor imagery from 22-channel, 250-Hz EEG; deployed real-time inference in a physical NVIDIA Jetson prototype, improved preprocessing throughput 35% via pinned memory and asynchronous CPU–GPU transfers, and earned PICT Honors in AI & ML through the work.',
       'Engineered training and preprocessing pipelines for 92K+ fundus scans and 1K+ dental imaging cases (93% diagnostic accuracy) on TensorFlow/Keras (2022–2023).',
       'Evaluated about 10 attention variants for 5-class diabetic retinopathy grading, produced SHAP interpretability reports, and established dataset/annotation protocols adopted by 5+ research teams with institutional copyright L-122721/2023.',
     ],
@@ -271,7 +272,7 @@ const SKILLS = [
   {
     label: 'Product stack',
     items:
-      'Python, Rust, TypeScript, SQL, C++, C#, FastAPI, Next.js, React, PostgreSQL/pgvector, Redis, ClickHouse, Qdrant, DynamoDB, Docker, Kubernetes, AWS/Bedrock, Azure',
+      'Python, Rust, TypeScript, SQL, C++, C#, FastAPI, Next.js, React, PostgreSQL/pgvector, Redis, ClickHouse, Qdrant, DynamoDB, Docker, Kubernetes, AWS (ECS, Bedrock, Aurora), Azure',
   },
   {
     label: 'Voice & agents',

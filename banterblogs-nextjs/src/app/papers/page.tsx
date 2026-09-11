@@ -151,7 +151,10 @@ const IN_PREP: Paper[] = [
 
 // Counts are derived so the hero, the tiles, and the metadata cannot drift from
 // the arrays the page actually renders.
-const UNDER_REVIEW_COUNT = UNDER_REVIEW_PAPERS.length;
+// Workshop submissions still in double-blind review; their titles stay off
+// public pages until decisions land.
+const WITHHELD_WORKSHOP_SUBMISSIONS = 4;
+const UNDER_REVIEW_COUNT = UNDER_REVIEW_PAPERS.length + WITHHELD_WORKSHOP_SUBMISSIONS;
 const IN_PREP_COUNT = IN_PREP.length;
 const TOTAL_PAPERS = ACCEPTED.length + PUBLIC_PREPRINTS.length + UNDER_REVIEW_COUNT + IN_PREP_COUNT;
 
@@ -266,7 +269,7 @@ export default function PapersPage() {
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
             evaluation. The first paper is accepted to the ICML 2026 Workshop on Hypothesis Testing, and the
             speculative-decoding null result is public on arXiv; {UNDER_REVIEW_COUNT} more are under blind review at
-            top ML venues and a workshop, with {IN_PREP_COUNT} in preparation. Each is backed by reproducible technical reports
+            top ML venues and workshops, with {IN_PREP_COUNT} in preparation. Each is backed by reproducible technical reports
             and artifact-level provenance from a {MEASUREMENTS.DISPLAY} measurement program.
           </p>
           <p className="text-sm text-muted-foreground/80">
@@ -318,7 +321,7 @@ export default function PapersPage() {
           </h2>
           <p className="mt-2 text-sm text-muted-foreground/70">
             {UNDER_REVIEW_COUNT} papers submitted with PDFs, artifact manifests, and venue checklists complete. Now
-            under blind review at top ML venues and a workshop.
+            under blind review at top ML venues and workshops.
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
@@ -326,6 +329,10 @@ export default function PapersPage() {
             <PaperCard key={p.title} paper={p} />
           ))}
         </div>
+        <p className="mt-5 text-sm text-muted-foreground">
+          Plus {WITHHELD_WORKSHOP_SUBMISSIONS} further workshop submissions under double-blind review. Their titles
+          are withheld until decisions land.
+        </p>
       </section>
 
       {/* ── In Preparation ── */}
