@@ -504,6 +504,44 @@ html {
 
 .galactic-system-rail {
   padding-bottom: env(safe-area-inset-bottom);
+  position: absolute; /* re-stated for the scrim's containing block */
+}
+
+/* Legibility scrim. On narrow viewports the rail is repositioned over the
+   accretion disk's brightest band, where the 10px description measured
+   ~1.4:1 against the orange — unreadable. A soft bottom-anchored gradient
+   (no box edge, per the scene's no-bounding-box art direction) restores
+   contrast without introducing a visible panel. Bleeds past the rail so the
+   fade never terminates mid-text. */
+.galactic-system-rail::before {
+  content: "";
+  position: absolute;
+  /* Bleeds well past the rail on both sides so the gradient never terminates
+     in a visible vertical edge; the hero section's overflow-hidden clips it,
+     so this cannot introduce horizontal scroll. */
+  inset: -1.5rem -8rem -6rem -8rem;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgb(2 4 8 / 0.94) 0%,
+    rgb(2 4 8 / 0.88) 42%,
+    rgb(2 4 8 / 0.62) 72%,
+    transparent 100%
+  );
+}
+
+/* Desktop keeps the rail in the dark left column where it already measured
+   ~8.8:1 — soften the scrim so the scene reads through it. */
+@media (min-width: 1280px) {
+  .galactic-system-rail::before {
+    background: linear-gradient(
+      to top,
+      rgb(2 4 8 / 0.72) 0%,
+      rgb(2 4 8 / 0.5) 55%,
+      transparent 100%
+    );
+  }
 }
 
 .galactic-rail-link::after {

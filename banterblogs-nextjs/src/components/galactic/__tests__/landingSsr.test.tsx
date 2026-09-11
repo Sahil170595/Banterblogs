@@ -48,7 +48,11 @@ describe('landing JSON-LD', () => {
     expect(jsonLd.about.description).toBe(CORE_SELECTION.blurb);
     expect(jsonLd.author.name).toBe('Sahil Kadadekar');
     expect(jsonLd.publisher.name).toBe('Chimeraforge');
-    // must serialize without lossy values (undefined drops keys silently)
-    expect(JSON.stringify(jsonLd)).not.toContain('undefined');
+    // JSON.stringify DROPS undefined values rather than emitting "undefined",
+    // so a substring check can never fail. Assert the keys survive instead.
+    const roundTripped = JSON.parse(JSON.stringify(jsonLd));
+    for (const key of ['name', 'description', 'url', 'about', 'author', 'publisher']) {
+      expect(roundTripped[key], `landing JSON-LD lost ${key}`).toBeTruthy();
+    }
   });
 });

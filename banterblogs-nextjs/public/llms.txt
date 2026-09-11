@@ -15,7 +15,7 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 
 ## Scale
 
-- 9 repositories across Python, Rust, TypeScript, C#, JavaScript
+- 9 repositories across Python, Rust, TypeScript, and C#
 - 1,348,000+ research measurements across 55 technical reports
 - 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing (workshop, not the main conference)
 - 5 papers under peer review (target: top ML venues)
@@ -81,10 +81,10 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - Phase 6 (TR144–TR149+TR152): Serving-state safety certification — measurement-validity substrate + FP8 KV-cache batteries + serving-state factorial
 
 ### Headline Findings
-- **Q4_K_M is the universal quantization sweet spot** (-4.1pp accuracy max across 5 models, 30-67% cost savings).
-- **Q2_K is universally unacceptable for safety** (100% ASR; banned across 18+ models, 10+ families).
-- **Quality metrics are not safety proxies** — safety degrades 13.9× faster than quality at Q3_K_S.
-- **Backend choice can move safety by 25pp** (chat template divergence, not the framework).
+- **Q4_K_M is the safe GGUF default** (established across 5 models in TR125 v1, extended to 7 in v2; 30-67% cost savings).
+- **Q2_K collapses refusals on the worst-affected model** (100% attack success on qwen2.5-1.5b in TR139; effects vary by model, not uniform).
+- **Quality metrics are not safety proxies** — safety degraded 13.9× faster than quality on llama3.2-1b at Q3_K_S.
+- **Backend choice moved safety 7-25pp**, peaking at 23-25pp on Llama 3.2 1B (chat template divergence, not the framework).
 - **Alignment type does not predict batch fragility** (RLHF/SFT/DPO/distilled all show same flip pattern, p = 0.942).
 - **FP8 KV-cache produces no measurable safety degradation** across 24K paired records (TR145, null result).
 - **Single-judge safety labels are insufficient** — cross-LLM κ = 0.69 lands in the "triangulate" bucket; safety-specialist judges measure a different axis than general LLMs (TR148, 68K judge rows).
@@ -157,7 +157,7 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 - PyTorch PR #175562 (merged 2026-06-04) — cudagraph_trees deallocation: hard assert → warning; surfaced via torch.compile decode diagnosis
 - vLLM PR #45207 (merged 2026-07-07) — pad Mamba page size instead of scaling block_size in unify_kv_cache_spec_page_size (hybrid attention/Mamba KV layout fix)
 - Triton PR #10819 (merged 2026-07-08) — tl.flip compile-time crash on documented default dim=None
-- Triton PR #10822 (under review) — shared-memory gather fallback when no warp-local layout exists
+- Triton PR #10822 (closed unmerged 2026-07-13; maintainers fixed the issue separately) — proposed a shared-memory gather fallback when no warp-local layout exists
 
 ## Links
 
@@ -178,7 +178,7 @@ Embedding-based fast-path router classifies 99% of queries in <10ms via cosine s
 - Substack: https://substack.com/@sahilkadadekar
 - LinkedIn: https://linkedin.com/in/sahilkadadekar
 - Twitter: https://twitter.com/sahilkadadekar
-- HuggingFace (16 model releases): https://huggingface.co/Crusadersk
+- HuggingFace (22 model releases): https://huggingface.co/Crusadersk
 - QuantSafe Certifier (HuggingFace Space): https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier
 - QuantSafe launch article (HuggingFace blog): https://huggingface.co/blog/build-small-hackathon/quantsafe
 

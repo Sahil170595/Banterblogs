@@ -7,13 +7,15 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { CHIMERAFORGE_TOOL } from '@/lib/tools';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/about' },
   title: 'About Chimera',
   description:
     'Constitutional AI ecosystem built by Sahil Kadadekar — 9 repos across Python, Rust, TypeScript, and C#. Constitutional enforcement, cryptographic provenance, and self-improving alignment.',
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'About Chimera | Chimeraforge',
     description:
-      'Constitutional AI ecosystem · 9 repos, 5 languages, Rust alignment runtime, multi-model debate, cryptographic provenance.',
+      'Constitutional AI ecosystem · 9 repos, 4 languages, Rust alignment runtime, multi-model debate, cryptographic provenance.',
     url: 'https://chimeraforge.vercel.app/about',
     type: 'website',
   },
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'About Chimera | Chimeraforge',
     description:
-      'Constitutional AI ecosystem · 9 repos, 5 languages, Rust alignment runtime, multi-model debate, cryptographic provenance.',
+      'Constitutional AI ecosystem · 9 repos, 4 languages, Rust alignment runtime, multi-model debate, cryptographic provenance.',
   },
 };
 

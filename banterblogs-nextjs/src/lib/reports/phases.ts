@@ -57,7 +57,7 @@ export const PHASE_DEFINITIONS: PhaseDefinition[] = [
     label: 'Phase 2 — Benchmarking (TR117–TR122)',
     description: 'Multi-agent parity, TensorRT compilation, inference physics, scaling laws.',
     featuredSummary:
-      'Benchmarking synthesis — cross-backend inference parity, TensorRT compilation, and scaling laws across 6 reports.',
+      'Benchmarking synthesis — cross-backend inference parity, TensorRT compilation, and scaling laws across 7 reports.',
     minTR: 117,
     maxTR: 122,
     hasWhitepaper: true,

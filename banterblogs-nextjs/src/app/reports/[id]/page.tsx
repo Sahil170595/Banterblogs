@@ -44,6 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title,
     description,
     openGraph: {
+      images: ['/opengraph-image.png'],
       title: `${title} | Chimeraforge`,
       description,
     },

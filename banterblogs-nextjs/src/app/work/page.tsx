@@ -7,9 +7,11 @@ import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 const METADATA_DESCRIPTION = `ML Engineer · inference optimization, constitutional AI architectures, empirical safety evaluation. 1 paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 under peer review, ${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.SHORT} measurements.`;
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/work' },
   title: 'Work',
   description: METADATA_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Work | Chimeraforge',
     description: METADATA_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/work',
@@ -63,10 +65,10 @@ const EXPERIENCE: Experience[] = [
     location: 'New York, USA',
     dates: 'Sep 2025 — Present',
     bullets: [
-      'Architected a constitutional AI ecosystem spanning 9 repositories, 15+ services, and 5 languages (Python, Rust, TypeScript, C#, JavaScript), with production inference services, a research platform, mobile and web clients, and a content pipeline.',
-      'Designed a constitutional alignment architecture: a multi-model debate engine with heat-based escalation, 3 consensus algorithms (weighted, ranked-choice, Condorcet), and a visual-embedding fast-path router achieving 99% single-hop routing in <10ms — a 10,000× speedup over full debate at 97% cost reduction. Productionized with drift detection (KS, PSI, ADWIN), canary deployment, and auto-rollback circuit breakers.',
+      'Architected a constitutional AI ecosystem spanning 9 repositories, 15+ services, and 4 languages (Python, Rust, TypeScript, C#), with production inference services, a research platform, mobile and web clients, and a content pipeline.',
+      'Designed a constitutional alignment architecture: a multi-model debate engine with heat-based escalation, 3 consensus algorithms (weighted, ranked-choice, Condorcet), and an embedding fast-path router achieving 99% single-hop routing in <10ms, avoiding full multi-model debate on the fast path. Productionized with drift detection (KS, PSI, ADWIN), canary deployment, and auto-rollback circuit breakers.',
       'Built the alignment runtime in Rust (7 crates): BFT consensus, Ed25519 provenance chains, Merkle tree verification, and zero-knowledge proofs (Pedersen commitments on Ristretto255). Integrated with Python ML services via zero-copy Arrow IPC FFI, achieving <20ms end-to-end P95 on the fast path.',
-      'Built JARVIS, a multi-provider AI gateway (Anthropic, OpenAI, Gemini) with chat, voice, multi-graph memory (semantic, temporal, causal, entity graphs with BFS traversal and episodic consolidation), tool execution with human-in-the-loop approval, proactive intelligence (system-originated workflows), and 5 channel adapters (Slack, Discord, Telegram, WhatsApp, Email). Shipped with a Unity/C# Android client and Next.js web console, both supporting cross-device sync and session handoff.',
+      'Built JARVIS, a multi-provider AI gateway (Anthropic, OpenAI, Gemini) with chat, voice, multi-graph memory (semantic, temporal, causal, entity graphs with BFS traversal and episodic consolidation), tool execution with human-in-the-loop approval, proactive intelligence (system-originated workflows), and channel adapters (Slack and Discord, with further channels in progress). Shipped with a Unity/C# Android client and Next.js web console, both supporting cross-device sync and session handoff.',
       'Wired a cognitive meta-controller with 4 agent styles (analytical, creative, adversarial, domain expert), ELO-based performance tracking, and advisory pre-checks on high-risk tool execution. Self-improving via a cross-repo MLOps loop: debate outcomes generate DPO training pairs (Rafailov loss), with Dr. GRPO, RLOO, and Self-Rewarding (WARM judge ensemble) post-training added 2026; fed through statistical drift detection (Welch\'s t-test, Cohen\'s d) and a canary deployment controller with auto-rollback for zero-downtime model promotion.',
       'Built a 6-agent content pipeline with ClickHouse analytics and confidence-scored publishing, plus a constitutional observability system with 6 watchers, 5 triagers, and 7 autonomous fixers driven by 8 playbooks with a SQLite-backed dead letter queue (102 tests).',
       'Extended the constitutional architecture to embodied autonomy via ProjectWyvern: a governed mission-execution plane between Chimera control and PX4/ArduPilot, with a 5-tier authority hierarchy, cryptographic mission replay, and an OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP on PX4 + ROS 2 + Gazebo in progress.',
@@ -158,7 +160,7 @@ const OPEN_SOURCE: OpenSourceItem[] = [
       'A standalone GPU-aware quantization CLI (separate from the Chimera ecosystem). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN via llm-compressor, plus GGUF for llama.cpp / Ollama), refuses honestly when a model will not fit (capacity read from HF metadata, no download), and measures the safety drift of the quantization it just performed — a two-axis vector (refusal-robustness + over-refusal, per zone) against an unquantized baseline, judged by a local ModernBERT refusal classifier. Verdicts are bounded, not absolute: a binomial over at-risk pairs with Wilson 95% CIs and a minimum-detectable-effect at 80% power, cross-checked against scipy in CI; `--report drift.json` emits an auditable schema-v1 artifact (judge/probe revision pins, decode params, resolved dtypes, environment fingerprint). Ships transparent `plan` / `probe` diagnostics rather than auto-quantization. v' + QUANTFIT_TOOL.version + ', Apache-2.0.',
   },
   {
-    label: 'HuggingFace — 16 model releases',
+    label: 'HuggingFace — 22 model releases',
     href: 'https://huggingface.co/Crusadersk',
     detail:
       '11 quantized (AWQ + GPTQ 4-bit) across Llama 3.2, Qwen 2.5, Mistral 7B, Phi-2, plus 4 custom GPT-2 scaling variants from the model scaling study, plus quantsafe-refusal-modernbert (the refusal classifier behind the QuantSafe Certifier).',
@@ -167,7 +169,7 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'PyTorch PR #175562 — merged to PyTorch main',
     href: 'https://github.com/pytorch/pytorch/pull/175562',
     detail:
-      'Authored an upstream PyTorch fix, merged to main (2026-06-04), replacing a hard assertion with a warning in cudagraph_trees deallocation — surfaced while diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered deallocation errors during compiled inference. Also validated the maintainer\'s in-review decode-path fix (PR #184102) on a real HF gpt2 decode and reported a multi-partition coverage gap it leaves open.',
+      'Authored an upstream PyTorch fix, merged to main (2026-06-04), replacing a hard assertion with a warning in cudagraph_trees deallocation — surfaced while diagnosing torch.compile autoregressive decode failures where growing KV-cache tensors triggered deallocation errors during compiled inference. Also validated the maintainer\'s proposed decode-path fix (PR #184102, since closed unmerged) on a real HF gpt2 decode and reported a multi-partition coverage gap it leaves open.',
     evidence: [{ label: 'Validation gist + repro (PR #184102)', href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb' }],
   },
   {
@@ -180,8 +182,8 @@ const OPEN_SOURCE: OpenSourceItem[] = [
     label: 'Triton PR #10819 — merged to triton-lang/triton',
     href: 'https://github.com/triton-lang/triton/pull/10819',
     detail:
-      'Authored an upstream Triton frontend fix, merged 2026-07-08: tl.flip crashed at compile time on its documented default (dim=None) because the bounds-check static_assert ran before dim resolution. A second, backend PR (#10822, under review) fixes a compiler abort in tl.gather when the index tensor is much longer than the source along the gather axis (issue #5836), by falling back to a shared-memory gather when no warp-local layout exists.',
-    evidence: [{ label: 'PR #10822 — backend gather fallback (under review)', href: 'https://github.com/triton-lang/triton/pull/10822' }],
+      'Authored an upstream Triton frontend fix, merged 2026-07-08: tl.flip crashed at compile time on its documented default (dim=None) because the bounds-check static_assert ran before dim resolution. A second, backend PR (#10822, closed unmerged — the maintainers fixed the issue separately) proposed a compiler-abort fix in tl.gather when the index tensor is much longer than the source along the gather axis (issue #5836), by falling back to a shared-memory gather when no warp-local layout exists.',
+    evidence: [{ label: 'PR #10822 — backend gather fallback (closed unmerged)', href: 'https://github.com/triton-lang/triton/pull/10822' }],
   },
   {
     label: 'QuantSafe Certifier — signed release-gate for quantized models',
@@ -210,7 +212,7 @@ export default function WorkPage() {
             Building across inference optimization, constitutional AI architectures, and empirical safety evaluation.
             A paper accepted at the ICML 2026 Workshop on Hypothesis Testing, 5 more under peer review,
             {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.DISPLAY} empirical measurements, and a constitutional AI ecosystem spanning
-            9 repositories and 5 languages.
+            9 repositories and 4 languages.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link

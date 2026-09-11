@@ -10,9 +10,11 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · 5 papers under peer review.`;
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/reports' },
   title: 'Research Archive',
   description: METADATA_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Research Archive | Chimeraforge',
     description: METADATA_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/reports',
@@ -208,8 +210,8 @@ export default async function ReportsIndex() {
           {[
             {
               number: '100% ASR',
-              finding: 'Q2_K is universally unacceptable for safety. Banned across 18+ models, 10+ families.',
-              source: [{ label: 'TR134', slug: 'technical-report-134' }, { label: 'TR139', slug: 'technical-report-139' }],
+              finding: 'Q2_K collapses refusals on the worst-affected model — 100% attack success on qwen2.5-1.5b. Not uniform: effects vary by model.',
+              source: [{ label: 'TR139', slug: 'technical-report-139' }],
             },
             {
               number: 'p = 0.942',
@@ -218,17 +220,17 @@ export default async function ReportsIndex() {
             },
             {
               number: '25pp',
-              finding: 'Backend migration can cost 25 percentage points of safety. Chat template divergence, not the framework.',
+              finding: 'Backend migration moved safety 7–25pp, peaking at 23–25pp on Llama 3.2 1B. Chat template divergence, not the framework.',
               source: [{ label: 'TR136', slug: 'technical-report-136' }],
             },
             {
               number: '13.9×',
-              finding: 'Quality metrics are not safety proxies. Safety degrades 13.9× faster than quality at Q3_K_S.',
+              finding: 'Quality metrics are not safety proxies. Safety degraded 13.9× faster than quality on llama3.2-1b at Q3_K_S.',
               source: [{ label: 'TR142', slug: 'technical-report-142' }],
             },
             {
               number: '99.4%',
-              finding: 'Dual Ollama eliminates 99% of multi-agent contention. Architectural fix, not code fix.',
+              finding: 'Dual Ollama reached 99.4% coordination efficiency on the best config, and cut contention to near zero. Architectural fix, not code fix.',
               source: [{ label: 'TR114', slug: 'technical-report-114' }],
             },
             {
@@ -243,7 +245,7 @@ export default async function ReportsIndex() {
             },
             {
               number: 'Q4_K_M',
-              finding: 'The universal quantization sweet spot. -4.1pp accuracy max across 5 models, 30-67% cost savings.',
+              finding: 'The safe GGUF default — established across 5 models, extended to 7 in v2. 30-67% cost savings.',
               source: [{ label: 'TR125', slug: 'technical-report-125' }],
             },
             {

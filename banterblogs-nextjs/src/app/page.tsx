@@ -9,6 +9,7 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 // repos. The classic scrollable overview lives at /home.
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/' },
   description:
     `Nine repositories orbiting one constitutional AI core — an interactive galactic map of the Chimera ecosystem. ` +
     `${REPORTS.DISPLAY} technical reports, ${MEASUREMENTS.DISPLAY} measurements.`,

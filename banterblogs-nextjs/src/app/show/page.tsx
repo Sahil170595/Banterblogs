@@ -6,9 +6,11 @@ const SHOW_DESCRIPTION =
   'Interactive scenes from the Chimera constitutional AI ecosystem — real cryptographic, consensus, and verifier internals rendered as visual demos.';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/show' },
   title: 'Show · Chimera',
   description: SHOW_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Show · Chimera | Chimeraforge',
     description: SHOW_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/show',

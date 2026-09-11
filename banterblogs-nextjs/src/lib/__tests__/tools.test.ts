@@ -58,6 +58,23 @@ describe('tools data module', () => {
   });
 });
 
+// Matches any semver-ish literal in the shapes these files actually use:
+// "v0.12.3", "(v0.12.3)", "Version: 0.12.3". Deliberately NOT anchored to the
+// CURRENT version — an earlier version of this guard searched for the current
+// literal, which meant it went blind the moment tools.ts was bumped, i.e. on
+// exactly the event it exists to catch.
+const VERSION_LITERAL = /\bv?(\d+\.\d+\.\d+)\b/g;
+
+function versionLiteralsNear(source: string, slug: string): string[] {
+  const found: string[] = [];
+  for (const line of source.split('\n')) {
+    // only lines that are actually talking about this package
+    if (!line.toLowerCase().includes(slug)) continue;
+    for (const match of line.matchAll(VERSION_LITERAL)) found.push(match[1]);
+  }
+  return found;
+}
+
 describe('no hard-coded package versions outside the module', () => {
   it('keeps every TS/TSX surface reading versions from tools.ts', () => {
     const offenders: string[] = [];
@@ -65,36 +82,46 @@ describe('no hard-coded package versions outside the module', () => {
       if (file.endsWith(path.join('lib', 'tools.ts'))) continue;
       const source = fs.readFileSync(file, 'utf8');
       for (const tool of TOOLS) {
-        if (source.includes(`v${tool.version}`) || source.includes(`Version: ${tool.version}`)) {
-          offenders.push(`${path.relative(SRC, file)} hard-codes ${tool.slug} ${tool.version}`);
+        // ANY hard-coded version literal on a line naming the package is a
+        // defect — whether or not it currently matches tools.ts.
+        for (const literal of versionLiteralsNear(source, tool.slug)) {
+          offenders.push(
+            `${path.relative(SRC, file)} hard-codes ${tool.slug} v${literal} (must read from tools.ts)`,
+          );
         }
       }
     }
     expect(offenders).toEqual([]);
   });
 
-  // llms.txt and the READMEs are hand-maintained (no imports to bind them to
+  // llms.txt and the READMEs are hand-maintained (no imports can bind them to
   // the module), and they are exactly where the drift went unnoticed before.
-  // They cannot be auto-wired, so assert they at least state the CURRENT
-  // version — this fails on the next release until they are refreshed.
+  // Assert every version literal they state for a package EQUALS the module's.
   it('keeps the hand-maintained scraper surfaces current', () => {
     const manual = [
       path.join(process.cwd(), 'public', 'llms.txt'),
       path.join(process.cwd(), 'README.md'),
       path.join(process.cwd(), '..', 'README.md'),
-    ].filter((file) => fs.existsSync(file));
+    ];
+
+    // A renamed/moved file must fail loudly rather than silently disarm the
+    // guard, so assert existence instead of filtering missing paths away.
+    const missing = manual.filter((file) => !fs.existsSync(file));
+    expect(missing, 'guarded scraper surface is missing').toEqual([]);
 
     const stale: string[] = [];
     for (const file of manual) {
       const source = fs.readFileSync(file, 'utf8');
       for (const tool of TOOLS) {
-        // Only police files that discuss the PACKAGE. A bare slug match would
-        // false-positive on the domain (chimeraforge.vercel.app), so require an
-        // install line or a PyPI project URL.
-        const describesPackage =
-          source.includes(tool.install) || source.includes(`pypi.org/project/${tool.slug}`);
-        if (describesPackage && !source.includes(tool.version)) {
-          stale.push(`${path.basename(file)} describes ${tool.slug} but not v${tool.version}`);
+        // Every version literal stated next to the package name must match —
+        // catches the case where one of several mentions is updated and the
+        // rest are forgotten.
+        for (const literal of versionLiteralsNear(source, tool.slug)) {
+          if (literal !== tool.version) {
+            stale.push(
+              `${path.basename(file)} states ${tool.slug} v${literal}, module says v${tool.version}`,
+            );
+          }
         }
       }
     }
@@ -112,7 +139,13 @@ describe('tool JSON-LD', () => {
       expect(jsonLd.downloadUrl).toBe(tool.pypi);
       expect(jsonLd.url).toBe(`https://chimeraforge.vercel.app/tools/${tool.slug}`);
       expect(jsonLd.featureList).toHaveLength(tool.commands.length);
-      expect(JSON.stringify(jsonLd)).not.toContain('undefined');
+      // JSON.stringify DROPS undefined values rather than emitting the string
+      // "undefined", so a substring check here can never fail. Assert the keys
+      // actually survive serialization instead.
+      const roundTripped = JSON.parse(JSON.stringify(jsonLd));
+      for (const key of ['name', 'description', 'url', 'downloadUrl', 'softwareVersion', 'license']) {
+        expect(roundTripped[key], `${tool.slug} JSON-LD lost ${key}`).toBeTruthy();
+      }
     }
   });
 });

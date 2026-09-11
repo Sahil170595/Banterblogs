@@ -21,6 +21,7 @@ export async function generateMetadata({
     title,
     description,
     openGraph: {
+      images: ['/opengraph-image.png'],
       title: `${title} | Chimeraforge`,
       description,
       url,

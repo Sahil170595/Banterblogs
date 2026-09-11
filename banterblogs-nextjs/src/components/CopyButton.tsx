@@ -37,8 +37,11 @@ export function CopyButton({ text, label = 'install command' }: CopyButtonProps)
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
-      className="text-muted-foreground transition-colors hover:text-primary"
+      // -m-2 p-2 grows the hit area to 30px without shifting layout: the 14px
+      // icon alone failed WCAG 2.5.8's 24x24 minimum target size.
+      className="-m-2 inline-flex items-center justify-center p-2 text-muted-foreground transition-colors hover:text-primary"
       aria-label={copied ? `Copied ${label}` : `Copy ${label}`}
     >
       {copied ? (

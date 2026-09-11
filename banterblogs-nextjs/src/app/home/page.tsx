@@ -13,6 +13,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 // research, roadmap.
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/home' },
   title: 'Overview',
   description:
     'The Chimera platform overview — systems, latest technical reports, and the research roadmap.',

@@ -5,6 +5,7 @@ import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/banterpacks' },
   title: 'Banterpacks Episodes',
   description: 'Development episodes from the production monorepo — JARVIS gateway, intelligence pipeline, constitutional AI, and Rust runtime.',
 };

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Github, Linkedin, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
 import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
@@ -26,6 +26,17 @@ export function Header() {
   // full-bleed space, nothing boxed off. Everywhere else it's the standard
   // sticky blurred bar.
   const isLanding = pathname === '/';
+
+  // Escape closes the mobile disclosure — expected dismiss behavior, and the
+  // menu is the only thing on screen once it is open.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) setIsMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isMenuOpen]);
 
   return (
     <header

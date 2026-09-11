@@ -96,6 +96,7 @@ export const metadata: Metadata = {
   title: 'Provenance Chain · Chimera Show',
   description: PROVENANCE_DESCRIPTION,
   openGraph: {
+    images: ['/opengraph-image.png'],
     title: 'Provenance Chain · Chimera Show | Chimeraforge',
     description: PROVENANCE_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/show/provenance-chain',

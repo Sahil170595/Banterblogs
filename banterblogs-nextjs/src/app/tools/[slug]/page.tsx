@@ -25,7 +25,8 @@ export async function generateMetadata({
     title: `${tool.name} — ${tool.tagline}`,
     description,
     alternates: { canonical: url },
-    openGraph: { title: `${tool.name} — ${tool.tagline}`, description, url, type: 'website' },
+    openGraph: {
+      images: ['/opengraph-image.png'], title: `${tool.name} — ${tool.tagline}`, description, url, type: 'website' },
   };
 }
 
