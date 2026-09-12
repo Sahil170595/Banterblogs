@@ -2,11 +2,10 @@ import { NextResponse } from 'next/server';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 
 export const runtime = 'nodejs';
-// Search (the only consumer) needs summary fields only — the full corpus with
-// rendered HTML was a ~2.9MB uncached response, re-parsed per request. Serve a
-// build-time snapshot with the same ISR window as the episode pages.
+// Summary fields only — the full corpus with rendered HTML was a ~2.9MB
+// uncached response, re-parsed per request. A build-time snapshot: the archive
+// ships with the deployment. (Site search reads /search.json, not this route.)
 export const dynamic = 'force-static';
-export const revalidate = 900;
 
 export async function GET() {
   try {

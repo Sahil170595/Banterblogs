@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 900;
 export const runtime = 'nodejs';
 
 interface ReportEntry {
