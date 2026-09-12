@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 import { ChevronRight, Hash, Eye, EyeOff, BookOpen } from 'lucide-react';
 import type { TocEntry } from '@/lib/episodes';
 
-// Fixed-position table of contents for episode pages.
+// Sticky table-of-contents rail for episode pages. The page gives it its own
+// grid column beside the article (xl and up), so it can never cover the text.
 //
 // Receives the headings (with the real rehype-slug ids) from the server page
 // instead of the full article HTML — the previous version parsed a detached
@@ -79,11 +80,11 @@ export function TableOfContents({ headings, className = '' }: TableOfContentsPro
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.5 }}
-          className={`fixed left-6 top-1/2 transform -translate-y-1/2 z-30 hidden xl:block ${className}`}
+          className={`sticky top-24 ${className}`}
         >
           <nav
             aria-label="Table of contents"
-            className="bg-background/90 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl max-w-xs"
+            className="bg-background/90 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50">
