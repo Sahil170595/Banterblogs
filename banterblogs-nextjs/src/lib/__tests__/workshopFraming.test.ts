@@ -22,6 +22,11 @@ describe('workshop paper framing', () => {
       const source = fs.readFileSync(file, 'utf8');
       expect(source).not.toMatch(/accepted at (?:the |an )?ICML/i);
       expect(source).toMatch(/presented at (?:the |an )?ICML 2026 (?:Workshop on Hypothesis Testing|workshop)/);
+      // "accepted" survives only as a dated fact ("accepted 2026-05-22"), never as the paper's status
+      const statusUses = [...source.matchAll(/\b[Aa]ccepted\b(?! \d{4}-\d{2}-\d{2})/g)].map((m) =>
+        source.slice(Math.max(0, (m.index ?? 0) - 30), (m.index ?? 0) + 40),
+      );
+      expect(statusUses).toEqual([]);
     },
   );
 });

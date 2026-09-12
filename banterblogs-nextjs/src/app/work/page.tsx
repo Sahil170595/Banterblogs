@@ -5,7 +5,7 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 
 const METADATA_DESCRIPTION =
-  'ML engineer and independent researcher · LLM serving and quantization safety, constitutional AI systems, upstream PyTorch/vLLM/Ollama/Triton fixes. An accepted ICML 2026 workshop paper, technical reports, and two PyPI tools.';
+  'ML engineer and independent researcher · LLM serving and quantization safety, constitutional AI systems, upstream PyTorch/vLLM/Ollama/Triton fixes. A paper presented at an ICML 2026 workshop, technical reports, and two PyPI tools.';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/work' },
@@ -54,17 +54,17 @@ const RESEARCH: ResearchItem[] = [
   {
     label: 'LLM Safety Research & Evaluation Infrastructure',
     href: '/reports',
-    meta: `${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements · 1 accepted + 8 under double-blind review`,
+    meta: `${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements · 1 presented + 8 under double-blind review`,
     bullets: [
       'Built the Banterhearts execution substrate: shared multi-backend evaluation and serving harnesses (Transformers, Ollama, ONNX, vLLM, SGLang, TGI), per-sample JSONL provenance, seed/config/git manifests, checkpointed OpenAI/Anthropic batch judges, disagreement-aware triangulation, fail-closed analyzers, and frozen-byte paper packages under dependency-locked CI.',
-      'Led the sole-author program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Accepted: ICML 2026 Workshop on Hypothesis Testing; under double-blind review: 3 main-track and 5 workshop submissions spanning quantization safety, judge reliability, multi-turn jailbreak risk, prompt-template transfer, serving state, and reproducibility. Reviewer for three ML workshops and for Advances in Artificial Intelligence and Machine Learning (AAIML), a Scopus-indexed journal.',
+      'Led the sole-author program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Presented: ICML 2026 Workshop on Hypothesis Testing; under double-blind review: 3 main-track and 5 workshop submissions spanning quantization safety, judge reliability, multi-turn jailbreak risk, prompt-template transfer, serving state, and reproducibility. Reviewer for three ML workshops and for Advances in Artificial Intelligence and Machine Learning (AAIML), a Scopus-indexed journal.',
       "Reported 3 pre-registered negative results against my own models: M/D/1 queueing missed observed continuous-batching latency by 20.4×; NUM_PARALLEL had no detectable effect (0/30 significant); PyTorch Direct caused larger safety degradation than Ollama. A 78,183-row 4-stack ablation isolated its N=2 concurrency failure and vLLM/TGI's 2.25× gain at N=8; deployment rules include Q4_K_M and compile-prefill-only on Linux.",
       "The TAIS preprint found no detectable safety divergence under speculative decoding at temperature zero across 60,849 matched samples: maximum absolute Cohen's h = 0.024, with 25/27 per-task TOST contrasts within ±3pp.",
       'Decomposed the measured safety tax to quantization 57%, backend 41%, concurrency 2%; across 18 models / 10+ families, alignment type (p=0.942) and 4 mechanistic probes failed to predict fragility, while output instability was strongest (r=0.91) and chat-template divergence sometimes exceeded precision effects.',
       'Showed safety can degrade 13.9× faster than quality under quantization; isolated FP8 KV-cache precision in 24,054 paired records, then replicated the null on 7,578 records / 12 of 12 TOST-equivalent cells. Shipped RTSI + JTP and RTSI-gated routing, recovering 76% of the refusal gap by routing the riskiest 20% of configurations (LOOCV AUC 0.84).',
     ],
     evidence: [
-      { label: 'arXiv:2605.27763 — accepted ICML 2026 workshop paper', href: 'https://arxiv.org/abs/2605.27763' },
+      { label: 'arXiv:2605.27763 — ICML 2026 workshop paper, presented', href: 'https://arxiv.org/abs/2605.27763' },
       { label: 'arXiv:2606.10154', href: 'https://arxiv.org/abs/2606.10154' },
       { label: 'arXiv:2606.25097 — TAIS preprint', href: 'https://arxiv.org/abs/2606.25097' },
     ],

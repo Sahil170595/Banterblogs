@@ -254,12 +254,12 @@ export default function PapersPage() {
         <div className="space-y-5 max-w-3xl">
           <span className="signal-pill">Papers</span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            {ACCEPTED.length} accepted · {PUBLIC_PREPRINTS.length} public preprint · {UNDER_REVIEW_COUNT} under peer
+            {ACCEPTED.length} presented · {PUBLIC_PREPRINTS.length} public preprint · {UNDER_REVIEW_COUNT} under peer
             review
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Independent research on inference optimization, constitutional AI architectures, and empirical safety
-            evaluation. The first paper is accepted to the ICML 2026 Workshop on Hypothesis Testing, and the
+            evaluation. The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the
             speculative-decoding null result is public on arXiv; {UNDER_REVIEW_COUNT} more are under blind review at
             top ML venues and workshops, with {IN_PREP_COUNT} in preparation. Each is backed by reproducible technical reports
             and artifact-level provenance from a {MEASUREMENTS.DISPLAY} measurement program.
@@ -293,8 +293,8 @@ export default function PapersPage() {
             Published &amp; public
           </h2>
           <p className="mt-2 text-sm text-muted-foreground/70">
-            The ICML 2026 workshop paper was accepted 2026-05-22, camera-ready submitted — the first peer-reviewed
-            acceptance from the program. The speculative-decoding null result is a public arXiv preprint.
+            The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first
+            peer-reviewed paper from the program. The speculative-decoding null result is a public arXiv preprint.
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
