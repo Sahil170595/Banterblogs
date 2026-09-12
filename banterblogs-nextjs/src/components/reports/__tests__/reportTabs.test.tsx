@@ -1,16 +1,33 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, ViewTransitionProps } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReportTabs, type ReportTabGroup } from '../ReportTabs';
 import { NAV_FORWARD } from '../ReportTransitions';
 
-const { url, replace } = vi.hoisted(() => ({ url: { search: '' }, replace: vi.fn() }));
+const { url, replace, viewTransitions } = vi.hoisted(() => ({
+  url: { search: '' },
+  replace: vi.fn(),
+  viewTransitions: [] as Array<Omit<ViewTransitionProps, 'children'>>,
+}));
 
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(url.search),
   usePathname: () => '/reports',
   useRouter: () => ({ replace }),
 }));
+
+// Next bundles the React canary that exports ViewTransition; the npm React
+// these tests run on is stable and has none, so a pass-through records props.
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  return {
+    ...actual,
+    ViewTransition: ({ children, ...props }: ViewTransitionProps) => {
+      viewTransitions.push(props);
+      return actual.createElement(actual.Fragment, null, children);
+    },
+  };
+});
 
 // transitionTypes never reaches the DOM; surface it for the assertions
 vi.mock('next/link', async () => {
@@ -46,6 +63,7 @@ const panelLinks = () =>
 beforeEach(() => {
   url.search = '';
   replace.mockReset();
+  viewTransitions.length = 0;
 });
 
 afterEach(cleanup);
@@ -108,10 +126,15 @@ describe('report archive tabs', () => {
     expect(replace).toHaveBeenLastCalledWith('/reports', { scroll: false });
   });
 
-  it('sends each card forward into its report', () => {
+  it('sends each card forward and pairs its title with the report page heading', () => {
     renderTabs();
     const cards = within(screen.getByRole('tabpanel')).getAllByRole('link');
 
     expect(cards.map((card) => card.getAttribute('data-transition-types'))).toEqual(cards.map(() => NAV_FORWARD));
+    expect([...new Set(viewTransitions.map((vt) => vt.name))]).toEqual([
+      'report-title-technical-report-138',
+      'report-title-technical-report-117',
+      'report-title-gemma3',
+    ]);
   });
 });

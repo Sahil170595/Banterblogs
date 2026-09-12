@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs';
-import { DirectionalPage, NAV_FORWARD } from '@/components/reports/ReportTransitions';
+import { DirectionalPage, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
 import { PHASE_DEFINITIONS, classifyReportSlug, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
@@ -311,9 +311,11 @@ export default async function ReportsIndex() {
                 transitionTypes={[NAV_FORWARD]}
                 className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
               >
-                <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
-                  {r.title}
-                </div>
+                <ReportTitleTransition slug={r.slug}>
+                  <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
+                    {r.title}
+                  </div>
+                </ReportTitleTransition>
                 {r.description && (
                   <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>
                 )}

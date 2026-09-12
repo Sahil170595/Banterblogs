@@ -3,7 +3,7 @@
 import { Suspense, type KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { NAV_FORWARD } from './ReportTransitions';
+import { NAV_FORWARD, ReportTitleTransition } from './ReportTransitions';
 
 export interface ReportTabEntry {
   slug: string;
@@ -158,9 +158,11 @@ function TabbedReports({ tabs, featuredSlugs, activeKey, onSelect }: TabbedRepor
                     className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
                   >
                     <div className="mb-3">
-                      <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">
-                        {r.title}
-                      </div>
+                      <ReportTitleTransition slug={r.slug}>
+                        <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">
+                          {r.title}
+                        </div>
+                      </ReportTitleTransition>
                     </div>
                     {r.description && (
                       <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">

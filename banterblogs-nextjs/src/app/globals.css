@@ -391,6 +391,19 @@ html {
   --vt-from: calc(-1 * var(--vt-slide));
 }
 
+/* A report title travelling between its archive card and the report page:
+   the incoming text shows at full resolution inside the moving box instead
+   of a scaled raster of the outgoing one. */
+::view-transition-old(.text-morph) {
+  display: none;
+}
+
+::view-transition-new(.text-morph) {
+  animation: none;
+  object-fit: none;
+  object-position: left top;
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),

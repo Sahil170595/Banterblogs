@@ -4,7 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
-import { DirectionalPage, NAV_BACK, NAV_FORWARD } from '@/components/reports/ReportTransitions';
+import { DirectionalPage, NAV_BACK, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
 import { discoverReportsUnique, findReportFolder, toHumanTitle } from '@/lib/reports/locator';
@@ -119,7 +119,9 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           </span>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{meta.title}</h1>
+        <ReportTitleTransition slug={id}>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{meta.title}</h1>
+        </ReportTitleTransition>
         {meta.description && (
           <p className="text-lg text-muted-foreground leading-relaxed">{meta.description}</p>
         )}

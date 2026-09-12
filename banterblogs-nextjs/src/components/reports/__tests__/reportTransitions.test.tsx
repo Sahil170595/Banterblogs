@@ -8,7 +8,13 @@ import ReportDetail from '@/app/reports/[id]/page';
 import ReportsIndex from '@/app/reports/page';
 import { discoverReportsUnique } from '@/lib/reports/locator';
 import { reportSortRank } from '@/lib/reports/phases';
-import { DirectionalPage, NAV_BACK, NAV_FORWARD } from '../ReportTransitions';
+import {
+  DirectionalPage,
+  NAV_BACK,
+  NAV_FORWARD,
+  ReportTitleTransition,
+  TITLE_MORPH_CLASS,
+} from '../ReportTransitions';
 
 const { viewTransitions } = vi.hoisted(() => ({
   viewTransitions: [] as Array<Omit<ViewTransitionProps, 'children'>>,
@@ -49,6 +55,10 @@ const links = (tree: unknown) => elementsIn(tree).filter((el) => typeof el.props
 const href = (link: AnyElement) => link.props.href as string;
 
 const DIRECTIONAL = { [NAV_FORWARD]: NAV_FORWARD, [NAV_BACK]: NAV_BACK, default: 'none' };
+// Forward only. The archive opens at its top, so the card a back navigation
+// would pair with is always below the fold: React names the outgoing heading,
+// finds no visible partner, and the heading vanishes from the sliding page.
+const TITLE_SHARE = { [NAV_FORWARD]: TITLE_MORPH_CLASS, default: 'none' };
 
 beforeEach(() => {
   viewTransitions.length = 0;
@@ -66,10 +76,22 @@ describe('report transition boundaries', () => {
 
     expect(viewTransitions).toEqual([{ enter: DIRECTIONAL, exit: DIRECTIONAL, default: 'none' }]);
   });
+
+  it('names a report title by its slug so the card and the heading pair up', () => {
+    render(
+      <ReportTitleTransition slug="technical-report-138">
+        <h1>TR138</h1>
+      </ReportTitleTransition>,
+    );
+
+    expect(viewTransitions).toEqual([
+      { name: 'report-title-technical-report-138', share: TITLE_SHARE, default: 'none' },
+    ]);
+  });
 });
 
 describe('reading-path wiring', () => {
-  it('report page: slides as a page and tags back, previous and next', async () => {
+  it('report page: slides as a page, morphs its heading, tags back, previous and next', async () => {
     const order = discoverReportsUnique()
       .map((entry) => entry.slug)
       .sort((a, b) => reportSortRank(a) - reportSortRank(b) || a.localeCompare(b));
@@ -79,6 +101,9 @@ describe('reading-path wiring', () => {
     const tree = await ReportDetail({ params: Promise.resolve({ id }) });
 
     expect(tree.type).toBe(DirectionalPage);
+    const title = elementsIn(tree).find((el) => el.type === ReportTitleTransition);
+    expect(title?.props.slug).toBe(id);
+    expect(elementsIn(title?.props.children).map((el) => el.type)).toContain('h1');
 
     const byText = (text: string) => links(tree).filter((link) => textIn(link).includes(text));
     expect(byText('Research Archive').map((link) => [href(link), link.props.transitionTypes])).toEqual([
@@ -88,7 +113,7 @@ describe('reading-path wiring', () => {
     expect(byText('Next').map((link) => link.props.transitionTypes)).toEqual([[NAV_FORWARD]]);
   });
 
-  it('archive: slides as a page and sends every report link forward', async () => {
+  it('archive: slides as a page, sends every report link forward, morphs card titles', async () => {
     const tree = await ReportsIndex();
 
     expect(tree.type).toBe(DirectionalPage);
@@ -97,6 +122,14 @@ describe('reading-path wiring', () => {
     for (const link of reportLinks) {
       expect(link.props.transitionTypes, href(link)).toEqual([NAV_FORWARD]);
     }
+
+    const titled = reportLinks.flatMap((link) =>
+      elementsIn(link.props.children)
+        .filter((el) => el.type === ReportTitleTransition)
+        .map((el) => [href(link), `/reports/${el.props.slug as string}`]),
+    );
+    expect(titled.length).toBeGreaterThan(0);
+    for (const [linkHref, titleHref] of titled) expect(titleHref).toBe(linkHref);
   });
 
   it('compendium: slides as a page and every link to the archive goes back', async () => {
@@ -190,6 +223,7 @@ describe('view transition styles', () => {
       expect(declarationsFor(CSS, `::view-transition-old(.${cls})`), cls).toMatch(/animation:/);
       expect(declarationsFor(CSS, `::view-transition-new(.${cls})`), cls).toMatch(/animation:/);
     }
+    expect(declarationsFor(CSS, `::view-transition-new(.${TITLE_MORPH_CLASS})`)).toMatch(/object-fit:\s*none/);
   });
 
   it('slides 12-16px on the motion tokens and moves only opacity and transform', () => {
