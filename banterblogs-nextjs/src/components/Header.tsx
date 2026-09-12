@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Github, Linkedin, Menu, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
 import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
@@ -20,18 +20,25 @@ const NAV_ITEMS = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   // On the galactic landing the nav floats transparent over the scene —
   // full-bleed space, nothing boxed off. Everywhere else it's the standard
   // sticky blurred bar.
   const isLanding = pathname === '/';
+  // one answer for both the active styling and aria-current
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   // Escape closes the mobile disclosure — expected dismiss behavior, and the
   // menu is the only thing on screen once it is open.
   useEffect(() => {
     if (!isMenuOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !event.defaultPrevented) setIsMenuOpen(false);
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      setIsMenuOpen(false);
+      // the focused menu link unmounts with the panel; without this, focus
+      // falls to <body>
+      toggleRef.current?.focus();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
@@ -87,24 +94,27 @@ export function Header() {
           {/* one nav language on every page — the landing's mono-uppercase is
               the site's editorial register, not a landing-only costume */}
           <nav className="hidden items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:flex">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                aria-current={pathname === item.href ? 'page' : undefined}
-                className={`px-2.5 py-2 transition xl:px-3 ${
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    ? isLanding
-                      ? 'text-primary'
-                      : 'rounded-full bg-primary/15 text-primary'
-                    : isLanding
-                      ? 'text-muted-foreground hover:text-primary'
-                      : 'rounded-full hover:bg-primary/10 hover:text-primary'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`px-2.5 py-2 transition xl:px-3 ${
+                    active
+                      ? isLanding
+                        ? 'text-primary'
+                        : 'rounded-full bg-primary/15 text-primary'
+                      : isLanding
+                        ? 'text-muted-foreground hover:text-primary'
+                        : 'rounded-full hover:bg-primary/10 hover:text-primary'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             <div className="ml-2 flex items-center gap-1 border-l border-border/40 pl-2">
               <Link
                 href={GITHUB_URLS.PROFILE}
@@ -128,6 +138,7 @@ export function Header() {
           </nav>
 
           <button
+            ref={toggleRef}
             className="inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition hover:bg-accent/10 hover:text-foreground lg:hidden"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label="Toggle navigation"
@@ -142,7 +153,9 @@ export function Header() {
       {isMenuOpen && (
         <div
           id="mobile-nav"
-          className={`border-t border-border/60 bg-background/95 backdrop-blur lg:hidden ${
+          // capped to the space under the 72px bar and scrollable, so the last
+          // links stay reachable on short screens
+          className={`max-h-[calc(100svh-72px)] overflow-y-auto overscroll-contain border-t border-border/60 bg-background/95 backdrop-blur lg:hidden ${
             isLanding ? 'h-[calc(100svh-72px)]' : ''
           }`}
         >

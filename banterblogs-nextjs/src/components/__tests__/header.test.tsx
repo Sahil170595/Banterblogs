@@ -1,3 +1,4 @@
+import { fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Header } from '../Header';
@@ -31,5 +32,45 @@ describe('header landing wordmark', () => {
 
     expect(html).not.toContain('data-landing-wordmark="orbital"');
     expect(html).toContain('>CF<');
+  });
+});
+
+describe('header navigation state', () => {
+  beforeEach(() => {
+    pathname.current = '/reports';
+  });
+
+  it('announces the section a nested page belongs to, matching its active styling', () => {
+    pathname.current = '/reports/technical-report-138';
+    const { getAllByRole } = render(<Header />);
+    const current = getAllByRole('link')
+      .filter((link) => link.getAttribute('aria-current') === 'page')
+      .map((link) => link.getAttribute('href'));
+
+    expect(current).toEqual(['/reports']);
+  });
+
+  it('returns focus to the menu toggle when Escape closes the mobile menu', () => {
+    const { getByRole, container } = render(<Header />);
+    const toggle = getByRole('button', { name: 'Toggle navigation' });
+    fireEvent.click(toggle);
+    const firstMenuLink = container.querySelector<HTMLAnchorElement>('#mobile-nav a');
+    expect(firstMenuLink).not.toBeNull();
+    firstMenuLink?.focus();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(container.querySelector('#mobile-nav')).toBeNull();
+    expect(document.activeElement).toBe(toggle);
+  });
+
+  it('caps the mobile menu to the space under the bar and lets it scroll', () => {
+    const { getByRole, container } = render(<Header />);
+    fireEvent.click(getByRole('button', { name: 'Toggle navigation' }));
+    const menuClasses = container.querySelector('#mobile-nav')?.className.split(/\s+/) ?? [];
+
+    expect(menuClasses).toEqual(
+      expect.arrayContaining(['max-h-[calc(100svh-72px)]', 'overflow-y-auto', 'overscroll-contain']),
+    );
   });
 });
