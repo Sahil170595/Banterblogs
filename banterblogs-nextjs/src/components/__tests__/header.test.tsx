@@ -52,6 +52,16 @@ describe('header across route transitions', () => {
     expect(css).toMatch(/::view-transition-old\(site-header\)\s*\{[^}]*display:\s*none/);
     expect(css).toMatch(/::view-transition-new\(site-header\)\s*\{[^}]*animation:\s*none/);
   });
+
+  it('paints its group solid while pages move under it, since a snapshot carries no backdrop', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8');
+
+    // Without it the sliding page reads through the translucent bar for the whole
+    // transition. A backdrop blur does not help: Chromium computes it on the group
+    // but does not render it inside the transition tree.
+    expect(css).toMatch(/::view-transition-group\(site-header\)\s*\{[^}]*background-color:\s*hsl\(var\(--background\)\)/);
+    expect(css).not.toMatch(/::view-transition-(group|new)\(site-header\)\s*\{[^}]*backdrop-filter/);
+  });
 });
 
 describe('header navigation state', () => {

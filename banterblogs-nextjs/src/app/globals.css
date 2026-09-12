@@ -328,10 +328,14 @@ html {
 }
 
 /* The sticky header holds still. Its old snapshot is dropped rather than
-   cross-faded: two stacked backdrop blurs flash. */
+   cross-faded: two stacked backdrop blurs flash. A snapshot carries no
+   backdrop, so the sliding page would read through the translucent bar; the
+   group is painted solid instead. A backdrop blur does not work here: Chromium
+   computes it on the group but does not render it inside the transition tree. */
 ::view-transition-group(site-header) {
   animation: none;
   z-index: 100;
+  background-color: hsl(var(--background));
 }
 
 ::view-transition-old(site-header) {
@@ -391,17 +395,26 @@ html {
   --vt-from: calc(-1 * var(--vt-slide));
 }
 
-/* A report title travelling between its archive card and the report page:
-   the incoming text shows at full resolution inside the moving box instead
-   of a scaled raster of the outgoing one. */
+/* A report title travelling between its archive card and the report page.
+   Both snapshots keep their native size, pinned top-left and clipped to the
+   moving box, so neither shows as a scaled raster and the larger heading
+   never paints over the neighbouring cards. */
+::view-transition-group(.text-morph) {
+  clip-path: inset(0);
+}
+
+::view-transition-old(.text-morph),
+::view-transition-new(.text-morph) {
+  object-fit: none;
+  object-position: left top;
+}
+
 ::view-transition-old(.text-morph) {
-  display: none;
+  animation: var(--vt-duration-fast) var(--vt-ease) both vt-fade-out;
 }
 
 ::view-transition-new(.text-morph) {
-  animation: none;
-  object-fit: none;
-  object-position: left top;
+  animation: var(--vt-duration) var(--vt-ease) both vt-fade-in;
 }
 
 @media (prefers-reduced-motion: reduce) {

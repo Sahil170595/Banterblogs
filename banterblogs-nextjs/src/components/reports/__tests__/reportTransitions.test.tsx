@@ -226,6 +226,20 @@ describe('view transition styles', () => {
     expect(declarationsFor(CSS, `::view-transition-new(.${TITLE_MORPH_CLASS})`)).toMatch(/object-fit:\s*none/);
   });
 
+  it('clips a travelling title to its own box and cross-fades the two titles at native size', () => {
+    const group = declarationsFor(CSS, `::view-transition-group(.${TITLE_MORPH_CLASS})`);
+    const outgoing = declarationsFor(CSS, `::view-transition-old(.${TITLE_MORPH_CLASS})`);
+    const incoming = declarationsFor(CSS, `::view-transition-new(.${TITLE_MORPH_CLASS})`);
+    // the heading is about twice the card title; unclipped, it paints over the neighbouring cards
+    expect(group).toMatch(/clip-path:\s*inset\(0\)/);
+    for (const [pseudo, body] of [['old', outgoing], ['new', incoming]] as const) {
+      expect(body, pseudo).toMatch(/object-fit:\s*none/);
+      expect(body, pseudo).not.toMatch(/display:\s*none/);
+    }
+    expect(outgoing).toMatch(/vt-fade-out/);
+    expect(incoming).toMatch(/vt-fade-in/);
+  });
+
   it('slides 12-16px on the motion tokens and moves only opacity and transform', () => {
     const offset = Number(/--vt-slide:\s*(\d+)px/.exec(CSS)?.[1]);
     expect(offset).toBeGreaterThanOrEqual(12);
