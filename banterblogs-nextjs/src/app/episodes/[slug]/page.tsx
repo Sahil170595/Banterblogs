@@ -58,7 +58,7 @@ import { ArticleEnhancements } from '@/components/ContentEnhancer';
 import { ContentStats } from '@/components/ContentStats';
 import { MobileNavigation } from '@/components/MobileOptimization';
 import { EpisodeFloatingUI } from '@/components/EpisodeFloatingUI';
-import { EpisodeRecommendationsClient } from '@/components/EpisodeRecommendationsClient';
+import { ContentRecommendations, recommendEpisodes } from '@/components/ContentRecommendations';
 
 export default async function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -142,7 +142,12 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
             <div className="signal-divider my-6" />
 
-            <EpisodeStats episode={episode} />
+            <EpisodeStats
+              filesChanged={episode.filesChanged}
+              linesAdded={episode.linesAdded}
+              readingTime={episode.readingTime}
+              complexity={episode.complexity}
+            />
           </div>
 
           <div className="signal-panel mb-10 p-6">
@@ -182,9 +187,10 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
           />
 
           <div className="mt-16">
-            <EpisodeRecommendationsClient
-              currentEpisode={toEpisodeSummary(episode)}
-              allEpisodes={allEpisodes.map(toEpisodeSummary)}
+            {/* scored on the server: only the picks reach the page */}
+            <ContentRecommendations
+              current={summary}
+              recommendations={recommendEpisodes(episode, allEpisodes).map(toEpisodeSummary)}
             />
           </div>
         </div>
