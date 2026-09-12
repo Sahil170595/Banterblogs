@@ -153,7 +153,7 @@ function TabbedReports({ tabs, featuredSlugs, activeKey, onSelect }: TabbedRepor
                   <Link
                     key={r.slug}
                     href={`/reports/${r.slug}`}
-                    className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-all"
+                    className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
                   >
                     <div className="mb-3">
                       <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">

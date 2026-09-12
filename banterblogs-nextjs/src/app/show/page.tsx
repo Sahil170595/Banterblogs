@@ -115,7 +115,7 @@ export default function ShowPage() {
                     {s.spec}
                   </div>
                 </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
               </Link>
             ) : (
               <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-6 border-t border-border/40 py-8 opacity-50">

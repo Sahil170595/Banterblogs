@@ -110,7 +110,7 @@ export function SystemRail({ activeSystem, onPreview, onSelect }: SystemRailProp
                   </span>
                   <span
                     aria-hidden="true"
-                    className={`absolute -top-[3px] left-0 h-[5px] w-[5px] rounded-full transition-all ${
+                    className={`absolute -top-[3px] left-0 h-[5px] w-[5px] rounded-full transition-[background-color,box-shadow] ${
                       active
                         ? 'bg-primary shadow-[0_0_12px_hsl(var(--primary))]'
                         : 'bg-white/25 group-hover:bg-white/70'

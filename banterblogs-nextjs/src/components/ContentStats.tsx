@@ -3,15 +3,15 @@ import type { ContentStatsSummary } from '@/lib/episodes';
 
 // Server component: stats are computed server-side (lib/episodes
 // computeContentStats) so the article HTML never rides into a client bundle
-// just to be counted. Hover scale is CSS — no framer-motion needed here.
+// just to be counted. The tiles are static readouts, so they do not react to
+// hover.
 
 interface ContentStatsProps {
   stats: ContentStatsSummary;
   className?: string;
 }
 
-const TILE_CLASS =
-  'text-center p-4 rounded-xl border border-border/50 bg-card/50 backdrop-blur transition-transform duration-200 hover:scale-105';
+const TILE_CLASS = 'text-center p-4 rounded-xl border border-border/50 bg-card/50 backdrop-blur';
 
 export function ContentStats({ stats, className = '' }: ContentStatsProps) {
   const tiles = [

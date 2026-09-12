@@ -157,14 +157,14 @@ export default async function ReportsIndex() {
       {/* ── Start Here: Featured Research ── */}
       <section className="mb-20">
         <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-primary" />
           Start Here
         </h2>
 
         {/* Compendium — hero card */}
         <Link
           href="/reports/compendium"
-          className="block group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-muted/20 p-8 md:p-10 mb-6 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5"
+          className="block group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-muted/20 p-8 md:p-10 mb-6 hover:border-primary/50 transition-[border-color,box-shadow] duration-fast ease-standard hover:shadow-2xl hover:shadow-primary/5"
         >
           <div className="relative z-10">
             <div className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">Whitepaper</div>
@@ -188,7 +188,7 @@ export default async function ReportsIndex() {
             <Link
               key={feat.slug}
               href={`/reports/${feat.slug}`}
-              className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:border-primary/40 hover:bg-muted/20 transition-all"
+              className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:border-primary/40 hover:bg-muted/20 transition-colors"
             >
               <div className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-2">
                 {feat.label}
@@ -304,7 +304,7 @@ export default async function ReportsIndex() {
               <Link
                 key={r.slug}
                 href={`/reports/${r.slug}`}
-                className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-all"
+                className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
               >
                 <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
                   {r.title}

@@ -414,7 +414,7 @@ export default async function PlatformPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Link
             href="/reports"
-            className="block group signal-panel p-5 hover:border-primary/40 transition-all"
+            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
@@ -426,7 +426,7 @@ export default async function PlatformPage() {
           </Link>
           <Link
             href="/episodes"
-            className="block group signal-panel p-5 hover:border-primary/40 transition-all"
+            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Episode Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
@@ -438,7 +438,7 @@ export default async function PlatformPage() {
           </Link>
           <Link
             href="/about"
-            className="block group signal-panel p-5 hover:border-primary/40 transition-all"
+            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">About the Project</h3>
             <p className="text-sm text-muted-foreground mb-3">
