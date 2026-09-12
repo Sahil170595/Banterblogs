@@ -73,12 +73,25 @@ code, pre, kbd, samp {
 /* Selection */
 ::selection {
   background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--primary-foreground));
+  color: hsl(var(--foreground));
 }
 
-/* Smooth scrolling for anchor links */
+/* Smooth scrolling for anchor links; the padding keeps anchored headings
+   clear of the sticky header. */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+  color-scheme: dark;
+}
+
+@layer base {
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
 }
 
 /* Display font utility */
@@ -125,9 +138,13 @@ html {
   mix-blend-mode: screen;
 }
 
-.chimera-shell > * {
-  position: relative;
-  z-index: 1;
+/* In the components layer so utilities on shell children (.fixed, .z-50)
+   win; unlayered, this rule un-fixed every fixed widget in <main>. */
+@layer components {
+  .chimera-shell > * {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .signal-panel {
@@ -547,11 +564,11 @@ html {
   border-radius: 4px;
 }
 
-.keyboard-navigation button:focus-visible,
-.keyboard-navigation [href]:focus-visible,
-.keyboard-navigation input:focus-visible,
-.keyboard-navigation select:focus-visible,
-.keyboard-navigation textarea:focus-visible {
+/* Site focus ring. Anchored at :root instead of the .keyboard-navigation
+   wrapper so it does not depend on that wrapper; specificity is unchanged
+   (buttons/fields 0,2,1; links 0,3,0). */
+:root :is(button, input, select, textarea):focus-visible,
+:root [href]:focus-visible {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
   box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
