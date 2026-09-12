@@ -1,42 +1,67 @@
 'use client';
 
-// Lightweight reader-comfort panel. Earlier revisions also surfaced
-// "High contrast", "Reduce motion", and "Screen reader" toggles —
-// none of which had CSS hooks or runtime behaviour and so were doing
-// nothing for users. Removed. The site already honours the OS-level
-// `prefers-reduced-motion` media query via Framer Motion's
-// `useReducedMotion()`, and the FocusIndicator (see
-// `AccessibilityShell.tsx`) provides the visible keyboard-focus ring.
-//
-// What remains: a font-size override, the only setting here that ever
-// actually moved a pixel.
+// Reader-comfort panel: a root font-size override, the one reader setting
+// that ever moved a pixel. Fetched on intent by the footer launcher
+// (AccessibilityPanelClient.tsx) and animated with CSS transitions, so no
+// page pays for it up front. Motion follows the OS prefers-reduced-motion
+// setting site-wide; the keyboard focus ring lives in globals.css.
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Type, Settings, X } from 'lucide-react';
+import { Type, X } from 'lucide-react';
 
-type FontSize = 'small' | 'medium' | 'large';
+export type FontSize = 'small' | 'medium' | 'large';
 
-interface AccessibilityPanelProps {
-  className?: string;
+// Also read by the pre-paint script in app/layout.tsx; keep the two in step
+// (pinned by readerSettings.test.tsx).
+export const FONT_SIZE_STORAGE_KEY = 'chimeraforge:reader-font-size';
+// Percentages scale from the visitor's browser default instead of pinning
+// 16px; medium IS that default, so it writes nothing.
+export const FONT_SIZE_SCALE: Record<Exclude<FontSize, 'medium'>, string> = {
+  small: '87.5%',
+  large: '112.5%',
+};
+const FONT_SIZES: readonly FontSize[] = ['small', 'medium', 'large'];
+
+export function applyFontSize(size: FontSize): void {
+  const style = document.documentElement.style;
+  if (size === 'medium') style.removeProperty('font-size');
+  else style.fontSize = FONT_SIZE_SCALE[size];
 }
 
-export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [fontSize, setFontSize] = useState<FontSize>('medium');
-  const launcherRef = useRef<HTMLButtonElement>(null);
+export function readStoredFontSize(): FontSize {
+  try {
+    const stored = window.localStorage.getItem(FONT_SIZE_STORAGE_KEY);
+    return stored === 'small' || stored === 'large' ? stored : 'medium';
+  } catch (error) {
+    console.warn('[reader-settings] stored font size unavailable', error);
+    return 'medium';
+  }
+}
+
+function storeFontSize(size: FontSize): void {
+  try {
+    if (size === 'medium') window.localStorage.removeItem(FONT_SIZE_STORAGE_KEY);
+    else window.localStorage.setItem(FONT_SIZE_STORAGE_KEY, size);
+  } catch (error) {
+    console.warn('[reader-settings] could not persist font size', error);
+  }
+}
+
+export interface AccessibilityPanelProps {
+  id: string;
+  open: boolean;
+  onClose: () => void;
+}
+
+export function AccessibilityPanel({ id, open, onClose }: AccessibilityPanelProps) {
+  const [fontSize, setFontSize] = useState<FontSize>(readStoredFontSize);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    document.documentElement.style.fontSize =
-      fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px';
-  }, [fontSize]);
-
   // Dialog focus contract: move focus in on open, trap Tab inside, close on
-  // Escape, and return focus to the launcher — without this the role="dialog"
-  // announcement lies to screen-reader users.
+  // Escape (onClose hands focus back to the launcher) — without this the
+  // role="dialog" announcement lies to screen-reader users.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!open) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
 
@@ -46,8 +71,7 @@ export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) 
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setIsOpen(false);
-        launcherRef.current?.focus();
+        onClose();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -66,82 +90,69 @@ export function AccessibilityPanel({ className = '' }: AccessibilityPanelProps) 
 
     dialog.addEventListener('keydown', handleKeyDown);
     return () => dialog.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [open, onClose]);
 
-  const closeAndRestoreFocus = () => {
-    setIsOpen(false);
-    launcherRef.current?.focus();
+  const choose = (size: FontSize) => {
+    setFontSize(size);
+    applyFontSize(size);
+    storeFontSize(size);
   };
 
   return (
-    <>
-      <motion.button
-        ref={launcherRef}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`fixed bottom-6 right-6 z-50 p-3 bg-background/90 backdrop-blur-xl border border-border/50 rounded-full shadow-2xl text-foreground hover:bg-background transition-colors ${className}`}
-        aria-label="Reader settings"
-        aria-expanded={isOpen}
-      >
-        <Settings className="h-5 w-5" aria-hidden />
-      </motion.button>
+    <div
+      ref={dialogRef}
+      id={id}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Reader settings"
+      // stays mounted so the close transition can run; closed = faded out
+      // and inert (unfocusable, hidden from assistive tech)
+      inert={open ? undefined : true}
+      className={`fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-border/50 bg-background/90 p-6 shadow-2xl backdrop-blur-xl transition-[opacity,transform] duration-200 ease-out sm:right-6 ${
+        open ? 'translate-x-0 scale-100 opacity-100' : 'pointer-events-none translate-x-5 scale-95 opacity-0'
+      }`}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Type className="h-5 w-5" aria-hidden />
+          Reader Settings
+        </h3>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Close reader settings"
+        >
+          <X className="h-4 w-4" aria-hidden />
+        </button>
+      </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            ref={dialogRef}
-            initial={{ opacity: 0, x: 20, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 20, scale: 0.95 }}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Reader settings"
-            className="fixed bottom-20 right-6 z-50 bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl p-6 w-72"
+      <div className="flex items-center gap-2 mb-2">
+        <Type className="h-4 w-4 text-primary" aria-hidden />
+        <span className="text-sm font-medium text-foreground">Font Size</span>
+      </div>
+      <div className="flex gap-2" role="group" aria-label="Font size">
+        {FONT_SIZES.map((size) => (
+          <button
+            key={size}
+            type="button"
+            onClick={() => choose(size)}
+            aria-pressed={fontSize === size}
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+              fontSize === size
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/70'
+            }`}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Type className="h-5 w-5" aria-hidden />
-                Reader Settings
-              </h3>
-              <button
-                onClick={closeAndRestoreFocus}
-                className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Close reader settings"
-              >
-                <X className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
+            {size.charAt(0).toUpperCase() + size.slice(1)}
+          </button>
+        ))}
+      </div>
 
-            <div className="flex items-center gap-2 mb-2">
-              <Type className="h-4 w-4 text-primary" aria-hidden />
-              <span className="text-sm font-medium text-foreground">Font Size</span>
-            </div>
-            <div className="flex gap-2" role="radiogroup" aria-label="Font size">
-              {(['small', 'medium', 'large'] as const).map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setFontSize(size)}
-                  role="radio"
-                  aria-checked={fontSize === size}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                    fontSize === size
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/70'
-                  }`}
-                >
-                  {size.charAt(0).toUpperCase() + size.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-4 pt-4 border-t border-border/50 text-[11px] text-muted-foreground/80 leading-relaxed">
-              Motion and contrast follow your OS settings — reduce-motion is honoured automatically,
-              and the site renders against the high-contrast Obsidian palette by default.
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+      <p className="mt-4 pt-4 border-t border-border/50 text-[11px] text-muted-foreground/80 leading-relaxed">
+        Motion and contrast follow your OS settings — reduce-motion is honoured automatically,
+        and the site renders against the high-contrast Obsidian palette by default.
+      </p>
+    </div>
   );
 }

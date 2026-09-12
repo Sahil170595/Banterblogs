@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BookOpen, Github, Linkedin, Mail, Package, Rss, Twitter } from 'lucide-react';
+import { ReaderSettingsLauncher } from './AccessibilityPanelClient';
 
 const FOOTER_LINKS = {
   Explore: [
@@ -127,6 +128,7 @@ export function Footer() {
               new Date().getFullYear() can mismatch across timezones / build
               boundaries and tripped React #418 in prod. Bump yearly. */}
           <span>(c) 2026 Chimeraforge. Crafted in public, powered by local AI.</span>
+          <ReaderSettingsLauncher />
         </div>
       </div>
     </footer>
