@@ -33,7 +33,6 @@ const REPORT_TYPE_BADGE: Record<ReturnType<typeof classifyReportSlug>, { label: 
 };
 
 export const runtime = 'nodejs';
-export const revalidate = 900;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;

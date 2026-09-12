@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
@@ -21,6 +21,12 @@ const PARALLAX_Y = 1.0;
 // adaptive resolution: step down when the GPU can't hold framerate
 const DPR_MAX = 1.75;
 const DPR_MIN = 1;
+// runs before every other useFrame subscriber (they read clock.elapsedTime);
+// a negative priority does not take rendering over from EffectComposer
+const SCENE_CLOCK_PRIORITY = -1;
+// the disk and halo ignite over ~2 s of rendered frames (uIgnite damp); a
+// pause that is already on at mount waits this long so the scene opens lit
+const IGNITION_SETTLE_MS = 2500;
 
 function CameraRig() {
   const { camera, pointer } = useThree();
@@ -40,29 +46,63 @@ function CameraRig() {
   return null;
 }
 
+// Paused = frameloop 'demand' plus a stopped clock: frames render only when
+// something invalidates (resize, hover glow) and each sees delta 0 and a held
+// elapsedTime, so nothing moves. R3F zeroes elapsedTime on every frameloop
+// switch; restoring it here makes the orbits resume where they stopped.
+function SceneClock({ paused }: { paused: boolean }) {
+  const clock = useThree((state) => state.clock);
+  const frameloop = useThree((state) => state.frameloop);
+  const sceneTime = useRef(0);
+
+  useEffect(() => {
+    if (paused && frameloop === 'demand') clock.stop();
+  }, [clock, frameloop, paused]);
+
+  useFrame(() => {
+    if (clock.elapsedTime < sceneTime.current) clock.elapsedTime = sceneTime.current;
+    sceneTime.current = clock.elapsedTime;
+  }, SCENE_CLOCK_PRIORITY);
+
+  return null;
+}
+
 interface GalacticSceneProps {
   onSelect: (selection: GalacticSelection | null) => void;
   /** system narrated by the tracking ticker — its label/orbit glow like a hover */
   featuredName: string | null;
   onStarHover: (name: string, hovering: boolean) => void;
+  /** "Pause motion", or a selection card covering the scene */
+  paused: boolean;
 }
 
-export default function GalacticScene({ onSelect, featuredName, onStarHover }: GalacticSceneProps) {
+export default function GalacticScene({ onSelect, featuredName, onStarHover, paused }: GalacticSceneProps) {
   const [dpr, setDpr] = useState(1.5);
+  const [ignited, setIgnited] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIgnited(true), IGNITION_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  const frozen = paused && ignited;
 
   return (
     <Canvas
       camera={{ position: CAMERA_BASE.toArray(), fov: 42, near: 0.1, far: 400 }}
       dpr={dpr}
+      frameloop={frozen ? 'demand' : 'always'}
       gl={{ antialias: false, powerPreference: 'high-performance' }}
       style={{ background: 'transparent' }}
       onPointerMissed={() => onSelect(null)}
     >
-      {/* integrated GPUs get a resolution step-down instead of permanent jank */}
-      <PerformanceMonitor
-        onIncline={() => setDpr(DPR_MAX)}
-        onDecline={() => setDpr(DPR_MIN)}
-      />
+      {/* integrated GPUs get a resolution step-down instead of permanent jank;
+          unmounted while frozen, where sparse frames would read as a stall */}
+      {!frozen && (
+        <PerformanceMonitor
+          onIncline={() => setDpr(DPR_MAX)}
+          onDecline={() => setDpr(DPR_MIN)}
+        />
+      )}
+      <SceneClock paused={frozen} />
       <color attach="background" args={['#04060a']} />
       <CameraRig />
       <Starfield />

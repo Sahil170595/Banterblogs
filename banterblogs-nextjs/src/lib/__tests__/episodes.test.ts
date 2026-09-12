@@ -1,5 +1,114 @@
 import { describe, it, expect } from 'vitest';
-import { getEpisodeStats, extractPrimaryHeading, Episode } from '../episodes';
+import {
+    getEpisodeStats,
+    extractPrimaryHeading,
+    extractHeadings,
+    extractHtmlHeadings,
+    renderMarkdownToHtml,
+    Episode,
+} from '../episodes';
+
+// One markdown document with a page-owned title, an in-body TOC between two
+// rules, and three real sections.
+const TOC_DOC = [
+    '# Report', '', '---', '',
+    '## 2. Table of Contents', '', '- [Intro](#intro)', '- [Results](#results)', '', '---', '',
+    '## Intro', '', 'Body.', '', '## Results', '', 'More.', '', '## Discussion', '', 'End.',
+].join('\n');
+
+describe('markdown reading surface', () => {
+    describe('tables', () => {
+        it('wraps every table in its own horizontal scroll container', async () => {
+            const html = await renderMarkdownToHtml('| a | b |\n|---|---|\n| x | 1 |\n\n| c |\n|---|\n| y |\n');
+            expect(html.match(/<div class="table-scroll"><table>/g)).toHaveLength(2);
+        });
+
+        it('marks numeric columns, header included, and leaves text columns alone', async () => {
+            const html = await renderMarkdownToHtml([
+                '| Model | Rate | Delta | Note |',
+                '|---|---|---|---|',
+                '| llama3.2-1b | 1.68% | +4.2 pp | ok |',
+                '| qwen2.5-7b | 0.42% | −3.1pp | 12 ms |',
+                '| phi-4 | 1,348,000 | 0.69 ± 0.03 | n/a |',
+                '| mistral-7b | 2.1× | 1.2e-5 | fine |',
+                '| gemma3 | 12 GB | — | slow |',
+            ].join('\n'));
+            // Rate and Delta: header + 5 body cells each ("—" is a blank, not a miss).
+            expect(html.match(/class="num"/g)).toHaveLength(12);
+            expect(html).toContain('<th class="num">Rate</th>');
+            expect(html).toContain('<th class="num">Delta</th>');
+            expect(html).toContain('<th>Model</th>');
+            expect(html).toContain('<td>12 ms</td>');
+        });
+
+        it('right-aligns a column at exactly the 80% threshold but not below it', async () => {
+            const column = (cells: string[]) => ['| v |', '|---|', ...cells.map((c) => `| ${c} |`)].join('\n');
+            expect(await renderMarkdownToHtml(column(['1', '2', '3', '4', 'x']))).toContain('<th class="num">v</th>');
+            expect(await renderMarkdownToHtml(column(['1', '2', '3', 'x', 'y']))).toContain('<th>v</th>');
+        });
+
+        it('keeps an author-set column alignment instead of inferring one', async () => {
+            const html = await renderMarkdownToHtml('| n |\n|:---:|\n| 1 |\n| 2 |\n');
+            expect(html).not.toContain('class="num"');
+            expect(html).toContain('align="center"');
+        });
+    });
+
+    describe('one title per page', () => {
+        it('demotes markdown h1 to h2 when the page renders its own title', async () => {
+            const html = await renderMarkdownToHtml('# Title\n\n## Section\n\ntext', { demoteH1: true });
+            expect(html).not.toMatch(/<h1[\s>]/);
+            expect(html).toMatch(/<h2 id="title"[^>]*>Title<\/h2>/);
+        });
+
+        it('keeps the h1 for pages that take their title from the markdown', async () => {
+            expect(await renderMarkdownToHtml('# Title\n\ntext')).toContain('<h1 id="title">Title</h1>');
+        });
+
+        it('keeps a demoted title out of the in-page heading list', async () => {
+            const html = await renderMarkdownToHtml('# Title\n\n## Section\n', { demoteH1: true });
+            expect(extractHtmlHeadings(html).map((h) => h.text)).toEqual(['Section']);
+        });
+    });
+
+    describe('one table of contents per page', () => {
+        it('drops the markdown TOC through the end of its list and merges the rules around it', async () => {
+            const html = await renderMarkdownToHtml(TOC_DOC, { dropInlineToc: true });
+            expect(html).not.toMatch(/table of contents/i);
+            expect(html).not.toContain('href="#intro"');
+            expect(html.match(/<hr>/g)).toHaveLength(1);
+            expect(html).toContain('<h2 id="intro">Intro</h2>');
+        });
+
+        it('drops grouped TOCs (label paragraphs between lists) under an h3', async () => {
+            const html = await renderMarkdownToHtml([
+                '### Table of Contents', '', '**Part I**', '', '1. [A](#a)', '', '**Part II**', '', '2. [B](#b)',
+                '', '---', '', '## A', '', 'x', '', '## B', '', 'y',
+            ].join('\n'), { dropInlineToc: true });
+            expect(html).not.toContain('Part I');
+            expect(html).not.toContain('href="#b"');
+            expect(html).toContain('<hr>');
+            expect(html).toContain('<h2 id="b">B</h2>');
+        });
+
+        it('keeps blocks after the list that are not part of the TOC', async () => {
+            const html = await renderMarkdownToHtml(
+                '## Table of Contents\n\n- [A](#a)\n\n> A note that stays.\n\n## A\n\nx',
+                { dropInlineToc: true },
+            );
+            expect(html).toContain('A note that stays.');
+            expect(html).not.toContain('href="#a"');
+        });
+
+        it('leaves the markdown TOC in place when the page shows no TOC of its own', async () => {
+            expect(await renderMarkdownToHtml(TOC_DOC)).toContain('2. Table of Contents');
+        });
+
+        it('omits the markdown TOC heading from the sidebar headings', () => {
+            expect(extractHeadings(TOC_DOC).map((h) => h.id)).toEqual(['intro', 'results', 'discussion']);
+        });
+    });
+});
 
 describe('episodes.ts', () => {
     describe('extractPrimaryHeading', () => {

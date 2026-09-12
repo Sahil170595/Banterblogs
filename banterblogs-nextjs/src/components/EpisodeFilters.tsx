@@ -16,6 +16,7 @@ type SortKey = 'date' | 'title' | 'complexity' | 'files';
 // Render a page at a time; "Load more" extends the window, and any filter
 // change resets it (keyed on the filter signature — no setState-in-effect).
 const PAGE_SIZE = 36;
+const OPTION_CLASS = 'bg-background text-foreground';
 
 export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,12 +86,14 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
-                type="text"
-                placeholder="Search episodes, tags, or systems..."
+                type="search"
+                name="q"
+                autoComplete="off"
+                placeholder="Search episodes, tags, or systems…"
                 aria-label="Search episodes, tags, or systems"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background/60 px-10 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="w-full rounded-xl border border-input bg-background/60 px-10 py-2.5 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               />
             </div>
 
@@ -99,12 +102,13 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortKey)}
                 aria-label="Sort episodes by"
-                className="rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="rounded-xl border border-input bg-background text-foreground px-3 py-2.5 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                <option value="date">Date</option>
-                <option value="title">Title</option>
-                <option value="complexity">Complexity</option>
-                <option value="files">Files</option>
+                {/* opaque, or Windows draws the native list light with light text */}
+                <option className={OPTION_CLASS} value="date">Date</option>
+                <option className={OPTION_CLASS} value="title">Title</option>
+                <option className={OPTION_CLASS} value="complexity">Complexity</option>
+                <option className={OPTION_CLASS} value="files">Files</option>
               </select>
 
               <button
@@ -126,6 +130,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setSelectedTag('')}
+          aria-pressed={selectedTag === ''}
           className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
             selectedTag === ''
               ? 'bg-primary text-primary-foreground'
@@ -138,6 +143,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
           <button
             key={tag}
             onClick={() => setSelectedTag(tag)}
+            aria-pressed={selectedTag === tag}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
               selectedTag === tag
                 ? 'bg-primary text-primary-foreground'
@@ -151,7 +157,17 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
 
       {filteredEpisodes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
-          No episodes match your filters yet. Try adjusting the search or tag selection.
+          <p>No episodes match your filters yet. Try adjusting the search or tag selection.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedTag('');
+            }}
+            className="mt-4 rounded-xl border border-input bg-background/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
         <>

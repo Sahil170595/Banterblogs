@@ -2,7 +2,7 @@
 
 import { computeDwell } from './_shared';
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   CheckCircle2,
@@ -555,6 +555,29 @@ export function StreamingLadder({ data }: { data: SceneData }) {
     setPlaying(true);
   }, []);
 
+  // Roving-tabindex radio group: arrows wrap, Home/End jump, focus follows the check.
+  const handleScenarioKey = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      const count = data.records.length;
+      if (count === 0) return;
+      let next: number | null = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        next = (safeActiveIdx + 1) % count;
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        next = (safeActiveIdx - 1 + count) % count;
+      } else if (e.key === 'Home') {
+        next = 0;
+      } else if (e.key === 'End') {
+        next = count - 1;
+      }
+      if (next === null) return;
+      e.preventDefault();
+      selectRecord(next);
+      e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]')[next]?.focus();
+    },
+    [data.records.length, safeActiveIdx, selectRecord],
+  );
+
   const togglePlay = useCallback(() => {
     setPlaying((p) => !p);
     setHasInteracted(true);
@@ -876,7 +899,12 @@ export function StreamingLadder({ data }: { data: SceneData }) {
         <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Try a different reasoning step · {data.records.length} scenarios
         </div>
-        <div role="radiogroup" aria-label="Reasoning step scenarios" className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div
+          role="radiogroup"
+          aria-label="Reasoning step scenarios"
+          onKeyDown={handleScenarioKey}
+          className="grid grid-cols-2 md:grid-cols-5 gap-2"
+        >
           {data.records.map((r, idx) => {
             const isActive = idx === safeActiveIdx;
             const enf = (r.enforcement?.outcome || 'pending').toLowerCase();

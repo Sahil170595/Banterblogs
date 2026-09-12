@@ -21,7 +21,14 @@ export default function proxy(request: NextRequest) {
   const match = request.nextUrl.pathname.match(/^\/reports\/([^/]+)$/);
   if (!match) return NextResponse.next();
 
-  const raw = decodeURIComponent(match[1]);
+  let raw: string;
+  try {
+    raw = decodeURIComponent(match[1]);
+  } catch {
+    // malformed percent-encoding: let the route answer instead of a 500 here
+    console.warn('[proxy] malformed percent-encoding in report slug:', request.nextUrl.pathname);
+    return NextResponse.next();
+  }
   if (CANONICAL_SLUG.test(raw)) return NextResponse.next();
 
   const normalized = normalizeSlug(raw);
@@ -33,5 +40,9 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/reports/:id',
+  // Only slugs that are NOT the CANONICAL_SLUG shape reach the proxy, so
+  // canonical report requests skip it — including the .rsc and
+  // .segments/*.segment.rsc transport forms Next appends to every matcher.
+  // Next compiles this without the `i` flag, so uppercase aliases still match.
+  matcher: '/reports/:id((?![a-z0-9]+(?:-[a-z0-9]+)*(?:\\.rsc|\\.segments/.+\\.segment\\.rsc)?$)[^/]+)',
 };

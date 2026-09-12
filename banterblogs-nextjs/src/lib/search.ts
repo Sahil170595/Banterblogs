@@ -47,25 +47,99 @@ export class EpisodeSearch {
       episode.complexity >= min && episode.complexity <= max
     );
   }
+}
 
-  getSuggestions(query: string, limit: number = 5): string[] {
-    const results = this.search(query);
-    const suggestions = new Set<string>();
+// ── Site search: the /search.json index (reports, tools, episodes) ──
 
-    results.slice(0, limit).forEach(result => {
-      result.item.title.split(' ').forEach(word => {
-        if (word.toLowerCase().includes(query.toLowerCase()) && word.length > 2) {
-          suggestions.add(word);
-        }
-      });
+export type SearchEntryType = 'report' | 'tool' | 'episode';
 
-      result.item.tags.forEach(tag => {
-        if (tag.toLowerCase().includes(query.toLowerCase())) {
-          suggestions.add(tag);
-        }
-      });
+/** One /search.json row. Text fields are plain text; markdown is stripped at build. */
+export interface SearchEntry {
+  type: SearchEntryType;
+  slug: string;
+  title: string;
+  href: string;
+  description?: string;
+  /** reports only: the research phase */
+  phase?: string;
+}
+
+export interface SearchGroup {
+  type: SearchEntryType;
+  entries: SearchEntry[];
+}
+
+// Ten rows plus group labels fit the results panel (max-h-96) without scrolling.
+const MAX_RESULTS_PER_GROUP: Record<SearchEntryType, number> = { report: 5, tool: 2, episode: 3 };
+// Canonical TR pages also answer to their short id: "TR138".
+const TR_REPORT_SLUG = /^technical-report-(\d+)$/;
+
+// "TR-138", "tr 138" and "Technical Report 138" all reduce to one key.
+const compactKey = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+export class SiteSearch {
+  private readonly fuse: Fuse<SearchEntry>;
+  private readonly byIdentifier = new Map<string, SearchEntry[]>();
+
+  constructor(entries: SearchEntry[]) {
+    this.fuse = new Fuse(entries, {
+      keys: [
+        { name: 'title', weight: 0.6 },
+        { name: 'slug', weight: 0.2 },
+        { name: 'description', weight: 0.15 },
+        { name: 'phase', weight: 0.05 },
+      ],
+      threshold: 0.35,
+      ignoreLocation: true,
+      minMatchCharLength: 2,
     });
-
-    return Array.from(suggestions).slice(0, limit);
+    for (const entry of entries) {
+      const tr = TR_REPORT_SLUG.exec(entry.slug);
+      for (const id of tr ? [compactKey(entry.slug), `tr${tr[1]}`] : [compactKey(entry.slug)]) {
+        this.byIdentifier.set(id, [...(this.byIdentifier.get(id) ?? []), entry]);
+      }
+    }
   }
+
+  /** Exact identifier hits first, then fuzzy matches; grouped by type, episodes last. */
+  search(query: string): SearchGroup[] {
+    const key = compactKey(query);
+    if (!key) return [];
+    const exact = this.byIdentifier.get(key) ?? [];
+    const fuzzy = this.fuse.search(query).map((result) => result.item).filter((entry) => !exact.includes(entry));
+
+    // a Map keeps insertion order, so groups follow each type's best-ranked hit
+    const byType = new Map<SearchEntryType, SearchEntry[]>();
+    for (const entry of [...exact, ...fuzzy]) {
+      const group = byType.get(entry.type) ?? [];
+      if (group.length < MAX_RESULTS_PER_GROUP[entry.type]) group.push(entry);
+      byType.set(entry.type, group);
+    }
+    const groups: SearchGroup[] = [];
+    for (const [type, entries] of byType) {
+      if (type !== 'episode') groups.push({ type, entries });
+    }
+    const episodes = byType.get('episode');
+    if (episodes) groups.push({ type: 'episode', entries: episodes });
+    return groups;
+  }
+}
+
+const MD_HEADING = /^#{1,6}\s+/;
+const MD_LINK = /!?\[([^\]]*)\]\([^)]*\)/g;
+const MD_CODE = /`([^`]*)`/g;
+const MD_STRONG = /\*\*(.+?)\*\*/g;
+// asterisks only: underscores belong to identifiers here (VLLM_BATCH_INVARIANT)
+const MD_EMPHASIS = /\*(\S(?:[^*]*\S)?)\*/g;
+
+/** Inline markdown to plain text, for search titles and snippets. */
+export function toPlainText(markdown: string): string {
+  return markdown
+    .replace(MD_HEADING, '')
+    .replace(MD_LINK, '$1')
+    .replace(MD_CODE, '$1')
+    .replace(MD_STRONG, '$1')
+    .replace(MD_EMPHASIS, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

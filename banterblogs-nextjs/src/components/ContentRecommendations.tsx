@@ -1,184 +1,139 @@
-'use client';
-
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Sparkles,
-  TrendingUp,
-  Clock,
-  Tag,
-  ArrowRight,
-  BookOpen,
-  Zap,
-  Star,
-  Eye
-} from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, Eye, Sparkles, Star, Tag, TrendingUp, Zap } from 'lucide-react';
 import type { EpisodeSummary } from '@/lib/episodes';
 
+// Server component: the episode page scores the archive here and renders only
+// the picks, so the page payload no longer carries every episode summary for
+// a three-item panel.
+
+// Scoring: shared tags dominate, then platform, then recency, then complexity.
+const SHARED_TAG_POINTS = 40;
+const SAME_PLATFORM_POINTS = 30;
+const RECENT_WINDOW_DAYS = 30;
+const RECENT_POINTS = 20;
+const NEARBY_WINDOW_DAYS = 90;
+const NEARBY_POINTS = 10;
+const SIMILAR_COMPLEXITY_BAND = 5;
+const SIMILAR_COMPLEXITY_POINTS = 10;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+export const RECOMMENDATION_COUNT = 3;
+// shared tags quoted in the reason line under each pick
+const REASON_TAG_LIMIT = 2;
+
+type Scored = Pick<EpisodeSummary, 'id' | 'tags' | 'platform' | 'date' | 'complexity'>;
+
+export function recommendEpisodes<T extends Scored>(
+  current: Scored,
+  archive: readonly T[],
+  count: number = RECOMMENDATION_COUNT,
+): T[] {
+  const currentTime = new Date(current.date).getTime();
+  return archive
+    .filter((episode) => episode.id !== current.id)
+    .map((episode) => {
+      let score = episode.tags.filter((tag) => current.tags.includes(tag)).length * SHARED_TAG_POINTS;
+      if (episode.platform === current.platform) score += SAME_PLATFORM_POINTS;
+      const daysApart = Math.abs(currentTime - new Date(episode.date).getTime()) / MS_PER_DAY;
+      if (daysApart < RECENT_WINDOW_DAYS) score += RECENT_POINTS;
+      else if (daysApart < NEARBY_WINDOW_DAYS) score += NEARBY_POINTS;
+      if (Math.abs(episode.complexity - current.complexity) < SIMILAR_COMPLEXITY_BAND) {
+        score += SIMILAR_COMPLEXITY_POINTS;
+      }
+      return { episode, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count)
+    .map(({ episode }) => episode);
+}
+
+function recommendationReason(current: Scored, episode: EpisodeSummary): string {
+  const shared = episode.tags.filter((tag) => current.tags.includes(tag));
+  if (shared.length > 0) return `Similar topics: ${shared.slice(0, REASON_TAG_LIMIT).join(', ')}`;
+  if (episode.platform === current.platform) return `Same platform: ${episode.platform}`;
+  return 'Nearby in the archive';
+}
+
+function rankIcon(index: number) {
+  switch (index) {
+    case 0:
+      return <Star className="h-4 w-4 text-primary" />;
+    case 1:
+      return <TrendingUp className="h-4 w-4 text-primary/80" />;
+    case 2:
+      return <Zap className="h-4 w-4 text-primary/70" />;
+    default:
+      return <BookOpen className="h-4 w-4 text-muted-foreground" />;
+  }
+}
+
 interface ContentRecommendationsProps {
-  currentEpisode: EpisodeSummary;
-  allEpisodes: EpisodeSummary[];
+  current: EpisodeSummary;
+  recommendations: EpisodeSummary[];
   className?: string;
 }
 
-export function ContentRecommendations({ currentEpisode, allEpisodes, className = '' }: ContentRecommendationsProps) {
-  const [recommendations, setRecommendations] = useState<EpisodeSummary[]>([]);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    // Generate recommendations based on various factors
-    const generateRecommendations = () => {
-      const scoredEpisodes = allEpisodes
-        .filter(ep => ep.id !== currentEpisode.id)
-        .map(episode => {
-          let score = 0;
-
-          // Tag similarity (40% weight)
-          const commonTags = episode.tags.filter(tag => 
-            currentEpisode.tags.includes(tag)
-          ).length;
-          score += commonTags * 40;
-
-          // Platform similarity (30% weight)
-          if (episode.platform === currentEpisode.platform) {
-            score += 30;
-          }
-
-          // Recency bonus (20% weight)
-          const currentDate = new Date(currentEpisode.date);
-          const episodeDate = new Date(episode.date);
-          const daysDiff = Math.abs(currentDate.getTime() - episodeDate.getTime()) / (1000 * 60 * 60 * 24);
-          if (daysDiff < 30) score += 20;
-          else if (daysDiff < 90) score += 10;
-
-          // Complexity similarity (10% weight)
-          const complexityDiff = Math.abs(episode.complexity - currentEpisode.complexity);
-          if (complexityDiff < 5) score += 10;
-
-          return { episode, score };
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-        .map(item => item.episode);
-
-      setRecommendations(scoredEpisodes);
-    };
-
-    generateRecommendations();
-    
-    // Show recommendations after a delay
-    const timer = setTimeout(() => setIsVisible(true), 3000);
-    return () => clearTimeout(timer);
-  }, [currentEpisode, allEpisodes]);
-
-  const getRecommendationReason = (episode: EpisodeSummary) => {
-    const commonTags = episode.tags.filter((tag: string) =>
-      currentEpisode.tags.includes(tag)
-    );
-    
-    if (commonTags.length > 0) {
-      return `Similar topics: ${commonTags.slice(0, 2).join(', ')}`;
-    } else if (episode.platform === currentEpisode.platform) {
-      return `Same platform: ${episode.platform}`;
-    } else {
-      return `Popular episode`;
-    }
-  };
-
-  const getRecommendationIcon = (index: number) => {
-    switch (index) {
-      case 0:
-        return <Star className="h-4 w-4 text-primary" />;
-      case 1:
-        return <TrendingUp className="h-4 w-4 text-primary/80" />;
-      case 2:
-        return <Zap className="h-4 w-4 text-primary/70" />;
-      default:
-        return <BookOpen className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
+export function ContentRecommendations({ current, recommendations, className = '' }: ContentRecommendationsProps) {
+  if (recommendations.length === 0) return null;
 
   return (
-    <AnimatePresence>
-      {isVisible && recommendations.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className={`content-recommendations ${className}`}
-        >
-          <div className="signal-panel p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">Recommended Episodes</h3>
-            </div>
-            
-            <p className="text-sm text-muted-foreground mb-4">
-              Based on your current reading, you might enjoy these episodes
-            </p>
+    <div className={`content-recommendations ${className}`}>
+      <div className="signal-panel p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">Recommended Episodes</h3>
+        </div>
 
-            <div className="space-y-3">
-              {recommendations.map((episode, index) => (
-                <motion.div
-                  key={episode.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group"
-                >
-                  <Link
-                    href={`/episodes/${episode.slug}`}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
-                  >
-                    <div className="flex-shrink-0">
-                      {getRecommendationIcon(index)}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                          {episode.title}
-                        </h4>
-                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                          #{episode.id}
-                        </span>
-                      </div>
-                      
-                      <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
-                        {episode.preview}
-                      </p>
-                      
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {episode.readingTime} min
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          {episode.tags.length} tags
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {episode.complexity} complexity
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                  </Link>
-                  
-                  <div className="ml-7 mt-1">
-                    <p className="text-xs text-primary/70">
-                      {getRecommendationReason(episode)}
-                    </p>
+        <p className="text-sm text-muted-foreground mb-4">
+          Based on your current reading, you might enjoy these episodes
+        </p>
+
+        <div className="space-y-3">
+          {recommendations.map((episode, index) => (
+            <div key={episode.id} className="group">
+              <Link
+                href={`/episodes/${episode.slug}`}
+                className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+              >
+                <div className="flex-shrink-0">{rankIcon(index)}</div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                      {episode.title}
+                    </h4>
+                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      #{episode.displayId ?? episode.id}
+                    </span>
                   </div>
-                </motion.div>
-              ))}
+
+                  <p className="text-xs text-muted-foreground mb-1 line-clamp-2">{episode.preview}</p>
+
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {episode.readingTime} min
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Tag className="h-3 w-3" />
+                      {episode.tags.length} tags
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {episode.complexity} complexity
+                    </div>
+                  </div>
+                </div>
+
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+              </Link>
+
+              <div className="ml-7 mt-1">
+                <p className="text-xs text-primary/70">{recommendationReason(current, episode)}</p>
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

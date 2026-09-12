@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 900;
 export const runtime = 'nodejs';
 
 interface ReportEntry {
@@ -39,7 +38,7 @@ interface ReportEntry {
 
 // PHASE_META derived from the single PHASE_DEFINITIONS source. Module-level so
 // it allocates once at parse time, not per ReportsIndex render. Newest phase
-// first (order 0) so the tab list defaults to the latest research.
+// first (order 0); the tab list itself opens on an All tab (ReportTabs).
 const PHASE_META: Record<string, { label: string; description: string; order: number }> = (() => {
   const meta: Record<string, { label: string; description: string; order: number }> = {};
   const reversed = [...PHASE_DEFINITIONS].reverse();

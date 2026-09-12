@@ -9,6 +9,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import GithubSlugger from "github-slugger";
+import type { Element, ElementContent, Root, RootContent } from "hast";
 
 export type EpisodePlatform = "banterpacks" | "chimera" | "benchmark" | "unknown";
 
@@ -56,15 +57,158 @@ export function toEpisodeSummary(episode: Episode): EpisodeSummary {
 
 const postsDirectory = path.join(process.cwd(), "posts");
 
+// ── Reading surface: a rehype step shared by reports, episodes, compendium ──
+
+// Share of a column's non-blank body cells that must parse as numbers before
+// the whole column, header included, is marked `num` (right-aligned).
+const NUMERIC_COLUMN_THRESHOLD = 0.8;
+
+// Signed number with separators/decimals/exponent and an optional unit;
+// "a ± b" counts as one value.
+const NUMBER = String.raw`[+\-−]?(?:\d[\d,]*(?:\.\d+)?|\.\d+)(?:e[+\-−]?\d+)?`;
+const UNIT = String.raw`(?:%|pp|ms|s|GB|MB|K|M|B|x|×)`;
+const QUANTITY = String.raw`(?:[×x]\s?)?${NUMBER}\s?${UNIT}?`;
+const NUMERIC_CELL = new RegExp(String.raw`^${QUANTITY}(?:\s?(?:±|\+/-)\s?${QUANTITY})?$`, "i");
+// Placeholders ("", "—", "n/a") count neither for nor against a column.
+const BLANK_CELL = /^(?:[-–—]|n\/?a)?$/i;
+
+// The markdown's own TOC heading ("Table of Contents", "2. Table of Contents").
+const INLINE_TOC_HEADING = /^(\d+\.\s*)?table of contents$/i;
+// Blocks that make up a markdown TOC body: lists or a table, plus label paragraphs.
+const TOC_BODY_TAGS = new Set(["ul", "ol", "table", "p"]);
+
+// A report page renders its own TOC once a document has this many headings.
+export const MIN_TOC_HEADINGS = 3;
+
+export interface RenderMarkdownOptions {
+  /** The page renders the title as its <h1>: markdown h1s become h2s. */
+  demoteH1?: boolean;
+  /** The page renders its own TOC: drop the markdown's TOC section. */
+  dropInlineToc?: boolean;
+}
+
+const RENDER_OPTIONS_KEY = "readingSurface";
+
+type HastParent = Root | Element;
+
+function textOf(node: ElementContent): string {
+  if (node.type === "text") return node.value;
+  if (node.type === "element") return node.children.map(textOf).join("");
+  return "";
+}
+
+function childElement(parent: Element, tagName: string): Element | undefined {
+  return parent.children.find((child): child is Element => child.type === "element" && child.tagName === tagName);
+}
+
+function rowsOf(section: Element | undefined): Element[][] {
+  if (!section) return [];
+  return section.children
+    .filter((row): row is Element => row.type === "element" && row.tagName === "tr")
+    .map((row) =>
+      row.children.filter((cell): cell is Element => cell.type === "element" && (cell.tagName === "th" || cell.tagName === "td")),
+    );
+}
+
+function markNumericColumns(table: Element): void {
+  const head = rowsOf(childElement(table, "thead"));
+  const body = rowsOf(childElement(table, "tbody"));
+  const columnCount = Math.max(0, ...head.map((row) => row.length), ...body.map((row) => row.length));
+  for (let column = 0; column < columnCount; column += 1) {
+    if (head[0]?.[column]?.properties.align) continue; // the author set this column's alignment
+    const values = body
+      .map((row) => row[column])
+      .filter((cell): cell is Element => Boolean(cell))
+      .map((cell) => textOf(cell).replace(/\s+/g, " ").trim())
+      .filter((value) => !BLANK_CELL.test(value));
+    if (values.length === 0) continue;
+    const numeric = values.filter((value) => NUMERIC_CELL.test(value)).length;
+    if (numeric / values.length < NUMERIC_COLUMN_THRESHOLD) continue;
+    for (const row of [...head, ...body]) {
+      const cell = row[column];
+      if (!cell) continue;
+      const existing = cell.properties.className;
+      cell.properties.className = Array.isArray(existing) ? [...existing, "num"] : ["num"];
+    }
+  }
+}
+
+// Wrap tables in a scroll box, mark numeric columns, and (optionally) demote h1.
+function transformElements(parent: HastParent, demoteH1: boolean): void {
+  for (let index = 0; index < parent.children.length; index += 1) {
+    const child = parent.children[index];
+    if (child.type !== "element") continue;
+    if (child.tagName === "table") {
+      markNumericColumns(child);
+      parent.children[index] = {
+        type: "element",
+        tagName: "div",
+        properties: { className: ["table-scroll"] },
+        children: [child],
+      };
+      continue;
+    }
+    if (demoteH1 && child.tagName === "h1") {
+      child.tagName = "h2";
+      child.properties.dataDemoted = true; // lets extractHtmlHeadings skip the title
+    }
+    transformElements(child, demoteH1);
+  }
+}
+
+function neighbourElement(blocks: RootContent[], from: number, step: 1 | -1): { node: Element; index: number } | undefined {
+  for (let index = from + step; index >= 0 && index < blocks.length; index += step) {
+    const node = blocks[index];
+    if (node.type === "element") return { node, index };
+    if (node.type === "text" && node.value.trim()) return undefined;
+  }
+  return undefined;
+}
+
+// Remove the TOC heading through its last list/table (label paragraphs between
+// lists go with it; a trailing paragraph or any other block ends the TOC).
+function dropInlineToc(tree: Root): void {
+  const blocks = tree.children;
+  const start = blocks.findIndex(
+    (node) =>
+      node.type === "element" &&
+      (node.tagName === "h2" || node.tagName === "h3") &&
+      INLINE_TOC_HEADING.test(textOf(node).trim()),
+  );
+  if (start === -1) return;
+  let end = -1;
+  for (let index = start + 1; index < blocks.length; index += 1) {
+    const node = blocks[index];
+    if (node.type !== "element") continue;
+    if (!TOC_BODY_TAGS.has(node.tagName)) break;
+    if (node.tagName !== "p") end = index;
+  }
+  if (end === -1) return;
+  const before = neighbourElement(blocks, start, -1);
+  const after = neighbourElement(blocks, end, 1);
+  if (before?.node.tagName === "hr" && after?.node.tagName === "hr") end = after.index;
+  blocks.splice(start, end - start + 1);
+}
+
+function rehypeReadingSurface() {
+  return (tree: Root, file: { data: Record<string, unknown> }) => {
+    const options = (file.data[RENDER_OPTIONS_KEY] ?? {}) as RenderMarkdownOptions;
+    if (options.dropInlineToc) dropInlineToc(tree);
+    transformElements(tree, Boolean(options.demoteH1));
+  };
+}
+
+// rehype-slug runs before the reading-surface step, so ids never shift.
 const markdownProcessor = remark()
   .use(remarkGfm)
   .use(remarkRehype, { allowDangerousHtml: false })
   .use(rehypeSlug)
   .use(rehypeHighlight)
+  .use(rehypeReadingSurface)
   .use(rehypeStringify);
 
-export async function renderMarkdownToHtml(markdown: string): Promise<string> {
-  const processed = await markdownProcessor.process(markdown);
+export async function renderMarkdownToHtml(markdown: string, options: RenderMarkdownOptions = {}): Promise<string> {
+  const processed = await markdownProcessor.process({ value: markdown, data: { [RENDER_OPTIONS_KEY]: options } });
   return processed.toString();
 }
 
@@ -98,6 +242,9 @@ export function extractHeadings(markdown: string): TocEntry[] {
     const level = match[1].length;
     const text = match[2].replace(/\*\*/g, '').replace(/`/g, '').trim();
     const id = slugger.slug(text);
+    // The page's own TOC replaces the markdown one (dropInlineToc); slugging
+    // it anyway keeps later ids in step with rehype-slug.
+    if (level <= 3 && INLINE_TOC_HEADING.test(text)) continue;
     headings.push({ id, text, level });
   }
   return headings;
@@ -113,6 +260,7 @@ export function extractHtmlHeadings(html: string): TocEntry[] {
   const re = /<h([2-4])[^>]*\sid="([^"]+)"[^>]*>([\s\S]*?)<\/h\1>/gi;
   let match: RegExpExecArray | null;
   while ((match = re.exec(html)) !== null) {
+    if (/^<h\d[^>]*\sdata-demoted/.test(match[0])) continue; // the page title, demoted by the renderer
     const text = match[3].replace(/<[^>]+>/g, '').trim();
     if (text) headings.push({ id: match[2], text, level: Number(match[1]) });
   }
@@ -286,7 +434,8 @@ async function processEpisodeFile(
   const { content, data } = matter(fileContents);
   const metadata = resolveEpisodeMetadata(data ?? {}, content, id, platform, originalId);
 
-  const htmlContent = await renderMarkdownToHtml(content);
+  // The episode page renders the title as its <h1>.
+  const htmlContent = await renderMarkdownToHtml(content, { demoteH1: true });
 
   const preview = metadata.preview ?? extractPreview(content);
   const tags = buildTags(content, metadata.tags);

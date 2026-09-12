@@ -51,7 +51,7 @@ export default async function CompendiumPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12">
-                <article className="prose prose-invert max-w-none prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-img:rounded-xl">
+                <article className="prose prose-invert prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-a:underline-offset-4 prose-a:decoration-primary/50 hover:prose-a:decoration-primary prose-img:rounded-xl">
                     <div dangerouslySetInnerHTML={{ __html: html }} />
                 </article>
 

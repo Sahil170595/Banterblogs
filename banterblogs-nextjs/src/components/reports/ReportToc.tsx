@@ -1,28 +1,42 @@
-import type { TocEntry } from '@/lib/episodes';
+import { MIN_TOC_HEADINGS, type TocEntry } from '@/lib/episodes';
 
 interface ReportTocProps {
   headings: TocEntry[];
 }
 
-function TocList({ headings }: { headings: TocEntry[] }) {
+// Sidebar labels past this length cut at a word boundary; the full text rides in `title`.
+const TOC_LABEL_MAX_CHARS = 48;
+
+function truncateLabel(text: string): string {
+  if (text.length <= TOC_LABEL_MAX_CHARS) return text;
+  const cut = text.slice(0, TOC_LABEL_MAX_CHARS);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+}
+
+function TocList({ headings, truncate = false }: { headings: TocEntry[]; truncate?: boolean }) {
   return (
     <ul className="space-y-1.5 text-sm">
-      {headings.map((h, i) => (
-        <li key={`${i}-${h.id}`} style={{ paddingLeft: `${(h.level - 2) * 12}px` }}>
-          <a
-            href={`#${h.id}`}
-            className="block text-muted-foreground hover:text-primary transition-colors leading-snug py-0.5"
-          >
-            {h.text}
-          </a>
-        </li>
-      ))}
+      {headings.map((h, i) => {
+        const label = truncate ? truncateLabel(h.text) : h.text;
+        return (
+          <li key={`${i}-${h.id}`} style={{ paddingLeft: `${(h.level - 2) * 12}px` }}>
+            <a
+              href={`#${h.id}`}
+              title={label === h.text ? undefined : h.text}
+              className="block text-muted-foreground hover:text-primary transition-colors leading-snug py-0.5"
+            >
+              {label}
+            </a>
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
 export function ReportTocMobile({ headings }: ReportTocProps) {
-  if (headings.length < 3) return null;
+  if (headings.length < MIN_TOC_HEADINGS) return null;
 
   return (
     <details className="lg:hidden rounded-xl border border-border/50 bg-card/50 p-4 mb-8">
@@ -37,7 +51,7 @@ export function ReportTocMobile({ headings }: ReportTocProps) {
 }
 
 export function ReportTocSidebar({ headings }: ReportTocProps) {
-  if (headings.length < 3) return null;
+  if (headings.length < MIN_TOC_HEADINGS) return null;
 
   return (
     <nav className="hidden lg:block" aria-label="Table of contents">
@@ -45,7 +59,7 @@ export function ReportTocSidebar({ headings }: ReportTocProps) {
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
           On this page
         </h3>
-        <TocList headings={headings} />
+        <TocList headings={headings} truncate />
       </div>
     </nav>
   );

@@ -25,7 +25,7 @@ interface EpisodeFloatingUIProps {
 
 export function EpisodeFloatingUI({ episode }: EpisodeFloatingUIProps) {
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-2">
+    <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-40 flex flex-col gap-2">
       <SocialShare episode={episode} />
       <BookmarkManager />
     </div>

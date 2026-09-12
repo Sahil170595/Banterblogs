@@ -2,9 +2,8 @@ import 'highlight.js/styles/github-dark.css';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 export const runtime = 'nodejs';
-// Prerender all episode pages at build; the archive is final so on-demand
-// renders only re-run for ISR refreshes, not first visits.
-export const revalidate = 900;
+// Prerendered at build and never revalidated: the archive ships inside the
+// deployment, so a regeneration would only redo work for identical output.
 import { getAllEpisodes, toEpisodeSummary, extractHtmlHeadings, computeContentStats } from '@/lib/episodes';
 import { EpisodeNavigation } from '@/components/EpisodeNavigation';
 
@@ -59,7 +58,7 @@ import { ArticleEnhancements } from '@/components/ContentEnhancer';
 import { ContentStats } from '@/components/ContentStats';
 import { MobileNavigation } from '@/components/MobileOptimization';
 import { EpisodeFloatingUI } from '@/components/EpisodeFloatingUI';
-import { EpisodeRecommendationsClient } from '@/components/EpisodeRecommendationsClient';
+import { ContentRecommendations, recommendEpisodes } from '@/components/ContentRecommendations';
 
 export default async function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -111,8 +110,6 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <TableOfContents headings={headings} />
-
       <EpisodeFloatingUI episode={summary} />
 
       <MobileNavigation
@@ -143,36 +140,50 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
             <div className="signal-divider my-6" />
 
-            <EpisodeStats episode={episode} />
+            <EpisodeStats
+              filesChanged={episode.filesChanged}
+              linesAdded={episode.linesAdded}
+              readingTime={episode.readingTime}
+              complexity={episode.complexity}
+            />
           </div>
 
           <div className="signal-panel mb-10 p-6">
             <ContentStats stats={contentStats} />
           </div>
 
-          <div
-            className="signal-panel p-8 prose prose-lg prose-zinc prose-invert max-w-none
-            prose-headings:font-bold prose-headings:text-foreground
-            prose-h1:text-4xl prose-h1:mb-8 prose-h1:mt-12
-            prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-10
-            prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8
-            prose-h4:text-xl prose-h4:mb-3 prose-h4:mt-6
-            prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6
-            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-            prose-strong:text-foreground prose-strong:font-semibold
-            prose-code:text-sm prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded
-            prose-pre:bg-muted prose-pre:border prose-pre:border-border
-            prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:pl-6 prose-blockquote:py-4 prose-blockquote:rounded-r-lg
-            prose-ul:list-disc prose-ol:list-decimal
-            prose-li:text-muted-foreground prose-li:mb-2
-            prose-img:rounded-xl prose-img:shadow-lg prose-img:border prose-img:border-border
-            prose-table:border prose-table:border-border prose-table:rounded-lg
-            prose-th:bg-muted prose-th:font-semibold prose-th:text-foreground
-            prose-td:border prose-td:border-border prose-td:text-muted-foreground"
-          >
-            {/* Server-rendered article body — SEO/no-JS complete on first paint. */}
-            <div id="episode-article" dangerouslySetInnerHTML={{ __html: episode.content }} />
-            <ArticleEnhancements articleId="episode-article" />
+          {/* From xl the TOC gets its own column: 16rem rail + 2rem gap leaves
+              the panel 46rem inside max-w-5xl, wide enough for the 65ch text. */}
+          <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-8">
+            <div className="signal-panel p-8">
+              {/* Server-rendered article body — SEO/no-JS complete on first paint.
+                  Prose sits inside the panel so the text column keeps its ~65ch measure. */}
+              <div
+                id="episode-article"
+                className="prose prose-zinc prose-invert
+                prose-headings:font-bold prose-headings:text-foreground
+                prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-10
+                prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8
+                prose-h4:text-xl prose-h4:mb-3 prose-h4:mt-6
+                prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6
+                prose-a:text-primary prose-a:underline prose-a:underline-offset-4 prose-a:decoration-primary/50 hover:prose-a:decoration-primary
+                prose-strong:text-foreground prose-strong:font-semibold
+                prose-code:text-sm prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+                prose-pre:bg-muted prose-pre:border prose-pre:border-border
+                prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:pl-6 prose-blockquote:py-4 prose-blockquote:rounded-r-lg
+                prose-ul:list-disc prose-ol:list-decimal
+                prose-li:text-muted-foreground prose-li:mb-2
+                prose-img:rounded-xl prose-img:shadow-lg prose-img:border prose-img:border-border
+                prose-table:border prose-table:border-border prose-table:rounded-lg
+                prose-th:bg-muted prose-th:font-semibold prose-th:text-foreground
+                prose-td:border prose-td:border-border prose-td:text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: episode.content }}
+              />
+              <ArticleEnhancements articleId="episode-article" />
+            </div>
+            <aside className="hidden xl:block">
+              <TableOfContents headings={headings} />
+            </aside>
           </div>
 
           <EpisodeNavigation
@@ -181,9 +192,10 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
           />
 
           <div className="mt-16">
-            <EpisodeRecommendationsClient
-              currentEpisode={toEpisodeSummary(episode)}
-              allEpisodes={allEpisodes.map(toEpisodeSummary)}
+            {/* scored on the server: only the picks reach the page */}
+            <ContentRecommendations
+              current={summary}
+              recommendations={recommendEpisodes(episode, allEpisodes).map(toEpisodeSummary)}
             />
           </div>
         </div>

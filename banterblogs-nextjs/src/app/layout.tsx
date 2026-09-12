@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { JetBrains_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
@@ -6,8 +6,6 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { KeyboardNavigation, FocusIndicator } from "@/components/AccessibilityShell";
-import { AccessibilityPanelClient } from "@/components/AccessibilityPanelClient";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { MotionConfig } from "framer-motion";
@@ -15,6 +13,19 @@ import { MotionConfig } from "framer-motion";
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
+
+// --background (220 32% 2%) from globals.css as hex, so browser chrome and the
+// first frame match the page (pinned by readerSettings.test.tsx)
+const THEME_BACKGROUND_HEX = "#030507";
+
+// Applies a stored reader font-size before first paint, so the rem-based
+// layout never reflows after hydration. The key and percentages mirror
+// FONT_SIZE_STORAGE_KEY / FONT_SIZE_SCALE in components/AccessibilityPanel.tsx
+// (pinned by readerSettings.test.tsx).
+const READER_FONT_SIZE_SCRIPT =
+  'try{var k=localStorage.getItem("chimeraforge:reader-font-size"),m={small:"87.5%",large:"112.5%"};' +
+  'if(k==="small"||k==="large")document.documentElement.style.fontSize=m[k]}' +
+  'catch(e){console.warn("[reader-settings] stored font size unavailable",e)}';
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chimeraforge.vercel.app"),
@@ -59,13 +70,25 @@ export const metadata: Metadata = {
   // (favicon.ico, apple-icon.png, opengraph-image.png, twitter-image.png).
 };
 
+export const viewport: Viewport = {
+  themeColor: THEME_BACKGROUND_HEX,
+  colorScheme: "dark",
+  // edge-to-edge on notched phones; fixed bottom UI pads with safe-area insets
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    // suppressHydrationWarning: the pre-paint script may set <html>'s inline
+    // font-size before React hydrates (applies to this element only)
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script id="reader-font-size" dangerouslySetInnerHTML={{ __html: READER_FONT_SIZE_SCRIPT }} />
+      </head>
       <body className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-background text-foreground antialiased`}>
         {/* WCAG 2.4.1: let keyboard users bypass the header on every page. */}
         <a
@@ -78,21 +101,16 @@ export default function RootLayout({
           {/* reducedMotion="user" makes every framer-motion animation respect
               prefers-reduced-motion globally (scenes add their own handling). */}
           <MotionConfig reducedMotion="user">
-            <KeyboardNavigation>
-              <FocusIndicator />
-              <div className="relative flex min-h-screen flex-col">
-                <Header />
-                <main id="main-content" className="flex-1 chimera-shell">
-                  {children}
-                </main>
-                <RouteGate hideOn={["/"]}>
-                  <Footer />
-                </RouteGate>
-
-                {/* Global UI Components — heavy panel lazy-loaded via client wrapper */}
-                <AccessibilityPanelClient />
-              </div>
-            </KeyboardNavigation>
+            {/* .keyboard-navigation scopes the focus-visible ring in globals.css */}
+            <div className="keyboard-navigation relative flex min-h-screen flex-col">
+              <Header />
+              <main id="main-content" className="flex-1 chimera-shell">
+                {children}
+              </main>
+              <RouteGate hideOn={["/"]}>
+                <Footer />
+              </RouteGate>
+            </div>
           </MotionConfig>
         </ErrorBoundary>
         <Analytics />

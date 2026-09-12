@@ -1,33 +1,29 @@
 'use client';
 
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Tag, FileText, X } from 'lucide-react';
-import type { EpisodeSearch } from '@/lib/search';
-import type { EpisodeSummary } from '@/lib/episodes';
+import { BookOpen, FileText, Package, Search, X } from 'lucide-react';
+import type { SearchEntry, SearchEntryType, SiteSearch } from '@/lib/search';
 import Link from 'next/link';
 
-interface SearchDialogProps {
-  episodes?: EpisodeSummary[];
-}
+const SEARCH_INDEX_URL = '/search.json';
 
-const MAX_RESULTS = 5;
+const GROUP_LABEL: Record<SearchEntryType, string> = { report: 'Reports', tool: 'Tools', episode: 'Episodes' };
+const GROUP_ICON = { report: FileText, tool: Package, episode: BookOpen } as const;
 
 // Module-level so the desktop and mobile Header instances share one fetch and
-// one fuse.js index — and nothing loads at all until search is first opened.
-let searchLoader: Promise<EpisodeSearch | null> | null = null;
+// one index — and nothing loads at all until search is first opened.
+let searchLoader: Promise<SiteSearch | null> | null = null;
 
-function loadSearch(seed: EpisodeSummary[]): Promise<EpisodeSearch | null> {
+function loadSearch(): Promise<SiteSearch | null> {
   if (!searchLoader) {
     searchLoader = (async () => {
       try {
-        // Dynamic import keeps fuse.js out of the sitewide header bundle.
-        const { EpisodeSearch } = await import('@/lib/search');
-        if (seed.length > 0) return new EpisodeSearch(seed);
-        const res = await fetch('/api/episodes');
-        if (!res.ok) throw new Error(`Failed to load episodes for search: ${res.status}`);
-        const data: EpisodeSummary[] = await res.json();
-        return new EpisodeSearch(data);
+        // Dynamic import keeps fuse.js out of the sitewide header bundle; the
+        // library and the index download in parallel.
+        const [{ SiteSearch }, response] = await Promise.all([import('@/lib/search'), fetch(SEARCH_INDEX_URL)]);
+        if (!response.ok) throw new Error(`Failed to load ${SEARCH_INDEX_URL}: ${response.status}`);
+        return new SiteSearch((await response.json()) as SearchEntry[]);
       } catch (error) {
         console.error('[SearchDialog] search index failed to load:', error);
         searchLoader = null; // allow retry on next open
@@ -38,12 +34,13 @@ function loadSearch(seed: EpisodeSummary[]): Promise<EpisodeSearch | null> {
   return searchLoader;
 }
 
-export function SearchDialog({ episodes = [] }: SearchDialogProps) {
+export function SearchDialog() {
   const router = useRouter();
   const listboxId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [searchInstance, setSearchInstance] = useState<EpisodeSearch | null>(null);
+  const [site, setSite] = useState<SiteSearch | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   // Keyed on the query so a new query resets the highlight without an effect.
   const [active, setActive] = useState({ query: '', index: -1 });
   const activeIndex = active.query === query ? active.index : -1;
@@ -53,31 +50,30 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
     },
     [query],
   );
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Load the index on first open, not on mount — visitors who never touch
   // search download nothing.
   useEffect(() => {
-    if (!isOpen || searchInstance) return;
+    if (!isOpen || site || loadFailed) return;
     let cancelled = false;
-    loadSearch(episodes).then((instance) => {
-      if (!cancelled && instance) setSearchInstance(instance);
+    loadSearch().then((instance) => {
+      if (cancelled) return;
+      if (instance) setSite(instance);
+      else setLoadFailed(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [isOpen, searchInstance, episodes]);
+  }, [isOpen, site, loadFailed]);
 
   // Results are pure functions of (query, index) — derive, don't sync state.
-  const { results, suggestions } = useMemo(() => {
-    if (!searchInstance || !query.trim()) {
-      return { results: [] as EpisodeSummary[], suggestions: [] as string[] };
-    }
-    return {
-      results: searchInstance.search(query).map((r) => r.item).slice(0, MAX_RESULTS),
-      suggestions: searchInstance.getSuggestions(query),
-    };
-  }, [query, searchInstance]);
+  const groups = useMemo(() => (site && query.trim() ? site.search(query) : []), [query, site]);
+  const options = useMemo(() => groups.flatMap((group) => group.entries), [groups]);
+
+  const open = () => {
+    setIsOpen(true);
+    setLoadFailed(false); // a reopen retries a failed load
+  };
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -85,45 +81,40 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
     setActive({ query: '', index: -1 });
   }, []);
 
-  // Keyboard-navigable option list: episode results first, then tag suggestions.
-  const optionCount = results.length + suggestions.length;
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       close();
       return;
     }
-    if (!optionCount) return;
+    if (!options.length) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex((i: number) => (i + 1) % optionCount);
+      setActiveIndex((i: number) => (i + 1) % options.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActiveIndex((i: number) => (i <= 0 ? optionCount - 1 : i - 1));
+      setActiveIndex((i: number) => (i <= 0 ? options.length - 1 : i - 1));
     } else if (e.key === 'Enter' && activeIndex >= 0) {
       e.preventDefault();
-      if (activeIndex < results.length) {
-        router.push(`/episodes/${results[activeIndex].slug}`);
-        close();
-      } else {
-        setQuery(suggestions[activeIndex - results.length]);
-        inputRef.current?.focus();
-      }
+      router.push(options[activeIndex].href);
+      close();
     }
   };
 
   const optionId = (index: number) => `${listboxId}-option-${index}`;
-  const showPanel = isOpen && (query.length > 0 || optionCount > 0);
+  const showPanel = isOpen && query.length > 0;
 
   return (
     <div className="relative w-full max-w-md">
       <div className="relative group">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
         <input
-          ref={inputRef}
-          type="text"
-          placeholder="Search episodes..."
-          aria-label="Search episodes"
+          type="search"
+          name="q"
+          autoComplete="off"
+          enterKeyHint="search"
+          spellCheck={false}
+          placeholder="Search reports, tools, episodes…"
+          aria-label="Search reports, tools and episodes"
           role="combobox"
           aria-expanded={showPanel}
           aria-controls={listboxId}
@@ -131,14 +122,15 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
           aria-activedescendant={activeIndex >= 0 ? optionId(activeIndex) : undefined}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsOpen(true)}
+          onFocus={open}
           onKeyDown={handleKeyDown}
-          className="w-full rounded-xl border border-input bg-background px-10 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary hover:border-ring"
+          className="w-full rounded-xl border border-input bg-background px-10 py-2.5 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary hover:border-ring [&::-webkit-search-cancel-button]:appearance-none"
         />
         {query && (
           <button
+            type="button"
             onClick={() => setQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -m-1.5 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Clear search"
           >
             <X className="h-4 w-4" />
@@ -148,64 +140,61 @@ export function SearchDialog({ episodes = [] }: SearchDialogProps) {
 
       {showPanel && (
         <div className="absolute top-full z-50 mt-2 w-full rounded-xl border border-border bg-background shadow-xl backdrop-blur-sm">
-          <div className="max-h-96 overflow-y-auto p-2" role="listbox" id={listboxId} aria-label="Search results">
-            {query && results.length > 0 && (
-              <div className="space-y-1">
-                <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                  Episodes ({results.length})
+          <div
+            className="max-h-96 overflow-y-auto overscroll-contain p-2"
+            role="listbox"
+            id={listboxId}
+            aria-label="Search results"
+          >
+            {groups.map((group) => {
+              const Icon = GROUP_ICON[group.type];
+              return (
+                <div key={group.type} role="group" aria-label={GROUP_LABEL[group.type]} className="space-y-1">
+                  <div aria-hidden="true" className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                    {GROUP_LABEL[group.type]}
+                  </div>
+                  {group.entries.map((entry) => {
+                    const index = options.indexOf(entry);
+                    const detail = entry.type === 'report' ? entry.phase : entry.description;
+                    return (
+                      <Link
+                        key={entry.href}
+                        id={optionId(index)}
+                        role="option"
+                        aria-selected={activeIndex === index}
+                        href={entry.href}
+                        className={`flex items-center space-x-3 rounded-md px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${activeIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
+                        onClick={close}
+                      >
+                        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="font-medium">{entry.title}</div>
+                          {detail && <div className="text-xs text-muted-foreground line-clamp-1">{detail}</div>}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-                {results.map((episode, index) => (
-                  <Link
-                    key={episode.id}
-                    id={optionId(index)}
-                    role="option"
-                    aria-selected={activeIndex === index}
-                    href={`/episodes/${episode.slug}`}
-                    className={`flex items-center space-x-3 rounded-md px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${activeIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
-                    onClick={close}
-                  >
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex-1 space-y-1">
-                      <div className="font-medium">{episode.title}</div>
-                      <div className="text-xs text-muted-foreground line-clamp-1">
-                        {episode.preview}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+              );
+            })}
 
-            {suggestions.length > 0 && (
-              <div className="space-y-1">
-                <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                  Suggestions
-                </div>
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={suggestion}
-                    id={optionId(results.length + index)}
-                    role="option"
-                    aria-selected={activeIndex === results.length + index}
-                    onClick={() => {
-                      setQuery(suggestion);
-                      inputRef.current?.focus();
-                    }}
-                    className={`flex w-full items-center space-x-2 rounded-md px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground ${activeIndex === results.length + index ? 'bg-accent text-accent-foreground' : ''}`}
-                  >
-                    <Tag className="h-4 w-4 text-muted-foreground" />
-                    <span>{suggestion}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {query && optionCount === 0 && (
+            {loadFailed ? (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                No results found for &ldquo;{query}&rdquo;
+                Search is unavailable right now. Close it and try again.
               </div>
+            ) : !site ? (
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">Loading…</div>
+            ) : (
+              options.length === 0 && (
+                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                  No results for &ldquo;{query}&rdquo;
+                </div>
+              )
             )}
           </div>
+          <p role="status" className="sr-only">
+            {site ? `${options.length} results` : ''}
+          </p>
         </div>
       )}
 

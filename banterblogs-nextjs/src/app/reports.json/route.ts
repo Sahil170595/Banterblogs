@@ -25,7 +25,7 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
  *   - Every discovered slug has a REPORT_CATALOG entry (no junk titles).
  *   - REPORTS.COUNT === live count of TR-numbered + Phase-0 reports.
  *
- * Performance: `force-static` + ISR revalidate. The route runs ONCE at build,
+ * Performance: `force-static`, no revalidate. The route runs ONCE at build,
  * the response is cached as static JSON, and subsequent crawler hits are pure
  * CDN reads with zero filesystem touch. locator.ts's module-level
  * `cachedDiscover` is shared with the rest of the build, so this adds no
@@ -33,7 +33,6 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-static';
-export const revalidate = 900; // matches /reports ISR window
 
 const BASE = 'https://chimeraforge.vercel.app';
 

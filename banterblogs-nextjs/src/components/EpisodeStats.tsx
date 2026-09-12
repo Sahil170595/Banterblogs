@@ -1,15 +1,16 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import { FileText, GitCommit, Clock, Activity } from 'lucide-react';
-import type { Episode } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
+// Server component taking the four numbers it prints; it used to be a client
+// island that received the whole Episode, rendered article included.
 interface EpisodeStatsProps {
-  episode: Episode;
+  filesChanged: number;
+  linesAdded: number;
+  readingTime: number;
+  complexity: number;
 }
 
-export function EpisodeStats({ episode }: EpisodeStatsProps) {
+export function EpisodeStats({ filesChanged, linesAdded, readingTime, complexity }: EpisodeStatsProps) {
   const getComplexityColor = (complexity: number) => {
     if (complexity >= 80) return 'text-red-400';
     if (complexity >= 60) return 'text-yellow-400';
@@ -18,37 +19,30 @@ export function EpisodeStats({ episode }: EpisodeStatsProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8"
-    >
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
       <div className="flex items-center space-x-2 text-sm">
         <FileText className="h-4 w-4 text-muted-foreground" />
         <span className="text-muted-foreground">Files:</span>
-        <span className="font-medium">{episode.filesChanged}</span>
+        <span className="font-medium">{filesChanged}</span>
       </div>
-      
+
       <div className="flex items-center space-x-2 text-sm">
         <GitCommit className="h-4 w-4 text-muted-foreground" />
         <span className="text-muted-foreground">Lines:</span>
-        <span className="font-medium">{formatNumber(episode.linesAdded)}</span>
+        <span className="font-medium">{formatNumber(linesAdded)}</span>
       </div>
-      
+
       <div className="flex items-center space-x-2 text-sm">
         <Clock className="h-4 w-4 text-muted-foreground" />
         <span className="text-muted-foreground">Read:</span>
-        <span className="font-medium">{episode.readingTime} min</span>
+        <span className="font-medium">{readingTime} min</span>
       </div>
-      
+
       <div className="flex items-center space-x-2 text-sm">
         <Activity className="h-4 w-4 text-muted-foreground" />
         <span className="text-muted-foreground">Complexity:</span>
-        <span className={`font-medium ${getComplexityColor(episode.complexity)}`}>
-          {episode.complexity}
-        </span>
+        <span className={`font-medium ${getComplexityColor(complexity)}`}>{complexity}</span>
       </div>
-    </motion.div>
+    </div>
   );
 }

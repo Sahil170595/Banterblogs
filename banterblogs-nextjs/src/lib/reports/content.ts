@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { promises as fsp } from 'fs';
 import path from 'path';
-import { renderMarkdownToHtml, extractPrimaryHeading } from '@/lib/episodes';
+import { renderMarkdownToHtml, extractPrimaryHeading, extractHeadings, MIN_TOC_HEADINGS } from '@/lib/episodes';
 import { findReportFolder, normalizeSlug, toHumanTitle, type ReportLocation } from './locator';
 
 export interface ReportSection {
@@ -77,7 +77,12 @@ async function buildSection(filePath: string, sourceLabel: string, originKey: st
   const fallback = path.basename(filePath, path.extname(filePath));
   const title = extractPrimaryHeading(raw) ?? toHumanTitle(fallback);
   const processed = rewriteDanglingFigures(rewriteReportLinks(raw));
-  const html = await renderMarkdownToHtml(processed);
+  // The report page renders the title as its <h1> and, past MIN_TOC_HEADINGS,
+  // its own TOC (see ReportToc).
+  const html = await renderMarkdownToHtml(processed, {
+    demoteH1: true,
+    dropInlineToc: extractHeadings(raw).length >= MIN_TOC_HEADINGS,
+  });
   return {
     id: sanitizeId(title) || sanitizeId(fallback),
     title,
