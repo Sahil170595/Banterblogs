@@ -21,7 +21,14 @@ export default function proxy(request: NextRequest) {
   const match = request.nextUrl.pathname.match(/^\/reports\/([^/]+)$/);
   if (!match) return NextResponse.next();
 
-  const raw = decodeURIComponent(match[1]);
+  let raw: string;
+  try {
+    raw = decodeURIComponent(match[1]);
+  } catch {
+    // malformed percent-encoding: let the route answer instead of a 500 here
+    console.warn('[proxy] malformed percent-encoding in report slug:', request.nextUrl.pathname);
+    return NextResponse.next();
+  }
   if (CANONICAL_SLUG.test(raw)) return NextResponse.next();
 
   const normalized = normalizeSlug(raw);

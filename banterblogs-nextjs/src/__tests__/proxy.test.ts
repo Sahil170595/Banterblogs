@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { getMiddlewareMatchers } from 'next/dist/build/analysis/get-page-static-info';
 import proxy, { config } from '../proxy';
@@ -18,6 +18,9 @@ declare module 'next/dist/build/analysis/get-page-static-info' {
 // same compilation here means the test sees exactly what the runtime sees.
 const [compiled] = getMiddlewareMatchers(config.matcher, {});
 const invokesProxy = (pathname: string) => new RegExp(compiled.regexp).test(pathname);
+
+// '%A' is a truncated escape: decodeURIComponent throws a URIError on it
+const MALFORMED_SLUG_PATH = '/reports/%E0%A4%A';
 
 describe('report slug proxy matcher', () => {
   it.each([
@@ -41,6 +44,10 @@ describe('report slug proxy matcher', () => {
   ])('sends alias %s through the proxy', (pathname) => {
     expect(invokesProxy(pathname)).toBe(true);
   });
+
+  it('sends a malformed percent-encoded slug through the proxy too', () => {
+    expect(invokesProxy(MALFORMED_SLUG_PATH)).toBe(true);
+  });
 });
 
 describe('report slug proxy', () => {
@@ -55,5 +62,15 @@ describe('report slug proxy', () => {
 
   it('passes a canonical slug straight through', () => {
     expect(run('/reports/technical-report-134').headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('passes a malformed percent-encoding through instead of throwing a 500', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const response = run(MALFORMED_SLUG_PATH);
+
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(warn).toHaveBeenCalledWith('[proxy] malformed percent-encoding in report slug:', MALFORMED_SLUG_PATH);
+    warn.mockRestore();
   });
 });

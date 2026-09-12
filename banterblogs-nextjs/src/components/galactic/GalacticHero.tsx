@@ -5,7 +5,7 @@ import { GalacticBackdrop } from './GalacticBackdrop';
 
 export function GalacticHero() {
   return (
-    <section className="relative h-[100svh] min-h-[560px] overflow-hidden">
+    <section className="group/hero relative h-[100svh] min-h-[560px] overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_56%_48%,transparent_0%,transparent_33%,rgba(2,4,8,0.18)_62%,rgba(2,4,8,0.72)_100%)]"
         aria-hidden="true"
@@ -64,7 +64,8 @@ export function GalacticHero() {
           className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/80 backdrop-blur-sm"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
-          <span className="h-1 w-1 animate-pulse rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))]" />
+          {/* the pulse stops while the pause control reports paused motion */}
+          <span className="h-1 w-1 animate-pulse rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))] group-has-[[data-motion=paused]]/hero:animate-none" />
           Select a system
         </p>
       </div>

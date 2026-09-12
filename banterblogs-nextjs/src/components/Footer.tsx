@@ -26,6 +26,11 @@ const FOOTER_LINKS = {
   ],
 } as const;
 
+// The feed and sitemap are route handlers, not pages: nothing to prefetch.
+const ROUTE_HANDLER_HREFS = new Set<string>(['/rss.xml', '/sitemap.xml']);
+// p-2 grows the 20px icon's hit area to 36px; -m-2 keeps the row where it was
+const ICON_LINK_CLASS = '-m-2 p-2 transition hover:text-primary';
+
 export function Footer() {
   return (
     <footer className="border-t border-border/60 bg-background/80">
@@ -45,7 +50,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
-                className="transition hover:text-primary"
+                className={ICON_LINK_CLASS}
               >
                 <Github className="h-5 w-5" />
               </Link>
@@ -54,7 +59,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Twitter"
-                className="transition hover:text-primary"
+                className={ICON_LINK_CLASS}
               >
                 <Twitter className="h-5 w-5" />
               </Link>
@@ -63,14 +68,14 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
-                className="transition hover:text-primary"
+                className={ICON_LINK_CLASS}
               >
                 <Linkedin className="h-5 w-5" />
               </Link>
               <Link
                 href="mailto:sahilkadadekar@gmail.com"
                 aria-label="Email"
-                className="transition hover:text-primary"
+                className={ICON_LINK_CLASS}
               >
                 <Mail className="h-5 w-5" />
               </Link>
@@ -79,7 +84,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="PyPI"
-                className="transition hover:text-primary"
+                className={ICON_LINK_CLASS}
               >
                 <Package className="h-5 w-5" />
               </Link>
@@ -88,14 +93,15 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Substack"
-                className="transition hover:text-primary"
+                className={ICON_LINK_CLASS}
               >
                 <BookOpen className="h-5 w-5" />
               </Link>
               <Link
                 href="/rss.xml"
+                prefetch={false}
                 aria-label="RSS feed"
-                className="transition hover:text-primary"
+                className={ICON_LINK_CLASS}
               >
                 <Rss className="h-5 w-5" />
               </Link>
@@ -104,12 +110,13 @@ export function Footer() {
 
           {Object.entries(FOOTER_LINKS).map(([section, links]) => (
             <div key={section} className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">{section}</h3>
+              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">{section}</h2>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 {links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
+                      prefetch={ROUTE_HANDLER_HREFS.has(link.href) ? false : undefined}
                       className="transition hover:text-primary"
                       target={link.href.startsWith('http') ? '_blank' : undefined}
                       rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
@@ -127,7 +134,7 @@ export function Footer() {
           {/* Year hardcoded so server-build and client-hydration agree —
               new Date().getFullYear() can mismatch across timezones / build
               boundaries and tripped React #418 in prod. Bump yearly. */}
-          <span>(c) 2026 Chimeraforge. Crafted in public, powered by local AI.</span>
+          <span>© 2026 Chimeraforge. Crafted in public, powered by local AI.</span>
           <ReaderSettingsLauncher />
         </div>
       </div>

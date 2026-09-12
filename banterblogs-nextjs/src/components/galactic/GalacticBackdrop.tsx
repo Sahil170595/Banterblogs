@@ -272,6 +272,8 @@ export function GalacticBackdrop() {
           onClick={toggleMotion}
           aria-label={motionLabel}
           title={motionLabel}
+          // read by the hero pill's pulse (GalacticHero), which stops on 'paused'
+          data-motion={motionPaused ? 'paused' : 'running'}
           className="pointer-events-auto absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/25 text-foreground/80 backdrop-blur-sm transition-colors hover:border-white/25 hover:text-primary sm:right-8"
         >
           {motionPaused ? (

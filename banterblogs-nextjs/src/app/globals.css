@@ -295,13 +295,6 @@ html {
   transform: scaleX(1);
 }
 
-/* Focus Management */
-.focus-indicator *:focus-visible {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
 /* Site focus ring. Anchored at :root instead of the .keyboard-navigation
    wrapper so it does not depend on that wrapper; specificity is unchanged
    (buttons/fields 0,2,1; links 0,3,0). */
