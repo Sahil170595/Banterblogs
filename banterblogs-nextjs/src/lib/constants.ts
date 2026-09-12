@@ -39,9 +39,9 @@ export const EXTERNAL_LINKS = {
  */
 export const MEASUREMENTS = {
   /** Long-form display, e.g. metadata descriptions and prose. Mirrors Banterhearts canonical exactly. */
-  DISPLAY: '1,437,000+',
-  /** Short-form display for stat tiles and pills (1.437M; 1.43M+ is a genuine floor here, not rounded up). */
-  SHORT: '1.43M+',
+  DISPLAY: '1,463,000+',
+  /** Short-form display for stat tiles and pills (1.463M; 1.46M+ is a genuine floor here, not rounded up). */
+  SHORT: '1.46M+',
 } as const;
 
 export const REPORTS = {

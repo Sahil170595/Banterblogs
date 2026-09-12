@@ -7,7 +7,7 @@ interface Paper {
   title: string;
   thesis: string;
   venue: string;
-  status: 'Accepted' | 'Preprint' | 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
+  status: 'Presented' | 'Preprint' | 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
   trs: { label: string; slug: string }[];
   arxiv?: string;
   demo?: { label: string; href: string };
@@ -19,7 +19,7 @@ const ACCEPTED: Paper[] = [
     thesis:
       'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
     venue: 'ICML 2026 Workshop on Hypothesis Testing',
-    status: 'Accepted',
+    status: 'Presented',
     trs: [{ label: 'TR138', slug: 'technical-report-138' }],
     arxiv: 'https://arxiv.org/abs/2605.27763',
   },
@@ -150,7 +150,7 @@ const UNDER_REVIEW_COUNT = UNDER_REVIEW_PAPERS.length + WITHHELD_WORKSHOP_SUBMIS
 const IN_PREP_COUNT = IN_PREP.length;
 const TOTAL_PAPERS = ACCEPTED.length + PUBLIC_PREPRINTS.length + UNDER_REVIEW_COUNT + IN_PREP_COUNT;
 
-const METADATA_DESCRIPTION = `${ACCEPTED.length} paper accepted at the ICML 2026 Workshop on Hypothesis Testing · ${PUBLIC_PREPRINTS.length} public preprint · ${UNDER_REVIEW_COUNT} under peer review · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
+const METADATA_DESCRIPTION = `${ACCEPTED.length} paper presented at the ICML 2026 Workshop on Hypothesis Testing · ${PUBLIC_PREPRINTS.length} public preprint · ${UNDER_REVIEW_COUNT} under peer review · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/papers' },
@@ -172,7 +172,7 @@ export const metadata: Metadata = {
 
 function StatusBadge({ status }: { status: Paper['status'] }) {
   const styles: Record<Paper['status'], string> = {
-    'Accepted': 'border-accent/60 bg-accent/15 text-accent',
+    'Presented': 'border-accent/60 bg-accent/15 text-accent',
     'Preprint': 'border-accent/40 bg-accent/10 text-accent/90',
     'Submitted': 'border-primary/60 bg-primary/15 text-primary',
     'In preparation': 'border-border/60 bg-muted/30 text-foreground/80',
@@ -273,7 +273,7 @@ export default function PapersPage() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { value: String(ACCEPTED.length), label: 'Accepted · ICML 2026 Workshop' },
+          { value: String(ACCEPTED.length), label: 'Presented · ICML 2026 Workshop' },
           { value: String(UNDER_REVIEW_COUNT), label: 'Under peer review' },
           { value: String(TOTAL_PAPERS), label: 'Papers total' },
           { value: MEASUREMENTS.SHORT, label: 'Measurements' },

@@ -21,7 +21,7 @@ The site publishes three types of content:
 
 - **Episodes** — narrative write-ups generated from git commits. Each episode is a roundtable discussion between four AI personas (Banterpacks, Claude, ChatGPT, Gemini) covering what changed and why. 268 episodes across Banterpacks (194) and Chimera Engine (74). The per-commit episode stream is now archived — the final episode in each line is a full retrospective; ongoing work is documented through the research reports.
 - **Research reports** — technical benchmarks on LLM performance, quantization, inference optimization, constitutional AI, and safety evaluation. Current counts: https://chimeraforge.vercel.app/reports.json
-- **Papers** — independent research write-ups. One paper accepted at the ICML 2026 Workshop on Hypothesis Testing, one public arXiv preprint, more under blind review and in preparation. Current roster: https://chimeraforge.vercel.app/papers
+- **Papers** — independent research write-ups. One paper presented at the ICML 2026 Workshop on Hypothesis Testing, one public arXiv preprint, more under blind review and in preparation. Current roster: https://chimeraforge.vercel.app/papers
 
 Headline counts (episodes / reports / measurements) are single-sourced from `src/lib/constants.ts` — update there, not in this README.
 

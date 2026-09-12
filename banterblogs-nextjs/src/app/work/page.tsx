@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 const HERO_HEADLINE =
   'Founding ML engineer building production agentic and inference systems for clinical AI, cybersecurity, and model deployment.';
 
-const HERO_SUMMARY = `Architected Attunica's multimodal psychotherapy platform and AWS ECS/Bedrock cutover; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake latency 80–400×. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 9 sole-author 2026 papers (1 accepted at an ICML 2026 workshop; 8 under double-blind review), four upstream contributions, 22 Hugging Face models, and two PyPI tools with 37K+ downloads.`;
+const HERO_SUMMARY = `Architected Attunica's multimodal psychotherapy platform and AWS ECS/Bedrock cutover; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake latency 80–400×. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 9 sole-author 2026 papers (1 presented at an ICML 2026 workshop; 8 under double-blind review), four upstream contributions, 22 Hugging Face models, and two PyPI tools with 37K+ downloads.`;
 
 interface ResearchItem {
   label: string;
