@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -32,6 +34,23 @@ describe('header landing wordmark', () => {
 
     expect(html).not.toContain('data-landing-wordmark="orbital"');
     expect(html).toContain('>CF<');
+  });
+});
+
+describe('header across route transitions', () => {
+  it('carries its own view-transition name, so page slides never move it', () => {
+    for (const route of ['/', '/reports', '/reports/technical-report-138']) {
+      pathname.current = route;
+      expect(renderToStaticMarkup(<Header />), route).toMatch(/^<header[^>]*style="view-transition-name:site-header"/);
+    }
+  });
+
+  it('holds its group still and drops the old snapshot, whose backdrop blur would flash', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8');
+
+    expect(css).toMatch(/::view-transition-group\(site-header\)\s*\{[^}]*animation:\s*none/);
+    expect(css).toMatch(/::view-transition-old\(site-header\)\s*\{[^}]*display:\s*none/);
+    expect(css).toMatch(/::view-transition-new\(site-header\)\s*\{[^}]*animation:\s*none/);
   });
 });
 

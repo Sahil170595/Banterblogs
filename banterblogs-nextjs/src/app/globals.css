@@ -294,3 +294,21 @@ html {
     scroll-behavior: auto !important;
   }
 }
+
+/* view transitions: route transitions on the reading path. */
+
+/* The sticky header holds still. Its old snapshot is dropped rather than
+   cross-faded: two stacked backdrop blurs flash. */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+
+::view-transition-old(site-header) {
+  display: none;
+}
+
+::view-transition-new(site-header) {
+  animation: none;
+}
+/* end view transitions */
