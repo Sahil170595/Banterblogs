@@ -1,8 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { GalacticBackdrop } from '../GalacticBackdrop';
+import { GalacticHero } from '../GalacticHero';
 import { landingJsonLd } from '../landingJsonLd';
 import { CORE_SELECTION, STAR_SYSTEMS } from '../systems';
+
+// The core already links to the systems page from the scene and the poster,
+// so the hero's two calls to action go where the scene does not: the raw
+// evidence and the peer-reviewed papers.
+describe('landing hero calls to action', () => {
+  const hero = renderToStaticMarkup(<GalacticHero />);
+
+  it('leads to the research archive, then the papers', () => {
+    expect(hero).toMatch(/href="\/reports"[^>]*>\s*Research archive/);
+    expect(hero).toMatch(/href="\/papers"[^>]*>\s*Papers/);
+  });
+});
 
 // The landing is a WebGL canvas — crawlers and screen readers only ever see
 // the server-rendered HTML (mode 'pending', i.e. the poster branch). This
