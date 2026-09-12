@@ -194,6 +194,35 @@ html {
   transform: translateY(-8px) translateZ(10px);
 }
 
+/* Markdown tables (rehype step in lib/episodes.ts) scroll inside their own
+   box instead of widening the page; inferred numeric columns right-align. */
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.table-scroll :is(th, td) {
+  font-variant-numeric: tabular-nums;
+}
+
+.table-scroll .num {
+  text-align: right;
+}
+
+/* Typography's `text-align: start` would override GFM column alignment. */
+.table-scroll [align="right"] {
+  text-align: right;
+}
+
+.table-scroll [align="center"] {
+  text-align: center;
+}
+
+/* Long unbroken tokens (paths, hashes, URLs) wrap instead of widening the page. */
+.prose {
+  overflow-wrap: break-word;
+}
+
 /* One box per code block: the prose <pre> carries surface and padding; the
    route-scoped github-dark theme supplies token colors only. */
 .prose pre :is(code, code.hljs) {
@@ -292,4 +321,3 @@ html {
     scroll-behavior: auto !important;
   }
 }
-

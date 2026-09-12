@@ -11,6 +11,7 @@ import {
 } from '../reports/phases';
 import { discoverReports, discoverReportsUnique } from '../reports/locator';
 import { assertCatalogComplete } from '../reports/meta';
+import { readReportSections } from '../reports/content';
 import { REPORTS } from '../constants';
 
 describe('phases.ts', () => {
@@ -166,6 +167,14 @@ describe('reports pipeline integration', () => {
             return typeof cat === 'string' && cat.startsWith('phase');
         });
         expect(technical.length).toBe(REPORTS.COUNT);
+    });
+
+    it('renders a report body with no h1, no in-body TOC, and scrollable tables', async () => {
+        const [section] = await readReportSections('technical-report-138');
+        expect(section.html).not.toMatch(/<h1[\s>]/);
+        expect(section.html).not.toMatch(/>2\. Table of Contents</);
+        expect(section.html).toContain('<div class="table-scroll"><table>');
+        expect(section.html).toContain('class="num"');
     });
 
     it('prefers directory entries when a slug exists as both file and directory', () => {
