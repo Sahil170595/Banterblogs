@@ -2,9 +2,8 @@ import 'highlight.js/styles/github-dark.css';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 export const runtime = 'nodejs';
-// Prerender all episode pages at build; the archive is final so on-demand
-// renders only re-run for ISR refreshes, not first visits.
-export const revalidate = 900;
+// Prerendered at build and never revalidated: the archive ships inside the
+// deployment, so a regeneration would only redo work for identical output.
 import { getAllEpisodes, toEpisodeSummary, extractHtmlHeadings, computeContentStats } from '@/lib/episodes';
 import { EpisodeNavigation } from '@/components/EpisodeNavigation';
 
