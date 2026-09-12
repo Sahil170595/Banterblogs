@@ -295,7 +295,37 @@ html {
   }
 }
 
-/* view transitions: route transitions on the reading path. */
+/* view transitions: route transitions on the reading path. React names the
+   boundaries in components/reports/ReportTransitions.tsx and hands them the
+   classes below; timing comes from the Tailwind motion tokens. */
+:root {
+  --vt-duration: theme('transitionDuration.base');
+  --vt-duration-fast: theme('transitionDuration.fast');
+  --vt-ease: theme('transitionTimingFunction.standard');
+  /* enough to read direction, too little to track (motion spec: 12-16px) */
+  --vt-slide: 16px;
+}
+
+/* clicks reach the live page while snapshots settle */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Unnamed content swaps instantly and stays live; only the named groups below
+   move, so a navigation that names nothing (into the archive from the landing
+   or /show) shows nothing. */
+::view-transition-old(root) {
+  display: none;
+}
+
+::view-transition-new(root) {
+  animation: none;
+}
 
 /* The sticky header holds still. Its old snapshot is dropped rather than
    cross-faded: two stacked backdrop blurs flash. */
@@ -310,5 +340,62 @@ html {
 
 ::view-transition-new(site-header) {
   animation: none;
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-slide-in {
+  from { transform: translateX(var(--vt-from, 0)); }
+}
+
+@keyframes vt-slide-out {
+  to { transform: translateX(var(--vt-to, 0)); }
+}
+
+/* nav-forward leaves to the left and arrives from the right; nav-back mirrors
+   it. The outgoing page fades on the fast token so the two pages never sit
+   half-visible over each other. */
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+  animation:
+    var(--vt-duration-fast) var(--vt-ease) both vt-fade-out,
+    var(--vt-duration) var(--vt-ease) both vt-slide-out;
+}
+
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+  animation:
+    var(--vt-duration) var(--vt-ease) both vt-fade-in,
+    var(--vt-duration) var(--vt-ease) both vt-slide-in;
+}
+
+::view-transition-old(.nav-forward) {
+  --vt-to: calc(-1 * var(--vt-slide));
+}
+
+::view-transition-new(.nav-forward) {
+  --vt-from: var(--vt-slide);
+}
+
+::view-transition-old(.nav-back) {
+  --vt-to: var(--vt-slide);
+}
+
+::view-transition-new(.nav-back) {
+  --vt-from: calc(-1 * var(--vt-slide));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 /* end view transitions */

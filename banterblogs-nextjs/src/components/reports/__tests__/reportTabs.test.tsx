@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReportTabs, type ReportTabGroup } from '../ReportTabs';
+import { NAV_FORWARD } from '../ReportTransitions';
 
 const { url, replace } = vi.hoisted(() => ({ url: { search: '' }, replace: vi.fn() }));
 
@@ -9,6 +11,15 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/reports',
   useRouter: () => ({ replace }),
 }));
+
+// transitionTypes never reaches the DOM; surface it for the assertions
+vi.mock('next/link', async () => {
+  const { createElement } = await import('react');
+  return {
+    default: ({ transitionTypes, children, ...props }: { transitionTypes?: string[]; children?: ReactNode }) =>
+      createElement('a', { ...props, 'data-transition-types': transitionTypes?.join(' ') }, children),
+  };
+});
 
 const entry = (slug: string) => ({ slug, title: slug, description: '' });
 
@@ -95,5 +106,12 @@ describe('report archive tabs', () => {
     fireEvent.keyDown(tabs[tabs.length - 2], { key: 'Home' });
     expect(document.activeElement).toBe(tabs[0]);
     expect(replace).toHaveBeenLastCalledWith('/reports', { scroll: false });
+  });
+
+  it('sends each card forward into its report', () => {
+    renderTabs();
+    const cards = within(screen.getByRole('tabpanel')).getAllByRole('link');
+
+    expect(cards.map((card) => card.getAttribute('data-transition-types'))).toEqual(cards.map(() => NAV_FORWARD));
   });
 });

@@ -3,6 +3,7 @@
 import { Suspense, type KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { NAV_FORWARD } from './ReportTransitions';
 
 export interface ReportTabEntry {
   slug: string;
@@ -153,6 +154,7 @@ function TabbedReports({ tabs, featuredSlugs, activeKey, onSelect }: TabbedRepor
                   <Link
                     key={r.slug}
                     href={`/reports/${r.slug}`}
+                    transitionTypes={[NAV_FORWARD]}
                     className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
                   >
                     <div className="mb-3">

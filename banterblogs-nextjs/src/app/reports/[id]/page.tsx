@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
+import { DirectionalPage, NAV_BACK, NAV_FORWARD } from '@/components/reports/ReportTransitions';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
 import { discoverReportsUnique, findReportFolder, toHumanTitle } from '@/lib/reports/locator';
@@ -100,11 +101,12 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
   const nextMeta = nextSlug ? readReportMeta(nextSlug) : null;
 
   return (
-    <div className="container py-16">
+    <DirectionalPage className="container py-16">
       {/* ── Header ── */}
       <div className="mb-8">
         <Link
           href="/reports"
+          transitionTypes={[NAV_BACK]}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -141,6 +143,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           {prevSlug ? (
             <Link
               href={`/reports/${prevSlug}`}
+              transitionTypes={[NAV_BACK]}
               className="group p-5 rounded-xl border border-border/40 hover:border-primary/30 transition-colors"
             >
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
@@ -157,6 +160,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           {nextSlug && (
             <Link
               href={`/reports/${nextSlug}`}
+              transitionTypes={[NAV_FORWARD]}
               className="group p-5 rounded-xl border border-border/40 hover:border-primary/30 transition-colors text-right"
             >
               <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
@@ -170,6 +174,6 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           )}
         </nav>
       )}
-    </div>
+    </DirectionalPage>
   );
 }
