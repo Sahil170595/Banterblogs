@@ -32,17 +32,19 @@ export function GalacticHero() {
           <p className="mt-3 max-w-xs text-[11px] leading-relaxed text-muted-foreground sm:text-[12px]">
             {REPORTS.DISPLAY} technical reports and {MEASUREMENTS.DISPLAY} measurements in orbit.
           </p>
+          {/* py-4 grows each link to a >=44px-tall target; the matching -my-4
+              keeps the row exactly where it was */}
           <div className="pointer-events-auto mt-4 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-[11px]">
             <Link
               href="/reports"
-              className="inline-flex items-center gap-1 text-primary transition-colors hover:text-primary/80"
+              className="-my-4 inline-flex items-center gap-1 py-4 text-primary transition-colors hover:text-primary/80"
             >
               Research archive
               <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
             <Link
               href="/home"
-              className="text-foreground/90 transition-colors hover:text-primary"
+              className="-my-4 py-4 text-foreground/90 transition-colors hover:text-primary"
             >
               Overview
             </Link>
@@ -59,7 +61,7 @@ export function GalacticHero() {
         </p>
 
         <p
-          className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/80 backdrop-blur-sm"
+          className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/80 backdrop-blur-sm"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
           <span className="h-1 w-1 animate-pulse rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))]" />
