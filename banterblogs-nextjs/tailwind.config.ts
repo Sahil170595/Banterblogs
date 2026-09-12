@@ -22,6 +22,16 @@ const config: Config = {
     extend: {
       // Custom animation/keyframes were removed 2026-07-04: all 48 utilities had
       // zero usages in src (hover motion is transition-based; scenes use framer).
+      // Motion tokens (pinned by motion.test.ts): one curve, two durations.
+      // fast = colour, border, background and opacity feedback; base =
+      // overlays and route transitions.
+      transitionDuration: {
+        fast: "150ms",
+        base: "250ms",
+      },
+      transitionTimingFunction: {
+        standard: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",

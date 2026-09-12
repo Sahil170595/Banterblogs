@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Share2,
   Bookmark,
@@ -36,6 +35,14 @@ interface ShareOption {
 
 const BOOKMARKS_KEY = 'episode-bookmarks';
 const LIKES_KEY = 'episode-likes';
+
+// Popovers stay mounted so they can enter and exit in CSS on the overlay
+// tokens; closed, they are inert and ignore the pointer.
+const POPOVER_CLASS =
+  'absolute bottom-full right-0 mb-2 origin-bottom-right bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl transition-[opacity,transform] duration-base ease-standard';
+const popoverState = (open: boolean) =>
+  open ? 'translate-y-0 scale-100 opacity-100' : 'pointer-events-none translate-y-1 scale-[0.98] opacity-0';
+const ICON_BUTTON_CLASS = 'p-2 rounded-full transition-colors duration-fast ease-standard';
 
 // localStorage JSON can be corrupt (manual edits, old formats) — never let a
 // bad value crash the component.
@@ -133,69 +140,56 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
   return (
     <div className={`social-share ${className}`}>
       <div className="flex items-center gap-2">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
+          type="button"
           onClick={handleLike}
-          className={`p-2 rounded-full transition-colors ${liked
+          className={`${ICON_BUTTON_CLASS} ${liked
               ? 'bg-red-500/20 text-red-400'
               : 'bg-muted/50 text-muted-foreground hover:bg-red-500/10 hover:text-red-400'
             }`}
           aria-label={liked ? 'Unlike episode' : 'Like episode'}
         >
           {liked ? <HeartHandshake className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}
-        </motion.button>
+        </button>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
+          type="button"
           onClick={handleBookmark}
-          className={`p-2 rounded-full transition-colors ${bookmarked
+          className={`${ICON_BUTTON_CLASS} ${bookmarked
               ? 'bg-accent/20 text-accent'
               : 'bg-muted/50 text-muted-foreground hover:bg-accent/10 hover:text-accent'
             }`}
           aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark episode'}
         >
           {bookmarked ? <BookmarkCheck className="h-4 w-4 fill-current" /> : <Bookmark className="h-4 w-4" />}
-        </motion.button>
+        </button>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-full bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+          className={`${ICON_BUTTON_CLASS} bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary`}
           aria-label="Share episode"
+          aria-expanded={isOpen}
         >
           <Share2 className="h-4 w-4" />
-        </motion.button>
+        </button>
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-full right-0 mb-2 bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl p-3 shadow-2xl min-w-48"
-          >
-            <div className="space-y-2">
-              {shareOptions.map((option, index) => (
-                <motion.button
-                  key={option.name}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => handleShare(option)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors ${option.color}`}
-                >
-                  {option.icon}
-                  <span className="text-sm font-medium">{option.name}</span>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div inert={isOpen ? undefined : true} className={`${POPOVER_CLASS} min-w-48 p-3 ${popoverState(isOpen)}`}>
+        <div className="space-y-2">
+          {shareOptions.map((option) => (
+            <button
+              key={option.name}
+              type="button"
+              onClick={() => handleShare(option)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors duration-fast ease-standard ${option.color}`}
+            >
+              {option.icon}
+              <span className="text-sm font-medium">{option.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -222,11 +216,10 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
 
   return (
     <div className={`bookmark-manager ${className}`}>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+        className={`${ICON_BUTTON_CLASS} relative bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary`}
         aria-label={`Bookmarks (${bookmarks.length})`}
         aria-expanded={isOpen}
       >
@@ -236,62 +229,52 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
             {bookmarks.length}
           </span>
         )}
-      </motion.button>
+      </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-full right-0 mb-2 bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl p-4 shadow-2xl min-w-64 max-w-80"
+      <div inert={isOpen ? undefined : true} className={`${POPOVER_CLASS} min-w-64 max-w-80 p-4 ${popoverState(isOpen)}`}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-foreground">Bookmarks</h3>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            aria-label="Close bookmarks"
+            className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors duration-fast ease-standard"
           >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-foreground">Bookmarks</h3>
-              <button
-                onClick={() => setIsOpen(false)}
-                aria-label="Close bookmarks"
-                className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
 
-            {bookmarks.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No bookmarks yet
-              </p>
-            ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {bookmarks.map((slug, index) => (
-                  <motion.div
-                    key={slug}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <a
-                      href={`/episodes/${slug}`}
-                      className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors truncate"
-                    >
-                      <LinkIcon className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">{slug.replace(/-/g, ' ')}</span>
-                    </a>
-                    <button
-                      onClick={() => removeBookmark(slug)}
-                      className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
-                      aria-label={`Remove bookmark for ${slug}`}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </motion.div>
-                ))}
+        {bookmarks.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No bookmarks yet
+          </p>
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {bookmarks.map((slug) => (
+              <div
+                key={slug}
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors duration-fast ease-standard"
+              >
+                <a
+                  href={`/episodes/${slug}`}
+                  className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors duration-fast ease-standard truncate"
+                >
+                  <LinkIcon className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{slug.replace(/-/g, ' ')}</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => removeBookmark(slug)}
+                  className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors duration-fast ease-standard"
+                  aria-label={`Remove bookmark for ${slug}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
               </div>
-            )}
-          </motion.div>
+            ))}
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { REPORTS } from '@/lib/constants';
@@ -29,7 +26,7 @@ export function ResearchSpotlight({ reports }: ResearchSpotlightProps) {
         </div>
         <Link
           href="/reports"
-          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:text-primary"
+          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard hover:border-primary/60 hover:text-primary motion-safe:active:scale-[0.98]"
         >
           Browse the archive
           <ArrowRight className="h-4 w-4" />
@@ -37,18 +34,12 @@ export function ResearchSpotlight({ reports }: ResearchSpotlightProps) {
       </div>
 
       {reports.length > 0 ? (
-        <motion.div
-          initial={false}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true, amount: 0.2 }}
-          className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3"
-        >
+        <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {reports.slice(0, 6).map((report) => (
             <Link
               key={report.slug}
               href={`/reports/${report.slug}`}
-              className="block group rounded-xl border border-border/50 bg-card/30 p-6 transition-all hover:border-primary/40 hover:bg-muted/20"
+              className="block group rounded-xl border border-border/50 bg-card/30 p-6 transition-colors duration-fast ease-standard hover:border-primary/40 hover:bg-muted/20"
             >
               <h3 className="mb-3 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
                 {report.title}
@@ -56,12 +47,12 @@ export function ResearchSpotlight({ reports }: ResearchSpotlightProps) {
               {report.description && (
                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{report.description}</p>
               )}
-              <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 group-focus-visible:opacity-100">
                 Read report <ArrowRight className="h-3 w-3" />
               </span>
             </Link>
           ))}
-        </motion.div>
+        </div>
       ) : (
         <div className="mt-10 signal-panel p-8 text-center text-muted-foreground">
           <p>Reports will be loaded dynamically.</p>

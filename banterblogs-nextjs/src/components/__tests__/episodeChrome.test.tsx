@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableOfContents } from '../TableOfContents';
 
@@ -46,6 +47,31 @@ describe('episode table of contents', () => {
     const rail = screen.getByRole('navigation', { name: 'Table of contents' }).parentElement;
     expect(rail?.className.split(/\s+/)).toEqual(expect.arrayContaining(['sticky']));
     expect(rail?.className).not.toMatch(/\bfixed\b/);
+  });
+
+  it('renders with the article on the server instead of popping in after load', () => {
+    const html = renderToStaticMarkup(<TableOfContents headings={[{ id: 'intro', text: 'Intro', level: 2 }]} />);
+
+    expect(html).toContain('aria-label="Table of contents"');
+    expect(html).toContain('Intro');
+  });
+
+  it('collapses by animating grid rows in CSS and makes the hidden list inert', () => {
+    render(<TableOfContents headings={[{ id: 'intro', text: 'Intro', level: 2 }]} />);
+    const toggle = screen.getByRole('button', { name: 'Collapse table of contents' });
+    const list = document.getElementById(toggle.getAttribute('aria-controls') ?? '');
+    if (!list) throw new Error('toggle does not control the list');
+
+    expect(list.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(['grid-rows-[1fr]', 'transition-[grid-template-rows,opacity]', 'duration-base', 'ease-standard']),
+    );
+    expect(list.hasAttribute('inert')).toBe(false);
+
+    fireEvent.click(toggle);
+
+    expect(list.className.split(/\s+/)).toContain('grid-rows-[0fr]');
+    expect(list.hasAttribute('inert')).toBe(true);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('gets its own grid column beside the article from xl up', () => {
