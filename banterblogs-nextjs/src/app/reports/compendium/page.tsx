@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { DirectionalPage, NAV_BACK } from '@/components/reports/ReportTransitions';
 import { renderMarkdownToHtml } from '@/lib/episodes';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
@@ -43,9 +44,9 @@ export default async function CompendiumPage() {
     const html = await renderMarkdownToHtml(raw);
 
     return (
-        <div className="container py-16">
+        <DirectionalPage className="container py-16">
             <div className="mb-8">
-                <Link href="/reports" className="text-sm text-muted-foreground hover:text-primary transition-colors mb-4 inline-block">
+                <Link href="/reports" transitionTypes={[NAV_BACK]} className="text-sm text-muted-foreground hover:text-primary transition-colors mb-4 inline-block">
                     &larr; Research Archive
                 </Link>
             </div>
@@ -72,13 +73,13 @@ export default async function CompendiumPage() {
                             <p className="text-sm text-muted-foreground mb-4">
                                 Access all {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.SHORT} measurements, and phase whitepapers.
                             </p>
-                            <Link href="/reports" className="text-sm text-primary hover:underline flex items-center gap-1">
+                            <Link href="/reports" transitionTypes={[NAV_BACK]} className="text-sm text-primary hover:underline flex items-center gap-1">
                                 View Technical Archives <span>&rarr;</span>
                             </Link>
                         </div>
                     </div>
                 </aside>
             </div>
-        </div>
+        </DirectionalPage>
     );
 }

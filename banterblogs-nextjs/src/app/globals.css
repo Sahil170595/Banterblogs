@@ -294,3 +294,134 @@ html {
     scroll-behavior: auto !important;
   }
 }
+
+/* view transitions: route transitions on the reading path. React names the
+   boundaries in components/reports/ReportTransitions.tsx and hands them the
+   classes below; timing comes from the Tailwind motion tokens. */
+:root {
+  --vt-duration: theme('transitionDuration.base');
+  --vt-duration-fast: theme('transitionDuration.fast');
+  --vt-ease: theme('transitionTimingFunction.standard');
+  /* enough to read direction, too little to track (motion spec: 12-16px) */
+  --vt-slide: 16px;
+}
+
+/* clicks reach the live page while snapshots settle */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Unnamed content swaps instantly and stays live; only the named groups below
+   move, so a navigation that names nothing (into the archive from the landing
+   or /show) shows nothing. */
+::view-transition-old(root) {
+  display: none;
+}
+
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* The sticky header holds still. Its old snapshot is dropped rather than
+   cross-faded: two stacked backdrop blurs flash. A snapshot carries no
+   backdrop, so the sliding page would read through the translucent bar; the
+   group is painted solid instead. A backdrop blur does not work here: Chromium
+   computes it on the group but does not render it inside the transition tree. */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+  background-color: hsl(var(--background));
+}
+
+::view-transition-old(site-header) {
+  display: none;
+}
+
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-slide-in {
+  from { transform: translateX(var(--vt-from, 0)); }
+}
+
+@keyframes vt-slide-out {
+  to { transform: translateX(var(--vt-to, 0)); }
+}
+
+/* nav-forward leaves to the left and arrives from the right; nav-back mirrors
+   it. The outgoing page fades on the fast token so the two pages never sit
+   half-visible over each other. */
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+  animation:
+    var(--vt-duration-fast) var(--vt-ease) both vt-fade-out,
+    var(--vt-duration) var(--vt-ease) both vt-slide-out;
+}
+
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+  animation:
+    var(--vt-duration) var(--vt-ease) both vt-fade-in,
+    var(--vt-duration) var(--vt-ease) both vt-slide-in;
+}
+
+::view-transition-old(.nav-forward) {
+  --vt-to: calc(-1 * var(--vt-slide));
+}
+
+::view-transition-new(.nav-forward) {
+  --vt-from: var(--vt-slide);
+}
+
+::view-transition-old(.nav-back) {
+  --vt-to: var(--vt-slide);
+}
+
+::view-transition-new(.nav-back) {
+  --vt-from: calc(-1 * var(--vt-slide));
+}
+
+/* A report title travelling between its archive card and the report page.
+   Both snapshots keep their native size, pinned top-left and clipped to the
+   moving box, so neither shows as a scaled raster and the larger heading
+   never paints over the neighbouring cards. */
+::view-transition-group(.text-morph) {
+  clip-path: inset(0);
+}
+
+::view-transition-old(.text-morph),
+::view-transition-new(.text-morph) {
+  object-fit: none;
+  object-position: left top;
+}
+
+::view-transition-old(.text-morph) {
+  animation: var(--vt-duration-fast) var(--vt-ease) both vt-fade-out;
+}
+
+::view-transition-new(.text-morph) {
+  animation: var(--vt-duration) var(--vt-ease) both vt-fade-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+/* end view transitions */

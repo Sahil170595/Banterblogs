@@ -83,8 +83,11 @@ export default function RootLayout({
 }) {
   return (
     // suppressHydrationWarning: the pre-paint script may set <html>'s inline
-    // font-size before React hydrates (applies to this element only)
-    <html lang="en" className="dark" suppressHydrationWarning>
+    // font-size before React hydrates (applies to this element only).
+    // data-scroll-behavior: route changes jump to the top instead of smooth-
+    // scrolling there (Next 16 opt-in), so a view transition captures the new
+    // page where it lands; in-page anchors stay smooth.
+    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script id="reader-font-size" dangerouslySetInnerHTML={{ __html: READER_FONT_SIZE_SCRIPT }} />
       </head>

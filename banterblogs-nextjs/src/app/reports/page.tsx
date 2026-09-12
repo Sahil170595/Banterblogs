@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs';
+import { DirectionalPage, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
 import { PHASE_DEFINITIONS, classifyReportSlug, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
@@ -110,7 +111,7 @@ export default async function ReportsIndex() {
   const featuredSlugs = FEATURED_REPORTS.map((f) => f.slug);
 
   return (
-    <div className="container py-16">
+    <DirectionalPage className="container py-16">
       {/* ── Hero ── */}
       <div className="signal-panel-strong mb-10 p-8 md:p-12">
         <div className="space-y-5 w-full">
@@ -164,6 +165,7 @@ export default async function ReportsIndex() {
         {/* Compendium — hero card */}
         <Link
           href="/reports/compendium"
+          transitionTypes={[NAV_FORWARD]}
           className="block group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-muted/20 p-8 md:p-10 mb-6 hover:border-primary/50 transition-[border-color,box-shadow] duration-fast ease-standard hover:shadow-2xl hover:shadow-primary/5"
         >
           <div className="relative z-10">
@@ -188,6 +190,7 @@ export default async function ReportsIndex() {
             <Link
               key={feat.slug}
               href={`/reports/${feat.slug}`}
+              transitionTypes={[NAV_FORWARD]}
               className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:border-primary/40 hover:bg-muted/20 transition-colors"
             >
               <div className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-2">
@@ -277,6 +280,7 @@ export default async function ReportsIndex() {
                   <Link
                     key={s.slug}
                     href={`/reports/${s.slug}`}
+                    transitionTypes={[NAV_FORWARD]}
                     className="rounded-full border border-border/60 px-2 py-0.5 text-muted-foreground transition hover:border-primary/60 hover:text-primary"
                   >
                     {s.label}
@@ -304,11 +308,14 @@ export default async function ReportsIndex() {
               <Link
                 key={r.slug}
                 href={`/reports/${r.slug}`}
+                transitionTypes={[NAV_FORWARD]}
                 className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
               >
-                <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
-                  {r.title}
-                </div>
+                <ReportTitleTransition slug={r.slug}>
+                  <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
+                    {r.title}
+                  </div>
+                </ReportTitleTransition>
                 {r.description && (
                   <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>
                 )}
@@ -333,6 +340,6 @@ export default async function ReportsIndex() {
         </div>
         <ReportTabs groups={technicalGroups} featuredSlugs={featuredSlugs} />
       </section>
-    </div>
+    </DirectionalPage>
   );
 }

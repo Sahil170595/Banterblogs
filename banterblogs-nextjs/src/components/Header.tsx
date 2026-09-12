@@ -17,6 +17,11 @@ const NAV_ITEMS = [
   { href: '/about', label: 'About' },
 ];
 
+// Named so route transitions leave the header in place; globals.css (view
+// transitions block) holds its group still and drops the old snapshot, whose
+// backdrop blur would flash against the new one.
+const HEADER_TRANSITION_NAME = 'site-header';
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -45,6 +50,7 @@ export function Header() {
 
   return (
     <header
+      style={{ viewTransitionName: HEADER_TRANSITION_NAME }}
       className={
         isLanding
           ? 'fixed top-0 z-50 w-full bg-transparent'
