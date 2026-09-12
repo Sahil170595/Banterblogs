@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, type KeyboardEvent } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 export interface ReportTabEntry {
   slug: string;
@@ -21,9 +22,76 @@ interface ReportTabsProps {
   featuredSlugs: string[];
 }
 
+// The default tab lists every report; any other tab lives in ?phase=<key>.
+export const ALL_TAB_KEY = 'all';
+export const PHASE_PARAM = 'phase';
+
 export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
-  const [activeTab, setActiveTab] = useState(groups[0]?.key ?? '');
+  const tabs: ReportTabGroup[] = [
+    {
+      key: ALL_TAB_KEY,
+      label: 'All',
+      description: 'Every technical report, newest phase first.',
+      reports: groups.flatMap((group) => group.reports),
+    },
+    ...groups,
+  ];
+
+  // Reading the URL opts this subtree out of the static prerender; the
+  // fallback is what the prerendered HTML carries — the All tab, the same
+  // default a URL without ?phase= resolves to.
+  return (
+    <Suspense fallback={<TabbedReports tabs={tabs} featuredSlugs={featuredSlugs} activeKey={ALL_TAB_KEY} />}>
+      <UrlSyncedTabs tabs={tabs} featuredSlugs={featuredSlugs} />
+    </Suspense>
+  );
+}
+
+function UrlSyncedTabs({ tabs, featuredSlugs }: { tabs: ReportTabGroup[]; featuredSlugs: string[] }) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const requested = searchParams.get(PHASE_PARAM);
+  const activeKey = tabs.find((tab) => tab.key === requested)?.key ?? ALL_TAB_KEY;
+
+  const select = (key: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (key === ALL_TAB_KEY) params.delete(PHASE_PARAM);
+    else params.set(PHASE_PARAM, key);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  return <TabbedReports tabs={tabs} featuredSlugs={featuredSlugs} activeKey={activeKey} onSelect={select} />;
+}
+
+interface TabbedReportsProps {
+  tabs: ReportTabGroup[];
+  featuredSlugs: string[];
+  activeKey: string;
+  /** absent in the prerendered fallback, which hydration replaces */
+  onSelect?: (key: string) => void;
+}
+
+const tabId = (key: string) => `report-tab-${key}`;
+
+function TabbedReports({ tabs, featuredSlugs, activeKey, onSelect }: TabbedReportsProps) {
   const featuredSet = new Set(featuredSlugs);
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    // step from the focused tab, which leads the URL while a replace is in flight
+    const focused = tabs.findIndex((tab) => tabId(tab.key) === (e.target as HTMLElement).id);
+    const current = focused >= 0 ? focused : tabs.findIndex((tab) => tab.key === activeKey);
+    let next: number | null = null;
+    if (e.key === 'ArrowRight') next = (current + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = tabs.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    onSelect?.(tabs[next].key);
+    document.getElementById(tabId(tabs[next].key))?.focus();
+  };
 
   return (
     <div>
@@ -32,26 +100,19 @@ export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
         role="tablist"
         aria-label="Report categories"
         className="flex gap-1 overflow-x-auto border-b border-border/40 mb-10 pb-px scrollbar-none"
-        onKeyDown={(e) => {
-          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-          e.preventDefault();
-          const idx = groups.findIndex((g) => g.key === activeTab);
-          const next = e.key === 'ArrowRight' ? (idx + 1) % groups.length : (idx - 1 + groups.length) % groups.length;
-          setActiveTab(groups[next].key);
-          document.getElementById(`report-tab-${groups[next].key}`)?.focus();
-        }}
+        onKeyDown={onKeyDown}
       >
-        {groups.map((group) => (
+        {tabs.map((group) => (
           <button
             key={group.key}
-            id={`report-tab-${group.key}`}
+            id={tabId(group.key)}
             role="tab"
-            aria-selected={activeTab === group.key}
+            aria-selected={activeKey === group.key}
             aria-controls={`report-panel-${group.key}`}
-            tabIndex={activeTab === group.key ? 0 : -1}
-            onClick={() => setActiveTab(group.key)}
+            tabIndex={activeKey === group.key ? 0 : -1}
+            onClick={() => onSelect?.(group.key)}
             className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors relative ${
-              activeTab === group.key
+              activeKey === group.key
                 ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -60,7 +121,7 @@ export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
             <span className="ml-1.5 text-xs text-muted-foreground/70">
               {group.reports.filter((r) => !featuredSet.has(r.slug)).length}
             </span>
-            {activeTab === group.key && (
+            {activeKey === group.key && (
               <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary rounded-full" />
             )}
           </button>
@@ -68,8 +129,8 @@ export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
       </div>
 
       {/* Active tab content */}
-      {groups.map((group) => {
-        if (group.key !== activeTab) return null;
+      {tabs.map((group) => {
+        if (group.key !== activeKey) return null;
         const visibleReports = group.reports.filter((r) => !featuredSet.has(r.slug));
 
         return (
@@ -77,7 +138,7 @@ export function ReportTabs({ groups, featuredSlugs }: ReportTabsProps) {
             key={group.key}
             id={`report-panel-${group.key}`}
             role="tabpanel"
-            aria-labelledby={`report-tab-${group.key}`}
+            aria-labelledby={tabId(group.key)}
           >
             {group.description && (
               <p className="text-sm text-muted-foreground/70 mb-8 max-w-2xl">{group.description}</p>
