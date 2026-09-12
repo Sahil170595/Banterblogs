@@ -62,7 +62,7 @@ export default async function EpisodesPage() {
           <div className="grid gap-3 sm:grid-cols-2 sm:min-w-[560px]">
             <Link
               href="/banterpacks"
-              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition hover:border-primary hover:bg-card/80"
+              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition-colors duration-fast ease-standard hover:border-primary hover:bg-card/80"
             >
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
@@ -73,11 +73,11 @@ export default async function EpisodesPage() {
                   <div className="text-xs text-muted-foreground">{banterpacksCount} episodes</div>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary transition group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 text-primary" />
             </Link>
             <Link
               href="/chimera"
-              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition hover:border-primary hover:bg-card/80"
+              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition-colors duration-fast ease-standard hover:border-primary hover:bg-card/80"
             >
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
@@ -88,7 +88,7 @@ export default async function EpisodesPage() {
                   <div className="text-xs text-muted-foreground">{chimeraCount} episodes</div>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary transition group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 text-primary" />
             </Link>
           </div>
         </div>

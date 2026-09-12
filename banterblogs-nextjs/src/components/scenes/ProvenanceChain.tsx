@@ -10,7 +10,7 @@ import {
   useCallback,
 } from 'react';
 import type { ReactNode, KeyboardEvent } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -238,7 +238,7 @@ function TimelineNode({
       tabIndex={tabIndex}
       onClick={onClick}
       aria-label={`Event ${rec.step_index + 1} of ${5}, ${rec.event.event_type}${tampered ? ', tampered — signature failed' : ', verified'}`}
-      className={`group flex items-center gap-3 w-full text-left rounded-lg border ${ring} bg-card/40 backdrop-blur-sm p-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+      className={`group flex items-center gap-3 w-full text-left rounded-lg border ${ring} bg-card/40 backdrop-blur-sm p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
         isActive ? '' : 'hover:border-border'
       }`}
     >
@@ -535,7 +535,18 @@ function AftermathPanel({
 
 // ---- Main component ----
 
+// reducedMotion="user": framer honours prefers-reduced-motion for every
+// animation in the scene. Scoped here, not in the root layout, so pages that
+// do not animate load no framer code.
 export function ProvenanceChain({ data }: { data: SceneData }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <ProvenanceChainScene data={data} />
+    </MotionConfig>
+  );
+}
+
+function ProvenanceChainScene({ data }: { data: SceneData }) {
   // v1 audit C1: hydration-safe motion preference. The server renders
   // with `reducedMotion=true` (motion off) and the client matches on
   // first paint. Only AFTER mount do we read the real preference. This
@@ -889,7 +900,7 @@ export function ProvenanceChain({ data }: { data: SceneData }) {
                   tabIndex={i === beatIdx ? 0 : -1}
                 >
                   <span
-                    className={`h-1 w-full rounded-full transition-all ${
+                    className={`h-1 w-full rounded-full transition-colors ${
                       i === beatIdx
                         ? 'bg-primary'
                         : i < beatIdx

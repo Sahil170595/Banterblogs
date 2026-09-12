@@ -192,7 +192,7 @@ function PaperCard({ paper }: { paper: Paper }) {
   return (
     <article className="signal-panel p-6 md:p-7 group">
       <header className="mb-3 flex items-start justify-between gap-3">
-        <h3 className="text-lg md:text-xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+        <h3 className="text-lg md:text-xl font-semibold leading-snug text-foreground">
           {paper.title}
         </h3>
         <StatusBadge status={paper.status} />
@@ -209,7 +209,7 @@ function PaperCard({ paper }: { paper: Paper }) {
             href={paper.arxiv}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full border border-border/60 px-2.5 py-0.5 font-mono text-foreground/80 transition hover:border-primary/60 hover:text-primary"
+            className="rounded-full border border-border/60 px-2.5 py-0.5 font-mono text-foreground/80 transition-colors duration-fast ease-standard hover:border-primary/60 hover:text-primary"
           >
             {paper.arxiv.replace(/^https?:\/\/arxiv\.org\/abs\//, '')}
           </Link>
@@ -222,7 +222,7 @@ function PaperCard({ paper }: { paper: Paper }) {
             href={paper.demo.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full border border-border/60 px-2.5 py-0.5 text-foreground/80 transition hover:border-primary/60 hover:text-primary"
+            className="rounded-full border border-border/60 px-2.5 py-0.5 text-foreground/80 transition-colors duration-fast ease-standard hover:border-primary/60 hover:text-primary"
           >
             {paper.demo.label}
           </Link>
@@ -235,7 +235,7 @@ function PaperCard({ paper }: { paper: Paper }) {
             <Link
               key={tr.slug}
               href={`/reports/${tr.slug}`}
-              className="rounded-full border border-border/60 px-2.5 py-0.5 text-foreground/80 transition hover:border-primary/60 hover:text-primary"
+              className="rounded-full border border-border/60 px-2.5 py-0.5 text-foreground/80 transition-colors duration-fast ease-standard hover:border-primary/60 hover:text-primary"
             >
               {tr.label}
             </Link>
@@ -351,7 +351,7 @@ export default function PapersPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Link
             href="/reports"
-            className="block group signal-panel p-5 hover:border-primary/40 transition-all"
+            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
             <p className="text-sm text-muted-foreground mb-3">
@@ -363,7 +363,7 @@ export default function PapersPage() {
           </Link>
           <Link
             href="/work"
-            className="block group signal-panel p-5 hover:border-primary/40 transition-all"
+            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Work</h3>
             <p className="text-sm text-muted-foreground mb-3">
@@ -375,7 +375,7 @@ export default function PapersPage() {
           </Link>
           <Link
             href="/platform"
-            className="block group signal-panel p-5 hover:border-primary/40 transition-all"
+            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
           >
             <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Platform Architecture</h3>
             <p className="text-sm text-muted-foreground mb-3">

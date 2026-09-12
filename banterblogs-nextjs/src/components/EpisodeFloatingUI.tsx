@@ -3,12 +3,9 @@
 import dynamic from 'next/dynamic';
 import type { EpisodeSummary } from '@/lib/episodes';
 
-// Floating action UI on /episodes/[slug] (bottom-right corner). Pulls
-// framer-motion + 11 lucide icons. Not visible above the fold and only
-// used after the user starts engaging with the page.
-//
-// Lazy-loaded so framer-motion does not block first paint on episode
-// detail pages.
+// Floating action UI on /episodes/[slug] (bottom-right corner): 11 lucide
+// icons and localStorage state, used only after the reader engages with the
+// page. Lazy-loaded so it does not block first paint on episode pages.
 
 const SocialShare = dynamic(
   () => import('./SocialFeatures').then((m) => m.SocialShare),

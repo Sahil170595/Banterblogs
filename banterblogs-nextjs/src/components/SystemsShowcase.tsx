@@ -1,8 +1,5 @@
-'use client';
-
 import Link from 'next/link';
 import { ArrowRight, Radio, Cpu, BrainCircuit, BarChart3, Smartphone, BookOpen, Rocket } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { CHIMERAFORGE_TOOL } from '@/lib/tools';
 
@@ -97,16 +94,12 @@ export function SystemsShowcase() {
 
       {/* Core engines — two big cards */}
       <div className="mt-14 grid gap-6 md:grid-cols-2">
-        {coreEngines.map((engine, index) => (
-          <motion.article
+        {coreEngines.map((engine) => (
+          <article
             key={engine.name}
-            initial={false}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            viewport={{ once: true, amount: 0.3 }}
             className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-8 backdrop-blur"
           >
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100" />
 
             <div className="flex items-center gap-3 mb-5">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -133,25 +126,21 @@ export function SystemsShowcase() {
 
             <Link
               href={engine.href}
-              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary/80"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors duration-fast ease-standard hover:text-primary/80"
             >
               Learn more
               <ArrowRight className="h-4 w-4" />
             </Link>
-          </motion.article>
+          </article>
         ))}
       </div>
 
       {/* Supporting systems — smaller cards in a flexible grid */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {supportingSystems.map((system, index) => (
-          <motion.article
+        {supportingSystems.map((system) => (
+          <article
             key={system.name}
-            initial={false}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.08 }}
-            viewport={{ once: true, amount: 0.3 }}
-            className="group rounded-xl border border-border/40 bg-card/40 p-5 backdrop-blur transition hover:border-border/60 hover:bg-card/60"
+            className="group rounded-xl border border-border/40 bg-card/40 p-5 backdrop-blur transition-colors duration-fast ease-standard hover:border-border/60 hover:bg-card/60"
           >
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -161,7 +150,7 @@ export function SystemsShowcase() {
             </div>
             <p className="text-xs text-muted-foreground/80 uppercase tracking-[0.16em] mb-2">{system.role}</p>
             <p className="text-sm text-muted-foreground leading-relaxed">{system.description}</p>
-          </motion.article>
+          </article>
         ))}
       </div>
 

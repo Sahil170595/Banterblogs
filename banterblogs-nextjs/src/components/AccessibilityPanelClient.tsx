@@ -53,7 +53,7 @@ export function ReaderSettingsLauncher() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={Panel ? PANEL_ID : undefined}
-        className="transition hover:text-primary"
+        className="transition-colors duration-fast ease-standard hover:text-primary"
       >
         Reader settings
       </button>

@@ -6,18 +6,15 @@ import { GalacticBackdrop } from '../GalacticBackdrop';
 
 vi.mock('../GalacticScene', () => ({ default: () => <div data-testid="scene" /> }));
 
-// The pill's pulse is switched off in CSS (:has) while the pause control
-// reports paused, so the server-rendered hero needs no client state.
-const PULSE_OFF_WHEN_PAUSED = 'group-has-[[data-motion=paused]]/hero:animate-none';
 // covers the scene gate's idle-callback deadline and its setTimeout fallback
 const SCENE_MAX_WAIT_MS = 2500;
 
-describe('landing pill pulse', () => {
-  it('is wired to stop when motion is paused', () => {
+describe('landing motion', () => {
+  it('keeps the pill dot static (a pulse is reserved for genuinely live state)', () => {
     const html = renderToStaticMarkup(<GalacticHero />);
 
-    expect(html).toMatch(/<section class="group\/hero /);
-    expect(html).toContain(PULSE_OFF_WHEN_PAUSED);
+    expect(html).toContain('Select a system');
+    expect(html).not.toContain('animate-pulse');
   });
 
   describe('pause control', () => {
@@ -51,7 +48,7 @@ describe('landing pill pulse', () => {
       Reflect.deleteProperty(window, 'matchMedia');
     });
 
-    it('publishes its state for the pulse to follow', async () => {
+    it('publishes its running and paused state', async () => {
       render(<GalacticBackdrop />);
       await act(async () => {
         await vi.advanceTimersByTimeAsync(SCENE_MAX_WAIT_MS);

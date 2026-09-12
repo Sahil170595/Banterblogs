@@ -7,8 +7,8 @@ import { formatNumber } from '@/lib/formatUtils';
 // per card (including an infinitely repeating arrow animation and a
 // document-level magnetic-cursor listener). On /episodes that meant 268
 // concurrent infinite animations and 268 document mousemove handlers for
-// effects CSS handles for free. All hover motion is transition-based and
-// disabled under prefers-reduced-motion.
+// effects CSS handles for free. Hover changes colour only: the background
+// tint, the tag borders and the title.
 
 interface EpisodeCardProps {
   episode: EpisodeSummary;
@@ -57,17 +57,17 @@ export function EpisodeCard({ episode }: EpisodeCardProps) {
   const tags = episode.tags.slice(0, 3);
 
   return (
-    <article className="group relative h-full overflow-hidden rounded-3xl border border-border/60 bg-card/60 backdrop-blur glass-ultra card-3d hover-lift">
+    <article className="group relative h-full overflow-hidden rounded-3xl border border-border/60 bg-card/60 backdrop-blur glass-ultra">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100" />
 
       {/* Glow effect */}
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
+      <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary/20 to-accent/20 opacity-0 blur-xl transition-opacity duration-fast ease-standard group-hover:opacity-100" />
 
       <Link href={`/episodes/${episode.slug}`} className="relative z-10 flex h-full flex-col gap-6 p-6">
         <header className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/40 text-xs font-bold text-foreground transition-transform duration-500 group-hover:rotate-[360deg] motion-reduce:transition-none motion-reduce:group-hover:rotate-0">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/40 text-xs font-bold text-foreground">
               {formattedEpisodeNumber}
             </span>
             <span className="px-2 py-1 rounded-full border border-border/60 bg-muted/40 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
@@ -78,7 +78,7 @@ export function EpisodeCard({ episode }: EpisodeCardProps) {
         </header>
 
         <div className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground transition-all duration-300 group-hover:text-primary group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0">
+          <h2 className="text-xl font-semibold text-foreground transition-colors duration-fast ease-standard group-hover:text-primary">
             {episode.title}
           </h2>
           <p className="text-sm text-muted-foreground">{episode.subtitle}</p>
@@ -124,7 +124,7 @@ export function EpisodeCard({ episode }: EpisodeCardProps) {
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground transition-colors duration-200 group-hover:border-primary/30"
+                className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground transition-colors duration-fast ease-standard group-hover:border-primary/30"
               >
                 <Tag className="h-3 w-3" aria-hidden="true" />
                 {tag}
@@ -141,10 +141,7 @@ export function EpisodeCard({ episode }: EpisodeCardProps) {
         <footer className="mt-auto flex items-center justify-between text-sm font-semibold text-primary">
           <span className="inline-flex items-center gap-2">
             Read episode
-            <ArrowRight
-              className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-              aria-hidden="true"
-            />
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </span>
           <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
             {episode.commit ? `#${episode.commit.slice(0, 7)}` : 'untracked'}
@@ -153,7 +150,7 @@ export function EpisodeCard({ episode }: EpisodeCardProps) {
       </Link>
 
       {/* Hover effect overlay */}
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden="true">
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100" aria-hidden="true">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
       </div>

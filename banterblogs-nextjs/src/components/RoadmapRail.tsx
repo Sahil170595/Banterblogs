@@ -1,7 +1,4 @@
-'use client';
-
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { ArrowRight, FlaskConical } from 'lucide-react';
 import { PHASE_DEFINITIONS, phaseRangeLabel } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
@@ -35,15 +32,8 @@ export function RoadmapRail() {
       </div>
 
       <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {highlights.map((phase, index) => (
-          <motion.div
-            key={phase.label}
-            initial={false}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.08 }}
-            viewport={{ once: true, amount: 0.3 }}
-            className="rounded-xl border border-border/40 bg-card/40 p-5 backdrop-blur"
-          >
+        {highlights.map((phase) => (
+          <div key={phase.label} className="rounded-xl border border-border/40 bg-card/40 p-5 backdrop-blur">
             <div className="flex items-center gap-2 mb-3">
               <FlaskConical className="h-4 w-4 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -52,14 +42,14 @@ export function RoadmapRail() {
             </div>
             <h3 className="text-sm font-semibold text-foreground mb-2">{phase.label}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{phase.summary}</p>
-          </motion.div>
+          </div>
         ))}
       </div>
 
       <div className="mt-8 text-center">
         <Link
           href="/reports"
-          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-6 py-3 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:text-primary"
+          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-6 py-3 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard hover:border-primary/60 hover:text-primary motion-safe:active:scale-[0.98]"
         >
           Browse the research archive
           <ArrowRight className="h-4 w-4" />

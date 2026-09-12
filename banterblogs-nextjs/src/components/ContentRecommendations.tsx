@@ -92,7 +92,7 @@ export function ContentRecommendations({ current, recommendations, className = '
             <div key={episode.id} className="group">
               <Link
                 href={`/episodes/${episode.slug}`}
-                className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+                className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-colors duration-fast ease-standard"
               >
                 <div className="flex-shrink-0">{rankIcon(index)}</div>
 

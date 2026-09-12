@@ -80,6 +80,30 @@ describe('site search dialog', () => {
     expect(push).toHaveBeenCalledWith('/reports/technical-report-138');
   });
 
+  it('fades the results panel in and out on the overlay tokens, keeping the last results while it leaves', async () => {
+    const input = await renderDialog();
+    // stays mounted while closed so the exit can run; hidden it is invisible
+    const panelClasses = () =>
+      (screen.getByRole('listbox', { hidden: true }).parentElement?.className ?? '').split(/\s+/);
+
+    expect(panelClasses()).toEqual(
+      expect.arrayContaining(['invisible', 'opacity-0', 'scale-[0.98]', '-translate-y-1', 'duration-base', 'ease-standard']),
+    );
+
+    await open(input, 'TR138');
+    await screen.findAllByRole('option');
+    expect(panelClasses()).toEqual(expect.arrayContaining(['visible', 'opacity-100', 'scale-100', 'translate-y-0']));
+    expect(panelClasses()).not.toContain('invisible');
+
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    expect(input.value).toBe('');
+    expect(panelClasses()).toEqual(expect.arrayContaining(['invisible', 'opacity-0']));
+    // the fading panel keeps its results rather than flashing an empty state
+    expect(screen.getAllByRole('option', { hidden: true }).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/no results/i)).toBeNull();
+  });
+
   it('says so when the index cannot load, instead of claiming no results', async () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 503, json: async () => [] });
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);

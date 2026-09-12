@@ -55,7 +55,7 @@ export default async function TagsPage() {
           <Link
             key={tag}
             href={`/tags/${encodeURIComponent(tag)}`}
-            className="signal-panel group flex items-center justify-between gap-4 p-5 transition hover:border-primary/40"
+            className="signal-panel group flex items-center justify-between gap-4 p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
           >
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border/60 bg-background/60 text-primary">

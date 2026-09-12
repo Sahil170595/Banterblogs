@@ -10,7 +10,7 @@ import {
   useCallback,
 } from 'react';
 import type { KeyboardEvent } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -281,7 +281,8 @@ function MatrixCell({
             }
       }
       transition={{ duration: 0.3 }}
-      className={`relative aspect-square min-h-[64px] rounded border ${tone} flex flex-col items-center justify-center gap-1 p-2 text-center`}
+      // 52px floor below sm so four replicas fit a 390px screen (was 368px wide)
+      className={`relative aspect-square min-h-[52px] sm:min-h-[64px] rounded border ${tone} flex flex-col items-center justify-center gap-1 p-2 text-center`}
     >
       <StatusIcon status={status} className="h-4 w-4 md:h-5 md:w-5" />
       <span
@@ -507,7 +508,18 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
 
 // ---- Main component ----
 
+// reducedMotion="user": framer honours prefers-reduced-motion for every
+// animation in the scene. Scoped here, not in the root layout, so pages that
+// do not animate load no framer code.
 export function BftConsensus({ data }: { data: SceneData }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <BftConsensusScene data={data} />
+    </MotionConfig>
+  );
+}
+
+function BftConsensusScene({ data }: { data: SceneData }) {
   // Hydration-safe motion preference. Server renders motion=off; client
   // flips to real value after mount (avoids the hydration mismatch
   // that scene-03 v1 hit).
@@ -762,7 +774,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => selectRecord(idx)}
                   aria-label={`Scenario ${idx + 1}: ${r.plain}`}
-                  className={`group flex flex-col items-start gap-1 min-w-[220px] md:min-w-0 rounded-lg border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                  className={`group flex flex-col items-start gap-1 min-w-[220px] md:min-w-0 rounded-lg border p-3 text-left transition-[color,background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                     isActive
                       ? 'border-primary shadow-[0_0_30px_-10px_hsl(var(--primary)/0.55)] bg-card/50'
                       : 'border-border/40 bg-card/30 hover:border-border'
@@ -883,7 +895,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
                   tabIndex={i === beatIdx ? 0 : -1}
                 >
                   <span
-                    className={`h-1 w-full rounded-full transition-all ${
+                    className={`h-1 w-full rounded-full transition-colors ${
                       i === beatIdx
                         ? 'bg-primary'
                         : i < beatIdx
@@ -902,7 +914,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
               PBFT phase × replica matrix
             </div>
             {/* Header row */}
-            <div className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2">
+            <div className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2">
               <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">
                 phase
               </div>
@@ -930,7 +942,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
                   <div
                     key={phaseId}
                     role="row"
-                    className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2"
+                    className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2"
                   >
                     <div
                       role="rowheader"
@@ -1002,7 +1014,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
               <div
                 role="grid"
                 aria-label="View change votes by replica"
-                className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3"
+                className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3"
               >
                 <div role="rowheader" className="flex flex-col justify-center text-left">
                   <span className="text-[12px] font-bold text-foreground/95">View change</span>
