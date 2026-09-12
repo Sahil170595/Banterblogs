@@ -33,5 +33,9 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/reports/:id',
+  // Only slugs that are NOT the CANONICAL_SLUG shape reach the proxy, so
+  // canonical report requests skip it — including the .rsc and
+  // .segments/*.segment.rsc transport forms Next appends to every matcher.
+  // Next compiles this without the `i` flag, so uppercase aliases still match.
+  matcher: '/reports/:id((?![a-z0-9]+(?:-[a-z0-9]+)*(?:\\.rsc|\\.segments/.+\\.segment\\.rsc)?$)[^/]+)',
 };
