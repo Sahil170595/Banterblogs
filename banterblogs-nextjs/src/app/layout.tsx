@@ -8,7 +8,6 @@ import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { MotionConfig } from "framer-motion";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
@@ -98,20 +97,16 @@ export default function RootLayout({
           Skip to content
         </a>
         <ErrorBoundary>
-          {/* reducedMotion="user" makes every framer-motion animation respect
-              prefers-reduced-motion globally (scenes add their own handling). */}
-          <MotionConfig reducedMotion="user">
-            {/* .keyboard-navigation scopes the focus-visible ring in globals.css */}
-            <div className="keyboard-navigation relative flex min-h-screen flex-col">
-              <Header />
-              <main id="main-content" className="flex-1 chimera-shell">
-                {children}
-              </main>
-              <RouteGate hideOn={["/"]}>
-                <Footer />
-              </RouteGate>
-            </div>
-          </MotionConfig>
+          {/* .keyboard-navigation scopes the focus-visible ring in globals.css */}
+          <div className="keyboard-navigation relative flex min-h-screen flex-col">
+            <Header />
+            <main id="main-content" className="flex-1 chimera-shell">
+              {children}
+            </main>
+            <RouteGate hideOn={["/"]}>
+              <Footer />
+            </RouteGate>
+          </div>
         </ErrorBoundary>
         <Analytics />
         <SpeedInsights />

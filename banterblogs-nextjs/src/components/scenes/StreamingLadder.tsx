@@ -3,7 +3,7 @@
 import { computeDwell } from './_shared';
 
 import { useState, useMemo, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -503,7 +503,18 @@ function pickEntryIndex(records: StepRecord[]): number {
   return idx >= 0 ? idx : 0;
 }
 
+// reducedMotion="user": framer honours prefers-reduced-motion for every
+// animation in the scene. Scoped here, not in the root layout, so pages that
+// do not animate load no framer code.
 export function StreamingLadder({ data }: { data: SceneData }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <StreamingLadderScene data={data} />
+    </MotionConfig>
+  );
+}
+
+function StreamingLadderScene({ data }: { data: SceneData }) {
   const reducedMotion = useReducedMotion();
   const entryIdx = useMemo(() => pickEntryIndex(data.records), [data.records]);
   const [activeIdx, setActiveIdx] = useState(entryIdx);
@@ -720,7 +731,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
               aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
             >
               <span
-                className={`h-1 w-full rounded-full transition-all ${
+                className={`h-1 w-full rounded-full transition-colors ${
                   i === beatIdx
                     ? 'bg-primary'
                     : i < beatIdx
@@ -913,7 +924,7 @@ export function StreamingLadder({ data }: { data: SceneData }) {
               <button
                 key={r.step_id}
                 onClick={() => selectRecord(idx)}
-                className={`group relative flex flex-col items-start gap-1 rounded-md border px-3 py-2.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                className={`group relative flex flex-col items-start gap-1 rounded-md border px-3 py-2.5 text-left transition-[color,background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                   isActive
                     ? 'border-primary bg-primary/5 shadow-[0_0_25px_-12px_hsl(var(--primary)/0.5)]'
                     : 'border-border/50 hover:border-border'
@@ -1050,10 +1061,10 @@ function ConfidenceBar({ value, barClass, label }: { value: number | null; barCl
       aria-label={label ? `${label} confidence` : 'Confidence'}
     >
       <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${pct}%` }}
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: pct / 100 }}
         transition={{ duration: 0.55, ease: 'easeOut', delay: 0.1 }}
-        className={`h-full ${barClass}`}
+        className={`h-full w-full origin-left ${barClass}`}
       />
     </div>
   );
@@ -1089,10 +1100,10 @@ function SignalGauge({
         aria-label={`${label} ${raw ?? clamped.toFixed(2)}`}
       >
         <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: pct / 100 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="h-full bg-accent/70"
+          className="h-full w-full origin-left bg-accent/70"
         />
       </div>
       <div className="font-mono text-[11px] text-foreground">{raw ?? clamped.toFixed(2)}</div>

@@ -10,7 +10,7 @@ import {
   useCallback,
 } from 'react';
 import type { KeyboardEvent } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -507,7 +507,18 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
 
 // ---- Main component ----
 
+// reducedMotion="user": framer honours prefers-reduced-motion for every
+// animation in the scene. Scoped here, not in the root layout, so pages that
+// do not animate load no framer code.
 export function BftConsensus({ data }: { data: SceneData }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <BftConsensusScene data={data} />
+    </MotionConfig>
+  );
+}
+
+function BftConsensusScene({ data }: { data: SceneData }) {
   // Hydration-safe motion preference. Server renders motion=off; client
   // flips to real value after mount (avoids the hydration mismatch
   // that scene-03 v1 hit).
@@ -762,7 +773,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => selectRecord(idx)}
                   aria-label={`Scenario ${idx + 1}: ${r.plain}`}
-                  className={`group flex flex-col items-start gap-1 min-w-[220px] md:min-w-0 rounded-lg border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                  className={`group flex flex-col items-start gap-1 min-w-[220px] md:min-w-0 rounded-lg border p-3 text-left transition-[color,background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                     isActive
                       ? 'border-primary shadow-[0_0_30px_-10px_hsl(var(--primary)/0.55)] bg-card/50'
                       : 'border-border/40 bg-card/30 hover:border-border'
@@ -883,7 +894,7 @@ export function BftConsensus({ data }: { data: SceneData }) {
                   tabIndex={i === beatIdx ? 0 : -1}
                 >
                   <span
-                    className={`h-1 w-full rounded-full transition-all ${
+                    className={`h-1 w-full rounded-full transition-colors ${
                       i === beatIdx
                         ? 'bg-primary'
                         : i < beatIdx

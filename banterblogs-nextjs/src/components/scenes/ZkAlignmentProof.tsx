@@ -10,7 +10,7 @@ import {
   useCallback,
 } from 'react';
 import type { KeyboardEvent } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -997,7 +997,18 @@ function useBeatController({
 // Main component
 // ---------------------------------------------------------------------------
 
+// reducedMotion="user": framer honours prefers-reduced-motion for every
+// animation in the scene. Scoped here, not in the root layout, so pages that
+// do not animate load no framer code.
 export function ZkAlignmentProof({ data }: { data: SceneData }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <ZkAlignmentProofScene data={data} />
+    </MotionConfig>
+  );
+}
+
+function ZkAlignmentProofScene({ data }: { data: SceneData }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   // SSR-safe reducedMotion — default true on first render to avoid hydration mismatch.

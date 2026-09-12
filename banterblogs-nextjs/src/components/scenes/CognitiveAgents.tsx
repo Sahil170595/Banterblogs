@@ -11,7 +11,7 @@ import {
   useLayoutEffect,
 } from 'react';
 import type { ReactNode, KeyboardEvent } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -251,10 +251,10 @@ function ConfidenceBar({
       aria-label={`${label} confidence`}
     >
       <motion.div
-        initial={reducedMotion ? { width: `${pct}%` } : { width: 0 }}
-        animate={{ width: `${pct}%` }}
+        initial={{ scaleX: reducedMotion ? pct / 100 : 0 }}
+        animate={{ scaleX: pct / 100 }}
         transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-        className={`h-full ${isSelected ? 'bg-primary' : 'bg-accent/70'}`}
+        className={`h-full w-full origin-left ${isSelected ? 'bg-primary' : 'bg-accent/70'}`}
       />
     </div>
   );
@@ -287,10 +287,10 @@ function SignalRow({
         aria-label={`${agentLabel} ${label}`}
       >
         <motion.div
-          initial={reducedMotion ? { width: `${pct}%` } : { width: 0 }}
-          animate={{ width: `${pct}%` }}
+          initial={{ scaleX: reducedMotion ? pct / 100 : 0 }}
+          animate={{ scaleX: pct / 100 }}
           transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
-          className="h-full bg-accent/70"
+          className="h-full w-full origin-left bg-accent/70"
         />
       </div>
     </div>
@@ -633,10 +633,10 @@ function MetaControllerCard({
                 aria-label={`${r.style} raw confidence`}
               >
                 <motion.div
-                  initial={reducedMotion ? { width: `${pct}%` } : { width: 0 }}
-                  animate={{ width: `${pct}%` }}
+                  initial={{ scaleX: reducedMotion ? pct / 100 : 0 }}
+                  animate={{ scaleX: pct / 100 }}
                   transition={reducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
-                  className={`h-full ${isSelected ? 'bg-primary' : 'bg-accent/60'}`}
+                  className={`h-full w-full origin-left ${isSelected ? 'bg-primary' : 'bg-accent/60'}`}
                 />
               </div>
               <div className={`font-mono text-xs text-right ${isSelected ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
@@ -764,7 +764,18 @@ function AftermathPanel({
   );
 }
 
+// reducedMotion="user": framer honours prefers-reduced-motion for every
+// animation in the scene. Scoped here, not in the root layout, so pages that
+// do not animate load no framer code.
 export function CognitiveAgents({ data }: { data: SceneData }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <CognitiveAgentsScene data={data} />
+    </MotionConfig>
+  );
+}
+
+function CognitiveAgentsScene({ data }: { data: SceneData }) {
   // SSR-safe useReducedMotion bridge — matches scenes 03/04/05.
   // useReducedMotion() returns null on the server and the actual
   // matchMedia value synchronously on the client, so reading it
@@ -1039,7 +1050,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
               tabIndex={i === beatIdx ? 0 : -1}
             >
               <span
-                className={`h-1 w-full rounded-full transition-all ${
+                className={`h-1 w-full rounded-full transition-colors ${
                   i === beatIdx
                     ? 'bg-primary'
                     : i < beatIdx
@@ -1112,7 +1123,7 @@ export function CognitiveAgents({ data }: { data: SceneData }) {
               <button
                 key={r.step_id}
                 onClick={() => selectRecord(idx)}
-                className={`group relative flex flex-col items-start gap-1 rounded-md border px-3 py-2.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                className={`group relative flex flex-col items-start gap-1 rounded-md border px-3 py-2.5 text-left transition-[color,background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                   isActive
                     ? 'border-primary bg-primary/5 shadow-[0_0_25px_-12px_hsl(var(--primary)/0.5)]'
                     : 'border-border/50 hover:border-border'
