@@ -1120,7 +1120,8 @@ function ZkAlignmentProofScene({ data }: { data: SceneData }) {
         <div
           role="group"
           aria-label="Beat navigation"
-          className="flex items-center gap-1 ml-1"
+          // wraps on phones: nine 40px beats outran a 390px screen by 35px
+          className="flex min-w-0 flex-wrap items-center gap-1 ml-1"
         >
           {record.beats.map((_, i) => (
             <button

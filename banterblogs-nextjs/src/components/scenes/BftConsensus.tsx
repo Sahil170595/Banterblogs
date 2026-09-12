@@ -281,7 +281,8 @@ function MatrixCell({
             }
       }
       transition={{ duration: 0.3 }}
-      className={`relative aspect-square min-h-[64px] rounded border ${tone} flex flex-col items-center justify-center gap-1 p-2 text-center`}
+      // 52px floor below sm so four replicas fit a 390px screen (was 368px wide)
+      className={`relative aspect-square min-h-[52px] sm:min-h-[64px] rounded border ${tone} flex flex-col items-center justify-center gap-1 p-2 text-center`}
     >
       <StatusIcon status={status} className="h-4 w-4 md:h-5 md:w-5" />
       <span
@@ -913,7 +914,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
               PBFT phase × replica matrix
             </div>
             {/* Header row */}
-            <div className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2">
+            <div className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2">
               <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">
                 phase
               </div>
@@ -941,7 +942,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                   <div
                     key={phaseId}
                     role="row"
-                    className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2"
+                    className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2"
                   >
                     <div
                       role="rowheader"
@@ -1013,7 +1014,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
               <div
                 role="grid"
                 aria-label="View change votes by replica"
-                className="grid grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3"
+                className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3"
               >
                 <div role="rowheader" className="flex flex-col justify-center text-left">
                   <span className="text-[12px] font-bold text-foreground/95">View change</span>
