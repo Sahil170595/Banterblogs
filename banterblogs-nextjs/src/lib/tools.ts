@@ -1,8 +1,8 @@
 /**
  * Shipped CLIs — single source of truth.
  *
- * Every surface that names a package version (Hero install chips, /platform
- * cards, /work, Footer, llms.txt, /tools pages) reads from here. Before this
+ * Every surface that names a package version (/platform cards, /work, Footer,
+ * llms.txt, /tools pages) reads from here. Before this
  * module the versions were hand-copied per surface and the site drifted seven
  * minor releases behind PyPI (it advertised chimeraforge 0.5.0 while PyPI was
  * on 0.12.3 at the time). Bump `version` here on release and every surface

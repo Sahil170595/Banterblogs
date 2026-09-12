@@ -33,8 +33,8 @@ export const EXTERNAL_LINKS = {
 /**
  * Research-program headline counts — single source of truth.
  * Bump these when Banterhearts BANTERHEARTS_MEASUREMENT_COUNT.md changes;
- * every public surface (Hero, RoadmapRail, SystemsShowcase, /about, /papers,
- * /platform, /reports, /reports/compendium, /work, llms.txt, rss.xml) imports
+ * every public surface (the landing, /about, /papers, /platform, /reports,
+ * /reports/compendium, /work, rss.xml) imports
  * these constants instead of carrying its own literal copy.
  */
 export const MEASUREMENTS = {

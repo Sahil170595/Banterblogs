@@ -19,7 +19,6 @@ export async function GET() {
 
     const urls: string[] = [
       urlEntry(BASE, now, 'weekly', 1.0),
-      urlEntry(`${BASE}/home`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/about`, now, 'monthly', 0.8),
       // The episode archive keeps its index entry; the per-episode, per-tag,
       // /tags, /banterpacks, and /chimera URLs are noindex and stay out.

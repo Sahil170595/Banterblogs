@@ -229,14 +229,6 @@ export function phaseWhitepaperSlug(key: PhaseKey): string {
   return `technical-report-conclusive-${key}-whitepaper`;
 }
 
-/** Display label for a phase's TR range, e.g. "TR108–TR116" or "TR144+". */
-export function phaseRangeLabel(key: PhaseKey): string {
-  const p = PHASE_DEFINITIONS.find((x) => x.key === key);
-  if (!p || p.minTR === undefined) return '';
-  if (p.maxTR === Infinity || p.maxTR === undefined) return `TR${p.minTR}+`;
-  return `TR${p.minTR}–TR${p.maxTR}`;
-}
-
 /**
  * Build-time assertion that every slug-pinned phase (Phase 0 today) actually
  * resolves to a discovered report on disk. Catches silent drift where a file
