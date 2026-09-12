@@ -635,6 +635,8 @@ export function ProvenanceChain({ data }: { data: SceneData }) {
         if (next !== null) {
           e.preventDefault();
           setter(next);
+          // focus follows the check (APG radio group)
+          e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]')[next]?.focus();
         }
       },
     [],
