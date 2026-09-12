@@ -27,12 +27,15 @@ const STUB_ROUTE_REDIRECTS = [
   { source: '/technology', destination: '/platform', permanent: true },
 ];
 
+// The scrollable overview that predates the galactic landing.
+const RETIRED_ROUTE_REDIRECTS = [{ source: '/home', destination: '/', permanent: true }];
+
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
   async redirects() {
-    return [...CONCLUSIVE_REDIRECTS, ...STUB_ROUTE_REDIRECTS];
+    return [...CONCLUSIVE_REDIRECTS, ...STUB_ROUTE_REDIRECTS, ...RETIRED_ROUTE_REDIRECTS];
   },
 };
 

@@ -93,7 +93,8 @@ export async function GET() {
   // Counts split: TR-numbered phases (phase1..phase6) vs Phase 0 pre-TR baselines
   // vs conclusive synthesis. Keeps machine consumers from conflating Phase 0
   // benchmarks with the TR108+ program (the two are catalogued separately for
-  // a reason — phase0 has hasWhitepaper:false and is filtered out of homepage cards).
+  // a reason — phase0 has hasWhitepaper:false and is filtered out of the featured
+  // whitepapers on /reports).
   const phase0Count = reports.filter((r) => r.category === 'phase0').length;
   const trCount = reports.filter(
     (r) => r.category !== 'phase0' && typeof r.category === 'string' && r.category.startsWith('phase'),

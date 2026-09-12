@@ -5,7 +5,7 @@ import tailwindConfig from '../../../tailwind.config';
 
 // Motion ratchet. One curve (ease-standard) and two durations — duration-fast
 // for colour and opacity feedback, duration-base for overlays — replaced ~70
-// `transition: all`, reveal-on-scroll on /home and framer durations up to
+// `transition: all`, reveal-on-scroll sections and framer durations up to
 // 0.7 s. The /show scenes and the galactic landing animate as content, so the
 // transition-all and duration rules exempt them; nothing is exempt from the
 // reveal-on-scroll ban. framer-motion is confined to those two surfaces, so
@@ -148,7 +148,7 @@ describe('motion ratchet', () => {
 
   it('scans the whole component tree', () => {
     // a moved directory must fail loudly rather than pass an empty scan
-    for (const known of ['components/Hero.tsx', 'components/SearchDialog.tsx', 'components/scenes/StreamingLadder.tsx']) {
+    for (const known of ['components/Header.tsx', 'components/SearchDialog.tsx', 'components/scenes/StreamingLadder.tsx']) {
       expect(files).toContain(path.join(SRC, known));
     }
     expect(fs.existsSync(GLOBALS_CSS)).toBe(true);

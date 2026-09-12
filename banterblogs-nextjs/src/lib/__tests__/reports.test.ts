@@ -6,7 +6,6 @@ import {
     classifyReportSlug,
     reportSortRank,
     phaseWhitepaperSlug,
-    phaseRangeLabel,
     assertPhaseSlugsResolved,
 } from '../reports/phases';
 import { discoverReports, discoverReportsUnique } from '../reports/locator';
@@ -111,12 +110,6 @@ describe('phases.ts', () => {
     describe('labels and whitepaper slugs', () => {
         it('builds the conclusive whitepaper slug convention', () => {
             expect(phaseWhitepaperSlug('phase1')).toBe('technical-report-conclusive-phase1-whitepaper');
-        });
-
-        it('renders open-ended ranges with a plus', () => {
-            expect(phaseRangeLabel('phase9')).toBe('TR166+');
-            expect(phaseRangeLabel('phase1')).toBe('TR108–TR116');
-            expect(phaseRangeLabel('phase0')).toBe(''); // slug-pinned phase has no TR range
         });
     });
 

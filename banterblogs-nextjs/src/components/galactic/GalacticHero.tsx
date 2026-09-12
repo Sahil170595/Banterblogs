@@ -43,10 +43,10 @@ export function GalacticHero() {
               <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
             <Link
-              href="/home"
+              href="/papers"
               className="-my-4 py-4 text-foreground/90 transition-colors hover:text-primary"
             >
-              Overview
+              Papers
             </Link>
           </div>
         </div>

@@ -18,8 +18,7 @@ interface CopyButtonProps {
 }
 
 /**
- * Shared copy-to-clipboard control. Extracted from Hero when the tool pages
- * needed the same affordance — one implementation, one feedback duration.
+ * Shared copy-to-clipboard control — one implementation, one feedback duration.
  */
 export function CopyButton({ text, label = 'install command' }: CopyButtonProps) {
   const [state, setState] = useState<CopyState>('idle');
