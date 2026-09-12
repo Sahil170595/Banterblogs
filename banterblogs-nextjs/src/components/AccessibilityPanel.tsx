@@ -108,8 +108,8 @@ export function AccessibilityPanel({ id, open, onClose }: AccessibilityPanelProp
       // stays mounted so the close transition can run; closed = faded out
       // and inert (unfocusable, hidden from assistive tech)
       inert={open ? undefined : true}
-      className={`fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-border/50 bg-background/90 p-6 shadow-2xl backdrop-blur-xl transition-[opacity,transform] duration-200 ease-out sm:right-6 ${
-        open ? 'translate-x-0 scale-100 opacity-100' : 'pointer-events-none translate-x-5 scale-95 opacity-0'
+      className={`fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-50 w-72 max-w-[calc(100vw-2rem)] origin-bottom-right rounded-xl border border-border/50 bg-background/90 p-6 shadow-2xl backdrop-blur-xl transition-[opacity,transform] duration-base ease-standard sm:right-6 ${
+        open ? 'translate-y-0 scale-100 opacity-100' : 'pointer-events-none translate-y-1 scale-[0.98] opacity-0'
       }`}
     >
       <div className="flex items-center justify-between mb-4">
@@ -120,7 +120,7 @@ export function AccessibilityPanel({ id, open, onClose }: AccessibilityPanelProp
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors duration-fast ease-standard"
           aria-label="Close reader settings"
         >
           <X className="h-4 w-4" aria-hidden />
@@ -138,7 +138,7 @@ export function AccessibilityPanel({ id, open, onClose }: AccessibilityPanelProp
             type="button"
             onClick={() => choose(size)}
             aria-pressed={fontSize === size}
-            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors duration-fast ease-standard ${
               fontSize === size
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/70'

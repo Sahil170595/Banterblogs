@@ -39,6 +39,9 @@ export function SearchDialog() {
   const listboxId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+  // What the results panel shows. It outlives close, so the panel fades out
+  // with its results instead of flashing an empty state.
+  const [panelQuery, setPanelQuery] = useState('');
   const [site, setSite] = useState<SiteSearch | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   // Keyed on the query so a new query resets the highlight without an effect.
@@ -67,8 +70,14 @@ export function SearchDialog() {
   }, [isOpen, site, loadFailed]);
 
   // Results are pure functions of (query, index) — derive, don't sync state.
-  const groups = useMemo(() => (site && query.trim() ? site.search(query) : []), [query, site]);
+  const groups = useMemo(() => (site && panelQuery.trim() ? site.search(panelQuery) : []), [panelQuery, site]);
   const options = useMemo(() => groups.flatMap((group) => group.entries), [groups]);
+  const showPanel = isOpen && query.length > 0;
+
+  const updateQuery = (next: string) => {
+    setQuery(next);
+    setPanelQuery(next);
+  };
 
   const open = () => {
     setIsOpen(true);
@@ -86,7 +95,8 @@ export function SearchDialog() {
       close();
       return;
     }
-    if (!options.length) return;
+    // a closing panel still holds its last results; never act on them
+    if (!showPanel || !options.length) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActiveIndex((i: number) => (i + 1) % options.length);
@@ -101,7 +111,6 @@ export function SearchDialog() {
   };
 
   const optionId = (index: number) => `${listboxId}-option-${index}`;
-  const showPanel = isOpen && query.length > 0;
 
   return (
     <div className="relative w-full max-w-md">
@@ -119,18 +128,18 @@ export function SearchDialog() {
           aria-expanded={showPanel}
           aria-controls={listboxId}
           aria-autocomplete="list"
-          aria-activedescendant={activeIndex >= 0 ? optionId(activeIndex) : undefined}
+          aria-activedescendant={showPanel && activeIndex >= 0 ? optionId(activeIndex) : undefined}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => updateQuery(e.target.value)}
           onFocus={open}
           onKeyDown={handleKeyDown}
-          className="w-full rounded-xl border border-input bg-background px-10 py-2.5 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary hover:border-ring [&::-webkit-search-cancel-button]:appearance-none"
+          className="w-full rounded-xl border border-input bg-background px-10 py-2.5 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground transition-colors duration-fast ease-standard focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary hover:border-ring [&::-webkit-search-cancel-button]:appearance-none"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="absolute right-3 top-1/2 -m-1.5 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -m-1.5 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors duration-fast ease-standard"
             aria-label="Clear search"
           >
             <X className="h-4 w-4" />
@@ -138,65 +147,69 @@ export function SearchDialog() {
         )}
       </div>
 
-      {showPanel && (
-        <div className="absolute top-full z-50 mt-2 w-full rounded-xl border border-border bg-background shadow-xl backdrop-blur-sm">
-          <div
-            className="max-h-96 overflow-y-auto overscroll-contain p-2"
-            role="listbox"
-            id={listboxId}
-            aria-label="Search results"
-          >
-            {groups.map((group) => {
-              const Icon = GROUP_ICON[group.type];
-              return (
-                <div key={group.type} role="group" aria-label={GROUP_LABEL[group.type]} className="space-y-1">
-                  <div aria-hidden="true" className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                    {GROUP_LABEL[group.type]}
-                  </div>
-                  {group.entries.map((entry) => {
-                    const index = options.indexOf(entry);
-                    const detail = entry.type === 'report' ? entry.phase : entry.description;
-                    return (
-                      <Link
-                        key={entry.href}
-                        id={optionId(index)}
-                        role="option"
-                        aria-selected={activeIndex === index}
-                        href={entry.href}
-                        className={`flex items-center space-x-3 rounded-md px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${activeIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
-                        onClick={close}
-                      >
-                        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="font-medium">{entry.title}</div>
-                          {detail && <div className="text-xs text-muted-foreground line-clamp-1">{detail}</div>}
-                        </div>
-                      </Link>
-                    );
-                  })}
+      {/* Stays mounted so it can enter and exit on the overlay tokens; closed it
+          is visibility:hidden (after the fade), so unfocusable and unannounced. */}
+      <div
+        className={`absolute top-full z-50 mt-2 w-full origin-top rounded-xl border border-border bg-background shadow-xl backdrop-blur-sm transition-[opacity,transform,visibility] duration-base ease-standard ${
+          showPanel ? 'visible translate-y-0 scale-100 opacity-100' : 'pointer-events-none invisible -translate-y-1 scale-[0.98] opacity-0'
+        }`}
+      >
+        <div
+          className="max-h-96 overflow-y-auto overscroll-contain p-2"
+          role="listbox"
+          id={listboxId}
+          aria-label="Search results"
+        >
+          {groups.map((group) => {
+            const Icon = GROUP_ICON[group.type];
+            return (
+              <div key={group.type} role="group" aria-label={GROUP_LABEL[group.type]} className="space-y-1">
+                <div aria-hidden="true" className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                  {GROUP_LABEL[group.type]}
                 </div>
-              );
-            })}
-
-            {loadFailed ? (
-              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                Search is unavailable right now. Close it and try again.
+                {group.entries.map((entry) => {
+                  const index = options.indexOf(entry);
+                  const detail = entry.type === 'report' ? entry.phase : entry.description;
+                  return (
+                    <Link
+                      key={entry.href}
+                      id={optionId(index)}
+                      role="option"
+                      aria-selected={activeIndex === index}
+                      href={entry.href}
+                      className={`flex items-center space-x-3 rounded-md px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${activeIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
+                      onClick={close}
+                    >
+                      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="font-medium">{entry.title}</div>
+                        {detail && <div className="text-xs text-muted-foreground line-clamp-1">{detail}</div>}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-            ) : !site ? (
-              <div className="px-2 py-4 text-center text-sm text-muted-foreground">Loading…</div>
-            ) : (
-              options.length === 0 && (
-                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  No results for &ldquo;{query}&rdquo;
-                </div>
-              )
-            )}
-          </div>
-          <p role="status" className="sr-only">
-            {site ? `${options.length} results` : ''}
-          </p>
+            );
+          })}
+
+          {loadFailed ? (
+            <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+              Search is unavailable right now. Close it and try again.
+            </div>
+          ) : !site ? (
+            <div className="px-2 py-4 text-center text-sm text-muted-foreground">Loading…</div>
+          ) : (
+            options.length === 0 && (
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                No results for &ldquo;{panelQuery}&rdquo;
+              </div>
+            )
+          )}
         </div>
-      )}
+        <p role="status" className="sr-only">
+          {site ? `${options.length} results` : ''}
+        </p>
+      </div>
 
       {/* Overlay to close search (pointer convenience; Escape handles keyboard) */}
       {isOpen && <div className="fixed inset-0 z-40" aria-hidden="true" onClick={close} />}

@@ -295,7 +295,7 @@ export default function WorkPage() {
               href="https://github.com/Sahil170595"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/60 hover:text-primary"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
             >
               <Github className="h-4 w-4" />
               GitHub
@@ -304,7 +304,7 @@ export default function WorkPage() {
               href="https://linkedin.com/in/sahilkadadekar"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/60 hover:text-primary"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
             >
               <Linkedin className="h-4 w-4" />
               LinkedIn
@@ -313,14 +313,14 @@ export default function WorkPage() {
               href="https://orcid.org/0000-0002-7139-1251"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/60 hover:text-primary"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
             >
               <ExternalLink className="h-4 w-4" />
               ORCID
             </Link>
             <Link
               href="/papers"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:bg-primary/90"
             >
               Papers
               <ArrowRight className="h-4 w-4" />
@@ -339,7 +339,7 @@ export default function WorkPage() {
           {RESEARCH.map((item) => {
             const external = item.href.startsWith('http');
             return (
-              <div key={item.href} className="group signal-panel p-5 hover:border-primary/40 transition-all">
+              <div key={item.href} className="group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="min-w-0">
                     <Link
@@ -461,26 +461,26 @@ export default function WorkPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/papers"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:bg-primary/90"
           >
             Papers
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/reports"
-            className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary/5"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary hover:bg-primary/5"
           >
             Research Archive
           </Link>
           <Link
             href="/platform"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
           >
             Platform
           </Link>
           <Link
             href="/about"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
           >
             About
           </Link>

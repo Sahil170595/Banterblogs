@@ -132,6 +132,20 @@ describe('reader settings panel', () => {
     expect(rootFontSize()).toBe('');
   });
 
+  it('enters and exits on the overlay tokens: a fade, a 98% scale and a 4px rise', async () => {
+    render(<ReaderSettingsLauncher />);
+    const { panel } = await openPanel();
+    const classes = () => panel.className.split(/\s+/);
+
+    expect(classes()).toEqual(
+      expect.arrayContaining(['transition-[opacity,transform]', 'duration-base', 'ease-standard', 'opacity-100', 'scale-100', 'translate-y-0']),
+    );
+
+    fireEvent.keyDown(panel, { key: 'Escape' });
+
+    expect(classes()).toEqual(expect.arrayContaining(['opacity-0', 'scale-[0.98]', 'translate-y-1', 'pointer-events-none']));
+  });
+
   it('closes on Escape and hands focus back to the launcher', async () => {
     render(<ReaderSettingsLauncher />);
     const { launcher, panel } = await openPanel();
