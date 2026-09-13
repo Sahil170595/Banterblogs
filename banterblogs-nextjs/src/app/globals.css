@@ -295,6 +295,59 @@ html {
   }
 }
 
+/* motion primitives. Durations and curves come from the Tailwind motion
+   tokens; everything that moves is scoped to html[data-motion="on"], which
+   the pre-paint gate (components/motion/prePaint.ts) sets only when
+   JavaScript runs and the visitor allows motion. */
+:root {
+  --motion-micro: theme('transitionDuration.micro');
+  --motion-fast: theme('transitionDuration.fast');
+  --motion-hover: theme('transitionDuration.hover');
+  --motion-base: theme('transitionDuration.base');
+  --motion-reveal: theme('transitionDuration.reveal');
+  --motion-entrance: theme('transitionDuration.entrance');
+  --ease-standard: theme('transitionTimingFunction.standard');
+  --ease-out-quad: theme('transitionTimingFunction.out-quad');
+  --ease-entrance: theme('transitionTimingFunction.entrance');
+  /* stagger steps: items entering together, lines of a heading */
+  --stagger-item: 50ms;
+  --stagger-line: 100ms;
+  /* how far a revealed item rises into place */
+  --reveal-rise: 8px;
+}
+
+/* <Reveal> (components/motion/Reveal.tsx): only content below the fold at
+   mount is held pending; the shared observer marks it shown once, with
+   --reveal-i staggering a batch that enters together. */
+html[data-motion="on"] [data-reveal] {
+  transition:
+    opacity var(--motion-reveal) var(--ease-out-quad),
+    transform var(--motion-reveal) var(--ease-out-quad);
+  transition-delay: calc(var(--reveal-i, 0) * var(--stagger-item));
+}
+
+html[data-motion="on"] [data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(var(--reveal-rise));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+@media print {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+/* end motion primitives */
+
 /* view transitions: route transitions on the reading path. React names the
    boundaries in components/reports/ReportTransitions.tsx and hands them the
    classes below; timing comes from the Tailwind motion tokens. */

@@ -20,17 +20,25 @@ const config: Config = {
       },
     },
     extend: {
-      // Custom animation/keyframes were removed 2026-07-04: all 48 utilities had
-      // zero usages in src (hover motion is transition-based; scenes use framer).
-      // Motion tokens (pinned by motion.test.ts): one curve, two durations.
-      // fast = colour, border, background and opacity feedback; base =
-      // overlays and route transitions.
+      // Motion tokens v2 (pinned by motion.test.ts; globals.css mirrors them as
+      // --motion-* / --ease-* for CSS-driven motion). micro = press feedback;
+      // fast = colour, border and opacity feedback; hover = hover-in depth;
+      // base = hover-out, overlays, route transitions, the tab indicator;
+      // reveal = scroll reveals and secondary entrance steps; entrance = a
+      // page title's first-load rise. out-quad eases things arriving;
+      // entrance is the slower title curve.
       transitionDuration: {
+        micro: "100ms",
         fast: "150ms",
+        hover: "160ms",
         base: "250ms",
+        reveal: "420ms",
+        entrance: "800ms",
       },
       transitionTimingFunction: {
         standard: "cubic-bezier(0.4, 0, 0.2, 1)",
+        "out-quad": "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+        entrance: "cubic-bezier(0.25, 0.1, 0.25, 1)",
       },
       colors: {
         background: "hsl(var(--background))",
