@@ -370,7 +370,10 @@ html {
    the bar, with the ember rule, fade in over the first
    --header-surface-range of scroll on a scroll timeline. Only the layers'
    opacity animates, never the blur radius. Without scroll timelines, or with
-   motion reduced, the bar is simply solid. */
+   motion reduced, the bar is simply solid. The header itself must not be a
+   backdrop root (no view-transition-name, filter, opacity, mask...), or the
+   blur reaches nothing behind it; its view-transition name sits on a frame
+   inside it. */
 :root {
   --header-surface-range: 64px;
 }

@@ -15,6 +15,11 @@ vi.mock('../SearchDialog', () => ({
   SearchDialog: () => null,
 }));
 
+// CSS properties that make an element a backdrop root (Filter Effects 2), so a
+// backdrop-filter inside it blurs nothing behind it. Chrome includes an
+// element with a view-transition-name.
+const BACKDROP_ROOT_TRIGGERS = ['view-transition-name', 'filter', 'opacity', 'mask', 'clip-path', 'backdrop-filter', 'mix-blend-mode', 'will-change'];
+
 describe('header landing wordmark', () => {
   beforeEach(() => {
     pathname.current = '/';
@@ -38,10 +43,13 @@ describe('header landing wordmark', () => {
 });
 
 describe('header across route transitions', () => {
-  it('carries its own view-transition name, so page slides never move it', () => {
+  it('names the frame inside the header, so page slides never move the bar and the header stays free to blur', () => {
     for (const route of ['/', '/reports', '/reports/technical-report-138']) {
       pathname.current = route;
-      expect(renderToStaticMarkup(<Header />), route).toMatch(/^<header[^>]*style="view-transition-name:site-header"/);
+      const html = renderToStaticMarkup(<Header />);
+      // the header's own tag carries no name; its first child does
+      expect(html, route).toMatch(/^<header(?![^>]*view-transition-name)[^>]*><div style="view-transition-name:site-header"/);
+      expect(html.match(/view-transition-name:site-header/g), route).toHaveLength(1);
     }
   });
 
@@ -79,10 +87,22 @@ describe('header surface on scroll', () => {
 
   it('keeps its height fixed and needs no JavaScript scroll state', () => {
     const header = render(<Header />).container.querySelector('header')!;
+    const frame = header.firstElementChild!;
 
-    expect(header.className.split(/\s+/)).toEqual(expect.arrayContaining(['border-b', 'border-transparent']));
-    expect(header.firstElementChild!.className.split(/\s+/)).toContain('h-[72px]');
+    // the named frame carries the transparent rule, so the group covers the whole bar
+    expect(frame.className.split(/\s+/)).toEqual(expect.arrayContaining(['border-b', 'border-transparent']));
+    expect(frame.firstElementChild!.className.split(/\s+/)).toContain('h-[72px]');
     expect(header.hasAttribute('data-scrolled')).toBe(false);
+  });
+
+  it('blurs the page through the glass layer: nothing makes the header a backdrop root', () => {
+    const header = render(<Header />).container.querySelector('header')!;
+
+    for (const trigger of BACKDROP_ROOT_TRIGGERS) {
+      expect(header.getAttribute('style') ?? '', trigger).not.toContain(trigger);
+      // rules on the header element itself, not its ::before and ::after layers
+      expect(CSS, trigger).not.toMatch(new RegExp(`\\.site-header\\s*(?:,[^{]*)?\\{[^}]*(?:^|[;{\\s])${trigger}\\s*:`));
+    }
   });
 
   it('fades a glass layer in over the first 64px on a scroll timeline, opacity only, for visitors who allow motion', () => {
