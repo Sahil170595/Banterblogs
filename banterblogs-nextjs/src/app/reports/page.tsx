@@ -1,11 +1,13 @@
+import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
-import { ReportTabs, type ReportTabGroup } from '@/components/reports/ReportTabs';
+import { Reveal } from '@/components/motion/Reveal';
+import { ReportTabs, type ReportTabEntry, type ReportTabGroup } from '@/components/reports/ReportTabs';
 import { DirectionalPage, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
-import { PHASE_DEFINITIONS, classifyReportSlug, phaseWhitepaperSlug } from '@/lib/reports/phases';
+import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · papers under peer review and an accepted ICML 2026 workshop paper.`;
@@ -54,14 +56,86 @@ const PHASE_META: Record<string, { label: string; description: string; order: nu
   return meta;
 })();
 
-// Featured reports pinned to the top — Phase N whitepaper entry points. Skip phases
-// without a whitepaper (Phase 0 baselines) — they get their own tab instead.
-// Uses phaseWhitepaperSlug() so the URL convention is owned by phases.ts.
-const FEATURED_REPORTS: { slug: string; label: string; summary: string }[] = PHASE_DEFINITIONS.filter((p) => p.hasWhitepaper).map((p) => ({
+// The curated synthesis set that opens the All tab: the program compendium,
+// then each phase's decision whitepaper. Phases without a whitepaper (the
+// Phase 0 baselines, the in-flight phases) have no entry; phaseWhitepaperSlug()
+// owns the URL convention.
+const COMPENDIUM_SLUG = 'compendium';
+const PHASE_WHITEPAPERS = PHASE_DEFINITIONS.filter((p) => p.hasWhitepaper).map((p) => ({
   slug: phaseWhitepaperSlug(p.key),
   label: `Phase ${p.number} Whitepaper`,
   summary: p.featuredSummary,
 }));
+
+const KEY_FINDINGS: { number: string; finding: string; source: { label: string; slug: string }[] }[] = [
+  {
+    number: '100% ASR',
+    finding: 'Q2_K collapses refusals on the worst-affected model — 100% attack success on qwen2.5-1.5b. Not uniform: effects vary by model.',
+    source: [{ label: 'TR139', slug: 'technical-report-139' }],
+  },
+  {
+    number: 'p = 0.942',
+    finding: 'Alignment type does not predict batch-induced safety fragility (RLHF, SFT, DPO, distilled — none differ).',
+    source: [{ label: 'TR141', slug: 'technical-report-141' }],
+  },
+  {
+    number: '25pp',
+    finding: 'Backend migration moved safety 7–25pp, peaking at 23–25pp on Llama 3.2 1B. Chat template divergence, not the framework.',
+    source: [{ label: 'TR136', slug: 'technical-report-136' }],
+  },
+  {
+    number: '13.9×',
+    finding: 'Quality metrics are not safety proxies. Safety degraded 13.9× faster than quality on llama3.2-1b at Q3_K_S.',
+    source: [{ label: 'TR142', slug: 'technical-report-142' }],
+  },
+  {
+    number: '99.4%',
+    finding: 'Dual Ollama reached 99.4% coordination efficiency on the best config, and cut contention to near zero. Architectural fix, not code fix.',
+    source: [{ label: 'TR114', slug: 'technical-report-114' }],
+  },
+  {
+    number: '+74%',
+    finding: 'GPU memory bandwidth is the multi-agent bottleneck — not the serving stack. Overturned the TR130 conclusion.',
+    source: [{ label: 'TR131', slug: 'technical-report-131' }],
+  },
+  {
+    number: '2.25×',
+    finding: 'Continuous batching delivers 2.25× throughput at N=8 via 77-80% kernel reduction.',
+    source: [{ label: 'TR132', slug: 'technical-report-132' }],
+  },
+  {
+    number: 'Q4_K_M',
+    finding: 'The safe GGUF default — established across 5 models, extended to 7 in v2. 30-67% cost savings.',
+    source: [{ label: 'TR125', slug: 'technical-report-125' }],
+  },
+  {
+    number: 'NULL',
+    finding: 'FP8 KV-cache produces no Holm-significant safety effect across 24K paired records on 3 models. Not pre-approved, not pre-banned — workload-specific paired eval required.',
+    source: [{ label: 'TR145', slug: 'technical-report-145' }],
+  },
+  {
+    number: 'κ = 0.69',
+    finding: 'Cross-LLM judge agreement is "triangulate" — single-judge labels are insufficient for safety classification. 68K judge rows over the TR145 safety subset. Plus: safety-specialist judges measure a different axis than general LLMs.',
+    source: [{ label: 'TR148', slug: 'technical-report-148' }],
+  },
+];
+
+// Each heading line rises on its own in the first-load entrance (globals.css);
+// inline blocks, so a line wraps inside itself on a phone.
+const TITLE_LINES = ['Edge LLM Inference', 'Under Real-World Constraints'];
+
+// a wrapping phone title never breaks "Real-World" at its hyphen
+function keepHyphenatedWhole(line: string) {
+  return line.split(/(\S+-\S+)/).map((part, index) =>
+    index % 2 ? (
+      <span key={part} className="whitespace-nowrap">
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
+}
 
 export default async function ReportsIndex() {
   const reportsEnabled = process.env.REPORTS_ENABLED !== 'false';
@@ -85,7 +159,7 @@ export default async function ReportsIndex() {
 
   for (const report of reports) {
     const cat = classifyReportSlug(report.slug);
-    // Phase whitepapers are the FEATURED_REPORTS cards above — skipping them
+    // Phase whitepapers lead the All tab as synthesis cards — skipping them
     // here keeps them out of the phase tabs and off a second, duplicate list.
     if (cat === 'whitepaper') continue;
     if (cat === 'conclusive' || cat === 'appendix') {
@@ -108,238 +182,130 @@ export default async function ReportsIndex() {
     .sort((a, b) => a._order - b._order)
     .map(({ _order, ...rest }) => rest);
 
-  const featuredSlugs = FEATURED_REPORTS.map((f) => f.slug);
+  const compendium = readReportMeta(COMPENDIUM_SLUG);
+  const synthesis: ReportTabEntry[] = [
+    { slug: COMPENDIUM_SLUG, title: compendium?.title ?? toHumanTitle(COMPENDIUM_SLUG), description: compendium?.description ?? '' },
+    ...PHASE_WHITEPAPERS.map((w) => ({ slug: w.slug, title: readReportMeta(w.slug)?.title ?? w.label, description: w.summary })),
+  ];
+
+  // the newest technical report: the highest TR number on disk
+  let latestSlug: string | undefined;
+  let latestTR = -1;
+  for (const report of technicalGroups.flatMap((group) => group.reports)) {
+    const tr = extractTRNumber(report.slug);
+    if (tr !== null && tr > latestTR) {
+      latestTR = tr;
+      latestSlug = report.slug;
+    }
+  }
 
   return (
-    <DirectionalPage className="container py-16">
-      {/* ── Hero ── */}
-      <div className="signal-panel-strong mb-10 p-8 md:p-12">
-        <div className="space-y-5 w-full">
-          <span className="signal-pill">Independent Research</span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Edge LLM Inference Under Real-World Constraints
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            How fast can local inference get — and how safe is it at the edge? This research program
-            answers both questions with CUDA event timing and controlled safety evaluations across
-            model loading, quantization, TensorRT compilation, KV cache optimization, multi-agent coordination,
-            and cross-backend safety consistency.
-          </p>
-          <p className="text-sm text-muted-foreground/80">
-            Independent research by <span className="text-foreground font-medium">Sahil Kadadekar</span>
-          </p>
-        </div>
-      </div>
-
-      {/* ── Stats Ribbon ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-16">
-        {[
-          { value: MEASUREMENTS.DISPLAY, label: 'Research Measurements' },
-          {
-            value: REPORTS.DISPLAY,
-            label: 'Technical Reports',
-            // 47 distinct TR numbers + 3 pre-series baselines + 5 revised
-            // versions filed as their own reports (TR117 multi-agent,
-            // TR138 Study D, TR164 V3/V4/V5)
-            note: '47 TR numbers · 3 baselines · versions counted',
-          },
-          { value: String(FEATURED_REPORTS.length), label: 'Synthesis Whitepapers' },
-        ].map((stat) => (
-          <div key={stat.label} className="signal-panel p-5 text-center">
-            <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>
-            <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</div>
-            {stat.note && (
-              <div className="mt-1.5 text-[10px] leading-snug text-muted-foreground/70">{stat.note}</div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* ── Start Here: Featured Research ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-primary" />
-          Start Here
-        </h2>
-
-        {/* Compendium — hero card */}
-        <Link
-          href="/reports/compendium"
-          transitionTypes={[NAV_FORWARD]}
-          className="block group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-muted/20 p-8 md:p-10 mb-6 hover:border-primary/50 transition-[border-color,box-shadow] duration-fast ease-standard hover:shadow-2xl hover:shadow-primary/5"
-        >
-          <div className="relative z-10">
-            <div className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">Whitepaper</div>
-            <h3 className="text-2xl md:text-4xl font-bold mb-4 group-hover:text-primary transition-colors">
-              Chimeraforge: High-Performance LLM Agent Orchestration
-            </h3>
-            <p className="text-base md:text-lg text-muted-foreground w-full mb-6 leading-relaxed">
-              Rust vs. Python for production AI orchestration. A hybrid architecture and &quot;Dual Ollama&quot; pattern
-              achieve 58% latency reduction and near-zero contention.
-            </p>
-            <span className="inline-flex items-center gap-2 text-primary font-medium">
-              Read the Whitepaper <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        </Link>
-
-        {/* Featured report cards — grid columns scale with FEATURED_REPORTS length so a future Phase 7 doesn't orphan a card. */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {FEATURED_REPORTS.map((feat) => (
-            <Link
-              key={feat.slug}
-              href={`/reports/${feat.slug}`}
-              transitionTypes={[NAV_FORWARD]}
-              className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:border-primary/40 hover:bg-muted/20 transition-colors"
-            >
-              <div className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-2">
-                {feat.label}
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                {feat.summary}
-              </p>
-              <span className="text-xs text-primary font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                Read report <span>&rarr;</span>
+    <DirectionalPage className="container pb-24 pt-6 md:pt-10">
+      {/* ── Head: title, one-line intro, the program in three numbers ── */}
+      <div>
+        <h1 className="text-[1.75rem] font-semibold leading-[1.08] tracking-[-0.025em] sm:text-4xl md:text-5xl md:leading-[1.05]">
+          {TITLE_LINES.map((line, index) => (
+            <span key={line}>
+              {index > 0 && ' '}
+              <span className="entrance-line inline-block" style={{ '--line': index } as CSSProperties}>
+                {keepHyphenatedWhole(line)}
               </span>
-            </Link>
+            </span>
           ))}
-        </div>
+        </h1>
+        <p className="entrance-intro mt-3 max-w-4xl text-[0.9375rem] leading-relaxed text-muted-foreground md:mt-4 md:text-[1.0625rem]">
+          How fast local inference can get, and how safe it stays at the edge. Independent research by{' '}
+          <span className="text-foreground">Sahil Kadadekar</span>.
+        </p>
+        <ul aria-label="The research program in numbers" className="entrance-intro mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground">
+          <li>
+            <span className="font-semibold tabular-nums text-foreground">{MEASUREMENTS.SHORT}</span> measurements
+          </li>
+          {/* the qualifiers drop on a phone so the row stays one line */}
+          <li>
+            <span className="font-semibold tabular-nums text-foreground">{REPORTS.DISPLAY}</span>{' '}
+            <span className="hidden sm:inline">technical </span>reports
+          </li>
+          <li>
+            <span className="font-semibold tabular-nums text-foreground">{PHASE_WHITEPAPERS.length}</span>{' '}
+            <span className="hidden sm:inline">synthesis </span>whitepapers
+          </li>
+          {/* 47 distinct TR numbers + 3 pre-series baselines + 5 revised
+              versions filed as their own reports (TR117 multi-agent, TR138
+              Study D, TR164 V3/V4/V5) */}
+          <li className="hidden text-muted-foreground/70 md:block">47 TR numbers · 3 baselines · versions counted</li>
+        </ul>
+      </div>
+
+      {/* ── Synthesis and technical reports, tabbed by phase ── */}
+      <section aria-labelledby="archive-heading" className="mt-6 md:mt-8">
+        <h2 id="archive-heading" className="sr-only">
+          Synthesis and technical reports
+        </h2>
+        <ReportTabs groups={technicalGroups} synthesis={synthesis} latestSlug={latestSlug} accentGroupKey={technicalGroups[0]?.key} />
       </section>
 
       {/* ── Key Findings ── */}
-      <section className="mb-20">
-        <div className="mb-8 border-b border-border/40 pb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Key Findings
+      <section aria-labelledby="findings-heading" className="mt-28">
+        <div className="max-w-2xl">
+          <h2 id="findings-heading" className="text-2xl font-semibold tracking-[-0.02em]">
+            Key findings
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground/70">
+          <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
             Concrete results pulled from the published reports. Numbers, not narrative.
           </p>
         </div>
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              number: '100% ASR',
-              finding: 'Q2_K collapses refusals on the worst-affected model — 100% attack success on qwen2.5-1.5b. Not uniform: effects vary by model.',
-              source: [{ label: 'TR139', slug: 'technical-report-139' }],
-            },
-            {
-              number: 'p = 0.942',
-              finding: 'Alignment type does not predict batch-induced safety fragility (RLHF, SFT, DPO, distilled — none differ).',
-              source: [{ label: 'TR141', slug: 'technical-report-141' }],
-            },
-            {
-              number: '25pp',
-              finding: 'Backend migration moved safety 7–25pp, peaking at 23–25pp on Llama 3.2 1B. Chat template divergence, not the framework.',
-              source: [{ label: 'TR136', slug: 'technical-report-136' }],
-            },
-            {
-              number: '13.9×',
-              finding: 'Quality metrics are not safety proxies. Safety degraded 13.9× faster than quality on llama3.2-1b at Q3_K_S.',
-              source: [{ label: 'TR142', slug: 'technical-report-142' }],
-            },
-            {
-              number: '99.4%',
-              finding: 'Dual Ollama reached 99.4% coordination efficiency on the best config, and cut contention to near zero. Architectural fix, not code fix.',
-              source: [{ label: 'TR114', slug: 'technical-report-114' }],
-            },
-            {
-              number: '+74%',
-              finding: 'GPU memory bandwidth is the multi-agent bottleneck — not the serving stack. Overturned the TR130 conclusion.',
-              source: [{ label: 'TR131', slug: 'technical-report-131' }],
-            },
-            {
-              number: '2.25×',
-              finding: 'Continuous batching delivers 2.25× throughput at N=8 via 77-80% kernel reduction.',
-              source: [{ label: 'TR132', slug: 'technical-report-132' }],
-            },
-            {
-              number: 'Q4_K_M',
-              finding: 'The safe GGUF default — established across 5 models, extended to 7 in v2. 30-67% cost savings.',
-              source: [{ label: 'TR125', slug: 'technical-report-125' }],
-            },
-            {
-              number: 'NULL',
-              finding: 'FP8 KV-cache produces no Holm-significant safety effect across 24K paired records on 3 models. Not pre-approved, not pre-banned — workload-specific paired eval required.',
-              source: [{ label: 'TR145', slug: 'technical-report-145' }],
-            },
-            {
-              number: 'κ = 0.69',
-              finding: 'Cross-LLM judge agreement is "triangulate" — single-judge labels are insufficient for safety classification. 68K judge rows over the TR145 safety subset. Plus: safety-specialist judges measure a different axis than general LLMs.',
-              source: [{ label: 'TR148', slug: 'technical-report-148' }],
-            },
-          ].map((f) => (
-            <article key={f.number} className="signal-panel p-5">
-              <div className="font-mono text-2xl md:text-3xl font-bold text-primary mb-3 tabular-nums">
-                {f.number}
-              </div>
-              <p className="text-sm text-foreground leading-relaxed mb-4">{f.finding}</p>
-              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {KEY_FINDINGS.map((f) => (
+            <Reveal as="article" key={f.number} className="flex flex-col rounded-xl bg-card/70 p-5">
+              <div className="font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{f.number}</div>
+              <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{f.finding}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs">
                 {f.source.map((s) => (
                   <Link
                     key={s.slug}
                     href={`/reports/${s.slug}`}
                     transitionTypes={[NAV_FORWARD]}
-                    className="rounded-full border border-border/60 px-2 py-0.5 text-muted-foreground transition hover:border-primary/60 hover:text-primary"
+                    className="rounded-full bg-foreground/[0.06] px-2 py-0.5 text-muted-foreground transition-colors duration-fast ease-standard hover:bg-primary/15 hover:text-primary"
                   >
                     {s.label}
                   </Link>
                 ))}
               </div>
-            </article>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* ── Conclusive Reports ── */}
       {conclusive.length > 0 && (
-        <section className="mb-20">
-          <div className="mb-8 border-b border-border/40 pb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Conclusive Reports &amp; Appendices
+        <section aria-labelledby="conclusive-heading" className="mt-24">
+          <div className="max-w-2xl">
+            <h2 id="conclusive-heading" className="text-2xl font-semibold tracking-[-0.02em]">
+              Conclusive reports and appendices
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground/70">
+            <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
               Dissertation-style synthesis documents consolidating findings across multiple technical reports.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <ul className="mt-8 grid gap-x-8 gap-y-1 md:grid-cols-2 xl:grid-cols-3">
             {conclusive.map((r) => (
-              <Link
-                key={r.slug}
-                href={`/reports/${r.slug}`}
-                transitionTypes={[NAV_FORWARD]}
-                className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
-              >
-                <ReportTitleTransition slug={r.slug}>
-                  <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug mb-3">
-                    {r.title}
-                  </div>
-                </ReportTitleTransition>
-                {r.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">{r.description}</p>
-                )}
-                <span className="text-xs text-muted-foreground flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Read <span>&rarr;</span>
-                </span>
-              </Link>
+              <Reveal as="li" key={r.slug}>
+                <Link
+                  href={`/reports/${r.slug}`}
+                  transitionTypes={[NAV_FORWARD]}
+                  className="-mx-3 block rounded-lg px-3 py-3 transition-colors duration-fast ease-standard hover:bg-card/70"
+                >
+                  <ReportTitleTransition slug={r.slug}>
+                    <div className="text-[0.9375rem] font-medium leading-snug text-foreground">{r.title}</div>
+                  </ReportTitleTransition>
+                  {r.description && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{r.description}</p>}
+                </Link>
+              </Reveal>
             ))}
-          </div>
+          </ul>
         </section>
       )}
-
-      {/* ── Technical Reports (Tabbed by Phase) ── */}
-      <section>
-        <div className="mb-8 border-b border-border/40 pb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Technical Reports
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground/70">
-            Individual research reports with raw data, methodology, and findings.
-          </p>
-        </div>
-        <ReportTabs groups={technicalGroups} featuredSlugs={featuredSlugs} />
-      </section>
     </DirectionalPage>
   );
 }

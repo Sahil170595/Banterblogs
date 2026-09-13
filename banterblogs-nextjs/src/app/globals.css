@@ -320,9 +320,10 @@ html {
 }
 
 /* <Reveal> (components/motion/Reveal.tsx): only content below the fold at
-   mount is held pending; the shared observer marks it shown once, with
-   --reveal-i staggering a batch that enters together. */
-html[data-motion="on"] [data-reveal] {
+   mount is held pending, instantly; the shared observer marks it shown
+   once, and only that change transitions, with --reveal-i staggering a
+   batch that enters together. */
+html[data-motion="on"] [data-reveal="shown"] {
   transition:
     opacity var(--motion-reveal) var(--ease-out-quad),
     transform var(--motion-reveal) var(--ease-out-quad);
@@ -485,6 +486,90 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
   animation-play-state: running;
 }
 
+/* The archive's first-load entrance (reports/page.tsx, ReportTabs.tsx), only
+   while the pre-paint gate holds the entrance window open on a full load of
+   /reports: the title lines rise 20% out of a blur, 100ms apart; intro and
+   stats follow at 150ms, the tabs at 200ms, the first cards 60ms apart. The
+   title moves transform and filter only, never opacity, so it paints on the
+   first frame (it is the page's LCP element). Settled within 1s. */
+:root {
+  --entrance-intro-delay: 150ms;
+  --entrance-tabs-delay: 200ms;
+  --entrance-cards-delay: 260ms;
+  --entrance-card-step: 60ms;
+  --entrance-blur: 8px;
+}
+
+@keyframes entrance-line {
+  from {
+    transform: translateY(20%);
+    filter: blur(var(--entrance-blur));
+  }
+}
+
+@keyframes entrance-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--reveal-rise));
+  }
+}
+
+html[data-motion="on"][data-entrance="/reports"] .entrance-line {
+  animation: entrance-line var(--motion-entrance) var(--ease-entrance) both;
+  animation-delay: calc(var(--line, 0) * var(--stagger-line));
+}
+
+html[data-motion="on"][data-entrance="/reports"] .entrance-intro {
+  animation: entrance-rise var(--motion-reveal) var(--ease-out-quad) var(--entrance-intro-delay) both;
+}
+
+html[data-motion="on"][data-entrance="/reports"] .entrance-tabs {
+  animation: entrance-rise var(--motion-reveal) var(--ease-out-quad) var(--entrance-tabs-delay) both;
+}
+
+html[data-motion="on"][data-entrance="/reports"] [data-entrance-card] {
+  animation: entrance-rise var(--motion-reveal) var(--ease-out-quad) both;
+  animation-delay: calc(var(--entrance-cards-delay) + var(--entrance-i, 0) * var(--entrance-card-step));
+}
+
+/* Archive tabs (ReportTabs.tsx): one underline glides between tabs over
+   base, transform only; the grid cross-fades in over the hover token after
+   a tab the visitor chose. Server and no-JS markup show a static underline
+   in the active tab until the indicator is placed. */
+[data-tab-indicator] {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 2px;
+  transform-origin: left center;
+  background-color: hsl(var(--primary));
+  opacity: 0;
+  pointer-events: none;
+}
+
+[data-indicator] [data-tab-indicator] {
+  opacity: 1;
+}
+
+[data-indicator] .tab-underline {
+  visibility: hidden;
+}
+
+html[data-motion="on"] [data-indicator="live"] [data-tab-indicator] {
+  transition: transform var(--motion-base) var(--ease-standard);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+  }
+}
+
+html[data-motion="on"] [data-tab-panel][data-switched] {
+  animation: panel-in var(--motion-hover) var(--ease-standard) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] {
     opacity: 1 !important;
@@ -499,6 +584,18 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
 
   .live-dot::after {
     animation: none !important;
+  }
+
+  .entrance-line,
+  .entrance-intro,
+  .entrance-tabs,
+  [data-entrance-card],
+  [data-tab-panel] {
+    animation: none !important;
+  }
+
+  [data-tab-indicator] {
+    transition: none !important;
   }
 }
 
