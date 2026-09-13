@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Header } from '../Header';
 
 const { pathname } = vi.hoisted(() => ({ pathname: { current: '/' } }));
@@ -61,6 +61,77 @@ describe('header across route transitions', () => {
     // but does not render it inside the transition tree.
     expect(css).toMatch(/::view-transition-group\(site-header\)\s*\{[^}]*background-color:\s*hsl\(var\(--background\)\)/);
     expect(css).not.toMatch(/::view-transition-(group|new)\(site-header\)\s*\{[^}]*backdrop-filter/);
+  });
+});
+
+describe('header scroll state', () => {
+  const scrollTo = (y: number) =>
+    act(() => {
+      Object.defineProperty(window, 'scrollY', { configurable: true, value: y });
+      fireEvent.scroll(window);
+    });
+  const classes = (el: Element) => el.className.split(/\s+/);
+
+  beforeEach(() => {
+    pathname.current = '/reports';
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
+  });
+
+  it('blends with the page at the top of an interior page', () => {
+    const header = render(<Header />).container.querySelector('header')!;
+
+    expect(header.dataset.scrolled).toBe('false');
+    expect(classes(header)).toEqual(expect.arrayContaining(['bg-transparent', 'border-transparent']));
+  });
+
+  it('turns solid with a hairline once scrolled past 8px, and blends again at the top', () => {
+    const header = render(<Header />).container.querySelector('header')!;
+
+    scrollTo(8);
+    expect(header.dataset.scrolled).toBe('false');
+    scrollTo(9);
+    expect(header.dataset.scrolled).toBe('true');
+    expect(classes(header)).toEqual(expect.arrayContaining(['bg-background/80', 'border-border/60']));
+    expect(classes(header)).not.toContain('bg-transparent');
+    scrollTo(0);
+    expect(header.dataset.scrolled).toBe('false');
+  });
+
+  it('keeps its height in both states: the border is always drawn, only its colour changes', () => {
+    const { container } = render(<Header />);
+    const header = container.querySelector('header')!;
+    const bar = header.firstElementChild!;
+
+    for (const y of [0, 1500]) {
+      scrollTo(y);
+      expect(classes(header), `scrollY ${y}`).toContain('border-b');
+      expect(classes(bar), `scrollY ${y}`).toContain('h-[72px]');
+    }
+  });
+
+  it('changes over the hover token and animates colour only', () => {
+    const header = render(<Header />).container.querySelector('header')!;
+
+    expect(classes(header)).toEqual(
+      expect.arrayContaining(['transition-[background-color,border-color]', 'duration-hover', 'ease-out-quad']),
+    );
+  });
+
+  it('renders blended on the server, before any scroll is known', () => {
+    expect(renderToStaticMarkup(<Header />)).toMatch(/^<header[^>]*data-scrolled="false"/);
+  });
+
+  it('leaves the landing header floating and transparent however far the page scrolls', () => {
+    pathname.current = '/';
+    const header = render(<Header />).container.querySelector('header')!;
+    scrollTo(1500);
+
+    expect(header.hasAttribute('data-scrolled')).toBe(false);
+    expect(classes(header)).toEqual(expect.arrayContaining(['fixed', 'bg-transparent']));
   });
 });
 
