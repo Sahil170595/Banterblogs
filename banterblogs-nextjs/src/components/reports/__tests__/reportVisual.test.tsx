@@ -1,10 +1,14 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { discoverReportsUnique } from '@/lib/reports/locator';
-import { PHASE_DEFINITIONS, phaseWhitepaperSlug, type PhaseKey } from '@/lib/reports/phases';
+import { PHASE_DEFINITIONS, classifyReportSlug, phaseWhitepaperSlug, type PhaseKey } from '@/lib/reports/phases';
 import { MAX_VISUAL_BYTES, ReportVisual, VISUAL_FAMILIES, visualStyleFor } from '../ReportVisual';
 
 const draw = (slug: string, accent = false) => renderToStaticMarkup(<ReportVisual slug={slug} accent={accent} />);
+// a phase with this many reports fills at least a row of the grid, so its
+// pictures must not repeat one composition
+const MIN_REPORTS_FOR_VARIETY = 5;
+const MIN_LAYOUTS_PER_PHASE = 3;
 
 // a real slug in each TR-numbered phase, plus the pinned Phase 0 baselines
 const SAMPLE_BY_PHASE: Record<PhaseKey, string> = {
@@ -31,6 +35,22 @@ describe('per-report visual', () => {
     const [a, b] = ['technical-report-138', 'technical-report-139'];
     expect(visualStyleFor(a).family).toBe(visualStyleFor(b).family);
     expect(draw(a)).not.toBe(draw(b));
+  });
+
+  it('varies the composition inside a phase, so a row of one phase never repeats one picture', () => {
+    const byPhase = new Map<string, string[]>();
+    for (const { slug } of discoverReportsUnique()) {
+      const phase = classifyReportSlug(slug);
+      if (!/^phase\d+$/.test(phase)) continue;
+      byPhase.set(phase, [...(byPhase.get(phase) ?? []), slug]);
+    }
+    const layoutOf = (slug: string) => /data-layout="([^"]+)"/.exec(draw(slug))?.[1];
+    for (const [phase, slugs] of byPhase) {
+      if (slugs.length < MIN_REPORTS_FOR_VARIETY) continue;
+      const layouts = new Set(slugs.map(layoutOf));
+      expect(layouts.has(undefined), phase).toBe(false);
+      expect(layouts.size, `${phase}: ${[...layouts].join(',')}`).toBeGreaterThanOrEqual(MIN_LAYOUTS_PER_PHASE);
+    }
   });
 
   it('gives every phase a family, no family to more than two phases', () => {

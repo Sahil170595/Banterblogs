@@ -2,11 +2,13 @@ import { createElement } from 'react';
 import { classifyReportSlug, PHASE_DEFINITIONS, type PhaseKey } from '@/lib/reports/phases';
 
 // The archive cards' per-report picture: an abstract, monochrome SVG in one of
-// five families. The phase picks the family and its variant, a hash of the
-// slug picks the parameters, so a report always draws the same picture and a
-// phase reads as one series. Integer PRNG and plain arithmetic only, so the
-// server and every browser produce identical markup. Strokes and the ember
-// accent are styled by the .rv rules in globals.css.
+// five families. The phase picks the family and its variant; a hash of the
+// slug picks a composition inside the family (a layout, sometimes mirrored)
+// and its parameters, so a report always draws the same picture, a phase
+// reads as one series, and a row of one phase never repeats a single image.
+// Integer PRNG and plain arithmetic only, so the server and every browser
+// produce identical markup. Strokes and the ember accent are styled by the
+// .rv rules in globals.css.
 
 export const VISUAL_FAMILIES = ['dots', 'fan', 'bars', 'arcs', 'wave'] as const;
 export type VisualFamily = (typeof VISUAL_FAMILIES)[number];
@@ -17,6 +19,7 @@ export const MAX_VISUAL_BYTES = 1800;
 
 const W = 320;
 const H = 180;
+const CX = W / 2;
 // the drawing frame inside the viewBox
 const L = 22;
 const R = 298;
@@ -41,11 +44,21 @@ const DEFAULT_STYLE: readonly [VisualFamily, Variant] = ['wave', 0];
 const SYNTHESIS_MARKS = 'M10 17V10H17M303 10H310V17';
 
 type Rng = () => number;
+type Mirror = 'x' | 'y';
 interface Shape {
   tag: 'path' | 'rect' | 'circle';
   cls: string;
   props: Record<string, string | number>;
 }
+interface Drawing {
+  shapes: Shape[];
+  layout: number;
+  mirror?: Mirror;
+}
+const MIRROR_TRANSFORM: Record<Mirror, string> = {
+  x: `matrix(-1 0 0 1 ${W} 0)`,
+  y: `matrix(1 0 0 -1 0 ${H})`,
+};
 
 const n1 = (v: number) => String(Math.round(v * 10) / 10);
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -73,34 +86,53 @@ function seeded(seed: number): Rng {
 
 const between = (r: Rng, lo: number, hi: number) => lo + (hi - lo) * r();
 const pick = (r: Rng, n: number) => Math.floor(r() * n);
+const chance = (r: Rng, p: number) => r() < p;
 
-// ---- dots: Bayer-dithered blocks; a density gradient (0) or a radial core (1)
+// ---- dots: 4x4 Bayer-dithered blocks; a density gradient (0) or dense cores (1)
 const BAYER_4X4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const DOTS_PER_BLOCK = 4;
 const DOT_PITCH = 8;
-const DOT_GRID = { cols: 7, rows: 3, perBlock: 4, gapX: 8, gapY: 12 };
+// block grids that each fill the frame: blocks across and down, gaps; the
+// 2-unit gaps read as one continuous dithered field
+const DOT_LAYOUTS = [
+  { cols: 7, rows: 3, gapX: 8, gapY: 12 },
+  { cols: 8, rows: 3, gapX: 2, gapY: 2 },
+  { cols: 6, rows: 2, gapX: 14, gapY: 18 },
+  { cols: 5, rows: 3, gapX: 24, gapY: 12 },
+] as const;
 // the hover accent lights a block at least this dense, so the ember reads
 const ACCENT_MIN_DENSITY = 0.55;
 
-function dots(r: Rng, variant: Variant): Shape[] {
-  const { cols, rows, perBlock, gapX, gapY } = DOT_GRID;
+function dots(r: Rng, variant: Variant): Drawing {
+  const layout = pick(r, DOT_LAYOUTS.length);
+  const { cols, rows, gapX, gapY } = DOT_LAYOUTS[layout];
+  const perBlock = DOTS_PER_BLOCK;
   const block = perBlock * DOT_PITCH;
   const x0 = (W - (cols * block + (cols - 1) * gapX)) / 2;
   const y0 = (H - (rows * block + (rows - 1) * gapY)) / 2;
+  const u = (c: number) => c / (cols - 1);
+  const v = (row: number) => (rows > 1 ? row / (rows - 1) : 0);
   let density: (c: number, row: number) => number;
+  let mirror: Mirror | undefined;
   if (variant === 0) {
     const hi = between(r, 0.94, 1);
-    const lo = between(r, 0.03, 0.12);
-    const reverse = r() < 0.5;
-    const rowShift = between(r, -0.1, 0.1);
-    density = (c, row) => clamp(hi + (lo - hi) * ((reverse ? cols - 1 - c : c) / (cols - 1)) + rowShift * (row - 1), 0, 1);
+    const lo = between(r, 0.02, 0.12);
+    const field = pick(r, 3);
+    const along = (c: number, row: number) => (field === 0 ? u(c) : field === 1 ? 0.7 * v(row) + 0.3 * u(c) : (u(c) + v(row)) / 2);
+    density = (c, row) => clamp(hi + (lo - hi) * along(c, row), 0, 1);
+    mirror = chance(r, 0.5) ? 'x' : undefined;
   } else {
-    const cx = between(r, 1, cols - 2);
-    const cy = between(r, 0.4, rows - 1.4);
-    const reach = between(r, 3.4, 4.8);
+    const cores: Array<[number, number]> = [];
+    for (let i = 0, n = 1 + pick(r, 2); i < n; i++) cores.push([between(r, 0.5, cols - 1.5), between(r, 0, rows - 1)]);
+    const reach = (between(r, 2.8, 4.4) * cols) / 7;
     density = (c, row) => {
-      const dx = c - cx;
-      const dy = (row - cy) * 1.4;
-      return clamp(1.08 - Math.sqrt(dx * dx + dy * dy) / reach, 0.02, 1);
+      let nearest: number = cols;
+      for (const [cx, cy] of cores) {
+        const dx = c - cx;
+        const dy = (row - cy) * 1.4;
+        nearest = Math.min(nearest, Math.sqrt(dx * dx + dy * dy));
+      }
+      return clamp(1.08 - nearest / reach, 0.02, 1);
     };
   }
   const dense: Array<[number, number]> = [];
@@ -114,7 +146,7 @@ function dots(r: Rng, variant: Variant): Shape[] {
       for (let c = 0; c < cols; c++) {
         const which = c === ac && row === ar ? 'accent' : 'base';
         for (let dx = 0; dx < perBlock; dx++) {
-          if ((BAYER_4X4[dy * perBlock + dx] + 0.5) / 16 >= density(c, row)) continue;
+          if ((BAYER_4X4[dy * perBlock + dx] + 0.5) / (perBlock * perBlock) >= density(c, row)) continue;
           const x = x0 + c * (block + gapX) + dx * DOT_PITCH + DOT_PITCH / 2;
           const prev = last[which];
           paths[which].push(prev === null ? `M${n1(x)} ${n1(y)}h0` : `m${n1(x - prev)} 0h0`);
@@ -123,35 +155,57 @@ function dots(r: Rng, variant: Variant): Shape[] {
       }
     }
   }
-  const out = [shape('path', 'd', { d: paths.base.join(''), strokeWidth: DOT_PITCH })];
-  if (paths.accent.length) out.push(shape('path', 'd h', { d: paths.accent.join(''), strokeWidth: DOT_PITCH }));
-  return out;
+  const shapes = [shape('path', 'd', { d: paths.base.join(''), strokeWidth: DOT_PITCH })];
+  if (paths.accent.length) shapes.push(shape('path', 'd h', { d: paths.accent.join(''), strokeWidth: DOT_PITCH }));
+  return { shapes, layout, mirror };
 }
 
-// ---- fan: a perspective fan from a corner (0) or a projection cone (1)
-function fan(r: Rng, variant: Variant): Shape[] {
-  const out = [shape('rect', 'l', { x: L, y: T, width: R - L, height: B - T })];
-  if (variant === 0) {
-    const rules: number[] = [];
-    const ratio = between(r, 0.72, 0.84);
-    let s = 1;
-    for (let i = 0, n = 8 + pick(r, 5); i < n; i++) {
-      s *= ratio;
-      rules.push(R - (R - L) * s);
-    }
-    const edge: number[] = [];
-    for (let j = 1, m = 2 + pick(r, 3); j <= m; j++) edge.push(T + ((B - T) * j * j) / ((m + 1) * (m + 1)));
-    out.push(shape('path', 'l', { d: rules.map((x) => `M${n1(x)} ${T}V${B}`).join('') }));
-    out.push(
-      shape('path', 'l', { d: [...rules.map((x) => `M${L} ${B}L${n1(x)} ${T}`), ...edge.map((y) => `M${L} ${B}L${R} ${n1(y)}`)].join('') }),
-    );
-    out.push(shape('path', 'h', { d: `M${L} ${B}L${R} ${T}` }));
-    return out;
+// ---- fan: perspective fans from the corners (0) or a projection cone (1)
+function fan(r: Rng, variant: Variant): Drawing {
+  const frame = shape('rect', 'l', { x: L, y: T, width: R - L, height: B - T });
+  if (variant === 1) return projection(r, frame);
+  const stops: number[] = [];
+  const ratio = between(r, 0.66, 0.86);
+  let s = 1;
+  for (let i = 0, n = 6 + pick(r, 8); i < n; i++) {
+    s *= ratio;
+    stops.push(s);
   }
+  if (chance(r, 0.34)) {
+    // twin fan: both bottom corners reach the same stops, denser toward the sides
+    const xs = stops.flatMap((f) => [CX - (CX - L) * (1 - f), CX + (R - CX) * (1 - f)]);
+    return {
+      layout: 1,
+      mirror: chance(r, 0.5) ? 'y' : undefined,
+      shapes: [
+        frame,
+        shape('path', 'l', { d: xs.map((x) => `M${n1(x)} ${T}V${B}`).join('') }),
+        shape('path', 'l', { d: xs.map((x) => `M${L} ${B}L${n1(x)} ${T}M${R} ${B}L${n1(x)} ${T}`).join('') }),
+        shape('path', 'h', { d: `M${L} ${B}L${CX} ${T}L${R} ${B}` }),
+      ],
+    };
+  }
+  const xs = stops.map((f) => R - (R - L) * f);
+  const edge: number[] = [];
+  for (let j = 1, m = 2 + pick(r, 3); j <= m; j++) edge.push(T + ((B - T) * j * j) / ((m + 1) * (m + 1)));
+  const mirrors: Array<Mirror | undefined> = [undefined, 'x', 'y'];
+  return {
+    layout: 0,
+    mirror: mirrors[pick(r, mirrors.length)],
+    shapes: [
+      frame,
+      shape('path', 'l', { d: xs.map((x) => `M${n1(x)} ${T}V${B}`).join('') }),
+      shape('path', 'l', { d: [...xs.map((x) => `M${L} ${B}L${n1(x)} ${T}`), ...edge.map((y) => `M${L} ${B}L${R} ${n1(y)}`)].join('') }),
+      shape('path', 'h', { d: `M${L} ${B}L${R} ${T}` }),
+    ],
+  };
+}
+
+function projection(r: Rng, frame: Shape): Drawing {
   const now = L + (R - L) * between(r, 0.34, 0.46);
   let y = between(r, 96, 120);
   const observed: Array<[number, number]> = [[L, y]];
-  const steps = 7;
+  const steps = 5 + pick(r, 4);
   for (let i = 1; i <= steps; i++) {
     y = clamp(y + between(r, -12, 10), T + 20, B - 20);
     observed.push([L + ((now - L) * i) / steps, y]);
@@ -162,142 +216,363 @@ function fan(r: Rng, variant: Variant): Shape[] {
   const drift = between(r, -26, 18);
   const ends: number[] = [];
   for (let j = 0; j < rays; j++) ends.push(clamp(oy + drift + spread * ((2 * j) / (rays - 1) - 1), T, B));
-  out.push(shape('path', 'l', { d: [1, 2, 3].map((k) => `M${L} ${n1(T + ((B - T) * k) / 4)}H${R}`).join(''), strokeDasharray: '1 4' }));
-  out.push(shape('path', 'l', { d: ends.map((ey) => `M${n1(ox)} ${n1(oy)}L${R} ${n1(ey)}`).join('') }));
-  out.push(shape('path', 'k', { d: `M${n1(ox)} ${T}V${B}`, strokeDasharray: '2 3' }));
-  out.push(shape('path', 'k', { d: 'M' + observed.map(([x, py]) => `${n1(x)} ${n1(py)}`).join('L') }));
-  out.push(shape('path', 'h', { d: `M${n1(ox)} ${n1(oy)}L${R} ${n1(clamp(oy + drift, T, B))}` }));
-  return out;
+  return {
+    layout: 0,
+    mirror: chance(r, 0.5) ? 'y' : undefined,
+    shapes: [
+      frame,
+      shape('path', 'l', { d: [1, 2, 3].map((k) => `M${L} ${n1(T + ((B - T) * k) / 4)}H${R}`).join(''), strokeDasharray: '1 4' }),
+      shape('path', 'l', { d: ends.map((ey) => `M${n1(ox)} ${n1(oy)}L${R} ${n1(ey)}`).join('') }),
+      shape('path', 'k', { d: `M${n1(ox)} ${T}V${B}`, strokeDasharray: '2 3' }),
+      shape('path', 'k', { d: 'M' + observed.map(([x, py]) => `${n1(x)} ${n1(py)}`).join('L') }),
+      shape('path', 'h', { d: `M${n1(ox)} ${n1(oy)}L${R} ${n1(clamp(oy + drift, T, B))}` }),
+    ],
+  };
 }
 
-// ---- bars: an ascending staircase (0) or a rise that breaks at a cliff (1)
+// ---- bars: benchmark comparisons (0) or throughput that breaks down (1)
 const BAR_BASE = 150;
 const BAR_TOP = 30;
 const BAR_LEVELS = 7;
+const BAR_STEP = (BAR_BASE - BAR_TOP) / BAR_LEVELS;
+const BAR_GUIDES = `M${L} ${n1(BAR_BASE - 2 * BAR_STEP)}H${R}M${L} ${n1(BAR_BASE - 4 * BAR_STEP)}H${R}M${L} ${n1(BAR_BASE - 6 * BAR_STEP)}H${R}`;
 
-function bars(r: Rng, variant: Variant): Shape[] {
-  const step = (BAR_BASE - BAR_TOP) / BAR_LEVELS;
-  const n = 12 + pick(r, 7);
-  const pitch = (R - L) / n;
-  const width = pitch * 0.56;
-  const levels: number[] = [];
-  let cliff = n;
-  if (variant === 0) {
-    let level = 1 + pick(r, 2);
-    const climb = between(r, 0.38, 0.62);
-    for (let i = 0; i < n; i++) {
-      if (i > 0 && r() < climb) level = Math.min(BAR_LEVELS, level + 1);
-      levels.push(level);
-    }
-  } else {
-    cliff = Math.floor(n * between(r, 0.56, 0.74));
-    let level = 2;
-    for (let i = 0; i < n; i++) {
-      if (i < cliff) {
-        if (i > 0 && r() < 0.7) level = Math.min(BAR_LEVELS, level + 1);
-        levels.push(level);
-      } else {
-        levels.push(1 + pick(r, 2));
-      }
-    }
-  }
-  const accentAt = variant === 0 ? levels.indexOf(Math.max(...levels)) : cliff - 1;
+interface Bar {
+  x: number;
+  w: number;
+  level: number;
+  broken?: boolean;
+}
+
+function evenBars(levels: number[], widthRatio: number, brokenFrom = levels.length): Bar[] {
+  const pitch = (R - L) / levels.length;
+  const w = pitch * widthRatio;
+  return levels.map((level, i) => ({ x: L + i * pitch + (pitch - w) / 2, w, level, broken: i >= brokenFrom }));
+}
+
+function drawBars(bars: Bar[], accentAt: number): Shape[] {
   const solid: string[] = [];
   const broken: string[] = [];
   const caps: string[] = [];
   let accent = '';
-  levels.forEach((level, i) => {
-    const x = L + i * pitch + (pitch - width) / 2;
-    const y = BAR_BASE - level * step;
-    const outline = `M${n1(x)} ${BAR_BASE}V${n1(y)}H${n1(x + width)}V${BAR_BASE}`;
-    if (i === accentAt) accent = outline;
-    else {
-      (i >= cliff ? broken : solid).push(outline);
-      caps.push(`M${n1(x)} ${n1(y)}H${n1(x + width)}`);
+  bars.forEach((bar, i) => {
+    const y = BAR_BASE - bar.level * BAR_STEP;
+    const outline = `M${n1(bar.x)} ${BAR_BASE}V${n1(y)}H${n1(bar.x + bar.w)}V${BAR_BASE}`;
+    if (i === accentAt) {
+      accent = outline;
+      return;
     }
+    (bar.broken ? broken : solid).push(outline);
+    caps.push(`M${n1(bar.x)} ${n1(y)}H${n1(bar.x + bar.w)}`);
   });
-  const out = [
-    shape('path', 'l', { d: [2, 4, 6].map((level) => `M${L} ${n1(BAR_BASE - level * step)}H${R}`).join(''), strokeDasharray: '1 4' }),
-    shape('path', 'l', { d: solid.join('') }),
-  ];
-  if (broken.length) out.push(shape('path', 'l', { d: broken.join(''), strokeDasharray: '2 2' }));
-  out.push(shape('path', 'k', { d: `${caps.join('')}M${L} ${BAR_BASE}H${R}` }));
-  out.push(shape('path', 'h', { d: accent }));
-  return out;
+  const shapes = [shape('path', 'l', { d: BAR_GUIDES, strokeDasharray: '1 4' })];
+  if (solid.length) shapes.push(shape('path', 'l', { d: solid.join('') }));
+  if (broken.length) shapes.push(shape('path', 'l', { d: broken.join(''), strokeDasharray: '2 2' }));
+  shapes.push(shape('path', 'k', { d: `${caps.join('')}M${L} ${BAR_BASE}H${R}` }));
+  if (accent) shapes.push(shape('path', 'h', { d: accent }));
+  return shapes;
 }
 
-// ---- arcs: rings rising from below with a needle (0) or a certification gauge (1)
-const RING_DASHES = [null, null, '3 5', '1 3'] as const;
-
-function arcs(r: Rng, variant: Variant): Shape[] {
-  const out: Shape[] = [];
-  if (variant === 0) {
-    const cx = 160 + between(r, -36, 36);
-    const cy = 178;
-    const rings = 8 + pick(r, 3);
-    const r0 = between(r, 14, 22);
-    const gap = between(r, 12, 14.5);
-    const accent = 2 + pick(r, rings - 3);
-    for (let i = 0; i < rings; i++) {
-      const dash = i === accent ? null : RING_DASHES[pick(r, RING_DASHES.length)];
-      out.push(shape('circle', i === accent ? 'h' : 'l', { cx: n1(cx), cy, r: n1(r0 + i * gap), ...(dash ? { strokeDasharray: dash } : {}) }));
-    }
-    const angle = Math.round(between(r, -48, 48));
-    out.push(shape('path', 'k', { d: `M${n1(cx)} ${cy}V${n1(cy - r0 - (rings - 1) * gap)}`, transform: `rotate(${angle} ${n1(cx)} ${cy})` }));
-    return out;
+function climb(r: Rng, n: number, start: number, p: number): number[] {
+  const levels: number[] = [];
+  let level = start;
+  for (let i = 0; i < n; i++) {
+    if (i > 0 && chance(r, p)) level = Math.min(BAR_LEVELS, level + 1);
+    levels.push(level);
   }
-  const cx = 160;
-  const cy = 96;
-  for (let i = 0; i < 5; i++) out.push(shape('circle', 'l', { cx, cy, r: 14 + i * 12, ...(i % 2 ? { strokeDasharray: '2 3' } : {}) }));
-  out.push(shape('circle', 't', { cx, cy, r: 76, pathLength: 120, strokeDasharray: '0.3 1.7', strokeWidth: 6 }));
-  const certified = Math.round(between(r, 54, 92));
-  out.push(shape('circle', 'h', { cx, cy, r: 66, pathLength: 100, strokeDasharray: `${certified} 100`, transform: `rotate(-90 ${cx} ${cy})` }));
-  out.push(shape('path', 'k', { d: `M${cx - 6} ${cy}H${cx + 6}M${cx} ${cy - 6}V${cy + 6}` }));
-  return out;
+  return levels;
 }
 
-// ---- wave: vertical ticks around a centre line; calm (0) or with one
-// perturbation window whose ticks spike (1)
-const WAVE_MID = 90;
-const WAVE_MAX_AMP = 62;
+function bars(r: Rng, variant: Variant): Drawing {
+  const widthRatio = between(r, 0.34, 0.66);
+  if (variant === 0) {
+    const layout = pick(r, 3);
+    if (layout === 0) {
+      const levels = climb(r, 10 + pick(r, 11), 1 + pick(r, 2), between(r, 0.35, 0.65));
+      return { layout, mirror: chance(r, 0.5) ? 'x' : undefined, shapes: drawBars(evenBars(levels, widthRatio), levels.indexOf(Math.max(...levels))) };
+    }
+    if (layout === 1) return { layout, shapes: clusteredBars(r, widthRatio) };
+    return { layout, shapes: rankedBars(r) };
+  }
+  const layout = pick(r, 4);
+  const mirror = layout < 3 && chance(r, 0.5) ? 'x' : undefined;
+  const n = 10 + pick(r, 9);
+  const cliff = Math.floor(n * between(r, 0.5, 0.76));
+  if (layout === 0) {
+    const levels = [...climb(r, cliff, 2, 0.7), ...Array.from({ length: n - cliff }, () => 1 + pick(r, 2))];
+    return { layout, mirror, shapes: drawBars(evenBars(levels, widthRatio, cliff), cliff - 1) };
+  }
+  if (layout === 1) {
+    // a plateau that holds, then steps down
+    const levels: number[] = [];
+    for (let i = 0; i < n; i++) levels.push(i < cliff ? Math.min(BAR_LEVELS, 3 + i * 2) : Math.max(1, BAR_LEVELS - Math.ceil((i - cliff + 1) * between(r, 0.8, 1.6))));
+    return { layout, mirror, shapes: drawBars(evenBars(levels, widthRatio, cliff), cliff - 1) };
+  }
+  if (layout === 2) return { layout, mirror, shapes: tickBars(r) };
+  return { layout, shapes: pairedBars(r) };
+}
+
+function clusteredBars(r: Rng, widthRatio: number): Shape[] {
+  const clusters = 3 + pick(r, 2);
+  const per = 3 + pick(r, 3);
+  const pitch = (R - L) / (clusters * per + clusters - 1);
+  const w = pitch * widthRatio;
+  const bars: Bar[] = [];
+  for (let c = 0; c < clusters; c++) {
+    climb(r, per, 1 + pick(r, 3), 0.6).forEach((level, i) => bars.push({ x: L + (c * (per + 1) + i) * pitch + (pitch - w) / 2, w, level }));
+  }
+  const top = Math.max(...bars.map((bar) => bar.level));
+  return drawBars(bars, bars.findIndex((bar) => bar.level === top));
+}
+
+function rankedBars(r: Rng): Shape[] {
+  const rows = 7 + pick(r, 4);
+  const pitch = (B - T - 12) / rows;
+  const h = pitch * between(r, 0.38, 0.6);
+  let length = (R - L) * between(r, 0.86, 1);
+  const outlines: string[] = [];
+  let accent = '';
+  for (let i = 0; i < rows; i++) {
+    const y = T + 6 + i * pitch;
+    const x = L + length;
+    const outline = `M${L} ${n1(y)}H${n1(x)}V${n1(y + h)}H${L}`;
+    if (i === 0) accent = outline;
+    else outlines.push(outline);
+    length *= between(r, 0.76, 0.95);
+  }
+  const quarters = [0.25, 0.5, 0.75].map((q) => `M${n1(L + (R - L) * q)} ${T}V${B}`).join('');
+  return [
+    shape('path', 'l', { d: quarters, strokeDasharray: '1 4' }),
+    shape('path', 'l', { d: outlines.join('') }),
+    shape('path', 'k', { d: `M${L} ${T}V${B}` }),
+    shape('path', 'h', { d: accent }),
+  ];
+}
+
+// a dense histogram of 1px ticks: a rise, then the ticks past the cliff dashed
+function tickBars(r: Rng): Shape[] {
+  const n = 28 + pick(r, 13);
+  const cliff = Math.floor(n * between(r, 0.5, 0.75));
+  const pitch = (R - L) / (n - 1);
+  const held: string[] = [];
+  const fell: string[] = [];
+  let accent = '';
+  let level = between(r, 0.15, 0.3);
+  for (let i = 0; i < n; i++) {
+    level = i < cliff ? clamp(level + between(r, 0, 0.07), 0, 1) : between(r, 0.06, 0.2);
+    const x = n1(L + i * pitch);
+    const tick = `M${x} ${BAR_BASE}V${n1(BAR_BASE - level * (BAR_BASE - BAR_TOP))}`;
+    if (i === cliff - 1) accent = tick;
+    else (i < cliff ? held : fell).push(tick);
+  }
+  return [
+    shape('path', 'l', { d: BAR_GUIDES, strokeDasharray: '1 4' }),
+    shape('path', 'l', { d: held.join('') }),
+    shape('path', 'l', { d: fell.join(''), strokeDasharray: '2 2' }),
+    shape('path', 'k', { d: `M${L} ${BAR_BASE}H${R}` }),
+    shape('path', 'h', { d: accent }),
+  ];
+}
+
+// two series side by side: one holds, the other breaks at the cliff
+function pairedBars(r: Rng): Shape[] {
+  const pairs = 6 + pick(r, 4);
+  const cliff = 2 + pick(r, pairs - 3);
+  const pitch = (R - L) / pairs;
+  const w = pitch * 0.3;
+  const bars: Bar[] = [];
+  let held = 2;
+  let failing = 2;
+  for (let i = 0; i < pairs; i++) {
+    held = Math.min(BAR_LEVELS, held + pick(r, 2));
+    failing = i < cliff ? Math.min(BAR_LEVELS, failing + pick(r, 2)) : 1;
+    const x = L + i * pitch + pitch * 0.16;
+    bars.push({ x, w, level: held }, { x: x + w + pitch * 0.08, w, level: failing, broken: i >= cliff });
+  }
+  return drawBars(bars, 2 * cliff);
+}
+
+// ---- arcs: rings around an off-frame centre with a needle (0) or a gauge (1)
+const RING_DASHES = [null, null, '3 5', '1 3'] as const;
+const TICK_DENSITIES = [90, 120, 180] as const;
+
+function rings(r: Rng, cx: number, cy: number, count: number, r0: number, gap: number, accentAt: number): Shape[] {
+  return Array.from({ length: count }, (_, i) => {
+    const dash = i === accentAt ? null : RING_DASHES[pick(r, RING_DASHES.length)];
+    return shape('circle', i === accentAt ? 'h' : 'l', { cx: n1(cx), cy: n1(cy), r: n1(r0 + i * gap), ...(dash ? { strokeDasharray: dash } : {}) });
+  });
+}
+
+function arcs(r: Rng, variant: Variant): Drawing {
+  if (variant === 1) return gauge(r);
+  const layout = pick(r, 3);
+  const count = 7 + pick(r, 3);
+  const accentAt = 2 + pick(r, count - 3);
+  let cx: number;
+  let cy: number;
+  let r0: number;
+  let gap: number;
+  let needle: string;
+  let angle: number;
+  if (layout === 0) {
+    [cx, cy, r0, gap] = [CX + between(r, -36, 36), 178, between(r, 14, 22), between(r, 12, 14.5)];
+    needle = `M${n1(cx)} ${cy}V${n1(cy - r0 - (count - 1) * gap)}`;
+    angle = Math.round(between(r, -48, 48));
+  } else if (layout === 1) {
+    [cx, cy, r0, gap] = [between(r, -24, 8), between(r, 72, 108), between(r, 24, 40), between(r, 22, 30)];
+    needle = `M${n1(cx)} ${n1(cy)}H${n1(cx + r0 + (count - 1) * gap)}`;
+    angle = Math.round(between(r, -34, 34));
+  } else {
+    [cx, cy, r0, gap] = [306, 8, between(r, 26, 40), between(r, 18, 24)];
+    needle = `M${cx} ${cy}H${n1(cx - r0 - (count - 1) * gap)}`;
+    angle = Math.round(between(r, 12, 62));
+  }
+  return {
+    layout,
+    shapes: [...rings(r, cx, cy, count, r0, gap, accentAt), shape('path', 'k', { d: needle, transform: `rotate(${angle} ${n1(cx)} ${n1(cy)})` })],
+  };
+}
+
+function gauge(r: Rng): Drawing {
+  const layout = pick(r, 4);
+  const certified = Math.round(between(r, 54, 92));
+  if (layout === 0) {
+    const cy = 94;
+    const r0 = between(r, 10, 16);
+    const step = between(r, 9, 13);
+    const count = Math.min(3 + pick(r, 4), Math.floor((62 - r0) / step) + 1);
+    const outer = r0 + (count - 1) * step;
+    const shapes: Shape[] = [];
+    for (let i = 0; i < count; i++) shapes.push(shape('circle', 'l', { cx: CX, cy, r: n1(r0 + i * step), ...(chance(r, 0.5) ? { strokeDasharray: '2 3' } : {}) }));
+    shapes.push(shape('circle', 't', { cx: CX, cy, r: n1(outer + 14), pathLength: TICK_DENSITIES[pick(r, TICK_DENSITIES.length)], strokeDasharray: '0.3 1.7', strokeWidth: 5 }));
+    shapes.push(shape('circle', 'h', { cx: CX, cy, r: n1(outer + 6), pathLength: 100, strokeDasharray: `${certified} 100`, transform: `rotate(-90 ${CX} ${cy})` }));
+    if (chance(r, 0.5) && count > 1) {
+      const inner = Math.round(certified * between(r, 0.4, 0.8));
+      shapes.push(shape('circle', 'k', { cx: CX, cy, r: n1(r0 + step), pathLength: 100, strokeDasharray: `${inner} 100`, transform: `rotate(-90 ${CX} ${cy})` }));
+    }
+    shapes.push(shape('path', 'k', { d: `M${CX - 5} ${cy}H${CX + 5}M${CX} ${cy - 5}V${cy + 5}` }));
+    return { layout, shapes };
+  }
+  if (layout === 1) {
+    // twin gauges, the higher reading lit
+    const other = Math.round(between(r, 30, 88));
+    const lit = other > certified ? 1 : 0;
+    const shapes: Shape[] = [];
+    [certified, other].forEach((reading, i) => {
+      const gx = CX + (i ? 62 : -62);
+      shapes.push(shape('circle', 'l', { cx: gx, cy: 92, r: 13 }), shape('circle', 'l', { cx: gx, cy: 92, r: 25, strokeDasharray: '2 3' }));
+      shapes.push(shape('circle', 't', { cx: gx, cy: 92, r: 46, pathLength: 60, strokeDasharray: '0.3 1.7', strokeWidth: 4 }));
+      shapes.push(
+        shape('circle', i === lit ? 'h' : 'k', {
+          cx: gx,
+          cy: 92,
+          r: 38,
+          pathLength: 100,
+          strokeDasharray: `${reading} 100`,
+          transform: `rotate(-90 ${gx} 92)`,
+        }),
+      );
+    });
+    return { layout, shapes };
+  }
+  if (layout === 2) {
+    // a quarter dial from the bottom-left corner of the frame
+    const step = between(r, 18, 22);
+    const count = Math.min(5 + pick(r, 3), Math.floor((140 - 34) / step) + 1);
+    const quarter = { pathLength: 400, transform: `rotate(-90 ${L} ${B})` };
+    const shapes: Shape[] = [];
+    for (let i = 0; i < count; i++) shapes.push(shape('circle', i % 2 ? 'k' : 'l', { cx: L, cy: B, r: n1(34 + i * step), strokeDasharray: '100 300', ...quarter }));
+    const outer = 34 + (count - 1) * step;
+    shapes.push(shape('circle', 'h', { cx: L, cy: B, r: n1(outer + 10), strokeDasharray: `${certified} 400`, ...quarter }));
+    shapes.push(shape('path', 'k', { d: `M${L} ${B}H${n1(L + outer + 10)}`, transform: `rotate(${n1(-90 + 0.9 * certified)} ${L} ${B})` }));
+    return { layout, shapes };
+  }
+  // a linear certification scale with the reading marked on it
+  const scale = 118;
+  const reach = L + ((R - L) * certified) / 100;
+  return {
+    layout,
+    shapes: [
+      shape('path', 't', { d: `M${L} ${scale}H${R}`, strokeDasharray: '1 7', strokeWidth: 10 }),
+      shape('path', 't', { d: `M${L} ${scale}H${R}`, strokeDasharray: '1.5 38.5', strokeWidth: 20 }),
+      shape('path', 'k', { d: `M${L} ${scale}H${R}` }),
+      shape('circle', 'l', { cx: n1(reach), cy: 84, r: 14 }),
+      shape('circle', 'l', { cx: n1(reach), cy: 84, r: 24, strokeDasharray: '2 3' }),
+      shape('path', 'k', { d: `M${n1(reach)} 84V${scale}`, strokeDasharray: '2 3' }),
+      shape('path', 'h', { d: `M${L} 84H${n1(reach)}` }),
+      shape('circle', 'h', { cx: n1(reach), cy: 84, r: 4 }),
+    ],
+  };
+}
+
+// ---- wave: vertical ticks along a trace; calm (0) or with one perturbation
+// window whose ticks spike (1); symmetric, one-sided or two stacked traces
 const WAVE_MIN_AMP = 1.5;
 
-function wave(r: Rng, variant: Variant): Shape[] {
-  const n = 60 + pick(r, 12);
-  const pitch = (R - L) / (n - 1);
-  const winStart = variant === 1 ? Math.floor(n * between(r, 0.3, 0.62)) : -1;
-  const winEnd = variant === 1 ? winStart + Math.floor(n * between(r, 0.12, 0.18)) : -1;
-  const inWindow = (i: number) => i >= winStart && i < winEnd;
+function amplitudes(r: Rng, n: number, window: [number, number] | null, ceiling: number): number[] {
   let envelope = between(r, 0.25, 0.5);
-  const amps: number[] = [];
+  const out: number[] = [];
   for (let i = 0; i < n; i++) {
-    envelope = clamp(envelope + between(r, -0.09, 0.09), 0.12, variant === 1 ? 0.42 : 0.9);
+    envelope = clamp(envelope + between(r, -0.09, 0.09), 0.12, ceiling);
     const jitter = between(r, 0.55, 1);
-    amps.push(WAVE_MAX_AMP * (inWindow(i) ? clamp(envelope * 2.2 * jitter + 0.25, 0, 1) : envelope * jitter));
+    const inWindow = window !== null && i >= window[0] && i < window[1];
+    out.push(inWindow ? clamp(envelope * 2.2 * jitter + 0.25, 0, 1) : envelope * jitter);
   }
-  const peak = amps.indexOf(Math.max(...amps));
+  return out;
+}
+
+function ticks(amps: number[], pitch: number, place: (amp: number) => [number, number], classOf: (i: number) => 'l' | 'k' | 'h'): Shape[] {
   const chains: Record<'l' | 'k' | 'h', string[]> = { l: [], k: [], h: [] };
   const last: Record<'l' | 'k' | 'h', { x: number; bottom: number } | null> = { l: null, k: null, h: null };
   amps.forEach((amp, i) => {
-    const cls = i === peak ? 'h' : (variant === 0 ? i % 8 === 0 : inWindow(i)) ? 'k' : 'l';
+    const cls = classOf(i);
     const x = L + i * pitch;
-    const half = Math.max(WAVE_MIN_AMP, amp);
-    const top = WAVE_MID - half;
+    const [top, span] = place(amp);
     const prev = last[cls];
-    chains[cls].push(prev === null ? `M${n1(x)} ${n1(top)}v${n1(2 * half)}` : `m${n1(x - prev.x)} ${n1(top - prev.bottom)}v${n1(2 * half)}`);
-    last[cls] = { x, bottom: top + 2 * half };
+    chains[cls].push(prev === null ? `M${n1(x)} ${n1(top)}v${n1(span)}` : `m${n1(x - prev.x)} ${n1(top - prev.bottom)}v${n1(span)}`);
+    last[cls] = { x, bottom: top + span };
   });
-  const out = [shape('path', 'l', { d: `M${L} ${WAVE_MID}H${R}`, strokeDasharray: '1 3' })];
-  for (const cls of ['l', 'k', 'h'] as const) if (chains[cls].length) out.push(shape('path', cls, { d: chains[cls].join('') }));
-  if (variant === 1) {
-    const xa = L + winStart * pitch - pitch / 2;
-    const xb = L + (winEnd - 1) * pitch + pitch / 2;
-    out.push(shape('path', 'l', { d: `M${n1(xa)} ${T}V${B}M${n1(xb)} ${T}V${B}`, strokeDasharray: '2 3' }));
-  }
-  return out;
+  return (['l', 'k', 'h'] as const).filter((cls) => chains[cls].length).map((cls) => shape('path', cls, { d: chains[cls].join('') }));
 }
 
-const DRAW: Record<VisualFamily, (r: Rng, variant: Variant) => Shape[]> = { dots, fan, bars, arcs, wave };
+function wave(r: Rng, variant: Variant): Drawing {
+  const layout = pick(r, 3);
+  // two stacked traces share the frame, so each is sparser
+  const n = layout === 2 ? 36 + pick(r, 10) : 56 + pick(r, 20);
+  const pitch = (R - L) / (n - 1);
+  let window: [number, number] | null = null;
+  if (variant === 1) {
+    const start = Math.floor(n * between(r, 0.28, 0.62));
+    window = [start, start + Math.floor(n * between(r, 0.1, 0.2))];
+  }
+  const rhythm = 6 + pick(r, 5);
+  const traces = layout === 2 ? [{ mid: 62, amp: 30 }, { mid: 124, amp: 30 }] : [{ mid: layout === 1 ? 150 : 90, amp: layout === 1 ? 116 : 62 }];
+  const shapes: Shape[] = [];
+  traces.forEach((trace, t) => {
+    // the perturbation and the accent live on the last trace
+    const lead = t === traces.length - 1;
+    const win = lead ? window : null;
+    const amps = amplitudes(r, n, win, variant === 1 ? 0.42 : 0.9);
+    const peak = lead ? amps.indexOf(Math.max(...amps)) : -1;
+    const place = (a: number): [number, number] => {
+      const span = Math.max(WAVE_MIN_AMP, a * trace.amp);
+      return layout === 1 ? [trace.mid - span, span] : [trace.mid - span, 2 * span];
+    };
+    const inWindow = (i: number) => win !== null && i >= win[0] && i < win[1];
+    shapes.push(shape('path', layout === 1 ? 'k' : 'l', { d: `M${L} ${trace.mid}H${R}`, ...(layout === 1 ? {} : { strokeDasharray: '1 3' }) }));
+    shapes.push(...ticks(amps, pitch, place, (i) => (i === peak ? 'h' : (variant === 0 ? i % rhythm === 0 : inWindow(i)) ? 'k' : 'l')));
+    if (win) {
+      const top = layout === 2 ? trace.mid - trace.amp - 4 : T;
+      const bottom = layout === 2 ? trace.mid + trace.amp + 4 : B;
+      const xa = n1(L + win[0] * pitch - pitch / 2);
+      const xb = n1(L + (win[1] - 1) * pitch + pitch / 2);
+      shapes.push(shape('path', 'l', { d: `M${xa} ${n1(top)}V${n1(bottom)}M${xb} ${n1(top)}V${n1(bottom)}`, strokeDasharray: '2 3' }));
+    }
+  });
+  return { shapes, layout, mirror: chance(r, 0.5) ? 'x' : undefined };
+}
+
+const DRAW: Record<VisualFamily, (r: Rng, variant: Variant) => Drawing> = { dots, fan, bars, arcs, wave };
 const PHASE_KEYS = new Set<string>(PHASE_DEFINITIONS.map((p) => p.key));
 
 /** Which family draws a report, and whether it is a synthesis document. */
@@ -315,8 +590,8 @@ export function visualStyleFor(slug: string): { family: VisualFamily; variant: V
 
 export function ReportVisual({ slug, accent = false }: { slug: string; accent?: boolean }) {
   const { family, variant, synthesis } = visualStyleFor(slug);
-  const shapes = DRAW[family](seeded(hashSlug(slug)), variant);
-  if (synthesis) shapes.push(shape('path', 'k', { d: SYNTHESIS_MARKS }));
+  const { shapes, layout, mirror } = DRAW[family](seeded(hashSlug(slug)), variant);
+  const body = shapes.map((s, i) => createElement(s.tag, { key: i, className: s.cls, ...s.props }));
   return (
     <svg
       className="rv"
@@ -324,10 +599,12 @@ export function ReportVisual({ slug, accent = false }: { slug: string; accent?: 
       aria-hidden="true"
       focusable="false"
       data-family={family}
+      data-layout={`${layout}${mirror ?? ''}`}
       data-synthesis={synthesis ? 'true' : undefined}
       data-accent={accent ? 'on' : undefined}
     >
-      {shapes.map((s, i) => createElement(s.tag, { key: i, className: s.cls, ...s.props }))}
+      {mirror ? <g transform={MIRROR_TRANSFORM[mirror]}>{body}</g> : body}
+      {synthesis && <path className="k" d={SYNTHESIS_MARKS} />}
     </svg>
   );
 }
