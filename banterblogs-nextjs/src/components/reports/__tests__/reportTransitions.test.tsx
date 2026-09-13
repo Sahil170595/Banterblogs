@@ -8,10 +8,13 @@ import ReportDetail from '@/app/reports/[id]/page';
 import ReportsIndex from '@/app/reports/page';
 import { discoverReportsUnique } from '@/lib/reports/locator';
 import { reportSortRank } from '@/lib/reports/phases';
+import { ReportHero } from '../ReportHead';
 import {
   DirectionalPage,
+  FIGURE_MORPH_CLASS,
   NAV_BACK,
   NAV_FORWARD,
+  ReportFigureTransition,
   ReportTitleTransition,
   TITLE_MORPH_CLASS,
 } from '../ReportTransitions';
@@ -88,10 +91,22 @@ describe('report transition boundaries', () => {
       { name: 'report-title-technical-report-138', share: TITLE_SHARE, default: 'none' },
     ]);
   });
+
+  it('names a report figure by its slug so the card visual and the hero figure pair up, forward only', () => {
+    render(
+      <ReportFigureTransition slug="technical-report-138">
+        <div>figure</div>
+      </ReportFigureTransition>,
+    );
+
+    expect(viewTransitions).toEqual([
+      { name: 'report-figure-technical-report-138', share: { [NAV_FORWARD]: FIGURE_MORPH_CLASS, default: 'none' }, default: 'none' },
+    ]);
+  });
 });
 
 describe('reading-path wiring', () => {
-  it('report page: slides as a page, morphs its heading, tags back, previous and next', async () => {
+  it('report page: slides as a page, morphs its heading and hero figure, tags back, previous and next', async () => {
     const order = discoverReportsUnique()
       .map((entry) => entry.slug)
       .sort((a, b) => reportSortRank(a) - reportSortRank(b) || a.localeCompare(b));
@@ -104,9 +119,11 @@ describe('reading-path wiring', () => {
     const title = elementsIn(tree).find((el) => el.type === ReportTitleTransition);
     expect(title?.props.slug).toBe(id);
     expect(elementsIn(title?.props.children).map((el) => el.type)).toContain('h1');
+    // the hero figure is the far end of the card visual's morph
+    expect(elementsIn(tree).filter((el) => el.type === ReportHero).map((el) => el.props.slug)).toEqual([id]);
 
     const byText = (text: string) => links(tree).filter((link) => textIn(link).includes(text));
-    expect(byText('Research Archive').map((link) => [href(link), link.props.transitionTypes])).toEqual([
+    expect(byText('Research archive').map((link) => [href(link), link.props.transitionTypes])).toEqual([
       ['/reports', [NAV_BACK]],
     ]);
     expect(byText('Previous').map((link) => link.props.transitionTypes)).toEqual([[NAV_BACK]]);
@@ -248,6 +265,25 @@ describe('view transition styles', () => {
     expect(group).toMatch(/animation-duration:\s*var\(--vt-duration-morph\)/);
     expect(outgoing).toMatch(/var\(--vt-duration-morph\)[^;,]*vt-morph-blur/);
     expect(incoming).toMatch(/var\(--vt-duration-morph\)[^;,]*vt-morph-blur/);
+  });
+
+  // Phase R2: the card visual opens into the hero figure on the gentle spring
+  // (740ms, no overshoot); the card's snapshot is contained and the hero's
+  // covered, so the drawing holds its place and size while the plate widens.
+  it('moves a report figure on the gentle spring, clipped to its rounded box, with the drawing held in place', () => {
+    const group = declarationsFor(CSS, `::view-transition-group(.${FIGURE_MORPH_CLASS})`);
+    expect(group).toMatch(/animation-duration:\s*var\(--vt-duration-figure\)/);
+    expect(group).toMatch(/animation-timing-function:\s*var\(--vt-ease-figure\)/);
+    expect(group).toMatch(/clip-path:\s*inset\(0 round/);
+    expect(CSS).toMatch(/--vt-duration-figure:\s*var\(--duration-spring-gentle\)/);
+    expect(CSS).toMatch(/--vt-ease-figure:\s*var\(--ease-spring-gentle\)/);
+    expect(GLOBALS_CSS).toMatch(/--duration-spring-gentle:\s*740ms;/);
+    expect(declarationsFor(CSS, `::view-transition-old(.${FIGURE_MORPH_CLASS})`)).toMatch(/object-fit:\s*contain/);
+    expect(declarationsFor(CSS, `::view-transition-new(.${FIGURE_MORPH_CLASS})`)).toMatch(/object-fit:\s*cover/);
+    // the browser's own cross-fade, so the pair blends without dimming
+    for (const pseudo of ['old', 'new']) {
+      expect(declarationsFor(CSS, `::view-transition-${pseudo}(.${FIGURE_MORPH_CLASS})`), pseudo).not.toMatch(/animation/);
+    }
   });
 
   // Phase R1 (motion brief): the page slide grew from 12-16px on base and

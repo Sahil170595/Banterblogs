@@ -8,12 +8,15 @@ import tailwindConfig from '../../../tailwind.config';
 // strong-in-out, move, drawer and three springs); distances, scales, blurs and
 // staggers step through CSS custom properties. The /show scenes and
 // the galactic landing animate as content, so the transition-all and duration
-// rules exempt them. Scroll reveals exist only through the <Reveal> primitive
-// in components/motion/, which keeps content visible without JavaScript and
-// under reduced motion: whileInView is banned everywhere, and an
-// IntersectionObserver or a view() timeline outside the primitives fails
-// unless it is a listed use that moves nothing. framer-motion stays confined
-// to the scenes and the landing, so pages that do not animate load none of it.
+// rules exempt them. Scroll reveals exist only through the motion primitives
+// in components/motion/, <Reveal> or RevealScope (which arms the targets a
+// server renderer marked with the primitive's REVEAL_TARGET), and both keep
+// content visible without JavaScript and under reduced motion: whileInView is
+// banned everywhere, reveal state and the target marker are written only
+// inside the primitives, and an IntersectionObserver or a view() timeline
+// outside them fails unless it is a listed use that reveals nothing (a
+// scroll-spy). framer-motion stays confined to the scenes and the landing, so
+// pages that do not animate load none of it.
 
 const SRC = path.join(process.cwd(), 'src');
 const GLOBALS_CSS = path.join(SRC, 'app', 'globals.css');
@@ -23,7 +26,10 @@ const MOTION_PRIMITIVES_DIR = path.join(SRC, 'components', 'motion');
 // Observers outside the primitives that reveal nothing, each with its reason.
 const NON_REVEAL_OBSERVERS: Record<string, string> = {
   [path.join('components', 'TableOfContents.tsx')]: 'scroll-spy: marks the heading in view; nothing moves',
+  [path.join('components', 'reports', 'ReportTocSpy.tsx')]:
+    'scroll-spy: marks the section being read and moves the contents marker to it; content never hides or moves',
 };
+const REPORT_TOC_SPY = path.join(SRC, 'components', 'reports', 'ReportTocSpy.tsx');
 
 // the researched motion brief (2026-09-12): responses stay 150-400ms and read
 // as obvious through distance, blur, scale and staging, not length
@@ -81,8 +87,10 @@ const WHILE_IN_VIEW = /\bwhileInView\b/;
 const INTERSECTION_OBSERVER = /\bnew\s+IntersectionObserver\b/;
 // a view-progress timeline is a CSS scroll reveal; scroll(root|self) progress is not
 const VIEW_TIMELINE = /animation-timeline\s*:\s*view\(|\bview-timeline(?:-name)?\s*:|\banimationTimeline\s*:\s*['"`]view\(/;
-// the primitive owns reveal state; pages wrap content in <Reveal> instead
-const REVEAL_STATE = /\bdata-reveal\b|\bdataset\.reveal\b/;
+// the primitives own reveal state and the target marker; pages wrap content in
+// <Reveal>, and server renderers mark targets with REVEAL_TARGET for a
+// RevealScope (dataReveal is the attribute's hast and React property name)
+const REVEAL_STATE = /\bdata-reveal\b|\bdataset\.reveal\b|\bdataReveal\b/;
 // `duration-300`, `hover:duration-500`, `!duration-700`, `duration-[400ms]`;
 // requiring a class boundary keeps CSS `transition-duration:` out of it.
 const DURATION_CLASS = /(?:^|[\s"'`{:!])duration-(\d+|\[[^\]\s]*\])(?![\w-])/g;
@@ -147,7 +155,7 @@ function motionViolations(file: string, source: string): string[] {
       offenders.push(`${where(line)} observes intersections outside the motion primitives (use <Reveal>, or list a use that moves nothing)`);
     }
     if (script && !primitive && REVEAL_STATE.test(text)) {
-      offenders.push(`${where(line)} writes reveal state outside the motion primitives (wrap the content in <Reveal>)`);
+      offenders.push(`${where(line)} writes reveal state outside the motion primitives (wrap the content in <Reveal>, or mark it with REVEAL_TARGET inside a RevealScope)`);
     }
     if (exempt) return;
     if (TRANSITION_ALL.test(text)) {
@@ -273,10 +281,15 @@ describe('motion ratchet detectors', () => {
     expect(motionViolations(GLOBALS_CSS, '.progress { animation-timeline: scroll(root); }')).toEqual([]);
   });
 
-  it('keeps reveal state inside the primitive; the stylesheet only styles it', () => {
+  it('keeps reveal state and the target marker inside the primitives; the stylesheet only styles them', () => {
     expect(motionViolations(plain, `el.setAttribute('data-reveal', 'shown');`)).toHaveLength(1);
     expect(motionViolations(plain, '<div data-reveal="" />')).toHaveLength(1);
+    // a server renderer may not hand-write the marker in its hast or React spelling either
+    expect(motionViolations(plain, `node.properties.dataReveal = '';`)).toHaveLength(1);
+    // it takes the primitive's marker for a RevealScope instead
+    expect(motionViolations(plain, 'Object.assign(node.properties, REVEAL_TARGET);')).toEqual([]);
     expect(motionViolations(primitive, `el.setAttribute('data-reveal', 'shown');`)).toEqual([]);
+    expect(motionViolations(primitive, `export const REVEAL_TARGET = { dataReveal: '' };`)).toEqual([]);
     expect(motionViolations(GLOBALS_CSS, 'html[data-motion="on"] [data-reveal="pending"] { opacity: 0; }')).toEqual([]);
   });
 
@@ -311,6 +324,7 @@ describe('motion ratchet', () => {
       'components/SearchDialog.tsx',
       'components/scenes/StreamingLadder.tsx',
       'components/motion/Reveal.tsx',
+      'components/motion/RevealScope.tsx',
       'components/motion/revealObserver.ts',
     ]) {
       expect(files).toContain(path.join(SRC, known));
@@ -318,7 +332,7 @@ describe('motion ratchet', () => {
     expect(fs.existsSync(GLOBALS_CSS)).toBe(true);
   });
 
-  it('keeps every transition narrow, every duration on the tokens and every reveal inside <Reveal>', () => {
+  it('keeps every transition narrow, every duration on the tokens and every reveal inside <Reveal> or RevealScope', () => {
     const offenders = files.flatMap((file) => motionViolations(file, fs.readFileSync(file, 'utf8')));
     expect(offenders).toEqual([]);
   });
@@ -329,6 +343,22 @@ describe('motion ratchet', () => {
       expect(fs.existsSync(full), `${file}: ${reason}`).toBe(true);
       expect(fs.readFileSync(full, 'utf8'), `${file}: ${reason}`).toMatch(INTERSECTION_OBSERVER);
     }
+  });
+
+  // Phase R2 listed the report contents' scroll-spy as a non-reveal observer.
+  // What makes it one: it moves only its own marker, by transform, from an
+  // observer (never a scroll listener), and the marker eases only while motion
+  // is armed, so it jumps under reduced motion.
+  it('lets the report scroll-spy move only its marker, by transform, from an observer', () => {
+    const source = fs.readFileSync(REPORT_TOC_SPY, 'utf8');
+    expect(source).toMatch(INTERSECTION_OBSERVER);
+    expect(source).not.toMatch(/addEventListener\(\s*['"`]scroll/);
+    expect([...source.matchAll(/(\w+)\.style\.(\w+)\s*=/g)].map((m) => `${m[1]}.${m[2]}`)).toEqual(['marker.transform']);
+    const css = fs.readFileSync(GLOBALS_CSS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const easing = rulesIn(css).filter((rule) => /\.report-toc-marker/.test(rule.selector) && /transition\s*:/.test(rule.declarations));
+    expect(easing.map((rule) => rule.selector)).toEqual(['html[data-motion="on"] .report-toc-marker[data-placed]', '.report-toc-marker']);
+    expect(easing[0].declarations).toMatch(/transform var\(--duration-base\) var\(--ease-strong-out\)/);
+    expect(easing[1].declarations).toMatch(/transition:\s*none\s*!important/);
   });
 
   it('keeps framer-motion inside the scenes and the landing', () => {
