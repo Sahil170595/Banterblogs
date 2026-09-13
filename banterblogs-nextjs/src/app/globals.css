@@ -1126,9 +1126,10 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   color: hsl(var(--muted-foreground));
 }
 
-.report-crumbs li + li::before {
+/* each separator trails the crumb before it, so a wrapped crumb never opens on a slash */
+.report-crumbs li:not(:last-child)::after {
   content: "/";
-  margin-right: 0.375rem;
+  margin-left: 0.375rem;
   color: hsl(var(--muted-foreground) / 0.5);
 }
 

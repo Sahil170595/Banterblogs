@@ -150,6 +150,11 @@ describe('report reading type', () => {
     expect([...desktopSizes].sort((a, b) => a - b).length, [...desktopSizes].join(',')).toBeLessThanOrEqual(MAX_SIZES_ON_PAGE);
   });
 
+  it('keeps each breadcrumb separator with the crumb before it, so a wrapped crumb never opens on a slash', () => {
+    expect(value(declarationsOf(baseRules, '.report-crumbs li:not(:last-child)::after'), 'content')).toBe('"/"');
+    expect(BLOCK).not.toMatch(/\.report-crumbs li \+ li::before/);
+  });
+
   it('sets the title at 40-48px, 600 weight and about -0.03em on desktop', () => {
     const title = declarationsOf(desktopRules, '.report-title');
     const base = declarationsOf(baseRules, '.report-title');
