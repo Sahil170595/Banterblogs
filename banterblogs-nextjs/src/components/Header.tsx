@@ -70,8 +70,8 @@ export function Header() {
         isLanding
           ? 'fixed top-0 z-50 w-full bg-transparent'
           : // the border is always drawn so the height never changes; only
-            // colours move, over the hover token
-            `sticky top-0 z-50 w-full border-b backdrop-blur transition-[background-color,border-color] duration-hover ease-out-quad relative after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/60 after:to-transparent after:transition-opacity after:duration-hover ${
+            // colours move, over the base token
+            `sticky top-0 z-50 w-full border-b backdrop-blur transition-[background-color,border-color] duration-base ease-out-quad relative after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/60 after:to-transparent after:transition-opacity after:duration-base ${
               scrolled
                 ? 'border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 after:opacity-100'
                 : 'border-transparent bg-transparent after:opacity-0'

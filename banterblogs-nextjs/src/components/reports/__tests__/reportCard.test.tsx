@@ -122,17 +122,26 @@ describe('card hover depth', () => {
     return at < 0 ? '' : CSS.slice(at, CSS.indexOf('}', at));
   };
 
-  it('lifts 2px and brightens on hover, nudging the arrow 2px: transform and colour only', () => {
-    expect(rule('.card-depth:is(:hover, :focus-visible)')).toMatch(/transform:\s*translateY\(-2px\)/);
+  it('lifts 4px, brightens and glows on hover, springing the arrow 4px: transform, opacity and colour only', () => {
+    expect(CSS).toMatch(/--hover-lift:\s*4px;/);
+    expect(CSS).toMatch(/--hover-nudge:\s*4px;/);
+    expect(rule('.card-depth:is(:hover, :focus-visible)')).toMatch(/transform:\s*translateY\(calc\(-1 \* var\(--hover-lift\)\)\)/);
     expect(rule('.card-depth:is(:hover, :focus-visible) .card-visual')).toMatch(/background-color:/);
-    expect(rule('.card-depth .card-arrow')).toMatch(/transform:\s*translateX\(-2px\)/);
+    expect(rule('.card-depth .card-arrow')).toMatch(/transform:\s*translateX\(calc\(-1 \* var\(--hover-nudge\)\)\)/);
     expect(rule('.card-depth:is(:hover, :focus-visible) .card-arrow')).toMatch(/transform:\s*none/);
-    expect(CSS).not.toMatch(/\.card-depth[^{]*\{[^}]*(?:width|height|margin|padding|top|left)\s*:/);
+    // the glow is a pre-rendered shadow that only fades
+    expect(rule('.card-depth::before')).toMatch(/box-shadow:/);
+    expect(rule('.card-depth::before')).toMatch(/opacity:\s*0;/);
+    expect(rule('.card-depth:is(:hover, :focus-visible)::before')).toMatch(/opacity:\s*1;/);
+    expect(rule('.card-depth:is(:hover, :focus-visible)::before')).not.toMatch(/box-shadow/);
+    // nothing a hover changes moves the layout
+    expect(CSS).not.toMatch(/\.card-depth:is\(:hover, :focus-visible\)[^{]*\{[^}]*(?:width|height|margin|padding|top|left|right|bottom|inset)\s*:/);
   });
 
-  it('eases in over the hover token and out over base', () => {
+  it('springs in over the hover token and eases out over base', () => {
     expect(rule('.card-depth')).toMatch(/var\(--motion-base\)\s+var\(--ease-out-quad\)/);
-    expect(rule('.card-depth:is(:hover, :focus-visible)')).toMatch(/transition-duration:\s*var\(--motion-hover\)/);
+    expect(rule('.card-depth:is(:hover, :focus-visible)')).toMatch(/transform var\(--motion-hover\) var\(--ease-spring\)/);
+    expect(rule('.card-depth:is(:hover, :focus-visible) .card-arrow')).toMatch(/transform var\(--motion-hover\) var\(--ease-spring\)/);
   });
 
   it('keeps the colour change but drops every transform under reduced motion', () => {

@@ -21,24 +21,30 @@ const config: Config = {
     },
     extend: {
       // Motion tokens v2 (pinned by motion.test.ts; globals.css mirrors them as
-      // --motion-* / --ease-* for CSS-driven motion). micro = press feedback;
-      // fast = colour, border and opacity feedback; hover = hover-in depth;
-      // base = hover-out, overlays, route transitions, the tab indicator;
-      // reveal = scroll reveals and secondary entrance steps; entrance = a
-      // page title's first-load rise. out-quad eases things arriving;
-      // entrance is the slower title curve.
+      // --motion-* / --ease-* for CSS-driven motion, next to the distances and
+      // staggers, so all tuning happens in these two places). Calibrated to
+      // read clearly at normal speed. micro = press feedback; fast = colour,
+      // border and opacity feedback; hover = hover-in depth; base = hover-out,
+      // the header state, overlays, route transitions; glide = the tab
+      // indicator; reveal = scroll reveals and secondary entrance steps;
+      // entrance = a page title's first-load rise. out-quad eases small
+      // things arriving; entrance is a soft ease-out for rises; spring is a
+      // damped spring (zeta 0.72, ~4% overshoot) sampled for linear().
       transitionDuration: {
         micro: "100ms",
         fast: "150ms",
-        hover: "160ms",
+        hover: "220ms",
         base: "250ms",
-        reveal: "420ms",
-        entrance: "800ms",
+        glide: "450ms",
+        reveal: "600ms",
+        entrance: "900ms",
       },
       transitionTimingFunction: {
         standard: "cubic-bezier(0.4, 0, 0.2, 1)",
         "out-quad": "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-        entrance: "cubic-bezier(0.25, 0.1, 0.25, 1)",
+        entrance: "cubic-bezier(0.22, 1, 0.36, 1)",
+        spring:
+          "linear(0, 0.042, 0.143, 0.275, 0.415, 0.55, 0.672, 0.775, 0.858, 0.922, 0.969, 1.001, 1.022, 1.033, 1.038, 1.038, 1.035, 1.03, 1.025, 1.02, 1.015, 1.01, 1.007, 1.004, 1)",
       },
       colors: {
         background: "hsl(var(--background))",

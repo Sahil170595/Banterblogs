@@ -113,11 +113,11 @@ describe('header scroll state', () => {
     }
   });
 
-  it('changes over the hover token and animates colour only', () => {
+  it('changes over the base token (about 250ms) and animates colour only', () => {
     const header = render(<Header />).container.querySelector('header')!;
 
     expect(classes(header)).toEqual(
-      expect.arrayContaining(['transition-[background-color,border-color]', 'duration-hover', 'ease-out-quad']),
+      expect.arrayContaining(['transition-[background-color,border-color]', 'duration-base', 'ease-out-quad']),
     );
   });
 

@@ -10,8 +10,12 @@ import { ENTRANCE_CARDS } from '../ReportTabs';
 
 const CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const ENTRANCE_GATE = 'html[data-motion="on"][data-entrance="/reports"]';
-// the entrance must be over by then (Phase R1-G)
-const SETTLED_BY_MS = 1200;
+// the entrance must be over by then: a 900ms title and 600ms rises, calibrated
+// 2026-09-12 to read clearly at normal speed
+const SETTLED_BY_MS = 1300;
+// LCP counts any painted opacity above 0; the title still reads as a heading
+// on its first frame from here up
+const MIN_TITLE_FROM_OPACITY = 0.3;
 
 function blocks(css: string): Array<{ prelude: string; body: string }> {
   const out: Array<{ prelude: string; body: string }> = [];
@@ -57,36 +61,40 @@ describe('archive entrance', () => {
     expect(names.sort()).toEqual(['entrance-line', 'entrance-rise']);
   });
 
-  it('brings the title into focus without hiding it: transform and filter from the first frame, no opacity', () => {
+  it('brings the title into focus without hiding it: a rise out of a blur from a partial opacity, never 0', () => {
     const line = keyframes('entrance-line');
-    expect(line).toMatch(/transform:\s*translateY\(20%\)/);
+    expect(line).toMatch(/transform:\s*translateY\(var\(--entrance-rise\)\)/);
     expect(line).toMatch(/filter:\s*blur\(var\(--entrance-blur\)\)/);
-    expect(line).not.toMatch(/opacity/);
-    expect(CSS).toMatch(/--entrance-blur:\s*8px;/);
+    expect(line).toMatch(/opacity:\s*var\(--entrance-from-opacity\)/);
+    expect(Number(/--entrance-from-opacity:\s*([\d.]+);/.exec(CSS)?.[1])).toBeGreaterThanOrEqual(MIN_TITLE_FROM_OPACITY);
+    expect(CSS).toMatch(/--entrance-rise:\s*24px;/);
+    expect(CSS).toMatch(/--entrance-blur:\s*12px;/);
     const lineRule = rules.find((rule) => rule.prelude.endsWith('.entrance-line'))!;
     expect(lineRule.body).toMatch(/var\(--motion-entrance\)\s+var\(--ease-entrance\)/);
     // line 0 starts at once; each later line one --stagger-line later
     expect(lineRule.body).toMatch(/animation-delay:\s*calc\(var\(--line, 0\) \* var\(--stagger-line\)\)/);
   });
 
-  it('staggers the first cards 60ms apart and settles within 1.2s', () => {
-    expect(ms('entrance-card-step')).toBe(60);
+  it('staggers the first cards one item step (70ms) apart and settles within 1.3s', () => {
+    expect(ms('stagger-item')).toBe(70);
+    const cards = rules.find((rule) => rule.prelude.endsWith('[data-entrance-card]'))!;
+    expect(cards.body).toMatch(/calc\(var\(--entrance-cards-delay\) \+ var\(--entrance-i, 0\) \* var\(--stagger-item\)\)/);
     const ends = [
       ms('stagger-line') + token('entrance'),
       ms('entrance-intro-delay') + token('reveal'),
       ms('entrance-tabs-delay') + token('reveal'),
-      ms('entrance-cards-delay') + (ENTRANCE_CARDS - 1) * ms('entrance-card-step') + token('reveal'),
+      ms('entrance-cards-delay') + (ENTRANCE_CARDS - 1) * ms('stagger-item') + token('reveal'),
     ];
     expect(Math.max(...ends)).toBeLessThanOrEqual(SETTLED_BY_MS);
   });
 });
 
 describe('archive tab motion', () => {
-  it('glides the indicator on transform over base, only under the motion gate', () => {
+  it('springs the indicator on transform over the glide token, only under the motion gate', () => {
     const moving = rules.filter((rule) => rule.prelude.includes('[data-tab-indicator]') && /transition:/.test(rule.body));
     expect(moving).toHaveLength(1);
     expect(moving[0].prelude).toMatch(/^html\[data-motion="on"\]/);
-    expect(moving[0].body).toMatch(/transition:\s*transform var\(--motion-base\) var\(--ease-standard\);/);
+    expect(moving[0].body).toMatch(/transition:\s*transform var\(--motion-glide\) var\(--ease-spring\);/);
   });
 
   it('fades the new grid in over the hover token after a tab change, only under the gate', () => {

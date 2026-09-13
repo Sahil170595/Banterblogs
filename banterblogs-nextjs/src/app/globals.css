@@ -305,16 +305,22 @@ html {
   --motion-fast: theme('transitionDuration.fast');
   --motion-hover: theme('transitionDuration.hover');
   --motion-base: theme('transitionDuration.base');
+  --motion-glide: theme('transitionDuration.glide');
   --motion-reveal: theme('transitionDuration.reveal');
   --motion-entrance: theme('transitionDuration.entrance');
   --ease-standard: theme('transitionTimingFunction.standard');
   --ease-out-quad: theme('transitionTimingFunction.out-quad');
   --ease-entrance: theme('transitionTimingFunction.entrance');
+  --ease-spring: theme('transitionTimingFunction.spring');
   /* stagger steps: items entering together, lines of a heading */
-  --stagger-item: 50ms;
-  --stagger-line: 100ms;
-  /* how far a revealed item rises into place */
-  --reveal-rise: 8px;
+  --stagger-item: 70ms;
+  --stagger-line: 120ms;
+  /* a reveal rises this far out of this much blur */
+  --reveal-rise: 16px;
+  --reveal-blur: 6px;
+  /* hover depth: the card lifts, its arrow nudges */
+  --hover-lift: 4px;
+  --hover-nudge: 4px;
   /* one live-state loop (a 2-3 s pulse) */
   --motion-pulse: 2400ms;
 }
@@ -325,26 +331,51 @@ html {
    batch that enters together. */
 html[data-motion="on"] [data-reveal="shown"] {
   transition:
-    opacity var(--motion-reveal) var(--ease-out-quad),
-    transform var(--motion-reveal) var(--ease-out-quad);
+    opacity var(--motion-reveal) var(--ease-entrance),
+    transform var(--motion-reveal) var(--ease-entrance),
+    filter var(--motion-reveal) var(--ease-entrance);
   transition-delay: calc(var(--reveal-i, 0) * var(--stagger-item));
 }
 
 html[data-motion="on"] [data-reveal="pending"] {
   opacity: 0;
   transform: translateY(var(--reveal-rise));
+  filter: blur(var(--reveal-blur));
 }
 
-/* Archive card hover depth (components/reports/ReportCard.tsx): a 2px lift,
-   a brighter visual surface and an arrow nudging 2px into place; in over the
-   hover token, out over base. Transform and colour only, so nothing beside
-   the card moves. */
+/* Archive card hover depth (components/reports/ReportCard.tsx): the card
+   lifts --hover-lift on the spring, its visual brightens over a faint ember
+   glow and the arrow springs --hover-nudge into place; in over the hover
+   token, out over base. Transform, opacity and colour only, so nothing
+   beside the card moves. */
 .card-depth {
+  position: relative;
   transition: transform var(--motion-base) var(--ease-out-quad);
 }
 
 .card-depth:is(:hover, :focus-visible) {
-  transform: translateY(-2px);
+  transform: translateY(calc(-1 * var(--hover-lift)));
+  transition: transform var(--motion-hover) var(--ease-spring);
+}
+
+/* the glow is a pre-rendered shadow under the visual that only fades, so a
+   hover never repaints a shadow */
+.card-depth::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.625rem;
+  box-shadow:
+    0 22px 44px -22px hsl(var(--primary) / 0.45),
+    0 12px 28px -16px rgb(0 0 0 / 0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-base) var(--ease-out-quad);
+}
+
+.card-depth:is(:hover, :focus-visible)::before {
+  opacity: 1;
   transition-duration: var(--motion-hover);
 }
 
@@ -367,7 +398,7 @@ html[data-motion="on"] [data-reveal="pending"] {
 
 .card-depth .card-arrow {
   opacity: 0;
-  transform: translateX(-2px);
+  transform: translateX(calc(-1 * var(--hover-nudge)));
   transition:
     opacity var(--motion-base) var(--ease-out-quad),
     transform var(--motion-base) var(--ease-out-quad);
@@ -376,7 +407,9 @@ html[data-motion="on"] [data-reveal="pending"] {
 .card-depth:is(:hover, :focus-visible) .card-arrow {
   opacity: 1;
   transform: none;
-  transition-duration: var(--motion-hover);
+  transition:
+    opacity var(--motion-hover) var(--ease-out-quad),
+    transform var(--motion-hover) var(--ease-spring);
 }
 
 .card-badge {
@@ -413,11 +446,6 @@ html[data-motion="on"] [data-reveal="pending"] {
 
 .rv .k {
   stroke: hsl(var(--foreground) / 0.56);
-}
-
-.rv .t {
-  fill: none;
-  stroke: hsl(var(--foreground) / 0.22);
 }
 
 .rv .d {
@@ -488,21 +516,24 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
 
 /* The archive's first-load entrance (reports/page.tsx, ReportTabs.tsx), only
    while the pre-paint gate holds the entrance window open on a full load of
-   /reports: the title lines rise 20% out of a blur, 100ms apart; intro and
-   stats follow at 150ms, the tabs at 200ms, the first cards 60ms apart. The
-   title moves transform and filter only, never opacity, so it paints on the
-   first frame (it is the page's LCP element). Settled within 1s. */
+   /reports: the title lines rise --entrance-rise out of --entrance-blur, one
+   --stagger-line apart, from a partial opacity (never 0) so the title, the
+   page's LCP element, paints on the first frame; intro and stats follow,
+   then the tabs, then the first cards one --stagger-item apart, each rising
+   like a reveal. Settled in about 1.25s. */
 :root {
+  --entrance-rise: 24px;
+  --entrance-blur: 12px;
+  --entrance-from-opacity: 0.4;
   --entrance-intro-delay: 150ms;
-  --entrance-tabs-delay: 200ms;
-  --entrance-cards-delay: 260ms;
-  --entrance-card-step: 60ms;
-  --entrance-blur: 8px;
+  --entrance-tabs-delay: 220ms;
+  --entrance-cards-delay: 300ms;
 }
 
 @keyframes entrance-line {
   from {
-    transform: translateY(20%);
+    opacity: var(--entrance-from-opacity);
+    transform: translateY(var(--entrance-rise));
     filter: blur(var(--entrance-blur));
   }
 }
@@ -511,6 +542,7 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
   from {
     opacity: 0;
     transform: translateY(var(--reveal-rise));
+    filter: blur(var(--reveal-blur));
   }
 }
 
@@ -520,22 +552,22 @@ html[data-motion="on"][data-entrance="/reports"] .entrance-line {
 }
 
 html[data-motion="on"][data-entrance="/reports"] .entrance-intro {
-  animation: entrance-rise var(--motion-reveal) var(--ease-out-quad) var(--entrance-intro-delay) both;
+  animation: entrance-rise var(--motion-reveal) var(--ease-entrance) var(--entrance-intro-delay) both;
 }
 
 html[data-motion="on"][data-entrance="/reports"] .entrance-tabs {
-  animation: entrance-rise var(--motion-reveal) var(--ease-out-quad) var(--entrance-tabs-delay) both;
+  animation: entrance-rise var(--motion-reveal) var(--ease-entrance) var(--entrance-tabs-delay) both;
 }
 
 html[data-motion="on"][data-entrance="/reports"] [data-entrance-card] {
-  animation: entrance-rise var(--motion-reveal) var(--ease-out-quad) both;
-  animation-delay: calc(var(--entrance-cards-delay) + var(--entrance-i, 0) * var(--entrance-card-step));
+  animation: entrance-rise var(--motion-reveal) var(--ease-entrance) both;
+  animation-delay: calc(var(--entrance-cards-delay) + var(--entrance-i, 0) * var(--stagger-item));
 }
 
-/* Archive tabs (ReportTabs.tsx): one underline glides between tabs over
-   base, transform only; the grid cross-fades in over the hover token after
-   a tab the visitor chose. Server and no-JS markup show a static underline
-   in the active tab until the indicator is placed. */
+/* Archive tabs (ReportTabs.tsx): one underline springs between tabs over
+   the glide token, transform only; the grid cross-fades in over the hover
+   token after a tab the visitor chose. Server and no-JS markup show a static
+   underline in the active tab until the indicator is placed. */
 [data-tab-indicator] {
   position: absolute;
   left: 0;
@@ -557,7 +589,7 @@ html[data-motion="on"][data-entrance="/reports"] [data-entrance-card] {
 }
 
 html[data-motion="on"] [data-indicator="live"] [data-tab-indicator] {
-  transition: transform var(--motion-base) var(--ease-standard);
+  transition: transform var(--motion-glide) var(--ease-spring);
 }
 
 @keyframes panel-in {
@@ -574,6 +606,7 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
     transition: none !important;
   }
 
@@ -603,6 +636,7 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
     transition: none !important;
   }
 }

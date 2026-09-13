@@ -24,12 +24,17 @@ const NON_REVEAL_OBSERVERS: Record<string, string> = {
   [path.join('components', 'TableOfContents.tsx')]: 'scroll-spy: marks the heading in view; nothing moves',
 };
 
-const DURATION_TOKENS = { micro: '100ms', fast: '150ms', hover: '160ms', base: '250ms', reveal: '420ms', entrance: '800ms' };
+// calibrated 2026-09-12 to read clearly at normal speed (owner direction)
+const DURATION_TOKENS = { micro: '100ms', fast: '150ms', hover: '220ms', base: '250ms', glide: '450ms', reveal: '600ms', entrance: '900ms' };
 const CURVE_TOKENS = {
   standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
   'out-quad': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  entrance: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+  entrance: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  spring:
+    'linear(0, 0.042, 0.143, 0.275, 0.415, 0.55, 0.672, 0.775, 0.858, 0.922, 0.969, 1.001, 1.022, 1.033, 1.038, 1.038, 1.035, 1.03, 1.025, 1.02, 1.015, 1.01, 1.007, 1.004, 1)',
 };
+// the spring may overshoot a little, never visibly bounce
+const MAX_SPRING_OVERSHOOT = 0.05;
 
 // Slowest framer transition allowed outside the scenes, in seconds: overlays
 // run at duration-base (0.25 s), so anything slower is decoration. Page motion
@@ -163,10 +168,18 @@ describe('motion tokens', () => {
     expect(extend?.transitionTimingFunction).toEqual(CURVE_TOKENS);
   });
 
-  it('steps staggers through CSS custom properties: items 50 ms, lines 100 ms', () => {
+  it('steps staggers through CSS custom properties: items 70 ms, lines 120 ms', () => {
     const css = fs.readFileSync(GLOBALS_CSS, 'utf8');
-    expect(css).toMatch(/--stagger-item:\s*50ms;/);
-    expect(css).toMatch(/--stagger-line:\s*100ms;/);
+    expect(css).toMatch(/--stagger-item:\s*70ms;/);
+    expect(css).toMatch(/--stagger-line:\s*120ms;/);
+  });
+
+  it('samples the spring from 0 to 1 with only a slight overshoot', () => {
+    const stops = /^linear\((.*)\)$/.exec(CURVE_TOKENS.spring)![1].split(',').map(Number);
+    expect(stops[0]).toBe(0);
+    expect(stops.at(-1)).toBe(1);
+    expect(Math.max(...stops) - 1).toBeGreaterThan(0);
+    expect(Math.max(...stops) - 1).toBeLessThanOrEqual(MAX_SPRING_OVERSHOOT);
   });
 
   it('reads every CSS motion duration and curve from the tokens, so CSS and classes cannot drift', () => {
@@ -309,6 +322,7 @@ describe('reveal primitive guarantees', () => {
     const declarations = rest.map((rule) => rule.declarations).join(';');
     expect(declarations).toMatch(/opacity:\s*1\s*!important/);
     expect(declarations).toMatch(/transform:\s*none\s*!important/);
+    expect(declarations).toMatch(/filter:\s*none\s*!important/);
     expect(declarations).toMatch(/transition:\s*none\s*!important/);
   });
 });
