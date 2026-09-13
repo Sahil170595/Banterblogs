@@ -173,6 +173,29 @@ describe('report contents scroll-spy', () => {
     expect(marker.style.transform).toBe(centredOn('results'));
   });
 
+  it('follows nothing while its sidebar is hidden (the phone layout)', () => {
+    const body = document.createElement('div');
+    for (const id of IDS) {
+      const heading = document.createElement('h2');
+      heading.id = id;
+      heading.getBoundingClientRect = () => rect(HEADING_TOP[id] - 1200);
+      body.append(heading);
+    }
+    document.body.append(body);
+    const { container } = render(
+      <nav style={{ display: 'none' }}>
+        <ReportTocSpy ids={IDS}>
+          <a href="#intro">intro</a>
+          <a href="#methods">methods</a>
+        </ReportTocSpy>
+      </nav>,
+    );
+    act(() => band().callback([]));
+
+    expect(current(container)).toEqual([]);
+    expect(container.querySelector('.report-toc-marker')?.hasAttribute(MARKER_PLACED_ATTRIBUTE)).toBe(false);
+  });
+
   it('never listens to scroll, and lets go of both observers on unmount', () => {
     const listen = vi.spyOn(window, 'addEventListener');
     const { unmount } = mountPage();

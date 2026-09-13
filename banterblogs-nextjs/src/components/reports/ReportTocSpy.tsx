@@ -42,6 +42,9 @@ export function ReportTocSpy({ ids, children }: { ids: string[]; children: React
     const byHref = new Map([...track.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')].map((link) => [link.getAttribute('href')!.slice(1), link]));
     const links = new Map(headings.map((heading) => [heading.id, byHref.get(heading.id) ?? null]));
     const scroller = track.closest<HTMLElement>('[data-toc-scroller]');
+    // the phone layout hides the sidebar: nothing to follow there
+    const nav = track.closest('nav');
+    const hidden = () => nav !== null && getComputedStyle(nav).display === 'none';
     let active: string | null = null;
     let endInView = false;
     let placing = 0;
@@ -56,6 +59,7 @@ export function ReportTocSpy({ ids, children }: { ids: string[]; children: React
     };
 
     const update = () => {
+      if (hidden()) return;
       const line = endInView ? window.innerHeight : window.innerHeight * ACTIVATION_LINE;
       const id = headingBeingRead(headings, line)?.id ?? null;
       if (id === active) return;

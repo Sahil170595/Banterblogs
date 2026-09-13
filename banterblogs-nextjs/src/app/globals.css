@@ -980,7 +980,9 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   --tw-prose-hr: hsl(var(--border) / 0.6);
   --tw-prose-th-borders: hsl(var(--border));
   --tw-prose-td-borders: hsl(var(--border) / 0.5);
-  max-width: 66ch;
+  /* ~77 characters a line: Manrope's zero is 0.61em wide against ~0.45em a
+     character of running text, so a 62-68ch measure would set 84-93 */
+  max-width: 39rem;
   font-size: 1.125rem;
   line-height: 1.6;
   color: hsl(var(--prose));

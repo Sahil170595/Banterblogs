@@ -16,6 +16,11 @@ const BLOCK = START >= 0 && END > START ? GLOBALS_CSS.slice(START, END).replace(
 
 const ROOT_PX = 16;
 const MIN_CONTRAST = 12;
+// Manrope's running text averages this much of an em a character (measured on
+// TR138 at 18px: 8.06px); its zero, the CSS ch, is 0.61em, so a ch measure
+// would overstate the line by a third
+const MANROPE_AVG_CHAR_EM = 0.448;
+const CHARS_PER_LINE = { min: 65, max: 80 };
 const MAX_SIZES_ON_PAGE = 7;
 // the text sizes the header and footer already put on every interior page
 // (Header.tsx nav 11px on desktop, badge 16, wordmark 18; Footer.tsx 14 and 18)
@@ -82,16 +87,19 @@ describe('report reading type', () => {
     expect(value(declarationsOf(baseRules, '.report-prose'), 'color')).toBe('hsl(var(--prose))');
   });
 
-  it('sets prose at 17-18px on 1.55-1.6 leading in a 62-68ch measure', () => {
+  it('sets prose at 17-18px on 1.55-1.6 leading in a measure of 65-80 characters a line', () => {
     const prose = declarationsOf(baseRules, '.report-prose');
-    expect(px(value(prose, 'font-size')!)).toBeGreaterThanOrEqual(17);
-    expect(px(value(prose, 'font-size')!)).toBeLessThanOrEqual(18);
+    const size = px(value(prose, 'font-size')!);
+    expect(size).toBeGreaterThanOrEqual(17);
+    expect(size).toBeLessThanOrEqual(18);
     expect(Number(value(prose, 'line-height'))).toBeGreaterThanOrEqual(1.55);
     expect(Number(value(prose, 'line-height'))).toBeLessThanOrEqual(1.6);
-    const measure = parseFloat(value(prose, 'max-width')!);
-    expect(value(prose, 'max-width')).toMatch(/ch$/);
-    expect(measure).toBeGreaterThanOrEqual(62);
-    expect(measure).toBeLessThanOrEqual(68);
+    // the spec's 62-68ch sets 84-93 Manrope characters; the line limit is the one kept
+    const measure = value(prose, 'max-width')!;
+    expect(measure).toMatch(/rem$/);
+    const charsPerLine = px(measure) / (size * MANROPE_AVG_CHAR_EM);
+    expect(charsPerLine).toBeGreaterThanOrEqual(CHARS_PER_LINE.min);
+    expect(charsPerLine).toBeLessThanOrEqual(CHARS_PER_LINE.max);
   });
 
   it('sets h2 at 22-28px, 560-600 weight, -0.02em; h3 at 18-20px and 600', () => {
