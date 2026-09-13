@@ -260,6 +260,34 @@ describe('<RevealScope> behaviour', () => {
     expect(observer().observed.has(below)).toBe(false);
   });
 
+  it('measures every target before it holds any, so no hold forces a layout for the next measure', () => {
+    armMotion();
+    const steps: string[] = [];
+    const original = HTMLElement.prototype.getBoundingClientRect;
+    const viewport = Object.getOwnPropertyDescriptor(globalThis, 'innerHeight');
+    const setAttribute = Element.prototype.setAttribute;
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      steps.push('measure');
+      const top = Number(this.dataset.top ?? 0);
+      return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
+    };
+    Object.defineProperty(globalThis, 'innerHeight', { configurable: true, get: () => (steps.push('measure'), VIEWPORT_HEIGHT) });
+    vi.spyOn(Element.prototype, 'setAttribute').mockImplementation(function (this: Element, name: string, value: string) {
+      if (name === REVEAL_ATTRIBUTE && value === REVEAL_PENDING) steps.push('hold');
+      setAttribute.call(this, name, value);
+    });
+    const blocks = [BELOW_FOLD, BELOW_FOLD + 100, BELOW_FOLD + 200].map((top) => `<pre ${REVEAL_ATTRIBUTE}="" data-top="${top}"><code>${top}</code></pre>`);
+    try {
+      render(<RevealScope className="report-prose" html={blocks.join('')} />);
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = original;
+      if (viewport) Object.defineProperty(globalThis, 'innerHeight', viewport);
+    }
+
+    expect(steps.filter((step) => step === 'hold')).toHaveLength(blocks.length);
+    expect(steps.lastIndexOf('measure')).toBeLessThan(steps.indexOf('hold'));
+  });
+
   it('shares the one observer with <Reveal>, and lets go of its targets on unmount', () => {
     armMotion();
     const before = io.instances.length;

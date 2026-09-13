@@ -31,18 +31,15 @@ function revealEntering(entries: IntersectionObserverEntry[]) {
   });
 }
 
-/**
- * Holds an element back until it scrolls into view, then reveals it once.
- * Only content below the fold is held, and only while the pre-paint gate has
- * armed motion: what is on screen at mount stays at rest. Returns the cleanup
- * for unmount.
- */
-export function armReveal(el: HTMLElement): (() => void) | undefined {
-  if (document.documentElement.getAttribute(MOTION_ATTRIBUTE) !== 'on') return undefined;
-  if (typeof IntersectionObserver === 'undefined') return undefined;
-  // revealed once means revealed for good, wherever it has scrolled to since
-  if (el.getAttribute(REVEAL_ATTRIBUTE) === REVEAL_SHOWN) return undefined;
-  if (el.getBoundingClientRect().top < window.innerHeight) return undefined;
+const motionArmed = () =>
+  document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on' && typeof IntersectionObserver !== 'undefined';
+
+// Reads only. Revealed once means revealed for good, wherever it has scrolled to since.
+const belowFold = (el: HTMLElement, fold: number) =>
+  el.getAttribute(REVEAL_ATTRIBUTE) !== REVEAL_SHOWN && el.getBoundingClientRect().top >= fold;
+
+// The write: pending until the shared observer sees it enter.
+function hold(el: HTMLElement): () => void {
   el.setAttribute(REVEAL_ATTRIBUTE, REVEAL_PENDING);
   shared ??= new IntersectionObserver(revealEntering, { rootMargin: REVEAL_ROOT_MARGIN });
   shared.observe(el);
@@ -50,12 +47,26 @@ export function armReveal(el: HTMLElement): (() => void) | undefined {
 }
 
 /**
+ * Holds an element back until it scrolls into view, then reveals it once.
+ * Only content below the fold is held, and only while the pre-paint gate has
+ * armed motion: what is on screen at mount stays at rest. Returns the cleanup
+ * for unmount.
+ */
+export function armReveal(el: HTMLElement): (() => void) | undefined {
+  if (!motionArmed() || !belowFold(el, window.innerHeight)) return undefined;
+  return hold(el);
+}
+
+/**
  * Arms every marked target inside a container whose markup React sets as a
- * string (RevealScope), exactly as armReveal arms one. Returns the cleanup.
+ * string (RevealScope), as armReveal arms one. Every target is measured
+ * before any is held: a hold dirties style and layout, so measuring after
+ * each one would force a layout per target. Returns the cleanup.
  */
 export function armRevealScope(container: HTMLElement): (() => void) | undefined {
-  const cleanups = [...container.querySelectorAll<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)]
-    .map((el) => armReveal(el))
-    .filter((cleanup): cleanup is () => void => cleanup !== undefined);
-  return cleanups.length ? () => cleanups.forEach((cleanup) => cleanup()) : undefined;
+  if (!motionArmed()) return undefined;
+  const fold = window.innerHeight;
+  const below = [...container.querySelectorAll<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)].filter((el) => belowFold(el, fold));
+  const releases = below.map(hold);
+  return releases.length ? () => releases.forEach((release) => release()) : undefined;
 }
