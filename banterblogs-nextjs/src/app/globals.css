@@ -211,8 +211,8 @@ html {
   padding: 0;
 }
 
-/* Galactic landing: tracking-ticker system change (neutralized by the
-   global prefers-reduced-motion block below) */
+/* Galactic landing: tracking-ticker system change (ended at once by the
+   reduced-motion rule in the motion primitives block below) */
 @keyframes galactic-ticker-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -286,97 +286,166 @@ html {
   box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
 }
 
-/* Reduced Motion Preferences */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+/* motion primitives. Every duration, curve, distance, scale, blur and
+   stagger is a named token, here or in the Tailwind theme, from the
+   researched motion brief (2026-09-12): responses stay 150-400ms and read as
+   obvious through size and staging, not length. Anything that moves on its
+   own is scoped to html[data-motion="on"], which the pre-paint gate
+   (components/motion/prePaint.ts) sets only when JavaScript runs and the
+   visitor allows motion. */
+:root {
+  --duration-fast: theme('transitionDuration.fast');
+  --duration-press: theme('transitionDuration.press');
+  --duration-hover: theme('transitionDuration.hover');
+  --duration-base: theme('transitionDuration.base');
+  --duration-enter: theme('transitionDuration.enter');
+  --duration-route: theme('transitionDuration.route');
+  --duration-morph: theme('transitionDuration.morph');
+  --duration-reveal: theme('transitionDuration.reveal');
+  --duration-exit: theme('transitionDuration.exit');
+  --duration-handoff: theme('transitionDuration.handoff');
+  --ease-standard: theme('transitionTimingFunction.standard');
+  --ease-strong-out: theme('transitionTimingFunction.strong-out');
+  --ease-strong-in-out: theme('transitionTimingFunction.strong-in-out');
+  --ease-move: theme('transitionTimingFunction.move');
+  --ease-drawer: theme('transitionTimingFunction.drawer');
+  /* springs: strong-out where linear() is unsupported; each pairs with its
+     own duration (gentle: morphs and drawers; snappy: small UI; bouncy: rare
+     delight only) */
+  --ease-spring-gentle: var(--ease-strong-out);
+  --ease-spring-snappy: var(--ease-strong-out);
+  --ease-spring-bouncy: var(--ease-strong-out);
+  --duration-spring-gentle: 740ms;
+  --duration-spring-snappy: 490ms;
+  --duration-spring-bouncy: 820ms;
+  /* distances: arrow nudge, card lift, hero rise, scroll reveal, route slide */
+  --motion-nudge: 4px;
+  --motion-lift: 3px;
+  --motion-rise: 12px;
+  --motion-reveal: 16px;
+  --motion-route: 32px;
+  /* scales: press, card press, overlay enter, icon swap, scroll reveal */
+  --scale-press: 0.97;
+  --scale-press-card: 0.985;
+  --scale-enter: 0.96;
+  --scale-icon: 0.8;
+  --scale-reveal: 0.98;
+  /* blurs: crossfade, shared-title morph, hero entrance, header glass */
+  --blur-crossfade: 2px;
+  --blur-morph: 3px;
+  --blur-enter: 6px;
+  --blur-glass: 16px;
+  /* staggers: words, items entering together, hero groups */
+  --stagger-word: 35ms;
+  --stagger-item: 50ms;
+  --stagger-group: 80ms;
+  /* one live-state loop (a 2-3 s pulse) */
+  --duration-pulse: 2400ms;
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    /* gentle: bounce 0, T 0.5s; no overshoot */
+    --ease-spring-gentle: linear(0, 0.005 1.1%, 0.02 2.3%, 0.046 3.6%, 0.082 5.1%, 0.117 6.3%, 0.16 7.6%, 0.365 13.7%, 0.463 16.8%, 0.512 18.5%, 0.557 20.1%, 0.599 21.7%, 0.638 23.3%, 0.674 25%, 0.708 26.6%, 0.768 30%, 0.819 33.6%, 0.862 37.4%, 0.9 41.8%, 0.931 46.7%, 0.954 52.1%, 0.972 58.4%, 0.984 65.3%, 0.992 73.6%, 0.996 83.1%, 1);
+    /* snappy: bounce 0.15, T 0.35s; 0.6% overshoot */
+    --ease-spring-snappy: linear(0, 0.006 1.3%, 0.023 2.6%, 0.053 4.1%, 0.095 5.7%, 0.136 7.1%, 0.187 8.6%, 0.413 15%, 0.516 18.1%, 0.566 19.7%, 0.613 21.3%, 0.656 22.9%, 0.696 24.4%, 0.732 25.9%, 0.766 27.5%, 0.824 30.7%, 0.873 34%, 0.913 37.5%, 0.946 41.3%, 0.971 45.6%, 0.989 50.3%, 1 55.7%, 1.005 61%, 1.006 67.7%, 1);
+    /* bouncy: bounce 0.3, T 0.5s; 4.6% overshoot */
+    --ease-spring-bouncy: linear(0, 0.002 0.6%, 0.007 1.1%, 0.015 1.8%, 0.027 2.4%, 0.061 3.7%, 0.111 5.2%, 0.16 6.5%, 0.221 7.8%, 0.478 13.4%, 0.592 16%, 0.647 17.3%, 0.697 18.6%, 0.744 19.9%, 0.786 21.2%, 0.825 22.5%, 0.86 23.8%, 0.891 25.1%, 0.92 26.5%, 0.945 27.8%, 0.967 29.2%, 0.986 30.6%, 1.002 32.1%, 1.022 34.4%, 1.035 37%, 1.043 39.7%, 1.046 42.8%, 1.041 48%, 1.012 62.6%, 1.003 70.4%, 0.998 82.2%, 1);
   }
 }
 
-/* motion primitives. Durations and curves come from the Tailwind motion
-   tokens; everything that moves is scoped to html[data-motion="on"], which
-   the pre-paint gate (components/motion/prePaint.ts) sets only when
-   JavaScript runs and the visitor allows motion. */
+/* Press feedback for buttons (about, work): the colour fades over fast and
+   the button settles to --scale-press over press on strong-out. */
+.pressable {
+  transition-property: color, background-color, border-color, transform;
+  transition-duration: var(--duration-fast), var(--duration-fast), var(--duration-fast), var(--duration-press);
+  transition-timing-function: var(--ease-standard), var(--ease-standard), var(--ease-standard), var(--ease-strong-out);
+}
+
+.pressable:active {
+  transform: scale(var(--scale-press));
+}
+
+/* Interior header (components/Header.tsx): a glass layer and hairline under
+   the bar, with the ember rule, fade in over the first
+   --header-surface-range of scroll on a scroll timeline. Only the layers'
+   opacity animates, never the blur radius. Without scroll timelines, or with
+   motion reduced, the bar is simply solid. */
 :root {
-  --motion-micro: theme('transitionDuration.micro');
-  --motion-fast: theme('transitionDuration.fast');
-  --motion-hover: theme('transitionDuration.hover');
-  --motion-base: theme('transitionDuration.base');
-  --motion-glide: theme('transitionDuration.glide');
-  --motion-reveal: theme('transitionDuration.reveal');
-  --motion-entrance: theme('transitionDuration.entrance');
-  --ease-standard: theme('transitionTimingFunction.standard');
-  --ease-out-quad: theme('transitionTimingFunction.out-quad');
-  --ease-entrance: theme('transitionTimingFunction.entrance');
-  --ease-spring: theme('transitionTimingFunction.spring');
-  /* stagger steps: items entering together, lines of a heading */
-  --stagger-item: 70ms;
-  --stagger-line: 120ms;
-  /* a reveal rises this far out of this much blur */
-  --reveal-rise: 16px;
-  --reveal-blur: 6px;
-  /* hover depth: the card lifts, its arrow nudges */
-  --hover-lift: 4px;
-  --hover-nudge: 4px;
-  /* one live-state loop (a 2-3 s pulse) */
-  --motion-pulse: 2400ms;
+  --header-surface-range: 64px;
+}
+
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: hsl(var(--background) / 0.72);
+  backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+  box-shadow: inset 0 -1px 0 hsl(var(--border) / 0.6);
+  pointer-events: none;
+}
+
+@keyframes header-surface {
+  from {
+    opacity: 0;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header::before,
+    .site-header::after {
+      animation: header-surface linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 var(--header-surface-range);
+    }
+  }
 }
 
 /* <Reveal> (components/motion/Reveal.tsx): only content below the fold at
-   mount is held pending, instantly; the shared observer marks it shown
-   once, and only that change transitions, with --reveal-i staggering a
-   batch that enters together. */
+   mount is held pending, instantly; the shared observer marks it shown once
+   and only that change transitions: it rises --motion-reveal from
+   --scale-reveal over the reveal token on strong-out, --reveal-i staggering a
+   batch one --stagger-item apart. No blur: a blur on each card layer cost
+   50-260ms frames while scrolling. */
 html[data-motion="on"] [data-reveal="shown"] {
   transition:
-    opacity var(--motion-reveal) var(--ease-entrance),
-    transform var(--motion-reveal) var(--ease-entrance),
-    filter var(--motion-reveal) var(--ease-entrance);
+    opacity var(--duration-reveal) var(--ease-strong-out),
+    transform var(--duration-reveal) var(--ease-strong-out);
   transition-delay: calc(var(--reveal-i, 0) * var(--stagger-item));
 }
 
 html[data-motion="on"] [data-reveal="pending"] {
   opacity: 0;
-  transform: translateY(var(--reveal-rise));
-  filter: blur(var(--reveal-blur));
+  transform: translateY(var(--motion-reveal)) scale(var(--scale-reveal));
 }
 
-/* Archive card hover depth (components/reports/ReportCard.tsx): the card
-   lifts --hover-lift on the spring, its visual brightens over a faint ember
-   glow and the arrow springs --hover-nudge into place; in over the hover
-   token, out over base. Transform, opacity and colour only, so nothing
-   beside the card moves. */
-.card-depth {
+/* Archive cards (components/reports/ReportCard.tsx). The link takes the
+   pointer and its .card-lift child moves, so a lifted card never slips out
+   from under the cursor; lift, glow and arrow run only where the device
+   really hovers. The glow is a pre-rendered ring and shadow on
+   .card-lift::after whose opacity animates: no shadow is ever transitioned.
+   In over the hover token, out over enter, on strong-out; the arrow nudges in
+   over hover and back over base; a press settles the card to
+   --scale-press-card. */
+.card-lift {
   position: relative;
-  transition: transform var(--motion-base) var(--ease-out-quad);
+  transition: transform var(--duration-enter) var(--ease-strong-out);
 }
 
-.card-depth:is(:hover, :focus-visible) {
-  transform: translateY(calc(-1 * var(--hover-lift)));
-  transition: transform var(--motion-hover) var(--ease-spring);
-}
-
-/* the glow is a pre-rendered shadow under the visual that only fades, so a
-   hover never repaints a shadow */
-.card-depth::before {
+.card-lift::after {
   content: "";
   position: absolute;
   inset: 0 0 auto;
   aspect-ratio: 16 / 9;
   border-radius: 0.625rem;
   box-shadow:
-    0 22px 44px -22px hsl(var(--primary) / 0.45),
-    0 12px 28px -16px rgb(0 0 0 / 0.7);
+    0 0 0 1px hsl(var(--primary) / 0.35),
+    0 12px 40px -12px hsl(var(--primary) / 0.35);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--motion-base) var(--ease-out-quad);
-}
-
-.card-depth:is(:hover, :focus-visible)::before {
-  opacity: 1;
-  transition-duration: var(--motion-hover);
+  transition: opacity var(--duration-enter) var(--ease-strong-out);
 }
 
 .card-visual {
@@ -385,31 +454,65 @@ html[data-motion="on"] [data-reveal="pending"] {
   border-radius: 0.625rem;
   background-color: hsl(var(--card));
   box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
-  transition:
-    background-color var(--motion-base) var(--ease-out-quad),
-    box-shadow var(--motion-base) var(--ease-out-quad);
-}
-
-.card-depth:is(:hover, :focus-visible) .card-visual {
-  background-color: hsl(var(--card-raised));
-  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.12);
-  transition-duration: var(--motion-hover);
+  transition: background-color var(--duration-enter) var(--ease-strong-out);
 }
 
 .card-depth .card-arrow {
   opacity: 0;
-  transform: translateX(calc(-1 * var(--hover-nudge)));
+  transform: translateX(calc(-1 * var(--motion-nudge)));
   transition:
-    opacity var(--motion-base) var(--ease-out-quad),
-    transform var(--motion-base) var(--ease-out-quad);
+    opacity var(--duration-base) var(--ease-strong-out),
+    transform var(--duration-base) var(--ease-strong-out);
 }
 
-.card-depth:is(:hover, :focus-visible) .card-arrow {
+@media (hover: hover) and (pointer: fine) {
+  .card-depth:hover .card-lift {
+    transform: translateY(calc(-1 * var(--motion-lift)));
+    transition-duration: var(--duration-hover);
+  }
+
+  .card-depth:hover .card-lift::after {
+    opacity: 1;
+    transition-duration: var(--duration-hover);
+  }
+
+  .card-depth:hover .card-visual {
+    background-color: hsl(var(--card-raised));
+    transition-duration: var(--duration-hover);
+  }
+
+  .card-depth:hover .card-arrow {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--duration-hover);
+  }
+
+  .card-depth:hover .rv .h {
+    stroke: hsl(var(--primary));
+    transition-duration: var(--duration-hover);
+  }
+
+  .card-depth:hover:active .card-lift {
+    transform: translateY(calc(-1 * var(--motion-lift))) scale(var(--scale-press-card));
+    transition: transform var(--duration-press) var(--ease-strong-out);
+  }
+}
+
+/* a touch press still settles the card */
+.card-depth:active .card-lift {
+  transform: scale(var(--scale-press-card));
+  transition: transform var(--duration-press) var(--ease-strong-out);
+}
+
+/* keyboard focus shows where the card leads, without moving anything */
+.card-depth:focus-visible .card-arrow {
   opacity: 1;
   transform: none;
-  transition:
-    opacity var(--motion-hover) var(--ease-out-quad),
-    transform var(--motion-hover) var(--ease-spring);
+  transition: none;
+}
+
+.card-depth:focus-visible .rv .h {
+  stroke: hsl(var(--primary));
 }
 
 .card-badge {
@@ -457,20 +560,15 @@ html[data-motion="on"] [data-reveal="pending"] {
 
 .rv .h {
   stroke: hsl(var(--foreground) / 0.8);
-  transition: stroke var(--motion-base) var(--ease-out-quad);
+  transition: stroke var(--duration-enter) var(--ease-strong-out);
 }
 
 .rv .d.h {
   stroke: hsl(var(--foreground) / 0.86);
 }
 
-.rv[data-accent="on"] .h,
-.card-depth:is(:hover, :focus-visible) .rv .h {
+.rv[data-accent="on"] .h {
   stroke: hsl(var(--primary));
-}
-
-.card-depth:is(:hover, :focus-visible) .rv .h {
-  transition-duration: var(--motion-hover);
 }
 
 /* Live-state dot (components/motion/LivePulse.tsx): a ring that loops only
@@ -506,7 +604,7 @@ html[data-motion="on"] [data-reveal="pending"] {
 }
 
 html[data-motion="on"] .live-dot::after {
-  animation: live-pulse var(--motion-pulse) var(--ease-out-quad) infinite;
+  animation: live-pulse var(--duration-pulse) var(--ease-strong-out) infinite;
   animation-play-state: paused;
 }
 
@@ -516,93 +614,109 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
 
 /* The archive's first-load entrance (reports/page.tsx, ReportTabs.tsx), only
    while the pre-paint gate holds the entrance window open on a full load of
-   /reports: the title lines rise --entrance-rise out of --entrance-blur, one
-   --stagger-line apart, from a partial opacity (never 0) so the title, the
-   page's LCP element, paints on the first frame; intro and stats follow,
-   then the tabs, then the first cards one --stagger-item apart, each rising
-   like a reveal. Settled in about 1.25s. */
+   /reports. It moves in groups, not letters: the title at 0 (so the LCP
+   heading starts on the first frame), then the intro, then the stats and
+   tabs, one --stagger-group apart, then the first row of cards one
+   --stagger-item apart; each rises --motion-rise out of --blur-enter over the
+   reveal token on strong-out. Every start falls within 400ms. */
 :root {
-  --entrance-rise: 24px;
-  --entrance-blur: 12px;
-  --entrance-from-opacity: 0.4;
-  --entrance-intro-delay: 150ms;
-  --entrance-tabs-delay: 220ms;
-  --entrance-cards-delay: 300ms;
-}
-
-@keyframes entrance-line {
-  from {
-    opacity: var(--entrance-from-opacity);
-    transform: translateY(var(--entrance-rise));
-    filter: blur(var(--entrance-blur));
-  }
+  /* the cards follow the three head groups */
+  --entrance-cards-after: 3;
 }
 
 @keyframes entrance-rise {
   from {
     opacity: 0;
-    transform: translateY(var(--reveal-rise));
-    filter: blur(var(--reveal-blur));
+    transform: translateY(var(--motion-rise));
+    filter: blur(var(--blur-enter));
   }
 }
 
-html[data-motion="on"][data-entrance="/reports"] .entrance-line {
-  animation: entrance-line var(--motion-entrance) var(--ease-entrance) both;
-  animation-delay: calc(var(--line, 0) * var(--stagger-line));
-}
-
-html[data-motion="on"][data-entrance="/reports"] .entrance-intro {
-  animation: entrance-rise var(--motion-reveal) var(--ease-entrance) var(--entrance-intro-delay) both;
-}
-
-html[data-motion="on"][data-entrance="/reports"] .entrance-tabs {
-  animation: entrance-rise var(--motion-reveal) var(--ease-entrance) var(--entrance-tabs-delay) both;
+html[data-motion="on"][data-entrance="/reports"] .entrance-group {
+  animation: entrance-rise var(--duration-reveal) var(--ease-strong-out) both;
+  animation-delay: calc(var(--group, 0) * var(--stagger-group));
 }
 
 html[data-motion="on"][data-entrance="/reports"] [data-entrance-card] {
-  animation: entrance-rise var(--motion-reveal) var(--ease-entrance) both;
-  animation-delay: calc(var(--entrance-cards-delay) + var(--entrance-i, 0) * var(--stagger-item));
+  animation: entrance-rise var(--duration-reveal) var(--ease-strong-out) both;
+  animation-delay: calc(var(--entrance-cards-after) * var(--stagger-group) + var(--entrance-i, 0) * var(--stagger-item));
 }
 
-/* Archive tabs (ReportTabs.tsx): one underline springs between tabs over
-   the glide token, transform only; the grid cross-fades in over the hover
-   token after a tab the visitor chose. Server and no-JS markup show a static
-   underline in the active tab until the indicator is placed. */
-[data-tab-indicator] {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 1px;
-  height: 2px;
-  transform-origin: left center;
-  background-color: hsl(var(--primary));
-  opacity: 0;
-  pointer-events: none;
+/* Archive tabs (ReportTabs.tsx), after Emil Kowalski's clip-path technique:
+   a copy of the tab row in the active style lies over the real row, clipped
+   to the active tab; the clip moves over base on strong-out, so the active
+   style flows from tab to tab. Until it is placed (server and no-JS markup,
+   reduced motion) the active tab keeps its own style and underline. A tab
+   picked with the pointer crossfades the grid in over the fast token out of
+   --blur-crossfade; a keyboard switch swaps at once. */
+[data-tab-highlight] {
+  visibility: hidden;
+  clip-path: inset(0 var(--highlight-right, 100%) 0 var(--highlight-left, 0px) round 0.375rem);
 }
 
-[data-indicator] [data-tab-indicator] {
-  opacity: 1;
+[data-highlight] [data-tab-highlight] {
+  visibility: visible;
 }
 
-[data-indicator] .tab-underline {
+[data-highlight] [role="tab"] {
+  color: hsl(var(--muted-foreground));
+}
+
+[data-highlight] [role="tab"]:hover {
+  color: hsl(var(--foreground));
+}
+
+[data-highlight] .tab-underline {
   visibility: hidden;
 }
 
-html[data-motion="on"] [data-indicator="live"] [data-tab-indicator] {
-  transition: transform var(--motion-glide) var(--ease-spring);
+html[data-motion="on"] [data-highlight="live"] [data-tab-highlight] {
+  transition: clip-path var(--duration-base) var(--ease-strong-out);
 }
 
 @keyframes panel-in {
   from {
     opacity: 0;
+    filter: blur(var(--blur-crossfade));
   }
 }
 
 html[data-motion="on"] [data-tab-panel][data-switched] {
-  animation: panel-in var(--motion-hover) var(--ease-standard) both;
+  animation: panel-in var(--duration-fast) var(--ease-strong-out) both;
 }
 
+/* Reduced motion: nothing moves, but colour and opacity may still fade
+   (reduced is not none). Distance, scale and blur tokens go to rest values,
+   transitions keep only colour and opacity, and CSS keyframe animations end
+   at once. Scroll-timeline animations are gated on no-preference where they
+   are declared (a time-based rule cannot stop them); view transitions become
+   a short crossfade in their own block. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-nudge: 0px;
+    --motion-lift: 0px;
+    --motion-rise: 0px;
+    --motion-reveal: 0px;
+    --motion-route: 0px;
+    --scale-press: 1;
+    --scale-press-card: 1;
+    --scale-enter: 1;
+    --scale-icon: 1;
+    --scale-reveal: 1;
+    --blur-crossfade: 0px;
+    --blur-morph: 0px;
+    --blur-enter: 0px;
+  }
+
+  *,
+  ::before,
+  ::after {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
   [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
@@ -610,7 +724,7 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
     transition: none !important;
   }
 
-  .card-depth,
+  .card-lift,
   .card-depth .card-arrow {
     transform: none !important;
   }
@@ -619,15 +733,13 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
     animation: none !important;
   }
 
-  .entrance-line,
-  .entrance-intro,
-  .entrance-tabs,
+  .entrance-group,
   [data-entrance-card],
   [data-tab-panel] {
     animation: none !important;
   }
 
-  [data-tab-indicator] {
+  [data-tab-highlight] {
     transition: none !important;
   }
 }
@@ -644,13 +756,22 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 
 /* view transitions: route transitions on the reading path. React names the
    boundaries in components/reports/ReportTransitions.tsx and hands them the
-   classes below; timing comes from the Tailwind motion tokens. */
+   classes below; every duration, curve and distance is a motion token. */
 :root {
-  --vt-duration: theme('transitionDuration.base');
+  /* the page slides --motion-route on move, so its travel reads after the
+     old page has faded */
+  --vt-duration: theme('transitionDuration.route');
+  --vt-ease: theme('transitionTimingFunction.move');
+  --vt-slide: var(--motion-route);
+  /* old content leaves fast; new content arrives gently after a handoff */
+  --vt-duration-exit: theme('transitionDuration.exit');
+  --vt-duration-enter: theme('transitionDuration.hover');
+  --vt-delay-enter: theme('transitionDuration.handoff');
+  --vt-ease-out: theme('transitionTimingFunction.strong-out');
+  /* the shared title travels a little longer and blurs at its midpoint */
+  --vt-duration-morph: theme('transitionDuration.morph');
+  /* reduced motion: a short crossfade */
   --vt-duration-fast: theme('transitionDuration.fast');
-  --vt-ease: theme('transitionTimingFunction.standard');
-  /* enough to read direction, too little to track (motion spec: 12-16px) */
-  --vt-slide: 16px;
 }
 
 /* clicks reach the live page while snapshots settle */
@@ -709,20 +830,25 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   to { transform: translateX(var(--vt-to, 0)); }
 }
 
+@keyframes vt-morph-blur {
+  50% { filter: blur(var(--blur-morph)); }
+}
+
 /* nav-forward leaves to the left and arrives from the right; nav-back mirrors
-   it. The outgoing page fades on the fast token so the two pages never sit
-   half-visible over each other. */
+   it. The outgoing page is gone on the exit token before the incoming one
+   fades in after the handoff, so the two pages never sit half-visible over
+   each other. */
 ::view-transition-old(.nav-forward),
 ::view-transition-old(.nav-back) {
   animation:
-    var(--vt-duration-fast) var(--vt-ease) both vt-fade-out,
+    var(--vt-duration-exit) var(--vt-ease-out) both vt-fade-out,
     var(--vt-duration) var(--vt-ease) both vt-slide-out;
 }
 
 ::view-transition-new(.nav-forward),
 ::view-transition-new(.nav-back) {
   animation:
-    var(--vt-duration) var(--vt-ease) both vt-fade-in,
+    var(--vt-duration-enter) var(--vt-ease-out) var(--vt-delay-enter) both vt-fade-in,
     var(--vt-duration) var(--vt-ease) both vt-slide-in;
 }
 
@@ -745,9 +871,11 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 /* A report title travelling between its archive card and the report page.
    Both snapshots keep their native size, pinned top-left and clipped to the
    moving box, so neither shows as a scaled raster and the larger heading
-   never paints over the neighbouring cards. */
+   never paints over the neighbouring cards; both blur at the midpoint, so
+   the two titles never read as two objects. */
 ::view-transition-group(.text-morph) {
   clip-path: inset(0);
+  animation-duration: var(--vt-duration-morph);
 }
 
 ::view-transition-old(.text-morph),
@@ -757,17 +885,34 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 }
 
 ::view-transition-old(.text-morph) {
-  animation: var(--vt-duration-fast) var(--vt-ease) both vt-fade-out;
+  animation:
+    var(--vt-duration-exit) var(--vt-ease-out) both vt-fade-out,
+    var(--vt-duration-morph) var(--vt-ease) both vt-morph-blur;
 }
 
 ::view-transition-new(.text-morph) {
-  animation: var(--vt-duration) var(--vt-ease) both vt-fade-in;
+  animation:
+    var(--vt-duration-morph) var(--vt-ease-out) both vt-fade-in,
+    var(--vt-duration-morph) var(--vt-ease) both vt-morph-blur;
 }
 
+/* Reduced motion: nothing slides or morphs; the pages crossfade on the fast
+   token, while the header and unnamed content still swap in place. */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
+  ::view-transition-group(*) {
+    animation: none !important;
+  }
+
+  ::view-transition-old(*) {
+    animation: var(--vt-duration-fast) var(--vt-ease-out) both vt-fade-out !important;
+  }
+
   ::view-transition-new(*) {
+    animation: var(--vt-duration-fast) var(--vt-ease-out) both vt-fade-in !important;
+  }
+
+  ::view-transition-new(root),
+  ::view-transition-new(site-header) {
     animation: none !important;
   }
 }

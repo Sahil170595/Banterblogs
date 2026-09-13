@@ -34,8 +34,17 @@ export const ALL_TAB_KEY = 'all';
 export const PHASE_PARAM = 'phase';
 /** cards that join the first-load entrance: the first two rows at three columns */
 export const ENTRANCE_CARDS = 6;
+/** entrance cards stagger across the first row; later ones start with its last */
+export const ENTRANCE_CARD_STEPS = 3;
+/** the head's entrance group the tabs join, after the title and the intro */
+export const TABS_ENTRANCE_GROUP = 2;
+
+type SwitchedBy = 'pointer' | 'keyboard';
 
 const tabId = (key: string) => `report-tab-${key}`;
+// the real tabs and their highlighted copies share one box, so the clip lines
+// up with the tab beneath it
+const TAB_BOX = 'relative shrink-0 px-3 pb-3 pt-2 text-sm font-medium';
 
 export function ReportTabs({ groups, synthesis, latestSlug, accentGroupKey }: ReportTabsProps) {
   const synthesisSlugs = new Set(synthesis.map((report) => report.slug));
@@ -53,8 +62,8 @@ export function ReportTabs({ groups, synthesis, latestSlug, accentGroupKey }: Re
   // out; `picked` leads the URL while a router.replace is in flight.
   const [urlParams, setUrlParams] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
-  // a tab the visitor chose, so the new grid cross-fades in
-  const [switched, setSwitched] = useState(false);
+  // how the visitor last changed tab: only a pointer change crossfades the grid
+  const [switched, setSwitched] = useState<SwitchedBy | null>(null);
   const onUrlChange = useCallback((params: string) => {
     setUrlParams(params);
     setPicked(null);
@@ -64,13 +73,13 @@ export function ReportTabs({ groups, synthesis, latestSlug, accentGroupKey }: Re
   const fromUrl = tabs.find((tab) => tab.key === requested)?.key;
   const activeKey = picked ?? fromUrl ?? ALL_TAB_KEY;
 
-  const select = (key: string) => {
+  const select = (key: string, via: SwitchedBy) => {
     const params = new URLSearchParams(urlParams ?? '');
     if (key === ALL_TAB_KEY) params.delete(PHASE_PARAM);
     else params.set(PHASE_PARAM, key);
     const query = params.toString();
     setPicked(key);
-    setSwitched(true);
+    setSwitched(via);
     // the first-load entrance is over once the visitor acts
     document.documentElement.removeAttribute(ENTRANCE_ATTRIBUTE);
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
@@ -108,8 +117,8 @@ function SearchParamsSync({ onChange }: { onChange: (params: string) => void }) 
 interface TabbedReportsProps {
   tabs: ReportTabGroup[];
   activeKey: string;
-  switched: boolean;
-  onSelect: (key: string) => void;
+  switched: SwitchedBy | null;
+  onSelect: (key: string, via: SwitchedBy) => void;
   synthesisSlugs: Set<string>;
   latestSlug?: string;
   accentSlugs: Set<string>;
@@ -117,24 +126,25 @@ interface TabbedReportsProps {
 
 function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, latestSlug, accentSlugs }: TabbedReportsProps) {
   const listRef = useRef<HTMLDivElement>(null);
-  const indicatorRef = useRef<HTMLSpanElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
+  const count = (group: ReportTabGroup) => group.reports.filter((report) => !synthesisSlugs.has(report.slug)).length;
 
-  // Slides the underline under the active tab, transform only. The server
-  // and no-JS markup carry a static underline in the active tab instead, and
-  // so does a visitor without motion (nothing may glide, so nothing is
-  // swapped); the first placement lands without a transition, later ones
-  // glide over base.
+  // Clips the highlighted copy of the row to the active tab (Emil Kowalski's
+  // clip-path technique); globals.css transitions the clip. The first
+  // placement lands without a transition, later ones move. Without motion
+  // nothing is placed and the active tab keeps its own style and underline.
   useLayoutEffect(() => {
     const list = listRef.current;
-    const indicator = indicatorRef.current;
-    if (!list || !indicator || document.documentElement.getAttribute(MOTION_ATTRIBUTE) !== 'on') return undefined;
+    const highlight = highlightRef.current;
+    if (!list || !highlight || document.documentElement.getAttribute(MOTION_ATTRIBUTE) !== 'on') return undefined;
     const place = () => {
       const tab = list.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
       if (!tab) return;
-      indicator.style.transform = `translateX(${tab.offsetLeft}px) scaleX(${tab.offsetWidth})`;
-      if (list.hasAttribute('data-indicator')) return;
-      list.setAttribute('data-indicator', 'placed');
-      requestAnimationFrame(() => list.setAttribute('data-indicator', 'live'));
+      highlight.style.setProperty('--highlight-left', `${tab.offsetLeft}px`);
+      highlight.style.setProperty('--highlight-right', `${highlight.offsetWidth - tab.offsetLeft - tab.offsetWidth}px`);
+      if (list.hasAttribute('data-highlight')) return;
+      list.setAttribute('data-highlight', 'placed');
+      requestAnimationFrame(() => list.setAttribute('data-highlight', 'live'));
     };
     place();
     if (typeof ResizeObserver === 'undefined') return undefined;
@@ -154,13 +164,13 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
     else if (e.key === 'End') next = tabs.length - 1;
     if (next === null) return;
     e.preventDefault();
-    onSelect(tabs[next].key);
+    onSelect(tabs[next].key, 'keyboard');
     document.getElementById(tabId(tabs[next].key))?.focus();
   };
 
   return (
     <div>
-      <div className="entrance-tabs">
+      <div className="entrance-group" style={{ '--group': TABS_ENTRANCE_GROUP } as CSSProperties}>
         <div
           ref={listRef}
           role="tablist"
@@ -178,20 +188,31 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
                 aria-selected={active}
                 aria-controls={`report-panel-${group.key}`}
                 tabIndex={active ? 0 : -1}
-                onClick={() => onSelect(group.key)}
-                className={`relative shrink-0 px-3 pb-3 pt-2 text-sm font-medium transition-colors duration-fast ease-standard ${
+                onClick={() => onSelect(group.key, 'pointer')}
+                className={`${TAB_BOX} transition-colors duration-fast ease-standard ${
                   active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {group.label}
-                <span className="ml-1.5 text-xs tabular-nums text-muted-foreground/70">
-                  {group.reports.filter((report) => !synthesisSlugs.has(report.slug)).length}
-                </span>
+                <span className="ml-1.5 text-xs tabular-nums text-muted-foreground/70">{count(group)}</span>
                 {active && <span aria-hidden="true" className="tab-underline absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
               </button>
             );
           })}
-          <span ref={indicatorRef} aria-hidden="true" data-tab-indicator="" />
+          {/* the row again in the active style, clipped to the active tab */}
+          <div
+            ref={highlightRef}
+            aria-hidden="true"
+            data-tab-highlight=""
+            className="pointer-events-none absolute left-0 top-0 flex gap-1 px-4 pt-1 sm:px-0"
+          >
+            {tabs.map((group) => (
+              <span key={group.key} className={`${TAB_BOX} text-foreground shadow-[inset_0_-2px_0_hsl(var(--primary))]`}>
+                {group.label}
+                <span className="ml-1.5 text-xs tabular-nums text-muted-foreground/70">{count(group)}</span>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -204,7 +225,7 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
             role="tabpanel"
             aria-labelledby={tabId(group.key)}
             data-tab-panel=""
-            data-switched={switched ? '' : undefined}
+            data-switched={switched === 'pointer' ? '' : undefined}
             className="pt-6 md:pt-8"
           >
             {group.description && <p className="mb-10 max-w-2xl text-sm leading-relaxed text-muted-foreground">{group.description}</p>}
@@ -216,7 +237,10 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
                   <Reveal
                     key={report.slug}
                     {...(index < ENTRANCE_CARDS
-                      ? { 'data-entrance-card': '', style: { '--entrance-i': index } as CSSProperties }
+                      ? {
+                          'data-entrance-card': '',
+                          style: { '--entrance-i': Math.min(index, ENTRANCE_CARD_STEPS - 1) } as CSSProperties,
+                        }
                       : {})}
                   >
                     <ReportCard

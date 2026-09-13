@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Github, Linkedin, Menu, X } from 'lucide-react';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
 import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
@@ -22,24 +22,10 @@ const NAV_ITEMS = [
 // backdrop blur would flash against the new one.
 const HEADER_TRANSITION_NAME = 'site-header';
 
-// Interior pages: the bar blends with the page at the top and turns solid
-// with a hairline once the page has scrolled past this far.
-const SCROLLED_PAST_PX = 8;
-
-function subscribeToScroll(onChange: () => void) {
-  window.addEventListener('scroll', onChange, { passive: true });
-  return () => window.removeEventListener('scroll', onChange);
-}
-const isScrolledPast = () => window.scrollY > SCROLLED_PAST_PX;
-// no scroll position exists on the server; the first paint is the top
-const blendedOnServer = () => false;
-
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
-  // re-renders only when the page crosses the threshold
-  const scrolled = useSyncExternalStore(subscribeToScroll, isScrolledPast, blendedOnServer);
   // On the galactic landing the nav floats transparent over the scene —
   // full-bleed space, nothing boxed off. Everywhere else it's the standard
   // sticky blurred bar.
@@ -65,17 +51,13 @@ export function Header() {
   return (
     <header
       style={{ viewTransitionName: HEADER_TRANSITION_NAME }}
-      data-scrolled={isLanding ? undefined : String(scrolled)}
       className={
         isLanding
           ? 'fixed top-0 z-50 w-full bg-transparent'
-          : // the border is always drawn so the height never changes; only
-            // colours move, over the base token
-            `sticky top-0 z-50 w-full border-b backdrop-blur transition-[background-color,border-color] duration-base ease-out-quad relative after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/60 after:to-transparent after:transition-opacity after:duration-base ${
-              scrolled
-                ? 'border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 after:opacity-100'
-                : 'border-transparent bg-transparent after:opacity-0'
-            }`
+          : // .site-header (globals.css) lays a glass surface and hairline under
+            // the bar that fade in with the ember rule over the first scroll, on
+            // a scroll timeline; the transparent border keeps the height fixed
+            'site-header sticky top-0 z-50 w-full border-b border-transparent relative after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/60 after:to-transparent'
       }
     >
       <div

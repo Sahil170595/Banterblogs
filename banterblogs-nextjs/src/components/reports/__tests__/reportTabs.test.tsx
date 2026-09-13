@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
-import { ENTRANCE_CARDS, ReportTabs, type ReportTabGroup } from '../ReportTabs';
+import { ENTRANCE_CARDS, ENTRANCE_CARD_STEPS, ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabGroup } from '../ReportTabs';
 import { NAV_FORWARD } from '../ReportTransitions';
 
 const { url, replace, viewTransitions } = vi.hoisted(() => ({
@@ -66,6 +66,7 @@ const panelLinks = () =>
     .getAllByRole('link')
     .map((link) => link.getAttribute('href'));
 const cardFor = (slug: string) => within(panel()).getByRole('link', { name: new RegExp(slug) });
+const highlightRow = () => screen.getByRole('tablist').querySelector<HTMLElement>('[data-tab-highlight]')!;
 
 beforeEach(() => {
   url.search = '';
@@ -185,54 +186,69 @@ describe('report archive tabs', () => {
 });
 
 describe('report archive motion wiring', () => {
-  it('wraps every card in a reveal and joins the first cards to the entrance, in order', () => {
+  it('joins the tabs to the head entrance and the first cards to it one row step apart', () => {
     const many: ReportTabGroup[] = [
       { key: 'phase3', label: 'Phase 3', description: '', reports: Array.from({ length: 9 }, (_, i) => entry(`technical-report-${123 + i}`)) },
     ];
     renderTabs({ groups: many, synthesis: [], latestSlug: undefined });
     const wrappers = within(panel()).getAllByRole('link').map((card) => card.parentElement!);
 
+    expect(screen.getByRole('tablist').parentElement?.className).toBe('entrance-group');
+    expect(screen.getByRole('tablist').parentElement?.style.getPropertyValue('--group')).toBe(String(TABS_ENTRANCE_GROUP));
     expect(wrappers.every((wrapper) => wrapper.hasAttribute('data-reveal'))).toBe(true);
     const joined = wrappers.filter((wrapper) => wrapper.hasAttribute('data-entrance-card'));
-    expect(joined).toHaveLength(ENTRANCE_CARDS);
     expect(joined).toEqual(wrappers.slice(0, ENTRANCE_CARDS));
-    expect(joined.map((wrapper) => wrapper.style.getPropertyValue('--entrance-i'))).toEqual(['0', '1', '2', '3', '4', '5']);
+    // the first row staggers; the rest start with its last card
+    expect(joined.map((wrapper) => wrapper.style.getPropertyValue('--entrance-i'))).toEqual(
+      Array.from({ length: ENTRANCE_CARDS }, (_, i) => String(Math.min(i, ENTRANCE_CARD_STEPS - 1))),
+    );
   });
 
-  it('serves a static underline under the active tab until the sliding indicator is placed', () => {
+  it('serves the active tab its own style and underline until the highlight is placed', () => {
     const markup = renderToStaticMarkup(tabsElement());
     const active = /<button[^>]*aria-selected="true"[^>]*>([\s\S]*?)<\/button>/.exec(markup)?.[1] ?? '';
 
     expect(active).toContain('tab-underline');
-    expect(markup).toMatch(/<span aria-hidden="true" data-tab-indicator="">/);
-    expect(markup).not.toContain('data-indicator=');
+    expect(markup).toMatch(/<div aria-hidden="true" data-tab-highlight=""/);
+    expect(markup).not.toContain('data-highlight=');
   });
 
-  it('places the indicator under the active tab with a transform once mounted, when motion is armed', () => {
+  it('repeats every tab in the highlight row, out of the accessibility tree', () => {
+    renderTabs();
+
+    expect(highlightRow().getAttribute('aria-hidden')).toBe('true');
+    expect(highlightRow().children).toHaveLength(screen.getAllByRole('tab').length);
+    expect([...highlightRow().children].map((copy) => copy.textContent)).toEqual(screen.getAllByRole('tab').map((tab) => tab.textContent));
+  });
+
+  it('clips the highlight row to the active tab once mounted, when motion is armed', () => {
     document.documentElement.setAttribute(MOTION_ATTRIBUTE, 'on');
     renderTabs();
     const list = screen.getByRole('tablist');
-    const indicator = list.querySelector<HTMLElement>('[data-tab-indicator]')!;
 
-    expect(list.getAttribute('data-indicator')).toMatch(/placed|live/);
-    expect(indicator.style.transform).toMatch(/^translateX\(-?\d+px\) scaleX\(\d+\)$/);
-    expect(indicator.getAttribute('aria-hidden')).toBe('true');
+    expect(list.getAttribute('data-highlight')).toMatch(/placed|live/);
+    expect(highlightRow().style.getPropertyValue('--highlight-left')).toMatch(/^-?\d+px$/);
+    expect(highlightRow().style.getPropertyValue('--highlight-right')).toMatch(/^-?\d+px$/);
   });
 
-  it('keeps the static underline as the indicator while motion is off, so nothing changes at load', () => {
+  it('keeps the active tab its own style while motion is off, so nothing changes at load', () => {
     renderTabs();
     const list = screen.getByRole('tablist');
 
-    expect(list.hasAttribute('data-indicator')).toBe(false);
-    expect(list.querySelector<HTMLElement>('[data-tab-indicator]')!.style.transform).toBe('');
+    expect(list.hasAttribute('data-highlight')).toBe(false);
+    expect(highlightRow().style.getPropertyValue('--highlight-left')).toBe('');
     expect(selectedTab()?.querySelector('.tab-underline')).not.toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: /Phase 2/ }));
     expect(selectedTab()?.querySelector('.tab-underline')).not.toBeNull();
-    expect(list.hasAttribute('data-indicator')).toBe(false);
+    expect(list.hasAttribute('data-highlight')).toBe(false);
   });
 
-  it('cross-fades the grid only after a tab the visitor chose', () => {
+  it('crossfades the grid after a pointer switch and swaps it at once on a keyboard switch', () => {
     renderTabs();
+    expect(panel().hasAttribute('data-switched')).toBe(false);
+
+    const tabs = screen.getAllByRole('tab');
+    fireEvent.keyDown(tabs[0], { key: 'End' });
     expect(panel().hasAttribute('data-switched')).toBe(false);
 
     fireEvent.click(screen.getByRole('tab', { name: /Phase 2/ }));

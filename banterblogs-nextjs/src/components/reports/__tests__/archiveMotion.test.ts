@@ -2,20 +2,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import tailwindConfig from '../../../../tailwind.config';
-import { ENTRANCE_CARDS } from '../ReportTabs';
+import { ENTRANCE_CARD_STEPS, TABS_ENTRANCE_GROUP } from '../ReportTabs';
 
-// The archive's CSS-driven motion: the first-load entrance, the tab
-// indicator and the grid fade. Component wiring is in reportTabs.test.tsx
-// and reportsIndex.test.tsx.
+// The archive's CSS-driven motion: the first-load entrance, the tab highlight
+// and the grid crossfade. Component wiring is in reportTabs.test.tsx and
+// reportsIndex.test.tsx.
 
 const CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const ENTRANCE_GATE = 'html[data-motion="on"][data-entrance="/reports"]';
-// the entrance must be over by then: a 900ms title and 600ms rises, calibrated
-// 2026-09-12 to read clearly at normal speed
-const SETTLED_BY_MS = 1300;
-// LCP counts any painted opacity above 0; the title still reads as a heading
-// on its first frame from here up
-const MIN_TITLE_FROM_OPACITY = 0.3;
+// the head moves in three groups: the title, the intro, the stats with the tabs
+const HEAD_GROUPS = 3;
+// a staged sequence starts every step within this (the motion brief's cap)
+const MAX_ENTRANCE_START_MS = 400;
+// and has settled within this
+const SETTLED_BY_MS = 1000;
 
 function blocks(css: string): Array<{ prelude: string; body: string }> {
   const out: Array<{ prelude: string; body: string }> = [];
@@ -50,7 +50,7 @@ const token = (key: string) => Number(String((tailwindConfig.theme?.extend?.tran
 describe('archive entrance', () => {
   it('plays only on a full load of /reports, under the motion gate', () => {
     const animating = rules.filter((rule) => /animation:\s*entrance-/.test(rule.body));
-    expect(animating.length).toBe(4);
+    expect(animating).toHaveLength(2);
     for (const rule of animating) {
       for (const selector of rule.prelude.split(',')) expect(selector.trim().startsWith(ENTRANCE_GATE), selector).toBe(true);
     }
@@ -58,62 +58,62 @@ describe('archive entrance', () => {
 
   it('names every entrance keyframe entrance-*, which is what closes the window', () => {
     const names = TOP.filter((b) => b.prelude.startsWith('@keyframes entrance')).map((b) => b.prelude.split(/\s+/)[1]);
-    expect(names.sort()).toEqual(['entrance-line', 'entrance-rise']);
+    expect(names).toEqual(['entrance-rise']);
   });
 
-  it('brings the title into focus without hiding it: a rise out of a blur from a partial opacity, never 0', () => {
-    const line = keyframes('entrance-line');
-    expect(line).toMatch(/transform:\s*translateY\(var\(--entrance-rise\)\)/);
-    expect(line).toMatch(/filter:\s*blur\(var\(--entrance-blur\)\)/);
-    expect(line).toMatch(/opacity:\s*var\(--entrance-from-opacity\)/);
-    expect(Number(/--entrance-from-opacity:\s*([\d.]+);/.exec(CSS)?.[1])).toBeGreaterThanOrEqual(MIN_TITLE_FROM_OPACITY);
-    expect(CSS).toMatch(/--entrance-rise:\s*24px;/);
-    expect(CSS).toMatch(/--entrance-blur:\s*12px;/);
-    const lineRule = rules.find((rule) => rule.prelude.endsWith('.entrance-line'))!;
-    expect(lineRule.body).toMatch(/var\(--motion-entrance\)\s+var\(--ease-entrance\)/);
-    // line 0 starts at once; each later line one --stagger-line later
-    expect(lineRule.body).toMatch(/animation-delay:\s*calc\(var\(--line, 0\) \* var\(--stagger-line\)\)/);
+  it('moves in groups, each rising out of a blur over the reveal token on strong-out', () => {
+    const rise = keyframes('entrance-rise');
+    expect(rise).toMatch(/opacity:\s*0;/);
+    expect(rise).toMatch(/transform:\s*translateY\(var\(--motion-rise\)\)/);
+    expect(rise).toMatch(/filter:\s*blur\(var\(--blur-enter\)\)/);
+    expect(CSS).toMatch(/--motion-rise:\s*12px;/);
+    expect(CSS).toMatch(/--blur-enter:\s*6px;/);
+    const group = rules.find((rule) => rule.prelude.endsWith('.entrance-group'))!;
+    expect(group.body).toMatch(/animation:\s*entrance-rise var\(--duration-reveal\) var\(--ease-strong-out\) both;/);
+    expect(group.body).toMatch(/animation-delay:\s*calc\(var\(--group, 0\) \* var\(--stagger-group\)\)/);
   });
 
-  it('staggers the first cards one item step (70ms) apart and settles within 1.3s', () => {
-    expect(ms('stagger-item')).toBe(70);
+  it('starts every step within 400ms, the first row after the head one item apart, and settles within 1s', () => {
+    expect(Number(/--entrance-cards-after:\s*(\d+);/.exec(CSS)?.[1])).toBe(HEAD_GROUPS);
+    expect(TABS_ENTRANCE_GROUP).toBe(HEAD_GROUPS - 1);
     const cards = rules.find((rule) => rule.prelude.endsWith('[data-entrance-card]'))!;
-    expect(cards.body).toMatch(/calc\(var\(--entrance-cards-delay\) \+ var\(--entrance-i, 0\) \* var\(--stagger-item\)\)/);
-    const ends = [
-      ms('stagger-line') + token('entrance'),
-      ms('entrance-intro-delay') + token('reveal'),
-      ms('entrance-tabs-delay') + token('reveal'),
-      ms('entrance-cards-delay') + (ENTRANCE_CARDS - 1) * ms('stagger-item') + token('reveal'),
-    ];
-    expect(Math.max(...ends)).toBeLessThanOrEqual(SETTLED_BY_MS);
+    expect(cards.body).toMatch(
+      /calc\(var\(--entrance-cards-after\) \* var\(--stagger-group\) \+ var\(--entrance-i, 0\) \* var\(--stagger-item\)\)/,
+    );
+    const lastStart = HEAD_GROUPS * ms('stagger-group') + (ENTRANCE_CARD_STEPS - 1) * ms('stagger-item');
+    expect(lastStart).toBeLessThanOrEqual(MAX_ENTRANCE_START_MS);
+    expect(lastStart + token('reveal')).toBeLessThanOrEqual(SETTLED_BY_MS);
   });
 });
 
 describe('archive tab motion', () => {
-  it('springs the indicator on transform over the glide token, only under the motion gate', () => {
-    const moving = rules.filter((rule) => rule.prelude.includes('[data-tab-indicator]') && /transition:/.test(rule.body));
+  it('moves the highlight by its clip over base on strong-out, only under the motion gate', () => {
+    const moving = rules.filter((rule) => rule.prelude.includes('[data-tab-highlight]') && /transition:/.test(rule.body));
     expect(moving).toHaveLength(1);
     expect(moving[0].prelude).toMatch(/^html\[data-motion="on"\]/);
-    expect(moving[0].body).toMatch(/transition:\s*transform var\(--motion-glide\) var\(--ease-spring\);/);
+    expect(moving[0].body).toMatch(/transition:\s*clip-path var\(--duration-base\) var\(--ease-strong-out\);/);
+    const clip = rules.find((rule) => rule.prelude === '[data-tab-highlight]')!;
+    expect(clip.body).toMatch(/clip-path:\s*inset\(0 var\(--highlight-right, 100%\) 0 var\(--highlight-left, 0px\)/);
+    expect(clip.body).toMatch(/visibility:\s*hidden/);
   });
 
-  it('fades the new grid in over the hover token after a tab change, only under the gate', () => {
+  it('crossfades the grid out of a 2px blur over the fast token after a pointer change, only under the gate', () => {
     const fading = rules.filter((rule) => /animation:\s*panel-in/.test(rule.body));
     expect(fading).toHaveLength(1);
     expect(fading[0].prelude).toBe('html[data-motion="on"] [data-tab-panel][data-switched]');
-    expect(fading[0].body).toMatch(/var\(--motion-hover\)/);
+    expect(fading[0].body).toMatch(/var\(--duration-fast\) var\(--ease-strong-out\)/);
     expect(keyframes('panel-in')).toMatch(/opacity:\s*0/);
+    expect(keyframes('panel-in')).toMatch(/filter:\s*blur\(var\(--blur-crossfade\)\)/);
+    expect(CSS).toMatch(/--blur-crossfade:\s*2px;/);
   });
 });
 
 describe('archive motion under reduced motion', () => {
   it.each([
-    ['.entrance-line', /animation:\s*none\s*!important/],
-    ['.entrance-intro', /animation:\s*none\s*!important/],
-    ['.entrance-tabs', /animation:\s*none\s*!important/],
+    ['.entrance-group', /animation:\s*none\s*!important/],
     ['[data-entrance-card]', /animation:\s*none\s*!important/],
     ['[data-tab-panel]', /animation:\s*none\s*!important/],
-    ['[data-tab-indicator]', /transition:\s*none\s*!important/],
+    ['[data-tab-highlight]', /transition:\s*none\s*!important/],
   ])('stills %s', (selector, declaration) => {
     const rule = reducedRules.find((r) => r.selector.split(',').map((s) => s.trim()).includes(selector));
     expect(rule, selector).toBeDefined();

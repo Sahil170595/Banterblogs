@@ -194,32 +194,32 @@ export default function AboutPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/platform"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground pressable hover:bg-primary/90"
           >
             Platform Architecture
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/reports"
-            className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary hover:bg-primary/5"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary pressable hover:border-primary hover:bg-primary/5"
           >
             Research Archive
           </Link>
           <Link
             href="/papers"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
           >
             Papers
           </Link>
           <Link
             href="/work"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
           >
             Work
           </Link>
           <Link
             href="/episodes"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
           >
             Episodes
           </Link>
@@ -227,7 +227,7 @@ export default function AboutPage() {
             href="https://substack.com/@sahilkadadekar"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
           >
             Substack
           </Link>
@@ -235,7 +235,7 @@ export default function AboutPage() {
             href="https://linkedin.com/in/sahilkadadekar"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-[color,background-color,border-color,transform] duration-fast ease-standard motion-safe:active:scale-[0.98] hover:border-primary/60 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
           >
             LinkedIn
           </Link>

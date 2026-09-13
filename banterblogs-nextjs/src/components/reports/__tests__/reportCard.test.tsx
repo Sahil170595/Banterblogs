@@ -105,12 +105,13 @@ describe('report card', () => {
     expect(viewTransitions.map((vt) => vt.name)).toEqual(['report-title-technical-report-138']);
   });
 
-  it('has no border of its own: depth comes from the hover rule, and the arrow is decorative', () => {
+  it('has no border of its own, and moves a child while the link keeps the pointer', () => {
     const root = card();
     const link = root.querySelector('a')!;
 
     expect(link.className.split(/\s+/)).toContain('card-depth');
     expect(link.className).not.toMatch(/\bborder\b/);
+    expect(link.firstElementChild?.className).toBe('card-lift');
     expect(root.querySelector('.card-arrow')?.getAttribute('aria-hidden')).toBe('true');
   });
 });
@@ -121,30 +122,60 @@ describe('card hover depth', () => {
     const at = CSS.indexOf(selector + ' {');
     return at < 0 ? '' : CSS.slice(at, CSS.indexOf('}', at));
   };
+  // the body of the hover-capable media query, braces balanced
+  const hoverOnly = (() => {
+    const at = CSS.indexOf('@media (hover: hover) and (pointer: fine)');
+    if (at < 0) return '';
+    const open = CSS.indexOf('{', at);
+    let depth = 0;
+    let end = open;
+    for (; end < CSS.length; end++) {
+      if (CSS[end] === '{') depth++;
+      else if (CSS[end] === '}' && --depth === 0) break;
+    }
+    return CSS.slice(open + 1, end);
+  })();
 
-  it('lifts 4px, brightens and glows on hover, springing the arrow 4px: transform, opacity and colour only', () => {
-    expect(CSS).toMatch(/--hover-lift:\s*4px;/);
-    expect(CSS).toMatch(/--hover-nudge:\s*4px;/);
-    expect(rule('.card-depth:is(:hover, :focus-visible)')).toMatch(/transform:\s*translateY\(calc\(-1 \* var\(--hover-lift\)\)\)/);
-    expect(rule('.card-depth:is(:hover, :focus-visible) .card-visual')).toMatch(/background-color:/);
-    expect(rule('.card-depth .card-arrow')).toMatch(/transform:\s*translateX\(calc\(-1 \* var\(--hover-nudge\)\)\)/);
-    expect(rule('.card-depth:is(:hover, :focus-visible) .card-arrow')).toMatch(/transform:\s*none/);
-    // the glow is a pre-rendered shadow that only fades
-    expect(rule('.card-depth::before')).toMatch(/box-shadow:/);
-    expect(rule('.card-depth::before')).toMatch(/opacity:\s*0;/);
-    expect(rule('.card-depth:is(:hover, :focus-visible)::before')).toMatch(/opacity:\s*1;/);
-    expect(rule('.card-depth:is(:hover, :focus-visible)::before')).not.toMatch(/box-shadow/);
-    // nothing a hover changes moves the layout
-    expect(CSS).not.toMatch(/\.card-depth:is\(:hover, :focus-visible\)[^{]*\{[^}]*(?:width|height|margin|padding|top|left|right|bottom|inset)\s*:/);
+  it('lifts the card 3px only where the device really hovers, moving the child while the link keeps the pointer', () => {
+    expect(CSS).toMatch(/--motion-lift:\s*3px;/);
+    expect(hoverOnly).toMatch(/\.card-depth:hover \.card-lift \{[^}]*transform:\s*translateY\(calc\(-1 \* var\(--motion-lift\)\)\)/);
+    // the link itself never moves, so it never slips out from under the cursor
+    expect(CSS).not.toMatch(/\.card-depth(?::hover|:focus-visible|:active|:is\([^)]*\))?\s*\{[^}]*transform/);
+    // hover motion lives only inside the hover-capable media query
+    expect(CSS.replace(hoverOnly, '')).not.toMatch(/\.card-depth:hover/);
   });
 
-  it('springs in over the hover token and eases out over base', () => {
-    expect(rule('.card-depth')).toMatch(/var\(--motion-base\)\s+var\(--ease-out-quad\)/);
-    expect(rule('.card-depth:is(:hover, :focus-visible)')).toMatch(/transform var\(--motion-hover\) var\(--ease-spring\)/);
-    expect(rule('.card-depth:is(:hover, :focus-visible) .card-arrow')).toMatch(/transform var\(--motion-hover\) var\(--ease-spring\)/);
+  it('glows by fading a pre-rendered ring and shadow, and never transitions a shadow', () => {
+    expect(rule('.card-lift::after')).toMatch(/box-shadow:/);
+    expect(rule('.card-lift::after')).toMatch(/opacity:\s*0;/);
+    expect(hoverOnly).toMatch(/\.card-depth:hover \.card-lift::after \{[^}]*opacity:\s*1;/);
+    expect(CSS).not.toMatch(/transition[^;{}]*box-shadow/);
   });
 
-  it('keeps the colour change but drops every transform under reduced motion', () => {
+  it('eases in over the hover token and out over enter, on strong-out', () => {
+    expect(rule('.card-lift')).toMatch(/transition:\s*transform var\(--duration-enter\) var\(--ease-strong-out\)/);
+    expect(hoverOnly).toMatch(/\.card-depth:hover \.card-lift \{[^}]*transition-duration:\s*var\(--duration-hover\)/);
+  });
+
+  it('nudges the arrow 4px in over hover and back over base, and shows it on keyboard focus without moving', () => {
+    expect(CSS).toMatch(/--motion-nudge:\s*4px;/);
+    expect(rule('.card-depth .card-arrow')).toMatch(/transform:\s*translateX\(calc\(-1 \* var\(--motion-nudge\)\)\)/);
+    expect(rule('.card-depth .card-arrow')).toMatch(/var\(--duration-base\) var\(--ease-strong-out\)/);
+    expect(hoverOnly).toMatch(/\.card-depth:hover \.card-arrow \{[^}]*transform:\s*none[^}]*transition-duration:\s*var\(--duration-hover\)/);
+    expect(rule('.card-depth:focus-visible .card-arrow')).toMatch(/transition:\s*none/);
+  });
+
+  it('settles to 0.985 on a press, over the press token', () => {
+    expect(CSS).toMatch(/--scale-press-card:\s*0\.985;/);
+    expect(rule('.card-depth:active .card-lift')).toMatch(/scale\(var\(--scale-press-card\)\)/);
+    expect(rule('.card-depth:active .card-lift')).toMatch(/var\(--duration-press\) var\(--ease-strong-out\)/);
+  });
+
+  it('changes nothing that moves the layout', () => {
+    expect(CSS).not.toMatch(/\.card-depth[^{]*:(?:hover|active|focus-visible)[^{]*\{[^}]*(?:width|height|margin|padding|top|left|right|bottom|inset)\s*:/);
+  });
+
+  it('keeps the colour change but drops every movement under reduced motion', () => {
     // every reduced-motion block, braces balanced
     const reduced: string[] = [];
     for (let at = CSS.indexOf('@media (prefers-reduced-motion: reduce)'); at >= 0; at = CSS.indexOf('@media (prefers-reduced-motion: reduce)', at + 1)) {
@@ -158,8 +189,13 @@ describe('card hover depth', () => {
       reduced.push(CSS.slice(open + 1, end));
     }
     const neutralised = reduced.map((body) => [...body.matchAll(/([^{}]+)\{([^{}]*)\}/g)]).flat();
-    const rest = neutralised.filter(([, selector, body]) => /\.card-depth/.test(selector) && /transform:\s*none\s*!important/.test(body));
-    expect(rest.map(([, selector]) => selector).join(',')).toMatch(/\.card-arrow/);
+    const still = neutralised
+      .filter(([, , body]) => /transform:\s*none\s*!important/.test(body))
+      .map(([, selector]) => selector)
+      .join(',');
+    expect(still).toMatch(/\.card-lift/);
+    expect(still).toMatch(/\.card-arrow/);
     expect(neutralised.some(([, selector, body]) => /\.card-visual/.test(selector) && /background/.test(body))).toBe(false);
+    expect(neutralised.some(([, , body]) => /--motion-lift:\s*0px/.test(body))).toBe(true);
   });
 });

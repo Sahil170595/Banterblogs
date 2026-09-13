@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { Reveal } from '@/components/motion/Reveal';
-import { ReportTabs, type ReportTabEntry, type ReportTabGroup } from '@/components/reports/ReportTabs';
+import { ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabEntry, type ReportTabGroup } from '@/components/reports/ReportTabs';
 import { DirectionalPage, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
 import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
@@ -120,9 +120,14 @@ const KEY_FINDINGS: { number: string; finding: string; source: { label: string; 
   },
 ];
 
-// Each heading line rises on its own in the first-load entrance (globals.css);
-// inline blocks, so a line wraps inside itself on a phone.
+// The title's two phrases are inline blocks, so each wraps inside itself on
+// a phone.
 const TITLE_LINES = ['Edge LLM Inference', 'Under Real-World Constraints'];
+
+// First-load entrance groups (globals.css): the title first, so the LCP
+// heading starts on the first frame, then the intro, then the stats with the
+// tabs (TABS_ENTRANCE_GROUP in ReportTabs).
+const HEAD_ENTRANCE_GROUP = { title: 0, intro: 1, stats: TABS_ENTRANCE_GROUP } as const;
 
 // a wrapping phone title never breaks "Real-World" at its hyphen
 function keepHyphenatedWhole(line: string) {
@@ -203,21 +208,29 @@ export default async function ReportsIndex() {
     <DirectionalPage className="container pb-24 pt-6 md:pt-10">
       {/* ── Head: title, one-line intro, the program in three numbers ── */}
       <div>
-        <h1 className="text-[1.75rem] font-semibold leading-[1.08] tracking-[-0.025em] sm:text-4xl md:text-5xl md:leading-[1.05]">
+        <h1
+          className="entrance-group text-[1.75rem] font-semibold leading-[1.08] tracking-[-0.025em] sm:text-4xl md:text-5xl md:leading-[1.05]"
+          style={{ '--group': HEAD_ENTRANCE_GROUP.title } as CSSProperties}
+        >
           {TITLE_LINES.map((line, index) => (
             <span key={line}>
               {index > 0 && ' '}
-              <span className="entrance-line inline-block" style={{ '--line': index } as CSSProperties}>
-                {keepHyphenatedWhole(line)}
-              </span>
+              <span className="inline-block">{keepHyphenatedWhole(line)}</span>
             </span>
           ))}
         </h1>
-        <p className="entrance-intro mt-3 max-w-4xl text-[0.9375rem] leading-relaxed text-muted-foreground md:mt-4 md:text-[1.0625rem]">
+        <p
+          className="entrance-group mt-3 max-w-4xl text-[0.9375rem] leading-relaxed text-muted-foreground md:mt-4 md:text-[1.0625rem]"
+          style={{ '--group': HEAD_ENTRANCE_GROUP.intro } as CSSProperties}
+        >
           How fast local inference can get, and how safe it stays at the edge. Independent research by{' '}
           <span className="text-foreground">Sahil Kadadekar</span>.
         </p>
-        <ul aria-label="The research program in numbers" className="entrance-intro mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground">
+        <ul
+          aria-label="The research program in numbers"
+          className="entrance-group mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground"
+          style={{ '--group': HEAD_ENTRANCE_GROUP.stats } as CSSProperties}
+        >
           <li>
             <span className="font-semibold tabular-nums text-foreground">{MEASUREMENTS.SHORT}</span> measurements
           </li>

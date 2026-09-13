@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { act, fireEvent, render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Header } from '../Header';
 
 const { pathname } = vi.hoisted(() => ({ pathname: { current: '/' } }));
@@ -64,74 +64,38 @@ describe('header across route transitions', () => {
   });
 });
 
-describe('header scroll state', () => {
-  const scrollTo = (y: number) =>
-    act(() => {
-      Object.defineProperty(window, 'scrollY', { configurable: true, value: y });
-      fireEvent.scroll(window);
-    });
-  const classes = (el: Element) => el.className.split(/\s+/);
+describe('header surface on scroll', () => {
+  const CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
   beforeEach(() => {
     pathname.current = '/reports';
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
   });
 
-  afterEach(() => {
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
-  });
-
-  it('blends with the page at the top of an interior page', () => {
-    const header = render(<Header />).container.querySelector('header')!;
-
-    expect(header.dataset.scrolled).toBe('false');
-    expect(classes(header)).toEqual(expect.arrayContaining(['bg-transparent', 'border-transparent']));
-  });
-
-  it('turns solid with a hairline once scrolled past 8px, and blends again at the top', () => {
-    const header = render(<Header />).container.querySelector('header')!;
-
-    scrollTo(8);
-    expect(header.dataset.scrolled).toBe('false');
-    scrollTo(9);
-    expect(header.dataset.scrolled).toBe('true');
-    expect(classes(header)).toEqual(expect.arrayContaining(['bg-background/80', 'border-border/60']));
-    expect(classes(header)).not.toContain('bg-transparent');
-    scrollTo(0);
-    expect(header.dataset.scrolled).toBe('false');
-  });
-
-  it('keeps its height in both states: the border is always drawn, only its colour changes', () => {
-    const { container } = render(<Header />);
-    const header = container.querySelector('header')!;
-    const bar = header.firstElementChild!;
-
-    for (const y of [0, 1500]) {
-      scrollTo(y);
-      expect(classes(header), `scrollY ${y}`).toContain('border-b');
-      expect(classes(bar), `scrollY ${y}`).toContain('h-[72px]');
-    }
-  });
-
-  it('changes over the base token (about 250ms) and animates colour only', () => {
-    const header = render(<Header />).container.querySelector('header')!;
-
-    expect(classes(header)).toEqual(
-      expect.arrayContaining(['transition-[background-color,border-color]', 'duration-base', 'ease-out-quad']),
-    );
-  });
-
-  it('renders blended on the server, before any scroll is known', () => {
-    expect(renderToStaticMarkup(<Header />)).toMatch(/^<header[^>]*data-scrolled="false"/);
-  });
-
-  it('leaves the landing header floating and transparent however far the page scrolls', () => {
+  it('gives interior pages the surface layer and keeps the landing header floating', () => {
+    expect(renderToStaticMarkup(<Header />)).toMatch(/^<header[^>]*class="site-header /);
     pathname.current = '/';
-    const header = render(<Header />).container.querySelector('header')!;
-    scrollTo(1500);
+    expect(renderToStaticMarkup(<Header />)).toMatch(/^<header[^>]*class="fixed top-0 z-50 w-full bg-transparent"/);
+  });
 
+  it('keeps its height fixed and needs no JavaScript scroll state', () => {
+    const header = render(<Header />).container.querySelector('header')!;
+
+    expect(header.className.split(/\s+/)).toEqual(expect.arrayContaining(['border-b', 'border-transparent']));
+    expect(header.firstElementChild!.className.split(/\s+/)).toContain('h-[72px]');
     expect(header.hasAttribute('data-scrolled')).toBe(false);
-    expect(classes(header)).toEqual(expect.arrayContaining(['fixed', 'bg-transparent']));
+  });
+
+  it('fades a glass layer in over the first 64px on a scroll timeline, opacity only, for visitors who allow motion', () => {
+    expect(CSS).toMatch(/--header-surface-range:\s*64px;/);
+    expect(CSS).toMatch(/\.site-header::before \{[^}]*backdrop-filter:\s*blur\(var\(--blur-glass\)\)/);
+    const gated = /@supports \(animation-timeline: scroll\(\)\) \{\s*@media \(prefers-reduced-motion: no-preference\) \{([\s\S]*?)\}\s*\}/.exec(CSS)?.[1] ?? '';
+    expect(gated).toMatch(/\.site-header::before,\s*\.site-header::after \{/);
+    expect(gated).toMatch(/animation-timeline:\s*scroll\(root block\);/);
+    expect(gated).toMatch(/animation-range:\s*0 var\(--header-surface-range\);/);
+    const frames = /@keyframes header-surface \{([\s\S]*?)\}\s*\}/.exec(CSS)?.[1] ?? '';
+    expect(frames).toMatch(/opacity:\s*0/);
+    // the layer's opacity animates, never its blur
+    expect(frames).not.toMatch(/blur|filter|transform/);
   });
 });
 

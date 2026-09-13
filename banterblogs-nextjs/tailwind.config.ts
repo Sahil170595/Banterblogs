@@ -20,31 +20,38 @@ const config: Config = {
       },
     },
     extend: {
-      // Motion tokens v2 (pinned by motion.test.ts; globals.css mirrors them as
-      // --motion-* / --ease-* for CSS-driven motion, next to the distances and
-      // staggers, so all tuning happens in these two places). Calibrated to
-      // read clearly at normal speed. micro = press feedback; fast = colour,
-      // border and opacity feedback; hover = hover-in depth; base = hover-out,
-      // the header state, overlays, route transitions; glide = the tab
-      // indicator; reveal = scroll reveals and secondary entrance steps;
-      // entrance = a page title's first-load rise. out-quad eases small
-      // things arriving; entrance is a soft ease-out for rises; spring is a
-      // damped spring (zeta 0.72, ~4% overshoot) sampled for linear().
+      // Motion tokens (pinned by motion.test.ts), from the researched motion
+      // brief (2026-09-12): responses stay 150-400ms and read as obvious
+      // through size and staging, not length. globals.css mirrors the
+      // durations as --duration-* beside the distance, scale, blur, stagger and
+      // spring tokens, so all tuning happens in these two places.
+      // fast = colour and opacity feedback; press = a pointer press; hover =
+      // hover in; base = small parts easing back, overlays, the tab highlight;
+      // enter = arrivals and card hover out; route = the page slide; morph =
+      // the shared title; reveal = scroll reveals and the archive entrance;
+      // exit = a page leaving; handoff = the pause before the next page fades
+      // in. Springs are sampled linear() curves in globals.css.
       transitionDuration: {
-        micro: "100ms",
         fast: "150ms",
-        hover: "220ms",
+        press: "160ms",
+        hover: "200ms",
         base: "250ms",
-        glide: "450ms",
+        enter: "300ms",
+        route: "350ms",
+        morph: "400ms",
         reveal: "600ms",
-        entrance: "900ms",
+        exit: "120ms",
+        handoff: "100ms",
       },
       transitionTimingFunction: {
         standard: "cubic-bezier(0.4, 0, 0.2, 1)",
-        "out-quad": "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-        entrance: "cubic-bezier(0.22, 1, 0.36, 1)",
-        spring:
-          "linear(0, 0.042, 0.143, 0.275, 0.415, 0.55, 0.672, 0.775, 0.858, 0.922, 0.969, 1.001, 1.022, 1.033, 1.038, 1.038, 1.035, 1.03, 1.025, 1.02, 1.015, 1.01, 1.007, 1.004, 1)",
+        "strong-out": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "strong-in-out": "cubic-bezier(0.77, 0, 0.175, 1)",
+        move: "cubic-bezier(0.42, 0, 0.58, 1)",
+        drawer: "cubic-bezier(0.32, 0.72, 0, 1)",
+        "spring-gentle": "var(--ease-spring-gentle)",
+        "spring-snappy": "var(--ease-spring-snappy)",
+        "spring-bouncy": "var(--ease-spring-bouncy)",
       },
       colors: {
         background: "hsl(var(--background))",

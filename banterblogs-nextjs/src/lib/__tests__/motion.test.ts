@@ -3,9 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import tailwindConfig from '../../../tailwind.config';
 
-// Motion ratchet, v2. Every duration and curve is a named token (micro, fast,
-// hover, base, reveal, entrance on the standard, out-quad and entrance
-// curves); staggers step through CSS custom properties. The /show scenes and
+// Motion ratchet, v2. Every duration and curve is a named token from the
+// researched motion brief (fast through reveal on standard, strong-out,
+// strong-in-out, move, drawer and three springs); distances, scales, blurs and
+// staggers step through CSS custom properties. The /show scenes and
 // the galactic landing animate as content, so the transition-all and duration
 // rules exempt them. Scroll reveals exist only through the <Reveal> primitive
 // in components/motion/, which keeps content visible without JavaScript and
@@ -24,17 +25,48 @@ const NON_REVEAL_OBSERVERS: Record<string, string> = {
   [path.join('components', 'TableOfContents.tsx')]: 'scroll-spy: marks the heading in view; nothing moves',
 };
 
-// calibrated 2026-09-12 to read clearly at normal speed (owner direction)
-const DURATION_TOKENS = { micro: '100ms', fast: '150ms', hover: '220ms', base: '250ms', glide: '450ms', reveal: '600ms', entrance: '900ms' };
+// the researched motion brief (2026-09-12): responses stay 150-400ms and read
+// as obvious through distance, blur, scale and staging, not length
+const DURATION_TOKENS = {
+  fast: '150ms',
+  press: '160ms',
+  hover: '200ms',
+  base: '250ms',
+  enter: '300ms',
+  route: '350ms',
+  morph: '400ms',
+  reveal: '600ms',
+  exit: '120ms',
+  handoff: '100ms',
+};
 const CURVE_TOKENS = {
   standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
-  'out-quad': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  entrance: 'cubic-bezier(0.22, 1, 0.36, 1)',
-  spring:
-    'linear(0, 0.042, 0.143, 0.275, 0.415, 0.55, 0.672, 0.775, 0.858, 0.922, 0.969, 1.001, 1.022, 1.033, 1.038, 1.038, 1.035, 1.03, 1.025, 1.02, 1.015, 1.01, 1.007, 1.004, 1)',
+  'strong-out': 'cubic-bezier(0.23, 1, 0.32, 1)',
+  'strong-in-out': 'cubic-bezier(0.77, 0, 0.175, 1)',
+  move: 'cubic-bezier(0.42, 0, 0.58, 1)',
+  drawer: 'cubic-bezier(0.32, 0.72, 0, 1)',
+  'spring-gentle': 'var(--ease-spring-gentle)',
+  'spring-snappy': 'var(--ease-spring-snappy)',
+  'spring-bouncy': 'var(--ease-spring-bouncy)',
 };
-// the spring may overshoot a little, never visibly bounce
-const MAX_SPRING_OVERSHOOT = 0.05;
+// most each spring may overshoot: gentle none, snappy barely, bouncy (rare delight) ~5%
+const MAX_SPRING_OVERSHOOT = { gentle: 0, snappy: 0.01, bouncy: 0.05 };
+// tokens that must rest under reduced motion, so only colour and opacity change
+const REST_TOKENS = [
+  '--motion-nudge',
+  '--motion-lift',
+  '--motion-rise',
+  '--motion-reveal',
+  '--motion-route',
+  '--scale-press',
+  '--scale-press-card',
+  '--scale-enter',
+  '--scale-icon',
+  '--scale-reveal',
+  '--blur-crossfade',
+  '--blur-morph',
+  '--blur-enter',
+];
 
 // Slowest framer transition allowed outside the scenes, in seconds: overlays
 // run at duration-base (0.25 s), so anything slower is decoration. Page motion
@@ -168,26 +200,37 @@ describe('motion tokens', () => {
     expect(extend?.transitionTimingFunction).toEqual(CURVE_TOKENS);
   });
 
-  it('steps staggers through CSS custom properties: items 70 ms, lines 120 ms', () => {
+  it('steps staggers through CSS custom properties: words 35 ms, items 50 ms, groups 80 ms', () => {
     const css = fs.readFileSync(GLOBALS_CSS, 'utf8');
-    expect(css).toMatch(/--stagger-item:\s*70ms;/);
-    expect(css).toMatch(/--stagger-line:\s*120ms;/);
+    expect(css).toMatch(/--stagger-word:\s*35ms;/);
+    expect(css).toMatch(/--stagger-item:\s*50ms;/);
+    expect(css).toMatch(/--stagger-group:\s*80ms;/);
   });
 
-  it('samples the spring from 0 to 1 with only a slight overshoot', () => {
-    const stops = /^linear\((.*)\)$/.exec(CURVE_TOKENS.spring)![1].split(',').map(Number);
-    expect(stops[0]).toBe(0);
-    expect(stops.at(-1)).toBe(1);
-    expect(Math.max(...stops) - 1).toBeGreaterThan(0);
-    expect(Math.max(...stops) - 1).toBeLessThanOrEqual(MAX_SPRING_OVERSHOOT);
-  });
+  it.each(Object.entries(MAX_SPRING_OVERSHOOT))(
+    'samples the %s spring from 0 to 1 within its overshoot, behind a linear() check with a strong-out fallback',
+    (name, maxOvershoot) => {
+      const css = fs.readFileSync(GLOBALS_CSS, 'utf8');
+      expect(css).toMatch(new RegExp(`--ease-spring-${name}:\\s*var\\(--ease-strong-out\\);`));
+      const spring = new RegExp(`--ease-spring-${name}:\\s*linear\\(([^)]*)\\);`).exec(css);
+      expect(spring, name).not.toBeNull();
+      const gate = css.indexOf('@supports (transition-timing-function: linear(0, 1))');
+      expect(gate).toBeGreaterThanOrEqual(0);
+      expect(gate).toBeLessThan(spring!.index);
+      const values = spring![1].split(',').map((stop) => Number(stop.trim().split(/\s+/)[0]));
+      expect(values[0]).toBe(0);
+      expect(values.at(-1)).toBe(1);
+      expect(Math.max(...values) - 1).toBeLessThanOrEqual(maxOvershoot);
+    },
+  );
 
-  it('reads every CSS motion duration and curve from the tokens, so CSS and classes cannot drift', () => {
+  it('mirrors every duration and curve into CSS from the tokens, so CSS and classes cannot drift', () => {
     const css = fs.readFileSync(GLOBALS_CSS, 'utf8');
     for (const key of Object.keys(DURATION_TOKENS)) {
-      expect(css, key).toMatch(new RegExp(`--motion-${key}:\\s*theme\\(['"]transitionDuration\\.${key}['"]\\);`));
+      expect(css, key).toMatch(new RegExp(`--duration-${key}:\\s*theme\\(['"]transitionDuration\\.${key}['"]\\);`));
     }
-    for (const key of Object.keys(CURVE_TOKENS)) {
+    // springs are defined in CSS and referenced by the theme, the other way round
+    for (const key of Object.keys(CURVE_TOKENS).filter((curve) => !curve.startsWith('spring-'))) {
       expect(css, key).toMatch(new RegExp(`--ease-${key}:\\s*theme\\(['"]transitionTimingFunction\\.${key}['"]\\);`));
     }
   });
@@ -324,5 +367,45 @@ describe('reveal primitive guarantees', () => {
     expect(declarations).toMatch(/transform:\s*none\s*!important/);
     expect(declarations).toMatch(/filter:\s*none\s*!important/);
     expect(declarations).toMatch(/transition:\s*none\s*!important/);
+  });
+});
+
+// Reduced is not none: nothing moves, but colour and opacity may still fade.
+describe('reduced motion', () => {
+  const css = fs.readFileSync(GLOBALS_CSS, 'utf8');
+  const reduced = cssBlocks(css)
+    .filter((block) => block.prelude.replace(/\s+/g, ' ') === '@media (prefers-reduced-motion: reduce)')
+    .flatMap((block) => rulesIn(block.body));
+
+  it('rests every distance, scale and blur token', () => {
+    const root = reduced.filter((rule) => rule.selector === ':root').map((rule) => rule.declarations).join(';');
+    for (const token of REST_TOKENS) expect(root, token).toMatch(new RegExp(`${token}:\\s*(0px|1);`));
+  });
+
+  it('lets transitions change colour and opacity only, and ends keyframe animations at once', () => {
+    const all = reduced.find((rule) => rule.selector.replace(/\s+/g, ' ') === '*, ::before, ::after');
+    expect(all).toBeDefined();
+    const properties = /transition-property:\s*([^;!]+)/.exec(all!.declarations)![1].split(',').map((property) => property.trim());
+    expect(properties).toContain('opacity');
+    for (const moving of ['all', 'transform', 'translate', 'scale', 'rotate', 'filter', 'clip-path']) {
+      expect(properties, moving).not.toContain(moving);
+    }
+    expect(all!.declarations).toMatch(/animation-duration:\s*0\.01ms\s*!important/);
+  });
+
+  it('declares every scroll-timeline animation only for visitors who allow motion', () => {
+    // a time-based duration cannot stop a scroll-driven animation (MDN)
+    const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    // declarations only: an @supports condition names the property too
+    const timelines = [...text.matchAll(/(?<=[{;]\s*)animation-timeline\s*:\s*scroll\(/g)];
+    expect(timelines.length).toBeGreaterThan(0);
+    for (const timeline of timelines) {
+      const before = text.slice(0, timeline.index);
+      const gate = before.lastIndexOf('@media (prefers-reduced-motion: no-preference)');
+      expect(gate, 'scroll timeline outside a no-preference gate').toBeGreaterThanOrEqual(0);
+      const since = before.slice(gate);
+      // the gate's block is still open where the timeline is declared
+      expect(since.split('{').length - since.split('}').length).toBeGreaterThan(0);
+    }
   });
 });

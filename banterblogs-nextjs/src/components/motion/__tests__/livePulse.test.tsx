@@ -43,7 +43,7 @@ describe('live pulse', () => {
 
   it('loops 2-3 s only under the motion gate, paused unless on screen, and never under reduced motion', () => {
     const css = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-    const period = /--motion-pulse:\s*(\d+)ms/.exec(css);
+    const period = /--duration-pulse:\s*(\d+)ms/.exec(css);
     expect(Number(period?.[1])).toBeGreaterThanOrEqual(2000);
     expect(Number(period?.[1])).toBeLessThanOrEqual(3000);
 

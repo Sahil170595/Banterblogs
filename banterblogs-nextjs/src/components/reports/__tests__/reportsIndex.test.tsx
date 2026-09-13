@@ -4,7 +4,7 @@ import ReportsIndex from '@/app/reports/page';
 import { Reveal } from '@/components/motion/Reveal';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { PHASE_DEFINITIONS, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
-import { ReportTabs, type ReportTabEntry, type ReportTabGroup } from '../ReportTabs';
+import { ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabEntry, type ReportTabGroup } from '../ReportTabs';
 
 // Next's App Router bundles the React canary that exports ViewTransition; the
 // npm React these tests run on is stable and has none.
@@ -34,6 +34,7 @@ function textIn(node: unknown): string {
 }
 
 const classes = (el: AnyElement) => String(el.props.className ?? '').split(/\s+/);
+const group = (el: AnyElement | undefined) => (el?.props.style as Record<string, number> | undefined)?.['--group'];
 // border width utilities: border, border-b, hover:border-2 ... (colour utilities do not draw one)
 const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
 // one line at the desktop measure
@@ -48,25 +49,27 @@ beforeAll(async () => {
 });
 
 describe('archive head', () => {
-  it('opens on the title in two entrance lines, with no boxed hero or stat tiles', () => {
+  it('opens on the title as the first entrance group, with no boxed hero or stat tiles', () => {
     const h1s = page.filter((el) => el.type === 'h1');
     expect(h1s).toHaveLength(1);
-    const lines = elementsIn(h1s[0].props.children).filter((el) => classes(el).includes('entrance-line'));
-
-    expect(lines.map(textIn)).toEqual(['Edge LLM Inference', 'Under Real-World Constraints']);
-    expect(lines.map((el) => (el.props.style as Record<string, number>)['--line'])).toEqual([0, 1]);
+    expect(classes(h1s[0])).toContain('entrance-group');
+    // group 0 starts at once, so the LCP heading begins on the first frame
+    expect(group(h1s[0])).toBe(0);
+    const phrases = elementsIn(h1s[0].props.children).filter((el) => classes(el).includes('inline-block'));
+    expect(phrases.map(textIn)).toEqual(['Edge LLM Inference', 'Under Real-World Constraints']);
     expect(page.filter((el) => classes(el).some((c) => /^signal-(panel|pill)/.test(c)))).toEqual([]);
   });
 
-  it('follows the title with a one-line intro and the three stats inline, then the tabs', () => {
+  it('follows the title with a one-line intro and the three stats inline, then the tabs, one entrance group each', () => {
     const at = (el: AnyElement | undefined) => (el ? page.indexOf(el) : -1);
     const h1 = page.find((el) => el.type === 'h1');
-    const intro = page.find((el) => el.type === 'p' && classes(el).includes('entrance-intro'));
-    const stats = page.find((el) => el.type === 'ul' && classes(el).includes('entrance-intro'));
+    const intro = page.find((el) => el.type === 'p' && classes(el).includes('entrance-group'));
+    const stats = page.find((el) => el.type === 'ul' && classes(el).includes('entrance-group'));
 
     expect(at(h1)).toBeLessThan(at(intro));
     expect(at(intro)).toBeLessThan(at(stats));
     expect(at(stats)).toBeLessThan(at(tabs));
+    expect([group(h1), group(intro), group(stats)]).toEqual([0, 1, TABS_ENTRANCE_GROUP]);
     expect(textIn(intro?.props.children).length).toBeLessThanOrEqual(INTRO_MAX_CHARS);
     const items = elementsIn(stats?.props.children).filter((el) => el.type === 'li').map(textIn);
     expect(items.slice(0, 3)).toEqual([
