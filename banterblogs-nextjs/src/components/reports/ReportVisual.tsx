@@ -393,8 +393,41 @@ function pairedBars(r: Rng): Shape[] {
 }
 
 // ---- arcs: rings around an off-frame centre with a needle (0) or a gauge (1)
-const RING_DASHES = [null, null, '3 5', '1 3'] as const;
-const TICK_DENSITIES = [90, 120, 180] as const;
+// sparse dashes only: dense dash patterns on large rings rasterize slowly
+const RING_DASHES = [null, null, '3 5'] as const;
+// Gauge ticks are short 1px lines, not dashed circles: a thick dashed ring
+// cost a 50ms GPU raster the first time a row of cards scrolled in. Unit
+// vectors every 15 degrees, clockwise from 3 o'clock (SVG y points down),
+// built from literal constants so no engine's Math.sin decides the markup.
+const DIAL_QUADRANT = [
+  [1, 0],
+  [0.9659, 0.2588],
+  [0.866, 0.5],
+  [0.7071, 0.7071],
+  [0.5, 0.866],
+  [0.2588, 0.9659],
+] as const;
+const DIAL: ReadonlyArray<readonly [number, number]> = [0, 1, 2, 3].flatMap((q) =>
+  DIAL_QUADRANT.map(([x, y]): readonly [number, number] => (q === 0 ? [x, y] : q === 1 ? [-y, x] : q === 2 ? [-x, -y] : [y, -x])),
+);
+const DIAL_MAJOR_EVERY = 3;
+// the linear scale's minor and major tick spacing, in viewBox units
+const SCALE_MINOR_STEP = 8;
+const SCALE_MAJOR_STEP = 40;
+
+// radial ticks centred on radius r: every `step`th dial position, majors longer
+function dialTicks(cx: number, cy: number, r: number, step: number): { minor: string; major: string } {
+  const minor: string[] = [];
+  const major: string[] = [];
+  DIAL.forEach(([ux, uy], i) => {
+    if (i % step) return;
+    const isMajor = i % (step * DIAL_MAJOR_EVERY) === 0;
+    const half = isMajor ? 4 : 2;
+    const tick = `M${n1(cx + ux * (r - half))} ${n1(cy + uy * (r - half))}L${n1(cx + ux * (r + half))} ${n1(cy + uy * (r + half))}`;
+    (isMajor ? major : minor).push(tick);
+  });
+  return { minor: minor.join(''), major: major.join('') };
+}
 
 function rings(r: Rng, cx: number, cy: number, count: number, r0: number, gap: number, accentAt: number): Shape[] {
   return Array.from({ length: count }, (_, i) => {
@@ -444,7 +477,8 @@ function gauge(r: Rng): Drawing {
     const outer = r0 + (count - 1) * step;
     const shapes: Shape[] = [];
     for (let i = 0; i < count; i++) shapes.push(shape('circle', 'l', { cx: CX, cy, r: n1(r0 + i * step), ...(chance(r, 0.5) ? { strokeDasharray: '2 3' } : {}) }));
-    shapes.push(shape('circle', 't', { cx: CX, cy, r: n1(outer + 14), pathLength: TICK_DENSITIES[pick(r, TICK_DENSITIES.length)], strokeDasharray: '0.3 1.7', strokeWidth: 5 }));
+    const dial = dialTicks(CX, cy, outer + 14, 1 + pick(r, 2));
+    shapes.push(shape('path', 'l', { d: dial.minor }), shape('path', 'k', { d: dial.major }));
     shapes.push(shape('circle', 'h', { cx: CX, cy, r: n1(outer + 6), pathLength: 100, strokeDasharray: `${certified} 100`, transform: `rotate(-90 ${CX} ${cy})` }));
     if (chance(r, 0.5) && count > 1) {
       const inner = Math.round(certified * between(r, 0.4, 0.8));
@@ -461,7 +495,8 @@ function gauge(r: Rng): Drawing {
     [certified, other].forEach((reading, i) => {
       const gx = CX + (i ? 62 : -62);
       shapes.push(shape('circle', 'l', { cx: gx, cy: 92, r: 13 }), shape('circle', 'l', { cx: gx, cy: 92, r: 25, strokeDasharray: '2 3' }));
-      shapes.push(shape('circle', 't', { cx: gx, cy: 92, r: 46, pathLength: 60, strokeDasharray: '0.3 1.7', strokeWidth: 4 }));
+      const dial = dialTicks(gx, 92, 46, 2);
+      shapes.push(shape('path', 'l', { d: dial.minor }), shape('path', 'k', { d: dial.major }));
       shapes.push(
         shape('circle', i === lit ? 'h' : 'k', {
           cx: gx,
@@ -490,11 +525,13 @@ function gauge(r: Rng): Drawing {
   // a linear certification scale with the reading marked on it
   const scale = 118;
   const reach = L + ((R - L) * certified) / 100;
+  const minorTicks = `M${L} ${scale - 5}v10` + `m${SCALE_MINOR_STEP} -10v10`.repeat(Math.floor((R - L) / SCALE_MINOR_STEP));
+  const majorTicks = `M${L} ${scale - 10}v20` + `m${SCALE_MAJOR_STEP} -20v20`.repeat(Math.floor((R - L) / SCALE_MAJOR_STEP));
   return {
     layout,
     shapes: [
-      shape('path', 't', { d: `M${L} ${scale}H${R}`, strokeDasharray: '1 7', strokeWidth: 10 }),
-      shape('path', 't', { d: `M${L} ${scale}H${R}`, strokeDasharray: '1.5 38.5', strokeWidth: 20 }),
+      shape('path', 'l', { d: minorTicks }),
+      shape('path', 'l', { d: majorTicks }),
       shape('path', 'k', { d: `M${L} ${scale}H${R}` }),
       shape('circle', 'l', { cx: n1(reach), cy: 84, r: 14 }),
       shape('circle', 'l', { cx: n1(reach), cy: 84, r: 24, strokeDasharray: '2 3' }),

@@ -9,6 +9,10 @@ const draw = (slug: string, accent = false) => renderToStaticMarkup(<ReportVisua
 // pictures must not repeat one composition
 const MIN_REPORTS_FOR_VARIETY = 5;
 const MIN_LAYOUTS_PER_PHASE = 3;
+// dither dots are drawn as square-capped strokes one dot pitch wide
+const DOT_STROKE_WIDTH = 8;
+// shortest repeat of a dash pattern, in viewBox units
+const MIN_DASH_PERIOD = 4;
 
 // a real slug in each TR-numbered phase, plus the pinned Phase 0 baselines
 const SAMPLE_BY_PHASE: Record<PhaseKey, string> = {
@@ -87,6 +91,19 @@ describe('per-report visual', () => {
       expect(svg, slug).toMatch(/^<svg[^>]*\bviewBox="0 0 320 180"/);
       // no text to announce, nothing to fetch, nothing to collide across 60 cards
       expect(svg, slug).not.toMatch(/<(text|image|script|use|foreignObject)\b|\sid="|NaN|Infinity/);
+    }
+  });
+
+  it('never draws thick or finely dashed strokes, which rasterize slowly as a row of cards scrolls in', () => {
+    // a thick dashed tick ring cost a 50ms GPU raster on the first scroll
+    for (const slug of [...discoverReportsUnique().map((entry) => entry.slug), 'compendium']) {
+      const svg = draw(slug);
+      // only the dither dots carry their own stroke width (one dot pitch)
+      for (const [, width] of svg.matchAll(/stroke-width="([^"]+)"/g)) expect(width, slug).toBe(String(DOT_STROKE_WIDTH));
+      for (const [, dashes] of svg.matchAll(/stroke-dasharray="([^"]+)"/g)) {
+        const period = dashes.split(/[\s,]+/).map(Number).reduce((sum, part) => sum + part, 0);
+        expect(period, `${slug}: ${dashes}`).toBeGreaterThanOrEqual(MIN_DASH_PERIOD);
+      }
     }
   });
 
