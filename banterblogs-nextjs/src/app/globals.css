@@ -1145,9 +1145,9 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   color: hsl(var(--foreground));
 }
 
+/* the title takes the page's full width, so most titles set on one line */
 .report-title {
   margin-top: 1rem;
-  max-width: 64rem;
   font-size: 2rem;
   line-height: 1.12;
   font-weight: 600;
@@ -1157,7 +1157,7 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 
 .report-dek {
   margin-top: 0.875rem;
-  max-width: 44rem;
+  max-width: 48rem;
   font-size: 1.125rem;
   line-height: 1.5;
   color: hsl(var(--muted-foreground));
