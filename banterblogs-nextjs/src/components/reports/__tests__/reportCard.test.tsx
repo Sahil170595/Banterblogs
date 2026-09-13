@@ -97,12 +97,12 @@ describe('report card', () => {
     expect(card().querySelector('p')?.className).toMatch(/\bline-clamp-2\b/);
   });
 
-  it('sends the card forward and pairs its title with the report heading', () => {
+  it('sends the card forward and pairs its visual and title with the report page hero and heading', () => {
     const link = card().querySelector('a')!;
 
     expect(link.getAttribute('href')).toBe('/reports/technical-report-138');
     expect(link.getAttribute('data-transition-types')).toBe(NAV_FORWARD);
-    expect(viewTransitions.map((vt) => vt.name)).toEqual(['report-title-technical-report-138']);
+    expect(viewTransitions.map((vt) => vt.name)).toEqual(['report-figure-technical-report-138', 'report-title-technical-report-138']);
   });
 
   it('has no border of its own, and moves a child while the link keeps the pointer', () => {

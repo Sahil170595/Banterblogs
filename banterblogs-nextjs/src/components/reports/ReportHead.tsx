@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import type { ReportFrontMatter } from '@/lib/reports/content';
+import { ReportFigureTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
 
 // The report page's head, below its breadcrumb, title and dek (page.tsx):
@@ -73,11 +74,16 @@ export function ReportDetails({ frontMatter }: { frontMatter: ReportFrontMatter 
   );
 }
 
-/** The report's archive-card visual on a plate at banner proportions, with its ember accent lit. */
+/**
+ * The report's archive-card visual on a plate at banner proportions, with its
+ * ember accent lit. It is the far end of the card-to-report figure morph.
+ */
 export function ReportHero({ slug }: { slug: string }) {
   return (
-    <div className="report-hero">
-      <ReportVisual slug={slug} accent />
-    </div>
+    <ReportFigureTransition slug={slug}>
+      <div className="report-hero">
+        <ReportVisual slug={slug} accent />
+      </div>
+    </ReportFigureTransition>
   );
 }

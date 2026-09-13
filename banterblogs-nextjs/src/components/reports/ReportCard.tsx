@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
 import { describeReport } from './reportIdentity';
-import { NAV_FORWARD, ReportTitleTransition } from './ReportTransitions';
+import { NAV_FORWARD, ReportFigureTransition, ReportTitleTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
 
 export { describeReport };
@@ -30,9 +30,11 @@ export function ReportCard({ slug, title, description, synthesis = false, latest
   return (
     <Link href={`/reports/${slug}`} transitionTypes={[NAV_FORWARD]} className="card-depth group block rounded-xl">
       <div className="card-lift">
-        <div className="card-visual aspect-video">
-          <ReportVisual slug={slug} accent={accent} />
-        </div>
+        <ReportFigureTransition slug={slug}>
+          <div className="card-visual aspect-video">
+            <ReportVisual slug={slug} accent={accent} />
+          </div>
+        </ReportFigureTransition>
         <ReportTitleTransition slug={slug}>
           <h3 className="mt-4 text-[1.25rem] font-semibold leading-snug tracking-[-0.015em] text-foreground">{heading}</h3>
         </ReportTitleTransition>

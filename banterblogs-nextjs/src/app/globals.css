@@ -899,6 +899,35 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
     var(--vt-duration-morph) var(--vt-ease) both vt-morph-blur;
 }
 
+/* A report's figure opening from its archive card into the report's hero:
+   the plate widens on the gentle spring while the two snapshots cross-fade,
+   clipped to its rounded box. The card is contained and the hero covered, so
+   the drawing sits at the same place and size in both all the way across; the
+   hero's plate fills in around it. */
+:root {
+  --vt-duration-figure: var(--duration-spring-gentle);
+  --vt-ease-figure: var(--ease-spring-gentle);
+}
+
+::view-transition-group(.figure-morph) {
+  clip-path: inset(0 round 0.625rem);
+  animation-duration: var(--vt-duration-figure);
+  animation-timing-function: var(--vt-ease-figure);
+}
+
+::view-transition-old(.figure-morph),
+::view-transition-new(.figure-morph) {
+  height: 100%;
+}
+
+::view-transition-old(.figure-morph) {
+  object-fit: contain;
+}
+
+::view-transition-new(.figure-morph) {
+  object-fit: cover;
+}
+
 /* Reduced motion: nothing slides or morphs; the pages crossfade on the fast
    token, while the header and unnamed content still swap in place. */
 @media (prefers-reduced-motion: reduce) {
