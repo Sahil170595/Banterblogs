@@ -1,9 +1,8 @@
 'use client';
 
 import { Suspense, type KeyboardEvent } from 'react';
-import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { NAV_FORWARD, ReportTitleTransition } from './ReportTransitions';
+import { ReportCard } from './ReportCard';
 
 export interface ReportTabEntry {
   slug: string;
@@ -149,30 +148,9 @@ function TabbedReports({ tabs, featuredSlugs, activeKey, onSelect }: TabbedRepor
                 All reports in this category are featured above.
               </p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3">
                 {visibleReports.map((r) => (
-                  <Link
-                    key={r.slug}
-                    href={`/reports/${r.slug}`}
-                    transitionTypes={[NAV_FORWARD]}
-                    className="block group rounded-xl border border-border/50 bg-card/30 p-5 hover:bg-muted/20 hover:border-border transition-colors"
-                  >
-                    <div className="mb-3">
-                      <ReportTitleTransition slug={r.slug}>
-                        <div className="text-base font-semibold group-hover:text-primary transition-colors leading-snug">
-                          {r.title}
-                        </div>
-                      </ReportTitleTransition>
-                    </div>
-                    {r.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">
-                        {r.description}
-                      </p>
-                    )}
-                    <span className="text-xs text-muted-foreground flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      View Report <span>&rarr;</span>
-                    </span>
-                  </Link>
+                  <ReportCard key={r.slug} slug={r.slug} title={r.title} description={r.description} />
                 ))}
               </div>
             )}
