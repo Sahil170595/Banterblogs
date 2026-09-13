@@ -91,7 +91,7 @@ const RENDER_OPTIONS_KEY = "readingSurface";
 
 type HastParent = Root | Element;
 
-function textOf(node: ElementContent): string {
+export function textOf(node: ElementContent): string {
   if (node.type === "text") return node.value;
   if (node.type === "element") return node.children.map(textOf).join("");
   return "";
@@ -207,9 +207,20 @@ const markdownProcessor = remark()
   .use(rehypeReadingSurface)
   .use(rehypeStringify);
 
+/** The rendered HTML tree of a markdown document, before it is stringified. */
+export async function renderMarkdownTree(markdown: string, options: RenderMarkdownOptions = {}): Promise<Root> {
+  // the reading-surface step reads its options from the file's data
+  const file = { value: markdown, data: { [RENDER_OPTIONS_KEY]: options } };
+  return (await markdownProcessor.run(markdownProcessor.parse(file), file)) as Root;
+}
+
+/** HTML for a rendered tree, or for a run of its nodes. */
+export function hastToHtml(node: Root | RootContent[]): string {
+  return markdownProcessor.stringify(Array.isArray(node) ? { type: "root", children: node } : node);
+}
+
 export async function renderMarkdownToHtml(markdown: string, options: RenderMarkdownOptions = {}): Promise<string> {
-  const processed = await markdownProcessor.process({ value: markdown, data: { [RENDER_OPTIONS_KEY]: options } });
-  return processed.toString();
+  return hastToHtml(await renderMarkdownTree(markdown, options));
 }
 
 export function extractPrimaryHeading(markdown: string): string | undefined {
@@ -244,6 +255,26 @@ export function extractHeadings(markdown: string): TocEntry[] {
     const id = slugger.slug(text);
     // The page's own TOC replaces the markdown one (dropInlineToc); slugging
     // it anyway keeps later ids in step with rehype-slug.
+    if (level <= 3 && INLINE_TOC_HEADING.test(text)) continue;
+    headings.push({ id, text, level });
+  }
+  return headings;
+}
+
+/**
+ * The contents of a rendered tree: its top-level h2-h4 with the ids
+ * rehype-slug gave them, skipping a demoted title and the markdown's own TOC
+ * heading. Reads what the page will show, so headings inside code blocks or
+ * folded out of the body never reach the contents.
+ */
+export function extractTreeHeadings(tree: Root): TocEntry[] {
+  const headings: TocEntry[] = [];
+  for (const node of tree.children) {
+    if (node.type !== "element" || !/^h[2-4]$/.test(node.tagName) || node.properties.dataDemoted) continue;
+    const level = Number(node.tagName.slice(1));
+    const text = textOf(node).replace(/\s+/g, " ").trim();
+    const id = node.properties.id;
+    if (!text || typeof id !== "string") continue;
     if (level <= 3 && INLINE_TOC_HEADING.test(text)) continue;
     headings.push({ id, text, level });
   }

@@ -8,6 +8,7 @@ import ReportDetail from '@/app/reports/[id]/page';
 import ReportsIndex from '@/app/reports/page';
 import { discoverReportsUnique } from '@/lib/reports/locator';
 import { reportSortRank } from '@/lib/reports/phases';
+import { ReportHero } from '../ReportHead';
 import {
   DirectionalPage,
   NAV_BACK,
@@ -91,7 +92,7 @@ describe('report transition boundaries', () => {
 });
 
 describe('reading-path wiring', () => {
-  it('report page: slides as a page, morphs its heading, tags back, previous and next', async () => {
+  it('report page: slides as a page, morphs its heading, shows its hero, tags back, previous and next', async () => {
     const order = discoverReportsUnique()
       .map((entry) => entry.slug)
       .sort((a, b) => reportSortRank(a) - reportSortRank(b) || a.localeCompare(b));
@@ -104,9 +105,11 @@ describe('reading-path wiring', () => {
     const title = elementsIn(tree).find((el) => el.type === ReportTitleTransition);
     expect(title?.props.slug).toBe(id);
     expect(elementsIn(title?.props.children).map((el) => el.type)).toContain('h1');
+    // the hero figure sits under the head
+    expect(elementsIn(tree).filter((el) => el.type === ReportHero).map((el) => el.props.slug)).toEqual([id]);
 
     const byText = (text: string) => links(tree).filter((link) => textIn(link).includes(text));
-    expect(byText('Research Archive').map((link) => [href(link), link.props.transitionTypes])).toEqual([
+    expect(byText('Research archive').map((link) => [href(link), link.props.transitionTypes])).toEqual([
       ['/reports', [NAV_BACK]],
     ]);
     expect(byText('Previous').map((link) => link.props.transitionTypes)).toEqual([[NAV_BACK]]);

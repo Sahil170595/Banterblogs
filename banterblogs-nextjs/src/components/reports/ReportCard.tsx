@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
-import { classifyReportSlug, phaseNumber, type PhaseKey } from '@/lib/reports/phases';
+import { describeReport } from './reportIdentity';
 import { NAV_FORWARD, ReportTitleTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
+
+export { describeReport };
 
 export interface ReportCardProps {
   slug: string;
@@ -15,22 +17,6 @@ export interface ReportCardProps {
   latest?: boolean;
   /** ember accent in the visual at rest (the newest phase); defaults to latest */
   accent?: boolean;
-}
-
-// "TR164 V3: Cross-Backend ..." -> label "TR164 V3", heading "Cross-Backend ..."
-const TR_TITLE_PREFIX = /^(TR\d+(?:\s[^:]+)?):\s*(.+)$/;
-const PHASE_KEY = /^phase\d+$/;
-
-/** The card heading and its meta line: the TR label moves out of the title. */
-export function describeReport(slug: string, title: string): { heading: string; meta: string } {
-  const prefix = TR_TITLE_PREFIX.exec(title);
-  const heading = prefix ? prefix[2] : title;
-  const category = classifyReportSlug(slug);
-  if (category === 'compendium') return { heading, meta: 'Compendium' };
-  const key = PHASE_KEY.test(category) ? category : (/phase(\d+)/.exec(slug.toLowerCase())?.[0] ?? null);
-  const phase = key ? `Phase ${phaseNumber(key as PhaseKey)}` : null;
-  const label = prefix ? prefix[1] : category === 'phase0' ? 'Baseline' : null;
-  return { heading, meta: [label, phase].filter(Boolean).join(' · ') || 'Report' };
 }
 
 /**

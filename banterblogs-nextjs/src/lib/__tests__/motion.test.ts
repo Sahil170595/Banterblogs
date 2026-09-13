@@ -12,8 +12,9 @@ import tailwindConfig from '../../../tailwind.config';
 // in components/motion/, which keeps content visible without JavaScript and
 // under reduced motion: whileInView is banned everywhere, and an
 // IntersectionObserver or a view() timeline outside the primitives fails
-// unless it is a listed use that moves nothing. framer-motion stays confined
-// to the scenes and the landing, so pages that do not animate load none of it.
+// unless it is a listed use that reveals nothing (a scroll-spy). framer-motion
+// stays confined to the scenes and the landing, so pages that do not animate
+// load none of it.
 
 const SRC = path.join(process.cwd(), 'src');
 const GLOBALS_CSS = path.join(SRC, 'app', 'globals.css');
@@ -23,7 +24,10 @@ const MOTION_PRIMITIVES_DIR = path.join(SRC, 'components', 'motion');
 // Observers outside the primitives that reveal nothing, each with its reason.
 const NON_REVEAL_OBSERVERS: Record<string, string> = {
   [path.join('components', 'TableOfContents.tsx')]: 'scroll-spy: marks the heading in view; nothing moves',
+  [path.join('components', 'reports', 'ReportTocSpy.tsx')]:
+    'scroll-spy: marks the section being read and moves the contents marker to it; content never hides or moves',
 };
+const REPORT_TOC_SPY = path.join(SRC, 'components', 'reports', 'ReportTocSpy.tsx');
 
 // the researched motion brief (2026-09-12): responses stay 150-400ms and read
 // as obvious through distance, blur, scale and staging, not length
@@ -329,6 +333,22 @@ describe('motion ratchet', () => {
       expect(fs.existsSync(full), `${file}: ${reason}`).toBe(true);
       expect(fs.readFileSync(full, 'utf8'), `${file}: ${reason}`).toMatch(INTERSECTION_OBSERVER);
     }
+  });
+
+  // Phase R2 listed the report contents' scroll-spy as a non-reveal observer.
+  // What makes it one: it moves only its own marker, by transform, from an
+  // observer (never a scroll listener), and the marker eases only while motion
+  // is armed, so it jumps under reduced motion.
+  it('lets the report scroll-spy move only its marker, by transform, from an observer', () => {
+    const source = fs.readFileSync(REPORT_TOC_SPY, 'utf8');
+    expect(source).toMatch(INTERSECTION_OBSERVER);
+    expect(source).not.toMatch(/addEventListener\(\s*['"`]scroll/);
+    expect([...source.matchAll(/(\w+)\.style\.(\w+)\s*=/g)].map((m) => `${m[1]}.${m[2]}`)).toEqual(['marker.transform']);
+    const css = fs.readFileSync(GLOBALS_CSS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const easing = rulesIn(css).filter((rule) => /\.report-toc-marker/.test(rule.selector) && /transition\s*:/.test(rule.declarations));
+    expect(easing.map((rule) => rule.selector)).toEqual(['html[data-motion="on"] .report-toc-marker[data-placed]', '.report-toc-marker']);
+    expect(easing[0].declarations).toMatch(/transform var\(--duration-base\) var\(--ease-strong-out\)/);
+    expect(easing[1].declarations).toMatch(/transition:\s*none\s*!important/);
   });
 
   it('keeps framer-motion inside the scenes and the landing', () => {
