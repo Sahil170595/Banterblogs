@@ -15,6 +15,9 @@ export const REVEAL_STAGGER_CAP = 5;
 const REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
 
 let shared: IntersectionObserver | null = null;
+// armed since the last measuring pass, in mount order
+const waiting = new Set<HTMLElement>();
+let passQueued = false;
 
 // Entries arriving together are one batch: stagger them in reading order.
 function revealEntering(entries: IntersectionObserverEntry[]) {
@@ -34,39 +37,55 @@ function revealEntering(entries: IntersectionObserverEntry[]) {
 const motionArmed = () =>
   document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on' && typeof IntersectionObserver !== 'undefined';
 
-// Reads only. Revealed once means revealed for good, wherever it has scrolled to since.
-const belowFold = (el: HTMLElement, fold: number) =>
-  el.getAttribute(REVEAL_ATTRIBUTE) !== REVEAL_SHOWN && el.getBoundingClientRect().top >= fold;
-
-// The write: pending until the shared observer sees it enter.
-function hold(el: HTMLElement): () => void {
-  el.setAttribute(REVEAL_ATTRIBUTE, REVEAL_PENDING);
+// One pass for everything armed in a task: measure it all, then hold what
+// sits below the fold. A hold dirties style and layout, so measuring after
+// each one would force a layout per element.
+function measureThenHold() {
+  passQueued = false;
+  const batch = [...waiting];
+  waiting.clear();
+  if (!motionArmed()) return;
+  const fold = window.innerHeight;
+  const below = batch.filter(
+    (el) => el.isConnected && el.getAttribute(REVEAL_ATTRIBUTE) !== REVEAL_SHOWN && el.getBoundingClientRect().top >= fold,
+  );
+  if (!below.length) return;
   shared ??= new IntersectionObserver(revealEntering, { rootMargin: REVEAL_ROOT_MARGIN });
-  shared.observe(el);
-  return () => shared?.unobserve(el);
+  for (const el of below) {
+    el.setAttribute(REVEAL_ATTRIBUTE, REVEAL_PENDING);
+    shared.observe(el);
+  }
 }
 
 /**
  * Holds an element back until it scrolls into view, then reveals it once.
  * Only content below the fold is held, and only while the pre-paint gate has
- * armed motion: what is on screen at mount stays at rest. Returns the cleanup
- * for unmount.
+ * armed motion: what is on screen at mount stays at rest. Everything armed in
+ * one task is measured together in a microtask, before the next paint.
+ * Returns the cleanup for unmount.
  */
 export function armReveal(el: HTMLElement): (() => void) | undefined {
-  if (!motionArmed() || !belowFold(el, window.innerHeight)) return undefined;
-  return hold(el);
+  // revealed once means revealed for good, wherever it has scrolled to since
+  if (!motionArmed() || el.getAttribute(REVEAL_ATTRIBUTE) === REVEAL_SHOWN) return undefined;
+  waiting.add(el);
+  if (!passQueued) {
+    passQueued = true;
+    queueMicrotask(measureThenHold);
+  }
+  return () => {
+    waiting.delete(el);
+    shared?.unobserve(el);
+  };
 }
 
 /**
  * Arms every marked target inside a container whose markup React sets as a
- * string (RevealScope), as armReveal arms one. Every target is measured
- * before any is held: a hold dirties style and layout, so measuring after
- * each one would force a layout per target. Returns the cleanup.
+ * string (RevealScope), as armReveal arms one: they join the same measuring
+ * pass. Returns the cleanup.
  */
 export function armRevealScope(container: HTMLElement): (() => void) | undefined {
-  if (!motionArmed()) return undefined;
-  const fold = window.innerHeight;
-  const below = [...container.querySelectorAll<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)].filter((el) => belowFold(el, fold));
-  const releases = below.map(hold);
+  const releases = [...container.querySelectorAll<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)]
+    .map((el) => armReveal(el))
+    .filter((release): release is () => void => release !== undefined);
   return releases.length ? () => releases.forEach((release) => release()) : undefined;
 }

@@ -55,9 +55,13 @@ const html = document.documentElement;
 const armMotion = () => html.setAttribute(MOTION_ATTRIBUTE, 'on');
 const observer = () => io.instances[0];
 
-// Renders reveals whose boxes sit at the given page offsets before the
-// mount effect measures them.
-function renderRevealsAt(tops: number[]) {
+// Reveals armed together are measured in one microtask queued at mount; this
+// resolves once that pass has run.
+const settle = () => new Promise<void>((resolve) => queueMicrotask(resolve));
+
+// Renders reveals whose boxes sit at the given page offsets when their batch
+// is measured.
+async function renderRevealsAt(tops: number[]) {
   const original = HTMLElement.prototype.getBoundingClientRect;
   let next = 0;
   HTMLElement.prototype.getBoundingClientRect = function () {
@@ -66,16 +70,27 @@ function renderRevealsAt(tops: number[]) {
     return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
   };
   try {
-    return render(
+    const rendered = render(
       <>
         {tops.map((top) => (
           <Reveal key={top}>item at {top}</Reveal>
         ))}
       </>,
     );
+    await settle();
+    return rendered;
   } finally {
     HTMLElement.prototype.getBoundingClientRect = original;
   }
+}
+
+// every element's box sits at `top` until the returned restore runs
+function boxesAt(top: number) {
+  const original = HTMLElement.prototype.getBoundingClientRect;
+  HTMLElement.prototype.getBoundingClientRect = () => ({ top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) });
+  return () => {
+    HTMLElement.prototype.getBoundingClientRect = original;
+  };
 }
 
 // the rect is the offset the reveal was rendered at (renderRevealsAt)
@@ -126,25 +141,25 @@ describe('<Reveal> markup', () => {
 });
 
 describe('<Reveal> behaviour', () => {
-  it('leaves everything at rest while the motion gate is off (no JavaScript gate, reduced motion)', () => {
-    const { container } = renderRevealsAt([BELOW_FOLD]);
+  it('leaves everything at rest while the motion gate is off (no JavaScript gate, reduced motion)', async () => {
+    const { container } = await renderRevealsAt([BELOW_FOLD]);
     const el = container.querySelector(`[${REVEAL_ATTRIBUTE}]`)!;
 
     expect(el.getAttribute(REVEAL_ATTRIBUTE)).toBe('');
     expect(io.instances.every((instance) => !instance.observed.has(el))).toBe(true);
   });
 
-  it('never hides what is already on screen', () => {
+  it('never hides what is already on screen', async () => {
     armMotion();
-    const { container } = renderRevealsAt([ON_SCREEN]);
+    const { container } = await renderRevealsAt([ON_SCREEN]);
     const el = container.querySelector(`[${REVEAL_ATTRIBUTE}]`)!;
 
     expect(el.getAttribute(REVEAL_ATTRIBUTE)).toBe('');
   });
 
-  it('holds back content below the fold and reveals it once as it enters', () => {
+  it('holds back content below the fold and reveals it once as it enters', async () => {
     armMotion();
-    const { container } = renderRevealsAt([BELOW_FOLD]);
+    const { container } = await renderRevealsAt([BELOW_FOLD]);
     const el = container.querySelector<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)!;
 
     expect(el.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_PENDING);
@@ -159,10 +174,10 @@ describe('<Reveal> behaviour', () => {
     expect(observer().observed.has(el)).toBe(false);
   });
 
-  it('staggers a batch entering together in reading order, capped at six steps', () => {
+  it('staggers a batch entering together in reading order, capped at six steps', async () => {
     armMotion();
     const tops = [BELOW_FOLD, BELOW_FOLD + 10, BELOW_FOLD + 20, BELOW_FOLD + 30, BELOW_FOLD + 40, BELOW_FOLD + 50, BELOW_FOLD + 60, BELOW_FOLD + 70];
-    const { container } = renderRevealsAt(tops);
+    const { container } = await renderRevealsAt(tops);
     const els = [...container.querySelectorAll<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)];
     const shuffled = [els[3], els[0], els[7], els[5], els[1], els[6], els[2], els[4]];
 
@@ -183,20 +198,87 @@ describe('<Reveal> behaviour', () => {
     expect(el.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_SHOWN);
   });
 
-  it('stops watching a reveal that unmounts before it enters', () => {
+  it('stops watching a reveal that unmounts before it enters', async () => {
     armMotion();
-    const { container, unmount } = renderRevealsAt([BELOW_FOLD + 500]);
+    const { container, unmount } = await renderRevealsAt([BELOW_FOLD + 500]);
     const el = container.querySelector(`[${REVEAL_ATTRIBUTE}]`)!;
     unmount();
 
     expect(observer().unobserved).toContain(el);
   });
 
-  it('shares one observer across every reveal', () => {
+  it('shares one observer across every reveal', async () => {
     armMotion();
-    renderRevealsAt([BELOW_FOLD, BELOW_FOLD + 100, BELOW_FOLD + 200]);
+    await renderRevealsAt([BELOW_FOLD, BELOW_FOLD + 100, BELOW_FOLD + 200]);
 
     expect(io.instances).toHaveLength(1);
+  });
+
+  it('measures every reveal armed together before it holds any, so no hold forces a layout for the next measure', async () => {
+    armMotion();
+    const steps: string[] = [];
+    const tops = [BELOW_FOLD, BELOW_FOLD + 100, BELOW_FOLD + 200];
+    const original = HTMLElement.prototype.getBoundingClientRect;
+    const viewport = Object.getOwnPropertyDescriptor(globalThis, 'innerHeight');
+    const setAttribute = Element.prototype.setAttribute;
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      steps.push('measure');
+      const top = Number(this.dataset.top ?? 0);
+      return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
+    };
+    Object.defineProperty(globalThis, 'innerHeight', { configurable: true, get: () => (steps.push('measure'), VIEWPORT_HEIGHT) });
+    vi.spyOn(Element.prototype, 'setAttribute').mockImplementation(function (this: Element, name: string, value: string) {
+      if (name === REVEAL_ATTRIBUTE && value === REVEAL_PENDING) steps.push('hold');
+      setAttribute.call(this, name, value);
+    });
+    try {
+      render(
+        <>
+          {tops.map((top) => (
+            <Reveal key={top} data-top={String(top)}>
+              item at {top}
+            </Reveal>
+          ))}
+        </>,
+      );
+      await settle();
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = original;
+      if (viewport) Object.defineProperty(globalThis, 'innerHeight', viewport);
+    }
+
+    expect(steps.filter((step) => step === 'hold')).toHaveLength(tops.length);
+    expect(steps.lastIndexOf('measure')).toBeLessThan(steps.indexOf('hold'));
+  });
+
+  it('never holds a reveal that unmounts before its batch is measured', async () => {
+    armMotion();
+    const restore = boxesAt(BELOW_FOLD);
+    try {
+      const { container, unmount } = render(<Reveal>gone before it is measured</Reveal>);
+      const el = container.querySelector(`[${REVEAL_ATTRIBUTE}]`)!;
+      unmount();
+      await settle();
+
+      expect(el.getAttribute(REVEAL_ATTRIBUTE)).toBe('');
+      expect(io.instances.every((instance) => !instance.observed.has(el))).toBe(true);
+    } finally {
+      restore();
+    }
+  });
+
+  it('holds nothing if motion stands down before the batch is measured (reduced motion mid-visit)', async () => {
+    armMotion();
+    const restore = boxesAt(BELOW_FOLD);
+    try {
+      const { container } = render(<Reveal>below the fold</Reveal>);
+      html.removeAttribute(MOTION_ATTRIBUTE);
+      await settle();
+
+      expect(container.querySelector(`[${REVEAL_ATTRIBUTE}]`)!.getAttribute(REVEAL_ATTRIBUTE)).toBe('');
+    } finally {
+      restore();
+    }
   });
 });
 
@@ -208,15 +290,18 @@ const BELOW_TARGET = `<pre ${REVEAL_ATTRIBUTE}="" data-top="${BELOW_FOLD}"><code
 const BELOW_PROSE = `<p data-top="${BELOW_FOLD + 200}">prose never moves</p>`;
 const SCOPED_HTML = `<p>intro</p>${ON_SCREEN_TARGET}${BELOW_TARGET}${BELOW_PROSE}`;
 
-// renders a scope whose elements sit at their data-top offsets when it arms
-function renderScope(html: string) {
+// renders a scope whose elements sit at their data-top offsets when their
+// batch is measured
+async function renderScope(html: string) {
   const original = HTMLElement.prototype.getBoundingClientRect;
   HTMLElement.prototype.getBoundingClientRect = function () {
     const top = Number(this.dataset.top ?? 0);
     return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
   };
   try {
-    return render(<RevealScope className="report-prose" html={html} />);
+    const rendered = render(<RevealScope className="report-prose" html={html} />);
+    await settle();
+    return rendered;
   } finally {
     HTMLElement.prototype.getBoundingClientRect = original;
   }
@@ -238,16 +323,16 @@ describe('<RevealScope> markup', () => {
 describe('<RevealScope> behaviour', () => {
   const target = (container: Element, tag: string) => container.querySelector<HTMLElement>(`.report-prose > ${tag}`)!;
 
-  it('leaves every target at rest while the motion gate is off (no JavaScript gate, reduced motion)', () => {
-    const { container } = renderScope(SCOPED_HTML);
+  it('leaves every target at rest while the motion gate is off (no JavaScript gate, reduced motion)', async () => {
+    const { container } = await renderScope(SCOPED_HTML);
 
     expect(target(container, 'pre').getAttribute(REVEAL_ATTRIBUTE)).toBe('');
     expect(io.instances.every((instance) => !instance.observed.has(target(container, 'pre')))).toBe(true);
   });
 
-  it('holds back only the marked targets below the fold, and reveals each once as it enters', () => {
+  it('holds back only the marked targets below the fold, and reveals each once as it enters', async () => {
     armMotion();
-    const { container } = renderScope(SCOPED_HTML);
+    const { container } = await renderScope(SCOPED_HTML);
     const below = target(container, 'pre');
 
     expect(target(container, 'div').getAttribute(REVEAL_ATTRIBUTE)).toBe('');
@@ -260,7 +345,7 @@ describe('<RevealScope> behaviour', () => {
     expect(observer().observed.has(below)).toBe(false);
   });
 
-  it('measures every target before it holds any, so no hold forces a layout for the next measure', () => {
+  it('measures every target before it holds any, so no hold forces a layout for the next measure', async () => {
     armMotion();
     const steps: string[] = [];
     const original = HTMLElement.prototype.getBoundingClientRect;
@@ -279,6 +364,7 @@ describe('<RevealScope> behaviour', () => {
     const blocks = [BELOW_FOLD, BELOW_FOLD + 100, BELOW_FOLD + 200].map((top) => `<pre ${REVEAL_ATTRIBUTE}="" data-top="${top}"><code>${top}</code></pre>`);
     try {
       render(<RevealScope className="report-prose" html={blocks.join('')} />);
+      await settle();
     } finally {
       HTMLElement.prototype.getBoundingClientRect = original;
       if (viewport) Object.defineProperty(globalThis, 'innerHeight', viewport);
@@ -288,10 +374,39 @@ describe('<RevealScope> behaviour', () => {
     expect(steps.lastIndexOf('measure')).toBeLessThan(steps.indexOf('hold'));
   });
 
-  it('shares the one observer with <Reveal>, and lets go of its targets on unmount', () => {
+  it('joins the same measuring pass as a <Reveal> armed alongside it', async () => {
+    armMotion();
+    const steps: string[] = [];
+    const original = HTMLElement.prototype.getBoundingClientRect;
+    const setAttribute = Element.prototype.setAttribute;
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      steps.push('measure');
+      const top = Number(this.dataset.top ?? 0);
+      return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
+    };
+    vi.spyOn(Element.prototype, 'setAttribute').mockImplementation(function (this: Element, name: string, value: string) {
+      if (name === REVEAL_ATTRIBUTE && value === REVEAL_PENDING) steps.push('hold');
+      setAttribute.call(this, name, value);
+    });
+    try {
+      render(
+        <>
+          <Reveal data-top={String(BELOW_FOLD)}>card</Reveal>
+          <RevealScope className="report-prose" html={BELOW_TARGET} />
+        </>,
+      );
+      await settle();
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = original;
+    }
+
+    expect(steps).toEqual(['measure', 'measure', 'hold', 'hold']);
+  });
+
+  it('shares the one observer with <Reveal>, and lets go of its targets on unmount', async () => {
     armMotion();
     const before = io.instances.length;
-    const { container, unmount } = renderScope(SCOPED_HTML);
+    const { container, unmount } = await renderScope(SCOPED_HTML);
     const below = target(container, 'pre');
     unmount();
 
