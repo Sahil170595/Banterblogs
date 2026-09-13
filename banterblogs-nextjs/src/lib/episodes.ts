@@ -10,6 +10,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import GithubSlugger from "github-slugger";
 import type { Element, ElementContent, Root, RootContent } from "hast";
+import { REVEAL_TARGET } from "@/components/motion/revealObserver";
 
 export type EpisodePlatform = "banterpacks" | "chimera" | "benchmark" | "unknown";
 
@@ -85,6 +86,8 @@ export interface RenderMarkdownOptions {
   demoteH1?: boolean;
   /** The page renders its own TOC: drop the markdown's TOC section. */
   dropInlineToc?: boolean;
+  /** Mark tables, code blocks and figures with the reveal target marker for a RevealScope (the report body). */
+  markRevealTargets?: boolean;
 }
 
 const RENDER_OPTIONS_KEY = "readingSurface";
@@ -133,8 +136,18 @@ function markNumericColumns(table: Element): void {
   }
 }
 
-// Wrap tables in a scroll box, mark numeric columns, and (optionally) demote h1.
-function transformElements(parent: HastParent, demoteH1: boolean): void {
+// a paragraph holding only images: the markdown figure
+function isStandingImage(el: Element): boolean {
+  const content = el.children.filter((child) => !(child.type === "text" && !child.value.trim()));
+  return el.tagName === "p" && content.length > 0 && content.every((child) => child.type === "element" && child.tagName === "img");
+}
+
+// Wrap tables in a scroll box, mark numeric columns, (optionally) demote h1,
+// and (optionally) mark tables, code blocks and figures as reveal targets:
+// the table's scroll box, the pre, the figure or standing image, never the
+// prose around them.
+function transformElements(parent: HastParent, options: RenderMarkdownOptions): void {
+  const target = options.markRevealTargets ? REVEAL_TARGET : {};
   for (let index = 0; index < parent.children.length; index += 1) {
     const child = parent.children[index];
     if (child.type !== "element") continue;
@@ -143,16 +156,20 @@ function transformElements(parent: HastParent, demoteH1: boolean): void {
       parent.children[index] = {
         type: "element",
         tagName: "div",
-        properties: { className: ["table-scroll"] },
+        properties: { className: ["table-scroll"], ...target },
         children: [child],
       };
       continue;
     }
-    if (demoteH1 && child.tagName === "h1") {
+    if (child.tagName === "pre" || child.tagName === "figure") Object.assign(child.properties, target);
+    if (isStandingImage(child)) {
+      for (const image of child.children) if (image.type === "element") Object.assign(image.properties, target);
+    }
+    if (options.demoteH1 && child.tagName === "h1") {
       child.tagName = "h2";
       child.properties.dataDemoted = true; // lets extractHtmlHeadings skip the title
     }
-    transformElements(child, demoteH1);
+    transformElements(child, options);
   }
 }
 
@@ -194,7 +211,7 @@ function rehypeReadingSurface() {
   return (tree: Root, file: { data: Record<string, unknown> }) => {
     const options = (file.data[RENDER_OPTIONS_KEY] ?? {}) as RenderMarkdownOptions;
     if (options.dropInlineToc) dropInlineToc(tree);
-    transformElements(tree, Boolean(options.demoteH1));
+    transformElements(tree, options);
   };
 }
 

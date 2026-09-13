@@ -1063,11 +1063,6 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   line-height: 1.6;
 }
 
-/* a code block right under a heading sits as close as any other first block */
-.report-prose :is(h2, h3, h4) + .report-reveal > pre {
-  margin-top: 0;
-}
-
 .report-prose table {
   margin-block: 0;
   font-size: 0.875rem;

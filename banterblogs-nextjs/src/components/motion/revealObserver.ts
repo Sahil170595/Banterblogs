@@ -1,6 +1,12 @@
 import { MOTION_ATTRIBUTE } from './prePaint';
 
 export const REVEAL_ATTRIBUTE = 'data-reveal';
+/**
+ * The rest marker a server renderer writes on a reveal target, as the hast
+ * and React property for data-reveal="": what <Reveal> renders, for markup
+ * built outside React. A RevealScope arms what carries it.
+ */
+export const REVEAL_TARGET = { dataReveal: '' } as const;
 export const REVEAL_PENDING = 'pending';
 export const REVEAL_SHOWN = 'shown';
 /** a batch entering together staggers over at most six steps (index 0-5) */
@@ -41,4 +47,15 @@ export function armReveal(el: HTMLElement): (() => void) | undefined {
   shared ??= new IntersectionObserver(revealEntering, { rootMargin: REVEAL_ROOT_MARGIN });
   shared.observe(el);
   return () => shared?.unobserve(el);
+}
+
+/**
+ * Arms every marked target inside a container whose markup React sets as a
+ * string (RevealScope), exactly as armReveal arms one. Returns the cleanup.
+ */
+export function armRevealScope(container: HTMLElement): (() => void) | undefined {
+  const cleanups = [...container.querySelectorAll<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)]
+    .map((el) => armReveal(el))
+    .filter((cleanup): cleanup is () => void => cleanup !== undefined);
+  return cleanups.length ? () => cleanups.forEach((cleanup) => cleanup()) : undefined;
 }

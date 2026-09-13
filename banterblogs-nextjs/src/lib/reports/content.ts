@@ -39,30 +39,15 @@ export interface ReportFrontMatter {
   date: string | null;
 }
 
-/** Tables, code blocks and figures rise into view; prose never moves. */
-export type RevealKind = 'table' | 'code' | 'figure';
-
-/**
- * One top-level element of a report body, which ReportMarkdown renders as the
- * same element with the same attributes. A table block is the <table> inside
- * its scroll box.
- */
-export interface ReportBlock {
-  tag: string;
-  props: Record<string, string>;
-  html: string;
-  reveal: RevealKind | null;
-}
-
 export interface ReportSection {
   id: string;
   title: string;
+  /** the body HTML, its tables, code blocks and figures marked as reveal targets */
   html: string;
   markdown: string;
   sourceLabel: string;
   originKey: string;
   headings: TocEntry[];
-  blocks: ReportBlock[];
   frontMatter: ReportFrontMatter | null;
 }
 
@@ -71,12 +56,13 @@ export interface ReportRenderOptions {
   foldTitleBlock?: boolean;
   /** The page renders its own TOC: drop the markdown's. */
   dropInlineToc?: boolean;
+  /** Mark tables, code blocks and figures as reveal targets (the page's RevealScope arms them). */
+  markRevealTargets?: boolean;
 }
 
 export interface RenderedReport {
   html: string;
   headings: TocEntry[];
-  blocks: ReportBlock[];
   frontMatter: ReportFrontMatter | null;
 }
 
@@ -346,41 +332,15 @@ function foldTitleBlock(tree: Root): ReportFrontMatter | null {
   };
 }
 
-// ── The body, block by block ─────────────────────────────────────────────────
-
-// hast property names to the attribute props React renders the same markup from
-function propsOf(el: Element): Record<string, string> {
-  const props: Record<string, string> = {};
-  for (const [key, value] of Object.entries(el.properties)) {
-    if (value === undefined || value === null || value === false) continue;
-    const name = /^data[A-Z]/.test(key) ? `data-${key.slice(4).replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).slice(1)}` : key;
-    props[name] = Array.isArray(value) ? value.join(' ') : value === true ? '' : String(value);
-  }
-  return props;
-}
-
-const isFigure = (el: Element) => {
-  const content = el.children.filter((child) => !(child.type === 'text' && !child.value.trim()));
-  return el.tagName === 'p' && content.length > 0 && content.every((child) => isElement(child) && child.tagName === 'img');
-};
-
-function blockOf(el: Element): ReportBlock {
-  const table = el.tagName === 'div' && classesOf(el).includes('table-scroll') ? el.children.find(isElement) : undefined;
-  if (table?.tagName === 'table') return { tag: 'table', props: propsOf(table), html: hastToHtml(table.children), reveal: 'table' };
-  const reveal: RevealKind | null = el.tagName === 'pre' ? 'code' : isFigure(el) ? 'figure' : null;
-  return { tag: el.tagName, props: propsOf(el), html: hastToHtml(el.children), reveal };
-}
-
-/** Render a report document: its body HTML, contents, blocks and (optionally) folded title block. */
+/** Render a report document: its body HTML, contents and (optionally) folded title block. */
 export async function renderReportDocument(markdown: string, options: ReportRenderOptions = {}): Promise<RenderedReport> {
-  const tree = await renderMarkdownTree(markdown, { demoteH1: true, dropInlineToc: Boolean(options.dropInlineToc) });
+  const tree = await renderMarkdownTree(markdown, {
+    demoteH1: true,
+    dropInlineToc: Boolean(options.dropInlineToc),
+    markRevealTargets: Boolean(options.markRevealTargets),
+  });
   const frontMatter = options.foldTitleBlock ? foldTitleBlock(tree) : null;
-  return {
-    html: hastToHtml(tree),
-    headings: extractTreeHeadings(tree),
-    blocks: tree.children.filter(isElement).map(blockOf),
-    frontMatter,
-  };
+  return { html: hastToHtml(tree), headings: extractTreeHeadings(tree), frontMatter };
 }
 
 async function buildSection(filePath: string, sourceLabel: string, originKey: string, primary: boolean): Promise<ReportSection> {
@@ -388,10 +348,12 @@ async function buildSection(filePath: string, sourceLabel: string, originKey: st
   const fallback = path.basename(filePath, path.extname(filePath));
   const title = extractPrimaryHeading(raw) ?? toHumanTitle(fallback);
   // The report page renders the title as its <h1>, the primary document's
-  // title block in its head and, past MIN_TOC_HEADINGS, its own TOC (ReportToc).
+  // title block in its head, past MIN_TOC_HEADINGS its own TOC (ReportToc),
+  // and reveals the tables, code blocks and figures (ReportMarkdown).
   const rendered = await renderReportDocument(prepareReportMarkdown(raw), {
     foldTitleBlock: primary,
     dropInlineToc: extractHeadings(raw).length >= MIN_TOC_HEADINGS,
+    markRevealTargets: true,
   });
   return {
     id: sanitizeId(title) || sanitizeId(fallback),
