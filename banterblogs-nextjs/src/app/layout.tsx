@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from "@/components/motion/prePaint";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -90,6 +91,9 @@ export default function RootLayout({
     <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script id="reader-font-size" dangerouslySetInnerHTML={{ __html: READER_FONT_SIZE_SCRIPT }} />
+        {/* arms html[data-motion] before first paint; without it (no JS,
+            reduced motion) every animated element renders at rest */}
+        <script id={MOTION_GATE_SCRIPT_ID} dangerouslySetInnerHTML={{ __html: MOTION_GATE_SCRIPT }} />
       </head>
       <body className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-background text-foreground antialiased`}>
         {/* WCAG 2.4.1: let keyboard users bypass the header on every page. */}
