@@ -36,6 +36,29 @@
   --chart-3: 220 8% 62%;
   --chart-4: 220 12% 38%;
   --chart-5: 220 14% 24%;
+
+  /* Status hues (Badge, Eyebrow dots): presented, under review, preprint.
+     Each clears 7:1 as text on --background and on its own 12% tint. */
+  --status-green: 145 55% 60%;
+  --status-amber: 38 90% 62%;
+  --status-blue: 212 85% 72%;
+
+  /* The page-title role (text-heading-48) steps with the viewport. */
+  --type-heading-48: 1.75rem;
+  --leading-heading-48: 1.08;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --type-heading-48: 2.25rem;
+    --leading-heading-48: 1.05;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --type-heading-48: 3rem;
+  }
 }
 
 * {
