@@ -20,17 +20,38 @@ const config: Config = {
       },
     },
     extend: {
-      // Custom animation/keyframes were removed 2026-07-04: all 48 utilities had
-      // zero usages in src (hover motion is transition-based; scenes use framer).
-      // Motion tokens (pinned by motion.test.ts): one curve, two durations.
-      // fast = colour, border, background and opacity feedback; base =
-      // overlays and route transitions.
+      // Motion tokens (pinned by motion.test.ts), from the researched motion
+      // brief (2026-09-12): responses stay 150-400ms and read as obvious
+      // through size and staging, not length. globals.css mirrors the
+      // durations as --duration-* beside the distance, scale, blur, stagger and
+      // spring tokens, so all tuning happens in these two places.
+      // fast = colour and opacity feedback; press = a pointer press; hover =
+      // hover in; base = small parts easing back, overlays, the tab highlight;
+      // enter = arrivals and card hover out; route = the page slide; morph =
+      // the shared title; reveal = scroll reveals and the archive entrance;
+      // exit = a page leaving; handoff = the pause before the next page fades
+      // in. Springs are sampled linear() curves in globals.css.
       transitionDuration: {
         fast: "150ms",
+        press: "160ms",
+        hover: "200ms",
         base: "250ms",
+        enter: "300ms",
+        route: "350ms",
+        morph: "400ms",
+        reveal: "600ms",
+        exit: "120ms",
+        handoff: "100ms",
       },
       transitionTimingFunction: {
         standard: "cubic-bezier(0.4, 0, 0.2, 1)",
+        "strong-out": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "strong-in-out": "cubic-bezier(0.77, 0, 0.175, 1)",
+        move: "cubic-bezier(0.42, 0, 0.58, 1)",
+        drawer: "cubic-bezier(0.32, 0.72, 0, 1)",
+        "spring-gentle": "var(--ease-spring-gentle)",
+        "spring-snappy": "var(--ease-spring-snappy)",
+        "spring-bouncy": "var(--ease-spring-bouncy)",
       },
       colors: {
         background: "hsl(var(--background))",

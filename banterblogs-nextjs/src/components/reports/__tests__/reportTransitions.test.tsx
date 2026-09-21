@@ -205,13 +205,19 @@ describe('view transition styles', () => {
     expect(BLOCK).not.toBe('');
   });
 
-  it('drops every view transition animation under reduced motion', () => {
+  it('moves nothing under reduced motion: groups stand still and pages crossfade on the fast token', () => {
     const at = CSS.indexOf('@media (prefers-reduced-motion: reduce)');
     expect(at).toBeGreaterThanOrEqual(0);
     const reduced = braceBody(CSS, CSS.indexOf('{', at));
-    for (const pseudo of ['::view-transition-group(*)', '::view-transition-old(*)', '::view-transition-new(*)']) {
-      expect(declarationsFor(reduced, pseudo), pseudo).toMatch(/animation:\s*none/);
-    }
+    expect(declarationsFor(reduced, '::view-transition-group(*)')).toMatch(/animation:\s*none/);
+    const outgoing = declarationsFor(reduced, '::view-transition-old(*)');
+    const incoming = declarationsFor(reduced, '::view-transition-new(*)');
+    expect(outgoing).toMatch(/var\(--vt-duration-fast\)[^;]*vt-fade-out/);
+    expect(incoming).toMatch(/var\(--vt-duration-fast\)[^;]*vt-fade-in/);
+    for (const body of [outgoing, incoming]) expect(body).not.toMatch(/vt-slide|vt-morph/);
+    // the header and unnamed content still swap in place
+    expect(declarationsFor(reduced, '::view-transition-new(site-header)')).toMatch(/animation:\s*none/);
+    expect(declarationsFor(reduced, '::view-transition-new(root)')).toMatch(/animation:\s*none/);
   });
 
   it('lets clicks through the transition overlay', () => {
@@ -238,14 +244,28 @@ describe('view transition styles', () => {
     }
     expect(outgoing).toMatch(/vt-fade-out/);
     expect(incoming).toMatch(/vt-fade-in/);
+    // both titles blur at the midpoint, so they never read as two objects
+    expect(group).toMatch(/animation-duration:\s*var\(--vt-duration-morph\)/);
+    expect(outgoing).toMatch(/var\(--vt-duration-morph\)[^;,]*vt-morph-blur/);
+    expect(incoming).toMatch(/var\(--vt-duration-morph\)[^;,]*vt-morph-blur/);
   });
 
-  it('slides 12-16px on the motion tokens and moves only opacity and transform', () => {
-    const offset = Number(/--vt-slide:\s*(\d+)px/.exec(CSS)?.[1]);
-    expect(offset).toBeGreaterThanOrEqual(12);
-    expect(offset).toBeLessThanOrEqual(16);
-    expect(CSS).toMatch(/--vt-duration:\s*theme\(['"]transitionDuration\.base['"]\)/);
-    expect(CSS).toMatch(/--vt-ease:\s*theme\(['"]transitionTimingFunction\.standard['"]\)/);
+  // Phase R1 (motion brief): the page slide grew from 12-16px on base and
+  // standard to the 32px route distance on the route duration and move curve;
+  // the old page leaves on the exit token and the new one fades in after the
+  // handoff, and the shared title gains a midpoint blur.
+  it('slides the route distance on the route tokens, the new page after a handoff, moving only opacity, transform and the title blur', () => {
+    expect(CSS).toMatch(/--vt-slide:\s*var\(--motion-route\)/);
+    expect(GLOBALS_CSS).toMatch(/--motion-route:\s*32px;/);
+    expect(CSS).toMatch(/--vt-duration:\s*theme\(['"]transitionDuration\.route['"]\)/);
+    expect(CSS).toMatch(/--vt-ease:\s*theme\(['"]transitionTimingFunction\.move['"]\)/);
+    expect(CSS).toMatch(/--vt-duration-exit:\s*theme\(['"]transitionDuration\.exit['"]\)/);
+    expect(CSS).toMatch(/--vt-delay-enter:\s*theme\(['"]transitionDuration\.handoff['"]\)/);
+    expect(CSS).toMatch(/--vt-duration-morph:\s*theme\(['"]transitionDuration\.morph['"]\)/);
+    expect(declarationsFor(CSS, '::view-transition-old(.nav-forward)')).toMatch(/var\(--vt-duration-exit\)[^,]*vt-fade-out/);
+    expect(declarationsFor(CSS, '::view-transition-new(.nav-forward)')).toMatch(
+      /var\(--vt-duration-enter\) var\(--vt-ease-out\) var\(--vt-delay-enter\) both vt-fade-in/,
+    );
     // every duration and curve goes through the tokens
     expect(CSS).not.toMatch(/\d+m?s\b|cubic-bezier|(?<![\w-])(?:ease(?:-in-out|-in|-out)?|linear)(?![\w-])/);
 
@@ -254,6 +274,6 @@ describe('view transition styles', () => {
     );
     expect(keyframes.length).toBeGreaterThan(0);
     const animated = new Set(keyframes.flatMap((body) => [...body.matchAll(/([\w-]+)\s*:/g)].map((m) => m[1])));
-    expect([...animated].sort()).toEqual(['opacity', 'transform']);
+    expect([...animated].sort()).toEqual(['filter', 'opacity', 'transform']);
   });
 });
