@@ -2,36 +2,19 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ReportDetails, ReportHero, ReportMeta } from '@/components/reports/ReportHead';
 import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
+import { ReportProgress } from '@/components/reports/ReportProgress';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
+import { REPORT_END_ATTRIBUTE } from '@/components/reports/ReportTocSpy';
 import { DirectionalPage, NAV_BACK, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
+import { reportIdentity } from '@/components/reports/reportIdentity';
+import { computeContentStats } from '@/lib/episodes';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
 import { discoverReportsUnique, findReportFolder, toHumanTitle } from '@/lib/reports/locator';
-import { classifyReportSlug, reportSortRank } from '@/lib/reports/phases';
-import { extractHeadings } from '@/lib/episodes';
+import { reportSortRank } from '@/lib/reports/phases';
 import { reportJsonLd } from './schema.org.json';
-
-// Visual badge styling for each category surfaced by classifyReportSlug.
-// Lives next to the JSX consumer (this page) but keys off the canonical
-// classifier so adding a category in phases.ts auto-fails type-check here.
-const REPORT_TYPE_BADGE: Record<ReturnType<typeof classifyReportSlug>, { label: string; color: string }> = {
-  whitepaper: { label: 'Whitepaper', color: 'text-primary border-primary/40 bg-primary/10' },
-  appendix: { label: 'Appendices', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  conclusive: { label: 'Conclusive Report', color: 'text-accent border-accent/40 bg-accent/10' },
-  compendium: { label: 'Compendium', color: 'text-primary border-primary/40 bg-primary/10' },
-  phase0: { label: 'Pre-TR Baseline', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase1: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase2: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase3: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase4: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase5: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase6: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase7: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase8: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  phase9: { label: 'Technical Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-  other: { label: 'Report', color: 'text-muted-foreground border-border/60 bg-muted/30' },
-};
 
 export const runtime = 'nodejs';
 
@@ -85,8 +68,13 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
   }
 
   const meta = readReportMeta(id) || { title: id.replace(/[-_]/g, ' ') };
-  const headings = report.sections.flatMap((s) => extractHeadings(s.markdown));
-  const reportType = REPORT_TYPE_BADGE[classifyReportSlug(id)];
+  const title = meta.title ?? toHumanTitle(id);
+  // the TR label and phase move out of the title into the breadcrumb and meta row
+  const { heading, label, phase } = reportIdentity(id, title);
+  const headings = report.sections.flatMap((s) => s.headings);
+  // the primary document's own title block, folded out of the body by the pipeline
+  const frontMatter = report.sections[0]?.frontMatter ?? null;
+  const readingMinutes = computeContentStats(report.sections.map((s) => s.html).join('\n')).readingTime;
 
   // Prev/next nav: sorted by reportSortRank (Phase 0 baselines first as they
   // chronologically predate TR108 → TR108..TR152 → conclusive synthesis docs).
@@ -101,60 +89,63 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
   const nextMeta = nextSlug ? readReportMeta(nextSlug) : null;
 
   return (
-    <DirectionalPage className="container py-16">
-      {/* ── Header ── */}
-      <div className="mb-8">
-        <Link
-          href="/reports"
-          transitionTypes={[NAV_BACK]}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Research Archive
-        </Link>
+    <DirectionalPage className="container pb-24 pt-8 md:pt-10">
+      <ReportProgress />
 
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] ${reportType.color}`}>
-            {reportType.label}
-          </span>
-        </div>
+      {/* ── Head: where it sits, what it is, how long it takes ── */}
+      <div className="report-head">
+        <nav aria-label="Breadcrumb">
+          <ol className="report-crumbs">
+            <li>
+              <Link href="/reports" transitionTypes={[NAV_BACK]}>
+                Research archive
+              </Link>
+            </li>
+            {phase && (
+              <li>
+                <Link href={`/reports?phase=${phase.key}`} transitionTypes={[NAV_BACK]}>
+                  Phase {phase.number} · {phase.name}
+                </Link>
+              </li>
+            )}
+          </ol>
+        </nav>
 
         <ReportTitleTransition slug={id}>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{meta.title}</h1>
+          <h1 className="report-title">{heading}</h1>
         </ReportTitleTransition>
-        {meta.description && (
-          <p className="text-lg text-muted-foreground leading-relaxed">{meta.description}</p>
-        )}
-
-        <div className="mt-6 h-px bg-gradient-to-r from-border/60 via-border/30 to-transparent" />
+        {meta.description && <p className="report-dek">{meta.description}</p>}
+        <ReportMeta label={label} phaseNumber={phase?.number ?? null} readingMinutes={readingMinutes} date={frontMatter?.date ?? null} />
+        {frontMatter && <ReportDetails frontMatter={frontMatter} />}
       </div>
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportJsonLd({ id, title: meta.title!, description: meta.description })) }} />
+      <ReportHero slug={id} />
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportJsonLd({ id, title, description: meta.description })) }} />
 
       <ReportTocMobile headings={headings} />
 
       {/* ── Content + Sidebar ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-12">
+      <div className="mt-8 grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,1fr)_15rem]">
         <ReportMarkdown sections={report.sections} />
         <ReportTocSidebar headings={headings} />
       </div>
+      <div {...{ [REPORT_END_ATTRIBUTE]: '' }} />
 
       {/* ── Navigation ── */}
       {(prevSlug || nextSlug) && (
-        <nav className="mt-16 pt-8 border-t border-border/30 grid gap-4 sm:grid-cols-2" aria-label="Report navigation">
+        <nav className="report-pager mt-20 grid gap-4 border-t border-border/40 pt-8 sm:grid-cols-2" aria-label="Report navigation">
           {prevSlug ? (
             <Link
               href={`/reports/${prevSlug}`}
               transitionTypes={[NAV_BACK]}
-              className="group p-5 rounded-xl border border-border/40 hover:border-primary/30 transition-colors"
+              className="block rounded-xl p-5 transition-colors duration-fast ease-standard hover:bg-card/70"
             >
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                <ArrowLeft className="h-3 w-3" />
+              <div className="report-pager-label">
+                <ArrowLeft aria-hidden="true" className="h-3 w-3" />
                 Previous
               </div>
-              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                {prevMeta?.title ?? toHumanTitle(prevSlug)}
-              </div>
+              <div className="report-pager-title line-clamp-1">{prevMeta?.title ?? toHumanTitle(prevSlug)}</div>
             </Link>
           ) : (
             <div />
@@ -163,15 +154,13 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
             <Link
               href={`/reports/${nextSlug}`}
               transitionTypes={[NAV_FORWARD]}
-              className="group p-5 rounded-xl border border-border/40 hover:border-primary/30 transition-colors text-right"
+              className="block rounded-xl p-5 text-right transition-colors duration-fast ease-standard hover:bg-card/70"
             >
-              <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
+              <div className="report-pager-label justify-end">
                 Next
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight aria-hidden="true" className="h-3 w-3" />
               </div>
-              <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                {nextMeta?.title ?? toHumanTitle(nextSlug)}
-              </div>
+              <div className="report-pager-title line-clamp-1">{nextMeta?.title ?? toHumanTitle(nextSlug)}</div>
             </Link>
           )}
         </nav>

@@ -10,6 +10,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import GithubSlugger from "github-slugger";
 import type { Element, ElementContent, Root, RootContent } from "hast";
+import { REVEAL_TARGET } from "@/components/motion/revealObserver";
 
 export type EpisodePlatform = "banterpacks" | "chimera" | "benchmark" | "unknown";
 
@@ -85,13 +86,15 @@ export interface RenderMarkdownOptions {
   demoteH1?: boolean;
   /** The page renders its own TOC: drop the markdown's TOC section. */
   dropInlineToc?: boolean;
+  /** Mark tables, code blocks and figures with the reveal target marker for a RevealScope (the report body). */
+  markRevealTargets?: boolean;
 }
 
 const RENDER_OPTIONS_KEY = "readingSurface";
 
 type HastParent = Root | Element;
 
-function textOf(node: ElementContent): string {
+export function textOf(node: ElementContent): string {
   if (node.type === "text") return node.value;
   if (node.type === "element") return node.children.map(textOf).join("");
   return "";
@@ -133,8 +136,18 @@ function markNumericColumns(table: Element): void {
   }
 }
 
-// Wrap tables in a scroll box, mark numeric columns, and (optionally) demote h1.
-function transformElements(parent: HastParent, demoteH1: boolean): void {
+// a paragraph holding only images: the markdown figure
+function isStandingImage(el: Element): boolean {
+  const content = el.children.filter((child) => !(child.type === "text" && !child.value.trim()));
+  return el.tagName === "p" && content.length > 0 && content.every((child) => child.type === "element" && child.tagName === "img");
+}
+
+// Wrap tables in a scroll box, mark numeric columns, (optionally) demote h1,
+// and (optionally) mark tables, code blocks and figures as reveal targets:
+// the table's scroll box, the pre, the figure or standing image, never the
+// prose around them.
+function transformElements(parent: HastParent, options: RenderMarkdownOptions): void {
+  const target = options.markRevealTargets ? REVEAL_TARGET : {};
   for (let index = 0; index < parent.children.length; index += 1) {
     const child = parent.children[index];
     if (child.type !== "element") continue;
@@ -143,16 +156,20 @@ function transformElements(parent: HastParent, demoteH1: boolean): void {
       parent.children[index] = {
         type: "element",
         tagName: "div",
-        properties: { className: ["table-scroll"] },
+        properties: { className: ["table-scroll"], ...target },
         children: [child],
       };
       continue;
     }
-    if (demoteH1 && child.tagName === "h1") {
+    if (child.tagName === "pre" || child.tagName === "figure") Object.assign(child.properties, target);
+    if (isStandingImage(child)) {
+      for (const image of child.children) if (image.type === "element") Object.assign(image.properties, target);
+    }
+    if (options.demoteH1 && child.tagName === "h1") {
       child.tagName = "h2";
       child.properties.dataDemoted = true; // lets extractHtmlHeadings skip the title
     }
-    transformElements(child, demoteH1);
+    transformElements(child, options);
   }
 }
 
@@ -194,7 +211,7 @@ function rehypeReadingSurface() {
   return (tree: Root, file: { data: Record<string, unknown> }) => {
     const options = (file.data[RENDER_OPTIONS_KEY] ?? {}) as RenderMarkdownOptions;
     if (options.dropInlineToc) dropInlineToc(tree);
-    transformElements(tree, Boolean(options.demoteH1));
+    transformElements(tree, options);
   };
 }
 
@@ -207,9 +224,20 @@ const markdownProcessor = remark()
   .use(rehypeReadingSurface)
   .use(rehypeStringify);
 
+/** The rendered HTML tree of a markdown document, before it is stringified. */
+export async function renderMarkdownTree(markdown: string, options: RenderMarkdownOptions = {}): Promise<Root> {
+  // the reading-surface step reads its options from the file's data
+  const file = { value: markdown, data: { [RENDER_OPTIONS_KEY]: options } };
+  return (await markdownProcessor.run(markdownProcessor.parse(file), file)) as Root;
+}
+
+/** HTML for a rendered tree, or for a run of its nodes. */
+export function hastToHtml(node: Root | RootContent[]): string {
+  return markdownProcessor.stringify(Array.isArray(node) ? { type: "root", children: node } : node);
+}
+
 export async function renderMarkdownToHtml(markdown: string, options: RenderMarkdownOptions = {}): Promise<string> {
-  const processed = await markdownProcessor.process({ value: markdown, data: { [RENDER_OPTIONS_KEY]: options } });
-  return processed.toString();
+  return hastToHtml(await renderMarkdownTree(markdown, options));
 }
 
 export function extractPrimaryHeading(markdown: string): string | undefined {
@@ -244,6 +272,26 @@ export function extractHeadings(markdown: string): TocEntry[] {
     const id = slugger.slug(text);
     // The page's own TOC replaces the markdown one (dropInlineToc); slugging
     // it anyway keeps later ids in step with rehype-slug.
+    if (level <= 3 && INLINE_TOC_HEADING.test(text)) continue;
+    headings.push({ id, text, level });
+  }
+  return headings;
+}
+
+/**
+ * The contents of a rendered tree: its top-level h2-h4 with the ids
+ * rehype-slug gave them, skipping a demoted title and the markdown's own TOC
+ * heading. Reads what the page will show, so headings inside code blocks or
+ * folded out of the body never reach the contents.
+ */
+export function extractTreeHeadings(tree: Root): TocEntry[] {
+  const headings: TocEntry[] = [];
+  for (const node of tree.children) {
+    if (node.type !== "element" || !/^h[2-4]$/.test(node.tagName) || node.properties.dataDemoted) continue;
+    const level = Number(node.tagName.slice(1));
+    const text = textOf(node).replace(/\s+/g, " ").trim();
+    const id = node.properties.id;
+    if (!text || typeof id !== "string") continue;
     if (level <= 3 && INLINE_TOC_HEADING.test(text)) continue;
     headings.push({ id, text, level });
   }

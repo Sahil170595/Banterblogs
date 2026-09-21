@@ -166,7 +166,8 @@ describe('reports pipeline integration', () => {
         const [section] = await readReportSections('technical-report-138');
         expect(section.html).not.toMatch(/<h1[\s>]/);
         expect(section.html).not.toMatch(/>2\. Table of Contents</);
-        expect(section.html).toContain('<div class="table-scroll"><table>');
+        // the report body marks its table scroll boxes as reveal targets, at rest
+        expect(section.html).toContain('<div class="table-scroll" data-reveal=""><table>');
         expect(section.html).toContain('class="num"');
     });
 

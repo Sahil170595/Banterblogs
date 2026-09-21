@@ -4,7 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import RootLayout from '@/app/layout';
 import { Reveal } from '../Reveal';
-import { armReveal, REVEAL_ATTRIBUTE, REVEAL_PENDING, REVEAL_SHOWN, REVEAL_STAGGER_CAP } from '../revealObserver';
+import { RevealScope } from '../RevealScope';
+import { armReveal, REVEAL_ATTRIBUTE, REVEAL_PENDING, REVEAL_SHOWN, REVEAL_STAGGER_CAP, REVEAL_TARGET } from '../revealObserver';
 import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE, MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from '../prePaint';
 
 vi.mock('next/font/google', () => ({
@@ -278,6 +279,139 @@ describe('<Reveal> behaviour', () => {
     } finally {
       restore();
     }
+  });
+});
+
+// RevealScope arms the reveal targets a server renderer marked inside markup
+// React only sets as a string (the report body): the same rest marker <Reveal>
+// renders, the same shared observer, the same pending and shown states.
+const ON_SCREEN_TARGET = `<div class="table-scroll" ${REVEAL_ATTRIBUTE}="" data-top="${ON_SCREEN}"><table><tbody><tr><td>1</td></tr></tbody></table></div>`;
+const BELOW_TARGET = `<pre ${REVEAL_ATTRIBUTE}="" data-top="${BELOW_FOLD}"><code>x = 1</code></pre>`;
+const BELOW_PROSE = `<p data-top="${BELOW_FOLD + 200}">prose never moves</p>`;
+const SCOPED_HTML = `<p>intro</p>${ON_SCREEN_TARGET}${BELOW_TARGET}${BELOW_PROSE}`;
+
+// renders a scope whose elements sit at their data-top offsets when their
+// batch is measured
+async function renderScope(html: string) {
+  const original = HTMLElement.prototype.getBoundingClientRect;
+  HTMLElement.prototype.getBoundingClientRect = function () {
+    const top = Number(this.dataset.top ?? 0);
+    return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
+  };
+  try {
+    const rendered = render(<RevealScope className="report-prose" html={html} />);
+    await settle();
+    return rendered;
+  } finally {
+    HTMLElement.prototype.getBoundingClientRect = original;
+  }
+}
+
+describe('<RevealScope> markup', () => {
+  it('renders the server HTML exactly as it was given, every target at rest', () => {
+    const markup = renderToStaticMarkup(<RevealScope className="report-prose" html={SCOPED_HTML} />);
+
+    expect(markup).toBe(`<div class="report-prose">${SCOPED_HTML}</div>`);
+    expect(markup).not.toMatch(/pending|shown|opacity|transform/);
+  });
+
+  it('owns the rest marker a server renderer writes: data-reveal="" as a hast or React property', () => {
+    expect(REVEAL_TARGET).toEqual({ dataReveal: '' });
+  });
+});
+
+describe('<RevealScope> behaviour', () => {
+  const target = (container: Element, tag: string) => container.querySelector<HTMLElement>(`.report-prose > ${tag}`)!;
+
+  it('leaves every target at rest while the motion gate is off (no JavaScript gate, reduced motion)', async () => {
+    const { container } = await renderScope(SCOPED_HTML);
+
+    expect(target(container, 'pre').getAttribute(REVEAL_ATTRIBUTE)).toBe('');
+    expect(io.instances.every((instance) => !instance.observed.has(target(container, 'pre')))).toBe(true);
+  });
+
+  it('holds back only the marked targets below the fold, and reveals each once as it enters', async () => {
+    armMotion();
+    const { container } = await renderScope(SCOPED_HTML);
+    const below = target(container, 'pre');
+
+    expect(target(container, 'div').getAttribute(REVEAL_ATTRIBUTE)).toBe('');
+    expect(below.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_PENDING);
+    // prose is never a target, wherever it sits
+    expect(container.querySelectorAll(`p[${REVEAL_ATTRIBUTE}]`)).toHaveLength(0);
+
+    act(() => observer().callback([entry(below)], observer() as unknown as IntersectionObserver));
+    expect(below.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_SHOWN);
+    expect(observer().observed.has(below)).toBe(false);
+  });
+
+  it('measures every target before it holds any, so no hold forces a layout for the next measure', async () => {
+    armMotion();
+    const steps: string[] = [];
+    const original = HTMLElement.prototype.getBoundingClientRect;
+    const viewport = Object.getOwnPropertyDescriptor(globalThis, 'innerHeight');
+    const setAttribute = Element.prototype.setAttribute;
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      steps.push('measure');
+      const top = Number(this.dataset.top ?? 0);
+      return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
+    };
+    Object.defineProperty(globalThis, 'innerHeight', { configurable: true, get: () => (steps.push('measure'), VIEWPORT_HEIGHT) });
+    vi.spyOn(Element.prototype, 'setAttribute').mockImplementation(function (this: Element, name: string, value: string) {
+      if (name === REVEAL_ATTRIBUTE && value === REVEAL_PENDING) steps.push('hold');
+      setAttribute.call(this, name, value);
+    });
+    const blocks = [BELOW_FOLD, BELOW_FOLD + 100, BELOW_FOLD + 200].map((top) => `<pre ${REVEAL_ATTRIBUTE}="" data-top="${top}"><code>${top}</code></pre>`);
+    try {
+      render(<RevealScope className="report-prose" html={blocks.join('')} />);
+      await settle();
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = original;
+      if (viewport) Object.defineProperty(globalThis, 'innerHeight', viewport);
+    }
+
+    expect(steps.filter((step) => step === 'hold')).toHaveLength(blocks.length);
+    expect(steps.lastIndexOf('measure')).toBeLessThan(steps.indexOf('hold'));
+  });
+
+  it('joins the same measuring pass as a <Reveal> armed alongside it', async () => {
+    armMotion();
+    const steps: string[] = [];
+    const original = HTMLElement.prototype.getBoundingClientRect;
+    const setAttribute = Element.prototype.setAttribute;
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      steps.push('measure');
+      const top = Number(this.dataset.top ?? 0);
+      return { top, left: 0, bottom: top + 100, right: 100, width: 100, height: 100, x: 0, y: top, toJSON: () => ({}) };
+    };
+    vi.spyOn(Element.prototype, 'setAttribute').mockImplementation(function (this: Element, name: string, value: string) {
+      if (name === REVEAL_ATTRIBUTE && value === REVEAL_PENDING) steps.push('hold');
+      setAttribute.call(this, name, value);
+    });
+    try {
+      render(
+        <>
+          <Reveal data-top={String(BELOW_FOLD)}>card</Reveal>
+          <RevealScope className="report-prose" html={BELOW_TARGET} />
+        </>,
+      );
+      await settle();
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = original;
+    }
+
+    expect(steps).toEqual(['measure', 'measure', 'hold', 'hold']);
+  });
+
+  it('shares the one observer with <Reveal>, and lets go of its targets on unmount', async () => {
+    armMotion();
+    const before = io.instances.length;
+    const { container, unmount } = await renderScope(SCOPED_HTML);
+    const below = target(container, 'pre');
+    unmount();
+
+    expect(io.instances.length).toBeLessThanOrEqual(Math.max(before, 1));
+    expect(observer().unobserved).toContain(below);
   });
 });
 
