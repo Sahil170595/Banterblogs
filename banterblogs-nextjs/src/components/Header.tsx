@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { Github, Linkedin, Menu, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
+import { MOTION_ATTRIBUTE } from './motion/prePaint';
+import { Wordmark } from './ui/Wordmark';
+import { cn } from '@/lib/cn';
 import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
 
 const NAV_ITEMS = [
@@ -16,6 +19,10 @@ const NAV_ITEMS = [
   { href: '/work', label: 'Work' },
   { href: '/about', label: 'About' },
 ];
+const SOCIAL_LINKS = [
+  { href: GITHUB_URLS.PROFILE, label: 'GitHub', Icon: Github },
+  { href: EXTERNAL_LINKS.LINKEDIN, label: 'LinkedIn', Icon: Linkedin },
+];
 
 // Named so route transitions leave the header in place; globals.css (view
 // transitions block) holds its group still and drops the old snapshot, whose
@@ -24,8 +31,21 @@ const NAV_ITEMS = [
 // backdrop root, and the header's glass layer (::before) would blur nothing.
 const HEADER_TRANSITION_NAME = 'site-header';
 
+// closed -> open -> closing (the panel's fade, globals.css) -> closed
+type MenuState = 'closed' | 'open' | 'closing';
+
+const COLOR_TRANSITION = 'transition-colors duration-fast ease-standard';
+const ICON_BUTTON = cn(
+  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 text-foreground hover:border-primary/60 hover:text-primary',
+  COLOR_TRANSITION,
+);
+const MENU_ROW = cn('menu-item flex min-h-11 items-center rounded-lg px-3 py-2 hover:bg-primary/10 hover:text-primary', COLOR_TRANSITION);
+
+const menuIndex = (i: number) => ({ '--i': i }) as CSSProperties;
+const motionArmed = () => document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on';
+
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menu, setMenu] = useState<MenuState>('closed');
   const toggleRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   // On the galactic landing the nav floats transparent over the scene —
@@ -35,20 +55,26 @@ export function Header() {
   // one answer for both the active styling and aria-current
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
+  // fades out when motion is armed; otherwise, and when a link is followed, goes at once
+  const closeMenu = (instant = false) => setMenu(!instant && motionArmed() ? 'closing' : 'closed');
+  const endFade = (event: AnimationEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) setMenu((state) => (state === 'closing' ? 'closed' : state));
+  };
+
   // Escape closes the mobile disclosure — expected dismiss behavior, and the
   // menu is the only thing on screen once it is open.
   useEffect(() => {
-    if (!isMenuOpen) return;
+    if (menu !== 'open') return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented) return;
-      setIsMenuOpen(false);
-      // the focused menu link unmounts with the panel; without this, focus
+      setMenu(motionArmed() ? 'closing' : 'closed');
+      // the focused menu link leaves with the panel; without this, focus
       // falls to <body>
       toggleRef.current?.focus();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isMenuOpen]);
+  }, [menu]);
 
   return (
     <header
@@ -71,31 +97,9 @@ export function Header() {
               : 'container flex h-[72px] items-center justify-between gap-6'
           }
         >
-          <Link href="/" className="flex items-center gap-2 sm:gap-3">
-            {isLanding ? (
-              <>
-                <span
-                  data-landing-wordmark="orbital"
-                  aria-hidden="true"
-                  className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/25"
-                >
-                  <span className="h-2 w-2 rounded-full bg-black ring-1 ring-primary/90 shadow-[0_0_12px_hsl(var(--primary))]" />
-                  <span className="absolute -right-[3px] top-1/2 h-1 w-1 -translate-y-1/2 rounded-full bg-primary" />
-                </span>
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
-                  Chimeraforge
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10 sm:h-11 sm:w-11 sm:text-base">
-                  CF
-                </span>
-                <span className="display text-base font-semibold tracking-tight text-foreground sm:text-lg">
-                  Chimeraforge
-                </span>
-              </>
-            )}
+          {/* the landing's mark on every page, so the two read as one site */}
+          <Link href="/" className="flex items-center">
+            <Wordmark />
           </Link>
 
           <div className="flex flex-1 items-center justify-end gap-4">
@@ -103,9 +107,9 @@ export function Header() {
               <SearchDialog />
             </div>
 
-            {/* one nav language on every page — the landing's mono-uppercase is
-                the site's editorial register, not a landing-only costume */}
-            <nav className="hidden items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:flex">
+            {/* one nav language on every page — the landing's mono register
+                is the site's editorial voice, not a landing-only costume */}
+            <nav className="hidden items-center gap-1 text-label-12-mono text-muted-foreground lg:flex">
               {NAV_ITEMS.map((item) => {
                 const active = isActive(item.href);
                 return (
@@ -113,96 +117,89 @@ export function Header() {
                     key={item.label}
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`px-2.5 py-2 transition xl:px-3 ${
+                    className={cn(
+                      'px-2.5 py-2 xl:px-3',
+                      COLOR_TRANSITION,
                       active
                         ? isLanding
                           ? 'text-primary'
                           : 'rounded-full bg-primary/15 text-primary'
                         : isLanding
-                          ? 'text-muted-foreground hover:text-primary'
-                          : 'rounded-full hover:bg-primary/10 hover:text-primary'
-                    }`}
+                          ? 'hover:text-primary'
+                          : 'rounded-full hover:bg-primary/10 hover:text-primary',
+                    )}
                   >
                     {item.label}
                   </Link>
                 );
               })}
               <div className="ml-2 flex items-center gap-1 border-l border-border/40 pl-2">
-                <Link
-                  href={GITHUB_URLS.PROFILE}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GitHub"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 text-foreground transition hover:border-primary/60 hover:text-primary"
-                >
-                  <Github className="h-4 w-4" />
-                </Link>
-                <Link
-                  href={EXTERNAL_LINKS.LINKEDIN}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LinkedIn"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 text-foreground transition hover:border-primary/60 hover:text-primary"
-                >
-                  <Linkedin className="h-4 w-4" />
-                </Link>
+                {SOCIAL_LINKS.map(({ href, label, Icon }) => (
+                  <Link key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={ICON_BUTTON}>
+                    <Icon className="h-4 w-4" />
+                  </Link>
+                ))}
               </div>
             </nav>
 
             <button
               ref={toggleRef}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition hover:bg-accent/10 hover:text-foreground lg:hidden"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
+              className={cn('inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/10 hover:text-foreground lg:hidden', COLOR_TRANSITION)}
+              onClick={() => (menu === 'open' ? closeMenu() : setMenu('open'))}
               aria-label="Toggle navigation"
-              aria-expanded={isMenuOpen}
+              aria-expanded={menu === 'open'}
               aria-controls="mobile-nav"
             >
-              {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+              {menu === 'open' ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
             </button>
           </div>
         </div>
 
-        {isMenuOpen && (
+        {menu !== 'closed' && (
           <div
             id="mobile-nav"
+            data-state={menu}
+            inert={menu === 'closing'}
+            onAnimationEnd={endFade}
             // capped to the space under the 72px bar and scrollable, so the last
             // links stay reachable on short screens
-            className={`max-h-[calc(100svh-72px)] overflow-y-auto overscroll-contain border-t border-border/60 bg-background/95 backdrop-blur lg:hidden ${
-              isLanding ? 'h-[calc(100svh-72px)]' : ''
-            }`}
+            className={cn(
+              'max-h-[calc(100svh-72px)] overflow-y-auto overscroll-contain border-t border-border/60 bg-background/95 backdrop-blur lg:hidden',
+              isLanding && 'h-[calc(100svh-72px)]',
+            )}
           >
             <div className="container space-y-1 py-6">
-              <div className="mb-4">
+              <div className="menu-item mb-4" style={menuIndex(0)}>
                 <SearchDialog />
               </div>
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS.map((item, index) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    style={menuIndex(index + 1)}
+                    className={cn(MENU_ROW, 'text-label-12-mono', active ? 'text-primary' : 'text-muted-foreground')}
+                    onClick={() => closeMenu(true)}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+              {SOCIAL_LINKS.map(({ href, label }, index) => (
                 <Link
-                  key={item.label}
-                  href={item.href}
-                  className="flex min-h-11 items-center rounded-lg px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
-                  onClick={() => setIsMenuOpen(false)}
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={menuIndex(NAV_ITEMS.length + 1 + index)}
+                  className={cn(MENU_ROW, 'text-copy-14 font-medium text-muted-foreground')}
+                  onClick={() => closeMenu(true)}
                 >
-                  {item.label}
+                  {label}
                 </Link>
               ))}
-              <Link
-                href={GITHUB_URLS.PROFILE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                GitHub
-              </Link>
-              <Link
-                href={EXTERNAL_LINKS.LINKEDIN}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                LinkedIn
-              </Link>
             </div>
           </div>
         )}

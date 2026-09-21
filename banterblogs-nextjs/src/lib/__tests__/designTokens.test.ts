@@ -60,7 +60,20 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 
 // The most each pattern may count. Lower a ceiling whenever a count drops;
 // raising one is a regression.
-const CEILINGS: Record<Pattern, number> = { ...MAIN_COUNTS };
+const CEILINGS: Record<Pattern, number> = {
+  arbitraryFontSize: 93,
+  arbitraryTracking: 50,
+  arbitraryShadow: 7,
+  largeRadius: 12,
+  paletteHue: 13,
+  transitionAll: 0,
+  backdrop: 10,
+  signalPanel: 55,
+  signalPill: 18,
+  signalDivider: 2,
+  glassUltra: 2,
+  shellWallpaper: 0,
+};
 
 function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

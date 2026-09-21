@@ -64,6 +64,7 @@ const REST_TOKENS = [
   '--motion-rise',
   '--motion-reveal',
   '--motion-route',
+  '--motion-menu',
   '--scale-press',
   '--scale-press-card',
   '--scale-enter',
