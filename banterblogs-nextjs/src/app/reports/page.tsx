@@ -10,7 +10,7 @@ import { DirectionalPage, NAV_FORWARD, ReportTitleTransition } from '@/component
 import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · papers under peer review and an accepted ICML 2026 workshop paper.`;
+const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · papers under peer review and a paper presented at the ICML 2026 Workshop on Hypothesis Testing.`;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/reports' },
