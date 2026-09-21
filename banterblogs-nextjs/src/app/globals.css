@@ -474,13 +474,51 @@ html[data-motion="on"] [data-reveal="pending"] {
   transition: opacity var(--duration-enter) var(--ease-strong-out);
 }
 
-.card-visual {
+/* The archive card's visual frame and the Card primitive's surface
+   (components/ui/Card.tsx) are one material: a card-coloured plate with an
+   inset hairline, brightening under the pointer. A surfaced card's glow rings
+   the whole surface rather than a 16:9 frame. */
+.card-visual,
+.card-surface {
   position: relative;
-  overflow: hidden;
-  border-radius: 0.625rem;
   background-color: hsl(var(--card));
   box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
   transition: background-color var(--duration-enter) var(--ease-strong-out);
+}
+
+.card-visual {
+  overflow: hidden;
+  border-radius: 0.625rem;
+}
+
+.card-surface {
+  border-radius: 0.75rem;
+}
+
+.card-lift.card-surface::after {
+  inset: 0;
+  aspect-ratio: auto;
+  border-radius: inherit;
+}
+
+/* A card that holds several links: its CardLink stretches over the card, and
+   the other links (ButtonLink, positioned) paint above it. Keyboard focus
+   rings the card rather than the title text. */
+.card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+:root .card-link:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.card-depth:has(.card-link:focus-visible) .card-surface {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
 }
 
 .card-depth .card-arrow {
@@ -502,7 +540,7 @@ html[data-motion="on"] [data-reveal="pending"] {
     transition-duration: var(--duration-hover);
   }
 
-  .card-depth:hover .card-visual {
+  .card-depth:hover :is(.card-visual, .card-surface) {
     background-color: hsl(var(--card-raised));
     transition-duration: var(--duration-hover);
   }
@@ -539,6 +577,66 @@ html[data-motion="on"] [data-reveal="pending"] {
 
 .card-depth:focus-visible .rv .h {
   stroke: hsl(var(--primary));
+}
+
+/* the same for a card whose focus lands on its stretched CardLink */
+.card-depth:has(.card-link:focus-visible) .card-arrow {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.card-depth:has(.card-link:focus-visible) .rv .h {
+  stroke: hsl(var(--primary));
+}
+
+/* ListRow (components/ui/ListRow.tsx), the /show row: its hairline is a 1px
+   layer, not a border, and turns ember under the pointer with the title; the
+   arrow nudges --motion-nudge where the device really hovers. Colour and the
+   arrow only: no lift on a dense list. */
+.list-row {
+  position: relative;
+}
+
+.list-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background-color: hsl(var(--border) / 0.6);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+a.list-row:hover::before {
+  background-color: hsl(var(--primary) / 0.6);
+}
+
+.list-row .row-arrow {
+  transition:
+    transform var(--duration-base) var(--ease-strong-out),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+a.list-row:hover .row-arrow {
+  color: hsl(var(--primary));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.list-row:hover .row-arrow {
+    transform: translateX(var(--motion-nudge));
+    transition-duration: var(--duration-hover), var(--duration-fast);
+  }
+}
+
+/* Section (components/ui/Section.tsx): one rhythm between page sections. */
+.page-section + .page-section {
+  margin-top: 4rem;
+}
+
+@media (min-width: 768px) {
+  .page-section + .page-section {
+    margin-top: 6rem;
+  }
 }
 
 .card-badge {
