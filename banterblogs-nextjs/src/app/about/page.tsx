@@ -60,7 +60,7 @@ export default function AboutPage() {
         <div className="space-y-4">
           <p className="text-label-13 text-muted-foreground">
             Built by <span className="font-medium text-foreground">Sahil Kadadekar</span> &middot;
-            Solo architect &middot; Sep 2025 &ndash; Present
+            Solo architect &middot; <span className="whitespace-nowrap">Sep 2025 &ndash; Present</span>
           </p>
           <StatRow
             label="The program in numbers"
