@@ -14,6 +14,10 @@ import { contrast, over, token, type Rgb } from '@/test/contrast';
 // (3.4:1), and BFT's not-yet-reached rows faded to 1.2-2.8:1. Every beat of
 // every scene is swept here from the tokens: text clears AA on the surface it
 // sits on, and text a scene dims to mark a step not reached yet clears 3:1.
+// The sweep sees opacity set by class, or inline on the first render
+// (framer-motion's initial={false}); a fade framer-motion animates in later
+// frames (the ladder's, agents' and chain's cards not yet revealed) is not
+// rendered in jsdom, so it is not scored here.
 
 const PAGES: Array<[string, ComponentType]> = [
   ['streaming-ladder', StreamingLadderPage],
