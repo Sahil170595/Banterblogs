@@ -6,7 +6,7 @@ import { ReportDetails, ReportHero, ReportMeta } from '@/components/reports/Repo
 import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportProgress } from '@/components/reports/ReportProgress';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
-import { REPORT_END_ATTRIBUTE } from '@/components/reports/ReportTocSpy';
+import { ReportEnd } from '@/components/reports/reportEnd';
 import { DirectionalPage, NAV_BACK, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
 import { reportIdentity } from '@/components/reports/reportIdentity';
 import { computeContentStats } from '@/lib/episodes';
@@ -130,7 +130,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
         <ReportMarkdown sections={report.sections} />
         <ReportTocSidebar headings={headings} />
       </div>
-      <div {...{ [REPORT_END_ATTRIBUTE]: '' }} />
+      <ReportEnd />
 
       {/* ── Navigation ── */}
       {(prevSlug || nextSlug) && (
