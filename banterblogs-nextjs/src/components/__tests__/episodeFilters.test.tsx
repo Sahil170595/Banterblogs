@@ -1,7 +1,20 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '../EpisodeFilters';
+
+const { url, replace } = vi.hoisted(() => ({ url: { search: '' }, replace: vi.fn() }));
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(url.search),
+  usePathname: () => '/episodes',
+  useRouter: () => ({ replace }),
+}));
+
+beforeEach(() => {
+  url.search = '';
+  replace.mockReset();
+});
 
 const episode = (id: number, title: string, tags: string[]): EpisodeSummary => ({
   id,
@@ -100,6 +113,94 @@ describe('episode filters', () => {
     fireEvent.click(screen.getByRole('button', { name: 'banterpacks' }), { detail: 1 });
     fireEvent.change(search(), { target: { value: 'stream' } });
     expect(list().hasAttribute('data-switched')).toBe(false);
+  });
+
+  // re-judge P1-5: the search, tag, sort and order lived in component state
+  // only, so a reload or a shared link lost them
+  describe('in the URL', () => {
+    const order = () => screen.getByRole('button', { name: /^Sorted/ });
+    const sort = () => screen.getByRole('combobox', { name: 'Sort episodes by' }) as HTMLSelectElement;
+    const pressed = () => screen.getAllByRole('button', { pressed: true }).map((chip) => chip.textContent);
+
+    it('restores the search, tag, sort and order a link or a reload names', () => {
+      url.search = '?q=safety&tag=chimera&sort=title&order=desc';
+      renderFilters();
+
+      expect(search().value).toBe('safety');
+      expect(pressed()).toEqual(['chimera']);
+      expect(sort().value).toBe('title');
+      expect(order().getAttribute('aria-label')).toMatch(/^Sorted descending/);
+      expect(screen.getAllByRole('article')).toHaveLength(1);
+    });
+
+    it('falls back to the defaults for values it does not know', () => {
+      url.search = '?sort=colour&order=sideways';
+      renderFilters();
+
+      expect(sort().value).toBe('date');
+      expect(order().getAttribute('aria-label')).toMatch(/^Sorted ascending/);
+      expect(pressed()).toEqual(['All']);
+    });
+
+    it('writes each change in place, without scrolling, and leaves the defaults out', () => {
+      renderFilters();
+
+      fireEvent.change(search(), { target: { value: 'stream' } });
+      expect(replace).toHaveBeenLastCalledWith('/episodes?q=stream', { scroll: false });
+      fireEvent.click(screen.getByRole('button', { name: 'banterpacks' }));
+      expect(replace).toHaveBeenLastCalledWith('/episodes?q=stream&tag=banterpacks', { scroll: false });
+      fireEvent.change(sort(), { target: { value: 'title' } });
+      fireEvent.click(order());
+      expect(replace).toHaveBeenLastCalledWith('/episodes?q=stream&tag=banterpacks&sort=title&order=desc', { scroll: false });
+
+      fireEvent.click(screen.getByRole('button', { name: 'All' }));
+      fireEvent.change(sort(), { target: { value: 'date' } });
+      fireEvent.click(order());
+      fireEvent.change(search(), { target: { value: '' } });
+      expect(replace).toHaveBeenLastCalledWith('/episodes', { scroll: false });
+    });
+
+    it('keeps what the visitor typed while the URL catches up with it', () => {
+      const view = renderFilters();
+      fireEvent.change(search(), { target: { value: 'st' } });
+      fireEvent.change(search(), { target: { value: 'str' } });
+
+      // the first write lands after the second keystroke
+      url.search = '?q=st';
+      view.rerender(<EpisodeFilters episodes={EPISODES} />);
+      expect(search().value).toBe('str');
+      url.search = '?q=str';
+      view.rerender(<EpisodeFilters episodes={EPISODES} />);
+      expect(search().value).toBe('str');
+    });
+
+    it('follows a URL it did not write, as from Back or a link', () => {
+      const view = renderFilters();
+      fireEvent.change(search(), { target: { value: 'stream' } });
+      url.search = '?tag=chimera';
+      view.rerender(<EpisodeFilters episodes={EPISODES} />);
+
+      expect(search().value).toBe('');
+      expect(pressed()).toEqual(['chimera']);
+    });
+
+    it('clears the search and tag from the URL along with the filters', () => {
+      url.search = '?q=streaming&tag=chimera&sort=title';
+      renderFilters();
+      fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+      expect(replace).toHaveBeenLastCalledWith('/episodes?sort=title', { scroll: false });
+    });
+  });
+
+  // re-judge P2-17: selected and unselected chips differed by colour alone
+  it('rings the selected chip, a cue that does not rest on colour', () => {
+    renderFilters();
+    const ring = (name: string) => screen.getByRole('button', { name }).className.includes('shadow-[inset_0_0_0_1px_hsl(var(--primary))]');
+    expect(ring('All')).toBe(true);
+    expect(ring('chimera')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'chimera' }));
+    expect(ring('chimera')).toBe(true);
+    expect(ring('All')).toBe(false);
   });
 
   it('shows a page of rows at a time and loads the next on request', () => {
