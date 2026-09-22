@@ -66,6 +66,24 @@ describe('reading stylesheet', () => {
     expect(importers).toEqual([...READING_ROUTES].sort());
   });
 
+  // Tailwind 3 keeps the last `@config` path on its PostCSS plugin: with only
+  // reading.css naming one, a build that processed it first compiled
+  // globals.css against the reading config ("rounded-3xl does not exist").
+  // Each sheet names its own config, so the order cannot matter.
+  it('compiles both sheets with one plugin instance in either order, each against its own config', async () => {
+    expect(GLOBALS).toMatch(/^@config "\.\.\/\.\.\/tailwind\.config\.ts";/m);
+    const plugin = tailwindcss();
+    const compile = async (file: 'globals' | 'reading') =>
+      (await postcss([plugin]).process(file === 'globals' ? GLOBALS : READING, { from: path.join(SRC, 'app', `${file}.css`) })).css;
+    for (const order of [['reading', 'globals'], ['globals', 'reading']] as const) {
+      const [first, second] = [await compile(order[0]), await compile(order[1])];
+      const [globals, reading] = order[0] === 'globals' ? [first, second] : [second, first];
+      expect(globals, order.join(' then ')).toMatch(/\.signal-panel \{/);
+      expect(globals, order.join(' then ')).not.toMatch(/\.prose\b/);
+      expect(reading, order.join(' then ')).toMatch(/\.prose \{/);
+    }
+  });
+
   it('builds the typography components only into the reading sheet', async () => {
     expect(tailwindConfig.plugins?.length).toBeGreaterThan(0);
     const globalsBuilt = await build(

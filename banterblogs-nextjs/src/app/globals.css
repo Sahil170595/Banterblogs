@@ -3,6 +3,11 @@
  * (was shipping on every page including /, /about, /work, /papers).
  */
 
+/* Named, not implied: Tailwind 3 keeps the last @config path on its PostCSS
+   plugin, so once reading.css (its own config) was processed first, this
+   sheet compiled against the reading config. */
+@config "../../tailwind.config.ts";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
