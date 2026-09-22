@@ -3,7 +3,15 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
-import { ENTRANCE_CARDS, ENTRANCE_CARD_STEPS, ReportTabs, TAB_STRIP_FADE_PX, TABS_ENTRANCE_GROUP, type ReportTabGroup } from '../ReportTabs';
+import {
+  ENTRANCE_CARDS,
+  ENTRANCE_CARD_STEPS,
+  ReportTabs,
+  TAB_STRIP_EDGE_FLOOR,
+  TAB_STRIP_FADE_PX,
+  TABS_ENTRANCE_GROUP,
+  type ReportTabGroup,
+} from '../ReportTabs';
 import { NAV_FORWARD } from '../ReportTransitions';
 import { GLOBALS_CSS } from '@/test/contrast';
 
@@ -223,6 +231,19 @@ describe('report archive motion wiring', () => {
     expect(strip).toMatch(/mask-image:\s*linear-gradient\(\s*to right,[^;]*var\(--tab-strip-fade-start\)[^;]*var\(--tab-strip-fade-end\)/);
     const timeline = /@supports \(animation-timeline: scroll\(\)\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
     expect(timeline).toMatch(/\.tab-strip \{[^}]*animation-timeline:\s*scroll\(self inline\)/);
+  });
+
+  // final WIG re-judge N5: the fades ran to transparent, so a tab count at
+  // the edge at rest (1440: Phase 7's "1") showed at 1.2-3.7:1. The edge
+  // keeps TAB_STRIP_EDGE_FLOOR of the text: still a cue, still legible.
+  it('fades the edges to a floor, never to nothing', () => {
+    const css = GLOBALS_CSS.slice(GLOBALS_CSS.indexOf('/* R4 a11y */'), GLOBALS_CSS.indexOf('/* end R4 a11y */'));
+    const strip = /\.tab-strip \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    const stops = /linear-gradient\(\s*to right,([^;]*)\);/.exec(strip)?.[1].split(/,(?![^(]*\))/).map((stop) => stop.trim()) ?? [];
+    expect(stops).toHaveLength(4);
+    expect(stops[0]).toBe('rgb(0 0 0 / var(--tab-strip-edge-floor))');
+    expect(stops[3]).toBe('rgb(0 0 0 / var(--tab-strip-edge-floor))');
+    expect(Number(/--tab-strip-edge-floor:\s*([\d.]+);/.exec(GLOBALS_CSS)?.[1])).toBe(TAB_STRIP_EDGE_FLOOR);
   });
 
   it('scrolls the tab it selects fully into view, clear of the edge fades', () => {

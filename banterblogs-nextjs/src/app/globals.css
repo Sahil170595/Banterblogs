@@ -1860,13 +1860,19 @@ html[data-route-to="landing"]::view-transition-new(site-header) {
   initial-value: 0px;
 }
 
+/* A fade to nothing left a tab's count at the edge at 1.2-3.7:1; the edge
+   keeps a floor of the text (TAB_STRIP_EDGE_FLOOR in ReportTabs). */
+:root {
+  --tab-strip-edge-floor: 0.3;
+}
+
 .tab-strip {
   mask-image: linear-gradient(
     to right,
-    transparent,
+    rgb(0 0 0 / var(--tab-strip-edge-floor)),
     #000 var(--tab-strip-fade-start),
     #000 calc(100% - var(--tab-strip-fade-end)),
-    transparent
+    rgb(0 0 0 / var(--tab-strip-edge-floor))
   );
 }
 
