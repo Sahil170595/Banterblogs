@@ -16,6 +16,9 @@ vi.mock('next/navigation', () => ({ usePathname: () => pathname.current }));
 vi.mock('../scrollAnchor', () => ({ restoreScrollAnchor, currentEntryKey: () => `key:${location.pathname}` }));
 
 const scrollTo = vi.fn();
+// longer than any window a restore could be given: the page still belongs to
+// the traversal that asked for it
+const LATE_COMMIT_MS = 20_000;
 type Frame = Parameters<typeof requestAnimationFrame>[0];
 let frames: Frame[] = [];
 const runFrames = () => {
@@ -27,6 +30,18 @@ const go = (to: string, rerender: (ui: ReactElement) => void) => {
   const [path] = to.split('#');
   pathname.current = path;
   history.pushState({ __NA: true }, '', to);
+  rerender(<RouteArrival />);
+};
+
+// Back or Forward, as the browser runs it: the entry is current, so popstate
+// already reads the destination; the page it reaches commits after, however
+// long the render takes.
+const traverseTo = (to: string) => {
+  history.replaceState({ __NA: true }, '', to);
+  window.dispatchEvent(new PopStateEvent('popstate', { state: { __NA: true } }));
+};
+const commit = (to: string, rerender: (ui: ReactElement) => void) => {
+  pathname.current = to.split('#')[0];
   rerender(<RouteArrival />);
 };
 
@@ -64,14 +79,39 @@ describe('a new page', () => {
 
   it('reached by Back or Forward keeps the position the history restores', () => {
     const { rerender } = render(<RouteArrival />);
-    window.dispatchEvent(new PopStateEvent('popstate', { state: { __NA: true } }));
-    pathname.current = '/reports';
-    rerender(<RouteArrival />);
+    traverseTo('/reports');
+    commit('/reports', rerender);
     expect(scrollTo).not.toHaveBeenCalled();
 
     // the next push is a push again
     go('/tools', rerender);
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' });
+  });
+
+  // CI, in the Playwright image with two workers: TR142 committed after the
+  // window a restore used to get, so Back took the page for a new one and
+  // started it at the top, 10,041px from where the reader left (locally:
+  // Chromium at 16x CPU, commit 19.2s after the traversal). A page a
+  // traversal reaches is its own, however long it takes to render.
+  it('reached by Back or Forward is restored however late it commits', () => {
+    const { rerender } = render(<RouteArrival />);
+    traverseTo('/reports');
+    vi.spyOn(performance, 'now').mockReturnValue(performance.now() + LATE_COMMIT_MS);
+    commit('/reports', rerender);
+    expect(scrollTo).not.toHaveBeenCalled();
+    runFrames();
+    expect(restoreScrollAnchor).toHaveBeenCalledWith('key:/reports');
+  });
+
+  // a traversal that changes no page (an #jump's entry, an archive tab) must
+  // not leave the next page it does change taking itself for one
+  it('does not hand the next page a traversal meant for another', () => {
+    const { rerender } = render(<RouteArrival />);
+    traverseTo('/papers#top');
+    go('/reports', rerender);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' });
+    runFrames();
+    expect(restoreScrollAnchor).not.toHaveBeenCalled();
   });
 
   // R6 bug 2: the history restores a number into a page whose skipped blocks
@@ -81,10 +121,8 @@ describe('a new page', () => {
   // rendered the page returns, and the correction must come after it.
   it('reached by Back or Forward puts the entry’s top block back, after the browser’s own restore', () => {
     const { rerender } = render(<RouteArrival />);
-    window.dispatchEvent(new PopStateEvent('popstate', { state: { __NA: true } }));
-    pathname.current = '/reports';
-    history.replaceState({ __NA: true }, '', '/reports');
-    rerender(<RouteArrival />);
+    traverseTo('/reports');
+    commit('/reports', rerender);
     expect(restoreScrollAnchor).not.toHaveBeenCalled();
     runFrames();
     expect(restoreScrollAnchor).toHaveBeenCalledTimes(1);

@@ -1,5 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
-import { LONG_REPORT, REPORT_BLOCKS, SCROLL_PADDING_PX, blockTop, clickInPlace, headingTop, leaveToPapers, settled, topBlock } from './history';
+import {
+  LONG_REPORT,
+  REPORT_BLOCKS,
+  SCROLL_PADDING_PX,
+  blockTop,
+  clickInPlace,
+  headingTop,
+  jumped,
+  leaveToPapers,
+  settled,
+  showsPage,
+  topBlock,
+} from './history';
 
 // R6 bug 1. A contents link is a #fragment navigation, and the browser makes
 // its history entry without state. The App Router ignores a popstate without
@@ -43,6 +55,8 @@ async function jump(page: Page, isMobile: boolean, href: string) {
   const link = await reach(page, isMobile, href);
   const left = await topBlock(page, REPORT_BLOCKS);
   await clickInPlace(page, link);
+  // the entry the jump makes is current before its landing means anything
+  await jumped(page, href);
   return left;
 }
 
@@ -69,22 +83,22 @@ test.describe('contents links', () => {
 
     await leaveToPapers(page, isMobile);
     await page.goBack();
-    await expect(page.locator('main h1')).toHaveText(title);
+    await showsPage(page, title);
     expect(new URL(page.url()).hash).toBe('#references');
     const backTop = await headingTop(page, 'references');
     expect(Math.abs(backTop - referencesTop), `#references after Back at ${backTop}`).toBeLessThanOrEqual(PLACE_TOLERANCE_PX);
 
     // the section read before the last jump, as the reader left it
     await page.goBack();
-    expect(new URL(page.url()).hash).toBe(middle);
-    await expect(page.locator('main h1')).toHaveText(title);
+    await jumped(page, middle);
+    await showsPage(page, title);
     const previousTop = await blockTop(page, REPORT_BLOCKS, atMiddle.index);
     expect(Math.abs(previousTop - atMiddle.top), `block ${atMiddle.index} after a second Back at ${previousTop}, was ${atMiddle.top}`).toBeLessThanOrEqual(
       PLACE_TOLERANCE_PX,
     );
 
     await page.goForward();
-    expect(new URL(page.url()).hash).toBe('#references');
+    await jumped(page, '#references');
     const forwardTop = await headingTop(page, 'references');
     expect(Math.abs(forwardTop - referencesTop), `#references after Forward at ${forwardTop}`).toBeLessThanOrEqual(PLACE_TOLERANCE_PX);
   });
@@ -98,9 +112,9 @@ test.describe('a contents link followed from the keyboard', () => {
     const link = await reach(page, isMobile, '#references');
     await link.focus();
     await page.keyboard.press('Enter');
+    await jumped(page, '#references');
     const top = await headingTop(page, 'references');
     expect(Math.abs(top - SCROLL_PADDING_PX), `#references landed at ${top}`).toBeLessThanOrEqual(LANDING_TOLERANCE_PX);
-    expect(new URL(page.url()).hash).toBe('#references');
     // the router's own mark on an entry it restores (Next's app-router __NA)
     await expect.poll(() => page.evaluate(() => Boolean(history.state?.__NA))).toBe(true);
   });

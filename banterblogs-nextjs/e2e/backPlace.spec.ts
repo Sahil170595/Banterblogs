@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { LONG_REPORT, REPORT_BLOCKS, blockTop, clickInPlace, leaveToPapers, settled, topBlock } from './history';
+import { LONG_REPORT, REPORT_BLOCKS, blockTop, clickInPlace, leaveToPapers, settled, showsPage, topBlock } from './history';
 
 // R6 bug 2. Back restored the scroll position as a number into a page
 // rendered afresh with its off-screen blocks skipped at estimated heights,
@@ -30,6 +30,7 @@ test.use({ reducedMotion: 'no-preference' });
 
 test('Back puts the archive card that topped the view back where it was', async ({ page }) => {
   await page.goto('/reports', { waitUntil: 'networkidle' });
+  const archive = (await page.locator('main h1').textContent()) ?? '';
   await wheelTo(page, ARCHIVE_DEPTH_PX);
   const before = await topBlock(page, ARCHIVE_BLOCKS);
   const card = await page.evaluate(() => {
@@ -44,17 +45,22 @@ test('Back puts the archive card that topped the view back where it was', async 
   await page.waitForURL(`**${card}`);
   await page.goBack();
   await page.waitForURL('**/reports');
+  // the URL changes at the popstate; the archive is on screen a render later
+  await showsPage(page, archive);
   const after = await blockTop(page, ARCHIVE_BLOCKS, before.index);
   expect(Math.abs(after - before.top), `block ${before.index} from ${before.top} to ${after}`).toBeLessThanOrEqual(PLACE_TOLERANCE_PX);
 });
 
 test('Back puts the report block that topped the view back where it was', async ({ page, isMobile }) => {
   await page.goto(LONG_REPORT, { waitUntil: 'networkidle' });
+  const title = (await page.locator('main h1').textContent()) ?? '';
   await wheelTo(page, REPORT_DEPTH_PX);
   const before = await topBlock(page, REPORT_BLOCKS);
   await leaveToPapers(page, isMobile);
   await page.goBack();
   await page.waitForURL(`**${LONG_REPORT}`);
+  // the URL changes at the popstate; the report is on screen a render later
+  await showsPage(page, title);
   const after = await blockTop(page, REPORT_BLOCKS, before.index);
   expect(Math.abs(after - before.top), `block ${before.index} from ${before.top} to ${after}`).toBeLessThanOrEqual(PLACE_TOLERANCE_PX);
 });
