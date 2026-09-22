@@ -6,7 +6,9 @@ import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties, t
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
 import { warmHeaderGlass } from './headerGlass';
+import { announceNavigation } from './motion/navRecede';
 import { MOTION_ATTRIBUTE } from './motion/prePaint';
+import { IntentLink } from './ui/IntentLink';
 import { Wordmark } from './ui/Wordmark';
 import { cn } from '@/lib/cn';
 import { EXTERNAL_LINKS, GITHUB_URLS } from '@/lib/constants';
@@ -134,9 +136,9 @@ export function Header() {
           }
         >
           {/* the landing's mark on every page, so the two read as one site */}
-          <Link href="/" className="flex items-center">
+          <IntentLink href="/" className="flex items-center">
             <Wordmark />
-          </Link>
+          </IntentLink>
 
           <div className="flex flex-1 items-center justify-end gap-4">
             <div className={isLanding ? 'hidden' : 'hidden flex-1 md:block lg:max-w-[180px] xl:max-w-xs 2xl:max-w-sm'}>
@@ -149,9 +151,11 @@ export function Header() {
               {NAV_ITEMS.map((item) => {
                 const active = isActive(item.href);
                 return (
-                  <Link
+                  // primary navigation stays warm, once the page has painted
+                  <IntentLink
                     key={item.label}
                     href={item.href}
+                    warm
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       'px-2.5 py-2 xl:px-3',
@@ -166,7 +170,7 @@ export function Header() {
                     )}
                   >
                     {item.label}
-                  </Link>
+                  </IntentLink>
                 );
               })}
               <div className="ml-2 flex items-center gap-1 border-l border-border/40 pl-2">
@@ -221,6 +225,7 @@ export function Header() {
                     style={menuIndex(index + 1)}
                     className={cn(MENU_ROW, 'text-label-12-mono', active ? cn('text-primary', CURRENT_MARK) : 'text-muted-foreground')}
                     onClick={() => closeMenu(true)}
+                    onNavigate={announceNavigation}
                   >
                     {item.label}
                   </Link>

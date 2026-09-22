@@ -15,7 +15,10 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
+// The landing's display face (its h1 and selection card) alone. Declared here
+// so its @font-face stays in the one global sheet, but not preloaded: the
+// landing fetches it once its heading is laid out, and no other page does.
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", preload: false });
 // Fallbacks with JetBrains Mono's 0.6em advance, so its swap moves nothing;
 // the automatic fallback is Arial-metric (pinned by monoFallback.test.ts).
 // Still preloaded: without the preload a late swap reflowed the landing's

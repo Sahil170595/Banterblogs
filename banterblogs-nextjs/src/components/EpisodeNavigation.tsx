@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface EpisodeLink {
@@ -20,18 +20,18 @@ export function EpisodeNavigation({ prevEpisode, nextEpisode }: EpisodeNavigatio
   return (
     <nav id={EPISODE_PAGER_ID} className="report-pager mt-20 grid gap-4 border-t border-border/40 pt-8 sm:grid-cols-2" aria-label="Episode navigation">
       {prevEpisode ? (
-        <Link href={`/episodes/${prevEpisode.slug}`} className="block rounded-xl p-5 transition-colors duration-fast ease-standard hover:bg-card/70">
+        <IntentLink href={`/episodes/${prevEpisode.slug}`} className="block rounded-xl p-5 transition-colors duration-fast ease-standard hover:bg-card/70">
           <div className="report-pager-label">
             <ArrowLeft aria-hidden="true" className="h-3 w-3" />
             Previous Episode
           </div>
           <div className="report-pager-title line-clamp-1">{prevEpisode.title}</div>
-        </Link>
+        </IntentLink>
       ) : (
         <div />
       )}
       {nextEpisode && (
-        <Link
+        <IntentLink
           href={`/episodes/${nextEpisode.slug}`}
           className="block rounded-xl p-5 text-right transition-colors duration-fast ease-standard hover:bg-card/70"
         >
@@ -40,7 +40,7 @@ export function EpisodeNavigation({ prevEpisode, nextEpisode }: EpisodeNavigatio
             <ArrowRight aria-hidden="true" className="h-3 w-3" />
           </div>
           <div className="report-pager-title line-clamp-1">{nextEpisode.title}</div>
-        </Link>
+        </IntentLink>
       )}
     </nav>
   );

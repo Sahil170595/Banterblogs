@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowRight } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem } from '@/components/motion/entrance';
@@ -61,7 +61,7 @@ export default async function TagsPage() {
       <ul className="hairline-grid mt-10 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
         {sortedTags.map(({ tag, count }, index) => (
           <li key={tag}>
-            <Link href={`/tags/${encodeURIComponent(tag)}`} className="tag-cell group">
+            <IntentLink href={`/tags/${encodeURIComponent(tag)}`} className="tag-cell group">
               <Reveal className="flex items-center justify-between gap-4 p-5 md:p-6" {...(index < ENTRANCE_CELLS ? entranceItem(index, HEAD_GROUPS) : {})}>
                 <div className="min-w-0">
                   <h2 className="text-heading-20 text-foreground transition-colors duration-fast ease-standard group-hover:text-primary">{tag}</h2>
@@ -72,7 +72,7 @@ export default async function TagsPage() {
                   <ArrowRight aria-hidden="true" className="row-arrow h-4 w-4" />
                 </span>
               </Reveal>
-            </Link>
+            </IntentLink>
           </li>
         ))}
       </ul>

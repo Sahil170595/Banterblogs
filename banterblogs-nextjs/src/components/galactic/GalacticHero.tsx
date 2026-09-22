@@ -1,7 +1,10 @@
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { NAV_RECEDE_SCOPE_ATTRIBUTE } from '@/components/motion/navRecede';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { GalacticBackdrop } from './GalacticBackdrop';
+
+const RECEDE_SCOPE = { [NAV_RECEDE_SCOPE_ATTRIBUTE]: '' };
 
 export function GalacticHero() {
   return (
@@ -19,7 +22,8 @@ export function GalacticHero() {
         aria-hidden="true"
       />
 
-      <div className="pointer-events-none relative z-10 flex h-full flex-col">
+      {/* a followed link recedes this copy layer only; the scene stays lit */}
+      <div {...RECEDE_SCOPE} className="pointer-events-none relative z-10 flex h-full flex-col">
         {/* Wherever the poster, or on a short window the disk, sits behind
             this block, its scrim is near-opaque (ember links keep 4.5:1 over
             the arc): below sm its own, from sm a layer over its light one.
@@ -44,19 +48,21 @@ export function GalacticHero() {
           {/* py-4 grows each link to a >=44px-tall target; the matching -my-4
               keeps the row exactly where it was */}
           <div className="pointer-events-auto mt-4 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-[11px]">
-            <Link
+            {/* the main call to action stays warm, once the landing has painted */}
+            <IntentLink
               href="/reports"
+              warm
               className="-my-4 inline-flex items-center gap-1 py-4 text-primary transition-colors hover:text-primary/80"
             >
               Research archive
               <ArrowRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
-            <Link
+            </IntentLink>
+            <IntentLink
               href="/papers"
               className="-my-4 py-4 text-foreground/90 transition-colors hover:text-primary"
             >
               Papers
-            </Link>
+            </IntentLink>
           </div>
         </div>
 

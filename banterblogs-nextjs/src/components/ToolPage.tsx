@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Minus } from 'lucide-react';
 import { Reveal } from './motion/Reveal';
 import { entranceGroup } from './motion/entrance';
@@ -117,14 +116,14 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
           description={
             <>
               {tool.commands.length} commands. Full flags and output samples live in the{' '}
-              <Link
+              <a
                 href={tool.repo}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary"
               >
                 README
-              </Link>
+              </a>
               .
             </>
           }
