@@ -301,10 +301,8 @@ function PhaseCard({
 }) {
   const meta = PHASE_META[phaseId];
   const Icon = meta.Icon;
-  // v1 audit C9 — `inert` keeps unrevealed cards out of the tab order
-  // AND hides them from AT consistently. React 19 passes the inert
-  // boolean to the underlying element natively.
-  const inertProp = !isRevealed ? { inert: '' as unknown as boolean } : {};
+  // `inert` keeps unrevealed cards out of the tab order and hides them from
+  // AT. React 19 takes it as a boolean; the empty string is false to it.
   const border = failedWrap
     ? 'border-primary shadow-[0_0_44px_-10px_hsl(var(--primary)/0.65)]'
     : isActive
@@ -322,7 +320,7 @@ function PhaseCard({
       }
       transition={{ duration: 0.35, ease: 'easeOut' }}
       aria-hidden={!isRevealed}
-      {...inertProp}
+      inert={!isRevealed}
       className={`relative rounded-lg border ${border} ${bg} backdrop-blur-sm ${
         emphasized ? 'p-5 md:p-7' : 'p-4 md:p-5'
       }`}

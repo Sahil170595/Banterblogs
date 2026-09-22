@@ -23,6 +23,21 @@ const MISSING_ROUTE = '/this-route-does-not-exist';
 const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;
 
+// WCAG 1.4.10 reflow: 320 CSS px (1280 at 400% zoom) with no sideways
+// scroll. Width and console only, on the phone project; no screenshots.
+const REFLOW_WIDTH = 320;
+const REFLOW_HEIGHT = 640;
+const REFLOW_ROUTES = [
+  ...ROUTES,
+  '/banterpacks',
+  '/chimera',
+  '/show/streaming-ladder',
+  '/show/bft-consensus',
+  '/show/cognitive-agents',
+  '/show/provenance-chain',
+  '/show/zk-alignment-proof',
+] as const;
+
 const SCREENSHOTS_ON = process.env.VISUAL_SCREENSHOTS === 'on';
 // share of pixels a fold may differ by before the screenshot fails
 const MAX_DIFF_PIXEL_RATIO = 0.01;
@@ -59,6 +74,20 @@ for (const route of [...ROUTES, MISSING_ROUTE]) {
         mask: [page.locator('canvas')],
         maxDiffPixelRatio: MAX_DIFF_PIXEL_RATIO,
       });
+    });
+  });
+}
+
+for (const route of REFLOW_ROUTES) {
+  test.describe(`${route} at ${REFLOW_WIDTH}px`, () => {
+    test('reflows without a sideways scroll and logs no errors', async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'phone', 'one narrow run, on the touch project');
+      const errors = collectErrors(page);
+      await page.setViewportSize({ width: REFLOW_WIDTH, height: REFLOW_HEIGHT });
+      await page.goto(route, { waitUntil: 'networkidle' });
+      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(scrollWidth).toBe(REFLOW_WIDTH);
+      expect(errors).toEqual([]);
     });
   });
 }

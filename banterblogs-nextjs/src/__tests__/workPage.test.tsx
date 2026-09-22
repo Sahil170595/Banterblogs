@@ -101,8 +101,8 @@ describe('work page layout', () => {
   });
 
   // R4 design re-judge: /work was 9,226px of bullets. Each entry shows its
-  // first two and folds the rest into one closed disclosure; every word stays
-  // on the page (and in find-in-page), one click away.
+  // lead bullets and folds the rest into one closed disclosure; every word
+  // stays on the page (and in find-in-page), one click away.
   it('shows the lead bullets of each entry and folds the rest, word for word, into one closed disclosure', () => {
     const rowsFor = (section: string) => [...page.querySelectorAll(`#${section} li.list-row`)];
     const entries = [
@@ -124,6 +124,14 @@ describe('work page layout', () => {
       expect(text(fold.querySelector('summary')!)).toContain(`Show ${bullets.length - visible} more`);
       expect([...fold.querySelectorAll('ul > li')].map(text)).toEqual(bullets.slice(visible));
     }
+  });
+
+  // re-judge P1-7: "AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF;" has no break
+  // opportunity and ran the page to 353px at 320; folded bullets included
+  it('lets a long unbroken token in a bullet break anywhere, so it never widens the page', () => {
+    const bullets = [...page.querySelectorAll('li.list-row ul > li')];
+    expect(bullets.length).toBe([...RESEARCH, ...EXPERIENCE].reduce((n, entry) => n + entry.bullets.length, 0));
+    for (const bullet of bullets) expect(bullet.className.split(/\s+/)).toContain('[overflow-wrap:anywhere]');
   });
 
   it('reveals every row as it scrolls in', () => {

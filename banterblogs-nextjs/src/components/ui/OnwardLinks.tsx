@@ -20,7 +20,8 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 export function OnwardLinks({ links, label = 'Onward', className = 'page-section' }: { links: OnwardLink[]; label?: string; className?: string }) {
   return (
     <nav aria-label={label} className={className}>
-      <ul className="grid gap-x-8 md:grid-cols-3">
+      {/* minmax(0,1fr) tracks (grid-cols-1), so a long word can never widen a phone page */}
+      <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-3">
         {links.map((link) => {
           const external = isExternal(link.href);
           const Arrow = external ? ArrowUpRight : ArrowRight;

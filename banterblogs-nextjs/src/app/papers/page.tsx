@@ -312,7 +312,7 @@ function PaperRow({ paper, index }: { paper: Paper; index: number }) {
   );
 }
 
-const PAPER_GRID = 'grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2';
+const PAPER_GRID = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2';
 
 export default function PapersPage() {
   return (

@@ -170,6 +170,70 @@ describe('header navigation state', () => {
     expect(document.activeElement).toBe(toggle);
   });
 
+  // re-judge P1-1 (WCAG 2.4.11): Tab past the last menu link moved focus to
+  // page content under the still-open panel
+  describe('when focus leaves the open mobile menu', () => {
+    const openMenu = () => {
+      const outside = document.createElement('a');
+      outside.href = '/elsewhere';
+      document.body.append(outside);
+      const view = render(<Header />);
+      fireEvent.click(view.getByRole('button', { name: 'Toggle navigation' }));
+      const links = [...view.container.querySelectorAll<HTMLAnchorElement>('#mobile-nav a')];
+      return { ...view, outside, lastLink: links[links.length - 1] };
+    };
+
+    afterEach(() => document.body.querySelectorAll('a[href="/elsewhere"]').forEach((a) => a.remove()));
+
+    it('closes at once, with no fade, when the keyboard moves focus out of the header', () => {
+      document.documentElement.setAttribute(MOTION_ATTRIBUTE, 'on');
+      const { container, outside, lastLink, getByRole } = openMenu();
+      lastLink.focus();
+
+      fireEvent.blur(lastLink, { relatedTarget: outside });
+
+      expect(container.querySelector('#mobile-nav')).toBeNull();
+      expect(getByRole('button', { name: 'Toggle navigation' }).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('stays open while focus moves inside the header', () => {
+      const { container, lastLink, getByRole } = openMenu();
+      fireEvent.blur(lastLink, { relatedTarget: getByRole('button', { name: 'Toggle navigation' }) });
+      expect(container.querySelector('#mobile-nav')?.getAttribute('data-state')).toBe('open');
+    });
+
+    it('stays open when a pointer press moved focus, so a tapped link is not shifted under the finger', () => {
+      const { container, outside, lastLink } = openMenu();
+      fireEvent.pointerDown(outside);
+      fireEvent.blur(lastLink, { relatedTarget: outside });
+      expect(container.querySelector('#mobile-nav')?.getAttribute('data-state')).toBe('open');
+    });
+  });
+
+  // re-judge P2-1: the site links sat in an unlabelled nav on desktop and in
+  // no landmark at all in the phone menu
+  it('puts the site links in a labelled primary navigation at every width', () => {
+    const { getAllByRole, getByRole } = render(<Header />);
+    expect(getAllByRole('navigation', { name: 'Primary' })).toHaveLength(1);
+    fireEvent.click(getByRole('button', { name: 'Toggle navigation' }));
+    const navs = getAllByRole('navigation', { name: 'Primary' });
+    expect(navs).toHaveLength(2);
+    expect(navs[1].id).toBe('mobile-nav');
+  });
+
+  // re-judge P2-17: the active item differed from the rest by colour alone
+  it('marks the current section with an underline as well as colour, in both menus', () => {
+    pathname.current = '/papers';
+    const { container, getByRole } = render(<Header />);
+    fireEvent.click(getByRole('button', { name: 'Toggle navigation' }));
+    const current = [...container.querySelectorAll('a[aria-current="page"]')];
+    expect(current).toHaveLength(2);
+    for (const link of current) expect(link.className.split(/\s+/)).toContain('underline');
+    for (const link of container.querySelectorAll('nav a:not([aria-current])')) {
+      expect(link.className.split(/\s+/)).not.toContain('underline');
+    }
+  });
+
   it('caps the mobile menu to the space under the bar and lets it scroll', () => {
     const { getByRole, container } = render(<Header />);
     fireEvent.click(getByRole('button', { name: 'Toggle navigation' }));
@@ -213,11 +277,22 @@ describe('mobile menu motion', () => {
     expect(stagger).toBeGreaterThanOrEqual(33);
     expect(stagger).toBeLessThanOrEqual(40);
     const items = ruleBody('html[data-motion="on"] #mobile-nav[data-state="open"] .menu-item');
-    expect(items).toMatch(/animation:\s*menu-item-in var\(--duration-base\) var\(--ease-strong-out\) both;/);
+    // fill backwards, not both: a transform animation that stays applied after
+    // it ends keeps every row its own stacking context, and the rows painted
+    // later covered the search results (a tap on a result followed a nav link)
+    expect(items).toMatch(/animation:\s*menu-item-in var\(--duration-base\) var\(--ease-strong-out\) backwards;/);
     expect(items).toMatch(/animation-delay:\s*calc\(var\(--i, 0\) \* var\(--stagger-menu\)\)/);
     const rise = /@keyframes menu-item-in \{([\s\S]*?)\}\s*\}/.exec(CSS)?.[1] ?? '';
     expect(rise).toMatch(/opacity:\s*0/);
     expect(rise).toMatch(/transform:\s*translateY\(var\(--motion-menu\)\)/);
+  });
+
+  it('keeps the search row, and its results panel, above the rows that follow it', () => {
+    const { getByRole, container } = render(<Header />);
+    fireEvent.click(toggle(getByRole));
+    const [searchRow, ...rest] = [...container.querySelectorAll<HTMLElement>('#mobile-nav .menu-item')];
+    expect(searchRow.className.split(/\s+/)).toEqual(expect.arrayContaining(['relative', 'z-10']));
+    for (const row of rest) expect(row.className.split(/\s+/)).not.toContain('z-10');
   });
 
   it('leaves in one fade over the fast token, opacity only', () => {

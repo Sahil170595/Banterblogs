@@ -131,7 +131,7 @@ export default function ProvenanceChainPage() {
       </div>
 
       <header className="mb-10 md:mb-14 space-y-8 md:space-y-10">
-        <div className="text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
           A live walkthrough · TDD-004 provenance chain
         </div>
 
@@ -155,13 +155,13 @@ export default function ProvenanceChainPage() {
         {/* Comparison: how systems track what they did. */}
         <div className="grid grid-cols-3 md:grid-cols-12 gap-2 md:gap-4">
           <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1 md:mb-2">
               Most chatbots
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/80 leading-none mb-1 md:mb-2">
               0
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               records of what they did
             </div>
             <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
@@ -169,13 +169,13 @@ export default function ProvenanceChainPage() {
             </p>
           </div>
           <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1 md:mb-2">
               Audit logs
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/90 leading-none mb-1 md:mb-2">
               1 log
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               that you have to trust
             </div>
             <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
@@ -184,13 +184,13 @@ export default function ProvenanceChainPage() {
             </p>
           </div>
           <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.08] via-primary/[0.04] to-transparent p-3 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-primary/90 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-1 md:mb-2">
               This system
             </div>
             <div className="text-3xl md:text-6xl font-bold tracking-tight text-primary leading-none mb-1 md:mb-3">
               3 checks
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-primary/80 mb-1 md:mb-3">
+            <div className="text-xs uppercase tracking-widest text-primary mb-1 md:mb-3">
               per event, locally verifiable
             </div>
             <p className="hidden md:block text-sm text-foreground/90 leading-relaxed">
@@ -211,7 +211,7 @@ export default function ProvenanceChainPage() {
             you have to trust the operator of.
           </p>
           <p>
-            <span className="text-primary/80 font-mono">this system:</span> SHA3-256 + Ed25519 +
+            <span className="text-primary font-mono">this system:</span> SHA3-256 + Ed25519 +
             chain + Merkle — three independent crypto checks per event.
           </p>
         </div>
@@ -268,10 +268,10 @@ export default function ProvenanceChainPage() {
           <span className="font-mono text-foreground">node:crypto</span> module — no external crypto
           dependency. Hot/warm/cold lifecycle tiering (WAL → rotated logs → S3 archive) is
           implemented in{' '}
-          <span className="font-mono text-foreground">tdd005/crates/chimera-core/src/util.rs</span>{' '}
+          <span className="font-mono text-foreground break-all">tdd005/crates/chimera-core/src/util.rs</span>{' '}
           (env-gated by{' '}
-          <span className="font-mono text-foreground">TDD005_PROVENANCE_HOT_DAYS</span>/
-          <span className="font-mono text-foreground">_WARM_DAYS</span>) with S3 backup via
+          <span className="font-mono text-foreground break-all">TDD005_PROVENANCE_HOT_DAYS</span>/
+          <span className="font-mono text-foreground break-all">_WARM_DAYS</span>) with S3 backup via
           the chimera-core{' '}
           <span className="font-mono text-foreground">/backup/run</span> handler;{' '}
           <span className="font-mono text-foreground">tdd004_provenance/src/wal.rs</span> is the

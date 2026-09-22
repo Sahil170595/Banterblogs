@@ -41,7 +41,8 @@ describe('reading stylesheet', () => {
     const globals = stripComments(GLOBALS);
     expect(globals).not.toMatch(/\.report-(?:prose|crumbs|title|dek|meta|details|hero|toc|progress|pager|frame|layout)\b/);
     expect(globals).not.toMatch(/\.prose\b/);
-    expect(globals).not.toMatch(/\.table-scroll\b/);
+    // the table's own rules; the site focus ring may still name it among the keyboard's scroll boxes
+    expect(globals).not.toMatch(/(?:^|\})\s*\.table-scroll\b/);
     // the tokens every page uses stay global: text-prose and the header height
     expect(globals).toMatch(/--prose:\s*36 10% 86%;/);
     expect(globals).toMatch(/--site-header-height:\s*73px;/);

@@ -7,6 +7,8 @@
 - the page has an `h1`;
 - the fold matches its screenshot baseline, with reduced motion, animations disabled, the canvas masked and 1% of pixels allowed to differ. This check only runs when `VISUAL_SCREENSHOTS=on`.
 
+Those routes, plus `/banterpacks`, `/chimera` and the five `/show/*` scenes, also load once at 320×640 on the `phone` project and must not scroll sideways (WCAG 1.4.10 reflow) or log errors. That check has no screenshot.
+
 The suite is not part of `npm run verify` or vitest (it needs a server and a browser), and it sits outside the app's `tsconfig.json`, so `next build` never type-checks it; `e2e/tsconfig.json` does, in CI. CI runs it in the `visual` job of `.github/workflows/ci.yml`, inside `mcr.microsoft.com/playwright:v1.63.0-noble`, next to the `build` job. The image tag and the exact `@playwright/test` version in `package.json` move together.
 
 ## Run it locally

@@ -1,6 +1,6 @@
 'use client';
 
-import { computeDwell } from './_shared';
+import { computeDwell, useSceneReducedMotion } from './_shared';
 
 import { useState, useMemo, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
 import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
@@ -427,7 +427,10 @@ function StateIcon({ state, className }: { state: TierState; className?: string 
 // prefers-reduced-motion — renders the full text immediately.
 function Typewriter({ text, onDone }: { text: string; onDone?: () => void }) {
   const [shown, setShown] = useState('');
-  const reducedMotion = useReducedMotion();
+  // the typing runs in an effect, on the client only, so it reads the real
+  // preference; the cursor renders on both sides and waits for the bridge
+  const typeAtOnce = useReducedMotion() === true;
+  const reducedMotion = useSceneReducedMotion();
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const onDoneRef = useRef(onDone);
   useEffect(() => {
@@ -439,7 +442,7 @@ function Typewriter({ text, onDone }: { text: string; onDone?: () => void }) {
     timersRef.current.forEach((t) => clearTimeout(t));
     timersRef.current = [];
 
-    if (reducedMotion) {
+    if (typeAtOnce) {
       setShown(text);
       onDoneRef.current?.();
       return () => {};
@@ -468,7 +471,7 @@ function Typewriter({ text, onDone }: { text: string; onDone?: () => void }) {
       timersRef.current.forEach((t) => clearTimeout(t));
       timersRef.current = [];
     };
-  }, [text, reducedMotion]);
+  }, [text, typeAtOnce]);
 
   return (
     <>
@@ -515,12 +518,15 @@ export function StreamingLadder({ data }: { data: SceneData }) {
 }
 
 function StreamingLadderScene({ data }: { data: SceneData }) {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSceneReducedMotion();
   const entryIdx = useMemo(() => pickEntryIndex(data.records), [data.records]);
   const [activeIdx, setActiveIdx] = useState(entryIdx);
   const [beatIdx, setBeatIdx] = useState(0);
-  // Reduced motion: don't auto-play. User can opt in.
-  const [playing, setPlaying] = useState(!reducedMotion);
+  // Until the visitor plays or pauses, autoplay follows the motion
+  // preference: off under reduced motion, and off on both sides of the
+  // hydration until the preference is known.
+  const [playChoice, setPlaying] = useState<boolean | null>(null);
+  const playing = playChoice ?? !reducedMotion;
   const [hasInteracted, setHasInteracted] = useState(false);
 
   // Defensive bounds — clamp to a valid index even on empty arrays so
@@ -590,9 +596,9 @@ function StreamingLadderScene({ data }: { data: SceneData }) {
   );
 
   const togglePlay = useCallback(() => {
-    setPlaying((p) => !p);
+    setPlaying(!playing);
     setHasInteracted(true);
-  }, []);
+  }, [playing]);
 
   const restart = useCallback(() => {
     setBeatIdx(0);

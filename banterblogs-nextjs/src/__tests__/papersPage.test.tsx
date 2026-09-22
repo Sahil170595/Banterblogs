@@ -157,6 +157,19 @@ describe('papers', () => {
     expect(page.querySelectorAll('li[data-reveal]').length).toBeGreaterThanOrEqual(LISTED_PAPERS);
   });
 
+  // re-judge P1-7: at 320 the demo button's min-content widened the one
+  // implicit (auto) column, and every card with it, to 310px in 288
+  // R4: the papers grid and the onward line are the page's two list grids; the
+  // paper rows size their body column with minmax(0,1fr) the same way
+  it('sizes every card grid’s phone column to the screen, never to its widest card', () => {
+    const grids = [...page.querySelectorAll('ul.grid')];
+    expect(grids.length).toBeGreaterThanOrEqual(2);
+    for (const grid of grids) expect(grid.className.split(/\s+/)).toContain('grid-cols-1');
+    const rows = [...page.querySelectorAll('article.list-row')];
+    expect(rows).toHaveLength(UNDER_REVIEW_ROWS + IN_PREP_ROWS);
+    for (const row of rows) expect(row.className).toContain('grid-cols-[auto_minmax(0,1fr)]');
+  });
+
   it('draws no boxed panels: no signal classes, and borders only on the hairline buttons', () => {
     expect(markup).not.toMatch(/signal-(panel|pill|divider)/);
     const bordered = [...page.querySelectorAll('*')].filter((el) => [...el.classList].some((c) => BORDER_WIDTH.test(c)));

@@ -237,7 +237,7 @@ function RepositoryCard({ repository, core = false, wide = false }: { repository
 // The two core engines join the head's entrance, after its three groups.
 const CORE_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
 // six systems fill two columns, then three, with no card left alone on a row
-const SUPPORTING_GRID = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
+const SUPPORTING_GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3';
 
 export default async function PlatformPage() {
   const episodes = await getAllEpisodes();
@@ -277,7 +277,7 @@ export default async function PlatformPage() {
 
       <div className="mt-8 md:mt-14">
         <Section id="core-engines" title="Core engines" aside>
-          <ul className="grid gap-4 xl:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {CORE_ENGINES.map((repository, index) => (
               <Reveal as="li" key={repository.name} {...entranceItem(index, CORE_ENTRANCE_AFTER)}>
                 <RepositoryCard repository={repository} core />
@@ -316,7 +316,7 @@ export default async function PlatformPage() {
         </Section>
 
         <Section id="in-development" title="In development" aside>
-          <ul className="grid gap-4">
+          <ul className="grid grid-cols-1 gap-4">
             {IN_DEVELOPMENT.map((repository) => (
               <Reveal as="li" key={repository.name}>
                 <RepositoryCard repository={repository} wide />
@@ -331,7 +331,7 @@ export default async function PlatformPage() {
           description="Independent CLIs shipped outside the Chimera ecosystem — their own repositories, not counted among the nine."
           aside
         >
-          <ul className="grid gap-4">
+          <ul className="grid grid-cols-1 gap-4">
             {STANDALONE_TOOLS.map((repository) => (
               <Reveal as="li" key={repository.name}>
                 <RepositoryCard repository={repository} wide />

@@ -78,7 +78,8 @@ function TitleLink({ href, children }: { href: string; children: ReactNode }) {
 }
 
 const BULLET_LIST = 'max-w-[68ch] space-y-3 text-copy-16 text-prose';
-const BULLET = 'relative pl-5 before:absolute before:left-0 before:top-[0.7em] before:h-1 before:w-1 before:rounded-full before:bg-foreground/30';
+// a long unbroken token (AWQ/GPTQ/…/GGUF;) breaks anywhere rather than widen a 320px page
+const BULLET = 'relative pl-5 [overflow-wrap:anywhere] before:absolute before:left-0 before:top-[0.7em] before:h-1 before:w-1 before:rounded-full before:bg-foreground/30';
 
 /**
  * An entry's bullets: the first `visible`, then the rest in one closed
@@ -143,7 +144,7 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
                 variant="ghost"
                 size="sm"
                 iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}
-                className="h-auto min-h-7 max-w-full shrink whitespace-normal px-2 py-1 text-left"
+                className="px-2 py-1 text-left"
               >
                 {evidence.label}
               </ButtonLink>

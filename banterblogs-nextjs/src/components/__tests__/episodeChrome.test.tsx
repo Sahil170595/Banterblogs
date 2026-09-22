@@ -30,6 +30,16 @@ describe('fixed bottom UI on notched phones', () => {
     expect(read('../EpisodeFloatingUI.tsx')).toContain('right-[max(1.5rem,env(safe-area-inset-right))]');
   });
 
+  // re-judge P1-6: below md the like/bookmark/share stack and the prev/next
+  // pill shared one bottom band, and the pill took the Bookmarks taps
+  it('lifts the floating stack clear of the prev/next pill on phones', () => {
+    const classes = /className="([^"]*)"/.exec(read('../EpisodeFloatingUI.tsx'))![1].split(/\s+/);
+    expect(classes).toContain('bottom-[calc(max(1.5rem,env(safe-area-inset-bottom))+3.5rem)]');
+    expect(classes).toContain('md:bottom-[max(1.5rem,env(safe-area-inset-bottom))]');
+    // the pill is md:hidden, so from md the stack keeps the corner
+    expect(read('../MobileOptimization.tsx')).toMatch(/\bmd:hidden\b/);
+  });
+
   // Glass is for the header alone: the floating pill and popovers are opaque
   // raised surfaces (.floating-surface), drawn with a hairline, not a border.
   it('draws the floating pill and popovers as opaque raised surfaces, not glass', () => {
