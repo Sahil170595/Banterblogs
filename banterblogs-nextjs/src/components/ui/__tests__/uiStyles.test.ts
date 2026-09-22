@@ -84,6 +84,22 @@ describe('retired panel classes, until their last use goes', () => {
   });
 });
 
+// R4: ember is spent on primary actions and the current page; a card's
+// own link rests neutral and takes the ember with the card's hover or focus.
+describe('card call to action', () => {
+  const r4 = CSS.slice(CSS.indexOf('.card-cta'));
+
+  it('turns ember with its card, under a real hover or keyboard focus, never at rest', () => {
+    // at rest it only eases its colour; the page gives it a neutral one
+    expect(body('.card-cta')).toMatch(/transition:\s*color var\(--duration-fast\) var\(--ease-standard\)/);
+    expect(body('.card-cta')).not.toMatch(/(?:^|[;\s])color:/);
+    const hover = /@media \(hover: hover\) and \(pointer: fine\) \{([\s\S]*?)\n\}/g;
+    const blocks = [...r4.matchAll(hover)].map((m) => m[1]).join('\n');
+    expect(blocks).toMatch(/\.card-depth:hover \.card-cta\s*\{[^}]*color:\s*hsl\(var\(--primary\)\)/);
+    expect(CSS).toMatch(/\.card-depth:has\(\.card-link:focus-visible\) \.card-cta\s*\{[^}]*color:\s*hsl\(var\(--primary\)\)/);
+  });
+});
+
 describe('section rhythm', () => {
   it('sets sections 64px apart on phones and 96px apart from 768px', () => {
     expect(body('.page-section + .page-section')).toMatch(/margin-top:\s*4rem/);

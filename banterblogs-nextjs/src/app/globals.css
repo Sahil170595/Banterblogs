@@ -1489,3 +1489,22 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   }
 }
 /* end R3-B1 */
+
+/* R4 layout */
+/* A card's own link (/platform): neutral at rest, ember with the card's
+   hover or keyboard focus, so ember stays on primary actions and the
+   current page. */
+.card-cta {
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-depth:hover .card-cta {
+    color: hsl(var(--primary));
+  }
+}
+
+.card-depth:has(.card-link:focus-visible) .card-cta {
+  color: hsl(var(--primary));
+}
+/* end R4 layout */

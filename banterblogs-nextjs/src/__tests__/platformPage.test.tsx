@@ -197,9 +197,41 @@ describe('repositories', () => {
     expect(core.querySelectorAll('.hairline-grid > *')).toHaveLength(4);
   });
 
-  it('keeps the page links and the explore cards', () => {
+  it('keeps the page links', () => {
     const hrefs = [...page.querySelectorAll('a')].map((a) => a.getAttribute('href'));
     for (const href of PAGE_LINKS) expect(hrefs, href).toContain(href);
+  });
+
+  // R4 design re-judge: seven supporting systems in three columns left the
+  // last card alone on its row. Project Wyvern, still in development, takes
+  // its own section, laid on its side as the standalone tool is.
+  it('ends no grid on an orphan: the six supporting systems fill their rows, and Project Wyvern has its own section', () => {
+    const supporting = [...page.querySelectorAll('#supporting-systems article')].map((a) => text(a.querySelector('h3')!));
+    expect(supporting).toEqual(SUPPORTING.filter((name) => name !== 'Project Wyvern'));
+    // two columns, then three: six fills both
+    expect(supporting.length % 2).toBe(0);
+    expect(supporting.length % 3).toBe(0);
+    const development = page.querySelector('#in-development')!;
+    expect([...development.querySelectorAll('article')].map((a) => text(a.querySelector('h3')!))).toEqual(['Project Wyvern']);
+  });
+
+  it('spends ember only on the current page and on hover: the repository links and step numbers are neutral', () => {
+    // no element is painted ember at rest (hover:/group-hover: variants are fine)
+    const ember = [...page.querySelectorAll('*')].filter((el) => [...el.classList].some((c) => c === 'text-primary' || c.startsWith('text-primary/')));
+    expect(ember.map((el) => text(el).slice(0, 30))).toEqual([]);
+    for (const name of REPOSITORIES) {
+      const cta = cardFor(name)!.querySelector('a.card-link')!.parentElement!;
+      expect(cta.classList.contains('card-cta'), name).toBe(true);
+      expect(cta.classList.contains('text-foreground/80'), name).toBe(true);
+    }
+  });
+
+  it('closes on one quiet onward line instead of a row of link cards', () => {
+    const onward = page.querySelector('nav[aria-label="Onward"]')!;
+    expect([...onward.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/reports', '/episodes', '/about']);
+    expect(onward.querySelector('.card-surface, .card-depth')).toBeNull();
+    // every card left on the page is a repository with its picture
+    expect([...page.querySelectorAll('.card-surface')].every((card) => card.querySelector('svg.rv'))).toBe(true);
   });
 });
 

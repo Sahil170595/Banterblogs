@@ -8,6 +8,7 @@ import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance
 import { ReportVisual, type Variant, type VisualFamily } from '@/components/reports/ReportVisual';
 import { Card, CardLink } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
+import { OnwardLinks, type OnwardLink } from '@/components/ui/OnwardLinks';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
@@ -153,6 +154,10 @@ const SUPPORTING_SYSTEMS: Repository[] = [
     meta: 'TypeScript · Vercel',
     description: `268 auto-generated episodes from git commits (stream archived 2026-06-26). Research archive with ${REPORTS.DISPLAY} technical reports. Next.js 16 with SSG + ISR.`,
   },
+];
+
+// the ninth repository, still in development, on its own row
+const IN_DEVELOPMENT: Repository[] = [
   {
     name: 'Project Wyvern',
     visual: ['fan', 1],
@@ -215,10 +220,11 @@ function RepositoryCard({ repository, core = false, wide = false }: { repository
             ))}
           </ul>
         )}
-        {/* the footer sits at the card's foot, so cards in a row end together */}
+        {/* the footer sits at the card's foot, so cards in a row end together;
+            the link is neutral and turns ember with the card's hover (.card-cta) */}
         <div className="mt-auto pt-5">
           {repository.footnote && <p className="mb-4 text-label-12-mono text-muted-foreground/80">{repository.footnote}</p>}
-          <p className="inline-flex items-center gap-1.5 text-label-13 font-medium text-primary">
+          <p className="card-cta inline-flex items-center gap-1.5 text-label-13 font-medium text-foreground/80">
             <CardLink href={href}>{label}</CardLink>
             <Arrow aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
           </p>
@@ -230,28 +236,25 @@ function RepositoryCard({ repository, core = false, wide = false }: { repository
 
 // The two core engines join the head's entrance, after its three groups.
 const CORE_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
+// six systems fill two columns, then three, with no card left alone on a row
 const SUPPORTING_GRID = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
-// the last supporting card closes the grid on its side: two columns, then three
-const SUPPORTING_WIDE = 'sm:col-span-2 xl:col-span-3';
 
 export default async function PlatformPage() {
   const episodes = await getAllEpisodes();
   const stats = getEpisodeStats(episodes);
 
-  const explore = [
+  const explore: OnwardLink[] = [
     {
       href: '/reports',
       title: 'Research Archive',
       blurb: `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements across inference, optimization, and safety.`,
-      cta: 'Browse reports',
     },
     {
       href: '/episodes',
       title: 'Episode Archive',
       blurb: `${stats.totalEpisodes} archived episodes documenting commits, decisions, and telemetry data points.`,
-      cta: 'Browse episodes',
     },
-    { href: '/about', title: 'About the Project', blurb: "Who built this, why, and where it's headed.", cta: 'Read more' },
+    { href: '/about', title: 'About the Project', blurb: "Who built this, why, and where it's headed." },
   ];
 
   return (
@@ -304,14 +307,21 @@ export default async function PlatformPage() {
 
         <Section id="supporting-systems" title="Supporting systems" aside>
           <ul className={SUPPORTING_GRID}>
-            {SUPPORTING_SYSTEMS.map((repository, index) => {
-              const wide = index === SUPPORTING_SYSTEMS.length - 1;
-              return (
-                <Reveal as="li" key={repository.name} className={cn(wide && SUPPORTING_WIDE)}>
-                  <RepositoryCard repository={repository} wide={wide} />
-                </Reveal>
-              );
-            })}
+            {SUPPORTING_SYSTEMS.map((repository) => (
+              <Reveal as="li" key={repository.name}>
+                <RepositoryCard repository={repository} />
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="in-development" title="In development" aside>
+          <ul className="grid gap-4">
+            {IN_DEVELOPMENT.map((repository) => (
+              <Reveal as="li" key={repository.name}>
+                <RepositoryCard repository={repository} wide />
+              </Reveal>
+            ))}
           </ul>
         </Section>
 
@@ -336,7 +346,7 @@ export default async function PlatformPage() {
               <li key={step.step}>
                 <Reveal className="p-5">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-label-13 text-primary">{step.step}</span>
+                    <span className="font-mono text-label-13 text-muted-foreground">{step.step}</span>
                     {/* h3, not h4: the section heading above is an h2 */}
                     <h3 className="text-copy-16 font-semibold text-foreground">{step.title}</h3>
                   </div>
@@ -376,21 +386,7 @@ export default async function PlatformPage() {
         </Section>
 
         {/* where to go next */}
-        <div className="page-section">
-          <ul className="grid gap-4 md:grid-cols-3">
-            {explore.map((link) => (
-              <Reveal as="li" key={link.href}>
-                <Card variant="interactive" href={link.href} className="flex h-full flex-col">
-                  <h3 className="text-heading-20 text-foreground">{link.title}</h3>
-                  <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{link.blurb}</p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary">
-                    {link.cta} <ArrowRight aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
-                  </span>
-                </Card>
-              </Reveal>
-            ))}
-          </ul>
-        </div>
+        <OnwardLinks links={explore} />
       </div>
     </div>
   );
