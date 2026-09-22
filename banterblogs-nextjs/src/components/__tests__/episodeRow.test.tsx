@@ -75,4 +75,26 @@ describe('EpisodeRow', () => {
     expect(classesIn(markup).filter((c) => BORDER_WIDTH.test(c))).toEqual([]);
     expect(markup).not.toMatch(/glass-ultra|backdrop|signal-|blur/);
   });
+
+  // R4 design re-judge: /episodes rendered 160 uppercase and 196 mono
+  // elements and a wall of boxed tag pills. Mono stays where it carries
+  // meaning (the number and the commit hash); nothing in a row shouts.
+  it('keeps mono for the number and the commit hash only, and sets nothing in uppercase', () => {
+    const markup = renderToStaticMarkup(<EpisodeRow episode={episode()} />);
+    expect(classesIn(markup)).not.toContain('text-label-12-mono');
+    expect(classesIn(markup)).not.toContain('uppercase');
+    const mono = [...markup.matchAll(/<(\w+) [^>]*class="[^"]*font-mono[^"]*"[^>]*>([^<]*)</g)].map((m) => m[2]);
+    expect(mono).toEqual(['74', '#a16e4c8']);
+    // without a commit there is no hash to set in mono
+    const untracked = renderToStaticMarkup(<EpisodeRow episode={episode({ commit: '' })} />);
+    expect([...untracked.matchAll(/class="[^"]*font-mono/g)]).toHaveLength(1);
+  });
+
+  it('lists its tags as one quiet sentence-case line, the rest counted, with no pills', () => {
+    const markup = renderToStaticMarkup(<EpisodeRow episode={episode()} />);
+    expect(classesIn(markup)).not.toContain('rounded-full');
+    const line = /<p class="([^"]*)"[^>]*>(?:(?!<\/p>).)*chimera, architecture, performance(?:(?!<\/p>).)*\+2 more(?:(?!<\/p>).)*<\/p>/.exec(markup);
+    expect(line).not.toBeNull();
+    expect(line![1].split(/\s+/)).toEqual(expect.arrayContaining(['text-label-13']));
+  });
 });
