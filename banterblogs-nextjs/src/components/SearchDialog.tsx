@@ -1,15 +1,19 @@
 'use client';
 
-import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, FileText, Package, Search, X } from 'lucide-react';
 import type { SearchEntry, SearchEntryType, SiteSearch } from '@/lib/search';
 import Link from 'next/link';
+import { cn } from '@/lib/cn';
 
 const SEARCH_INDEX_URL = '/search.json';
 
 const GROUP_LABEL: Record<SearchEntryType, string> = { report: 'Reports', tool: 'Tools', episode: 'Episodes' };
 const GROUP_ICON = { report: FileText, tool: Package, episode: BookOpen } as const;
+// a foreground tint, so the muted detail line keeps ~7:1, and an ember rule
+// on the leading edge, so the highlight does not rest on colour alone
+const ACTIVE_OPTION = 'bg-foreground/10 text-foreground shadow-[inset_2px_0_0_hsl(var(--primary))]';
 
 // Module-level so the desktop and mobile Header instances share one fetch and
 // one index — and nothing loads at all until search is first opened.
@@ -37,6 +41,7 @@ function loadSearch(): Promise<SiteSearch | null> {
 export function SearchDialog() {
   const router = useRouter();
   const listboxId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   // What the results panel shows. It outlives close, so the panel fades out
@@ -74,14 +79,17 @@ export function SearchDialog() {
   const options = useMemo(() => groups.flatMap((group) => group.entries), [groups]);
   const showPanel = isOpen && query.length > 0;
 
-  const updateQuery = (next: string) => {
-    setQuery(next);
-    setPanelQuery(next);
-  };
-
   const open = () => {
     setIsOpen(true);
     setLoadFailed(false); // a reopen retries a failed load
+  };
+
+  // typing opens it too: a field that kept focus through Escape fires no
+  // focus event, and the panel would stay shut
+  const updateQuery = (next: string) => {
+    if (!isOpen) open();
+    setQuery(next);
+    setPanelQuery(next);
   };
 
   const close = useCallback(() => {
@@ -90,8 +98,18 @@ export function SearchDialog() {
     setActive({ query: '', index: -1 });
   }, []);
 
+  // focus leaving the search (Tab, or a click elsewhere) closes it, so no
+  // results panel or click-catcher is left over the page
+  const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (!isOpen || e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    close();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
+      // spent on the search when it had something to close, so the mobile
+      // menu around the field stays open
+      if (isOpen || query) e.preventDefault();
       close();
       return;
     }
@@ -113,10 +131,11 @@ export function SearchDialog() {
   const optionId = (index: number) => `${listboxId}-option-${index}`;
 
   return (
-    <div className="relative w-full max-w-md">
+    <div className="relative w-full max-w-md" onBlur={handleBlur}>
       <div className="relative group">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
         <input
+          ref={inputRef}
           type="search"
           name="q"
           autoComplete="off"
@@ -132,13 +151,20 @@ export function SearchDialog() {
           value={query}
           onChange={(e) => updateQuery(e.target.value)}
           onFocus={open}
+          onClick={() => {
+            if (!isOpen) open();
+          }}
           onKeyDown={handleKeyDown}
           className="w-full rounded-xl border border-input bg-background px-10 py-2.5 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground transition-colors duration-fast ease-standard focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary hover:border-ring [&::-webkit-search-cancel-button]:appearance-none"
         />
         {query && (
           <button
             type="button"
-            onClick={() => setQuery('')}
+            onClick={() => {
+              setQuery('');
+              // the button leaves with the query; focus goes back to the field
+              inputRef.current?.focus();
+            }}
             className="absolute right-3 top-1/2 -m-1.5 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors duration-fast ease-standard"
             aria-label="Clear search"
           >
@@ -150,6 +176,9 @@ export function SearchDialog() {
       {/* Stays mounted so it can enter and exit on the overlay tokens; closed it
           is visibility:hidden (after the fade), so unfocusable and unannounced. */}
       <div
+        // a press on the results keeps focus in the field, so it never blurs
+        // (and closes) the search on the way to a click
+        onMouseDown={(e) => e.preventDefault()}
         className={`absolute top-full z-50 mt-2 w-full origin-top rounded-xl border border-border bg-background shadow-xl backdrop-blur-sm transition-[opacity,transform,visibility] duration-base ease-standard ${
           showPanel ? 'visible translate-y-0 scale-100 opacity-100' : 'pointer-events-none invisible -translate-y-1 scale-[0.98] opacity-0'
         }`}
@@ -177,7 +206,12 @@ export function SearchDialog() {
                       role="option"
                       aria-selected={activeIndex === index}
                       href={entry.href}
-                      className={`flex items-center space-x-3 rounded-md px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${activeIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
+                      // the arrows and Enter drive the list from the field; Tab leaves it
+                      tabIndex={-1}
+                      className={cn(
+                        'flex items-center space-x-3 rounded-md px-2 py-2 text-sm hover:bg-foreground/[0.06]',
+                        activeIndex === index && ACTIVE_OPTION,
+                      )}
                       onClick={close}
                     >
                       <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
