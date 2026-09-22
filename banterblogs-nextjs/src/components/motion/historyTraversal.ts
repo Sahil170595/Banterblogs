@@ -5,7 +5,8 @@ type NavigateEvent = Event & { navigationType?: string };
  * Calls back on every Back/Forward traversal. Following an #anchor link
  * fires popstate as well, so a traversal is recognised by the Navigation
  * API's navigationType, or, without that API, by the router state the
- * history entry carries (an anchor's entry has none). Returns the cleanup.
+ * history entry carries (an anchor's entry has none as it is made;
+ * fragmentHistory.ts hands it to the router after). Returns the cleanup.
  */
 export function onHistoryTraversal(listener: () => void): () => void {
   const navigation = (window as Window & { navigation?: EventTarget }).navigation;

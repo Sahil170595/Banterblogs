@@ -112,6 +112,24 @@ describe('history scroll guard', () => {
     expect(root.style.scrollBehavior).toBe('');
   });
 
+  // R6: Back returns into the entries #jumps make (fragmentHistory.ts),
+  // watched from the guard's mount
+  it('hands #jump entries to the router while mounted', () => {
+    history.replaceState({ __NA: true }, '', '/reports/technical-report-142');
+    const replaceState = vi.spyOn(history, 'replaceState');
+    const { unmount } = render(<HistoryScrollGuard />);
+    history.pushState(null, '', '#references');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(replaceState).toHaveBeenCalledWith(null, '', location.href);
+    unmount();
+    replaceState.mockClear();
+    history.pushState(null, '', '#methods');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(replaceState).not.toHaveBeenCalled();
+    replaceState.mockRestore();
+    history.replaceState(null, '', '/');
+  });
+
   it('is mounted once, in the root layout', () => {
     const layout = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'layout.tsx'), 'utf8');
     expect(layout.match(/<HistoryScrollGuard \/>/g)).toHaveLength(1);
