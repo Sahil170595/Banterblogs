@@ -7,6 +7,7 @@ import {
   extractPrimaryHeading,
   extractTreeHeadings,
   hastToHtml,
+  labelTableRegions,
   MIN_TOC_HEADINGS,
   renderMarkdownTree,
   textOf,
@@ -58,6 +59,8 @@ export interface ReportRenderOptions {
   dropInlineToc?: boolean;
   /** Mark tables, code blocks and figures as reveal targets (the page's RevealScope arms them). */
   markRevealTargets?: boolean;
+  /** A later document on a page of several: its table regions are named after it, so no name repeats. */
+  tableRegionName?: string;
 }
 
 export interface RenderedReport {
@@ -340,6 +343,8 @@ export async function renderReportDocument(markdown: string, options: ReportRend
     markRevealTargets: Boolean(options.markRevealTargets),
   });
   const frontMatter = options.foldTitleBlock ? foldTitleBlock(tree) : null;
+  // numbered again once the fold has taken its table
+  labelTableRegions(tree, options.tableRegionName);
   return { html: hastToHtml(tree), headings: extractTreeHeadings(tree), frontMatter };
 }
 
@@ -354,6 +359,7 @@ async function buildSection(filePath: string, sourceLabel: string, originKey: st
     foldTitleBlock: primary,
     dropInlineToc: extractHeadings(raw).length >= MIN_TOC_HEADINGS,
     markRevealTargets: true,
+    tableRegionName: primary ? undefined : title,
   });
   return {
     id: sanitizeId(title) || sanitizeId(fallback),

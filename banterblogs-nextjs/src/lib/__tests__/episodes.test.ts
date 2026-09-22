@@ -21,7 +21,18 @@ describe('markdown reading surface', () => {
     describe('tables', () => {
         it('wraps every table in its own horizontal scroll container', async () => {
             const html = await renderMarkdownToHtml('| a | b |\n|---|---|\n| x | 1 |\n\n| c |\n|---|\n| y |\n');
-            expect(html.match(/<div class="table-scroll"><table>/g)).toHaveLength(2);
+            expect(html.match(/<div class="table-scroll"[^>]*><table>/g)).toHaveLength(2);
+        });
+
+        // re-judge P1-8: WebKit will not focus a scroll box without a
+        // tabindex, so the columns past its edge were out of keyboard reach
+        it('makes each scroll box a named region the keyboard can reach, numbered in reading order', async () => {
+            const host = document.createElement('div');
+            host.innerHTML = await renderMarkdownToHtml('| a | b |\n|---|---|\n| x | 1 |\n\nText.\n\n| c |\n|---|\n| y |\n');
+            const boxes = [...host.querySelectorAll('.table-scroll')];
+            expect(boxes.map((box) => box.getAttribute('role'))).toEqual(['region', 'region']);
+            expect(boxes.map((box) => box.getAttribute('tabindex'))).toEqual(['0', '0']);
+            expect(boxes.map((box) => box.getAttribute('aria-label'))).toEqual(['Table 1', 'Table 2']);
         });
 
         it('marks numeric columns, header included, and leaves text columns alone', async () => {

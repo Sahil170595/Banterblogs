@@ -176,8 +176,24 @@ describe('title block folding rules', () => {
     const { html, frontMatter } = await fold(doc('# A Title', '', '| Model | Score |', '|---|---|', '| a | 1 |', '', '---', '', '## Results', '', 'Text.'));
 
     expect(frontMatter!.fields).toEqual([]);
-    expect(html.trimStart()).toMatch(/^<div class="table-scroll"><table>/);
+    expect(html.trimStart()).toMatch(/^<div class="table-scroll"[^>]*><table>/);
     expect(html).toMatch(/<\/div>\s*<hr>\s*<h2 id="results">/);
+  });
+
+  // the scroll boxes are named regions (re-judge P1-8): the names count the
+  // tables a reader meets, so a folded metadata table takes no number
+  it('numbers the body tables from 1 once the metadata table has folded away', async () => {
+    const { html } = await fold(
+      doc('# A Title', '', '| Field | Value |', '|---|---|', '| **Date** | 2026-01-01 |', '', '---', '', '## Results', '', '| Model | Score |', '|---|---|', '| a | 1 |', '', '| Model | Rate |', '|---|---|', '| b | 2 |'),
+    );
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    expect([...host.querySelectorAll('.table-scroll')].map((box) => box.getAttribute('aria-label'))).toEqual(['Table 1', 'Table 2']);
+  });
+
+  it('names a later section’s tables after it, so region names stay unique on a page of several documents', async () => {
+    const { html } = await renderReportDocument(doc('# Appendix', '', '| Model | Score |', '|---|---|', '| a | 1 |'), { tableRegionName: 'Appendix' });
+    expect(html).toContain('aria-label="Appendix, table 1"');
   });
 
   it('keeps metadata that follows prose', async () => {

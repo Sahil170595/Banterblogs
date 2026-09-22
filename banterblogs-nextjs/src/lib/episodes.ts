@@ -153,10 +153,13 @@ function transformElements(parent: HastParent, options: RenderMarkdownOptions): 
     if (child.type !== "element") continue;
     if (child.tagName === "table") {
       markNumericColumns(child);
+      // a focusable region: WebKit will not focus a scroll box without a
+      // tabindex, so its hidden columns would be out of keyboard reach;
+      // labelTableRegions names it
       parent.children[index] = {
         type: "element",
         tagName: "div",
-        properties: { className: ["table-scroll"], ...target },
+        properties: { className: [TABLE_SCROLL_CLASS], role: "region", tabIndex: 0, ...target },
         children: [child],
       };
       continue;
@@ -212,7 +215,37 @@ function rehypeReadingSurface() {
     const options = (file.data[RENDER_OPTIONS_KEY] ?? {}) as RenderMarkdownOptions;
     if (options.dropInlineToc) dropInlineToc(tree);
     transformElements(tree, options);
+    labelTableRegions(tree);
   };
+}
+
+const TABLE_SCROLL_CLASS = "table-scroll";
+
+/** "Table 3", or "<document>, table 3" for a page's later documents, whose names must differ from the first's */
+function tableRegionLabel(position: number, documentName?: string): string {
+  return documentName ? `${documentName}, table ${position}` : `Table ${position}`;
+}
+
+/**
+ * Names the table scroll regions in reading order. Run again after anything
+ * removes a table (the report head folds a metadata table away), so the
+ * numbers count the tables a reader meets.
+ */
+export function labelTableRegions(tree: Root, documentName?: string): void {
+  let position = 0;
+  const visit = (parent: HastParent) => {
+    for (const child of parent.children) {
+      if (child.type !== "element") continue;
+      const classes = child.properties.className;
+      if (Array.isArray(classes) && classes.includes(TABLE_SCROLL_CLASS)) {
+        position += 1;
+        child.properties.ariaLabel = tableRegionLabel(position, documentName);
+        continue;
+      }
+      visit(child);
+    }
+  };
+  visit(tree);
 }
 
 // rehype-slug runs before the reading-surface step, so ids never shift.
