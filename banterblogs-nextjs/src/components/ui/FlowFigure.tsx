@@ -50,8 +50,9 @@ export function FlowFigure({ title, caption, steps, loop, className }: FlowFigur
         ))}
       </ol>
       {loop && (
-        // grid lines of the row layout: from the returned-to step's column up to the leaving step's
-        <div className="flow-loop" style={{ '--loop-span': `${loop.to + 1} / ${loop.from + 1}` } as CSSProperties}>
+        // grid lines of the row layout: the bracket runs from the returned-to
+        // step's column up to the leaving step's; its label from there to the end
+        <div className="flow-loop" style={{ '--loop-span': `${loop.to + 1} / ${loop.from + 1}`, '--loop-start': String(loop.to + 1) } as CSSProperties}>
           <span aria-hidden="true" className="flow-loop-path" />
           <p className="flow-loop-label text-label-13 text-muted-foreground">
             <RotateCcw aria-hidden="true" className="mr-1.5 inline-block h-3.5 w-3.5 align-[-0.125em]" />

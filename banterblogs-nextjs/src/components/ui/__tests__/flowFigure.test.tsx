@@ -40,6 +40,9 @@ describe('FlowFigure', () => {
     expect(text(loop)).toContain('RLAIF retrains the router');
     // grid lines of the row layout: from step 1's column up to step 2's
     expect(loop.style.getPropertyValue('--loop-span')).toBe('2 / 3');
+    // its label runs on from the returned-to step, so it does not wrap in one column
+    expect(loop.style.getPropertyValue('--loop-start')).toBe('2');
+    expect(CSS).toMatch(/\.flow-loop-label \{[^}]*grid-column:\s*var\(--loop-start\) \/ -1/);
     expect(figure.style.getPropertyValue('--flow-count')).toBe(String(STEPS.length));
   });
 

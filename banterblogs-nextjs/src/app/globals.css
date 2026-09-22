@@ -1639,7 +1639,7 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   }
 
   .flow-loop-label {
-    grid-column: var(--loop-span);
+    grid-column: var(--loop-start) / -1;
     grid-row: 2;
   }
 }
