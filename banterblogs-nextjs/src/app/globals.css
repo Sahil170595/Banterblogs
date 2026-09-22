@@ -1738,3 +1738,45 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end report page */
+
+/* R3-B2 */
+/* Hairline grid (/platform, /tags): each cell draws a 1px ring into the 1px
+   gap between cells, and the grid clips the rings at its own edge, so only
+   the rules between cells show, never a frame. The cells stay transparent:
+   the grid reads as ruling on whatever surface it sits on (a card that
+   brightens under the pointer included), an empty trailing slot is simply
+   blank, and a cell's content can rise into place without uncovering a
+   block of line colour. */
+.hairline-grid {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.hairline-grid > * {
+  box-shadow: 0 0 0 1px hsl(var(--border));
+}
+
+/* A repository's drawing (/platform) on a drafting plate: the report hero's
+   faint ember light and hairline grid at card size, the drawing at its own
+   16:9 in the middle. */
+.repo-plate {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--background) / 0.6);
+  background-image:
+    radial-gradient(ellipse 40% 90% at 50% 58%, hsl(var(--primary) / 0.07), transparent 70%),
+    linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
+  background-position: center;
+  background-size: auto, 1.25rem 1.25rem, 1.25rem 1.25rem;
+}
+
+.repo-plate .rv {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+}
+/* end R3-B2 */
