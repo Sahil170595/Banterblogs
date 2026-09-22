@@ -3,11 +3,20 @@ import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { DirectionalPage, NAV_BACK } from '@/components/reports/ReportTransitions';
-import { renderMarkdownToHtml } from '@/lib/episodes';
-import { MEASUREMENTS, REPORTS } from '@/lib/constants';
-
 import type { Metadata } from 'next';
+import { entranceGroup } from '@/components/motion/entrance';
+import { RevealScope } from '@/components/motion/RevealScope';
+import { ReportDetails, ReportHero, ReportMeta } from '@/components/reports/ReportHead';
+import { ReportProgress } from '@/components/reports/ReportProgress';
+import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
+import { DirectionalPage, NAV_BACK, ReportTitleTransition } from '@/components/reports/ReportTransitions';
+import { reportIdentity } from '@/components/reports/reportIdentity';
+import { ReportEnd } from '@/components/reports/reportEnd';
+import { cn } from '@/lib/cn';
+import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { computeContentStats, extractHeadings, MIN_TOC_HEADINGS } from '@/lib/episodes';
+import { prepareReportMarkdown, renderReportDocument } from '@/lib/reports/content';
+import { readReportMeta } from '@/lib/reports/meta';
 
 export const runtime = 'nodejs';
 
@@ -33,6 +42,18 @@ export const metadata: Metadata = {
     },
 };
 
+// the report catalog's key, which the archive card links and morphs from
+const COMPENDIUM_SLUG = 'compendium';
+// the head's first-load entrance: breadcrumb and title, the dek, the meta and details
+const HEAD_GROUP = { title: 0, dek: 1, meta: 2 } as const;
+const NOTE_HEADING = 'report-pager-label';
+
+/**
+ * The research compendium on the report page's reading register: its title
+ * block folds into the head (the report page does the same), its body reads
+ * in the reading type with the report contents beside it, and the notes the
+ * old sidebar held (hidden on phones) follow the body for every reader.
+ */
 export default async function CompendiumPage() {
     const filePath = path.join(process.cwd(), 'PublishReady', 'research_compendium.md');
 
@@ -41,45 +62,86 @@ export default async function CompendiumPage() {
     }
 
     const raw = fs.readFileSync(filePath, 'utf8');
-    const html = await renderMarkdownToHtml(raw);
+    const { html, headings, frontMatter } = await renderReportDocument(prepareReportMarkdown(raw), {
+        foldTitleBlock: true,
+        dropInlineToc: extractHeadings(raw).length >= MIN_TOC_HEADINGS,
+        markRevealTargets: true,
+    });
+    const meta = readReportMeta(COMPENDIUM_SLUG);
+    const title = meta?.title ?? METADATA_TITLE;
+    const { heading, label } = reportIdentity(COMPENDIUM_SLUG, title);
+    const readingMinutes = computeContentStats(html).readingTime;
+    const dek = entranceGroup(HEAD_GROUP.dek);
 
     return (
-        <DirectionalPage className="container py-16">
-            <div className="mb-8">
-                <Link href="/reports" transitionTypes={[NAV_BACK]} className="text-sm text-muted-foreground hover:text-primary transition-colors mb-4 inline-block">
-                    &larr; Research Archive
-                </Link>
+        <DirectionalPage className="container pb-24 pt-8 md:pt-10">
+            <ReportProgress />
+
+            <div className="report-head">
+                <div {...entranceGroup(HEAD_GROUP.title)}>
+                    <nav aria-label="Breadcrumb">
+                        <ol className="report-crumbs">
+                            <li>
+                                <Link href="/reports" transitionTypes={[NAV_BACK]}>
+                                    Research archive
+                                </Link>
+                            </li>
+                        </ol>
+                    </nav>
+                    <ReportTitleTransition slug={COMPENDIUM_SLUG}>
+                        <h1 className="report-title">{heading}</h1>
+                    </ReportTitleTransition>
+                </div>
+                {meta?.description && (
+                    <p className={cn('report-dek', dek.className)} style={dek.style}>
+                        {meta.description}
+                    </p>
+                )}
+                <div {...entranceGroup(HEAD_GROUP.meta)}>
+                    <ReportMeta label={label} phaseNumber={null} readingMinutes={readingMinutes} date={frontMatter?.date ?? null} />
+                    {frontMatter && <ReportDetails frontMatter={frontMatter} />}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12">
-                <article className="prose prose-invert prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-a:underline-offset-4 prose-a:decoration-primary/50 hover:prose-a:decoration-primary prose-img:rounded-xl">
-                    <div dangerouslySetInnerHTML={{ __html: html }} />
+            <ReportHero slug={COMPENDIUM_SLUG} />
+
+            <ReportTocMobile headings={headings} />
+
+            <div className="mt-8 grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,1fr)_15rem]">
+                <article className="min-w-0">
+                    <RevealScope className="report-prose prose prose-invert" html={html} />
                 </article>
-
-                <aside className="hidden lg:block">
-                    <div className="sticky top-24 space-y-6">
-                        <div className="rounded-xl border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
-                            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">About this Paper</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                This whitepaper synthesizes the foundational Phase 1 research (TR108-TR116) — the Rust vs. Python comparison that shaped the platform architecture.
-                            </p>
-                            <div className="text-xs text-muted-foreground/70">
-                                Published: November 2025 &middot; Sahil Kadadekar
-                            </div>
-                        </div>
-
-                        <div className="rounded-xl border border-border/50 bg-muted/20 p-6">
-                            <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Source Data</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Access all {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.SHORT} measurements, and phase whitepapers.
-                            </p>
-                            <Link href="/reports" transitionTypes={[NAV_BACK]} className="text-sm text-primary hover:underline flex items-center gap-1">
-                                View Technical Archives <span>&rarr;</span>
-                            </Link>
-                        </div>
-                    </div>
-                </aside>
+                <ReportTocSidebar headings={headings} />
             </div>
+            <ReportEnd />
+
+            {/* the old sidebar's notes, whole, under one hairline */}
+            <aside aria-label="About this paper" className="mt-20 grid gap-10 border-t border-border/40 pt-8 md:grid-cols-2">
+                <div className="max-w-[60ch]">
+                    <h2 className={NOTE_HEADING}>About this Paper</h2>
+                    <p className="mt-3 text-copy-16 text-prose">
+                        This whitepaper synthesizes the foundational Phase 1 research (TR108-TR116) — the Rust vs. Python comparison that
+                        shaped the platform architecture.
+                    </p>
+                    <p className="mt-3 text-label-13 text-muted-foreground">Published: November 2025 &middot; Sahil Kadadekar</p>
+                </div>
+                <div className="max-w-[60ch]">
+                    <h2 className={NOTE_HEADING}>Source Data</h2>
+                    <p className="mt-3 text-copy-16 text-prose">
+                        Access all {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.SHORT} measurements, and phase whitepapers.
+                    </p>
+                    <Link
+                        href="/reports"
+                        transitionTypes={[NAV_BACK]}
+                        className="group mt-3 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary"
+                    >
+                        View Technical Archives
+                        <span aria-hidden="true" className="inline-block transition-transform duration-hover ease-strong-out group-hover:translate-x-[var(--motion-nudge)]">
+                            &rarr;
+                        </span>
+                    </Link>
+                </div>
+            </aside>
         </DirectionalPage>
     );
 }

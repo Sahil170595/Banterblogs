@@ -67,7 +67,7 @@ const CEILINGS: Record<Pattern, number> = {
   largeRadius: 2,
   paletteHue: 0,
   transitionAll: 0,
-  backdrop: 2,
+  backdrop: 1,
   signalPanel: 20,
   signalPill: 10,
   signalDivider: 0,
