@@ -82,6 +82,20 @@ describe('episode head', () => {
   });
 });
 
+// final WIG re-judge N6: the floating Like, Bookmark and Share controls (and
+// a "Bookmarks" h3) came before the h1, so the first Tab after arriving went
+// to "Like episode" and the outline opened at h3. They are fixed-position,
+// so they follow the article in DOM order and nothing moves.
+describe('episode reading order', () => {
+  it('puts the floating actions after the article and its pager', () => {
+    const actions = page.querySelector('[data-episode-actions]');
+    expect(actions).not.toBeNull();
+    for (const before of [page.querySelector('h1')!, page.querySelector('#episode-article')!, page.querySelector('nav.report-pager')!]) {
+      expect(before.compareDocumentPosition(actions!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
+});
+
 describe('episode body', () => {
   it('sets the article in the reading type and reveals its code blocks and tables', () => {
     const body = page.querySelector('#episode-article .report-prose')!;

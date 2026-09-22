@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from "@/components/motion/prePaint";
+import { RouteArrival } from "@/components/motion/RouteArrival";
 import { EntranceWindow } from "@/components/motion/EntranceWindow";
 import { HistoryScrollGuard } from "@/components/motion/HistoryScrollGuard";
 import { RouteTransition } from "@/components/motion/RouteTransition";
@@ -120,6 +121,8 @@ export default function RootLayout({
         </a>
         {/* closes the first-load entrance window on the first client navigation */}
         <EntranceWindow />
+        {/* ahead of the page, so a new page is settled before the router scrolls */}
+        <RouteArrival />
         {/* Back/Forward restores land at once, not in a long smooth glide */}
         <HistoryScrollGuard />
         <ErrorBoundary>

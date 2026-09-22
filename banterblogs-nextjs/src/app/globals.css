@@ -280,9 +280,11 @@ html {
   );
 }
 
-/* Desktop keeps the rail in the dark left column where it already measured
-   ~8.8:1 — soften the scrim so the scene reads through it. */
-@media (min-width: 1280px) {
+/* A tall desktop window keeps the rail in the dark left column where it
+   already measured ~8.8:1 — soften the scrim so the scene reads through it.
+   Shorter windows put the disk behind the rail (the current numeral 4.47:1
+   at 1440x789, 3.54:1 at 1280x640), so they keep the full scrim. */
+@media (min-width: 1280px) and (min-height: 801px) {
   .galactic-system-rail::before {
     background: linear-gradient(
       to top,
@@ -291,6 +293,16 @@ html {
       rgb(2 4 8 / 0.5) 58%,
       transparent 100%
     );
+  }
+}
+
+/* The hero copy's near-opaque scrim (GalacticHero). The poster is laid out
+   by height, so on a short window the lensed disk sits behind the copy, and
+   where the poster shows a star or a system body can at any size. Only the
+   live scene on a tall window lifts it, to the light scrim beneath. */
+@media (min-height: 801px) {
+  .group\/hero:has([data-scene-stage="live"]) .hero-scrim-strong {
+    opacity: 0;
   }
 }
 
@@ -530,6 +542,14 @@ html[data-motion="on"] [data-reveal="shown"] {
 html[data-motion="on"] [data-reveal="pending"] {
   opacity: 0;
   transform: translateY(var(--motion-reveal)) scale(var(--scale-reveal));
+}
+
+/* Focus can land in held content the observer has not reached (a focus
+   scroll parks its target in the bottom band it leaves out): it is at rest
+   at once, and revealObserver marks it shown when focus moves on. */
+html[data-motion="on"] [data-reveal="pending"]:focus-within {
+  opacity: 1;
+  transform: none;
 }
 
 /* Archive cards (components/reports/ReportCard.tsx). The link takes the
@@ -914,15 +934,23 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 }
 
 .archive-card-slot {
-  content-visibility: auto;
+  content-visibility: var(--cv, auto);
   contain-intrinsic-block-size: auto var(--archive-estimate-card);
   overflow-clip-margin: var(--card-glow-extent);
 }
 
 .archive-section {
-  content-visibility: auto;
+  content-visibility: var(--cv, auto);
   contain-intrinsic-block-size: auto var(--archive-estimate-section);
   overflow-clip-margin: var(--card-glow-extent);
+}
+
+/* Skipping here and in reading.css, until the page view needs exact
+   positions (a Tab, focus from a script, an in-page #jump:
+   components/motion/contentVisibility.ts): a jump or a focus scroll aimed
+   at an estimate missed once the blocks it passed rendered. */
+html[data-cv="off"] {
+  --cv: visible;
 }
 
 /* Reduced motion: nothing moves, but colour and opacity may still fade
@@ -1818,13 +1846,15 @@ html[data-route-to="landing"]::view-transition-new(site-header) {
   initial-value: 0px;
 }
 
+/* A fade to nothing left a tab's count at the edge at 1.2-3.7:1; the edges
+   keep TAB_STRIP_EDGE_FLOOR (ReportTabs) of the text. */
 .tab-strip {
   mask-image: linear-gradient(
     to right,
-    transparent,
+    rgb(0 0 0 / 0.3),
     #000 var(--tab-strip-fade-start),
     #000 calc(100% - var(--tab-strip-fade-end)),
-    transparent
+    rgb(0 0 0 / 0.3)
   );
 }
 

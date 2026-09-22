@@ -225,15 +225,16 @@ describe('report body rendering', () => {
   const SKIPPED_BLOCKS = ['.report-prose > p', '.report-prose > pre', '.report-prose > .table-scroll'];
   const printRules = TOP.filter((b) => b.prelude === '@media print').flatMap((b) => rulesIn(b.body));
 
+  // auto unless the page view has turned skipping off (--cv, contentVisibility.ts)
   it.each(SKIPPED_BLOCKS)('skips %s off screen, and keeps its drawn size once rendered', (selector) => {
     const declarations = declarationsOf(baseRules, selector);
-    expect(value(declarations, 'content-visibility')).toBe('auto');
+    expect(value(declarations, 'content-visibility')).toBe('var(--cv, auto)');
     // a height estimate only: the column sets the width
     expect(value(declarations, 'contain-intrinsic-block-size')).toMatch(/^auto var\(--prose-estimate-[\w-]+\)$/);
   });
 
   it('skips nothing else: lists, quotes, headings and figures would change under layout containment', () => {
-    const skipping = baseRules.filter((rule) => /content-visibility:\s*auto/.test(rule.declarations));
+    const skipping = baseRules.filter((rule) => /content-visibility:\s*(?:auto|var\()/.test(rule.declarations));
     expect(skipping.flatMap((rule) => rule.selector.split(',').map((s) => s.trim())).sort()).toEqual([...SKIPPED_BLOCKS].sort());
   });
 

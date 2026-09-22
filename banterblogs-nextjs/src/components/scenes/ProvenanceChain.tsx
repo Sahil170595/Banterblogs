@@ -749,7 +749,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[9px] uppercase tracking-widest text-primary/80 mb-1">
+            <div className="text-[9px] uppercase tracking-widest text-primary mb-1">
               Merkle root
             </div>
             <div className="font-mono text-[10px] md:text-[11px] text-primary/90 break-all">
@@ -829,12 +829,12 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
               <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Walkthrough · beat {beatIdx + 1} of {beats.length}
                 {isIntroBeat && (
-                  <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
                     intro
                   </span>
                 )}
                 {!isIntroBeat && activePhaseId && (
-                  <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
                     → {activePhaseId}
                   </span>
                 )}

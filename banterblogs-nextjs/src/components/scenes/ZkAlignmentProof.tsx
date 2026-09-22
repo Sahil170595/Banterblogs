@@ -28,6 +28,10 @@ import {
 // locale made a de-DE render differ from the server's (React #418).
 const FIXED_POINT_FORMAT = new Intl.NumberFormat('en-US');
 
+// A stage the walkthrough has not reached yet: dimmed, its text still 3:1
+// or better (was 0.3, 1.4-1.9:1); its ember hex needs 0.7 (3.3:1)
+const NOT_REACHED_OPACITY = 0.7;
+
 // ---------------------------------------------------------------------------
 // Types (mirror zk-alignment-proof.json)
 // ---------------------------------------------------------------------------
@@ -324,7 +328,7 @@ function ProverPanel({
   return (
     <motion.div
       initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: visible ? 1 : 0.3 }}
+      animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
       transition={{ duration: 0.4 }}
       className={`rounded-xl border p-5 md:p-6 ${
         visible
@@ -435,8 +439,9 @@ function BitStripProver({
                 }`}
               >
                 <span className="text-sm md:text-base font-bold leading-none">{value ?? '?'}</span>
-                <span className="text-[7px] md:text-[8px] uppercase tracking-widest text-muted-foreground/70 mt-0.5">
-                  2<sup>{bitIdx}</sup>
+                {/* the index at 10px, its digits too (not the 75% a sup gets) */}
+                <span className="mt-0.5 text-[10px] leading-none tracking-tight text-muted-foreground">
+                  2<sup className="text-[10px]">{bitIdx}</sup>
                 </span>
               </motion.div>
             );
@@ -469,7 +474,7 @@ function ConstructionPanel({
     return (
       <motion.div
         initial={reducedMotion ? false : { opacity: 0 }}
-        animate={{ opacity: visible ? 1 : 0.3 }}
+        animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
         transition={{ duration: 0.4 }}
         className="rounded-xl border border-border/30 bg-card/10 p-5 md:p-6"
       >
@@ -492,7 +497,7 @@ function ConstructionPanel({
   return (
     <motion.div
       initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: visible ? 1 : 0.3 }}
+      animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
       transition={{ duration: 0.4 }}
       className={`rounded-xl border p-5 md:p-6 ${
         visible
@@ -538,7 +543,7 @@ function ConstructionPanel({
           per-bit Schnorr OR proof · 6 scalars · prove b_i ∈ &#123;0, 1&#125; without revealing which
         </div>
         <BitProofDetail proof={range.bit_proofs[0]} bitIndex={0} reducedMotion={reducedMotion} />
-        <div className="text-[10px] text-muted-foreground/70 font-mono">
+        <div className="text-[10px] text-muted-foreground font-mono">
           + {range.bit_proofs.length - 1} more identical-shape proofs (one per bit)
         </div>
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 pt-2">
@@ -617,12 +622,12 @@ function CommitStrip({
               <span className="text-[8px] md:text-[9px] tracking-tight text-foreground/70">
                 {hex.slice(0, 4)}
               </span>
-              <span className="text-[8px] md:text-[9px] text-muted-foreground/70">…</span>
+              <span className="text-[8px] md:text-[9px] text-muted-foreground">…</span>
               <span className="text-[8px] md:text-[9px] tracking-tight text-foreground/70">
                 {hex.slice(-4)}
               </span>
-              <span className="text-[7px] uppercase tracking-widest text-muted-foreground/70 mt-0.5">
-                b<sub>{bitIdx}</sub>
+              <span className="mt-0.5 text-[10px] leading-none tracking-tight text-muted-foreground">
+                b<sub className="text-[10px]">{bitIdx}</sub>
               </span>
             </motion.div>
           );
@@ -647,7 +652,7 @@ function BitProofDetail({
       transition={{ duration: 0.3 }}
       className="rounded border border-border/40 bg-card/20 p-3 md:p-4 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-[10px] font-mono"
     >
-      <div className="col-span-2 md:col-span-3 text-[10px] uppercase tracking-widest text-muted-foreground/80 mb-1">
+      <div className="col-span-2 md:col-span-3 text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
         bit-{bitIndex} proof bundle (verifier-visible only)
       </div>
       <ScalarRow label="a_0" hex={proof.a0_hex} />
@@ -663,7 +668,7 @@ function BitProofDetail({
 function ScalarRow({ label, hex }: { label: string; hex: string }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="text-muted-foreground/80 shrink-0" aria-hidden>
+      <span className="text-muted-foreground shrink-0" aria-hidden>
         {label}
       </span>
       <span
@@ -695,7 +700,7 @@ function VerifierPanel({
     return (
       <motion.div
         initial={reducedMotion ? false : { opacity: 0 }}
-        animate={{ opacity: visible ? 1 : 0.3 }}
+        animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
         transition={{ duration: 0.4 }}
         className="rounded-xl border border-border/30 bg-card/10 p-5 md:p-6"
       >
@@ -720,7 +725,7 @@ function VerifierPanel({
   return (
     <motion.div
       initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: visible ? 1 : 0.3 }}
+      animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
       transition={{ duration: 0.4 }}
       className={`rounded-xl border p-5 md:p-6 ${
         visible
@@ -792,7 +797,7 @@ function CheckStrip({
               transition={{ duration: 0.2, delay: reducedMotion ? 0 : idx * 0.02 }}
               className={`aspect-square min-h-[26px] flex flex-col items-center justify-center rounded border ${
                 isFailing
-                  ? 'border-primary bg-primary/25 text-primary shadow-[0_0_18px_-2px_hsl(var(--primary)/0.55)]'
+                  ? 'border-primary bg-primary/25 text-foreground shadow-[0_0_18px_-2px_hsl(var(--primary)/0.55)]'
                   : wasChecked
                     ? 'border-accent/60 bg-accent/15 text-accent'
                     : 'border-border/30 bg-card/10 text-muted-foreground/40'
@@ -801,8 +806,8 @@ function CheckStrip({
               <span className="text-sm font-bold leading-none">
                 {isFailing ? '×' : wasChecked ? '✓' : '·'}
               </span>
-              <span className="text-[7px] uppercase tracking-widest mt-0.5 text-muted-foreground/80">
-                b<sub>{bitIdx}</sub>
+              <span className="mt-0.5 text-[10px] leading-none tracking-tight text-muted-foreground">
+                b<sub className="text-[10px]">{bitIdx}</sub>
               </span>
             </motion.div>
           );
@@ -820,7 +825,7 @@ function SumCheckRow({
 }) {
   if (failingBit !== null) {
     return (
-      <div className="rounded border border-border/40 bg-card/20 p-3 text-xs font-mono text-muted-foreground/70">
+      <div className="rounded border border-border/40 bg-card/20 p-3 text-xs font-mono text-muted-foreground">
         skipped — short-circuited at bit {failingBit}
       </div>
     );
