@@ -57,7 +57,7 @@ export function CopyButton({ text, label = 'install command' }: CopyButtonProps)
         <Copy aria-hidden="true" className={`${ICON_CLASS} ${copied ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`} />
         <Check
           aria-hidden="true"
-          className={`${ICON_CLASS} text-emerald-400 ${copied ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`}
+          className={`${ICON_CLASS} text-status-green ${copied ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`}
         />
       </button>
       {/* a changed aria-label on the focused button is not reliably read out */}

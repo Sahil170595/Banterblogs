@@ -23,8 +23,10 @@ const MANROPE_AVG_CHAR_EM = 0.448;
 const CHARS_PER_LINE = { min: 65, max: 80 };
 const MAX_SIZES_ON_PAGE = 7;
 // the text sizes the header and footer already put on every interior page
-// (Header.tsx nav 11px on desktop, badge 16, wordmark 18; Footer.tsx 14 and 18)
-const CHROME_SIZES_PX = { phone: [14, 16, 18], desktop: [11, 14, 16, 18] };
+// (Phase R3: Header.tsx wordmark and nav 12px, search 14 on desktop and 16 in
+// the phone menu, menu links 12 and 14; Footer.tsx wordmark and headings 12,
+// links 14)
+const CHROME_SIZES_PX = { phone: [12, 14, 16], desktop: [12, 14] };
 const DESKTOP_QUERY = '@media (min-width: 768px)';
 
 // top-level blocks with their bodies, braces balanced

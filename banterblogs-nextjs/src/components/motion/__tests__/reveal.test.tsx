@@ -130,12 +130,12 @@ describe('<Reveal> markup', () => {
 
   it('passes data attributes and style through for the entrance', () => {
     const markup = renderToStaticMarkup(
-      <Reveal data-entrance-card="" style={{ '--entrance-i': 2 } as CSSProperties}>
+      <Reveal data-entrance-item="" style={{ '--entrance-i': 2 } as CSSProperties}>
         card
       </Reveal>,
     );
 
-    expect(markup).toContain('data-entrance-card=""');
+    expect(markup).toContain('data-entrance-item=""');
     expect(markup).toContain('style="--entrance-i:2"');
   });
 });

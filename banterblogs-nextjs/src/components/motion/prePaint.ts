@@ -5,9 +5,9 @@
 // reduced-motion visitors see every element at rest.
 //
 // It also opens the entrance window: data-entrance carries the path of the
-// full page load, so a first-load entrance (the /reports archive) never plays
-// on a client-side navigation into the page. The window closes once no
-// entrance-* animation is left running.
+// full page load, and a page head's first-load entrance (entrance.ts) plays
+// only while it is set. The window closes once no entrance-* animation is
+// left running, or at the first client-side navigation (EntranceWindow).
 
 export const MOTION_GATE_SCRIPT_ID = 'motion-gate';
 export const MOTION_ATTRIBUTE = 'data-motion';

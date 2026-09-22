@@ -2,16 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import tailwindConfig from '../../../../tailwind.config';
+import { HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
 import { ENTRANCE_CARD_STEPS, TABS_ENTRANCE_GROUP } from '../ReportTabs';
 
-// The archive's CSS-driven motion: the first-load entrance, the tab highlight
-// and the grid crossfade. Component wiring is in reportTabs.test.tsx and
+// The archive's CSS-driven motion: its first-load entrance, the tab highlight
+// and the grid crossfade. The entrance is the shared one (Phase R3 moved its
+// rules off /reports alone; components/motion/__tests__/entrance.test.tsx
+// covers them); component wiring is in reportTabs.test.tsx and
 // reportsIndex.test.tsx.
 
 const CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-const ENTRANCE_GATE = 'html[data-motion="on"][data-entrance="/reports"]';
+const ENTRANCE_GATE = 'html[data-motion="on"][data-entrance]';
 // the head moves in three groups: the title, the intro, the stats with the tabs
-const HEAD_GROUPS = 3;
+const HEAD_GROUPS = HEAD_ENTRANCE_GROUPS;
 // a staged sequence starts every step within this (the motion brief's cap)
 const MAX_ENTRANCE_START_MS = 400;
 // and has settled within this
@@ -48,7 +51,7 @@ const ms = (name: string) => {
 const token = (key: string) => Number(String((tailwindConfig.theme?.extend?.transitionDuration as Record<string, string>)[key]).replace('ms', ''));
 
 describe('archive entrance', () => {
-  it('plays only on a full load of /reports, under the motion gate', () => {
+  it('plays only on a full page load, under the motion gate', () => {
     const animating = rules.filter((rule) => /animation:\s*entrance-/.test(rule.body));
     expect(animating).toHaveLength(2);
     for (const rule of animating) {
@@ -74,11 +77,11 @@ describe('archive entrance', () => {
   });
 
   it('starts every step within 400ms, the first row after the head one item apart, and settles within 1s', () => {
-    expect(Number(/--entrance-cards-after:\s*(\d+);/.exec(CSS)?.[1])).toBe(HEAD_GROUPS);
+    expect(Number(/--entrance-items-after:\s*(\d+);/.exec(CSS)?.[1])).toBe(HEAD_GROUPS);
     expect(TABS_ENTRANCE_GROUP).toBe(HEAD_GROUPS - 1);
-    const cards = rules.find((rule) => rule.prelude.endsWith('[data-entrance-card]'))!;
+    const cards = rules.find((rule) => rule.prelude.endsWith('[data-entrance-item]'))!;
     expect(cards.body).toMatch(
-      /calc\(var\(--entrance-cards-after\) \* var\(--stagger-group\) \+ var\(--entrance-i, 0\) \* var\(--stagger-item\)\)/,
+      /calc\(var\(--entrance-items-after\) \* var\(--stagger-group\) \+ var\(--entrance-i, 0\) \* var\(--stagger-item\)\)/,
     );
     const lastStart = HEAD_GROUPS * ms('stagger-group') + (ENTRANCE_CARD_STEPS - 1) * ms('stagger-item');
     expect(lastStart).toBeLessThanOrEqual(MAX_ENTRANCE_START_MS);
@@ -111,7 +114,7 @@ describe('archive tab motion', () => {
 describe('archive motion under reduced motion', () => {
   it.each([
     ['.entrance-group', /animation:\s*none\s*!important/],
-    ['[data-entrance-card]', /animation:\s*none\s*!important/],
+    ['[data-entrance-item]', /animation:\s*none\s*!important/],
     ['[data-tab-panel]', /animation:\s*none\s*!important/],
     ['[data-tab-highlight]', /transition:\s*none\s*!important/],
   ])('stills %s', (selector, declaration) => {

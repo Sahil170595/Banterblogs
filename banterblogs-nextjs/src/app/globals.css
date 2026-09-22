@@ -36,6 +36,29 @@
   --chart-3: 220 8% 62%;
   --chart-4: 220 12% 38%;
   --chart-5: 220 14% 24%;
+
+  /* Status hues (Badge, Eyebrow dots): presented, under review, preprint.
+     Each clears 7:1 as text on --background and on its own 12% tint. */
+  --status-green: 145 55% 60%;
+  --status-amber: 38 90% 62%;
+  --status-blue: 212 85% 72%;
+
+  /* The page-title role (text-heading-48) steps with the viewport. */
+  --type-heading-48: 1.75rem;
+  --leading-heading-48: 1.08;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --type-heading-48: 2.25rem;
+    --leading-heading-48: 1.05;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --type-heading-48: 3rem;
+  }
 }
 
 * {
@@ -105,38 +128,75 @@ html {
   isolation: isolate;
 }
 
-.chimera-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.14;
-  background-image:
-    linear-gradient(to right, hsl(var(--border) / 0.65) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--border) / 0.45) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(circle at 25% 10%, black 35%, transparent 75%);
-}
-
 .chimera-shell::after {
   content: "";
   position: absolute;
-  inset: 0;
+  /* up under the sticky header, transparent at the top of the page, so the
+     horizon sits behind the bar with no seam where <main> begins */
+  inset: calc(-1 * var(--site-header-height)) 0 0;
   pointer-events: none;
   opacity: 0.2;
-  /* three tiled speck layers (prime-ish offsets break the lattice) +
-     accretion horizon: the landing's starfield and disk glow carrying
-     through every interior page — continuity with the galactic center */
+  /* three tiled speck layers (prime-ish offsets break the lattice) and one
+     quiet accretion horizon behind the header: the landing's starfield and
+     disk glow carrying through every interior page. The horizon is sized in
+     rem so a long page does not stretch it. */
   background-image:
     radial-gradient(circle 1px at 31px 47px, hsl(0 0% 100% / 0.9) 99%, transparent 100%),
     radial-gradient(circle 1px at 149px 173px, hsl(0 0% 100% / 0.7) 99%, transparent 100%),
     radial-gradient(circle 1.5px at 233px 89px, hsl(30 40% 92% / 0.85) 99%, transparent 100%),
-    radial-gradient(ellipse 90% 42% at 50% -14%, hsl(var(--primary) / 0.7), transparent 65%),
-    radial-gradient(circle at 20% 20%, hsl(var(--accent) / 0.3), transparent 45%),
-    radial-gradient(circle at 80% 15%, hsl(var(--primary) / 0.28), transparent 40%);
-  background-size: 293px 271px, 359px 331px, 457px 419px, auto, auto, auto;
-  background-repeat: repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+    radial-gradient(ellipse 60rem 22rem at 50% -8rem, hsl(var(--primary) / 0.5), transparent 70%);
+  background-size: 293px 271px, 359px 331px, 457px 419px, auto;
+  background-repeat: repeat, repeat, repeat, no-repeat;
   mix-blend-mode: screen;
+}
+
+/* The brand mark (components/ui/Wordmark.tsx): the landing's orbital ring
+   with an ember-lit core and a satellite on its right, and the name in the
+   12px mono label size, wide-tracked as on the landing. */
+.brand-orbit {
+  position: relative;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid hsl(0 0% 100% / 0.25);
+  border-radius: 9999px;
+}
+
+.brand-orbit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: auto;
+  border-radius: 9999px;
+  background-color: #000;
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.9),
+    0 0 12px hsl(var(--primary));
+}
+
+.brand-orbit::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -3px;
+  width: 0.25rem;
+  height: 0.25rem;
+  margin: auto 0;
+  border-radius: 9999px;
+  background-color: hsl(var(--primary));
+}
+
+.brand-wordmark {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--foreground));
 }
 
 /* In the components layer so utilities on shell children (.fixed, .z-50)
@@ -148,18 +208,21 @@ html {
   }
 }
 
+/* Retired panels, kept until their last pages move onto the primitives
+   (Phase R3-B). No backdrop blur: glass is for the header alone, and the
+   surface is opaque enough to read over the starfield without it. */
 .signal-panel {
-  @apply rounded-3xl border border-border/60 bg-card/70 backdrop-blur-md shadow-lg shadow-black/20;
+  @apply rounded-3xl border border-border/60 bg-card/90 shadow-lg shadow-black/20;
   box-shadow: 0 20px 45px -30px rgba(0,0,0,0.8), 0 0 0 1px hsl(var(--border)/0.4) inset;
 }
 
 .signal-panel-strong {
-  @apply rounded-3xl border border-border/70 bg-card/80 backdrop-blur-xl;
+  @apply rounded-3xl border border-border/70 bg-card/95;
   box-shadow: 0 25px 60px -35px rgba(0,0,0,0.9), 0 0 0 1px hsl(var(--primary)/0.15) inset;
 }
 
 .signal-pill {
-  @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground;
+  @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-label-12-mono text-muted-foreground;
 }
 
 .signal-divider {
@@ -335,10 +398,13 @@ html {
   --blur-morph: 3px;
   --blur-enter: 6px;
   --blur-glass: 16px;
-  /* staggers: words, items entering together, hero groups */
+  /* staggers: words, items entering together, hero groups, mobile-menu items */
   --stagger-word: 35ms;
   --stagger-item: 50ms;
   --stagger-group: 80ms;
+  --stagger-menu: 35ms;
+  /* the rise of a mobile-menu item */
+  --motion-menu: 8px;
   /* one live-state loop (a 2-3 s pulse) */
   --duration-pulse: 2400ms;
 }
@@ -406,6 +472,43 @@ html {
   }
 }
 
+/* The mobile menu (Header.tsx, B16). Opening, the panel fades in over fast
+   while its items rise --motion-menu, one --stagger-menu apart, over base on
+   strong-out. Closing is one fade of the whole panel over fast; the header
+   holds the panel, inert, until that fade ends. Without motion armed the menu
+   simply appears and goes. */
+@keyframes menu-panel-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes menu-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-menu));
+  }
+}
+
+@keyframes menu-out {
+  to {
+    opacity: 0;
+  }
+}
+
+html[data-motion="on"] #mobile-nav[data-state="open"] {
+  animation: menu-panel-in var(--duration-fast) var(--ease-strong-out) both;
+}
+
+html[data-motion="on"] #mobile-nav[data-state="open"] .menu-item {
+  animation: menu-item-in var(--duration-base) var(--ease-strong-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger-menu));
+}
+
+html[data-motion="on"] #mobile-nav[data-state="closing"] {
+  animation: menu-out var(--duration-fast) var(--ease-strong-out) both;
+}
+
 /* <Reveal> (components/motion/Reveal.tsx): only content below the fold at
    mount is held pending, instantly; the shared observer marks it shown once
    and only that change transitions: it rises --motion-reveal from
@@ -451,13 +554,51 @@ html[data-motion="on"] [data-reveal="pending"] {
   transition: opacity var(--duration-enter) var(--ease-strong-out);
 }
 
-.card-visual {
+/* The archive card's visual frame and the Card primitive's surface
+   (components/ui/Card.tsx) are one material: a card-coloured plate with an
+   inset hairline, brightening under the pointer. A surfaced card's glow rings
+   the whole surface rather than a 16:9 frame. */
+.card-visual,
+.card-surface {
   position: relative;
-  overflow: hidden;
-  border-radius: 0.625rem;
   background-color: hsl(var(--card));
   box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
   transition: background-color var(--duration-enter) var(--ease-strong-out);
+}
+
+.card-visual {
+  overflow: hidden;
+  border-radius: 0.625rem;
+}
+
+.card-surface {
+  border-radius: 0.75rem;
+}
+
+.card-lift.card-surface::after {
+  inset: 0;
+  aspect-ratio: auto;
+  border-radius: inherit;
+}
+
+/* A card that holds several links: its CardLink stretches over the card, and
+   the other links (ButtonLink, positioned) paint above it. Keyboard focus
+   rings the card rather than the title text. */
+.card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+:root .card-link:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.card-depth:has(.card-link:focus-visible) .card-surface {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
 }
 
 .card-depth .card-arrow {
@@ -479,7 +620,7 @@ html[data-motion="on"] [data-reveal="pending"] {
     transition-duration: var(--duration-hover);
   }
 
-  .card-depth:hover .card-visual {
+  .card-depth:hover :is(.card-visual, .card-surface) {
     background-color: hsl(var(--card-raised));
     transition-duration: var(--duration-hover);
   }
@@ -516,6 +657,66 @@ html[data-motion="on"] [data-reveal="pending"] {
 
 .card-depth:focus-visible .rv .h {
   stroke: hsl(var(--primary));
+}
+
+/* the same for a card whose focus lands on its stretched CardLink */
+.card-depth:has(.card-link:focus-visible) .card-arrow {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.card-depth:has(.card-link:focus-visible) .rv .h {
+  stroke: hsl(var(--primary));
+}
+
+/* ListRow (components/ui/ListRow.tsx), the /show row: its hairline is a 1px
+   layer, not a border, and turns ember under the pointer with the title; the
+   arrow nudges --motion-nudge where the device really hovers. Colour and the
+   arrow only: no lift on a dense list. */
+.list-row {
+  position: relative;
+}
+
+.list-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background-color: hsl(var(--border) / 0.6);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+a.list-row:hover::before {
+  background-color: hsl(var(--primary) / 0.6);
+}
+
+.list-row .row-arrow {
+  transition:
+    transform var(--duration-base) var(--ease-strong-out),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+a.list-row:hover .row-arrow {
+  color: hsl(var(--primary));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.list-row:hover .row-arrow {
+    transform: translateX(var(--motion-nudge));
+    transition-duration: var(--duration-hover), var(--duration-fast);
+  }
+}
+
+/* Section (components/ui/Section.tsx): one rhythm between page sections. */
+.page-section + .page-section {
+  margin-top: 4rem;
+}
+
+@media (min-width: 768px) {
+  .page-section + .page-section {
+    margin-top: 6rem;
+  }
 }
 
 .card-badge {
@@ -615,16 +816,17 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
   animation-play-state: running;
 }
 
-/* The archive's first-load entrance (reports/page.tsx, ReportTabs.tsx), only
-   while the pre-paint gate holds the entrance window open on a full load of
-   /reports. It moves in groups, not letters: the title at 0 (so the LCP
-   heading starts on the first frame), then the intro, then the stats and
-   tabs, one --stagger-group apart, then the first row of cards one
-   --stagger-item apart; each rises --motion-rise out of --blur-enter over the
-   reveal token on strong-out. Every start falls within 400ms. */
+/* The first-load entrance (components/motion/entrance.ts; PageHeader and the
+   /reports head), only while the pre-paint gate holds the entrance window
+   open: on a full page load, closed on the first client navigation. It moves
+   in groups, not letters: the title at 0 (so the LCP heading starts on the
+   first frame), then the lede, then the meta row, one --stagger-group apart,
+   then the first content items one --stagger-item apart; each rises
+   --motion-rise out of --blur-enter over the reveal token on strong-out.
+   Every start falls within 400ms. */
 :root {
-  /* the cards follow the three head groups */
-  --entrance-cards-after: 3;
+  /* items follow the three head groups unless they say otherwise */
+  --entrance-items-after: 3;
 }
 
 @keyframes entrance-rise {
@@ -635,14 +837,14 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
   }
 }
 
-html[data-motion="on"][data-entrance="/reports"] .entrance-group {
+html[data-motion="on"][data-entrance] .entrance-group {
   animation: entrance-rise var(--duration-reveal) var(--ease-strong-out) both;
   animation-delay: calc(var(--group, 0) * var(--stagger-group));
 }
 
-html[data-motion="on"][data-entrance="/reports"] [data-entrance-card] {
+html[data-motion="on"][data-entrance] [data-entrance-item] {
   animation: entrance-rise var(--duration-reveal) var(--ease-strong-out) both;
-  animation-delay: calc(var(--entrance-cards-after) * var(--stagger-group) + var(--entrance-i, 0) * var(--stagger-item));
+  animation-delay: calc(var(--entrance-items-after) * var(--stagger-group) + var(--entrance-i, 0) * var(--stagger-item));
 }
 
 /* Archive tabs (ReportTabs.tsx), after Emil Kowalski's clip-path technique:
@@ -701,6 +903,7 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
     --motion-rise: 0px;
     --motion-reveal: 0px;
     --motion-route: 0px;
+    --motion-menu: 0px;
     --scale-press: 1;
     --scale-press-card: 1;
     --scale-enter: 1;
@@ -736,8 +939,12 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
     animation: none !important;
   }
 
+  .menu-item {
+    animation: none !important;
+  }
+
   .entrance-group,
-  [data-entrance-card],
+  [data-entrance-item],
   [data-tab-panel] {
     animation: none !important;
   }
@@ -953,8 +1160,9 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 /* report page (app/reports/[id]/page.tsx, components/reports/Report*.tsx):
    reading type, the head, the hero figure, the contents with its scroll-spy
    marker, and the reading-progress bar. With the header and footer the page
-   uses seven text sizes: 11, 14, 16, 18, 20, 26 and 44px (32 for the title
-   on a phone, where the 11px nav and the 20px dek are gone).
+   uses seven text sizes: 12, 14, 16, 18, 20, 26 and 44px (32 for the title
+   on a phone, where the 20px dek is gone). Its mono labels are the 12px
+   label role (text-label-12-mono).
    readingType.test.ts pins the type. */
 :root {
   /* body prose at ~15:1 on --background; the muted grey it replaces is 8.87:1 */
@@ -1298,9 +1506,9 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 .report-toc-label {
   margin-bottom: 0.875rem;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
 }
@@ -1372,9 +1580,9 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   cursor: pointer;
   list-style: none;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
 }
@@ -1482,9 +1690,9 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   align-items: center;
   gap: 0.375rem;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
 }

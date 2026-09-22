@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from "@/components/motion/prePaint";
+import { EntranceWindow } from "@/components/motion/EntranceWindow";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -103,6 +104,8 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        {/* closes the first-load entrance window on the first client navigation */}
+        <EntranceWindow />
         <ErrorBoundary>
           {/* .keyboard-navigation scopes the focus-visible ring in globals.css */}
           <div className="keyboard-navigation relative flex min-h-screen flex-col">

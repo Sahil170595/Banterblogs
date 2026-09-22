@@ -196,7 +196,7 @@ describe('report archive motion wiring', () => {
     expect(screen.getByRole('tablist').parentElement?.className).toBe('entrance-group');
     expect(screen.getByRole('tablist').parentElement?.style.getPropertyValue('--group')).toBe(String(TABS_ENTRANCE_GROUP));
     expect(wrappers.every((wrapper) => wrapper.hasAttribute('data-reveal'))).toBe(true);
-    const joined = wrappers.filter((wrapper) => wrapper.hasAttribute('data-entrance-card'));
+    const joined = wrappers.filter((wrapper) => wrapper.hasAttribute('data-entrance-item'));
     expect(joined).toEqual(wrappers.slice(0, ENTRANCE_CARDS));
     // the first row staggers; the rest start with its last card
     expect(joined.map((wrapper) => wrapper.style.getPropertyValue('--entrance-i'))).toEqual(

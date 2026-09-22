@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { BookOpen, Github, Linkedin, Mail, Package, Rss, Twitter } from 'lucide-react';
 import { ReaderSettingsLauncher } from './AccessibilityPanelClient';
+import { Eyebrow } from './ui/Eyebrow';
+import { Wordmark } from './ui/Wordmark';
 
 const FOOTER_LINKS = {
   Explore: [
@@ -37,11 +39,8 @@ export function Footer() {
       <div className="container py-14">
         <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))] md:gap-6">
           <div className="space-y-5">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10">CF</span>
-              <span className="text-lg font-semibold text-foreground">Chimeraforge</span>
-            </div>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <Wordmark />
+            <p className="max-w-sm text-copy-14 text-muted-foreground">
               Constitutional AI enforcement architecture — embedding-based safety routing, multi-model debate, cryptographic provenance, and self-improving alignment.
             </p>
             <div className="flex items-center gap-4 text-muted-foreground">
@@ -110,8 +109,8 @@ export function Footer() {
 
           {Object.entries(FOOTER_LINKS).map(([section, links]) => (
             <div key={section} className="space-y-4">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">{section}</h2>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <Eyebrow as="h2">{section}</Eyebrow>
+              <ul className="space-y-2 text-copy-14 text-muted-foreground">
                 {links.map((link) => (
                   <li key={link.href}>
                     <Link
@@ -130,7 +129,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-sm text-muted-foreground md:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-copy-14 text-muted-foreground md:flex-row">
           {/* Year hardcoded so server-build and client-hydration agree —
               new Date().getFullYear() can mismatch across timezones / build
               boundaries and tripped React #418 in prod. Bump yearly. */}

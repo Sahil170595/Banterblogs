@@ -1,8 +1,9 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Reveal } from '@/components/motion/Reveal';
+import { entranceGroup, entranceItem } from '@/components/motion/entrance';
 import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
 import { ReportCard } from './ReportCard';
 
@@ -170,7 +171,7 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
 
   return (
     <div>
-      <div className="entrance-group" style={{ '--group': TABS_ENTRANCE_GROUP } as CSSProperties}>
+      <div {...entranceGroup(TABS_ENTRANCE_GROUP)}>
         <div
           ref={listRef}
           role="tablist"
@@ -236,12 +237,7 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
                 {group.reports.map((report, index) => (
                   <Reveal
                     key={report.slug}
-                    {...(index < ENTRANCE_CARDS
-                      ? {
-                          'data-entrance-card': '',
-                          style: { '--entrance-i': Math.min(index, ENTRANCE_CARD_STEPS - 1) } as CSSProperties,
-                        }
-                      : {})}
+                    {...(index < ENTRANCE_CARDS ? entranceItem(Math.min(index, ENTRANCE_CARD_STEPS - 1), TABS_ENTRANCE_GROUP + 1) : {})}
                   >
                     <ReportCard
                       slug={report.slug}
