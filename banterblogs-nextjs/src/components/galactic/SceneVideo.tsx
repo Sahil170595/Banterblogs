@@ -2,15 +2,42 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { NAV_RECEDE_RESET_MS, NAV_START_EVENT } from '@/components/motion/navRecede';
-import { SCENE_VIDEO_TIMING, type SceneVideoSource, type SceneVideoVariant } from './sceneVideoGate';
+import manifest from './sceneVideo.manifest.json';
 
 // The loop over the poster (sceneVideoGate.ts decides who gets it). It stays
 // transparent until its first frame is presented, which is the poster's own
 // frame, then fades in over the poster, which stays underneath. It plays
-// only while it can be seen and motion is on.
+// only while it can be seen and motion is on. The loop's manifest lives
+// here, in the chunk that loads once the gate has armed, so the landing
+// carries nothing of it before the page has loaded.
+
+export type SceneVideoSource = { src: string; type: string; bytes: number };
+export type SceneVideoVariant = {
+  name: string;
+  media: string | null;
+  aspect: number;
+  width: number;
+  height: number;
+  /** best first; the player may promote one the device decodes in hardware */
+  sources: SceneVideoSource[];
+};
+
+const VARIANTS = manifest.variants as SceneVideoVariant[];
+const TIMING = { fps: manifest.fps, frames: manifest.frames };
+
+/** The loop for a poster variant (sceneVideoGate's posterVariantFor), or null: that poster has none. */
+export function videoVariantFor(posterVariant: string): SceneVideoVariant | null {
+  return VARIANTS.find((variant) => variant.name === posterVariant) ?? null;
+}
 
 // hides the codecs' differences from the poster's AVIF; the pictures match
 export const VIDEO_CROSSFADE_MS = 400;
+// A browser can pause the loop itself: WebKit stops at the first wrap, and
+// a phone can interrupt playback. It is started again this many times in a
+// row before it is left standing, and a loop that ran this long before
+// pausing gets those attempts back, so a refusal cannot spin.
+export const RESUME_ATTEMPTS = 5;
+export const RESUME_COOLDOWN_MS = 2000;
 // the poster <img> ScenePoster renders; its chosen file is already in cache
 const POSTER_IMAGE_SELECTOR = '[data-scene-poster] img';
 const BITS_PER_BYTE = 8;
@@ -35,7 +62,7 @@ interface SceneVideoProps {
  */
 async function orderByDecodeCost(variant: SceneVideoVariant): Promise<SceneVideoSource[]> {
   const capabilities = navigator.mediaCapabilities;
-  const seconds = SCENE_VIDEO_TIMING.frames / SCENE_VIDEO_TIMING.fps;
+  const seconds = TIMING.frames / TIMING.fps;
   const results = await Promise.all(
     variant.sources.map((source) =>
       capabilities
@@ -46,7 +73,7 @@ async function orderByDecodeCost(variant: SceneVideoVariant): Promise<SceneVideo
             width: variant.width,
             height: variant.height,
             bitrate: Math.round((source.bytes * BITS_PER_BYTE) / seconds),
-            framerate: SCENE_VIDEO_TIMING.fps,
+            framerate: TIMING.fps,
           },
         })
         .catch((error: unknown) => {
@@ -70,22 +97,13 @@ export default function SceneVideo({ variant, paused, onUnavailable }: SceneVide
   // read by event handlers without a render: a navigation's click task stays short
   const conditions = useRef({ ready: false, paused, onscreen: true, hidden: false, leaving: false, failed: false });
   const playRequested = useRef(false);
+  const resumes = useRef({ left: RESUME_ATTEMPTS, at: 0 });
   const onUnavailableRef = useRef(onUnavailable);
   useEffect(() => {
     onUnavailableRef.current = onUnavailable;
   }, [onUnavailable]);
 
-  const sync = useCallback(() => {
-    const video = videoRef.current;
-    const state = conditions.current;
-    if (!video || !state.ready || state.failed) return;
-    const shouldPlay = !state.paused && state.onscreen && !state.hidden && !state.leaving;
-    if (shouldPlay === playRequested.current) return;
-    playRequested.current = shouldPlay;
-    if (!shouldPlay) {
-      video.pause();
-      return;
-    }
+  const start = useCallback((video: HTMLVideoElement) => {
     video.muted = true;
     video.play()?.catch((error: unknown) => {
       if (error instanceof DOMException && error.name === 'AbortError') {
@@ -99,12 +117,32 @@ export default function SceneVideo({ variant, paused, onUnavailable }: SceneVide
     });
   }, []);
 
+  const sync = useCallback(() => {
+    const video = videoRef.current;
+    const state = conditions.current;
+    if (!video || !state.ready || state.failed) return;
+    const shouldPlay = !state.paused && state.onscreen && !state.hidden && !state.leaving;
+    if (shouldPlay === playRequested.current) return;
+    playRequested.current = shouldPlay;
+    if (shouldPlay) {
+      resumes.current = { left: RESUME_ATTEMPTS, at: performance.now() };
+      start(video);
+    } else {
+      video.pause();
+    }
+  }, [start]);
+
   useEffect(() => {
     if (sources !== null) return;
     let cancelled = false;
-    orderByDecodeCost(variant).then((ordered) => {
-      if (!cancelled) setSources(ordered);
-    });
+    orderByDecodeCost(variant)
+      .catch((error: unknown) => {
+        console.warn('[landing] could not weigh the scene video codecs; keeping the manifest order', error);
+        return variant.sources;
+      })
+      .then((ordered) => {
+        if (!cancelled) setSources(ordered);
+      });
     return () => {
       cancelled = true;
     };
@@ -134,6 +172,19 @@ export default function SceneVideo({ variant, paused, onUnavailable }: SceneVide
     } else {
       video.addEventListener('timeupdate', onTimeUpdate);
     }
+
+    // a pause the page did not ask for (WebKit stops at the loop's wrap)
+    const onPause = () => {
+      if (!playRequested.current || conditions.current.failed) return;
+      const counter = resumes.current;
+      if (performance.now() - counter.at > RESUME_COOLDOWN_MS) counter.left = RESUME_ATTEMPTS;
+      if (counter.left <= 0) return;
+      counter.left -= 1;
+      counter.at = performance.now();
+      if (counter.left === 0) console.warn('[landing] scene video keeps pausing itself; leaving it on its last frame');
+      start(video);
+    };
+    video.addEventListener('pause', onPause);
 
     const onVisibility = () => {
       conditions.current.hidden = document.visibilityState === 'hidden';
@@ -168,13 +219,15 @@ export default function SceneVideo({ variant, paused, onUnavailable }: SceneVide
     return () => {
       if (frameHandle !== undefined) video.cancelVideoFrameCallback?.(frameHandle);
       video.removeEventListener('timeupdate', onTimeUpdate);
+      video.removeEventListener('pause', onPause);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener(NAV_START_EVENT, onLeave);
       clearTimeout(resume);
       observer?.disconnect();
+      playRequested.current = false;
       video.pause();
     };
-  }, [sync]);
+  }, [start, sync]);
 
   return (
     <div

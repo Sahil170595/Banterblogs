@@ -1,8 +1,9 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NAV_RECEDE_RESET_MS, NAV_START_EVENT } from '@/components/motion/navRecede';
-import SceneVideo from '../SceneVideo';
-import type { SceneVideoVariant } from '../sceneVideoGate';
+import SceneVideo, { RESUME_ATTEMPTS, RESUME_COOLDOWN_MS, videoVariantFor, type SceneVideoVariant } from '../SceneVideo';
+import posterManifest from '../scenePoster.manifest.json';
+import videoManifest from '../sceneVideo.manifest.json';
 
 // The loop that replaces the poster on touch devices. It never shows a
 // frame it has not decoded (the poster stays until the first one is
@@ -42,6 +43,25 @@ const setVisibility = (next: Document['visibilityState']) =>
     visibility = next;
     document.dispatchEvent(new Event('visibilitychange'));
   });
+
+describe('loop video art direction', () => {
+  it('has a loop for the portrait posters and none for the landscape one', () => {
+    expect(videoVariantFor('phone')?.width).toBe(1080);
+    expect(videoVariantFor('tablet')?.width).toBe(1080);
+    // a 12:5 loop would cost a no-GPU desktop 0.4-0.5 of a core in software
+    expect(videoVariantFor('landscape')).toBeNull();
+  });
+
+  it('frames each loop exactly like the poster it replaces', () => {
+    for (const video of videoManifest.variants) {
+      const poster = posterManifest.variants.find((variant) => variant.name === video.name);
+      expect(poster, `a ${video.name} poster`).toBeDefined();
+      expect(video.media).toBe(poster?.media);
+      expect(video.aspect).toBe(poster?.aspect);
+      expect(video.width / video.height).toBeCloseTo(video.aspect, 2);
+    }
+  });
+});
 
 describe('landing loop video player', () => {
   beforeEach(() => {
@@ -179,6 +199,37 @@ describe('landing loop video player', () => {
       await vi.advanceTimersByTimeAsync(NAV_RECEDE_RESET_MS);
     });
     expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  // WebKit stopped the loop at its first wrap (it seeks to 0 and pauses);
+  // the loop is meant to run for as long as it can be seen
+  it('plays on when the browser pauses it by itself', async () => {
+    render(<SceneVideo variant={VARIANT} paused={false} />);
+    await flush();
+    play.mockClear();
+
+    await act(async () => void videoElement().dispatchEvent(new Event('pause')));
+    expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops retrying a loop that pauses itself again and again, and says so', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(<SceneVideo variant={VARIANT} paused={false} />);
+    await flush();
+    play.mockClear();
+
+    for (let attempt = 0; attempt < RESUME_ATTEMPTS + 3; attempt++) {
+      await act(async () => void videoElement().dispatchEvent(new Event('pause')));
+    }
+    expect(play).toHaveBeenCalledTimes(RESUME_ATTEMPTS);
+    expect(warn).toHaveBeenCalledWith('[landing] scene video keeps pausing itself; leaving it on its last frame');
+
+    // a loop that ran for a while before pausing gets the retries back
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(RESUME_COOLDOWN_MS + 1);
+      videoElement().dispatchEvent(new Event('pause'));
+    });
+    expect(play).toHaveBeenCalledTimes(RESUME_ATTEMPTS + 1);
   });
 
   it('pauses and resumes with the motion control', async () => {

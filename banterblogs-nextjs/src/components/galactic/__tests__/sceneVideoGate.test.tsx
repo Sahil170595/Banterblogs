@@ -1,16 +1,18 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GalacticBackdrop, MOTION_STORAGE_KEY } from '../GalacticBackdrop';
-import { allowsVideo, videoVariantFor, SCENE_VIDEO_VARIANTS, type VideoSignals } from '../sceneVideoGate';
-import posterManifest from '../scenePoster.manifest.json';
+import { allowsVideo, posterVariantFor, type VideoSignals } from '../sceneVideoGate';
 
 // Phones and tablets never run the WebGL scene; they get a short loop
 // rendered from it (scripts/render-scene-video.mjs) in place of the still
 // poster, but only once the page has loaded and gone idle, and never for
-// visitors who asked for less motion or less data. The player is covered
-// by sceneVideoPlayer.test.tsx; this stand-in shows what it was given.
+// visitors who asked for less motion or less data. The player, which owns
+// the loop's manifest, is covered by sceneVideoPlayer.test.tsx; this
+// stand-in answers for it — the landscape poster has no loop.
 
 vi.mock('../SceneVideo', () => ({
+  videoVariantFor: (posterVariant: string) =>
+    posterVariant === 'landscape' ? null : { name: posterVariant, width: 1080, height: 1728, sources: [] },
   default: ({ variant, paused }: { variant: { name: string }; paused: boolean }) => (
     <div data-testid="video" data-variant={variant.name} data-paused={String(paused)} />
   ),
@@ -57,21 +59,11 @@ describe('landing loop video gate', () => {
 describe('loop video art direction', () => {
   const matching = (...queries: string[]) => (media: string) => queries.includes(media);
 
-  it('serves the loop of the poster variant the viewport shows', () => {
-    expect(videoVariantFor(matching(PHONE_ASPECT, TABLET_ASPECT))?.name).toBe('phone');
-    expect(videoVariantFor(matching(TABLET_ASPECT))?.name).toBe('tablet');
-    // wider viewports show the landscape poster, which has no loop
-    expect(videoVariantFor(matching())).toBeNull();
-  });
-
-  it('frames each loop exactly like the poster it replaces', () => {
-    for (const video of SCENE_VIDEO_VARIANTS) {
-      const poster = posterManifest.variants.find((variant) => variant.name === video.name);
-      expect(poster, `a ${video.name} poster`).toBeDefined();
-      expect(video.media).toBe(poster?.media);
-      expect(video.aspect).toBe(poster?.aspect);
-      expect(video.width / video.height).toBeCloseTo(video.aspect, 2);
-    }
+  it('follows the poster the viewport shows', () => {
+    expect(posterVariantFor(matching(PHONE_ASPECT, TABLET_ASPECT))).toBe('phone');
+    expect(posterVariantFor(matching(TABLET_ASPECT))).toBe('tablet');
+    // wider viewports fall through to the poster with no query
+    expect(posterVariantFor(matching())).toBe('landscape');
   });
 });
 

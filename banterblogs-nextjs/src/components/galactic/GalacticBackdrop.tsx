@@ -7,7 +7,8 @@ import { NAV_RECEDE_ATTRIBUTE, NAV_RECEDE_RESET_MS, NAV_START_EVENT } from '@/co
 import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
 import { ScenePoster } from './ScenePoster';
 import { SCENE_CONTEXT_ATTRIBUTES } from './sceneOpening';
-import { ART_DIRECTION_QUERIES, allowsVideo, videoVariantFor, type SceneVideoVariant, type VideoSignals } from './sceneVideoGate';
+import type { SceneVideoVariant } from './SceneVideo';
+import { ART_DIRECTION_QUERIES, allowsVideo, posterVariantFor, type VideoSignals } from './sceneVideoGate';
 import { SelectionCard } from './SelectionCard';
 import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
 import { SystemRail } from './SystemRail';
@@ -127,7 +128,7 @@ function readVideoSignals(): VideoSignals {
   };
 }
 
-const currentVideoVariant = () => videoVariantFor((media) => window.matchMedia(media).matches);
+const currentPosterVariant = () => posterVariantFor((media) => window.matchMedia(media).matches);
 
 function whenIdle(callback: () => void): () => void {
   if (typeof window.requestIdleCallback === 'function') {
@@ -286,6 +287,8 @@ export function GalacticBackdrop() {
     const artDirection = ART_DIRECTION_QUERIES.map((query) => window.matchMedia(query));
     let armed = false;
     let cancelIdle: (() => void) | undefined;
+    // the player's chunk carries the loop's manifest; this is where it loads
+    let pickVariant: ((posterVariant: string) => SceneVideoVariant | null) | undefined;
     const arm = () => {
       if (armed || cancelIdle || videoUnavailableRef.current || document.readyState !== 'complete') return;
       if (!allowsVideo(readVideoSignals())) return;
@@ -294,8 +297,19 @@ export function GalacticBackdrop() {
         // hidden or reduced meanwhile: the next visibility or motion change re-arms
         if (!allowsVideo(readVideoSignals())) return;
         armed = true;
-        setVideoVariant(currentVideoVariant());
-        setVideoArmed(true);
+        import('./SceneVideo').then(
+          ({ videoVariantFor }) => {
+            if (!armed) return;
+            pickVariant = videoVariantFor;
+            // a viewport whose poster has no loop (landscape) keeps the still
+            setVideoVariant(videoVariantFor(currentPosterVariant()));
+            setVideoArmed(true);
+          },
+          (error: unknown) => {
+            console.warn('[landing] the scene video could not load; keeping the poster', error);
+            videoUnavailableRef.current = true;
+          },
+        );
       });
     };
     const onMotionChange = () => {
@@ -306,7 +320,7 @@ export function GalacticBackdrop() {
       setVideoArmed(false);
     };
     const reframe = () => {
-      if (armed) setVideoVariant(currentVideoVariant());
+      if (armed && pickVariant) setVideoVariant(pickVariant(currentPosterVariant()));
     };
     arm();
     window.addEventListener('load', arm);
@@ -314,6 +328,7 @@ export function GalacticBackdrop() {
     reducedMotion.addEventListener('change', onMotionChange);
     for (const query of artDirection) query.addEventListener('change', reframe);
     return () => {
+      armed = false;
       window.removeEventListener('load', arm);
       document.removeEventListener('visibilitychange', arm);
       reducedMotion.removeEventListener('change', onMotionChange);
