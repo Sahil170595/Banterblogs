@@ -276,6 +276,29 @@ html {
   transform: scaleX(1);
 }
 
+/* Scene arrival (GalacticBackdrop.tsx), after Vercel's home: the canvas
+   layer stays hidden over the poster until the scene is drawing steadily,
+   then fades in over it on strong-out, and the poster leaves once the fade
+   ends.
+   The fade runs only while motion is armed; otherwise the canvas swaps in at
+   once. */
+:root {
+  --duration-scene-crossfade: 1200ms;
+}
+
+[data-scene-stage="loading"] {
+  opacity: 0;
+}
+
+html[data-motion="on"] [data-scene-stage="loading"] {
+  will-change: opacity;
+}
+
+html[data-motion="on"] [data-scene-stage="fading"] {
+  transition: opacity var(--duration-scene-crossfade) var(--ease-strong-out);
+  will-change: opacity;
+}
+
 /* Site focus ring. Anchored at :root instead of the .keyboard-navigation
    wrapper so it does not depend on that wrapper; specificity is unchanged
    (buttons/fields 0,2,1; links 0,3,0). */
