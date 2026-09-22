@@ -7,7 +7,7 @@ import {
   extractPrimaryHeading,
   extractTreeHeadings,
   hastToHtml,
-  labelTableRegions,
+  labelScrollRegions,
   MIN_TOC_HEADINGS,
   renderMarkdownTree,
   textOf,
@@ -59,8 +59,8 @@ export interface ReportRenderOptions {
   dropInlineToc?: boolean;
   /** Mark tables, code blocks and figures as reveal targets (the page's RevealScope arms them). */
   markRevealTargets?: boolean;
-  /** A later document on a page of several: its table regions are named after it, so no name repeats. */
-  tableRegionName?: string;
+  /** A later document on a page of several: its table and code regions are named after it, so no name repeats. */
+  scrollRegionName?: string;
 }
 
 export interface RenderedReport {
@@ -344,7 +344,7 @@ export async function renderReportDocument(markdown: string, options: ReportRend
   });
   const frontMatter = options.foldTitleBlock ? foldTitleBlock(tree) : null;
   // numbered again once the fold has taken its table
-  labelTableRegions(tree, options.tableRegionName);
+  labelScrollRegions(tree, options.scrollRegionName);
   return { html: hastToHtml(tree), headings: extractTreeHeadings(tree), frontMatter };
 }
 
@@ -359,7 +359,7 @@ async function buildSection(filePath: string, sourceLabel: string, originKey: st
     foldTitleBlock: primary,
     dropInlineToc: extractHeadings(raw).length >= MIN_TOC_HEADINGS,
     markRevealTargets: true,
-    tableRegionName: primary ? undefined : title,
+    scrollRegionName: primary ? undefined : title,
   });
   return {
     id: sanitizeId(title) || sanitizeId(fallback),

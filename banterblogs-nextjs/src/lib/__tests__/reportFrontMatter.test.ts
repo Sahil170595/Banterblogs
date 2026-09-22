@@ -192,7 +192,7 @@ describe('title block folding rules', () => {
   });
 
   it('names a later section’s tables after it, so region names stay unique on a page of several documents', async () => {
-    const { html } = await renderReportDocument(doc('# Appendix', '', '| Model | Score |', '|---|---|', '| a | 1 |'), { tableRegionName: 'Appendix' });
+    const { html } = await renderReportDocument(doc('# Appendix', '', '| Model | Score |', '|---|---|', '| a | 1 |'), { scrollRegionName: 'Appendix' });
     expect(html).toContain('aria-label="Appendix, table 1"');
   });
 

@@ -35,6 +35,20 @@ describe('markdown reading surface', () => {
             expect(boxes.map((box) => box.getAttribute('aria-label'))).toEqual(['Table 1', 'Table 2']);
         });
 
+        // the highlighted code block scrolls inside its <code> (the theme's
+        // overflow-x), which WebKit would not focus either (axe on TR142)
+        it('makes each code block’s scroller a named region the keyboard can reach', async () => {
+            const host = document.createElement('div');
+            host.innerHTML = await renderMarkdownToHtml('```bash\nrun --a\n```\n\nText with `inline` code.\n\n```\nplain\n```\n');
+            const scrollers = [...host.querySelectorAll('pre > code')];
+            expect(scrollers.map((code) => code.getAttribute('role'))).toEqual(['region', 'region']);
+            expect(scrollers.map((code) => code.getAttribute('tabindex'))).toEqual(['0', '0']);
+            expect(scrollers.map((code) => code.getAttribute('aria-label'))).toEqual(['Code block 1', 'Code block 2']);
+            expect(scrollers.every((code) => code.hasAttribute('data-scroll-region'))).toBe(true);
+            // inline code is not a scroller
+            expect(host.querySelector('p code')?.hasAttribute('tabindex')).toBe(false);
+        });
+
         it('marks numeric columns, header included, and leaves text columns alone', async () => {
             const html = await renderMarkdownToHtml([
                 '| Model | Rate | Delta | Note |',
