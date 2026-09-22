@@ -80,7 +80,7 @@ const scenes = [
 
 export default function ShowPage() {
   return (
-    <div className="container py-12 md:py-20 max-w-5xl">
+    <div className="container max-w-5xl pb-12 pt-6 md:pb-20 md:pt-10">
       <header className="mb-16 space-y-4">
         <div {...entranceGroup(0)}>
           <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
