@@ -1,13 +1,14 @@
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { IntentLink } from '@/components/ui/IntentLink';
 import type { EpisodePlatform, EpisodeSummary } from '@/lib/episodes';
 import { formatNumber } from '@/lib/formatUtils';
 
 // The archived episodes' index entry: the /show row (a hairline layer, the
 // title and arrow turning ember under the pointer, no lift on a dense list)
-// with the number and date in a mono rail. Plain markup, no client code, so
-// an index of 268 stays light; every figure the old card printed is on one
-// meta line.
+// with the number and date in a mono rail. Plain markup and no client code of
+// its own, so an index of 268 stays light; the link prefetches its episode on
+// intent, not as the row scrolls by. Every figure the old card printed is on
+// one meta line.
 
 /** tags listed on a row; the rest are counted */
 export const ROW_TAG_LIMIT = 3;
@@ -49,7 +50,7 @@ export function EpisodeRow({ episode }: { episode: EpisodeSummary }) {
   ];
   return (
     <article>
-      <Link href={`/episodes/${episode.slug}`} className="list-row episode-row group">
+      <IntentLink href={`/episodes/${episode.slug}`} className="list-row episode-row group">
         <div className="episode-row-rail">
           <span className="font-mono text-label-13 text-muted-foreground transition-colors duration-fast ease-standard group-hover:text-primary">
             {episodeNumber(episode.displayId ?? episode.id)}
@@ -75,7 +76,7 @@ export function EpisodeRow({ episode }: { episode: EpisodeSummary }) {
           )}
         </div>
         <ArrowRight aria-hidden="true" className="row-arrow episode-row-arrow h-5 w-5 text-muted-foreground" />
-      </Link>
+      </IntentLink>
     </article>
   );
 }

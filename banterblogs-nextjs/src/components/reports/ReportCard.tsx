@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { describeReport } from './reportIdentity';
 import { NAV_FORWARD, ReportFigureTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
@@ -28,7 +28,7 @@ export interface ReportCardProps {
 export function ReportCard({ slug, title, description, synthesis = false, latest = false, accent = latest }: ReportCardProps) {
   const { heading, meta } = describeReport(slug, title);
   return (
-    <Link href={`/reports/${slug}`} transitionTypes={[NAV_FORWARD]} className="card-depth group block rounded-xl">
+    <IntentLink href={`/reports/${slug}`} transitionTypes={[NAV_FORWARD]} className="card-depth group block rounded-xl">
       <div className="card-lift">
         <ReportFigureTransition slug={slug}>
           <div className="card-visual aspect-video">
@@ -46,6 +46,6 @@ export function ReportCard({ slug, title, description, synthesis = false, latest
           <ArrowRight aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
         </div>
       </div>
-    </Link>
+    </IntentLink>
   );
 }

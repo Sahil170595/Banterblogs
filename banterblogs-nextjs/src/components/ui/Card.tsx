@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { cn } from '@/lib/cn';
+import { IntentLink } from './IntentLink';
 
 type CardTag = 'div' | 'article' | 'li';
 
@@ -30,9 +30,9 @@ export function Card({ variant = 'plain', href, as: Tag = 'div', className, chil
   // the outer element fills its grid cell, so cards in a row share a height
   if (href) {
     return (
-      <Link href={href} className="card-depth group block h-full rounded-xl">
+      <IntentLink href={href} className="card-depth group block h-full rounded-xl">
         {lift}
-      </Link>
+      </IntentLink>
     );
   }
   return <Tag className="card-depth group relative h-full rounded-xl">{lift}</Tag>;
@@ -52,8 +52,8 @@ export interface CardLinkProps {
 export function CardLink({ href, className, children }: CardLinkProps) {
   const external = /^https?:\/\//.test(href);
   return (
-    <Link href={href} className={cn('card-link', className)} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+    <IntentLink href={href} className={cn('card-link', className)} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
       {children}
-    </Link>
+    </IntentLink>
   );
 }

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { IntentLink } from './IntentLink';
 
 export interface ListRowProps {
   title: ReactNode;
@@ -39,8 +39,8 @@ export function ListRow({ title, href, index, description, meta, titleAs: Title 
   );
   if (!href) return <div className={layout}>{body}</div>;
   return (
-    <Link href={href} className={cn('group', layout)}>
+    <IntentLink href={href} className={cn('group', layout)}>
       {body}
-    </Link>
+    </IntentLink>
   );
 }

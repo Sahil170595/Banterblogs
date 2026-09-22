@@ -23,12 +23,25 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-// transitionTypes never reaches the DOM; surface it for the assertions
+// transitionTypes and prefetch never reach the DOM; surface them for the assertions
 vi.mock('next/link', async () => {
   const { createElement } = await import('react');
   return {
-    default: ({ transitionTypes, children, ...props }: { transitionTypes?: string[]; children?: ReactNode }) =>
-      createElement('a', { ...props, 'data-transition-types': transitionTypes?.join(' ') }, children),
+    default: ({
+      transitionTypes,
+      prefetch,
+      children,
+      ...props
+    }: {
+      transitionTypes?: string[];
+      prefetch?: boolean | null;
+      children?: ReactNode;
+    }) =>
+      createElement(
+        'a',
+        { ...props, 'data-transition-types': transitionTypes?.join(' '), 'data-prefetch': prefetch === false ? 'off' : 'auto' },
+        children,
+      ),
   };
 });
 
@@ -105,6 +118,10 @@ describe('report card', () => {
     expect(link.getAttribute('href')).toBe('/reports/technical-report-138');
     expect(link.getAttribute('data-transition-types')).toBe(NAV_FORWARD);
     expect(viewTransitions.map((vt) => vt.name)).toEqual(['report-figure-technical-report-138']);
+  });
+
+  it('prefetches its report on intent, not on sight', () => {
+    expect(card().querySelector('a')!.getAttribute('data-prefetch')).toBe('off');
   });
 
   it('has no border of its own, and moves a child while the link keeps the pointer', () => {

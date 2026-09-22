@@ -1020,6 +1020,21 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 }
 /* end motion primitives */
 
+/* The page a followed list or card link leaves (components/motion/
+   navRecede.ts) answers the click at once: while the next page is rendered,
+   everything in it but the kept element recedes on the exit token, and the
+   view transition then carries the receded page out. A report card keeps
+   only its figure, the element the next page shares, so none of the leaving
+   page's text is still bright when the arriving page's text fades in. */
+:root {
+  --nav-recede-opacity: 0.35;
+}
+
+html[data-motion="on"] [data-nav-recede] {
+  opacity: var(--nav-recede-opacity);
+  transition: opacity var(--duration-exit) var(--ease-strong-out);
+}
+
 /* view transitions. Every page-to-page navigation moves the page: the route
    boundary (components/motion/RouteTransition.tsx) hands React the old page
    and the new one (the layout's main and footer) with the classes below, and
