@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowRight, ArrowUpRight, Brain, Calendar, Cpu, Gauge, Home, Inbox, Layers, Shield, Wrench, type LucideIcon } from 'lucide-react';
 import { STAR_SYSTEMS } from '@/components/galactic/systems';
 import { Reveal } from '@/components/motion/Reveal';
@@ -361,25 +361,25 @@ export default async function PlatformPage() {
           <div className="max-w-[60ch] space-y-4 text-copy-17 text-prose">
             <p>
               The subsystems above are not diagrams on{' '}
-              <Link href="/show" className={PROSE_LINK}>
+              <IntentLink href="/show" className={PROSE_LINK}>
                 /show
-              </Link>
+              </IntentLink>
               . Each scene replays pre-computed records from the Banterpacks pipeline — real Ed25519 signatures, real Pedersen
               commitments, real tier verdicts — and labels the one deterministic stand-in where the public demo uses it.
             </p>
             <p>
               Start with the{' '}
-              <Link href="/show/streaming-ladder" className={PROSE_LINK}>
+              <IntentLink href="/show/streaming-ladder" className={PROSE_LINK}>
                 five-tier streaming ladder
-              </Link>
+              </IntentLink>
               , the{' '}
-              <Link href="/show/zk-alignment-proof" className={PROSE_LINK}>
+              <IntentLink href="/show/zk-alignment-proof" className={PROSE_LINK}>
                 zero-knowledge alignment proof
-              </Link>
+              </IntentLink>
               , or{' '}
-              <Link href="/show/bft-consensus" className={PROSE_LINK}>
+              <IntentLink href="/show/bft-consensus" className={PROSE_LINK}>
                 BFT consensus across four replicas
-              </Link>
+              </IntentLink>
               .
             </p>
           </div>

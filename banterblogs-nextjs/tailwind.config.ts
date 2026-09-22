@@ -37,10 +37,11 @@ const config: Config = {
       // spring tokens, so all tuning happens in these two places.
       // fast = colour and opacity feedback; press = a pointer press; hover =
       // hover in; base = small parts easing back, overlays, the tab highlight;
-      // enter = arrivals and card hover out; route = the page slide; morph =
-      // the shared title; reveal = scroll reveals and the archive entrance;
-      // exit = a page leaving; handoff = the pause before the next page fades
-      // in. Springs are sampled linear() curves in globals.css.
+      // enter = arrivals, a page rising in, card hover out; route = the page
+      // slide; morph = the shared report figure and the landing's push-in;
+      // reveal = scroll reveals and the archive entrance; exit = a page
+      // leaving; handoff = the pause before the next page fades in. Springs
+      // are sampled linear() curves in globals.css.
       transitionDuration: {
         fast: "150ms",
         press: "160ms",
@@ -51,7 +52,7 @@ const config: Config = {
         morph: "400ms",
         reveal: "600ms",
         exit: "120ms",
-        handoff: "100ms",
+        handoff: "40ms",
       },
       transitionTimingFunction: {
         standard: "cubic-bezier(0.4, 0, 0.2, 1)",

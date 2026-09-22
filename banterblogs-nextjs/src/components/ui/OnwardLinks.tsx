@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { IntentLink } from './IntentLink';
 
 export interface OnwardLink {
   href: string;
@@ -27,10 +27,10 @@ export function OnwardLinks({ links, label = 'Onward', className = 'page-section
           const Arrow = external ? ArrowUpRight : ArrowRight;
           return (
             <li key={link.href} className="list-row py-5">
-              <Link href={link.href} className="row-link text-copy-16 font-medium text-foreground" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+              <IntentLink href={link.href} className="row-link text-copy-16 font-medium text-foreground" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
                 {link.title}{' '}
                 <Arrow aria-hidden="true" {...(external ? {} : { 'data-direction': 'forward' })} className="row-arrow h-4 w-4 text-muted-foreground" />
-              </Link>
+              </IntentLink>
               <p className="mt-1.5 text-copy-14 text-muted-foreground">{link.blurb}</p>
             </li>
           );

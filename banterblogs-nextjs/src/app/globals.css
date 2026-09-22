@@ -386,15 +386,18 @@ html[data-motion="on"] [data-scene-stage="fading"] {
   --motion-rise: 12px;
   --motion-reveal: 16px;
   --motion-route: 32px;
-  /* scales: press, card press, overlay enter, icon swap, scroll reveal */
+  /* scales: press, card press, overlay enter, icon swap, scroll reveal, the
+     landing's push-in as it hands over to the interior */
   --scale-press: 0.97;
   --scale-press-card: 0.985;
   --scale-enter: 0.96;
   --scale-icon: 0.8;
   --scale-reveal: 0.98;
-  /* blurs: crossfade, shared-title morph, hero entrance, header glass */
+  --scale-push: 1.08;
+  /* blurs: crossfade, a page rising in on a route change, hero entrance,
+     header glass */
   --blur-crossfade: 2px;
-  --blur-morph: 3px;
+  --blur-route: 4px;
   --blur-enter: 6px;
   --blur-glass: 16px;
   /* staggers: words, items entering together, hero groups, mobile-menu items */
@@ -895,6 +898,32 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   animation: panel-in var(--duration-fast) var(--ease-strong-out) both;
 }
 
+/* The archive's cards and its lower sections skip style, layout and paint
+   while off screen, so a navigation into or out of it renders a screen of
+   the archive, not all 55 cards. Paint containment would clip a card's hover
+   glow, so the clip edge sits past it. Each keeps its drawn height once
+   rendered and holds an estimate until then. */
+:root {
+  /* the glow's blur less its spread, plus its drop and the hover lift, rounded up */
+  --card-glow-extent: 48px;
+  /* a card: its 16:9 figure, a two-line title, two lines of description, the meta line */
+  --archive-estimate-card: 24rem;
+  /* the findings grid or the conclusive list at desktop width */
+  --archive-estimate-section: 40rem;
+}
+
+.archive-card-slot {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--archive-estimate-card);
+  overflow-clip-margin: var(--card-glow-extent);
+}
+
+.archive-section {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--archive-estimate-section);
+  overflow-clip-margin: var(--card-glow-extent);
+}
+
 /* Reduced motion: nothing moves, but colour and opacity may still fade
    (reduced is not none). Distance, scale and blur tokens go to rest values,
    transitions keep only colour and opacity, and CSS keyframe animations end
@@ -914,8 +943,9 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
     --scale-enter: 1;
     --scale-icon: 1;
     --scale-reveal: 1;
+    --scale-push: 1;
     --blur-crossfade: 0px;
-    --blur-morph: 0px;
+    --blur-route: 0px;
     --blur-enter: 0px;
   }
 
@@ -969,22 +999,53 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 }
 /* end motion primitives */
 
-/* view transitions: route transitions on the reading path. React names the
-   boundaries in components/reports/ReportTransitions.tsx and hands them the
-   classes below; every duration, curve and distance is a motion token. */
+/* The page a followed list or card link leaves (components/motion/
+   navRecede.ts) answers the click at once: while the next page is rendered,
+   everything in it but the kept element recedes on the exit token, and the
+   view transition then carries the receded page out. A report card keeps
+   only its figure, the element the next page shares, so none of the leaving
+   page's text is still bright when the arriving page's text fades in. */
 :root {
-  /* the page slides --motion-route on move, so its travel reads after the
-     old page has faded */
+  --nav-recede-opacity: 0.35;
+}
+
+html[data-motion="on"] [data-nav-recede] {
+  opacity: var(--nav-recede-opacity);
+  transition: opacity var(--duration-exit) var(--ease-strong-out);
+}
+
+/* view transitions. Every page-to-page navigation moves the page: the route
+   boundary (components/motion/RouteTransition.tsx) hands React the old page
+   and the new one (the layout's main and footer) with the classes below, and
+   marks the kind of page a navigation left and reached. React never animates
+   the unnamed rest of the document (it cancels the root snapshot), so
+   nothing here styles root. The reading path (components/reports/) types
+   its links forward or back and names the report figure. Every duration,
+   curve and distance is a motion token. */
+:root {
+  /* any navigation: the old page leaves fast, and the new one rises out of a
+     blur after a short handoff */
+  --vt-duration-exit: theme('transitionDuration.exit');
+  --vt-duration-rise: theme('transitionDuration.enter');
+  --vt-delay-enter: theme('transitionDuration.handoff');
+  --vt-ease-out: theme('transitionTimingFunction.strong-out');
+  --vt-rise: var(--motion-rise);
+  --vt-rise-blur: var(--blur-route);
+  /* the reading path slides --motion-route on move, so its travel reads
+     after the old page has faded */
   --vt-duration: theme('transitionDuration.route');
   --vt-ease: theme('transitionTimingFunction.move');
   --vt-slide: var(--motion-route);
-  /* old content leaves fast; new content arrives gently after a handoff */
-  --vt-duration-exit: theme('transitionDuration.exit');
   --vt-duration-enter: theme('transitionDuration.hover');
-  --vt-delay-enter: theme('transitionDuration.handoff');
-  --vt-ease-out: theme('transitionTimingFunction.strong-out');
-  /* the shared title travels a little longer and blurs at its midpoint */
-  --vt-duration-morph: theme('transitionDuration.morph');
+  /* the landing into the interior: the scene pushes in as it dissolves, the
+     header settles, and the page rises from further once the scene has
+     mostly gone */
+  --vt-duration-push: theme('transitionDuration.morph');
+  --vt-push-scale: var(--scale-push);
+  --vt-delay-landing: theme('transitionDuration.exit');
+  --vt-rise-landing: var(--motion-route);
+  --vt-rise-blur-landing: var(--blur-enter);
+  --vt-settle: var(--motion-menu);
   /* reduced motion: a short crossfade */
   --vt-duration-fast: theme('transitionDuration.fast');
 }
@@ -999,22 +1060,30 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   animation-timing-function: var(--vt-ease);
 }
 
-/* Unnamed content swaps instantly and stays live; only the named groups below
-   move, so a navigation that names nothing (into the archive from the landing
-   or /show) shows nothing. */
-::view-transition-old(root) {
-  display: none;
+/* Any navigation: the old page fades out on the exit token while the new one
+   rises --vt-rise out of a --vt-rise-blur blur over the enter token, after
+   the handoff, on the top layer. */
+::view-transition-old(.route) {
+  animation: var(--vt-duration-exit) var(--vt-ease-out) both vt-fade-out;
 }
 
-::view-transition-new(root) {
-  animation: none;
+::view-transition-new(.route) {
+  animation: var(--vt-duration-rise) var(--vt-ease-out) var(--vt-delay-enter) both vt-rise-in;
 }
 
-/* The sticky header holds still. Its old snapshot is dropped rather than
-   cross-faded: two stacked backdrop blurs flash. A snapshot carries no
-   backdrop, so the sliding page would read through the translucent bar; the
-   group is painted solid instead. A backdrop blur does not work here: Chromium
-   computes it on the group but does not render it inside the transition tree. */
+/* the arriving page's layer: above the leaving page, and above anything
+   travelling between the two (the report figure passes beneath its text,
+   never over it) */
+::view-transition-group(.nav-arrive) {
+  z-index: 2;
+}
+
+/* The sticky header holds still above the pages. Its old snapshot is dropped
+   rather than cross-faded: two stacked backdrop blurs flash. A snapshot
+   carries no backdrop, so a leaving page scrolled under the translucent bar
+   would read through it; the group is painted solid instead. A backdrop blur
+   does not work here: Chromium computes it on the group but does not render
+   it inside the transition tree. */
 ::view-transition-group(site-header) {
   animation: none;
   z-index: 100;
@@ -1045,14 +1114,32 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   to { transform: translateX(var(--vt-to, 0)); }
 }
 
-@keyframes vt-morph-blur {
-  50% { filter: blur(var(--blur-morph)); }
+@keyframes vt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--vt-rise));
+    filter: blur(var(--vt-rise-blur));
+  }
 }
 
-/* nav-forward leaves to the left and arrives from the right; nav-back mirrors
-   it. The outgoing page is gone on the exit token before the incoming one
-   fades in after the handoff, so the two pages never sit half-visible over
-   each other. */
+@keyframes vt-push-out {
+  to {
+    opacity: 0;
+    transform: scale(var(--vt-push-scale));
+  }
+}
+
+@keyframes vt-settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--vt-settle)));
+  }
+}
+
+/* The reading path (links typed nav-forward and nav-back): forward leaves to
+   the left and arrives from the right; back mirrors it. The outgoing page is
+   gone on the exit token before the incoming one fades in after the handoff,
+   so the two pages never sit half-visible over each other. */
 ::view-transition-old(.nav-forward),
 ::view-transition-old(.nav-back) {
   animation:
@@ -1083,45 +1170,19 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   --vt-from: calc(-1 * var(--vt-slide));
 }
 
-/* A report title travelling between its archive card and the report page.
-   Both snapshots keep their native size, pinned top-left and clipped to the
-   moving box, so neither shows as a scaled raster and the larger heading
-   never paints over the neighbouring cards; both blur at the midpoint, so
-   the two titles never read as two objects. */
-::view-transition-group(.text-morph) {
-  clip-path: inset(0);
-  animation-duration: var(--vt-duration-morph);
-}
-
-::view-transition-old(.text-morph),
-::view-transition-new(.text-morph) {
-  object-fit: none;
-  object-position: left top;
-}
-
-::view-transition-old(.text-morph) {
-  animation:
-    var(--vt-duration-exit) var(--vt-ease-out) both vt-fade-out,
-    var(--vt-duration-morph) var(--vt-ease) both vt-morph-blur;
-}
-
-::view-transition-new(.text-morph) {
-  animation:
-    var(--vt-duration-morph) var(--vt-ease-out) both vt-fade-in,
-    var(--vt-duration-morph) var(--vt-ease) both vt-morph-blur;
-}
-
-/* A report's figure opening from its archive card into the report's hero:
-   the plate widens on the gentle spring while the two snapshots cross-fade,
-   clipped to its rounded box. The card is contained and the hero covered, so
-   the drawing sits at the same place and size in both all the way across; the
-   hero's plate fills in around it. */
+/* A report's figure opening from its archive card into the report's hero,
+   the one element that travels: the plate widens on the gentle spring over
+   the morph token while the two snapshots cross-fade, clipped to its rounded
+   box, above the leaving page and beneath the arriving one. The card is
+   contained and the hero covered, so the drawing sits at the same place and
+   size in both all the way across; the hero's plate fills in around it. */
 :root {
-  --vt-duration-figure: var(--duration-spring-gentle);
+  --vt-duration-figure: var(--duration-morph);
   --vt-ease-figure: var(--ease-spring-gentle);
 }
 
 ::view-transition-group(.figure-morph) {
+  z-index: 1;
   clip-path: inset(0 round 0.625rem);
   animation-duration: var(--vt-duration-figure);
   animation-timing-function: var(--vt-ease-figure);
@@ -1140,8 +1201,45 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   object-fit: cover;
 }
 
-/* Reduced motion: nothing slides or morphs; the pages crossfade on the fast
-   token, while the header and unnamed content still swap in place. */
+/* The landing into the interior, the site's one loud handoff: the scene
+   pushes in to --vt-push-scale as it dissolves over the morph token, and the
+   page rises --vt-rise-landing out of the hero entrance's blur once the scene
+   has mostly gone. RouteTransition marks the page a navigation left. */
+html[data-route-from="landing"]::view-transition-old(.route) {
+  animation: var(--vt-duration-push) var(--vt-ease-out) both vt-push-out;
+}
+
+html[data-route-from="landing"]::view-transition-new(.route) {
+  --vt-rise: var(--vt-rise-landing);
+  --vt-rise-blur: var(--vt-rise-blur-landing);
+  animation: var(--vt-duration-rise) var(--vt-ease-out) var(--vt-delay-landing) both vt-rise-in;
+}
+
+/* The landing's bar is transparent and full-bleed over the scene, the
+   interior's framed: between the two the group stays clear, the old bar
+   fades out while the new one comes in, and the interior's settles down into
+   place. */
+html[data-route-from="landing"]::view-transition-group(site-header),
+html[data-route-to="landing"]::view-transition-group(site-header) {
+  background-color: transparent;
+}
+
+html[data-route-from="landing"]::view-transition-old(site-header),
+html[data-route-to="landing"]::view-transition-old(site-header) {
+  display: block;
+  animation: var(--vt-duration-exit) var(--vt-ease-out) both vt-fade-out;
+}
+
+html[data-route-from="landing"]::view-transition-new(site-header) {
+  animation: var(--vt-duration-rise) var(--vt-ease-out) var(--vt-delay-enter) both vt-settle-in;
+}
+
+html[data-route-to="landing"]::view-transition-new(site-header) {
+  animation: var(--vt-duration-rise) var(--vt-ease-out) var(--vt-delay-enter) both vt-fade-in;
+}
+
+/* Reduced motion: nothing slides, rises, pushes or morphs; every navigation
+   crossfades the pages on the fast token, and the header swaps in place. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*) {
     animation: none !important;
@@ -1155,7 +1253,10 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
     animation: var(--vt-duration-fast) var(--vt-ease-out) both vt-fade-in !important;
   }
 
-  ::view-transition-new(root),
+  ::view-transition-old(site-header) {
+    display: none !important;
+  }
+
   ::view-transition-new(site-header) {
     animation: none !important;
   }

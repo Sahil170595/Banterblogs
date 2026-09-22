@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowRight } from 'lucide-react';
 import { entranceGroup, entranceItem } from '@/components/motion/entrance';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -109,7 +109,7 @@ export default function ShowPage() {
         {scenes.map((s, index) => (
           <li key={s.slug} {...(index < ENTRANCE_ROWS ? entranceItem(index, HEAD_GROUPS) : {})}>
             {s.available ? (
-              <Link
+              <IntentLink
                 href={`/show/${s.slug}`}
                 className="group relative grid grid-cols-[auto_1fr_auto] items-baseline gap-6 border-t border-border/40 py-8 hover:border-primary/60 transition-colors"
               >
@@ -128,7 +128,7 @@ export default function ShowPage() {
                   </div>
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
-              </Link>
+              </IntentLink>
             ) : (
               <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-6 border-t border-border/40 py-8 opacity-50">
                 <span className="font-mono text-xs text-muted-foreground">{s.number}</span>

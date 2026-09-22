@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import type { ReactNode } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -19,6 +20,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@vercel/analytics/next', () => ({ Analytics: () => null }));
 vi.mock('@vercel/speed-insights/next', () => ({ SpeedInsights: () => null }));
 vi.mock('@/components/SearchDialog', () => ({ SearchDialog: () => null }));
+// the route boundary renders the canary-only ViewTransition, which npm React lacks
+vi.mock('@/components/motion/RouteTransition', () => ({ RouteTransition: ({ children }: { children: ReactNode }) => children }));
 
 const layoutHtml = () => renderToStaticMarkup(<RootLayout>{<p>page</p>}</RootLayout>);
 

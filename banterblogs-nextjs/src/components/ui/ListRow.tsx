@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { IntentLink } from './IntentLink';
 
 export interface ListRowProps {
   title: ReactNode;
@@ -41,10 +41,10 @@ export function ListRow({ title, href, titleHref, index, description, meta, chil
       <div className="min-w-0 space-y-2">
         <Title className="text-heading-20 text-foreground transition-colors duration-fast ease-standard group-hover:text-primary">
           {titleHref ? (
-            <Link href={titleHref} className="row-link" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+            <IntentLink href={titleHref} className="row-link" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
               {title}{' '}
               <TitleArrow aria-hidden="true" {...(external ? {} : { 'data-direction': 'forward' })} className="row-arrow h-4 w-4 text-muted-foreground" />
-            </Link>
+            </IntentLink>
           ) : (
             title
           )}
@@ -68,8 +68,8 @@ export function ListRow({ title, href, titleHref, index, description, meta, chil
   );
   if (!href) return <Tag className={layout}>{body}</Tag>;
   return (
-    <Link href={href} className={cn('group', layout)}>
+    <IntentLink href={href} className={cn('group', layout)}>
       {body}
-    </Link>
+    </IntentLink>
   );
 }

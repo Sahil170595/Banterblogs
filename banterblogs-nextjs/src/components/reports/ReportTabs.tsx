@@ -259,6 +259,7 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
                 {group.reports.map((report, index) => (
                   <Reveal
                     key={report.slug}
+                    className="archive-card-slot"
                     {...(index < ENTRANCE_CARDS ? entranceItem(Math.min(index, ENTRANCE_CARD_STEPS - 1), TABS_ENTRANCE_GROUP + 1) : {})}
                   >
                     <ReportCard

@@ -1,12 +1,12 @@
 import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { Reveal } from '@/components/motion/Reveal';
 import { ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabEntry, type ReportTabGroup } from '@/components/reports/ReportTabs';
-import { DirectionalPage, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
+import { NAV_FORWARD } from '@/components/reports/ReportTransitions';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
@@ -205,7 +205,7 @@ export default async function ReportsIndex() {
   }
 
   return (
-    <DirectionalPage className="container pb-24 pt-6 md:pt-10">
+    <div className="container pb-24 pt-6 md:pt-10">
       {/* ── Head: title, one-line intro, the program in three numbers ── */}
       <div>
         <h1
@@ -259,7 +259,7 @@ export default async function ReportsIndex() {
       </section>
 
       {/* ── Key Findings ── */}
-      <section aria-labelledby="findings-heading" className="mt-28">
+      <section aria-labelledby="findings-heading" className="archive-section mt-28">
         <div className="max-w-2xl">
           <h2 id="findings-heading" className="text-heading-24">
             Key findings
@@ -275,14 +275,14 @@ export default async function ReportsIndex() {
               <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{f.finding}</p>
               <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs">
                 {f.source.map((s) => (
-                  <Link
+                  <IntentLink
                     key={s.slug}
                     href={`/reports/${s.slug}`}
                     transitionTypes={[NAV_FORWARD]}
                     className="rounded-full bg-foreground/[0.06] px-2 py-0.5 text-muted-foreground transition-colors duration-fast ease-standard hover:bg-primary/15 hover:text-primary"
                   >
                     {s.label}
-                  </Link>
+                  </IntentLink>
                 ))}
               </div>
             </Reveal>
@@ -292,7 +292,7 @@ export default async function ReportsIndex() {
 
       {/* ── Conclusive Reports ── */}
       {conclusive.length > 0 && (
-        <section aria-labelledby="conclusive-heading" className="mt-24">
+        <section aria-labelledby="conclusive-heading" className="archive-section mt-24">
           <div className="max-w-2xl">
             <h2 id="conclusive-heading" className="text-heading-24">
               Conclusive reports and appendices
@@ -304,21 +304,19 @@ export default async function ReportsIndex() {
           <ul className="mt-8 grid gap-x-8 gap-y-1 md:grid-cols-2 xl:grid-cols-3">
             {conclusive.map((r) => (
               <Reveal as="li" key={r.slug}>
-                <Link
+                <IntentLink
                   href={`/reports/${r.slug}`}
                   transitionTypes={[NAV_FORWARD]}
                   className="-mx-3 block rounded-lg px-3 py-3 transition-colors duration-fast ease-standard hover:bg-card/70"
                 >
-                  <ReportTitleTransition slug={r.slug}>
-                    <div className="text-[0.9375rem] font-medium leading-snug text-foreground">{r.title}</div>
-                  </ReportTitleTransition>
+                  <div className="text-[0.9375rem] font-medium leading-snug text-foreground">{r.title}</div>
                   {r.description && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{r.description}</p>}
-                </Link>
+                </IntentLink>
               </Reveal>
             ))}
           </ul>
         </section>
       )}
-    </DirectionalPage>
+    </div>
   );
 }

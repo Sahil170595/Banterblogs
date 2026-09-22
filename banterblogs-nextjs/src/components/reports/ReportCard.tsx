@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { describeReport } from './reportIdentity';
-import { NAV_FORWARD, ReportFigureTransition, ReportTitleTransition } from './ReportTransitions';
+import { NAV_FORWARD, ReportFigureTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
 
 export { describeReport };
@@ -28,16 +28,14 @@ export interface ReportCardProps {
 export function ReportCard({ slug, title, description, synthesis = false, latest = false, accent = latest }: ReportCardProps) {
   const { heading, meta } = describeReport(slug, title);
   return (
-    <Link href={`/reports/${slug}`} transitionTypes={[NAV_FORWARD]} className="card-depth group block rounded-xl">
+    <IntentLink href={`/reports/${slug}`} transitionTypes={[NAV_FORWARD]} className="card-depth group block rounded-xl">
       <div className="card-lift">
         <ReportFigureTransition slug={slug}>
           <div className="card-visual aspect-video">
             <ReportVisual slug={slug} accent={accent} />
           </div>
         </ReportFigureTransition>
-        <ReportTitleTransition slug={slug}>
-          <h3 className="mt-4 text-heading-20 text-foreground">{heading}</h3>
-        </ReportTitleTransition>
+        <h3 className="mt-4 text-heading-20 text-foreground">{heading}</h3>
         {description && <p className="mt-2 line-clamp-2 text-[0.9375rem] leading-relaxed text-muted-foreground">{description}</p>}
         <div data-card-meta="" className="mt-3 flex items-center gap-2 text-label-13 text-muted-foreground/80">
           {synthesis && <span className="card-badge">Synthesis</span>}
@@ -48,6 +46,6 @@ export function ReportCard({ slug, title, description, synthesis = false, latest
           <ArrowRight aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
         </div>
       </div>
-    </Link>
+    </IntentLink>
   );
 }

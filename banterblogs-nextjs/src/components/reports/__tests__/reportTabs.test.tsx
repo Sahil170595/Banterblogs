@@ -163,16 +163,21 @@ describe('report archive tabs', () => {
     expect(screen.getAllByRole('tab').map((tab) => tab.tabIndex)).toEqual([-1, -1, 0, -1]);
   });
 
-  it('sends each card forward and pairs its visual and title with the report page hero and heading', () => {
+  // Phase R4 (archiveMotion.test.ts, archive rendering)
+  it('seats every card in a slot that skips rendering off screen', () => {
+    renderTabs();
+    const cards = within(panel()).getAllByRole('link');
+
+    expect(cards.map((card) => card.parentElement?.classList.contains('archive-card-slot'))).toEqual(cards.map(() => true));
+  });
+
+  it('sends each card forward and pairs only its visual with the report page hero', () => {
     renderTabs();
     const cards = within(panel()).getAllByRole('link');
 
     expect(cards.map((card) => card.getAttribute('data-transition-types'))).toEqual(cards.map(() => NAV_FORWARD));
     expect([...new Set(viewTransitions.map((vt) => vt.name))]).toEqual(
-      ['technical-report-139', 'technical-report-138', 'technical-report-117', 'gemma3'].flatMap((slug) => [
-        `report-figure-${slug}`,
-        `report-title-${slug}`,
-      ]),
+      ['technical-report-139', 'technical-report-138', 'technical-report-117', 'gemma3'].map((slug) => `report-figure-${slug}`),
     );
   });
 
