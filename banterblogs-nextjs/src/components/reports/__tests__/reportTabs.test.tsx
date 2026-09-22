@@ -162,6 +162,14 @@ describe('report archive tabs', () => {
     expect(screen.getAllByRole('tab').map((tab) => tab.tabIndex)).toEqual([-1, -1, 0, -1]);
   });
 
+  // Phase R4 (archiveMotion.test.ts, archive rendering)
+  it('seats every card in a slot that skips rendering off screen', () => {
+    renderTabs();
+    const cards = within(panel()).getAllByRole('link');
+
+    expect(cards.map((card) => card.parentElement?.classList.contains('archive-card-slot'))).toEqual(cards.map(() => true));
+  });
+
   it('sends each card forward and pairs its visual and title with the report page hero and heading', () => {
     renderTabs();
     const cards = within(panel()).getAllByRole('link');

@@ -120,4 +120,11 @@ describe('archive grid inputs', () => {
     expect(revealed.filter((el) => el.props.as === 'article').length).toBeGreaterThan(0);
     expect(revealed.filter((el) => el.props.as === 'li').length).toBeGreaterThan(0);
   });
+
+  // Phase R4 (archiveMotion.test.ts, archive rendering)
+  it('skips rendering the findings and the conclusive list until they near the viewport', () => {
+    const sections = page.filter((el) => el.type === 'section' && /^(findings|conclusive)-heading$/.test(String(el.props['aria-labelledby'])));
+    expect(sections).toHaveLength(2);
+    for (const section of sections) expect(classes(section), String(section.props['aria-labelledby'])).toContain('archive-section');
+  });
 });

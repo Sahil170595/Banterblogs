@@ -259,7 +259,7 @@ export default async function ReportsIndex() {
       </section>
 
       {/* ── Key Findings ── */}
-      <section aria-labelledby="findings-heading" className="mt-28">
+      <section aria-labelledby="findings-heading" className="archive-section mt-28">
         <div className="max-w-2xl">
           <h2 id="findings-heading" className="text-heading-24">
             Key findings
@@ -292,7 +292,7 @@ export default async function ReportsIndex() {
 
       {/* ── Conclusive Reports ── */}
       {conclusive.length > 0 && (
-        <section aria-labelledby="conclusive-heading" className="mt-24">
+        <section aria-labelledby="conclusive-heading" className="archive-section mt-24">
           <div className="max-w-2xl">
             <h2 id="conclusive-heading" className="text-heading-24">
               Conclusive reports and appendices

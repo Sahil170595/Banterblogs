@@ -916,6 +916,32 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   animation: panel-in var(--duration-fast) var(--ease-strong-out) both;
 }
 
+/* The archive's cards and its lower sections skip style, layout and paint
+   while off screen, so a navigation into or out of it renders a screen of
+   the archive, not all 55 cards. Paint containment would clip a card's hover
+   glow, so the clip edge sits past it. Each keeps its drawn height once
+   rendered and holds an estimate until then. */
+:root {
+  /* the glow's blur less its spread, plus its drop and the hover lift, rounded up */
+  --card-glow-extent: 48px;
+  /* a card: its 16:9 figure, a two-line title, two lines of description, the meta line */
+  --archive-estimate-card: 24rem;
+  /* the findings grid or the conclusive list at desktop width */
+  --archive-estimate-section: 40rem;
+}
+
+.archive-card-slot {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--archive-estimate-card);
+  overflow-clip-margin: var(--card-glow-extent);
+}
+
+.archive-section {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--archive-estimate-section);
+  overflow-clip-margin: var(--card-glow-extent);
+}
+
 /* Reduced motion: nothing moves, but colour and opacity may still fade
    (reduced is not none). Distance, scale and blur tokens go to rest values,
    transitions keep only colour and opacity, and CSS keyframe animations end
@@ -1225,6 +1251,36 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 /* the body opens flush under the hero, whatever its first block is */
 .report-prose > :first-child {
   margin-top: 0;
+}
+
+/* Off-screen blocks skip style, layout and paint until they near the
+   viewport, so opening a long report lays out a screen of it, not all of it.
+   content-visibility contains layout and paint, so only blocks whose margins
+   collapse with their siblings rather than their children, and that paint
+   inside their own box, take it. Each keeps its drawn height once rendered
+   and holds an estimate until then. */
+:root {
+  /* a paragraph of three or four lines at 18/28.8px */
+  --prose-estimate-text: 7rem;
+  /* a table or code block of eight to ten rows */
+  --prose-estimate-block: 16rem;
+}
+
+.report-prose > p {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--prose-estimate-text);
+}
+
+.report-prose > pre,
+.report-prose > .table-scroll {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--prose-estimate-block);
+}
+
+@media print {
+  .report-prose > * {
+    content-visibility: visible;
+  }
 }
 
 .report-prose h2 {

@@ -112,6 +112,36 @@ describe('archive tab motion', () => {
   });
 });
 
+// Phase R4: every navigation into or out of the archive styles, lays out and
+// captures the whole page, 55 cards of drawings (about 140ms of style and
+// layout inside the view transition, measured on a local build). Cards and
+// sections off screen skip that work until they near the viewport. Paint
+// containment would clip a card's hover glow, so the clip edge sits past it.
+describe('archive rendering', () => {
+  const declarationsOf = (selector: string) =>
+    rules.filter((rule) => rule.prelude.split(',').map((s) => s.trim()).includes(selector)).map((rule) => rule.body).join(';');
+  const px = (name: string) => {
+    const match = new RegExp(`--${name}:\\s*(\\d+)px;`).exec(CSS);
+    if (!match) throw new Error(`--${name} is not defined in px in globals.css`);
+    return Number(match[1]);
+  };
+
+  it.each(['.archive-card-slot', '.archive-section'])('skips %s off screen, keeping its drawn height once rendered', (selector) => {
+    const body = declarationsOf(selector);
+    expect(body).toMatch(/content-visibility:\s*auto/);
+    expect(body).toMatch(/contain-intrinsic-block-size:\s*auto var\(--archive-estimate-[\w-]+\)/);
+    expect(body).toMatch(/overflow-clip-margin:\s*var\(--card-glow-extent\)/);
+  });
+
+  it('keeps the clip edge outside a card glow: its blur less its spread, plus its drop and the lift', () => {
+    const glow = /\.card-lift::after\s*\{[^}]*box-shadow:[^;]*,\s*0 (\d+)px (\d+)px -(\d+)px/.exec(CSS);
+    expect(glow).not.toBeNull();
+    const [, drop, blur, spread] = glow!.slice(0, 4).map(Number);
+    const lift = px('motion-lift');
+    expect(px('card-glow-extent')).toBeGreaterThanOrEqual(blur - spread + drop + lift);
+  });
+});
+
 describe('archive motion under reduced motion', () => {
   it.each([
     ['.entrance-group', /animation:\s*none\s*!important/],

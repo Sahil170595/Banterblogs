@@ -166,3 +166,31 @@ describe('report reading type', () => {
     expect(value(base, 'letter-spacing')).toBe('-0.03em');
   });
 });
+
+// Phase R4 (re-judge 3 P0-1, perf re-judge P1-3): opening TR138 spent about
+// 200ms styling and laying out its whole 60,000px body inside the view
+// transition (CDP trace, local production build), before a frame could move.
+// Blocks off screen now skip style, layout and paint until they near the
+// viewport, and remember their size once drawn. content-visibility contains
+// layout and paint, so it goes only on blocks whose margins collapse with
+// their siblings, not their children, and that paint inside their own box.
+describe('report body rendering', () => {
+  const SKIPPED_BLOCKS = ['.report-prose > p', '.report-prose > pre', '.report-prose > .table-scroll'];
+  const printRules = TOP.filter((b) => b.prelude === '@media print').flatMap((b) => rulesIn(b.body));
+
+  it.each(SKIPPED_BLOCKS)('skips %s off screen, and keeps its drawn size once rendered', (selector) => {
+    const declarations = declarationsOf(baseRules, selector);
+    expect(value(declarations, 'content-visibility')).toBe('auto');
+    // a height estimate only: the column sets the width
+    expect(value(declarations, 'contain-intrinsic-block-size')).toMatch(/^auto var\(--prose-estimate-[\w-]+\)$/);
+  });
+
+  it('skips nothing else: lists, quotes, headings and figures would change under layout containment', () => {
+    const skipping = baseRules.filter((rule) => /content-visibility:\s*auto/.test(rule.declarations));
+    expect(skipping.flatMap((rule) => rule.selector.split(',').map((s) => s.trim())).sort()).toEqual([...SKIPPED_BLOCKS].sort());
+  });
+
+  it('renders every block for print', () => {
+    expect(value(declarationsOf(printRules, '.report-prose > *'), 'content-visibility')).toBe('visible');
+  });
+});
