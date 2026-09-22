@@ -60,6 +60,23 @@
   --toc-marker-height: 16px;
   /* the contents list fades its clipped edges over this much scroll */
   --toc-edge-fade: 1.5rem;
+  /* the reading frame: the article column at the prose measure, the gap and
+     the contents rail, one centred pair (was a 352px dead band at 1440) */
+  --reading-measure: 39rem;
+  --reading-gap: 4rem;
+  --reading-rail: 15rem;
+}
+
+/* ── the frame: the head over the column and the rail, centred ── */
+.report-frame {
+  max-width: calc(var(--reading-measure) + var(--reading-gap) + var(--reading-rail));
+  margin-inline: auto;
+}
+
+.report-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 2rem;
 }
 
 /* ── reading type ── */
@@ -351,17 +368,20 @@
   font-size: inherit;
 }
 
-/* ── hero figure: the report's card visual on a plate at banner proportions ── */
+/* ── hero figure: the report's card visual, opening the article column on a
+   plate framed to the drawing's own 16:9, so the drawing fills it (it filled
+   a quarter of a 1216px banner). The card it morphs from is 16:9 too. ── */
 .report-hero {
   position: relative;
-  margin-top: 2rem;
-  height: 10rem;
+  max-width: var(--reading-measure);
+  aspect-ratio: 16 / 9;
+  margin-bottom: 2.5rem;
   overflow: hidden;
   border-radius: 0.625rem;
   background-color: hsl(var(--card));
   /* a faint ember light behind the drawing, on a hairline grid */
   background-image:
-    radial-gradient(ellipse 32% 90% at 50% 58%, hsl(var(--primary) / 0.09), transparent 70%),
+    radial-gradient(ellipse 60% 70% at 50% 58%, hsl(var(--primary) / 0.09), transparent 70%),
     linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
     linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
   background-position: center;
@@ -369,12 +389,9 @@
   box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
 }
 
-/* the drawing keeps its 16:9 at the plate's full height, centred */
 .report-hero .rv {
-  width: auto;
+  width: 100%;
   height: 100%;
-  aspect-ratio: 16 / 9;
-  margin-inline: auto;
 }
 
 /* ── contents ── */
@@ -455,9 +472,9 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
     opacity var(--duration-fast) var(--ease-standard);
 }
 
-/* the mobile contents: a disclosure above the body */
+/* the mobile contents: a disclosure above the body, in the article column */
 .report-toc-mobile {
-  margin-top: 2rem;
+  margin-bottom: 2rem;
   border-radius: 0.75rem;
   background-color: hsl(var(--card));
   box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
@@ -603,8 +620,16 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
     font-size: 1.25rem;
   }
 
-  .report-hero {
-    height: 12rem;
+  .report-layout {
+    margin-top: 2.5rem;
+  }
+}
+
+/* the contents rail joins the column from lg, where the frame fits */
+@media (min-width: 1024px) {
+  .report-layout {
+    grid-template-columns: minmax(0, var(--reading-measure)) var(--reading-rail);
+    column-gap: var(--reading-gap);
   }
 }
 

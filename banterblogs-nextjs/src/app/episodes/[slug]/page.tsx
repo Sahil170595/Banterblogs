@@ -137,75 +137,77 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
       {/* the report page's reading register: breadcrumb, title, dek and meta, then the body and its contents */}
       <div className="container pb-24 pt-8 md:pt-10">
-        <div className="report-head">
-          <div {...entranceGroup(HEAD_GROUP.title)}>
-            <nav aria-label="Breadcrumb">
-              <ol className="report-crumbs">
-                <li>
-                  <Link href="/episodes">Episode archive</Link>
-                </li>
-                {platformArchive && (
+        {/* one centred frame: the head over the article column and the contents rail */}
+        <div className="report-frame">
+          <div className="report-head">
+            <div {...entranceGroup(HEAD_GROUP.title)}>
+              <nav aria-label="Breadcrumb">
+                <ol className="report-crumbs">
                   <li>
-                    <Link href={platformArchive}>{platformLabel} episodes</Link>
+                    <Link href="/episodes">Episode archive</Link>
                   </li>
-                )}
-              </ol>
-            </nav>
-            <h1 className="report-title">{episode.title}</h1>
-          </div>
-          {episode.subtitle && (
-            <p className={cn('report-dek', entranceGroup(HEAD_GROUP.dek).className)} style={entranceGroup(HEAD_GROUP.dek).style}>
-              {episode.subtitle}
-            </p>
-          )}
-          <div {...entranceGroup(HEAD_GROUP.meta)}>
-            <ul className="report-meta" aria-label="About this episode">
-              <li>
-                <strong>Episode {displayId}</strong>
-              </li>
-              <li>{platformLabel}</li>
-              <li>
-                <time dateTime={episode.date}>{EPISODE_DATE.format(new Date(episode.date))}</time>
-              </li>
-            </ul>
-            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-              <EpisodeStats
-                filesChanged={episode.filesChanged}
-                linesAdded={episode.linesAdded}
-                readingTime={episode.readingTime}
-                complexity={episode.complexity}
-              />
-              <ContentStats stats={contentStats} />
+                  {platformArchive && (
+                    <li>
+                      <Link href={platformArchive}>{platformLabel} episodes</Link>
+                    </li>
+                  )}
+                </ol>
+              </nav>
+              <h1 className="report-title">{episode.title}</h1>
+            </div>
+            {episode.subtitle && (
+              <p className={cn('report-dek', entranceGroup(HEAD_GROUP.dek).className)} style={entranceGroup(HEAD_GROUP.dek).style}>
+                {episode.subtitle}
+              </p>
+            )}
+            <div {...entranceGroup(HEAD_GROUP.meta)}>
+              <ul className="report-meta" aria-label="About this episode">
+                <li>
+                  <strong>Episode {displayId}</strong>
+                </li>
+                <li>{platformLabel}</li>
+                <li>
+                  <time dateTime={episode.date}>{EPISODE_DATE.format(new Date(episode.date))}</time>
+                </li>
+              </ul>
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+                <EpisodeStats
+                  filesChanged={episode.filesChanged}
+                  linesAdded={episode.linesAdded}
+                  readingTime={episode.readingTime}
+                  complexity={episode.complexity}
+                />
+                <ContentStats stats={contentStats} />
+              </div>
             </div>
           </div>
-        </div>
 
-        <ReportTocMobile headings={headings} />
-
-        <div className="mt-10 grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,1fr)_15rem]">
-          <div className="min-w-0">
-            {/* Server-rendered article body, complete without JavaScript; its tables,
-                code blocks and figures reveal as they scroll in. */}
-            <article id="episode-article">
-              <RevealScope className="report-prose prose prose-invert" html={episode.content} />
-            </article>
-            <ArticleEnhancements articleId="episode-article" />
+          <div className="report-layout">
+            <div className="min-w-0">
+              <ReportTocMobile headings={headings} />
+              {/* Server-rendered article body, complete without JavaScript; its tables,
+                  code blocks and figures reveal as they scroll in. */}
+              <article id="episode-article">
+                <RevealScope className="report-prose prose prose-invert" html={episode.content} />
+              </article>
+              <ArticleEnhancements articleId="episode-article" />
+            </div>
+            <ReportTocSidebar headings={headings} />
           </div>
-          <ReportTocSidebar headings={headings} />
+          <ReportEnd />
+
+          <EpisodeNavigation
+            prevEpisode={prevEpisode && { slug: prevEpisode.slug, title: prevEpisode.title }}
+            nextEpisode={nextEpisode && { slug: nextEpisode.slug, title: nextEpisode.title }}
+          />
+
+          {/* scored on the server: only the picks reach the page */}
+          <ContentRecommendations
+            className="mt-20"
+            current={summary}
+            recommendations={recommendEpisodes(episode, allEpisodes).map(toEpisodeSummary)}
+          />
         </div>
-        <ReportEnd />
-
-        <EpisodeNavigation
-          prevEpisode={prevEpisode && { slug: prevEpisode.slug, title: prevEpisode.title }}
-          nextEpisode={nextEpisode && { slug: nextEpisode.slug, title: nextEpisode.title }}
-        />
-
-        {/* scored on the server: only the picks reach the page */}
-        <ContentRecommendations
-          className="mt-20"
-          current={summary}
-          recommendations={recommendEpisodes(episode, allEpisodes).map(toEpisodeSummary)}
-        />
       </div>
     </>
   );

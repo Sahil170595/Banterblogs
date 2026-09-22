@@ -78,71 +78,75 @@ export default async function CompendiumPage() {
         <DirectionalPage className="container pb-24 pt-8 md:pt-10">
             <ReportProgress />
 
-            <div className="report-head">
-                <div {...entranceGroup(HEAD_GROUP.title)}>
-                    <nav aria-label="Breadcrumb">
-                        <ol className="report-crumbs">
-                            <li>
-                                <Link href="/reports" transitionTypes={[NAV_BACK]}>
-                                    Research archive
-                                </Link>
-                            </li>
-                        </ol>
-                    </nav>
-                    <ReportTitleTransition slug={COMPENDIUM_SLUG}>
-                        <h1 className="report-title">{heading}</h1>
-                    </ReportTitleTransition>
+            {/* one centred frame: the head over the article column and the contents rail */}
+            <div className="report-frame">
+                <div className="report-head">
+                    <div {...entranceGroup(HEAD_GROUP.title)}>
+                        <nav aria-label="Breadcrumb">
+                            <ol className="report-crumbs">
+                                <li>
+                                    <Link href="/reports" transitionTypes={[NAV_BACK]}>
+                                        Research archive
+                                    </Link>
+                                </li>
+                            </ol>
+                        </nav>
+                        <ReportTitleTransition slug={COMPENDIUM_SLUG}>
+                            <h1 className="report-title">{heading}</h1>
+                        </ReportTitleTransition>
+                    </div>
+                    {meta?.description && (
+                        <p className={cn('report-dek', dek.className)} style={dek.style}>
+                            {meta.description}
+                        </p>
+                    )}
+                    <div {...entranceGroup(HEAD_GROUP.meta)}>
+                        <ReportMeta label={label} phaseNumber={null} readingMinutes={readingMinutes} date={frontMatter?.date ?? null} />
+                        {frontMatter && <ReportDetails frontMatter={frontMatter} />}
+                    </div>
                 </div>
-                {meta?.description && (
-                    <p className={cn('report-dek', dek.className)} style={dek.style}>
-                        {meta.description}
-                    </p>
-                )}
-                <div {...entranceGroup(HEAD_GROUP.meta)}>
-                    <ReportMeta label={label} phaseNumber={null} readingMinutes={readingMinutes} date={frontMatter?.date ?? null} />
-                    {frontMatter && <ReportDetails frontMatter={frontMatter} />}
+
+                {/* the column (hero, phone contents, body) beside the contents rail */}
+                <div className="report-layout">
+                    <div className="min-w-0">
+                        <ReportHero slug={COMPENDIUM_SLUG} />
+                        <ReportTocMobile headings={headings} />
+                        <article>
+                            <RevealScope className="report-prose prose prose-invert" html={html} />
+                        </article>
+                    </div>
+                    <ReportTocSidebar headings={headings} />
                 </div>
+                <ReportEnd />
+
+                {/* the old sidebar's notes, whole, under one hairline */}
+                <aside aria-label="About this paper" className="mt-20 grid gap-10 border-t border-border/40 pt-8 md:grid-cols-2">
+                    <div className="max-w-[60ch]">
+                        <h2 className={NOTE_HEADING}>About this Paper</h2>
+                        <p className="mt-3 text-copy-16 text-prose">
+                            This whitepaper synthesizes the foundational Phase 1 research (TR108-TR116) — the Rust vs. Python comparison that
+                            shaped the platform architecture.
+                        </p>
+                        <p className="mt-3 text-label-13 text-muted-foreground">Published: November 2025 &middot; Sahil Kadadekar</p>
+                    </div>
+                    <div className="max-w-[60ch]">
+                        <h2 className={NOTE_HEADING}>Source Data</h2>
+                        <p className="mt-3 text-copy-16 text-prose">
+                            Access all {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.SHORT} measurements, and phase whitepapers.
+                        </p>
+                        <Link
+                            href="/reports"
+                            transitionTypes={[NAV_BACK]}
+                            className="group mt-3 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary"
+                        >
+                            View Technical Archives
+                            <span aria-hidden="true" className="inline-block transition-transform duration-hover ease-strong-out group-hover:translate-x-[var(--motion-nudge)]">
+                                &rarr;
+                            </span>
+                        </Link>
+                    </div>
+                </aside>
             </div>
-
-            <ReportHero slug={COMPENDIUM_SLUG} />
-
-            <ReportTocMobile headings={headings} />
-
-            <div className="mt-8 grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,1fr)_15rem]">
-                <article className="min-w-0">
-                    <RevealScope className="report-prose prose prose-invert" html={html} />
-                </article>
-                <ReportTocSidebar headings={headings} />
-            </div>
-            <ReportEnd />
-
-            {/* the old sidebar's notes, whole, under one hairline */}
-            <aside aria-label="About this paper" className="mt-20 grid gap-10 border-t border-border/40 pt-8 md:grid-cols-2">
-                <div className="max-w-[60ch]">
-                    <h2 className={NOTE_HEADING}>About this Paper</h2>
-                    <p className="mt-3 text-copy-16 text-prose">
-                        This whitepaper synthesizes the foundational Phase 1 research (TR108-TR116) — the Rust vs. Python comparison that
-                        shaped the platform architecture.
-                    </p>
-                    <p className="mt-3 text-label-13 text-muted-foreground">Published: November 2025 &middot; Sahil Kadadekar</p>
-                </div>
-                <div className="max-w-[60ch]">
-                    <h2 className={NOTE_HEADING}>Source Data</h2>
-                    <p className="mt-3 text-copy-16 text-prose">
-                        Access all {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.SHORT} measurements, and phase whitepapers.
-                    </p>
-                    <Link
-                        href="/reports"
-                        transitionTypes={[NAV_BACK]}
-                        className="group mt-3 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary"
-                    >
-                        View Technical Archives
-                        <span aria-hidden="true" className="inline-block transition-transform duration-hover ease-strong-out group-hover:translate-x-[var(--motion-nudge)]">
-                            &rarr;
-                        </span>
-                    </Link>
-                </div>
-            </aside>
         </DirectionalPage>
     );
 }

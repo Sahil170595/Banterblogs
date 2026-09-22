@@ -169,6 +169,40 @@ describe('report reading type', () => {
     expect(BLOCK).not.toMatch(/\.report-crumbs li \+ li::before/);
   });
 
+  it('centres the article column and the contents rail as one pair, the column at the prose measure', () => {
+    const LG_QUERY = '@media (min-width: 1024px)';
+    const tokens = declarationsOf(baseRules, ':root');
+    const measure = value(tokens, '--reading-measure')!;
+    // the column is exactly the prose measure, so no dead band opens beside the text
+    expect(measure).toBe(value(declarationsOf(baseRules, '.report-prose'), 'max-width'));
+    const gap = px(value(tokens, '--reading-gap')!);
+    const rail = px(value(tokens, '--reading-rail')!);
+    // at most the width of the rail itself between text and contents (was 352px at 1440)
+    expect(gap).toBeGreaterThanOrEqual(48);
+    expect(gap).toBeLessThanOrEqual(96);
+    expect(rail).toBeGreaterThanOrEqual(224);
+    const frame = declarationsOf(baseRules, '.report-frame');
+    expect(value(frame, 'max-width')).toBe('calc(var(--reading-measure) + var(--reading-gap) + var(--reading-rail))');
+    expect(value(frame, 'margin-inline')).toBe('auto');
+    const wide = TOP.filter((b) => b.prelude === LG_QUERY).flatMap((b) => rulesIn(b.body));
+    const layout = declarationsOf(wide, '.report-layout');
+    expect(value(layout, 'grid-template-columns')).toBe('minmax(0, var(--reading-measure)) var(--reading-rail)');
+    expect(value(layout, 'column-gap')).toBe('var(--reading-gap)');
+    // the frame fits the lg container (1024 - 2 x 32px padding)
+    expect(px(measure) + gap + rail).toBeLessThanOrEqual(1024 - 64);
+  });
+
+  it('frames the hero plate to the drawing: the column width at the drawing\'s own 16:9, the drawing filling it', () => {
+    const hero = declarationsOf(baseRules, '.report-hero');
+    expect(value(hero, 'aspect-ratio')).toBe('16 / 9');
+    expect(value(hero, 'max-width')).toBe('var(--reading-measure)');
+    expect(value(hero, 'height')).toBeUndefined();
+    expect(declarationsOf(desktopRules, '.report-hero')).toBe('');
+    const drawing = declarationsOf(baseRules, '.report-hero .rv');
+    expect(value(drawing, 'width')).toBe('100%');
+    expect(value(drawing, 'height')).toBe('100%');
+  });
+
   it('sets the title in the page-title role every interior page uses: its size token, 540 weight, -0.03em', () => {
     const base = declarationsOf(baseRules, '.report-title');
     expect(value(base, 'font-size')).toBe(TITLE_TOKEN);
