@@ -31,6 +31,9 @@ export const metadata: Metadata = {
 
 export const runtime = 'nodejs';
 
+// the head's entrance groups: the title, then the platform button (the lede paints at once)
+const HEAD_GROUPS = 2;
+
 export default async function BanterpacksPage() {
   const episodes = await getAllEpisodes();
 
@@ -43,6 +46,7 @@ export default async function BanterpacksPage() {
       <PageHeader
         eyebrow={<Eyebrow>Banterpacks</Eyebrow>}
         title="Banterpacks Episodes"
+        stillLede
         lede={`${banterpacksEpisodes.length} episodes covering development of the production monorepo — JARVIS gateway, intelligence pipeline, and constitutional AI.`}
         actions={
           <ButtonLink href="/platform" iconEnd={<ArrowRight className="h-3.5 w-3.5" />}>
@@ -52,7 +56,7 @@ export default async function BanterpacksPage() {
       />
 
       <div className="mt-10 md:mt-14">
-        <EpisodeFilters episodes={banterpacksEpisodes.map(toEpisodeSummary)} />
+        <EpisodeFilters episodes={banterpacksEpisodes.map(toEpisodeSummary)} entranceAfter={HEAD_GROUPS} />
       </div>
     </div>
   );

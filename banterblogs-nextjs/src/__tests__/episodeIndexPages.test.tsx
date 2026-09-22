@@ -111,9 +111,13 @@ describe.each([
     3,
   ],
 ])('%s', (_route, Page, eyebrow, title, lede, platformLink, rows) => {
+  // on a phone the lede outgrows the rows' previews in view, so it is the LCP
+  // element and paints at once; the title, then the button, then the toolbar rise
   it('is the index template: head, lede, the platform link as a button, then the rows', async () => {
     const page = mount(await Page());
-    expectIndexTemplate(page);
+    expectIndexTemplate(page, 2);
+    const ledeEl = [...page.querySelectorAll('header p')].find((p) => text(p) === lede)!;
+    expect(ledeEl.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
     expect(text(page.querySelector('h1')!)).toBe(title);
     expect(text(page.querySelector('header')!)).toContain(eyebrow);
     expect(text(page)).toContain(lede);

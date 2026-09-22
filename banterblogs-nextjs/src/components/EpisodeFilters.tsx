@@ -5,13 +5,15 @@ import { Search, SortAsc, SortDesc } from 'lucide-react';
 import type { EpisodeSummary } from '@/lib/episodes';
 import { EpisodeSearch } from '@/lib/search';
 import { Reveal } from '@/components/motion/Reveal';
-import { entranceItem } from '@/components/motion/entrance';
+import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
 import { EpisodeRow } from './EpisodeRow';
 
 interface EpisodeFiltersProps {
   episodes: EpisodeSummary[];
+  /** the page head's entrance groups the toolbar follows */
+  entranceAfter?: number;
 }
 
 type SortKey = 'date' | 'title' | 'complexity' | 'files';
@@ -27,7 +29,7 @@ const OPTION_CLASS = 'bg-background text-foreground';
 const FIELD = 'h-10 rounded-full border border-border bg-background text-copy-14 text-foreground transition-colors duration-fast ease-standard hover:border-foreground/30 focus-visible:border-primary/60';
 const CHIP = 'pressable h-7 shrink-0 rounded-full px-3 text-label-13 font-medium';
 
-export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
+export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS }: EpisodeFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -103,7 +105,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
 
   return (
     <div className="space-y-5">
-      <div {...entranceItem(0)} className="space-y-3 sm:space-y-4">
+      <div {...entranceItem(0, entranceAfter)} className="space-y-3 sm:space-y-4">
         {/* on a phone: the search on its own line, then sort, order and the count on one */}
         <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
           <div className="relative w-full sm:w-auto sm:flex-1">
