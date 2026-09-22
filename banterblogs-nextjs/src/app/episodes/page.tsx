@@ -45,6 +45,16 @@ export default async function EpisodesPage() {
         eyebrow={<Eyebrow dot="neutral">Archive</Eyebrow>}
         title="Episode Archive"
         lede="The full development narrative across Banterpacks and Chimera Engine, from raw commits to benchmarked outcomes."
+        meta={
+          <p className="max-w-[60ch] text-copy-14 text-muted-foreground">
+            Archived 2026-06-26. These episodes were generated from git commits by a multi-persona pipeline between September 2025 and
+            June 2026. The pipeline is retired; the research program continues at{' '}
+            <Link href="/reports" className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary">
+              /reports
+            </Link>
+            .
+          </p>
+        }
         actions={
           <>
             <ButtonLink href="/banterpacks" iconEnd={<ArrowRight className="h-3.5 w-3.5" />}>
@@ -56,18 +66,6 @@ export default async function EpisodesPage() {
           </>
         }
       />
-
-      {/* the page's largest text in view, its LCP element, so it paints at once
-          rather than in the head's entrance (Chrome credits a fade from 0 to
-          LCP only when it ends) */}
-      <p className="mt-6 max-w-[60ch] text-copy-14 text-muted-foreground">
-        Archived 2026-06-26. These episodes were generated from git commits by a multi-persona pipeline between September 2025 and June
-        2026. The pipeline is retired; the research program continues at{' '}
-        <Link href="/reports" className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary">
-          /reports
-        </Link>
-        .
-      </p>
 
       <div className="mt-10 md:mt-14">
         <EpisodeFilters episodes={episodes.map(toEpisodeSummary)} />

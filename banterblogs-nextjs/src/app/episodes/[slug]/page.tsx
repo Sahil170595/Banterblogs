@@ -68,10 +68,8 @@ export async function generateMetadata({
   };
 }
 
-// The head's first-load entrance: the breadcrumb, the dek, then the meta and
-// counts. The title is the largest text in view, its LCP element, so it
-// paints at once: Chrome credits a fade from 0 to LCP only when it ends.
-const HEAD_GROUP = { crumbs: 0, dek: 1, meta: 2 } as const;
+// the head's first-load entrance: breadcrumb and title, the dek, the meta and counts
+const HEAD_GROUP = { title: 0, dek: 1, meta: 2 } as const;
 // each platform's archive, the breadcrumb's second step
 const PLATFORM_ARCHIVE: Record<string, string> = { Chimera: '/chimera', Banterpacks: '/banterpacks' };
 // the episode's date, as the old head printed it, in every time zone alike
@@ -139,19 +137,21 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
       {/* the report page's reading register: breadcrumb, title, dek and meta, then the body and its contents */}
       <div className="container pb-24 pt-8 md:pt-10">
         <div className="report-head">
-          <nav aria-label="Breadcrumb" {...entranceGroup(HEAD_GROUP.crumbs)}>
-            <ol className="report-crumbs">
-              <li>
-                <Link href="/episodes">Episode archive</Link>
-              </li>
-              {platformArchive && (
+          <div {...entranceGroup(HEAD_GROUP.title)}>
+            <nav aria-label="Breadcrumb">
+              <ol className="report-crumbs">
                 <li>
-                  <Link href={platformArchive}>{platformLabel} episodes</Link>
+                  <Link href="/episodes">Episode archive</Link>
                 </li>
-              )}
-            </ol>
-          </nav>
-          <h1 className="report-title">{episode.title}</h1>
+                {platformArchive && (
+                  <li>
+                    <Link href={platformArchive}>{platformLabel} episodes</Link>
+                  </li>
+                )}
+              </ol>
+            </nav>
+            <h1 className="report-title">{episode.title}</h1>
+          </div>
           {episode.subtitle && (
             <p className={cn('report-dek', entranceGroup(HEAD_GROUP.dek).className)} style={entranceGroup(HEAD_GROUP.dek).style}>
               {episode.subtitle}

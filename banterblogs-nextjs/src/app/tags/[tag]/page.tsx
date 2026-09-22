@@ -3,13 +3,14 @@ import { notFound } from 'next/navigation';
 import { EpisodeRow } from '@/components/EpisodeRow';
 import { ArrowLeft } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
+import { entranceItem } from '@/components/motion/entrance';
 import { ButtonLink } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 
-// The rows paint at once: a row's preview is often the largest text in view,
-// and Chrome credits a fade from 0 to LCP only when it ends.
+// the first rows join the head's first-load entrance, after its three groups
+const ENTRANCE_ROWS = 3;
 
 // Every topic is known at build: prerender them all, so a visit never runs
 // the archive through the markdown pipeline on the request.
@@ -81,8 +82,8 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
       />
 
       <ul className="mt-10 md:mt-14">
-        {filteredEpisodes.map((episode) => (
-          <Reveal as="li" key={episode.id}>
+        {filteredEpisodes.map((episode, index) => (
+          <Reveal as="li" key={episode.id} {...(index < ENTRANCE_ROWS ? entranceItem(index) : {})}>
             <EpisodeRow episode={episode} />
           </Reveal>
         ))}

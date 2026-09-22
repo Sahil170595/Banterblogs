@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Brain, Calendar, Cpu, Gauge, Home, Inbox, Layers, Shield, Wrench, type LucideIcon } from 'lucide-react';
 import { STAR_SYSTEMS } from '@/components/galactic/systems';
 import { Reveal } from '@/components/motion/Reveal';
-import { entranceItem } from '@/components/motion/entrance';
+import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
 import { ReportVisual, type Variant, type VisualFamily } from '@/components/reports/ReportVisual';
 import { Card, CardLink } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -228,10 +228,8 @@ function RepositoryCard({ repository, core = false, wide = false }: { repository
   );
 }
 
-// The lede is the page's largest text, its LCP element, so it paints at once
-// (PageHeader stillLede); the title and the stat row rise, then the two core
-// engines join the sequence one group later.
-const CORE_ENTRANCE_AFTER = 2;
+// The two core engines join the head's entrance, after its three groups.
+const CORE_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
 const SUPPORTING_GRID = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
 // the last supporting card closes the grid on its side: two columns, then three
 const SUPPORTING_WIDE = 'sm:col-span-2 xl:col-span-3';
@@ -261,7 +259,6 @@ export default async function PlatformPage() {
       <PageHeader
         eyebrow={<Eyebrow dot="ember">Platform Architecture</Eyebrow>}
         title="What Powers Chimeraforge"
-        stillLede
         lede="Nine repositories across Python, Rust, TypeScript, and C#. Constitutional AI enforcement with cryptographic provenance, multi-model debate, and a self-improving alignment loop — from the JARVIS gateway to mobile clients to channel adapters."
         meta={
           <StatRow

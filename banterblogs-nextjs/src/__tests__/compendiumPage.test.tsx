@@ -61,9 +61,10 @@ describe('compendium head', () => {
     }
   });
 
-  it('rises in three entrance groups with the title painting at once, and draws its hero figure', () => {
-    expect([...page.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)].map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1', '2']);
-    expect(page.querySelector('h1')!.closest(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
+  it('rises in three entrance groups, the breadcrumb and title first, and draws its hero figure', () => {
+    const groups = [...page.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)];
+    expect(groups.map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1', '2']);
+    expect(groups[0].querySelector('h1')).not.toBeNull();
     expect(page.querySelector('.report-hero svg.rv')).not.toBeNull();
   });
 });

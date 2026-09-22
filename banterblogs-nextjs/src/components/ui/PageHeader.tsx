@@ -2,8 +2,6 @@ import type { ReactNode } from 'react';
 import { entranceGroup } from '@/components/motion/entrance';
 import { cn } from '@/lib/cn';
 
-const LEDE = 'mt-4 max-w-[60ch] text-copy-17 text-prose';
-
 export interface PageHeaderProps {
   title: ReactNode;
   eyebrow?: ReactNode;
@@ -15,12 +13,6 @@ export interface PageHeaderProps {
   actions?: ReactNode;
   /** the first-load entrance; on unless a page opts out */
   entrance?: boolean;
-  /**
-   * paint the lede at once, outside the entrance: for a lede that is the
-   * page's largest text, since Chrome credits a fade from 0 to LCP only when
-   * it ends. The meta row then rises one group after the title.
-   */
-  stillLede?: boolean;
   className?: string;
 }
 
@@ -34,7 +26,7 @@ export interface PageHeaderProps {
  * (its LCP element, when the title is short) out of any delayed group or
  * item: Chrome credits a late fade from 0 to LCP only when it ends.
  */
-export function PageHeader({ title, eyebrow, lede, meta, actions, entrance = true, stillLede = false, className }: PageHeaderProps) {
+export function PageHeader({ title, eyebrow, lede, meta, actions, entrance = true, className }: PageHeaderProps) {
   // an entrance group's class and --group, merged with the element's own classes
   const group = (index: number, classes?: string) => {
     const props = entrance ? entranceGroup(index) : undefined;
@@ -46,9 +38,9 @@ export function PageHeader({ title, eyebrow, lede, meta, actions, entrance = tru
         {eyebrow && <div className="mb-3">{eyebrow}</div>}
         <h1 className="text-heading-48 text-foreground">{title}</h1>
       </div>
-      {lede && (stillLede ? <p className={LEDE}>{lede}</p> : <p {...group(1, LEDE)}>{lede}</p>)}
+      {lede && <p {...group(1, 'mt-4 max-w-[60ch] text-copy-17 text-prose')}>{lede}</p>}
       {(meta || actions) && (
-        <div {...group(stillLede ? 1 : 2, 'mt-5 flex flex-wrap items-center gap-x-6 gap-y-3')}>
+        <div {...group(2, 'mt-5 flex flex-wrap items-center gap-x-6 gap-y-3')}>
           {meta}
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>

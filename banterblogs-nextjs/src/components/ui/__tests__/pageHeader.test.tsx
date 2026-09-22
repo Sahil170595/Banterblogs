@@ -39,21 +39,6 @@ describe('PageHeader', () => {
     expect(groups[2].querySelector('a[href="/reports"]')).not.toBeNull();
   });
 
-  // Chrome credits an element that fades in from opacity 0 to LCP only when
-  // its fade ends (~840ms after FCP on /platform, measured 2026-09-21), so a
-  // lede that is the page's largest text paints at once and the meta row
-  // takes its step.
-  it('can hold the lede still when it is the largest text, the meta row rising one group after the title', () => {
-    const el = render(<PageHeader title="Platform" lede="The longest paragraph." meta={<span>9 repositories</span>} stillLede />).container
-      .firstElementChild as HTMLElement;
-    const lede = [...el.querySelectorAll('p')].find((p) => p.textContent === 'The longest paragraph.')!;
-    expect(lede.closest(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
-    expect(lede.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-copy-17', 'text-prose', 'max-w-[60ch]']));
-    const groups = [...el.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)];
-    expect(groups.map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1']);
-    expect(groups[1].textContent).toContain('9 repositories');
-  });
-
   it('can opt out of the entrance, and leaves out what it is not given', () => {
     const markup = renderToStaticMarkup(<PageHeader title="Papers" entrance={false} />);
     expect(markup).not.toContain(ENTRANCE_GROUP_CLASS);

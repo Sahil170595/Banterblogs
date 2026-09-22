@@ -55,8 +55,8 @@ const boxes = (page: HTMLElement) =>
 
 afterEach(cleanup);
 
-// the head rises in its groups (fewer when its largest text paints at once),
-// then the first content items follow one group later
+// the head rises in its groups (two without a meta row), then the first
+// content items follow one group later
 function expectIndexTemplate(page: HTMLElement, headGroups = 3, minItems = 1) {
   expect(page.querySelectorAll('h1')).toHaveLength(1);
   expect(groups(page)).toEqual(['0', '1', '2'].slice(0, headGroups));
@@ -78,9 +78,9 @@ describe('/episodes', () => {
     const notice =
       'Archived 2026-06-26. These episodes were generated from git commits by a multi-persona pipeline between September 2025 and June 2026. The pipeline is retired; the research program continues at /reports.';
     expect(all).toContain(notice);
-    // the page's largest text in view paints at once, outside the entrance
+    // the notice rises with the buttons, in the head's meta row
     const noticeEl = [...page.querySelectorAll('p')].find((p) => text(p) === notice)!;
-    expect(noticeEl.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
+    expect((noticeEl.closest(`.${ENTRANCE_GROUP_CLASS}`) as HTMLElement).style.getPropertyValue('--group')).toBe('2');
     expect(page.querySelector('a[href="/reports"]')).not.toBeNull();
     const banterpacks = page.querySelector('a[href="/banterpacks"]')!;
     const chimera = page.querySelector('a[href="/chimera"]')!;
@@ -89,13 +89,12 @@ describe('/episodes', () => {
     for (const button of [banterpacks, chimera]) expect(button.classList.contains('pressable')).toBe(true);
   });
 
-  it('lists every episode as a row; the toolbar joins the entrance, the rows paint at once and reveal below', async () => {
+  it('lists every episode as a row; the toolbar, then the first rows, join the entrance', async () => {
     const page = mount(await EpisodesPage());
     expect(page.querySelectorAll('article a.list-row')).toHaveLength(ARCHIVE.length);
     const items = [...page.querySelectorAll(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)];
-    expect(items).toHaveLength(1);
     expect(items[0].querySelector('input[type="search"]')).not.toBeNull();
-    for (const row of page.querySelectorAll('article')) expect(row.closest(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
+    expect(items.slice(1).map((item) => item.querySelector('article') !== null)).toEqual([true, true, true]);
   });
 });
 
@@ -111,13 +110,9 @@ describe.each([
     3,
   ],
 ])('%s', (_route, Page, eyebrow, title, lede, platformLink, rows) => {
-  // on a phone the lede outgrows the rows' previews in view, so it is the LCP
-  // element and paints at once; the title, then the button, then the toolbar rise
   it('is the index template: head, lede, the platform link as a button, then the rows', async () => {
     const page = mount(await Page());
-    expectIndexTemplate(page, 2);
-    const ledeEl = [...page.querySelectorAll('header p')].find((p) => text(p) === lede)!;
-    expect(ledeEl.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
+    expectIndexTemplate(page);
     expect(text(page.querySelector('h1')!)).toBe(title);
     expect(text(page.querySelector('header')!)).toContain(eyebrow);
     expect(text(page)).toContain(lede);
@@ -131,7 +126,7 @@ describe.each([
 describe('/tags/[tag]', () => {
   it('lists every episode with the tag as a row that reveals, under the topic head', async () => {
     const page = mount(await TagPage({ params: Promise.resolve({ tag: 'architecture' }) }));
-    expectIndexTemplate(page, 3, 0);
+    expectIndexTemplate(page, 3, 2);
     expect(text(page.querySelector('header a[href="/tags"]')!)).toBe('Topic Map');
     expect(text(page.querySelector('h1')!)).toBe('architecture');
     expect(text(page.querySelector('header')!)).toContain('Topic Focus');
@@ -156,14 +151,9 @@ describe('/tags/[tag] at build', () => {
 describe('/tags', () => {
   it('maps every tag to its page in a hairline grid, busiest first, with its count', async () => {
     const page = mount(await TagsPage());
-    // the head is the largest text in view, so it paints at once and the
-    // topic map's first row rises cell by cell, one group apart
-    expect(page.querySelectorAll('h1')).toHaveLength(1);
-    expect(page.querySelector('header')!.querySelector(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
-    expect(groups(page)).toEqual(['0', '1', '2']);
-    for (const group of page.querySelectorAll(`.${ENTRANCE_GROUP_CLASS}`)) expect(group.closest('.hairline-grid')).not.toBeNull();
-    expect(page.innerHTML).not.toMatch(/signal-(panel|pill|divider)|glass-ultra|backdrop-blur/);
-    expect(boxes(page)).toEqual([]);
+    // no meta row: the first cells follow the lede one group later
+    expectIndexTemplate(page, 2);
+    for (const item of page.querySelectorAll(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)) expect(item.closest('.hairline-grid')).not.toBeNull();
     expect(text(page.querySelector('h1')!)).toBe('Chimera Tags');
     expect(text(page.querySelector('header')!)).toContain('Topic Map');
     expect(text(page)).toContain('Explore the full signal surface by topic, platform, and technology.');

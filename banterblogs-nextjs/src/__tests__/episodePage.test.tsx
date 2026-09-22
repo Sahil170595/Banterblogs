@@ -73,14 +73,12 @@ describe('episode head', () => {
     }
   });
 
-  // the title is the largest text in view (its LCP element), and Chrome
-  // credits a fade from 0 to LCP only when the fade ends
-  it('rises in three entrance groups on a full load, breadcrumb, dek, meta, the title painting at once', () => {
+  it('rises in three entrance groups on a full load, the breadcrumb and title first', () => {
     const groups = [...page.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)];
     expect(groups.map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1', '2']);
-    expect(groups[0].matches('nav[aria-label="Breadcrumb"]')).toBe(true);
+    expect(groups[0].querySelector('h1')).not.toBeNull();
+    expect(groups[0].querySelector('nav[aria-label="Breadcrumb"]')).not.toBeNull();
     expect(groups[1].classList.contains('report-dek')).toBe(true);
-    expect(page.querySelector('h1')!.closest(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
   });
 });
 

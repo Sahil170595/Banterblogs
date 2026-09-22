@@ -23,9 +23,9 @@ type SortKey = 'date' | 'title' | 'complexity' | 'files';
 // change resets it (keyed on the filter signature — no setState-in-effect).
 const PAGE_SIZE = 36;
 const OPTION_CLASS = 'bg-background text-foreground';
-// The toolbar joins the page head's first-load entrance. The rows do not: a
-// row's preview is often the largest text in view, and Chrome credits a fade
-// from 0 to LCP only when it ends, so they paint at once and reveal below.
+// The toolbar, then the first rows, join the page head's first-load entrance;
+// entranceItem caps where the later ones start.
+const ENTRANCE_ROWS = 3;
 const FIELD = 'h-10 rounded-full border border-border bg-background text-copy-14 text-foreground transition-colors duration-fast ease-standard hover:border-foreground/30 focus-visible:border-primary/60';
 const CHIP = 'pressable h-7 shrink-0 rounded-full px-3 text-label-13 font-medium';
 
@@ -185,8 +185,8 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
         <>
           {/* keyed on the filters, so a pointer pick replays the crossfade on a fresh list */}
           <ul key={filterKey} data-tab-panel="" data-switched={pointerPick ? '' : undefined}>
-            {filteredEpisodes.slice(0, visibleCount).map((episode) => (
-              <Reveal as="li" key={episode.id}>
+            {filteredEpisodes.slice(0, visibleCount).map((episode, index) => (
+              <Reveal as="li" key={episode.id} {...(index < ENTRANCE_ROWS ? entranceItem(index + 1, entranceAfter) : {})}>
                 <EpisodeRow episode={episode} />
               </Reveal>
             ))}

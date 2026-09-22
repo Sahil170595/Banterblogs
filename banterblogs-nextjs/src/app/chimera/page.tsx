@@ -31,9 +31,6 @@ export const metadata: Metadata = {
 
 export const runtime = 'nodejs';
 
-// the head's entrance groups: the title, then the platform button (the lede paints at once)
-const HEAD_GROUPS = 2;
-
 export default async function ChimeraPage() {
   const episodes = await getAllEpisodes();
 
@@ -44,7 +41,6 @@ export default async function ChimeraPage() {
       <PageHeader
         eyebrow={<Eyebrow>Chimera Engine</Eyebrow>}
         title="Chimera Episodes"
-        stillLede
         lede={`${chimeraEpisodes.length} episodes covering the constitutional AI debate engine and alignment architecture.`}
         actions={
           <ButtonLink href="/platform" iconEnd={<ArrowRight className="h-3.5 w-3.5" />}>
@@ -54,7 +50,7 @@ export default async function ChimeraPage() {
       />
 
       <div className="mt-10 md:mt-14">
-        <EpisodeFilters episodes={chimeraEpisodes.map(toEpisodeSummary)} entranceAfter={HEAD_GROUPS} />
+        <EpisodeFilters episodes={chimeraEpisodes.map(toEpisodeSummary)} />
       </div>
     </div>
   );
