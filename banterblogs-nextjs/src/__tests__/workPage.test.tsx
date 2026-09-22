@@ -126,6 +126,22 @@ describe('work page layout', () => {
     }
   });
 
+  // final WIG re-judge N1: five summaries were all "Show 1 more", read with
+  // no context. Each names its entry, so every disclosure's name is unique.
+  it('names each disclosure after its entry', () => {
+    const entries = [
+      ...RESEARCH.map((item) => [item.label, item.bullets.length > RESEARCH_VISIBLE] as const),
+      ...EXPERIENCE.map((job) => [`${job.role}, ${job.company}`, job.bullets.length > ROLE_VISIBLE] as const),
+    ].filter(([, folds]) => folds);
+    const names = [...page.querySelectorAll('li.list-row details > summary')].map((summary) => {
+      const context = summary.querySelector('.sr-only');
+      expect(context, text(summary)).not.toBeNull();
+      return text(context!);
+    });
+    expect(names).toEqual(entries.map(([title]) => `about ${title}`));
+    expect(new Set(names).size).toBe(names.length);
+  });
+
   // re-judge P1-7: "AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF;" has no break
   // opportunity and ran the page to 353px at 320; folded bullets included
   it('lets a long unbroken token in a bullet break anywhere, so it never widens the page', () => {

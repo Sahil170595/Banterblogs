@@ -86,7 +86,7 @@ const BULLET = 'relative pl-5 [overflow-wrap:anywhere] before:absolute before:le
  * disclosure (.more-details in globals.css), so the page skims as headlines
  * and every word stays on it, one click away.
  */
-function Bullets({ items, visible }: { items: string[]; visible: number }) {
+function Bullets({ items, visible, about }: { items: string[]; visible: number; about: string }) {
   const shown = items.slice(0, visible);
   const folded = items.slice(visible);
   return (
@@ -104,6 +104,8 @@ function Bullets({ items, visible }: { items: string[]; visible: number }) {
             <ChevronRight aria-hidden="true" className="more-chevron h-3.5 w-3.5" />
             <span className="more-closed">Show {folded.length} more</span>
             <span className="more-open">Show fewer</span>
+            {/* every disclosure on the page otherwise reads the same */}
+            <span className="sr-only"> about {about}</span>
           </summary>
           <ul className={cn('mt-3', BULLET_LIST)}>
             {folded.map((bullet) => (
@@ -133,7 +135,7 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
           <TitleLink href={item.href}>{item.label}</TitleLink>
         </h3>
         {item.meta && <p className="mt-1.5 text-label-13 text-muted-foreground">{item.meta}</p>}
-        <Bullets items={item.bullets} visible={RESEARCH_VISIBLE_BULLETS} />
+        <Bullets items={item.bullets} visible={RESEARCH_VISIBLE_BULLETS} about={item.label} />
         {item.evidence && item.evidence.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-1">
             <span className="mr-2 text-label-12-mono text-muted-foreground/80">Evidence</span>
@@ -165,7 +167,7 @@ function RoleRow({ job }: { job: Experience }) {
         <p className="mt-1 text-copy-16 text-muted-foreground">
           {job.company} · {job.location}
         </p>
-        <Bullets items={job.bullets} visible={ROLE_VISIBLE_BULLETS} />
+        <Bullets items={job.bullets} visible={ROLE_VISIBLE_BULLETS} about={`${job.role}, ${job.company}`} />
       </div>
     </Reveal>
   );
