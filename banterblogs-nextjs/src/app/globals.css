@@ -279,9 +279,11 @@ html {
   );
 }
 
-/* Desktop keeps the rail in the dark left column where it already measured
-   ~8.8:1 — soften the scrim so the scene reads through it. */
-@media (min-width: 1280px) {
+/* A tall desktop window keeps the rail in the dark left column where it
+   already measured ~8.8:1 — soften the scrim so the scene reads through it.
+   Shorter windows put the disk behind the rail (the current numeral 4.47:1
+   at 1440x789, 3.54:1 at 1280x640), so they keep the full scrim. */
+@media (min-width: 1280px) and (min-height: 801px) {
   .galactic-system-rail::before {
     background: linear-gradient(
       to top,
@@ -290,6 +292,30 @@ html {
       rgb(2 4 8 / 0.5) 58%,
       transparent 100%
     );
+  }
+}
+
+/* The hero copy's scrims (GalacticHero). The poster is laid out by height,
+   so on a short window the lensed disk sits behind the copy, and where the
+   poster shows, a star or a system body can at any size: the near-opaque
+   scrim holds there. Only the live scene on a tall window reads through the
+   light one, and the two crossfade as the scene arrives. */
+.hero-scrim-strong,
+.hero-scrim-light {
+  transition: opacity var(--duration-scene-crossfade) var(--ease-standard);
+}
+
+.hero-scrim-light {
+  opacity: 0;
+}
+
+@media (min-width: 640px) and (min-height: 801px) {
+  .group\/hero:has([data-scene-stage="live"]) .hero-scrim-light {
+    opacity: 1;
+  }
+
+  .group\/hero:has([data-scene-stage="live"]) .hero-scrim-strong {
+    opacity: 0;
   }
 }
 
