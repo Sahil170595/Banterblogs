@@ -69,9 +69,9 @@ describe('work page copy', () => {
 });
 
 describe('work page layout', () => {
-  it('puts the headline and the profile links in the rail, with an index of the four sections', () => {
-    const rail = page.querySelector('header.profile-rail')!;
-    expect(rail.querySelector('h1')).not.toBeNull();
+  it('puts the headline across the page, then the profile links in the rail, with an index of the four sections', () => {
+    expect(page.querySelector('header h1')).not.toBeNull();
+    const rail = page.querySelector('.profile-rail')!;
     for (const link of PROFILE_LINKS) expect(rail.querySelector(`a[href="${link.href}"]`), link.href).not.toBeNull();
     const index = [...rail.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute('href') ?? '');
     expect(index).toEqual(['#research', '#experience', '#education', '#skills']);

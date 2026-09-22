@@ -61,8 +61,8 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 // The most each pattern may count. Lower a ceiling whenever a count drops;
 // raising one is a regression.
 const CEILINGS: Record<Pattern, number> = {
-  arbitraryFontSize: 74,
-  arbitraryTracking: 21,
+  arbitraryFontSize: 71,
+  arbitraryTracking: 20,
   arbitraryShadow: 7,
   largeRadius: 2,
   paletteHue: 0,
@@ -123,9 +123,11 @@ describe('type roles', () => {
 
   it.each([
     // role, size px, line height, tracking, weight
-    ['heading-32', 32, '1.2', '-0.02em', '600'],
-    ['heading-24', 24, '1.3333', '-0.02em', '600'],
-    ['heading-20', 20, '1.375', '-0.015em', '600'],
+    // headings at 560, under the 600 that read blunt beside the references
+    // (Linear 510-590, Vercel 450; R4 design re-judge)
+    ['heading-32', 32, '1.2', '-0.02em', '560'],
+    ['heading-24', 24, '1.3333', '-0.02em', '560'],
+    ['heading-20', 20, '1.375', '-0.015em', '560'],
     ['copy-18', 18, '1.6', undefined, undefined],
     ['copy-17', 17, '1.6', undefined, undefined],
     ['copy-16', 16, '1.625', undefined, undefined],
@@ -140,15 +142,39 @@ describe('type roles', () => {
     expect(options.fontWeight).toBe(weight);
   });
 
-  it('steps the page title from 28px on phones through 36px to 48px on desktop, at -0.025em and 600', () => {
+  it('steps the page title from 28px on phones through 36px to 48px on desktop, at -0.03em and 540', () => {
     const [size, options] = fontSize['heading-48'];
     expect(size).toBe('var(--type-heading-48)');
-    expect(options).toEqual({ lineHeight: 'var(--leading-heading-48)', letterSpacing: '-0.025em', fontWeight: '600' });
+    // Manrope is variable (200-800), so 540 renders as 540, not a snapped 500 or 600
+    expect(options).toEqual({ lineHeight: 'var(--leading-heading-48)', letterSpacing: '-0.03em', fontWeight: '540' });
     const at = (query: string | null) => {
       const scope = query ? new RegExp(`@media \\(min-width: ${query}\\) \\{\\s*:root \\{([^}]*)\\}`).exec(css)?.[1] : /:root \{([^}]*--type-heading-48[^}]*)\}/.exec(css)?.[1];
       return rem(/--type-heading-48:\s*([\d.]+rem)/.exec(scope ?? '')?.[1] ?? 'NaN');
     };
     expect([at(null), at('640px'), at('768px')]).toEqual([28, 36, 48]);
+  });
+
+  it('names the one display exception (/show) at the page-title weight: 48px on phones, 72px from md', () => {
+    const [size, options] = fontSize['display-72'];
+    expect(size).toBe('var(--type-display-72)');
+    expect(options).toEqual({ lineHeight: '0.95', letterSpacing: '-0.04em', fontWeight: '540' });
+    const at = (query: string | null) => {
+      const scope = query ? new RegExp(`@media \\(min-width: ${query}\\) \\{\\s*:root \\{([^}]*)\\}`).exec(css)?.[1] : /:root \{([^}]*--type-display-72[^}]*)\}/.exec(css)?.[1];
+      return rem(/--type-display-72:\s*([\d.]+rem)/.exec(scope ?? '')?.[1] ?? 'NaN');
+    };
+    expect([at(null), at('768px')]).toEqual([48, 72]);
+  });
+
+  it('holds every page title to the one title role: no page sets its h1 in another size or weight', () => {
+    // the profile pages stepped their title down to 32px, /show set 72px bold, reading pages 44px
+    const pages = ['app/show/page.tsx', 'components/ui/ProfileLayout.tsx', 'components/ui/PageHeader.tsx'];
+    for (const page of pages) {
+      const source = fs.readFileSync(path.join(SRC, page), 'utf8');
+      const h1 = /<h1 className="([^"]*)"/.exec(source)?.[1] ?? '';
+      expect(h1.split(/\s+/).filter((c) => /^(?:[\w-]+:)?(?:text-(?:\d?xl|\[)|font-(?:bold|semibold|medium)|tracking-)/.test(c)), page).toEqual([]);
+      expect(h1, page).toMatch(/\btext-(?:heading-48|display-72)\b/);
+      expect(h1, page).not.toMatch(/:text-heading-(?!48)/);
+    }
   });
 
   it('extends the default scale rather than replacing it, so pages outside R3 keep rendering', () => {

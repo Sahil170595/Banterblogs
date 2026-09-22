@@ -57,7 +57,15 @@ const declarationsOf = (rules: typeof baseRules, selector: string) =>
     .map((rule) => rule.declarations)
     .join(';');
 const value = (declarations: string, property: string) => new RegExp(`(?:^|[;\\s])${property}:\\s*([^;]+)`).exec(declarations)?.[1].trim();
-const px = (size: string) => (size.endsWith('rem') ? parseFloat(size) * ROOT_PX : size.endsWith('px') ? parseFloat(size) : NaN);
+// the page-title role's size token (globals.css): its phone value, and its value from 768px
+const TITLE_TOKEN = 'var(--type-heading-48)';
+const titleToken = (query: string | null) => {
+  const scope = query ? new RegExp(`@media \\(min-width: ${query}\\) \\{\\s*:root \\{([^}]*)\\}`).exec(GLOBALS_CSS)?.[1] : /:root \{([^}]*--type-heading-48[^}]*)\}/.exec(GLOBALS_CSS)?.[1];
+  return parseFloat(/--type-heading-48:\s*([\d.]+)rem/.exec(scope ?? '')?.[1] ?? 'NaN') * ROOT_PX;
+};
+let titleAtDesktop = false;
+const px = (size: string) =>
+  size === TITLE_TOKEN ? titleToken(titleAtDesktop ? '768px' : null) : size.endsWith('rem') ? parseFloat(size) * ROOT_PX : size.endsWith('px') ? parseFloat(size) : NaN;
 
 // WCAG 2 relative luminance of an `H S% L%` token
 function luminance(hsl: string): number {
@@ -145,7 +153,9 @@ describe('report reading type', () => {
         return size && size !== 'inherit' ? rule.selector.split(',').map((s): [string, number] => [s.trim(), px(size)]) : [];
       }));
     const phone = sizesFor(baseRules);
-    const desktop = new Map([...phone, ...sizesFor(desktopRules)]);
+    titleAtDesktop = true;
+    const desktop = new Map([...sizesFor(baseRules), ...sizesFor(desktopRules)]);
+    titleAtDesktop = false;
     const phoneSizes = new Set([...CHROME_SIZES_PX.phone, ...phone.values()]);
     const desktopSizes = new Set([...CHROME_SIZES_PX.desktop, ...desktop.values()]);
     expect([...phoneSizes].sort((a, b) => a - b).length, [...phoneSizes].join(',')).toBeLessThanOrEqual(MAX_SIZES_ON_PAGE);
@@ -157,12 +167,13 @@ describe('report reading type', () => {
     expect(BLOCK).not.toMatch(/\.report-crumbs li \+ li::before/);
   });
 
-  it('sets the title at 40-48px, 600 weight and about -0.03em on desktop', () => {
-    const title = declarationsOf(desktopRules, '.report-title');
+  it('sets the title in the page-title role every interior page uses: its size token, 540 weight, -0.03em', () => {
     const base = declarationsOf(baseRules, '.report-title');
-    expect(px(value(title, 'font-size')!)).toBeGreaterThanOrEqual(40);
-    expect(px(value(title, 'font-size')!)).toBeLessThanOrEqual(48);
-    expect(value(base, 'font-weight')).toBe('600');
+    expect(value(base, 'font-size')).toBe(TITLE_TOKEN);
+    expect(value(base, 'line-height')).toBe('var(--leading-heading-48)');
+    expect([titleToken(null), titleToken('768px')]).toEqual([28, 48]);
+    expect(declarationsOf(desktopRules, '.report-title')).toBe('');
+    expect(value(base, 'font-weight')).toBe('540');
     expect(value(base, 'letter-spacing')).toBe('-0.03em');
   });
 });

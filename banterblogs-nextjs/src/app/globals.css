@@ -43,9 +43,11 @@
   --status-amber: 38 90% 62%;
   --status-blue: 212 85% 72%;
 
-  /* The page-title role (text-heading-48) steps with the viewport. */
+  /* The page-title role (text-heading-48) steps with the viewport; so does
+     the one display exception (text-display-72, /show). */
   --type-heading-48: 1.75rem;
   --leading-heading-48: 1.08;
+  --type-display-72: 3rem;
 }
 
 @media (min-width: 640px) {
@@ -58,6 +60,7 @@
 @media (min-width: 768px) {
   :root {
     --type-heading-48: 3rem;
+    --type-display-72: 4.5rem;
   }
 }
 
@@ -1375,12 +1378,13 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   color: hsl(var(--foreground));
 }
 
-/* the title takes the page's full width, so most titles set on one line */
+/* the page-title role (text-heading-48): the size, weight and tracking every
+   interior page's title uses */
 .report-title {
   margin-top: 1rem;
-  font-size: 2rem;
-  line-height: 1.12;
-  font-weight: 600;
+  font-size: var(--type-heading-48);
+  line-height: var(--leading-heading-48);
+  font-weight: 540;
   letter-spacing: -0.03em;
   color: hsl(var(--foreground));
 }
@@ -1737,11 +1741,6 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
 }
 
 @media (min-width: 768px) {
-  .report-title {
-    font-size: 2.75rem;
-    line-height: 1.08;
-  }
-
   .report-dek {
     font-size: 1.25rem;
   }
