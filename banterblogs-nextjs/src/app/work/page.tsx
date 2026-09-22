@@ -52,9 +52,11 @@ const SECTIONS = [
 const LINK_ICONS: Record<string, LucideIcon> = { GitHub: Github, LinkedIn: Linkedin, ORCID: ExternalLink };
 // the research rows that join the first-load entrance, after the rail
 const ENTRANCE_ROWS = 2;
-// bullets an entry shows before the rest fold away: the page skims as
-// headlines (it was 9,226px of bullets at 1440)
-const VISIBLE_BULLETS = 2;
+// bullets an entry shows before the rest fold away, so the page skims as
+// headlines (it was 9,226px of bullets at 1440): a research entry already
+// leads with its meta line and evidence, a role with the first two of its story
+const RESEARCH_VISIBLE_BULLETS = 1;
+const ROLE_VISIBLE_BULLETS = 2;
 const CURRENT_ROLE = /Present$/;
 
 const isExternal = (href: string) => /^https?:\/\//.test(href);
@@ -79,13 +81,13 @@ const BULLET_LIST = 'max-w-[68ch] space-y-3 text-copy-16 text-prose';
 const BULLET = 'relative pl-5 before:absolute before:left-0 before:top-[0.7em] before:h-1 before:w-1 before:rounded-full before:bg-foreground/30';
 
 /**
- * An entry's bullets: the first VISIBLE_BULLETS, then the rest in one closed
+ * An entry's bullets: the first `visible`, then the rest in one closed
  * disclosure (.more-details in globals.css), so the page skims as headlines
  * and every word stays on it, one click away.
  */
-function Bullets({ items }: { items: string[] }) {
-  const shown = items.slice(0, VISIBLE_BULLETS);
-  const folded = items.slice(VISIBLE_BULLETS);
+function Bullets({ items, visible }: { items: string[]; visible: number }) {
+  const shown = items.slice(0, visible);
+  const folded = items.slice(visible);
   return (
     <>
       <ul className={cn('mt-4', BULLET_LIST)}>
@@ -130,7 +132,7 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
           <TitleLink href={item.href}>{item.label}</TitleLink>
         </h3>
         {item.meta && <p className="mt-1.5 text-label-13 text-muted-foreground">{item.meta}</p>}
-        <Bullets items={item.bullets} />
+        <Bullets items={item.bullets} visible={RESEARCH_VISIBLE_BULLETS} />
         {item.evidence && item.evidence.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-1">
             <span className="mr-2 text-label-12-mono text-muted-foreground/80">Evidence</span>
@@ -162,7 +164,7 @@ function RoleRow({ job }: { job: Experience }) {
         <p className="mt-1 text-copy-16 text-muted-foreground">
           {job.company} · {job.location}
         </p>
-        <Bullets items={job.bullets} />
+        <Bullets items={job.bullets} visible={ROLE_VISIBLE_BULLETS} />
       </div>
     </Reveal>
   );

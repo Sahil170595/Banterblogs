@@ -233,17 +233,29 @@ function PaperLinks({ paper, className }: { paper: Paper; className?: string }) 
   );
 }
 
-/** the evidence reports, in tabular labels */
-function Evidence({ paper, className }: { paper: Paper; className?: string }) {
+/**
+ * The evidence reports: on one line after their label on a card, and under
+ * it in a row's narrow meta column, the links' text in line with the label.
+ */
+function Evidence({ paper, stacked = false, className }: { paper: Paper; stacked?: boolean; className?: string }) {
   if (paper.trs.length === 0) return null;
+  const links = paper.trs.map((tr) => (
+    <ButtonLink key={tr.slug} href={`/reports/${tr.slug}`} variant="ghost" size="sm" className="px-2">
+      {tr.label}
+    </ButtonLink>
+  ));
+  if (stacked) {
+    return (
+      <div className={className}>
+        <span className="block text-label-13 text-muted-foreground/80">Evidence</span>
+        <div className="-ml-2 mt-1 flex flex-wrap items-center gap-1">{links}</div>
+      </div>
+    );
+  }
   return (
     <div className={cn('flex flex-wrap items-center gap-x-1 gap-y-1', className)}>
       <span className="mr-2 text-label-13 text-muted-foreground/80">Evidence</span>
-      {paper.trs.map((tr) => (
-        <ButtonLink key={tr.slug} href={`/reports/${tr.slug}`} variant="ghost" size="sm" className="px-2">
-          {tr.label}
-        </ButtonLink>
-      ))}
+      {links}
     </div>
   );
 }
@@ -291,7 +303,7 @@ function PaperRow({ paper, index }: { paper: Paper; index: number }) {
       aside={
         <div className="space-y-3">
           <StatusLine paper={paper} />
-          <Evidence paper={paper} />
+          <Evidence paper={paper} stacked />
         </div>
       }
     >
