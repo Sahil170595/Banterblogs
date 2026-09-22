@@ -33,7 +33,7 @@ Chimeraforge documents work across nine repositories:
 |---|---|
 | **Banterpacks** | Core monorepo — JARVIS gateway, constitutional router (TDD002), debate engine (Chimera), Rust runtime (TDD005) with ZK proofs + BFT, RLAIF alignment loop, authoring. |
 | **Banterhearts** | ML research platform — inference API, benchmarking, AutoOpt agent, safety evaluation. Current counts: https://chimeraforge.vercel.app/reports.json |
-| **Chimeraforge (PyPI)** | LLM deployment optimizer on PyPI (v0.30.10). Model-agnostic 5-gate capacity planner (VRAM, quality, safety opt-in, latency, cost) — plans any registry / Ollama / HuggingFace model across 22 GPU profiles, and serves the same numbers to AI assistants over MCP. Every number labeled `measured` / `estimated` / `unknown`. |
+| **Chimeraforge (PyPI)** | LLM deployment optimizer on PyPI (v0.34.0). Model-agnostic 5-gate capacity planner (VRAM, quality, safety opt-in, latency, cost) — plans any registry / Ollama / HuggingFace model across 22 GPU profiles, and serves the same numbers to AI assistants over MCP. Every number labeled `measured` / `extrapolated` / `derived` / `estimated` / `unknown`. |
 | **Chimera Multi-Agent** | Muse Protocol — 6-agent content pipeline + observability control plane (OTel, ClickHouse, Datadog). |
 | **Chimeradroid** | Unity/C# Android companion — voice, chat, tool approval, session handoff, mesh networking. |
 | **Echo** | Messaging channel adapters — Slack and Discord bridges to JARVIS. |
