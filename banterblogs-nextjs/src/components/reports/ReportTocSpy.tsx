@@ -4,13 +4,15 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
 import { REPORT_END_ATTRIBUTE } from './reportEnd';
 
-// Scroll-spy for the report contents. An IntersectionObserver, not a scroll
-// handler, marks the entry being read (aria-current="location") and moves the
+// Scroll-spy for the report contents. IntersectionObservers, not a scroll
+// handler, mark the entry being read (aria-current="location") and move the
 // copper marker to it with a transform, written straight onto the marker;
 // globals.css eases it over the base token on strong-out, and not at all
-// under reduced motion. It watches the headings and every block between them:
+// under reduced motion. They watch the headings and every block between them:
 // the blocks tile the body, so any scroll or jump changes what crosses the
-// activation band and the answer is re-read, even where no heading is near.
+// activation band. The observer callbacks read no layout; what is in the band
+// comes from their entries, and the section being read is the section of the
+// last element there. One frame then reads the contents, then writes.
 
 /** a heading becomes the one being read once it rises past this share of the viewport */
 export const ACTIVATION_LINE = 0.3;
@@ -20,14 +22,13 @@ export const CURRENT_ATTRIBUTE = 'aria-current';
 export const CURRENT_VALUE = 'location';
 export const MARKER_PLACED_ATTRIBUTE = 'data-placed';
 
-// the last heading at or above the line
-function headingBeingRead(headings: HTMLElement[], line: number): HTMLElement | null {
-  let found: HTMLElement | null = null;
-  for (const heading of headings) {
-    if (heading.getBoundingClientRect().top > line) break;
-    found = heading;
+type Intersecting = Set<Element>;
+
+function updateIntersecting(set: Intersecting, entries: IntersectionObserverEntry[]) {
+  for (const entry of entries) {
+    if (entry.isIntersecting) set.add(entry.target);
+    else set.delete(entry.target);
   }
-  return found;
 }
 
 export function ReportTocSpy({ ids, children }: { ids: string[]; children: ReactNode }) {
@@ -45,54 +46,95 @@ export function ReportTocSpy({ ids, children }: { ids: string[]; children: React
     const scroller = track.closest<HTMLElement>('[data-toc-scroller]');
     // the phone layout hides the sidebar: nothing to follow there
     const nav = track.closest('nav');
-    const hidden = () => nav !== null && getComputedStyle(nav).display === 'none';
-    let active: string | null = null;
+
+    // every watched element in document order, with the heading of its section
+    const headingIds = new Set(headings.map((heading) => heading.id));
+    const bodies = new Set(headings.map((heading) => heading.parentElement).filter((el): el is HTMLElement => el !== null));
+    const blocks = [...bodies].flatMap((body) => [...body.children]);
+    const order = new Map<Element, number>();
+    const sectionOf = new Map<Element, string | null>();
+    let section: string | null = null;
+    blocks.forEach((block, index) => {
+      if (headingIds.has(block.id)) section = block.id;
+      order.set(block, index);
+      sectionOf.set(block, section);
+    });
+
+    const inBand: Intersecting = new Set();
+    const inView: Intersecting = new Set();
     let endInView = false;
+    let active: string | null = null;
+    let frame = 0;
     let placing = 0;
 
-    const keepInView = (link: HTMLElement) => {
-      if (!scroller) return;
-      const box = scroller.getBoundingClientRect();
-      const at = link.getBoundingClientRect();
-      if (at.top >= box.top && at.bottom <= box.bottom) return;
-      const smooth = document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on';
-      scroller.scrollBy({ top: at.top - box.top - scroller.clientHeight / 3, behavior: smooth ? 'smooth' : 'auto' });
+    // the section of the last element in the band, or on screen once the end of the report is
+    const sectionBeingRead = () => {
+      let last: Element | null = null;
+      for (const el of endInView ? inView : inBand) {
+        if (last === null || (order.get(el) ?? -1) > (order.get(last) ?? -1)) last = el;
+      }
+      return last ? (sectionOf.get(last) ?? null) : null;
     };
 
-    const update = () => {
-      if (hidden()) return;
-      const line = endInView ? window.innerHeight : window.innerHeight * ACTIVATION_LINE;
-      const id = headingBeingRead(headings, line)?.id ?? null;
+    const apply = () => {
+      frame = 0;
+      const id = sectionBeingRead();
       if (id === active) return;
+      // reads, all before any write
+      if (nav !== null && getComputedStyle(nav).display === 'none') return;
+      const link = id ? links.get(id) : null;
+      const markerTop = link ? Math.round(link.offsetTop + (link.offsetHeight - marker.offsetHeight) / 2) : 0;
+      const box = scroller && link ? scroller.getBoundingClientRect() : null;
+      const at = box && link ? link.getBoundingClientRect() : null;
+      const scrollerHeight = scroller ? scroller.clientHeight : 0;
+      // writes
       if (active) links.get(active)?.removeAttribute(CURRENT_ATTRIBUTE);
       active = id;
-      const link = id ? links.get(id) : null;
       if (!link) {
         marker.removeAttribute(MARKER_PLACED_ATTRIBUTE);
         return;
       }
       link.setAttribute(CURRENT_ATTRIBUTE, CURRENT_VALUE);
-      marker.style.transform = `translateY(${Math.round(link.offsetTop + (link.offsetHeight - marker.offsetHeight) / 2)}px)`;
+      marker.style.transform = `translateY(${markerTop}px)`;
       // placed without easing the first time, so it never slides in from the top
       if (!marker.hasAttribute(MARKER_PLACED_ATTRIBUTE)) placing = requestAnimationFrame(() => marker.setAttribute(MARKER_PLACED_ATTRIBUTE, ''));
-      keepInView(link);
+      if (scroller && box && at && (at.top < box.top || at.bottom > box.bottom)) {
+        const smooth = document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on';
+        scroller.scrollBy({ top: at.top - box.top - scrollerHeight / 3, behavior: smooth ? 'smooth' : 'auto' });
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(apply);
     };
 
-    // the band above the activation line: headings and the blocks between them crossing it
-    const band = new IntersectionObserver(update, { rootMargin: `0px 0px -${Math.round((1 - ACTIVATION_LINE) * 100)}% 0px` });
-    const bodies = new Set(headings.map((heading) => heading.parentElement).filter((el): el is HTMLElement => el !== null));
-    for (const body of bodies) for (const block of body.children) band.observe(block);
+    // the band above the activation line, and the whole viewport for the end of the report
+    const band = new IntersectionObserver(
+      (entries) => {
+        updateIntersecting(inBand, entries);
+        schedule();
+      },
+      { rootMargin: `0px 0px -${Math.round((1 - ACTIVATION_LINE) * 100)}% 0px` },
+    );
+    const view = new IntersectionObserver((entries) => {
+      updateIntersecting(inView, entries);
+      schedule();
+    });
+    for (const block of blocks) {
+      band.observe(block);
+      view.observe(block);
+    }
     const end = document.querySelector(`[${REPORT_END_ATTRIBUTE}]`);
     const tail = new IntersectionObserver((entries) => {
       endInView = entries.some((entry) => entry.isIntersecting);
-      update();
+      schedule();
     });
     if (end) tail.observe(end);
-    update();
 
     return () => {
       band.disconnect();
+      view.disconnect();
       tail.disconnect();
+      cancelAnimationFrame(frame);
       cancelAnimationFrame(placing);
     };
   }, [ids]);
