@@ -39,8 +39,7 @@ const PRESENTED: Paper[] = [
 const PUBLIC_PREPRINTS: Paper[] = [
   {
     title: 'Typical-Acceptance Invariance Screen for Speculative Decoding Safety',
-    thesis:
-      'No detectable safety divergence under speculative decoding at temperature zero: 60,849 matched samples, max |Cohen’s h| = 0.024, and 25 of 27 per-task TOST contrasts inside ±3pp. A strong null result, withdrawn from venue review and released as a public preprint.',
+    thesis: 'Examines output differences and refusal behavior under temperature-zero speculative decoding.',
     venue: 'Public preprint',
     status: 'Preprint',
     trs: [{ label: 'TR144', slug: 'technical-report-144' }],
@@ -85,7 +84,7 @@ const IN_PREP: Paper[] = [
   {
     title: 'Inference Optimization Is Not Safety-Neutral',
     thesis:
-      'Synthesis paper. Quantization drives 57% of total safety cost, backend choice 41%, concurrency 2%. Chat template divergence can induce larger safety shifts than numerical precision.',
+      'Synthesis paper. Across two shared anchor models, quantization, backend, and concurrency account for 57%, 41%, and 2% of normalized safety-score changes: descriptive shares, not a causal decomposition. Chat template divergence can induce larger safety shifts than numerical precision.',
     venue: 'TBD',
     status: 'Synthesis',
     trs: [
@@ -343,7 +342,7 @@ export default function PapersPage() {
         <Section
           id="published"
           title="Published & public"
-          description="The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program. The speculative-decoding null result is a public arXiv preprint."
+          description="The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program. The speculative-decoding study is a public arXiv preprint."
           aside
         >
           <ul className={PAPER_GRID}>
@@ -389,7 +388,7 @@ export default function PapersPage() {
         {/* the program behind the papers, then where to go next */}
         <div className="page-section">
           <p className="max-w-[60ch] text-copy-17 text-prose">
-            The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the speculative-decoding null result is
+            The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the speculative-decoding study is
             public on arXiv; {UNDER_REVIEW_COUNT} more are under blind review at top ML venues and workshops, with {IN_PREP_COUNT} in
             preparation. Each is backed by reproducible technical reports and artifact-level provenance from a {MEASUREMENTS.DISPLAY}{' '}
             measurement program.

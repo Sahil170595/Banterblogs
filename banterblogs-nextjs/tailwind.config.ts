@@ -68,13 +68,16 @@ const config: Config = {
       // the sizes R1 and R2 shipped. They extend the default scale, so pages
       // not yet on the roles keep rendering. heading-48 is the page title on
       // every interior page and steps 28 -> 36 -> 48px through
-      // --type-heading-48 (globals.css); display-72 is the one display
-      // exception (/show). Titles sit at 540 and headings at 560 on the
-      // variable Manrope axis; copy-17 is the page lede; label-13 sets
-      // tabular figures and label-12-mono is the one mono eyebrow
-      // (labelRoles below).
+      // --type-heading-48 (globals.css); the two display roles take its
+      // weight at the size their surface sets: display-72 on /show, and
+      // display-32 in the landing's hero panel, which holds both lines of
+      // its heading unbroken at 22px on phones and 32px from md. Titles sit
+      // at 540 and headings at 560 on the variable Manrope axis; copy-17 is
+      // the page lede; label-13 sets tabular figures and label-12-mono is
+      // the one mono eyebrow (labelRoles below).
       fontSize: {
         "display-72": ["var(--type-display-72)", { lineHeight: "0.95", letterSpacing: "-0.04em", fontWeight: "540" }],
+        "display-32": ["var(--type-display-32)", { lineHeight: "var(--leading-heading-48)", letterSpacing: "-0.03em", fontWeight: "540" }],
         "heading-48": ["var(--type-heading-48)", { lineHeight: "var(--leading-heading-48)", letterSpacing: "-0.03em", fontWeight: "540" }],
         "heading-32": ["2rem", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "560" }],
         "heading-24": ["1.5rem", { lineHeight: "1.3333", letterSpacing: "-0.02em", fontWeight: "560" }],
@@ -141,7 +144,6 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
-        display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif"],
         mono: MONO_STACK,
       },
     },

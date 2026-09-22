@@ -86,7 +86,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   tagline: 'LLM deployment planner',
   summary:
     'Turns "which model, quantization, GPU, and backend — how many, will it fit, will it hit my SLO, what will it cost" into a fast, measured answer from your shell, your Python, or your AI assistant.',
-  version: '0.30.10',
+  version: '0.34.0',
   license: 'MIT',
   python: '3.10 – 3.14',
   install: 'pip install chimeraforge',
@@ -95,10 +95,10 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/Chimeraforge',
   changelog: 'https://github.com/Sahil170595/Chimeraforge/blob/main/CHANGELOG.md',
   ecosystem: true,
-  downloads: '25,000+',
+  downloads: '28,000+',
   principle: {
     title: 'The trust principle',
-    body: 'Every number is labeled measured, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are computed from real model architecture. Throughput is a measured lookup when one exists, otherwise an explicit bandwidth roofline, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
+    body: 'Every number is labeled measured, extrapolated, derived, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are derived: exact arithmetic over the model’s real architecture, not a measurement. Throughput is a measured lookup only on the rig the corpus was measured on; on any other GPU it is scaled by memory bandwidth and labeled extrapolated, otherwise an explicit roofline estimate, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
   },
   // README: "a 5-gate pipeline: VRAM -> quality -> safety (opt-in) -> latency
   // -> budget", and its "What's modeled" table for how each gate is computed
@@ -141,7 +141,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
     },
     {
       title: '22 GPU profiles',
-      body: 'Consumer Ada and Blackwell (RTX 30/40/50-series), datacenter (A100 40/80GB, H100, H200, B200, L4, T4), and AMD MI300X — each with VRAM, bandwidth, FP16 TFLOPS, TDP, and interconnect.',
+      body: 'Consumer Ampere, Ada, and Blackwell (RTX 30/40/50-series), datacenter (A100 40/80GB, H100, H200, B200, L4, T4), and AMD MI300X — each with VRAM, bandwidth, FP16 TFLOPS, TDP, and interconnect.',
     },
   ],
   evidence: [
@@ -170,8 +170,10 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
     },
   ],
   limits: [
-    'MoE active-versus-total parameter divergence, reasoning tokens, speculative decoding, and prefix caching are not modeled yet.',
-    'Quantization coverage for vLLM and TGI is GGUF-only so far.',
+    'Speculative decoding is not modeled yet. For MoE, active-versus-total parameters are modeled, but expert parallelism and routing load imbalance are not.',
+    'Quantization coverage for vLLM, TGI, and SGLang is FP16, FP8, and AWQ/GPTQ; FP8 and W4A16 quality are estimated, not measured, because the quality corpus covers GGUF k-quants only.',
+    'The bundled quality corpus is 20 items, which resolves nothing smaller than about 21 percentage points, so every measured quant delta in it reports as indistinguishable from its FP16 baseline.',
+    'Heterogeneous fleets assume a capability-aware request router that no serving engine ships yet.',
     'Tensor- and pipeline-parallel throughput are comms-modeled estimates, not measured, and cannot be combined in a single plan.',
     'The bundled corpus is fit primarily on one rig (RTX 4080 12GB); other GPUs scale from bandwidth and compute until you run measure.',
   ],
@@ -192,7 +194,7 @@ export const QUANTFIT_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/quantfit',
   changelog: 'https://github.com/Sahil170595/quantfit/blob/main/CHANGELOG.md',
   ecosystem: false,
-  downloads: '12,000+',
+  downloads: '13,000+',
   principle: {
     title: 'Safety drift is a vector, not a number',
     body: 'verify-safety generates from both the unquantized baseline and the quantized model over a curated probe set, judges each response with a local classifier, and reports two axes: refusal-robustness drift (did the quant start complying with what should be refused — the dangerous direction) and over-refusal drift (did it start refusing what should be answered — the usability direction). A scalar refusal-delta can read zero while both axes move in opposite directions. Verdicts are bounded, never absolute: a no-detection result bounds the drift, it does not certify safety.',
