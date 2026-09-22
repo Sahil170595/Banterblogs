@@ -160,8 +160,9 @@ describe('card hover depth', () => {
     expect(hoverOnly).toMatch(/\.card-depth:hover \.card-lift \{[^}]*transform:\s*translateY\(calc\(-1 \* var\(--motion-lift\)\)\)/);
     // the link itself never moves, so it never slips out from under the cursor
     expect(CSS).not.toMatch(/\.card-depth(?::hover|:focus-visible|:active|:is\([^)]*\))?\s*\{[^}]*transform/);
-    // hover motion lives only inside the hover-capable media query
-    expect(CSS.replace(hoverOnly, '')).not.toMatch(/\.card-depth:hover/);
+    // hover rules live only inside hover-capable media queries (the card's, and R4's call to action)
+    const outsideHover = CSS.replace(/@media \(hover: hover\) and \(pointer: fine\) \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '');
+    expect(outsideHover).not.toMatch(/\.card-depth:hover/);
   });
 
   it('glows by fading a pre-rendered ring and shadow, and never transitions a shadow', () => {

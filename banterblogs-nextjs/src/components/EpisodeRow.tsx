@@ -46,16 +46,16 @@ export function EpisodeRow({ episode }: { episode: EpisodeSummary }) {
     `${formatNumber(episode.linesAdded)} lines added`,
     `${episode.readingTime} min read`,
     `chaos score ${episode.complexity}/100`,
-    episode.commit ? `#${episode.commit.slice(0, SHORT_HASH_LENGTH)}` : 'untracked',
   ];
   return (
     <article>
       <IntentLink href={`/episodes/${episode.slug}`} className="list-row episode-row group">
+        {/* mono only where it carries meaning: the number here, the commit hash below */}
         <div className="episode-row-rail">
           <span className="font-mono text-label-13 text-muted-foreground transition-colors duration-fast ease-standard group-hover:text-primary">
             {episodeNumber(episode.displayId ?? episode.id)}
           </span>
-          <time dateTime={episode.date} className="text-label-12-mono text-muted-foreground/80">
+          <time dateTime={episode.date} className="text-label-13 text-muted-foreground/80">
             {EPISODE_DATE.format(new Date(episode.date))}
           </time>
         </div>
@@ -63,15 +63,15 @@ export function EpisodeRow({ episode }: { episode: EpisodeSummary }) {
           <h2 className="text-heading-20 text-foreground transition-colors duration-fast ease-standard group-hover:text-primary">{episode.title}</h2>
           {episode.subtitle && <p className="mt-1 text-copy-14 text-prose">{episode.subtitle}</p>}
           {episode.preview && <p className="mt-2 line-clamp-2 max-w-3xl text-copy-14 text-muted-foreground">{episode.preview}</p>}
-          <p className="mt-3 text-label-13 text-muted-foreground/80">{facts.join(' · ')}</p>
+          <p className="mt-3 text-label-13 text-muted-foreground/80">
+            {facts.join(' · ')} ·{' '}
+            {episode.commit ? <span className="font-mono">#{episode.commit.slice(0, SHORT_HASH_LENGTH)}</span> : 'untracked'}
+          </p>
+          {/* the tags as one quiet line, not a wall of pills */}
           {tags.length > 0 && (
-            <p className="mt-2 flex flex-wrap items-center gap-1.5">
-              {tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-foreground/[0.06] px-2 py-0.5 text-label-12-mono text-muted-foreground">
-                  {tag}
-                </span>
-              ))}
-              {more > 0 && <span className="text-label-12-mono text-muted-foreground/80">+{more} more</span>}
+            <p className="mt-1 text-label-13 text-muted-foreground/70">
+              {tags.join(', ')}
+              {more > 0 && ` +${more} more`}
             </p>
           )}
         </div>

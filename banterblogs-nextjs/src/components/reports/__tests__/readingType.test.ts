@@ -7,12 +7,14 @@ import { describe, expect, it } from 'vitest';
 // 560-600 weight on -0.02em, h3 at 18-20px and 600, links that change only
 // their underline colour, and no more than seven font sizes on the page with
 // the header and footer. The rules live in one delimited report-page block of
-// globals.css.
+// reading.css, the stylesheet only the reading routes load; the tokens every
+// page uses (--prose, the page-title size) stay in globals.css.
 
 const GLOBALS_CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8');
-const START = GLOBALS_CSS.indexOf('/* report page');
-const END = GLOBALS_CSS.indexOf('/* end report page */');
-const BLOCK = START >= 0 && END > START ? GLOBALS_CSS.slice(START, END).replace(/\/\*[\s\S]*?\*\//g, '') : '';
+const READING_CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'reading.css'), 'utf8');
+const START = READING_CSS.indexOf('/* report page');
+const END = READING_CSS.indexOf('/* end report page */');
+const BLOCK = START >= 0 && END > START ? READING_CSS.slice(START, END).replace(/\/\*[\s\S]*?\*\//g, '') : '';
 
 const ROOT_PX = 16;
 const MIN_CONTRAST = 12;
@@ -57,7 +59,15 @@ const declarationsOf = (rules: typeof baseRules, selector: string) =>
     .map((rule) => rule.declarations)
     .join(';');
 const value = (declarations: string, property: string) => new RegExp(`(?:^|[;\\s])${property}:\\s*([^;]+)`).exec(declarations)?.[1].trim();
-const px = (size: string) => (size.endsWith('rem') ? parseFloat(size) * ROOT_PX : size.endsWith('px') ? parseFloat(size) : NaN);
+// the page-title role's size token (globals.css): its phone value, and its value from 768px
+const TITLE_TOKEN = 'var(--type-heading-48)';
+const titleToken = (query: string | null) => {
+  const scope = query ? new RegExp(`@media \\(min-width: ${query}\\) \\{\\s*:root \\{([^}]*)\\}`).exec(GLOBALS_CSS)?.[1] : /:root \{([^}]*--type-heading-48[^}]*)\}/.exec(GLOBALS_CSS)?.[1];
+  return parseFloat(/--type-heading-48:\s*([\d.]+)rem/.exec(scope ?? '')?.[1] ?? 'NaN') * ROOT_PX;
+};
+let titleAtDesktop = false;
+const px = (size: string) =>
+  size === TITLE_TOKEN ? titleToken(titleAtDesktop ? '768px' : null) : size.endsWith('rem') ? parseFloat(size) * ROOT_PX : size.endsWith('px') ? parseFloat(size) : NaN;
 
 // WCAG 2 relative luminance of an `H S% L%` token
 function luminance(hsl: string): number {
@@ -73,12 +83,12 @@ function luminance(hsl: string): number {
 const token = (css: string, name: string) => new RegExp(`--${name}:\\s*([\\d.]+ [\\d.]+% [\\d.]+%)`).exec(css)?.[1];
 
 describe('report reading type', () => {
-  it('lives in one delimited block of globals.css', () => {
+  it('lives in one delimited block of reading.css', () => {
     expect(BLOCK).not.toBe('');
   });
 
   it('sets prose in its own colour token at 12:1 or better on the page background', () => {
-    const prose = token(BLOCK, 'prose');
+    const prose = token(GLOBALS_CSS, 'prose');
     const background = token(GLOBALS_CSS, 'background');
     expect(prose).toBeDefined();
     const ratio = (luminance(prose!) + 0.05) / (luminance(background!) + 0.05);
@@ -120,8 +130,8 @@ describe('report reading type', () => {
   it('sets table cells in the prose colour and keeps numeric columns tabular and right-aligned', () => {
     expect(value(declarationsOf(baseRules, '.report-prose td'), 'color')).toBe('hsl(var(--prose))');
     // Phase 0's rules, outside this block
-    expect(GLOBALS_CSS).toMatch(/\.table-scroll :is\(th, td\) \{\s*font-variant-numeric: tabular-nums;/);
-    expect(GLOBALS_CSS).toMatch(/\.table-scroll \.num \{\s*text-align: right;/);
+    expect(READING_CSS).toMatch(/\.table-scroll :is\(th, td\) \{\s*font-variant-numeric: tabular-nums;/);
+    expect(READING_CSS).toMatch(/\.table-scroll \.num \{\s*text-align: right;/);
   });
 
   it('turns a link underline ember on hover and changes nothing else: colour only, no motion', () => {
@@ -145,7 +155,9 @@ describe('report reading type', () => {
         return size && size !== 'inherit' ? rule.selector.split(',').map((s): [string, number] => [s.trim(), px(size)]) : [];
       }));
     const phone = sizesFor(baseRules);
-    const desktop = new Map([...phone, ...sizesFor(desktopRules)]);
+    titleAtDesktop = true;
+    const desktop = new Map([...sizesFor(baseRules), ...sizesFor(desktopRules)]);
+    titleAtDesktop = false;
     const phoneSizes = new Set([...CHROME_SIZES_PX.phone, ...phone.values()]);
     const desktopSizes = new Set([...CHROME_SIZES_PX.desktop, ...desktop.values()]);
     expect([...phoneSizes].sort((a, b) => a - b).length, [...phoneSizes].join(',')).toBeLessThanOrEqual(MAX_SIZES_ON_PAGE);
@@ -157,12 +169,47 @@ describe('report reading type', () => {
     expect(BLOCK).not.toMatch(/\.report-crumbs li \+ li::before/);
   });
 
-  it('sets the title at 40-48px, 600 weight and about -0.03em on desktop', () => {
-    const title = declarationsOf(desktopRules, '.report-title');
+  it('centres the article column and the contents rail as one pair, the column at the prose measure', () => {
+    const LG_QUERY = '@media (min-width: 1024px)';
+    const tokens = declarationsOf(baseRules, ':root');
+    const measure = value(tokens, '--reading-measure')!;
+    // the column is exactly the prose measure, so no dead band opens beside the text
+    expect(measure).toBe(value(declarationsOf(baseRules, '.report-prose'), 'max-width'));
+    const gap = px(value(tokens, '--reading-gap')!);
+    const rail = px(value(tokens, '--reading-rail')!);
+    // at most the width of the rail itself between text and contents (was 352px at 1440)
+    expect(gap).toBeGreaterThanOrEqual(48);
+    expect(gap).toBeLessThanOrEqual(96);
+    expect(rail).toBeGreaterThanOrEqual(224);
+    const frame = declarationsOf(baseRules, '.report-frame');
+    expect(value(frame, 'max-width')).toBe('calc(var(--reading-measure) + var(--reading-gap) + var(--reading-rail))');
+    expect(value(frame, 'margin-inline')).toBe('auto');
+    const wide = TOP.filter((b) => b.prelude === LG_QUERY).flatMap((b) => rulesIn(b.body));
+    const layout = declarationsOf(wide, '.report-layout');
+    expect(value(layout, 'grid-template-columns')).toBe('minmax(0, var(--reading-measure)) var(--reading-rail)');
+    expect(value(layout, 'column-gap')).toBe('var(--reading-gap)');
+    // the frame fits the lg container (1024 - 2 x 32px padding)
+    expect(px(measure) + gap + rail).toBeLessThanOrEqual(1024 - 64);
+  });
+
+  it('frames the hero plate to the drawing: the column width at the drawing\'s own 16:9, the drawing filling it', () => {
+    const hero = declarationsOf(baseRules, '.report-hero');
+    expect(value(hero, 'aspect-ratio')).toBe('16 / 9');
+    expect(value(hero, 'max-width')).toBe('var(--reading-measure)');
+    expect(value(hero, 'height')).toBeUndefined();
+    expect(declarationsOf(desktopRules, '.report-hero')).toBe('');
+    const drawing = declarationsOf(baseRules, '.report-hero .rv');
+    expect(value(drawing, 'width')).toBe('100%');
+    expect(value(drawing, 'height')).toBe('100%');
+  });
+
+  it('sets the title in the page-title role every interior page uses: its size token, 540 weight, -0.03em', () => {
     const base = declarationsOf(baseRules, '.report-title');
-    expect(px(value(title, 'font-size')!)).toBeGreaterThanOrEqual(40);
-    expect(px(value(title, 'font-size')!)).toBeLessThanOrEqual(48);
-    expect(value(base, 'font-weight')).toBe('600');
+    expect(value(base, 'font-size')).toBe(TITLE_TOKEN);
+    expect(value(base, 'line-height')).toBe('var(--leading-heading-48)');
+    expect([titleToken(null), titleToken('768px')]).toEqual([28, 48]);
+    expect(declarationsOf(desktopRules, '.report-title')).toBe('');
+    expect(value(base, 'font-weight')).toBe('540');
     expect(value(base, 'letter-spacing')).toBe('-0.03em');
   });
 });

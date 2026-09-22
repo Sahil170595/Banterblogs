@@ -31,6 +31,14 @@ export interface ToolHighlight {
   body: string;
 }
 
+/** How the tool decides, drawn beside the page head (components/ui/FlowFigure.tsx). */
+export interface ToolPipeline {
+  title: string;
+  caption: string;
+  /** io: what goes in; step: a stage or gate; result: what comes out */
+  steps: { label: string; detail: string; kind?: 'io' | 'step' | 'result' }[];
+}
+
 export interface ToolDef {
   slug: string;
   name: string;
@@ -63,6 +71,8 @@ export interface ToolDef {
   downloads?: string;
   /** the honesty commitment each tool leads with — its actual differentiator */
   principle: { title: string; body: string };
+  /** the tool's decision path, from its README */
+  pipeline?: ToolPipeline;
   commands: ToolCommand[];
   highlights: ToolHighlight[];
   evidence: ToolEvidence[];
@@ -89,6 +99,21 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   principle: {
     title: 'The trust principle',
     body: 'Every number is labeled measured, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are computed from real model architecture. Throughput is a measured lookup when one exists, otherwise an explicit bandwidth roofline, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
+  },
+  // README: "a 5-gate pipeline: VRAM -> quality -> safety (opt-in) -> latency
+  // -> budget", and its "What's modeled" table for how each gate is computed
+  pipeline: {
+    title: 'How plan decides',
+    caption: 'Every candidate passes five gates in order; a plan that finds nothing names the gate that stopped it.',
+    steps: [
+      { label: 'Candidates', detail: 'model × quantization × backend × replicas × batch', kind: 'io' },
+      { label: 'VRAM', detail: 'weights and KV-cache from the real architecture' },
+      { label: 'Quality', detail: 'measured, estimated, or unknown' },
+      { label: 'Safety', detail: 'opt-in: the TR134/TR142 refusal-rate lookup' },
+      { label: 'Latency', detail: 'TTFT and TPOT against your SLO' },
+      { label: 'Budget', detail: 'GPU $/hr × fleet size' },
+      { label: 'Plan', detail: 'the cheapest config that meets your SLO', kind: 'result' },
+    ],
   },
   commands: [
     { name: 'plan', summary: 'predictive capacity planner' },
@@ -171,6 +196,19 @@ export const QUANTFIT_TOOL: ToolDef = {
   principle: {
     title: 'Safety drift is a vector, not a number',
     body: 'verify-safety generates from both the unquantized baseline and the quantized model over a curated probe set, judges each response with a local classifier, and reports two axes: refusal-robustness drift (did the quant start complying with what should be refused — the dangerous direction) and over-refusal drift (did it start refusing what should be answered — the usability direction). A scalar refusal-delta can read zero while both axes move in opposite directions. Verdicts are bounded, never absolute: a no-detection result bounds the drift, it does not certify safety.',
+  },
+  // README, "The safety check": the probe set, the two generations, the local
+  // judge, the two axes over at-risk pairs and the Wilson-bounded verdict
+  pipeline: {
+    title: 'How verify-safety decides',
+    caption: 'Two drift axes, not one number; a no-detection result bounds the drift, it does not certify safety.',
+    steps: [
+      { label: 'Probe set', detail: '40 curated prompts: some to refuse, some to answer', kind: 'io' },
+      { label: 'Generate', detail: 'the unquantized baseline and the quantized model' },
+      { label: 'Judge', detail: 'refusal or compliance, by a local classifier' },
+      { label: 'Two axes', detail: 'refusal-robustness drift and over-refusal drift' },
+      { label: 'Verdict', detail: 'bounded by a Wilson 95% CI, never absolute', kind: 'result' },
+    ],
   },
   commands: [
     { name: 'verify-safety', summary: 'did quantization break refusals? two-axis drift' },

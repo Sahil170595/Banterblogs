@@ -32,6 +32,10 @@ const DEMO = 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-cert
 // every evidence link on main, in order
 const EVIDENCE = [138, 144, 125, 134, 142, 140, 139, 134, 135, 136, 137, 123, 127, 133, 112, 114, 115, 145, 164, 130, 132, 126, 147];
 const LISTED_PAPERS = 11;
+// the presented paper and the public preprint
+const PUBLISHED = 2;
+const UNDER_REVIEW_ROWS = 3;
+const IN_PREP_ROWS = 6;
 const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
 
 let page: HTMLElement;
@@ -85,7 +89,7 @@ describe('papers head', () => {
 });
 
 describe('papers', () => {
-  it('lists every paper as a card with its status badge and venue line, and never a withheld title', () => {
+  it('lists every paper with its status badge and venue line, and never a withheld title', () => {
     const articles = [...page.querySelectorAll('article')];
     expect(articles).toHaveLength(LISTED_PAPERS);
     const badges = articles.map((article) => article.querySelector('.text-label-12-mono.rounded-full'));
@@ -108,28 +112,62 @@ describe('papers', () => {
     const evidence = hrefs.filter((href) => href?.startsWith('/reports/technical-report-')).map((href) => Number(href!.slice(-3)));
     expect(evidence).toEqual(EVIDENCE);
     for (const href of ['/reports', '/work', '/platform']) expect(hrefs).toContain(href);
-    for (const button of page.querySelectorAll(`a[href^="https://arxiv.org"]:not(.card-link), a[href="${DEMO}"], a[href^="/reports/technical-report-"]`)) {
+    // a title that leads to its preprint is the card's or row's own link; every other link is a button
+    for (const button of page.querySelectorAll(`a[href^="https://arxiv.org"]:not(.card-link):not(.row-link), a[href="${DEMO}"], a[href^="/reports/technical-report-"]`)) {
       expect(button.className.split(/\s+/)).toEqual(expect.arrayContaining(['pressable', 'rounded-full']));
     }
   });
 
-  it('lifts the linked papers: each paper with a public link is an interactive card whose title leads there', () => {
-    const interactive = [...page.querySelectorAll('article.card-depth')];
-    expect(interactive).toHaveLength(ARXIV.length);
-    expect(interactive.map((card) => card.querySelector('h3 a.card-link')?.getAttribute('href'))).toEqual(ARXIV);
-    expect(page.querySelectorAll('article:not(.card-depth) .card-link')).toHaveLength(0);
+  // R4 design re-judge: 10 of 12 cards were text-only boxes of uneven height,
+  // one of them filler. Cards stay only where there is a picture.
+  it('keeps cards for the two public papers only, each with its evidence report picture, its title leading to the preprint', () => {
+    const cards = [...page.querySelectorAll('article.card-depth')];
+    expect(cards).toHaveLength(PUBLISHED);
+    expect(cards.map((card) => card.querySelector('h3 a.card-link')?.getAttribute('href'))).toEqual(ARXIV.slice(0, PUBLISHED));
+    for (const card of cards) expect(card.querySelector('svg.rv')).not.toBeNull();
+    const surfaces = [...page.querySelectorAll('.card-surface')];
+    expect(surfaces).toHaveLength(PUBLISHED);
+    expect(surfaces.every((surface) => surface.querySelector('svg.rv'))).toBe(true);
+  });
+
+  it('sets the papers under review and in preparation as numbered hairline rows, the title leading to a preprint where there is one', () => {
+    for (const [section, count] of [['#under-review', UNDER_REVIEW_ROWS], ['#in-preparation', IN_PREP_ROWS]] as const) {
+      const rows = [...page.querySelectorAll(`${section} article.list-row`)];
+      expect(rows, section).toHaveLength(count);
+      expect(rows.map((row) => text(row.querySelector('.font-mono')!)), section).toEqual(Array.from({ length: count }, (_, i) => String(i + 1).padStart(2, '0')));
+    }
+    const rowLinks = [...page.querySelectorAll('article.list-row h3 a.row-link')].map((a) => a.getAttribute('href'));
+    expect(rowLinks).toEqual(ARXIV.slice(PUBLISHED));
+  });
+
+  it('counts the withheld submissions in the section description, never as a card or a title', () => {
+    const description = page.querySelector('#under-review-heading')!.parentElement!;
+    expect(text(description)).toContain('Plus 5 workshop submissions under double-blind review. Their titles are withheld until decisions land.');
+    expect([...page.querySelectorAll('.card-surface, article')].filter((el) => /workshop submissions/.test(text(el)))).toEqual([]);
+  });
+
+  it('closes on one quiet onward line: the three links with their reasons, no cards and no ember', () => {
+    const onward = page.querySelector('nav[aria-label="Onward"]')!;
+    expect([...onward.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/reports', '/work', '/platform']);
+    expect(onward.querySelector('.card-surface, .card-depth')).toBeNull();
+    expect(onward.innerHTML).not.toMatch(/text-primary/);
   });
 
   it('reveals the lists as they scroll in', () => {
-    expect(page.querySelectorAll('li[data-reveal]').length).toBeGreaterThanOrEqual(LISTED_PAPERS + 3);
+    expect(page.querySelectorAll('li[data-reveal]').length).toBeGreaterThanOrEqual(LISTED_PAPERS);
   });
 
   // re-judge P1-7: at 320 the demo button's min-content widened the one
   // implicit (auto) column, and every card with it, to 310px in 288
+  // R4: the papers grid and the onward line are the page's two list grids; the
+  // paper rows size their body column with minmax(0,1fr) the same way
   it('sizes every card grid’s phone column to the screen, never to its widest card', () => {
     const grids = [...page.querySelectorAll('ul.grid')];
-    expect(grids.length).toBeGreaterThanOrEqual(4);
+    expect(grids.length).toBeGreaterThanOrEqual(2);
     for (const grid of grids) expect(grid.className.split(/\s+/)).toContain('grid-cols-1');
+    const rows = [...page.querySelectorAll('article.list-row')];
+    expect(rows).toHaveLength(UNDER_REVIEW_ROWS + IN_PREP_ROWS);
+    for (const row of rows) expect(row.className).toContain('grid-cols-[auto_minmax(0,1fr)]');
   });
 
   it('draws no boxed panels: no signal classes, and borders only on the hairline buttons', () => {

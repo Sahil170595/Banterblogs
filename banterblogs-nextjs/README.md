@@ -127,6 +127,7 @@ Open [localhost:3000](http://localhost:3000).
 | `npm run build` | Production build (also validates all markdown and report data) |
 | `npm run lint` | ESLint check |
 | `npm run test` | Run Vitest test suites |
+| `npm run poster:render` | Re-render the landing poster from the live scene (needs a GPU and `next start` running; `scenePoster.test.tsx` fails until you do after a scene change) |
 
 ---
 

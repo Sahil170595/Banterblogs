@@ -8,6 +8,7 @@ import {
   prefersPoster,
   type SceneSignals,
 } from '../GalacticBackdrop';
+import { SCENE_CONTEXT_ATTRIBUTES } from '../sceneOpening';
 import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from '../TrackingTicker';
 import { STAR_SYSTEMS } from '../systems';
 
@@ -139,6 +140,25 @@ describe('landing scene lifecycle and motion control', () => {
     await advance(SCENE_MAX_WAIT_MS);
 
     expect(scene()).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Pause motion' })).toBeNull();
+  });
+
+  it('keeps software WebGL (SwiftShader, no GPU) on the poster', async () => {
+    // a software renderer grants a plain context but refuses a strict one
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation((_type: string, attributes?: { failIfMajorPerformanceCaveat?: boolean }) =>
+        attributes?.failIfMajorPerformanceCaveat
+          ? null
+          : ({ getExtension: () => ({ loseContext: () => undefined }) } as unknown as ReturnType<
+              HTMLCanvasElement['getContext']
+            >),
+      );
+    render(<GalacticBackdrop />);
+    await advance(SCENE_MAX_WAIT_MS);
+
+    expect(scene()).toBeNull();
+    expect(getContext).toHaveBeenCalledWith(expect.stringMatching(/^webgl2?$/), SCENE_CONTEXT_ATTRIBUTES);
     expect(screen.queryByRole('button', { name: 'Pause motion' })).toBeNull();
   });
 

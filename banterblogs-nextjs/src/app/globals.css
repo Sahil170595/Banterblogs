@@ -3,6 +3,11 @@
  * (was shipping on every page including /, /about, /work, /papers).
  */
 
+/* Named, not implied: Tailwind 3 keeps the last @config path on its PostCSS
+   plugin, so once reading.css (its own config) was processed first, this
+   sheet compiled against the reading config. */
+@config "../../tailwind.config.ts";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -43,9 +48,11 @@
   --status-amber: 38 90% 62%;
   --status-blue: 212 85% 72%;
 
-  /* The page-title role (text-heading-48) steps with the viewport. */
+  /* The page-title role (text-heading-48) steps with the viewport; so does
+     the one display exception (text-display-72, /show). */
   --type-heading-48: 1.75rem;
   --leading-heading-48: 1.08;
+  --type-display-72: 3rem;
 }
 
 @media (min-width: 640px) {
@@ -58,6 +65,7 @@
 @media (min-width: 768px) {
   :root {
     --type-heading-48: 3rem;
+    --type-display-72: 4.5rem;
   }
 }
 
@@ -229,42 +237,6 @@ html {
 
 .signal-pill {
   @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-label-12-mono text-muted-foreground;
-}
-
-/* Markdown tables (rehype step in lib/episodes.ts) scroll inside their own
-   box instead of widening the page; inferred numeric columns right-align. */
-.table-scroll {
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.table-scroll :is(th, td) {
-  font-variant-numeric: tabular-nums;
-}
-
-.table-scroll .num {
-  text-align: right;
-}
-
-/* Typography's `text-align: start` would override GFM column alignment. */
-.table-scroll [align="right"] {
-  text-align: right;
-}
-
-.table-scroll [align="center"] {
-  text-align: center;
-}
-
-/* Long unbroken tokens (paths, hashes, URLs) wrap instead of widening the page. */
-.prose {
-  overflow-wrap: break-word;
-}
-
-/* One box per code block: the prose <pre> carries surface and padding; the
-   route-scoped github-dark theme supplies token colors only. */
-.prose pre :is(code, code.hljs) {
-  background: transparent;
-  padding: 0;
 }
 
 /* Galactic landing: tracking-ticker system change (ended at once by the
@@ -1291,617 +1263,15 @@ html[data-route-to="landing"]::view-transition-new(site-header) {
 }
 /* end view transitions */
 
-/* report page (app/reports/[id]/page.tsx, components/reports/Report*.tsx):
-   reading type, the head, the hero figure, the contents with its scroll-spy
-   marker, and the reading-progress bar. With the header and footer the page
-   uses seven text sizes: 12, 14, 16, 18, 20, 26 and 44px (32 for the title
-   on a phone, where the 20px dek is gone). Its mono labels are the 12px
-   label role (text-label-12-mono).
-   readingType.test.ts pins the type. */
+/* Tokens the reading pages share with every other page: the prose colour
+   (text-prose) and the interior header's height. The reading pages' own
+   rules live in reading.css, which only the reading routes load. */
 :root {
   /* body prose at ~15:1 on --background; the muted grey it replaces is 8.87:1 */
   --prose: 36 10% 86%;
   /* the interior header: a 72px bar and its frame's 1px border (Header.tsx) */
   --site-header-height: 73px;
-  /* the contents marker: 2x16px, centred on the active entry */
-  --toc-marker-height: 16px;
-  /* the contents list fades its clipped edges over this much scroll */
-  --toc-edge-fade: 1.5rem;
 }
-
-/* ── reading type ── */
-.report-prose {
-  --tw-prose-body: hsl(var(--prose));
-  --tw-prose-headings: hsl(var(--foreground));
-  --tw-prose-bold: hsl(var(--foreground));
-  --tw-prose-links: hsl(var(--foreground));
-  --tw-prose-code: hsl(var(--foreground));
-  --tw-prose-quotes: hsl(var(--prose));
-  --tw-prose-bullets: hsl(var(--muted-foreground) / 0.7);
-  --tw-prose-counters: hsl(var(--muted-foreground));
-  --tw-prose-hr: hsl(var(--border) / 0.6);
-  --tw-prose-th-borders: hsl(var(--border));
-  --tw-prose-td-borders: hsl(var(--border) / 0.5);
-  /* ~77 characters a line: Manrope's zero is 0.61em wide against ~0.45em a
-     character of running text, so a 62-68ch measure would set 84-93 */
-  max-width: 39rem;
-  font-size: 1.125rem;
-  line-height: 1.6;
-  color: hsl(var(--prose));
-}
-
-/* the body opens flush under the hero, whatever its first block is */
-.report-prose > :first-child {
-  margin-top: 0;
-}
-
-/* Off-screen blocks skip style, layout and paint until they near the
-   viewport, so opening a long report lays out a screen of it, not all of it.
-   content-visibility contains layout and paint, so only blocks whose margins
-   collapse with their siblings rather than their children, and that paint
-   inside their own box, take it. Each keeps its drawn height once rendered
-   and holds an estimate until then. */
-:root {
-  /* a paragraph of three or four lines at 18/28.8px */
-  --prose-estimate-text: 7rem;
-  /* a table or code block of eight to ten rows */
-  --prose-estimate-block: 16rem;
-}
-
-.report-prose > p {
-  content-visibility: auto;
-  contain-intrinsic-block-size: auto var(--prose-estimate-text);
-}
-
-.report-prose > pre,
-.report-prose > .table-scroll {
-  content-visibility: auto;
-  contain-intrinsic-block-size: auto var(--prose-estimate-block);
-}
-
-@media print {
-  .report-prose > * {
-    content-visibility: visible;
-  }
-}
-
-.report-prose h2 {
-  margin-top: 2.25em;
-  margin-bottom: 0.7em;
-  font-size: 1.625rem;
-  line-height: 1.25;
-  font-weight: 580;
-  letter-spacing: -0.02em;
-  color: hsl(var(--foreground));
-}
-
-.report-prose h3 {
-  margin-top: 2em;
-  margin-bottom: 0.6em;
-  font-size: 1.125rem;
-  line-height: 1.45;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: hsl(var(--foreground));
-}
-
-.report-prose :is(h4, h5, h6) {
-  margin-top: 1.75em;
-  margin-bottom: 0.5em;
-  font-size: 1rem;
-  line-height: 1.5;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-}
-
-.report-prose a {
-  color: hsl(var(--foreground));
-  font-weight: inherit;
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-  text-decoration-color: hsl(var(--foreground) / 0.35);
-  transition: text-decoration-color var(--duration-fast) var(--ease-standard);
-}
-
-.report-prose a:hover {
-  text-decoration-color: hsl(var(--primary));
-}
-
-/* inline code at 16px; code in a heading, a table or a block takes its surroundings' size */
-.report-prose :not(pre) > code {
-  padding: 0.1em 0.35em;
-  border-radius: 0.3rem;
-  background-color: hsl(var(--muted));
-  font-size: 1rem;
-  font-weight: 400;
-}
-
-.report-prose :is(h2, h3, h4, h5, h6, table, blockquote) code {
-  font-size: inherit;
-}
-
-.report-prose code::before,
-.report-prose code::after {
-  content: none;
-}
-
-.report-prose pre {
-  border-radius: 0.625rem;
-  background-color: hsl(var(--card));
-  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
-  padding: 1rem 1.25rem;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.report-prose table {
-  margin-block: 0;
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-.report-prose .table-scroll {
-  margin-block: 1.75em;
-}
-
-.report-prose thead th {
-  padding: 0.5rem 0.75rem;
-  background-color: hsl(var(--muted) / 0.6);
-  color: hsl(var(--foreground));
-  font-weight: 600;
-  vertical-align: bottom;
-}
-
-.report-prose td {
-  padding: 0.5rem 0.75rem;
-  color: hsl(var(--prose));
-  vertical-align: top;
-}
-
-.report-prose tbody tr:nth-child(even) {
-  background-color: hsl(var(--muted) / 0.2);
-}
-
-.report-prose blockquote {
-  margin-block: 1.5em;
-  border-left: 2px solid hsl(var(--border));
-  border-radius: 0 0.5rem 0.5rem 0;
-  background-color: hsl(var(--muted) / 0.3);
-  padding: 0.75rem 1rem;
-  color: hsl(var(--prose));
-  font-size: 1rem;
-  font-style: normal;
-  font-weight: 400;
-  quotes: none;
-}
-
-.report-prose blockquote > :first-child {
-  margin-top: 0;
-}
-
-.report-prose blockquote > :last-child {
-  margin-bottom: 0;
-}
-
-.report-prose hr {
-  margin-block: 2.5em;
-}
-
-/* ── head ── */
-.report-crumbs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.875rem;
-  color: hsl(var(--muted-foreground));
-}
-
-/* each separator trails the crumb before it, so a wrapped crumb never opens on a slash */
-.report-crumbs li:not(:last-child)::after {
-  content: "/";
-  margin-left: 0.375rem;
-  color: hsl(var(--muted-foreground) / 0.5);
-}
-
-.report-crumbs a {
-  transition: color var(--duration-fast) var(--ease-standard);
-}
-
-.report-crumbs a:hover {
-  color: hsl(var(--foreground));
-}
-
-/* the title takes the page's full width, so most titles set on one line */
-.report-title {
-  margin-top: 1rem;
-  font-size: 2rem;
-  line-height: 1.12;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  color: hsl(var(--foreground));
-}
-
-.report-dek {
-  margin-top: 0.875rem;
-  max-width: 48rem;
-  font-size: 1.125rem;
-  line-height: 1.5;
-  color: hsl(var(--muted-foreground));
-}
-
-.report-meta {
-  margin-top: 1.25rem;
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 0.5rem;
-  row-gap: 0.25rem;
-  font-size: 0.875rem;
-  color: hsl(var(--muted-foreground));
-  font-variant-numeric: tabular-nums;
-}
-
-.report-meta li + li::before {
-  content: "\00B7";
-  margin-right: 0.5rem;
-  color: hsl(var(--muted-foreground) / 0.6);
-}
-
-.report-meta strong {
-  font-weight: 600;
-  color: hsl(var(--foreground));
-}
-
-.report-details {
-  margin-top: 0.75rem;
-  font-size: 0.875rem;
-}
-
-.report-details > summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  cursor: pointer;
-  list-style: none;
-  color: hsl(var(--muted-foreground));
-  transition: color var(--duration-fast) var(--ease-standard);
-}
-
-.report-details > summary::-webkit-details-marker {
-  display: none;
-}
-
-.report-details > summary:hover {
-  color: hsl(var(--foreground));
-}
-
-.report-details[open] .report-details-chevron {
-  transform: rotate(90deg);
-}
-
-.report-details-panel {
-  margin-top: 0.75rem;
-  max-width: 52rem;
-  border-radius: 0.75rem;
-  background-color: hsl(var(--card));
-  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
-  padding: 1rem 1.25rem;
-  line-height: 1.5;
-}
-
-.report-details-panel > p + p {
-  margin-top: 0.25rem;
-}
-
-.report-details-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-}
-
-.report-details-panel dl {
-  display: grid;
-  grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
-  gap: 0.375rem 1.5rem;
-  margin-top: 0.875rem;
-}
-
-.report-details-panel dt {
-  color: hsl(var(--muted-foreground));
-}
-
-.report-details-panel dd {
-  margin: 0;
-  color: hsl(var(--prose));
-  overflow-wrap: anywhere;
-}
-
-.report-details-panel :is(a) {
-  text-decoration-line: underline;
-  text-decoration-color: hsl(var(--foreground) / 0.35);
-  text-underline-offset: 0.2em;
-}
-
-.report-details-panel code {
-  font-size: inherit;
-}
-
-/* ── hero figure: the report's card visual on a plate at banner proportions ── */
-.report-hero {
-  position: relative;
-  margin-top: 2rem;
-  height: 10rem;
-  overflow: hidden;
-  border-radius: 0.625rem;
-  background-color: hsl(var(--card));
-  /* a faint ember light behind the drawing, on a hairline grid */
-  background-image:
-    radial-gradient(ellipse 32% 90% at 50% 58%, hsl(var(--primary) / 0.09), transparent 70%),
-    linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
-  background-position: center;
-  background-size: auto, 1.5rem 1.5rem, 1.5rem 1.5rem;
-  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
-}
-
-/* the drawing keeps its 16:9 at the plate's full height, centred */
-.report-hero .rv {
-  width: auto;
-  height: 100%;
-  aspect-ratio: 16 / 9;
-  margin-inline: auto;
-}
-
-/* ── contents ── */
-.report-toc {
-  position: sticky;
-  top: calc(var(--site-header-height) + 1.5rem);
-  align-self: start;
-}
-
-.report-toc-scroller {
-  max-height: calc(100vh - var(--site-header-height) - 3rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-}
-
-.report-toc-label {
-  margin-bottom: 0.875rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-}
-
-.report-toc-list {
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-/* the marker and its rail share the track, so entry offsets are the marker's */
-.report-toc-track {
-  position: relative;
-}
-
-.report-toc-track::before {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  left: 0;
-  width: 1px;
-  background-color: hsl(var(--border) / 0.8);
-}
-
-.report-toc-list a {
-  display: block;
-  padding: 0.3125rem 0 0.3125rem 0.875rem;
-  color: hsl(var(--muted-foreground));
-  transition: color var(--duration-fast) var(--ease-standard);
-}
-
-.report-toc-list a:hover,
-.report-toc-list a[aria-current="location"] {
-  color: hsl(var(--foreground));
-}
-
-.report-toc-marker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 2px;
-  height: var(--toc-marker-height);
-  border-radius: 1px;
-  background-color: hsl(var(--primary));
-  opacity: 0;
-  pointer-events: none;
-}
-
-.report-toc-marker[data-placed] {
-  opacity: 1;
-}
-
-/* it glides only once placed, so its first position is not a slide from the top */
-html[data-motion="on"] .report-toc-marker[data-placed] {
-  transition:
-    transform var(--duration-base) var(--ease-strong-out),
-    opacity var(--duration-fast) var(--ease-standard);
-}
-
-/* the mobile contents: a disclosure above the body */
-.report-toc-mobile {
-  margin-top: 2rem;
-  border-radius: 0.75rem;
-  background-color: hsl(var(--card));
-  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
-  padding: 0.875rem 1rem;
-}
-
-.report-toc-mobile > summary {
-  cursor: pointer;
-  list-style: none;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-}
-
-.report-toc-mobile > summary::-webkit-details-marker {
-  display: none;
-}
-
-.report-toc-mobile .report-toc-list {
-  margin-top: 0.75rem;
-}
-
-/* ── reading progress: a 2px copper bar under the header ── */
-.report-progress {
-  position: fixed;
-  inset-inline: 0;
-  top: var(--site-header-height);
-  z-index: 40;
-  height: 2px;
-  pointer-events: none;
-}
-
-.report-progress-bar {
-  height: 100%;
-  background-color: hsl(var(--primary));
-  transform: scaleX(0);
-  transform-origin: 0 50%;
-}
-
-@keyframes report-progress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-@property --toc-fade-top {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
-}
-
-@property --toc-fade-bottom {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
-}
-
-@keyframes toc-fade-top {
-  from {
-    --toc-fade-top: 0px;
-  }
-  to {
-    --toc-fade-top: var(--toc-edge-fade);
-  }
-}
-
-@keyframes toc-fade-bottom {
-  from {
-    --toc-fade-bottom: var(--toc-edge-fade);
-  }
-  to {
-    --toc-fade-bottom: 0px;
-  }
-}
-
-/* Both run on scroll timelines, off the main thread, and only for visitors
-   who allow motion: the bar follows the page, the contents list fades the
-   edge it has scrolled past and the one it has left to show. */
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .report-progress-bar {
-      animation: report-progress linear both;
-      animation-timeline: scroll(root block);
-    }
-
-    .report-toc-scroller {
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--toc-fade-top),
-        #000 calc(100% - var(--toc-fade-bottom)),
-        transparent 100%
-      );
-      /* Longhands with an auto duration: the build's minifier rewrote the
-         two-animation shorthand with a 0s duration, which put the top fade,
-         whose range starts at 0, at its end state from the first frame. */
-      animation-name: toc-fade-top, toc-fade-bottom;
-      animation-duration: auto;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: scroll(self);
-      animation-range:
-        0 var(--toc-edge-fade),
-        calc(100% - var(--toc-edge-fade)) 100%;
-    }
-  }
-}
-
-/* ── previous and next ── */
-.report-pager-label {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-}
-
-.report-pager-title {
-  margin-top: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: hsl(var(--foreground));
-  transition: color var(--duration-fast) var(--ease-standard);
-}
-
-.report-pager a:hover .report-pager-title {
-  color: hsl(var(--primary));
-}
-
-@media (min-width: 768px) {
-  .report-title {
-    font-size: 2.75rem;
-    line-height: 1.08;
-  }
-
-  .report-dek {
-    font-size: 1.25rem;
-  }
-
-  .report-hero {
-    height: 12rem;
-  }
-}
-
-/* Reduced motion: the contents marker jumps, and the reading bar is not shown.
-   The bar is a continuous scroll-linked motion; the contents list still marks
-   the section being read, by colour alone. */
-@media (prefers-reduced-motion: reduce) {
-  .report-toc-marker {
-    transition: none !important;
-  }
-
-  .report-progress {
-    display: none;
-  }
-}
-/* end report page */
 
 /* R3-B2 */
 /* Hairline grid (/platform, /tags): each cell draws a 1px ring into the 1px
@@ -2232,6 +1602,192 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end R3-B1 */
+
+/* R4 layout */
+/* A card's own link (/platform): neutral at rest, ember with the card's
+   hover or keyboard focus, so ember stays on primary actions and the
+   current page. */
+.card-cta {
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-depth:hover .card-cta {
+    color: hsl(var(--primary));
+  }
+}
+
+.card-depth:has(.card-link:focus-visible) .card-cta {
+  color: hsl(var(--primary));
+}
+
+/* FlowFigure (components/ui/FlowFigure.tsx): a real sequence as nodes on
+   one hairline rail, on the drafting plate the report hero and repository
+   drawings use. Down the side by default; across once the figure itself is
+   --flow-row-min wide (a container query: the same figure sits in a head
+   column and in a page column). Ring nodes are stages, filled ones what goes
+   in, and the one ember node what comes out. */
+:root {
+  --flow-node: 0.6875rem;
+  --flow-gap: 1.25rem;
+}
+
+.flow {
+  container-type: inline-size;
+  container-name: flow;
+  position: relative;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  background-color: hsl(var(--card) / 0.6);
+  background-image:
+    radial-gradient(ellipse 70% 80% at 50% 100%, hsl(var(--primary) / 0.06), transparent 70%),
+    linear-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+  background-size: auto, 1.5rem 1.5rem, 1.5rem 1.5rem;
+  background-position: center;
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+}
+
+.flow-steps {
+  display: grid;
+  margin-top: 1.5rem;
+}
+
+.flow-step {
+  position: relative;
+  padding: 0 0 1.25rem calc(var(--flow-node) + 0.875rem);
+}
+
+.flow-step:last-child {
+  padding-bottom: 0;
+}
+
+/* the rail: from this node to the next */
+.flow-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: calc(0.3rem + var(--flow-node));
+  bottom: 0.3rem;
+  left: calc(var(--flow-node) / 2);
+  width: 1px;
+  background-color: hsl(var(--foreground) / 0.18);
+}
+
+.flow-node {
+  position: absolute;
+  top: 0.3rem;
+  left: 0;
+  width: var(--flow-node);
+  height: var(--flow-node);
+  border-radius: 9999px;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.55);
+}
+
+.flow-step[data-kind="io"] .flow-node {
+  background-color: hsl(var(--foreground) / 0.4);
+  box-shadow: none;
+}
+
+.flow-step[data-kind="result"] .flow-node {
+  background-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18);
+}
+
+.flow-loop {
+  margin-top: 1.25rem;
+}
+
+/* the return path is drawn only in the row layout; down the side the label says it */
+.flow-loop-path {
+  display: none;
+}
+
+@container flow (min-width: 36rem) {
+  .flow-steps {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--flow-count), minmax(0, 1fr));
+    column-gap: var(--flow-gap);
+  }
+
+  .flow-step {
+    padding: calc(var(--flow-node) + 0.875rem) 0 0;
+  }
+
+  .flow-step:not(:last-child)::before {
+    top: calc(var(--flow-node) / 2);
+    bottom: auto;
+    left: calc(var(--flow-node) + 0.375rem);
+    right: calc(0.375rem - var(--flow-gap));
+    width: auto;
+    height: 1px;
+  }
+
+  .flow-node {
+    top: 0;
+  }
+
+  .flow-loop {
+    display: grid;
+    grid-template-columns: repeat(var(--flow-count), minmax(0, 1fr));
+    column-gap: var(--flow-gap);
+    row-gap: 0.5rem;
+  }
+
+  /* a dashed bracket from the leaving step's node back under the returned-to one */
+  .flow-loop-path {
+    display: block;
+    grid-column: var(--loop-span);
+    height: 0.875rem;
+    margin-left: calc(var(--flow-node) / 2);
+    margin-right: calc(-1 * (var(--flow-gap) + var(--flow-node) / 2));
+    border: 1px dashed hsl(var(--foreground) / 0.3);
+    border-top: 0;
+    border-radius: 0 0 0.375rem 0.375rem;
+  }
+
+  .flow-loop-label {
+    grid-column: var(--loop-start) / -1;
+    grid-row: 2;
+  }
+}
+
+/* A folded list (/work): the first bullets show, the rest open from a quiet
+   summary line whose label says what a click will do. */
+.more-details > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.875rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: hsl(var(--muted-foreground));
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.more-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.more-details > summary:hover {
+  color: hsl(var(--foreground));
+}
+
+.more-chevron {
+  transition: transform var(--duration-base) var(--ease-strong-out);
+}
+
+.more-details[open] > summary .more-chevron {
+  transform: rotate(90deg);
+}
+
+.more-details[open] .more-closed,
+.more-details:not([open]) .more-open {
+  display: none;
+}
+/* end R4 layout */
 
 /* R4 a11y */
 /* The site ring (see "Site focus ring") on the other things the keyboard

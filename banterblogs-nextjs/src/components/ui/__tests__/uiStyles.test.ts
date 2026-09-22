@@ -84,6 +84,35 @@ describe('retired panel classes, until their last use goes', () => {
   });
 });
 
+// R4: ember is spent on primary actions and the current page; a card's
+// own link rests neutral and takes the ember with the card's hover or focus.
+describe('card call to action', () => {
+  const r4 = CSS.slice(CSS.indexOf('.card-cta'));
+
+  it('turns ember with its card, under a real hover or keyboard focus, never at rest', () => {
+    // at rest it only eases its colour; the page gives it a neutral one
+    expect(body('.card-cta')).toMatch(/transition:\s*color var\(--duration-fast\) var\(--ease-standard\)/);
+    expect(body('.card-cta')).not.toMatch(/(?:^|[;\s])color:/);
+    const hover = /@media \(hover: hover\) and \(pointer: fine\) \{([\s\S]*?)\n\}/g;
+    const blocks = [...r4.matchAll(hover)].map((m) => m[1]).join('\n');
+    expect(blocks).toMatch(/\.card-depth:hover \.card-cta\s*\{[^}]*color:\s*hsl\(var\(--primary\)\)/);
+    expect(CSS).toMatch(/\.card-depth:has\(\.card-link:focus-visible\) \.card-cta\s*\{[^}]*color:\s*hsl\(var\(--primary\)\)/);
+  });
+});
+
+// R4: a folded list (/work) opens from a quiet summary whose label says
+// what it will do, and whose chevron turns only as a colour-free transform.
+describe('more details', () => {
+  it('draws the summary as a plain muted line with its own chevron, and swaps its label when open', () => {
+    expect(body('.more-details > summary')).toMatch(/list-style:\s*none/);
+    expect(body('.more-details > summary')).toMatch(/color:\s*hsl\(var\(--muted-foreground\)\)/);
+    expect(body('.more-details > summary::-webkit-details-marker')).toMatch(/display:\s*none/);
+    expect(body('.more-details[open] > summary .more-chevron')).toMatch(/transform:\s*rotate\(90deg\)/);
+    expect(body('.more-details[open] .more-closed')).toMatch(/display:\s*none/);
+    expect(body('.more-details:not([open]) .more-open')).toMatch(/display:\s*none/);
+  });
+});
+
 describe('section rhythm', () => {
   it('sets sections 64px apart on phones and 96px apart from 768px', () => {
     expect(body('.page-section + .page-section')).toMatch(/margin-top:\s*4rem/);

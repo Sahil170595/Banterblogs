@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowRight } from 'lucide-react';
 import { entranceGroup, entranceItem } from '@/components/motion/entrance';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 import { cn } from '@/lib/cn';
 
 // PageHeader's first-load entrance on the /show head: the eyebrow and title,
@@ -83,10 +84,9 @@ export default function ShowPage() {
     <div className="container max-w-5xl pb-12 pt-6 md:pb-20 md:pt-10">
       <header className="mb-16 space-y-4">
         <div {...entranceGroup(0)}>
-          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Chimera · Show
-          </div>
-          <h1 className="mt-4 text-5xl md:text-7xl font-bold tracking-tight leading-[0.95]">
+          <Eyebrow as="div">Chimera · Show</Eyebrow>
+          {/* the one display exception: the page-title weight at display size */}
+          <h1 className="mt-4 text-display-72 text-foreground">
             The internals,
             <br />
             on <span className="text-primary">display</span>.
@@ -117,13 +117,13 @@ export default function ShowPage() {
                   {s.number}
                 </span>
                 <div className="space-y-2">
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight group-hover:text-primary transition-colors">
+                  <h2 className="text-heading-24 md:text-heading-32 text-foreground group-hover:text-primary transition-colors">
                     {s.title}
                   </h2>
                   <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
                     {s.blurb}
                   </p>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70 pt-1">
+                  <div className="text-label-12-mono text-muted-foreground/70 pt-1">
                     {s.spec}
                   </div>
                 </div>
@@ -133,17 +133,17 @@ export default function ShowPage() {
               <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-6 border-t border-border/40 py-8 opacity-50">
                 <span className="font-mono text-xs text-muted-foreground">{s.number}</span>
                 <div className="space-y-2">
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
+                  <h2 className="text-heading-24 md:text-heading-32 text-foreground">
                     {s.title}
                   </h2>
                   <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
                     {s.blurb}
                   </p>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70 pt-1">
+                  <div className="text-label-12-mono text-muted-foreground/70 pt-1">
                     {s.spec}
                   </div>
                 </div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                <span className="text-label-12-mono text-muted-foreground/70">
                   soon
                 </span>
               </div>

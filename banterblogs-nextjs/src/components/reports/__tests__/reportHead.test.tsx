@@ -130,6 +130,35 @@ describe('report page head', () => {
   });
 });
 
+// R4 layout: at 1440 the column ran x=112-736 with the contents at x=1088
+// (352px of dead space), and the hero drawing filled a quarter of a 1216px
+// plate. The head, the article column and the contents rail now sit in one
+// centred frame; the hero opens the article column, so the rail starts level
+// with it, and the plate is the drawing's own 16:9.
+describe('report page layout', () => {
+  const column = (root: Element) => root.querySelector('.report-frame .report-layout')!.children[0];
+
+  it('sets the head, the article column and the contents rail in one reading frame', async () => {
+    const root = await page('technical-report-138');
+    const frame = root.querySelector('.report-frame')!;
+    expect(frame.querySelector('.report-head h1')).not.toBeNull();
+    const [article, rail] = [...frame.querySelector('.report-layout')!.children];
+    expect(article.querySelector('.report-prose')).not.toBeNull();
+    expect(rail.matches('nav.report-toc')).toBe(true);
+    expect(frame.querySelector('nav.report-pager')).not.toBeNull();
+  });
+
+  it('opens the article column on the hero, then the phone contents, then the body', async () => {
+    const root = await page('technical-report-138');
+    const [hero, mobileToc, body] = ['.report-hero', '.report-toc-mobile', '.report-prose'].map((selector) => column(root).querySelector(selector)!);
+    expect(column(root).firstElementChild).toBe(hero);
+    expect(hero.compareDocumentPosition(mobileToc) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(mobileToc.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // one hero, still the far end of the figure morph (ReportFigureTransition wraps it)
+    expect(root.querySelectorAll('.report-hero')).toHaveLength(1);
+  });
+});
+
 describe('report identity', () => {
   it.each([
     ['technical-report-138', 'TR138: Batch Inference Safety Under Non-Determinism', 'Batch Inference Safety Under Non-Determinism', 'TR138', 'phase5', 'Attack Surface'],

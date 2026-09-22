@@ -10,7 +10,9 @@ const read = (file: string) => readFileSync(path.resolve(__dirname, file), 'utf8
 describe('episode contents', () => {
   it('uses the report contents beside the body and above it on phones, with the reading bar', () => {
     const page = read('../../app/episodes/[slug]/page.tsx');
-    expect(page).toMatch(/lg:grid-cols-\[minmax\(0,1fr\)_15rem\]/);
+    // the reading frame and its column-and-rail grid (reading.css), as on the report page
+    expect(page).toMatch(/className="report-frame"/);
+    expect(page).toMatch(/className="report-layout"/);
     expect(page).toMatch(/<ReportTocSidebar headings=\{headings\} \/>/);
     expect(page).toMatch(/<ReportTocMobile headings=\{headings\} \/>/);
     expect(page).toMatch(/<ReportProgress \/>/);

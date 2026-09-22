@@ -30,12 +30,25 @@ const STUB_ROUTE_REDIRECTS = [
 // The scrollable overview that predates the galactic landing.
 const RETIRED_ROUTE_REDIRECTS = [{ source: '/home', destination: '/', permanent: true }];
 
+// The landing poster files carry a content hash in their names
+// (scripts/render-scene-poster.mjs), so a new render is a new URL and the
+// phone's LCP image never needs revalidating on a repeat visit.
+const IMMUTABLE_CACHE = 'public, max-age=31536000, immutable';
+
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    // inlineCss stays off (measured in R4): it sends the global sheet twice
+    // per HTML response (<style> and the RSC payload, about +57 KB gzip on
+    // every page, uncached), slowed a warm navigation (88 -> 109 ms), and
+    // scored no better in local Lighthouse mobile (medians 84/92/91/90 against
+    // 92/93/92/91 on /papers, /platform, /episodes and TR138).
   },
   async redirects() {
     return [...CONCLUSIVE_REDIRECTS, ...STUB_ROUTE_REDIRECTS, ...RETIRED_ROUTE_REDIRECTS];
+  },
+  async headers() {
+    return [{ source: '/landing/poster/:file', headers: [{ key: 'Cache-Control', value: IMMUTABLE_CACHE }] }];
   },
 };
 

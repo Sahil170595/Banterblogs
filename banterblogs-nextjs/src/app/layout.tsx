@@ -16,6 +16,8 @@ const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 // Fallbacks with JetBrains Mono's 0.6em advance, so its swap moves nothing;
 // the automatic fallback is Arial-metric (pinned by monoFallback.test.ts).
+// Still preloaded: without the preload a late swap reflowed the landing's
+// poster nav on phones (CLS 0.00074, measured in R4).
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",

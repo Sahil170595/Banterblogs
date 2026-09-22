@@ -12,6 +12,10 @@ import { EDUCATION, EXPERIENCE, HERO_HEADLINE, HERO_SUMMARY, NEXT_LINKS, PROFILE
 
 const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
 const MAX_BORDERED = 12;
+// bullets an entry shows before its disclosure: a research entry leads with
+// its meta line and evidence, a role with the first two of its story
+const RESEARCH_VISIBLE = 1;
+const ROLE_VISIBLE = 2;
 const text = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 let page: HTMLElement;
@@ -69,9 +73,9 @@ describe('work page copy', () => {
 });
 
 describe('work page layout', () => {
-  it('puts the headline and the profile links in the rail, with an index of the four sections', () => {
-    const rail = page.querySelector('header.profile-rail')!;
-    expect(rail.querySelector('h1')).not.toBeNull();
+  it('puts the headline across the page, then the profile links in the rail, with an index of the four sections', () => {
+    expect(page.querySelector('header h1')).not.toBeNull();
+    const rail = page.querySelector('.profile-rail')!;
     for (const link of PROFILE_LINKS) expect(rail.querySelector(`a[href="${link.href}"]`), link.href).not.toBeNull();
     const index = [...rail.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute('href') ?? '');
     expect(index).toEqual(['#research', '#experience', '#education', '#skills']);
@@ -96,11 +100,37 @@ describe('work page layout', () => {
     }
   });
 
+  // R4 design re-judge: /work was 9,226px of bullets. Each entry shows its
+  // lead bullets and folds the rest into one closed disclosure; every word
+  // stays on the page (and in find-in-page), one click away.
+  it('shows the lead bullets of each entry and folds the rest, word for word, into one closed disclosure', () => {
+    const rowsFor = (section: string) => [...page.querySelectorAll(`#${section} li.list-row`)];
+    const entries = [
+      ...rowsFor('research').map((row, i) => [row, RESEARCH[i].bullets, RESEARCH_VISIBLE] as const),
+      ...rowsFor('experience').map((row, i) => [row, EXPERIENCE[i].bullets, ROLE_VISIBLE] as const),
+    ];
+    expect(entries).toHaveLength(RESEARCH.length + EXPERIENCE.length);
+    for (const [row, bullets, visible] of entries) {
+      const shown = [...row.querySelectorAll(':scope ul:not(details ul) > li')].map(text);
+      expect(shown).toEqual(bullets.slice(0, visible));
+      const folds = row.querySelectorAll('details');
+      if (bullets.length <= visible) {
+        expect(folds).toHaveLength(0);
+        continue;
+      }
+      expect(folds).toHaveLength(1);
+      const fold = folds[0] as HTMLDetailsElement;
+      expect(fold.open).toBe(false);
+      expect(text(fold.querySelector('summary')!)).toContain(`Show ${bullets.length - visible} more`);
+      expect([...fold.querySelectorAll('ul > li')].map(text)).toEqual(bullets.slice(visible));
+    }
+  });
+
   // re-judge P1-7: "AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF;" has no break
-  // opportunity and ran the page to 353px at 320
+  // opportunity and ran the page to 353px at 320; folded bullets included
   it('lets a long unbroken token in a bullet break anywhere, so it never widens the page', () => {
     const bullets = [...page.querySelectorAll('li.list-row ul > li')];
-    expect(bullets.length).toBeGreaterThan(0);
+    expect(bullets.length).toBe([...RESEARCH, ...EXPERIENCE].reduce((n, entry) => n + entry.bullets.length, 0));
     for (const bullet of bullets) expect(bullet.className.split(/\s+/)).toContain('[overflow-wrap:anywhere]');
   });
 
