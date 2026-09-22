@@ -54,7 +54,15 @@ export function SystemRail({ activeSystem, onPreview, onSelect }: SystemRailProp
       className="galactic-system-rail pointer-events-auto absolute bottom-24 left-4 right-[4.5rem] z-30 sm:left-8 sm:right-[4.5rem]"
     >
       <div className="grid items-end gap-3 border-t border-white/15 pt-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:gap-8 xl:pt-4">
-        <div className="min-h-[78px] min-w-0">
+        {/* Every system's readout sits unseen in the same cell from the
+            first paint, so the cell is as tall as the tallest one and the
+            rail never grows when the tour starts or turns (layout shift). */}
+        <div data-readout-cell="" className="grid min-w-0 [&>*]:[grid-area:1/1]">
+          {STAR_SYSTEMS.map((system, index) => (
+            <div key={system.name} aria-hidden="true" className="invisible">
+              <TrackingTicker system={system} position={index + 1} total={STAR_SYSTEMS.length} />
+            </div>
+          ))}
           {activeSystem ? (
             <TrackingTicker
               system={activeSystem}
@@ -81,10 +89,10 @@ export function SystemRail({ activeSystem, onPreview, onSelect }: SystemRailProp
                   href={system.href}
                   aria-label={`${String(index + 1).padStart(2, '0')} — ${system.name}`}
                   aria-current={active ? 'step' : undefined}
-                  className={`galactic-rail-link group relative block h-11 border-t pt-2 font-mono text-[8px] tracking-[0.08em] transition-colors sm:text-[9px] ${
+                  className={`galactic-rail-link group relative block h-11 border-t pt-2 font-mono text-[11px] tracking-[0.08em] transition-colors sm:text-[12px] ${
                     active
                       ? 'border-primary text-primary'
-                      : 'border-white/15 text-foreground/35 hover:border-white/55 hover:text-foreground'
+                      : 'border-white/15 text-foreground/70 hover:border-white/55 hover:text-foreground'
                   }`}
                   onMouseEnter={() => onPreview(system.name, true)}
                   onMouseLeave={() => onPreview(system.name, false)}

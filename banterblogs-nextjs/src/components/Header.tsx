@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Github, Linkedin, Menu, X } from 'lucide-react';
-import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type FocusEvent } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
 import { warmHeaderGlass } from './headerGlass';
@@ -42,6 +42,11 @@ const ICON_BUTTON = cn(
 );
 const MENU_ROW = cn('menu-item flex min-h-11 items-center rounded-lg px-3 py-2 hover:bg-primary/10 hover:text-primary', COLOR_TRANSITION);
 
+// the current section: an underline beside the colour, so it never rests on hue alone
+const CURRENT_MARK = 'underline decoration-primary decoration-1 underline-offset-[6px]';
+// focus that lands this soon after a pointer press came from the pointer
+const POINTER_FOCUS_WINDOW_MS = 400;
+
 const menuIndex = (i: number) => ({ '--i': i }) as CSSProperties;
 const motionArmed = () => document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on';
 
@@ -59,7 +64,7 @@ export function Header() {
 
   // fades out when motion is armed; otherwise, and when a link is followed, goes at once
   const closeMenu = (instant = false) => setMenu(!instant && motionArmed() ? 'closing' : 'closed');
-  const endFade = (event: AnimationEvent<HTMLDivElement>) => {
+  const endFade = (event: AnimationEvent<HTMLElement>) => {
     if (event.target === event.currentTarget) setMenu((state) => (state === 'closing' ? 'closed' : state));
   };
 
@@ -81,9 +86,34 @@ export function Header() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [menu]);
 
+  // when the last pointer press landed, so a focus move it caused can be told
+  // from the keyboard's
+  const lastPointerDownRef = useRef(-Infinity);
+  useEffect(() => {
+    if (menu !== 'open') return;
+    const onPointerDown = () => {
+      lastPointerDownRef.current = performance.now();
+    };
+    document.addEventListener('pointerdown', onPointerDown, { capture: true, passive: true });
+    return () => document.removeEventListener('pointerdown', onPointerDown, { capture: true });
+  }, [menu]);
+
+  // Keyboard focus that leaves the header while the menu is open would land
+  // on page content under the panel (WCAG 2.4.11), so the menu goes at once.
+  // A pointer press is left alone: closing then would shift the page under
+  // the finger before its click lands.
+  const closeOnFocusOut = (event: FocusEvent<HTMLElement>) => {
+    if (menu !== 'open') return;
+    const next = event.relatedTarget;
+    if (!(next instanceof Node) || event.currentTarget.contains(next)) return;
+    if (performance.now() - lastPointerDownRef.current < POINTER_FOCUS_WINDOW_MS) return;
+    closeMenu(true);
+  };
+
   return (
     <header
       ref={headerRef}
+      onBlur={closeOnFocusOut}
       className={
         isLanding
           ? 'fixed top-0 z-50 w-full bg-transparent'
@@ -115,7 +145,7 @@ export function Header() {
 
             {/* one nav language on every page — the landing's mono register
                 is the site's editorial voice, not a landing-only costume */}
-            <nav className="hidden items-center gap-1 text-label-12-mono text-muted-foreground lg:flex">
+            <nav aria-label="Primary" className="hidden items-center gap-1 text-label-12-mono text-muted-foreground lg:flex">
               {NAV_ITEMS.map((item) => {
                 const active = isActive(item.href);
                 return (
@@ -128,8 +158,8 @@ export function Header() {
                       COLOR_TRANSITION,
                       active
                         ? isLanding
-                          ? 'text-primary'
-                          : 'rounded-full bg-primary/15 text-primary'
+                          ? cn('text-primary', CURRENT_MARK)
+                          : cn('rounded-full bg-primary/15 text-primary', CURRENT_MARK)
                         : isLanding
                           ? 'hover:text-primary'
                           : 'rounded-full hover:bg-primary/10 hover:text-primary',
@@ -162,8 +192,9 @@ export function Header() {
         </div>
 
         {menu !== 'closed' && (
-          <div
+          <nav
             id="mobile-nav"
+            aria-label="Primary"
             data-state={menu}
             inert={menu === 'closing'}
             onAnimationEnd={endFade}
@@ -188,7 +219,7 @@ export function Header() {
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     style={menuIndex(index + 1)}
-                    className={cn(MENU_ROW, 'text-label-12-mono', active ? 'text-primary' : 'text-muted-foreground')}
+                    className={cn(MENU_ROW, 'text-label-12-mono', active ? cn('text-primary', CURRENT_MARK) : 'text-muted-foreground')}
                     onClick={() => closeMenu(true)}
                   >
                     {item.label}
@@ -209,7 +240,7 @@ export function Header() {
                 </Link>
               ))}
             </div>
-          </div>
+          </nav>
         )}
       </div>
     </header>

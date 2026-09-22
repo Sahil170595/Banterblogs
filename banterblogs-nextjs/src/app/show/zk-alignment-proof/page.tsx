@@ -144,7 +144,7 @@ export default function ZkAlignmentProofPage() {
       </div>
 
       <header className="mb-10 md:mb-14 space-y-8 md:space-y-10">
-        <div className="text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
           A live walkthrough · TDD-005 zero-knowledge proofs
         </div>
 
@@ -171,28 +171,28 @@ export default function ZkAlignmentProofPage() {
 
         <div className="grid grid-cols-3 md:grid-cols-12 gap-2 md:gap-4">
           <div className="md:col-span-3 rounded-lg border border-border/30 bg-card/20 p-3 md:p-5 opacity-80">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1 md:mb-2">
               Plaintext score
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/70 leading-none mb-1 md:mb-2">
               0.92
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               full reveal
             </div>
-            <p className="hidden md:block text-xs text-muted-foreground/80 leading-relaxed">
+            <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
               The verifier learns the exact score. So does every downstream observer. With enough
               samples, the constitution centroid is reconstructable from the scores alone.
             </p>
           </div>
           <div className="md:col-span-3 rounded-lg border border-border/60 bg-card/40 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-foreground/70 mb-1 md:mb-2">
               Threshold flag
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-foreground/85 leading-none mb-1 md:mb-2">
               true
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/80 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               unsigned boolean
             </div>
             <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
@@ -201,13 +201,13 @@ export default function ZkAlignmentProofPage() {
             </p>
           </div>
           <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.10] via-primary/[0.05] to-transparent p-3 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-primary/90 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-1 md:mb-2">
               This system
             </div>
             <div className="text-3xl md:text-6xl font-bold tracking-tight text-primary leading-none mb-1 md:mb-3">
               14-bit · proven
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-primary/80 mb-1 md:mb-3">
+            <div className="text-xs uppercase tracking-widest text-primary mb-1 md:mb-3">
               Pedersen + Schnorr OR · 14-bit range
             </div>
             <p className="hidden md:block text-sm text-foreground/90 leading-relaxed">
@@ -229,7 +229,7 @@ export default function ZkAlignmentProofPage() {
             threshold&rdquo; — less leakage, but no cryptographic proof.
           </p>
           <p>
-            <span className="text-primary/80 font-mono">this system:</span> Pedersen + Schnorr OR
+            <span className="text-primary font-mono">this system:</span> Pedersen + Schnorr OR
             range proof — valid 14-bit commitment, mathematically, with nothing else disclosed.
             Threshold binding by prover refusal-to-create.
           </p>
@@ -251,7 +251,7 @@ export default function ZkAlignmentProofPage() {
             actually verifies (or actually fails) within the same library. The protocol shape (per-bit
             Pedersen commit + Schnorr OR + homomorphic sum, 14-bit fixed-point ×10000) is{' '}
             <span className="text-foreground">protocol-faithful</span> to{' '}
-            <span className="font-mono text-foreground/80">
+            <span className="font-mono text-foreground/80 break-all">
               tdd005/crates/tdd004_provenance/src/zk.rs
             </span>
             .
@@ -285,12 +285,12 @@ export default function ZkAlignmentProofPage() {
           <span className="font-mono text-foreground">C = v·G + r·H</span>, Schnorr OR proof for
           bit ∈ &#123;0, 1&#125;, bit-decomposition range proof with homomorphic sum, alignment
           proof bundling) are ported from{' '}
-          <span className="font-mono text-foreground">
+          <span className="font-mono text-foreground break-all">
             tdd005/crates/tdd004_provenance/src/zk.rs
           </span>
           . Domain constants verbatim:{' '}
-          <span className="font-mono text-foreground">tdd004_pedersen_h_v1</span>,{' '}
-          <span className="font-mono text-foreground">schnorr_or_challenge_v1</span>. Fixed-point
+          <span className="font-mono text-foreground break-all">tdd004_pedersen_h_v1</span>,{' '}
+          <span className="font-mono text-foreground break-all">schnorr_or_challenge_v1</span>. Fixed-point
           scale ×10000. Range bits = 14 (covers [0, 16383], suitable for a score in [0, 1]).
         </p>
         <p>

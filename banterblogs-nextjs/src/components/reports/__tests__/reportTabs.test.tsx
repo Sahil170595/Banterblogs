@@ -3,8 +3,9 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
-import { ENTRANCE_CARDS, ENTRANCE_CARD_STEPS, ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabGroup } from '../ReportTabs';
+import { ENTRANCE_CARDS, ENTRANCE_CARD_STEPS, ReportTabs, TAB_STRIP_FADE_PX, TABS_ENTRANCE_GROUP, type ReportTabGroup } from '../ReportTabs';
 import { NAV_FORWARD } from '../ReportTransitions';
+import { GLOBALS_CSS } from '@/test/contrast';
 
 const { url, replace, viewTransitions } = vi.hoisted(() => ({
   url: { search: '' },
@@ -202,6 +203,43 @@ describe('report archive motion wiring', () => {
     expect(joined.map((wrapper) => wrapper.style.getPropertyValue('--entrance-i'))).toEqual(
       Array.from({ length: ENTRANCE_CARDS }, (_, i) => String(Math.min(i, ENTRANCE_CARD_STEPS - 1))),
     );
+  });
+
+  // re-judge P2-9: `scrollbar-none` is no Tailwind 3.4 utility, and at 1440
+  // eight of eleven tabs sat past the edge with no cue that they were there
+  it('cues the tabs past either edge with fades driven by the strip’s own scroll', () => {
+    renderTabs();
+    const classes = screen.getByRole('tablist').className.split(/\s+/);
+    expect(classes).toContain('tab-strip');
+    expect(classes).not.toContain('scrollbar-none');
+
+    const css = GLOBALS_CSS.slice(GLOBALS_CSS.indexOf('/* R4 a11y */'), GLOBALS_CSS.indexOf('/* end R4 a11y */'));
+    const strip = /\.tab-strip \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(strip).toMatch(/mask-image:\s*linear-gradient\(\s*to right,[^;]*var\(--tab-strip-fade-start\)[^;]*var\(--tab-strip-fade-end\)/);
+    const timeline = /@supports \(animation-timeline: scroll\(\)\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
+    expect(timeline).toMatch(/\.tab-strip \{[^}]*animation-timeline:\s*scroll\(self inline\)/);
+  });
+
+  it('scrolls the tab it selects fully into view, clear of the edge fades', () => {
+    renderTabs();
+    const list = screen.getByRole('tablist');
+    const tabs = screen.getAllByRole('tab');
+    const scrollTo = vi.fn();
+    Object.assign(list, { scrollTo });
+    const set = (el: HTMLElement, geometry: Record<string, number>) => {
+      for (const [key, value] of Object.entries(geometry)) Object.defineProperty(el, key, { value, configurable: true });
+    };
+    set(list, { clientWidth: 300, scrollWidth: 900, scrollLeft: 0 });
+    tabs.forEach((tab, i) => set(tab, { offsetLeft: i * 200, offsetWidth: 180 }));
+
+    // the last tab, 600-780, past the 300px view: its end and a fade's width in view
+    fireEvent.click(tabs[tabs.length - 1]);
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: 780 + TAB_STRIP_FADE_PX - 300, behavior: 'auto' });
+
+    // back to the first, from there: its start, less a fade, clamped at 0
+    set(list, { scrollLeft: 520 });
+    fireEvent.click(tabs[0]);
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: 0, behavior: 'auto' });
   });
 
   it('serves the active tab its own style and underline until the highlight is placed', () => {

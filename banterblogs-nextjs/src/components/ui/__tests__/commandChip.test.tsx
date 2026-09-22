@@ -25,9 +25,22 @@ describe('CommandChip', () => {
     const chip = /^<div class="([^"]*)"/.exec(markup)![1].split(/\s+/);
     expect(chip).toContain('max-w-full');
     expect(chip).not.toContain('overflow-x-auto');
-    const code = /<code class="([^"]*)"/.exec(markup)![1].split(/\s+/);
-    expect(code).toEqual(expect.arrayContaining(['min-w-0', 'overflow-x-auto', 'whitespace-nowrap']));
+    const scroller = /<span[^>]*role="region"[^>]*class="([^"]*)"/.exec(markup)![1].split(/\s+/);
+    expect(scroller).toEqual(expect.arrayContaining(['min-w-0', 'overflow-x-auto', 'whitespace-nowrap']));
+    expect(markup).toMatch(/role="region"[^>]*><code[^>]*>uvx chimeraforge plan/);
     // the copy button is the chip's own child, outside the scroller
-    expect(markup).toMatch(/<\/code><button/);
+    expect(markup).toMatch(/<\/code><\/span><button/);
+  });
+
+  // re-judge P1-8: WebKit will not focus a scroll box without a tabindex, so
+  // an overflowing command could not be scrolled from the keyboard there
+  it('lets the keyboard reach and scroll its command, named for what it holds', () => {
+    const markup = renderToStaticMarkup(<CommandChip command="pip install quantfit" label="quantfit install command" />);
+    const scroller = /<span([^>]*)role="region"([^>]*)>/.exec(markup)!;
+    const attributes = scroller[1] + scroller[2];
+    expect(attributes).toContain('tabindex="0"');
+    expect(attributes).toContain('aria-label="quantfit install command"');
+    // its ring comes from the site focus-ring rule (globals.css, R4 a11y)
+    expect(attributes).toContain('data-scroll-region=""');
   });
 });

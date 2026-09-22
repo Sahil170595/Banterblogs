@@ -254,7 +254,7 @@ function PaperCard({ paper, figure = false }: { paper: Paper; figure?: boolean }
   );
 }
 
-const PAPER_GRID = 'grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2';
+const PAPER_GRID = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2';
 
 export default function PapersPage() {
   return (
@@ -345,7 +345,7 @@ export default function PapersPage() {
             preparation. Each is backed by reproducible technical reports and artifact-level provenance from a {MEASUREMENTS.DISPLAY}{' '}
             measurement program.
           </p>
-          <ul className="mt-8 grid gap-4 md:grid-cols-3">
+          <ul className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             {CROSS_LINKS.map((link) => (
               <Reveal as="li" key={link.href}>
                 <Card variant="interactive" href={link.href} className="flex h-full flex-col">

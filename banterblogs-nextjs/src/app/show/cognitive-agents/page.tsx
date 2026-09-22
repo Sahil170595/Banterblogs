@@ -119,7 +119,7 @@ export default function CognitiveAgentsPage() {
       </div>
 
       <header className="mb-10 md:mb-14 space-y-8 md:space-y-10">
-        <div className="text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
           A live walkthrough · four cognitive agents
         </div>
 
@@ -144,13 +144,13 @@ export default function CognitiveAgentsPage() {
             col-span proportions preserved on md+. */}
         <div className="grid grid-cols-3 md:grid-cols-12 gap-2 md:gap-4">
           <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1 md:mb-2">
               Most chatbots
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/80 leading-none mb-1 md:mb-2">
               1
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               point of view
             </div>
             <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
@@ -158,13 +158,13 @@ export default function CognitiveAgentsPage() {
             </p>
           </div>
           <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1 md:mb-2">
               Ensemble voting
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/90 leading-none mb-1 md:mb-2">
               same×N
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               copies vote
             </div>
             <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
@@ -172,13 +172,13 @@ export default function CognitiveAgentsPage() {
             </p>
           </div>
           <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.08] via-primary/[0.04] to-transparent p-3 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-primary/90 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-1 md:mb-2">
               This system
             </div>
             <div className="text-3xl md:text-6xl font-bold tracking-tight text-primary leading-none mb-1 md:mb-3">
               4 paths
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-primary/80 mb-1 md:mb-3">
+            <div className="text-xs uppercase tracking-widest text-primary mb-1 md:mb-3">
               structurally different algorithms
             </div>
             <p className="hidden md:block text-sm text-foreground/90 leading-relaxed">
@@ -193,7 +193,7 @@ export default function CognitiveAgentsPage() {
         <div className="md:hidden space-y-2 text-xs text-muted-foreground leading-relaxed -mt-4">
           <p><span className="text-muted-foreground/80 font-mono">most chatbots:</span> one model answers; its blind spots become yours.</p>
           <p><span className="text-muted-foreground/80 font-mono">ensemble:</span> same model, multiple calls, majority wins. Same blind spots, averaged.</p>
-          <p><span className="text-primary/80 font-mono">this system:</span> four different algorithms with different failure modes — genuine redundancy.</p>
+          <p><span className="text-primary font-mono">this system:</span> four different algorithms with different failure modes — genuine redundancy.</p>
         </div>
 
         <div className="space-y-3 max-w-3xl pt-2">

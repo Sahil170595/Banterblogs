@@ -21,7 +21,32 @@ describe('markdown reading surface', () => {
     describe('tables', () => {
         it('wraps every table in its own horizontal scroll container', async () => {
             const html = await renderMarkdownToHtml('| a | b |\n|---|---|\n| x | 1 |\n\n| c |\n|---|\n| y |\n');
-            expect(html.match(/<div class="table-scroll"><table>/g)).toHaveLength(2);
+            expect(html.match(/<div class="table-scroll"[^>]*><table>/g)).toHaveLength(2);
+        });
+
+        // re-judge P1-8: WebKit will not focus a scroll box without a
+        // tabindex, so the columns past its edge were out of keyboard reach
+        it('makes each scroll box a named region the keyboard can reach, numbered in reading order', async () => {
+            const host = document.createElement('div');
+            host.innerHTML = await renderMarkdownToHtml('| a | b |\n|---|---|\n| x | 1 |\n\nText.\n\n| c |\n|---|\n| y |\n');
+            const boxes = [...host.querySelectorAll('.table-scroll')];
+            expect(boxes.map((box) => box.getAttribute('role'))).toEqual(['region', 'region']);
+            expect(boxes.map((box) => box.getAttribute('tabindex'))).toEqual(['0', '0']);
+            expect(boxes.map((box) => box.getAttribute('aria-label'))).toEqual(['Table 1', 'Table 2']);
+        });
+
+        // the highlighted code block scrolls inside its <code> (the theme's
+        // overflow-x), which WebKit would not focus either (axe on TR142)
+        it('makes each code block’s scroller a named region the keyboard can reach', async () => {
+            const host = document.createElement('div');
+            host.innerHTML = await renderMarkdownToHtml('```bash\nrun --a\n```\n\nText with `inline` code.\n\n```\nplain\n```\n');
+            const scrollers = [...host.querySelectorAll('pre > code')];
+            expect(scrollers.map((code) => code.getAttribute('role'))).toEqual(['region', 'region']);
+            expect(scrollers.map((code) => code.getAttribute('tabindex'))).toEqual(['0', '0']);
+            expect(scrollers.map((code) => code.getAttribute('aria-label'))).toEqual(['Code block 1', 'Code block 2']);
+            expect(scrollers.every((code) => code.hasAttribute('data-scroll-region'))).toBe(true);
+            // inline code is not a scroller
+            expect(host.querySelector('p code')?.hasAttribute('tabindex')).toBe(false);
         });
 
         it('marks numeric columns, header included, and leaves text columns alone', async () => {

@@ -153,15 +153,24 @@ function transformElements(parent: HastParent, options: RenderMarkdownOptions): 
     if (child.type !== "element") continue;
     if (child.tagName === "table") {
       markNumericColumns(child);
+      // a focusable region: WebKit will not focus a scroll box without a
+      // tabindex, so its hidden columns would be out of keyboard reach;
+      // labelScrollRegions names it
       parent.children[index] = {
         type: "element",
         tagName: "div",
-        properties: { className: ["table-scroll"], ...target },
+        properties: { className: [TABLE_SCROLL_CLASS], role: "region", tabIndex: 0, ...target },
         children: [child],
       };
       continue;
     }
     if (child.tagName === "pre" || child.tagName === "figure") Object.assign(child.properties, target);
+    if (child.tagName === "pre") {
+      // the block's <code> is the scroller (the highlight theme's overflow-x),
+      // so it is the focusable region; the pre keeps the copy button's corner
+      const code = child.children.find((node): node is Element => node.type === "element" && node.tagName === "code");
+      if (code) Object.assign(code.properties, { role: "region", tabIndex: 0, dataScrollRegion: "" });
+    }
     if (isStandingImage(child)) {
       for (const image of child.children) if (image.type === "element") Object.assign(image.properties, target);
     }
@@ -212,7 +221,47 @@ function rehypeReadingSurface() {
     const options = (file.data[RENDER_OPTIONS_KEY] ?? {}) as RenderMarkdownOptions;
     if (options.dropInlineToc) dropInlineToc(tree);
     transformElements(tree, options);
+    labelScrollRegions(tree);
   };
+}
+
+const TABLE_SCROLL_CLASS = "table-scroll";
+
+type ScrollRegionKind = "table" | "code block";
+
+/** "Table 3" or "Code block 3", or "<document>, table 3" for a page's later documents, whose names must differ from the first's */
+function scrollRegionLabel(kind: ScrollRegionKind, position: number, documentName?: string): string {
+  const name = `${kind} ${position}`;
+  return documentName ? `${documentName}, ${name}` : name[0].toUpperCase() + name.slice(1);
+}
+
+function scrollRegionKind(el: Element, parent: HastParent): ScrollRegionKind | null {
+  const classes = el.properties.className;
+  if (Array.isArray(classes) && classes.includes(TABLE_SCROLL_CLASS)) return "table";
+  if (el.tagName === "code" && parent.type === "element" && parent.tagName === "pre") return "code block";
+  return null;
+}
+
+/**
+ * Names the tables' and code blocks' scroll regions in reading order. Run
+ * again after anything removes one (the report head folds a metadata table
+ * away), so the numbers count the ones a reader meets.
+ */
+export function labelScrollRegions(tree: Root, documentName?: string): void {
+  const positions: Record<ScrollRegionKind, number> = { table: 0, "code block": 0 };
+  const visit = (parent: HastParent) => {
+    for (const child of parent.children) {
+      if (child.type !== "element") continue;
+      const kind = scrollRegionKind(child, parent);
+      if (kind) {
+        positions[kind] += 1;
+        child.properties.ariaLabel = scrollRegionLabel(kind, positions[kind], documentName);
+        continue;
+      }
+      visit(child);
+    }
+  };
+  visit(tree);
 }
 
 // rehype-slug runs before the reading-surface step, so ids never shift.
