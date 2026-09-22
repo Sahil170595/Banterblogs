@@ -1,22 +1,54 @@
+import type { ReactNode } from 'react';
 import { render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import AboutPage from '@/app/about/page';
 import WorkPage from '@/app/work/page';
 import { ENTRANCE_GROUP_CLASS, ENTRANCE_ITEM_ATTRIBUTE } from '@/components/motion/entrance';
 import { PROFILE_ITEMS_AFTER } from '@/components/ui/ProfileLayout';
-import { EDUCATION, EXPERIENCE, HERO_HEADLINE, HERO_SUMMARY, NEXT_LINKS, PROFILE_LINKS, RESEARCH, SKILLS } from '@/lib/work';
+import { parseSpan } from '@/lib/timeline';
+import {
+  EDUCATION,
+  EXPERIENCE,
+  HERO_HEADLINE,
+  HERO_SUMMARY,
+  NEXT_LINKS,
+  PROFILE_CTA,
+  PROFILE_LINKS,
+  RESEARCH,
+  SKILLS,
+  WORK_TITLE,
+} from '@/lib/work';
 
 // /work on the profile template (Phase R3-B): the identity and links in a
 // rail, the research and the roles as hairline rows beside it, every
-// sentence, figure and link of the résumé copy intact.
+// sentence, figure and link of the résumé copy intact. R5: a title that
+// reads as a title, with the owner's headline as its standfirst, and the
+// roles drawn on one time axis under the lede.
+
+// prefetch never reaches the DOM; surface it on the anchor
+vi.mock('next/link', async () => {
+  const { createElement } = await import('react');
+  return {
+    default: ({ prefetch, children, onNavigate: _onNavigate, transitionTypes: _types, ...props }: { prefetch?: boolean | null; onNavigate?: unknown; transitionTypes?: unknown; children?: ReactNode }) =>
+      createElement('a', { ...props, 'data-prefetch': prefetch === false ? 'off' : 'auto' }, children),
+  };
+});
 
 const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
-const MAX_BORDERED = 12;
+// the three hairline pills of the closing row; the rail's profile links are quiet text links
+const MAX_BORDERED = 3;
+// a title, not a sentence: one line at 48px across the page
+const TITLE_MAX_CHARS = 32;
 // bullets an entry shows before its disclosure: a research entry leads with
 // its meta line and evidence, a role with the first two of its story
 const RESEARCH_VISIBLE = 1;
 const ROLE_VISIBLE = 2;
 const text = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+const startOf = (dates: string) => {
+  const { start } = parseSpan(dates);
+  return start.year * 12 + start.month;
+};
 
 let page: HTMLElement;
 let markup: string;
@@ -28,11 +60,19 @@ beforeEach(() => {
 });
 
 describe('work page copy', () => {
-  it('keeps the headline as the one h1, and the summary as the lede', () => {
+  it('titles the page with the name the site already uses, short enough to read as a title', () => {
     const h1s = page.querySelectorAll('h1');
     expect(h1s).toHaveLength(1);
-    expect(text(h1s[0])).toBe(HERO_HEADLINE);
-    expect(text(page)).toContain(HERO_SUMMARY);
+    expect(text(h1s[0])).toBe(WORK_TITLE);
+    expect(WORK_TITLE.length).toBeLessThanOrEqual(TITLE_MAX_CHARS);
+    // not a new claim: /about names the builder the same way
+    expect(text(render(<AboutPage />).container)).toContain(`Built by ${WORK_TITLE}`);
+  });
+
+  it('keeps the owner’s headline verbatim as the standfirst under the title, and the summary as the lede', () => {
+    const standfirst = page.querySelector('header h1 + p')!;
+    expect(text(standfirst)).toBe(HERO_HEADLINE);
+    expect(text(page.querySelector('.profile-rail + div > p')!)).toBe(HERO_SUMMARY);
   });
 
   it('keeps every research entry: its label, annotation, every bullet and every evidence link', () => {
@@ -64,8 +104,8 @@ describe('work page copy', () => {
     }
   });
 
-  it('keeps the profile links and the links onward', () => {
-    for (const link of [...PROFILE_LINKS, ...NEXT_LINKS]) {
+  it('keeps the profile links, the call to action and the links onward', () => {
+    for (const link of [...PROFILE_LINKS, PROFILE_CTA, ...NEXT_LINKS]) {
       const found = [...page.querySelectorAll(`a[href="${link.href}"]`)].map(text);
       expect(found, link.href).toContain(link.label);
     }
@@ -73,13 +113,34 @@ describe('work page copy', () => {
 });
 
 describe('work page layout', () => {
-  it('puts the headline across the page, then the profile links in the rail, with an index of the four sections', () => {
+  it('puts the title across the page, then the call to action first in the rail, the profile links after it, and an index of the four sections', () => {
     expect(page.querySelector('header h1')).not.toBeNull();
     const rail = page.querySelector('.profile-rail')!;
-    for (const link of PROFILE_LINKS) expect(rail.querySelector(`a[href="${link.href}"]`), link.href).not.toBeNull();
+    const links = [...rail.querySelectorAll('a[href]')].filter((a) => !a.getAttribute('href')!.startsWith('#'));
+    expect(links.map((a) => a.getAttribute('href'))).toEqual([PROFILE_CTA.href, ...PROFILE_LINKS.map((l) => l.href)]);
+    // one ember pill; the profile links are quiet text links, with no hairline box
+    expect(links[0].className.split(/\s+/)).toContain('bg-primary');
+    for (const link of links.slice(1)) {
+      expect(link.className.split(/\s+/).filter((c) => BORDER_WIDTH.test(c)), link.getAttribute('href')!).toEqual([]);
+      expect(link.getAttribute('target')).toBe('_blank');
+    }
     const index = [...rail.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute('href') ?? '');
     expect(index).toEqual(['#research', '#experience', '#education', '#skills']);
     for (const id of index) expect(page.querySelector(`section${id}`), id).not.toBeNull();
+  });
+
+  // R5 design re-judge: /work had no visual. The roles, drawn from their
+  // own dates on one axis, under the lede: the page's visual anchor.
+  it('draws the roles on one time axis under the lede, oldest first, the ones still running marked', () => {
+    // revealed on scroll where it starts below the fold (a phone)
+    const figure = page.querySelector('.profile-rail + div > p + [data-reveal] > figure.timeline')!;
+    expect(figure, 'a timeline figure right under the lede').not.toBeNull();
+    const chronological = [...EXPERIENCE].sort((a, b) => startOf(a.dates) - startOf(b.dates));
+    const lanes = [...figure.querySelectorAll('ol > li')];
+    expect(lanes.map((li) => text(li.querySelector('.timeline-label')!))).toEqual(chronological.map((job) => job.company));
+    expect(lanes.map((li) => text(li.querySelector('.timeline-dates')!))).toEqual(chronological.map((job) => job.dates));
+    const running = chronological.map((job) => String(job.dates.endsWith('Present')));
+    expect(lanes.map((li) => li.getAttribute('data-ongoing'))).toEqual(running);
   });
 
   it('sets research and roles as hairline rows, current roles marked live', () => {
@@ -126,6 +187,31 @@ describe('work page layout', () => {
     }
   });
 
+  // a11y re-judge P2-N1: five of eight summaries read "Show 1 more" with no
+  // context. Each names its entry for assistive tech; the line stays quiet.
+  it('names every disclosure after its entry, for assistive tech only', () => {
+    const named = [
+      ...[...page.querySelectorAll('#research li.list-row')].map((row, i) => [row, RESEARCH[i].label] as const),
+      ...[...page.querySelectorAll('#experience li.list-row')].map((row, i) => [row, `${EXPERIENCE[i].role}, ${EXPERIENCE[i].company}`] as const),
+    ];
+    const summaries = named.filter(([row]) => row.querySelector('summary'));
+    expect(summaries.length).toBeGreaterThanOrEqual(1);
+    const names = summaries.map(([row, entry]) => {
+      const context = row.querySelector('summary .sr-only')!;
+      expect(context, entry).not.toBeNull();
+      expect(text(context), entry).toBe(`about ${entry}`);
+      return text(row.querySelector('summary')!);
+    });
+    expect(new Set(names).size).toBe(names.length);
+  });
+
+  // perf re-judge: plain links in view at load prefetched their pages
+  it('prefetches every in-site link on intent, not on sight', () => {
+    const internal = [...page.querySelectorAll('a[href^="/"]')];
+    expect(internal.length).toBeGreaterThanOrEqual(1 + NEXT_LINKS.length + 1);
+    for (const link of internal) expect(link.getAttribute('data-prefetch'), link.getAttribute('href')!).toBe('off');
+  });
+
   // re-judge P1-7: "AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF;" has no break
   // opportunity and ran the page to 353px at 320; folded bullets included
   it('lets a long unbroken token in a bullet break anywhere, so it never widens the page', () => {
@@ -139,7 +225,7 @@ describe('work page layout', () => {
     expect(page.querySelectorAll('li.list-row[data-reveal]').length).toBeGreaterThanOrEqual(rows);
   });
 
-  it('draws no boxed panels: no signal classes, and at most a handful of hairline buttons', () => {
+  it('draws no boxed panels: no signal classes, and only the closing row’s hairline pills', () => {
     expect(markup).not.toMatch(/signal-(panel|pill|divider)/);
     const bordered = [...page.querySelectorAll('*')].filter((el) => [...el.classList].some((c) => BORDER_WIDTH.test(c)));
     expect(bordered.every((el) => el.classList.contains('pressable'))).toBe(true);
