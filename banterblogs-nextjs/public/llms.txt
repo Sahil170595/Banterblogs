@@ -192,6 +192,5 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 ## Contact
 
 Built by Sahil Kadadekar
-- Email: sahilkadadekar@gmail.com
 - Twitter: https://twitter.com/sahilkadadekar
 - LinkedIn: https://linkedin.com/in/sahilkadadekar

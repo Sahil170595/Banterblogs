@@ -61,15 +61,15 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 // The most each pattern may count. Lower a ceiling whenever a count drops;
 // raising one is a regression.
 const CEILINGS: Record<Pattern, number> = {
-  arbitraryFontSize: 77,
-  arbitraryTracking: 29,
+  arbitraryFontSize: 74,
+  arbitraryTracking: 21,
   arbitraryShadow: 7,
   largeRadius: 2,
   paletteHue: 0,
   transitionAll: 0,
-  backdrop: 1,
-  signalPanel: 20,
-  signalPill: 10,
+  backdrop: 0,
+  signalPanel: 2,
+  signalPill: 6,
   signalDivider: 0,
   glassUltra: 0,
   shellWallpaper: 0,

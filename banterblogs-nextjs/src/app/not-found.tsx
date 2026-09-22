@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { entranceItem } from '@/components/motion/entrance';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { ListRow } from '@/components/ui/ListRow';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { REPORTS } from '@/lib/constants';
 import { TOOLS } from '@/lib/tools';
 
@@ -25,50 +27,40 @@ const DESTINATIONS = [
     blurb: `${TOOLS.map((tool) => tool.name).join(' and ')}, the command-line tools built on the research.`,
   },
 ];
+// the rows follow the head's two groups (it has no meta row) into the entrance
+const ROWS_AFTER = 2;
 
 // Unboxed, in the /show register: eyebrow, headline, one sentence, then rows.
 export default function NotFound() {
   return (
-    <div className="container max-w-5xl py-12 md:py-20">
-      <header className="mb-16 space-y-4">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Error 404 · Page not found</p>
-        <h1 className="text-5xl font-bold leading-[0.95] tracking-tight md:text-7xl">
-          Nothing lives
-          <br />
-          at this <span className="text-primary">address</span>.
-        </h1>
-        <p className="max-w-3xl pt-2 text-lg leading-relaxed text-muted-foreground md:text-xl">
-          The link may be out of date or the URL mistyped; everything published here is reachable from these three
-          places.
-        </p>
-      </header>
+    <div className="container max-w-5xl pb-24">
+      <PageHeader
+        eyebrow={<Eyebrow dot="ember">Error 404 · Page not found</Eyebrow>}
+        title={
+          <>
+            Nothing lives{' '}
+            <br />
+            at this <span className="text-primary">address</span>.
+          </>
+        }
+        lede="The link may be out of date or the URL mistyped; everything published here is reachable from these three places."
+      />
 
-      <ol className="space-y-1">
+      <ol className="mt-12 md:mt-16">
         {DESTINATIONS.map((destination, index) => (
-          <li key={destination.href}>
-            <Link
+          <li key={destination.href} {...entranceItem(index, ROWS_AFTER)}>
+            <ListRow
               href={destination.href}
-              className="group relative grid grid-cols-[auto_1fr_auto] items-baseline gap-6 border-t border-border/40 py-8 transition-colors hover:border-primary/60"
-            >
-              <span className="font-mono text-xs text-muted-foreground transition-colors group-hover:text-primary">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold leading-tight tracking-tight transition-colors group-hover:text-primary md:text-3xl">
-                  {destination.title}
-                </h2>
-                <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">{destination.blurb}</p>
-              </div>
-              <ArrowRight
-                className="h-5 w-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary"
-                aria-hidden="true"
-              />
-            </Link>
+              index={String(index + 1).padStart(2, '0')}
+              title={destination.title}
+              titleAs="h2"
+              description={destination.blurb}
+            />
           </li>
         ))}
       </ol>
 
-      <p className="mt-12 border-t border-border/40 pt-8 text-sm text-muted-foreground">
+      <p className="list-row mt-12 pt-8 text-copy-14 text-muted-foreground">
         Looking for a particular report, tool or episode? Use the search in the site header (inside the menu on small
         screens).
       </p>

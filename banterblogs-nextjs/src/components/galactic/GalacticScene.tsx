@@ -6,6 +6,7 @@ import { PerformanceMonitor } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { BlackHole } from './BlackHole';
+import { IGNITION_SETTLE_MS, createWarmupGate } from './sceneOpening';
 import { StarSystems } from './StarSystems';
 import { Starfield } from './Starfield';
 import type { GalacticSelection } from './systems';
@@ -24,9 +25,6 @@ const DPR_MIN = 1;
 // runs before every other useFrame subscriber (they read clock.elapsedTime);
 // a negative priority does not take rendering over from EffectComposer
 const SCENE_CLOCK_PRIORITY = -1;
-// the disk and halo ignite over ~2 s of rendered frames (uIgnite damp); a
-// pause that is already on at mount waits this long so the scene opens lit
-const IGNITION_SETTLE_MS = 2500;
 
 function CameraRig() {
   const { camera, pointer } = useThree();
@@ -67,16 +65,32 @@ function SceneClock({ paused }: { paused: boolean }) {
   return null;
 }
 
+// Reports once, when the scene is warm (sceneOpening.ts). Subscribers run
+// just before a frame is drawn, in the same task, so the state update this
+// triggers lands after that frame.
+function SceneReadySignal({ onReady }: { onReady: () => void }) {
+  const [isWarm] = useState(createWarmupGate);
+  const reported = useRef(false);
+  useFrame(() => {
+    if (reported.current || !isWarm(performance.now())) return;
+    reported.current = true;
+    onReady();
+  });
+  return null;
+}
+
 interface GalacticSceneProps {
   onSelect: (selection: GalacticSelection | null) => void;
   /** system narrated by the tracking ticker — its label/orbit glow like a hover */
   featuredName: string | null;
   onStarHover: (name: string, hovering: boolean) => void;
-  /** "Pause motion", or a selection card covering the scene */
+  /** the scene is drawing steadily; the poster over it can fade out */
+  onReady: () => void;
+  /** "Pause motion", a selection card covering the scene, or an offscreen canvas */
   paused: boolean;
 }
 
-export default function GalacticScene({ onSelect, featuredName, onStarHover, paused }: GalacticSceneProps) {
+export default function GalacticScene({ onSelect, featuredName, onStarHover, onReady, paused }: GalacticSceneProps) {
   const [dpr, setDpr] = useState(1.5);
   const [ignited, setIgnited] = useState(false);
   useEffect(() => {
@@ -103,6 +117,7 @@ export default function GalacticScene({ onSelect, featuredName, onStarHover, pau
         />
       )}
       <SceneClock paused={frozen} />
+      <SceneReadySignal onReady={onReady} />
       <color attach="background" args={['#04060a']} />
       <CameraRig />
       <Starfield />

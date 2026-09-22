@@ -39,6 +39,17 @@ describe('PageHeader', () => {
     expect(groups[2].querySelector('a[href="/reports"]')).not.toBeNull();
   });
 
+  it('can hold the lede still, for a page whose largest text it is, and then brings the meta row in right after the title', () => {
+    // Chrome credits a fade from opacity 0 to LCP only when it ends (~0.9 s measured on /tools)
+    const el = render(<PageHeader title="Tools" lede="The parts of this program." meta={<span>v1</span>} stillLede />).container.firstElementChild as HTMLElement;
+    const lede = [...el.querySelectorAll('p')].find((p) => p.textContent === 'The parts of this program.')!;
+    expect(lede.closest(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
+    expect(lede.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-copy-17', 'text-prose', 'max-w-[60ch]']));
+    const groups = [...el.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)];
+    expect(groups.map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1']);
+    expect(groups[1].textContent).toBe('v1');
+  });
+
   it('can opt out of the entrance, and leaves out what it is not given', () => {
     const markup = renderToStaticMarkup(<PageHeader title="Papers" entrance={false} />);
     expect(markup).not.toContain(ENTRANCE_GROUP_CLASS);

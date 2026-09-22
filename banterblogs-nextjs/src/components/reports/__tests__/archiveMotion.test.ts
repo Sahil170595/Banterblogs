@@ -66,7 +66,8 @@ describe('archive entrance', () => {
 
   it('moves in groups, each rising out of a blur over the reveal token on strong-out', () => {
     const rise = keyframes('entrance-rise');
-    expect(rise).toMatch(/opacity:\s*0;/);
+    // from a 1% sliver, not 0, so the LCP title is a candidate on its first frame
+    expect(rise).toMatch(/opacity:\s*var\(--entrance-start-opacity\);/);
     expect(rise).toMatch(/transform:\s*translateY\(var\(--motion-rise\)\)/);
     expect(rise).toMatch(/filter:\s*blur\(var\(--blur-enter\)\)/);
     expect(CSS).toMatch(/--motion-rise:\s*12px;/);

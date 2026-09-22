@@ -59,7 +59,13 @@ describe('entrance stylesheet', () => {
 
   it('rises every step out of a blur over the reveal token on strong-out, groups first, then items', () => {
     const rise = TOP.find((b) => b.prelude === '@keyframes entrance-rise')?.body ?? '';
-    expect(rise).toMatch(/opacity:\s*0;/);
+    // Chrome skips opacity-0 elements as LCP candidates and credits a fade only
+    // when it ends; starting from a sliver of opacity keeps every step an LCP
+    // candidate from its first paint, and the sliver cannot be seen.
+    expect(rise).toMatch(/opacity:\s*var\(--entrance-start-opacity\);/);
+    const start = Number(/--entrance-start-opacity:\s*([\d.]+);/.exec(CSS)?.[1]);
+    expect(start).toBeGreaterThan(0);
+    expect(start).toBeLessThanOrEqual(0.02);
     expect(rise).toMatch(/transform:\s*translateY\(var\(--motion-rise\)\)/);
     expect(rise).toMatch(/filter:\s*blur\(var\(--blur-enter\)\)/);
     const [group, item] = rules.filter((rule) => /animation:\s*entrance-/.test(rule.body));

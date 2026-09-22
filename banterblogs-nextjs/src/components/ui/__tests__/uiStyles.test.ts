@@ -11,6 +11,23 @@ const rules = [...CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]
 const ruleFor = (selector: string) => rules.filter((rule) => rule.selector.split(',').map((s) => s.trim()).includes(selector));
 const body = (selector: string) => ruleFor(selector).map((rule) => rule.body).join(';');
 
+describe('wordmark', () => {
+  // JetBrains Mono advances every glyph 600 of 1000 units per em
+  const MONO_ADVANCE_EM = 0.6;
+  const NAME = 'Chimeraforge';
+
+  it('holds a fixed box as wide as the mono name, so a late font swap cannot shift the header', () => {
+    const rule = body('.brand-wordmark');
+    const tracking = Number(/letter-spacing:\s*([\d.]+)em/.exec(rule)?.[1]);
+    const width = Number(/(?:^|;)\s*width:\s*([\d.]+)em/.exec(rule)?.[1]);
+    expect(rule).toMatch(/display:\s*inline-block/);
+    expect(rule).toMatch(/white-space:\s*nowrap/);
+    expect(width).toBeCloseTo(NAME.length * (MONO_ADVANCE_EM + tracking), 5);
+    const source = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'ui', 'Wordmark.tsx'), 'utf8');
+    expect(source).toContain(`<span className="brand-wordmark">${NAME}</span>`);
+  });
+});
+
 describe('card surface', () => {
   it('shares the archive card visual rules instead of forking them', () => {
     expect(ruleFor('.card-surface').some((rule) => rule.selector.includes('.card-visual'))).toBe(true);

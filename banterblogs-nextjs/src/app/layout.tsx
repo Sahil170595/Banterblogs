@@ -13,7 +13,14 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
+// Fallbacks with JetBrains Mono's 0.6em advance, so its swap moves nothing;
+// the automatic fallback is Arial-metric (pinned by monoFallback.test.ts).
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  adjustFontFallback: false,
+  fallback: ["Menlo", "Courier New", "monospace"],
+});
 
 // --background (220 32% 2%) from globals.css as hex, so browser chrome and the
 // first frame match the page (pinned by readerSettings.test.tsx)
