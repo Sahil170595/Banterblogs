@@ -410,7 +410,7 @@ function AdversarialCard({
     verdict.recommendation === 'block'
       ? 'text-primary'
       : verdict.recommendation === 'review'
-      ? 'text-primary/80'
+      ? 'text-status-amber'
       : 'text-accent';
   return (
     <AgentCard
@@ -989,10 +989,10 @@ function CognitiveAgentsScene({ data }: { data: SceneData }) {
           <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
             Walkthrough · beat {beatIdx + 1} of {beats.length}
             {isIntroBeat && (
-              <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">intro</span>
+              <span className="ml-2 text-primary font-mono normal-case tracking-normal">intro</span>
             )}
             {!isIntroBeat && activeAgentId && (
-              <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">
+              <span className="ml-2 text-primary font-mono normal-case tracking-normal">
                 → {activeAgentId}
               </span>
             )}

@@ -183,6 +183,10 @@ function pickEntryIndex(_records: ScenarioRecord[]): number {
   return 0;
 }
 
+// A phase row the walkthrough has not reached yet: dimmed, its text still
+// 3:1 or better on the panel (was opacity-30/40, 1.2-2.8:1)
+const NOT_REACHED = 'opacity-60';
+
 // Status → icon + tint for the matrix cells.
 function StatusIcon({ status, className }: { status: PhaseEvent['status'] | 'leader-implicit' | 'empty'; className?: string }) {
   switch (status) {
@@ -254,7 +258,8 @@ function MatrixCell({
         : status === 'rejected'
           ? 'border-primary/50 bg-primary/[0.08]'
           : status === 'timeout'
-            ? 'border-border/40 bg-card/20 opacity-70'
+            ? // a vote that never came: a dashed edge, not a fade, so its label still reads in a dimmed row
+              'border-dashed border-border/70 bg-card/20'
             : status === 'leader-implicit'
               ? 'border-accent/50 bg-accent/[0.08]'
               : 'border-border/25 bg-card/10';
@@ -274,9 +279,9 @@ function MatrixCell({
       aria-label={ariaLabel}
       animate={
         reducedMotion
-          ? { opacity: status === 'timeout' ? 0.7 : 1 }
+          ? { opacity: 1 }
           : {
-              opacity: status === 'timeout' ? 0.7 : 1,
+              opacity: 1,
               scale: isCurrentPhase && event && status === 'equivocation' ? 1.05 : isCurrentPhase && event ? 1.02 : 1,
             }
       }
@@ -287,7 +292,7 @@ function MatrixCell({
       <StatusIcon status={status} className="h-4 w-4 md:h-5 md:w-5" />
       <span
         className={`text-[9px] md:text-[10px] font-mono uppercase tracking-widest ${
-          status === 'equivocation' ? 'text-primary font-bold' : 'text-muted-foreground/90'
+          status === 'equivocation' ? 'text-foreground font-bold' : 'text-muted-foreground'
         }`}
         aria-hidden
       >
@@ -397,8 +402,8 @@ function VerdictPanel({
               {headline}
             </div>
             {outcome.equivocation_replica && (
-              <span className="ml-auto rounded border border-primary/60 bg-primary/15 text-primary px-2.5 py-1 text-[11px] md:text-xs font-mono uppercase tracking-widest flex items-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+              <span className="ml-auto rounded border border-primary/60 bg-primary/15 text-foreground px-2.5 py-1 text-[11px] md:text-xs font-mono uppercase tracking-widest flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-primary" aria-hidden />
                 {outcome.equivocation_replica} byzantine
               </span>
             )}
@@ -829,12 +834,12 @@ function BftConsensusScene({ data }: { data: SceneData }) {
               <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Walkthrough · beat {beatIdx + 1} of {beats.length}
                 {isIntroBeat && (
-                  <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
                     intro
                   </span>
                 )}
                 {!isIntroBeat && activePhaseId && (
-                  <span className="ml-2 text-primary/80 font-mono normal-case tracking-normal">
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
                     → {activePhaseId}
                   </span>
                 )}
@@ -947,13 +952,13 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                     <div
                       role="rowheader"
                       className={`flex flex-col justify-center text-left ${
-                        phaseRevealed ? 'opacity-100' : 'opacity-40'
+                        phaseRevealed ? 'opacity-100' : NOT_REACHED
                       }`}
                     >
                       <span className="text-[12px] md:text-[13px] font-bold text-foreground/95">
                         {PHASE_META[phaseId].name}
                       </span>
-                      <span className="text-[9px] md:text-[10px] text-muted-foreground/80">
+                      <span className="text-[9px] md:text-[10px] text-muted-foreground">
                         {PHASE_META[phaseId].plain}
                       </span>
                     </div>
@@ -964,7 +969,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                       return (
                         <div
                           key={`${phaseId}-${r}`}
-                          className={phaseRevealed ? 'opacity-100' : 'opacity-30'}
+                          className={phaseRevealed ? 'opacity-100' : NOT_REACHED}
                           aria-hidden={!phaseRevealed}
                         >
                           <MatrixCell
