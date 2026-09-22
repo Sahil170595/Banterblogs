@@ -1,9 +1,14 @@
 import { MEASUREMENTS, REPORTS } from './constants';
+import { formatMonth, monthIndex, parseSpan } from './timeline';
 import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from './tools';
 
 // The /work page's content (owner copy from résumé v8), kept apart from its
 // layout (app/work/page.tsx), so the page test can hold every sentence to it.
 
+/** the page title: the name /about already builds under ("Built by …") */
+export const WORK_TITLE = 'Sahil Kadadekar';
+
+/** the owner's headline, verbatim: the standfirst under the title */
 export const HERO_HEADLINE =
   'Founding ML engineer building production agentic and inference systems for clinical AI, cybersecurity, and model deployment.';
 
@@ -215,6 +220,21 @@ export const EXPERIENCE: Experience[] = [
   },
 ];
 
+const startMonth = (job: Experience) => monthIndex(parseSpan(job.dates).start);
+const CHRONOLOGICAL = [...EXPERIENCE].sort((a, b) => startMonth(a) - startMonth(b));
+const STILL_RUNNING = EXPERIENCE.filter((job) => parseSpan(job.dates).end === null).length;
+const FIRST_START = formatMonth(parseSpan(CHRONOLOGICAL[0].dates).start);
+
+/**
+ * The roles on one time axis, the page's figure (components/ui/TimelineFigure):
+ * oldest first, each by its company and role, drawn from its dates as written.
+ */
+export const CAREER_TIMELINE = {
+  title: 'Roles over time',
+  caption: `${EXPERIENCE.length} roles since ${FIRST_START}; the ${STILL_RUNNING} still running reach the present.`,
+  lanes: CHRONOLOGICAL.map((job) => ({ label: job.company, detail: job.role, dates: job.dates })),
+};
+
 export const EDUCATION = [
   {
     school: 'New York University',
@@ -265,12 +285,14 @@ export interface WorkLink {
   href: string;
 }
 
-/** the profile links beside the headline; the last is the page's one call to action */
+/** the rail's one call to action, first in it */
+export const PROFILE_CTA: WorkLink = { label: 'Papers', href: '/papers' };
+
+/** the profile links under it */
 export const PROFILE_LINKS: WorkLink[] = [
   { label: 'GitHub', href: 'https://github.com/Sahil170595' },
   { label: 'LinkedIn', href: 'https://linkedin.com/in/sahilkadadekar' },
   { label: 'ORCID', href: 'https://orcid.org/0000-0002-7139-1251' },
-  { label: 'Papers', href: '/papers' },
 ];
 
 /** where the page leads next */

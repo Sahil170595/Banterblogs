@@ -79,6 +79,9 @@ const config: Config = {
         "heading-32": ["2rem", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "560" }],
         "heading-24": ["1.5rem", { lineHeight: "1.3333", letterSpacing: "-0.02em", fontWeight: "560" }],
         "heading-20": ["1.25rem", { lineHeight: "1.375", letterSpacing: "-0.015em", fontWeight: "560" }],
+        // the standfirst under a short page title (/work), at the copy weight
+        "copy-24": ["1.5rem", { lineHeight: "1.4", letterSpacing: "-0.01em" }],
+        "copy-20": ["1.25rem", { lineHeight: "1.45", letterSpacing: "-0.005em" }],
         "copy-18": ["1.125rem", { lineHeight: "1.6" }],
         "copy-17": ["1.0625rem", { lineHeight: "1.6" }],
         "copy-16": ["1rem", { lineHeight: "1.625" }],

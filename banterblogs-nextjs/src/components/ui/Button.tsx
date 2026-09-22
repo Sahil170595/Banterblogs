@@ -74,10 +74,13 @@ export function Button({ variant, size, icon, iconEnd, className, type = 'button
 
 export interface ButtonLinkProps extends ButtonStyle, Slots {
   href: string;
+  /**
+   * an in-site page prefetches on intent (IntentLink, the default), not when
+   * the button comes into view; false prefetches it on sight
+   */
+  intent?: boolean;
   className?: string;
   'aria-label'?: string;
-  /** inside the site: prefetch on intent (the default), or on sight with false */
-  intent?: boolean;
 }
 
 const isExternal = (href: string) => /^https?:\/\//.test(href);
