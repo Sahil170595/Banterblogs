@@ -17,6 +17,8 @@ export interface ProfileLayoutProps {
   identity?: ReactNode;
   /** the page's sections, indexed in the rail on wide screens */
   sections: ProfileSection[];
+  /** a figure under the lede, the page's visual anchor */
+  figure?: ReactNode;
   children: ReactNode;
 }
 
@@ -38,7 +40,7 @@ const group = (index: number, classes?: string) => {
  * The lede, the page's largest text and so its LCP element, stays out of the
  * entrance: Chrome credits a fade from 0 to LCP only when it ends.
  */
-export function ProfileLayout({ eyebrow, title, lede, identity, sections, children }: ProfileLayoutProps) {
+export function ProfileLayout({ eyebrow, title, lede, identity, sections, figure, children }: ProfileLayoutProps) {
   return (
     <div className="container pb-24 pt-6 md:pt-10">
       <header {...group(0)}>
@@ -64,6 +66,7 @@ export function ProfileLayout({ eyebrow, title, lede, identity, sections, childr
         </div>
         <div className="mt-10 min-w-0 lg:mt-0">
           <p className="max-w-[60ch] text-copy-18 text-prose">{lede}</p>
+          {figure}
           {children}
         </div>
       </div>

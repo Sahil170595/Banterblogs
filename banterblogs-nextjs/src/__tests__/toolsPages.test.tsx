@@ -112,6 +112,19 @@ describe.each(TOOLS.map((tool) => [tool.slug, tool] as const))('/tools/%s', (_sl
     expect(group(summary)).toBeUndefined();
   });
 
+  // R4 design re-judge: the fold used only its left 500px and the page had
+  // no figure. The empty half now draws how the tool decides.
+  it('draws how the tool decides as a figure beside the head: its steps in order, before the principle', () => {
+    const el = page();
+    const figure = el.querySelector('figure.flow')!;
+    expect(figure).not.toBeNull();
+    expect([...figure.querySelectorAll('.flow-label')].map(text)).toEqual(tool.pipeline!.steps.map((s) => s.label));
+    expect(text(figure.querySelector('figcaption')!)).toContain(tool.pipeline!.title);
+    // it shares the head's grid with the header, and comes before the page's sections
+    expect(figure.closest('.tool-head')?.querySelector('header')).not.toBeNull();
+    expect(figure.compareDocumentPosition(el.querySelector('#principle')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('keeps the principle, and sets the highlights as rows', () => {
     const el = page();
     expect(text(el)).toContain(tool.principle.title);

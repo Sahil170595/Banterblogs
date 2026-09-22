@@ -1507,4 +1507,171 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 .card-depth:has(.card-link:focus-visible) .card-cta {
   color: hsl(var(--primary));
 }
+
+/* FlowFigure (components/ui/FlowFigure.tsx): a real sequence as nodes on
+   one hairline rail, on the drafting plate the report hero and repository
+   drawings use. Down the side by default; across once the figure itself is
+   --flow-row-min wide (a container query: the same figure sits in a head
+   column and in a page column). Ring nodes are stages, filled ones what goes
+   in, and the one ember node what comes out. */
+:root {
+  --flow-node: 0.6875rem;
+  --flow-gap: 1.25rem;
+}
+
+.flow {
+  container-type: inline-size;
+  container-name: flow;
+  position: relative;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  background-color: hsl(var(--card) / 0.6);
+  background-image:
+    radial-gradient(ellipse 70% 80% at 50% 100%, hsl(var(--primary) / 0.06), transparent 70%),
+    linear-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+  background-size: auto, 1.5rem 1.5rem, 1.5rem 1.5rem;
+  background-position: center;
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+}
+
+.flow-steps {
+  display: grid;
+  margin-top: 1.5rem;
+}
+
+.flow-step {
+  position: relative;
+  padding: 0 0 1.25rem calc(var(--flow-node) + 0.875rem);
+}
+
+.flow-step:last-child {
+  padding-bottom: 0;
+}
+
+/* the rail: from this node to the next */
+.flow-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: calc(0.3rem + var(--flow-node));
+  bottom: 0.3rem;
+  left: calc(var(--flow-node) / 2);
+  width: 1px;
+  background-color: hsl(var(--foreground) / 0.18);
+}
+
+.flow-node {
+  position: absolute;
+  top: 0.3rem;
+  left: 0;
+  width: var(--flow-node);
+  height: var(--flow-node);
+  border-radius: 9999px;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.55);
+}
+
+.flow-step[data-kind="io"] .flow-node {
+  background-color: hsl(var(--foreground) / 0.4);
+  box-shadow: none;
+}
+
+.flow-step[data-kind="result"] .flow-node {
+  background-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18);
+}
+
+.flow-loop {
+  margin-top: 1.25rem;
+}
+
+/* the return path is drawn only in the row layout; down the side the label says it */
+.flow-loop-path {
+  display: none;
+}
+
+@container flow (min-width: 36rem) {
+  .flow-steps {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--flow-count), minmax(0, 1fr));
+    column-gap: var(--flow-gap);
+  }
+
+  .flow-step {
+    padding: calc(var(--flow-node) + 0.875rem) 0 0;
+  }
+
+  .flow-step:not(:last-child)::before {
+    top: calc(var(--flow-node) / 2);
+    bottom: auto;
+    left: calc(var(--flow-node) + 0.375rem);
+    right: calc(0.375rem - var(--flow-gap));
+    width: auto;
+    height: 1px;
+  }
+
+  .flow-node {
+    top: 0;
+  }
+
+  .flow-loop {
+    display: grid;
+    grid-template-columns: repeat(var(--flow-count), minmax(0, 1fr));
+    column-gap: var(--flow-gap);
+    row-gap: 0.5rem;
+  }
+
+  /* a dashed bracket from the leaving step's node back under the returned-to one */
+  .flow-loop-path {
+    display: block;
+    grid-column: var(--loop-span);
+    height: 0.875rem;
+    margin-left: calc(var(--flow-node) / 2);
+    margin-right: calc(-1 * (var(--flow-gap) + var(--flow-node) / 2));
+    border: 1px dashed hsl(var(--foreground) / 0.3);
+    border-top: 0;
+    border-radius: 0 0 0.375rem 0.375rem;
+  }
+
+  .flow-loop-label {
+    grid-column: var(--loop-span);
+    grid-row: 2;
+  }
+}
+
+/* A folded list (/work): the first bullets show, the rest open from a quiet
+   summary line whose label says what a click will do. */
+.more-details > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.875rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: hsl(var(--muted-foreground));
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.more-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.more-details > summary:hover {
+  color: hsl(var(--foreground));
+}
+
+.more-chevron {
+  transition: transform var(--duration-base) var(--ease-strong-out);
+}
+
+.more-details[open] > summary .more-chevron {
+  transform: rotate(90deg);
+}
+
+.more-details[open] .more-closed,
+.more-details:not([open]) .more-open {
+  display: none;
+}
 /* end R4 layout */

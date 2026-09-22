@@ -3,11 +3,12 @@ import { ArrowRight } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceGroup } from '@/components/motion/entrance';
 import { ButtonLink } from '@/components/ui/Button';
+import { FlowFigure } from '@/components/ui/FlowFigure';
 import { ListRow } from '@/components/ui/ListRow';
 import { ProfileLayout } from '@/components/ui/ProfileLayout';
 import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
-import { ABOUT_LINKS, ECOSYSTEM } from '@/lib/about';
+import { ABOUT_LINKS, DECISION_PATH, ECOSYSTEM } from '@/lib/about';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function AboutPage() {
         </>
       }
       sections={SECTIONS}
+      figure={<FlowFigure {...DECISION_PATH} className="mt-10" />}
       identity={
         <div className="space-y-4">
           <p className="text-label-13 text-muted-foreground">

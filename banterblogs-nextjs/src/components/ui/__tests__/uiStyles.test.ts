@@ -100,6 +100,19 @@ describe('card call to action', () => {
   });
 });
 
+// R4: a folded list (/work) opens from a quiet summary whose label says
+// what it will do, and whose chevron turns only as a colour-free transform.
+describe('more details', () => {
+  it('draws the summary as a plain muted line with its own chevron, and swaps its label when open', () => {
+    expect(body('.more-details > summary')).toMatch(/list-style:\s*none/);
+    expect(body('.more-details > summary')).toMatch(/color:\s*hsl\(var\(--muted-foreground\)\)/);
+    expect(body('.more-details > summary::-webkit-details-marker')).toMatch(/display:\s*none/);
+    expect(body('.more-details[open] > summary .more-chevron')).toMatch(/transform:\s*rotate\(90deg\)/);
+    expect(body('.more-details[open] .more-closed')).toMatch(/display:\s*none/);
+    expect(body('.more-details:not([open]) .more-open')).toMatch(/display:\s*none/);
+  });
+});
+
 describe('section rhythm', () => {
   it('sets sections 64px apart on phones and 96px apart from 768px', () => {
     expect(body('.page-section + .page-section')).toMatch(/margin-top:\s*4rem/);

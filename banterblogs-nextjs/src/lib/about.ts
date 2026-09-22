@@ -59,6 +59,25 @@ export const ECOSYSTEM: EcosystemRepo[] = [
   },
 ];
 
+/**
+ * The decision path the page's lede describes, drawn under it
+ * (components/ui/FlowFigure.tsx): every action routes through the embedding
+ * safety classifier, escalates to multi-model debate when uncertain and
+ * produces signed provenance; debate outcomes train the encoder (RLAIF).
+ */
+export const DECISION_PATH = {
+  title: 'How a decision is made',
+  caption: 'Every action takes the same path; the uncertain ones escalate, and what debate decides trains the router.',
+  steps: [
+    { label: 'Action', detail: 'a chat turn or a tool action', kind: 'io' as const },
+    { label: 'Router', detail: 'embedding safety classifier; routine queries take the fast path' },
+    { label: 'Debate', detail: 'multi-model, when the router is uncertain' },
+    { label: 'Provenance', detail: 'Ed25519-signed chain with zero-knowledge proofs', kind: 'result' as const },
+  ],
+  // from the debate back to the router
+  loop: { from: 2, to: 1, label: 'RLAIF: debate outcomes train the alignment encoder' },
+};
+
 export interface AboutLink {
   label: string;
   href: string;

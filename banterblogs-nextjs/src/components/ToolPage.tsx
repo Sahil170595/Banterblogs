@@ -6,6 +6,7 @@ import { Badge } from './ui/Badge';
 import { ButtonLink } from './ui/Button';
 import { CommandChip } from './ui/CommandChip';
 import { Eyebrow } from './ui/Eyebrow';
+import { FlowFigure } from './ui/FlowFigure';
 import { ListRow } from './ui/ListRow';
 import { PageHeader } from './ui/PageHeader';
 import { Section } from './ui/Section';
@@ -39,49 +40,59 @@ const quickstartEntrance = entranceGroup(QUICKSTART_GROUP);
 export function ToolPage({ tool }: { tool: ToolDef }) {
   return (
     <div className="container pb-24">
-      <PageHeader
-        eyebrow={
-          <span className="flex flex-wrap items-center gap-3">
-            <Badge tone="ember">CLI</Badge>
-            <Eyebrow as="span">{tool.tagline}</Eyebrow>
-          </span>
-        }
-        title={tool.name}
-        stillLede
-        lede={tool.summary}
-        meta={
-          <ul aria-label="About this release" className="meta-list basis-full text-label-13 text-muted-foreground">
-            <li>
-              <span className="font-semibold text-foreground">v{tool.version}</span>
-            </li>
-            <li>{tool.license}</li>
-            <li>Python {tool.python}</li>
-            {/* quantfit is a standalone tool, not one of the nine repos —
-                state it here so the page never inflates the ecosystem count */}
-            {!tool.ecosystem && <li>Standalone tool</li>}
-          </ul>
-        }
-        actions={
-          <>
-            <CommandChip command={tool.install} label={`${tool.name} install command`} />
-            <ButtonLink href={tool.pypi} variant="primary" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
-              PyPI
-            </ButtonLink>
-            <ButtonLink href={tool.repo} variant="ghost" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
-              Source
-            </ButtonLink>
-            {tool.changelog && (
-              <ButtonLink href={tool.changelog} variant="ghost" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
-                Changelog
-              </ButtonLink>
-            )}
-          </>
-        }
-      />
-      {/* outside the head's action row, so a long command scrolls inside
-          the chip instead of widening the row past a phone's edge */}
-      <div className={cn(quickstartEntrance.className, 'mt-3')} style={quickstartEntrance.style}>
-        <CommandChip command={tool.quickstart} label={`${tool.name} quickstart command`} />
+      {/* the head, and beside it from lg how the tool decides */}
+      <div className={cn('tool-head', tool.pipeline && 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-x-16 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]')}>
+        <div className="min-w-0">
+          <PageHeader
+            eyebrow={
+              <span className="flex flex-wrap items-center gap-3">
+                <Badge tone="ember">CLI</Badge>
+                <Eyebrow as="span">{tool.tagline}</Eyebrow>
+              </span>
+            }
+            title={tool.name}
+            stillLede
+            lede={tool.summary}
+            meta={
+              <ul aria-label="About this release" className="meta-list basis-full text-label-13 text-muted-foreground">
+                <li>
+                  <span className="font-semibold text-foreground">v{tool.version}</span>
+                </li>
+                <li>{tool.license}</li>
+                <li>Python {tool.python}</li>
+                {/* quantfit is a standalone tool, not one of the nine repos —
+                    state it here so the page never inflates the ecosystem count */}
+                {!tool.ecosystem && <li>Standalone tool</li>}
+              </ul>
+            }
+            actions={
+              <>
+                <CommandChip command={tool.install} label={`${tool.name} install command`} />
+                <ButtonLink href={tool.pypi} variant="primary" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
+                  PyPI
+                </ButtonLink>
+                <ButtonLink href={tool.repo} variant="ghost" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
+                  Source
+                </ButtonLink>
+                {tool.changelog && (
+                  <ButtonLink href={tool.changelog} variant="ghost" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
+                    Changelog
+                  </ButtonLink>
+                )}
+              </>
+            }
+          />
+          {/* outside the head's action row, so a long command scrolls inside
+              the chip instead of widening the row past a phone's edge */}
+          <div className={cn(quickstartEntrance.className, 'mt-3')} style={quickstartEntrance.style}>
+            <CommandChip command={tool.quickstart} label={`${tool.name} quickstart command`} />
+          </div>
+        </div>
+        {tool.pipeline && (
+          <div className={cn(quickstartEntrance.className, 'mt-12 min-w-0 lg:mt-0 lg:pt-10')} style={quickstartEntrance.style}>
+            <FlowFigure title={tool.pipeline.title} caption={tool.pipeline.caption} steps={tool.pipeline.steps} />
+          </div>
+        )}
       </div>
 
       <div className="mt-16 md:mt-24">

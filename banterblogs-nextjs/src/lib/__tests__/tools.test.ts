@@ -45,6 +45,24 @@ describe('tools data module', () => {
     }
   });
 
+  // R4: each tool page draws how the tool decides. The steps are the tool's
+  // own: chimeraforge's README ("a 5-gate pipeline: VRAM -> quality -> safety
+  // (opt-in) -> latency -> budget") and quantfit's verify-safety.
+  it('draws chimeraforge plan through its five gates in the order the planner runs them', () => {
+    const pipeline = toolBySlug('chimeraforge')!.pipeline!;
+    const gates = pipeline.steps.filter((step) => (step.kind ?? 'step') === 'step').map((step) => step.label);
+    expect(gates).toEqual(['VRAM', 'Quality', 'Safety', 'Latency', 'Budget']);
+    expect(pipeline.steps[0].kind).toBe('io');
+    expect(pipeline.steps.at(-1)!.kind).toBe('result');
+    expect(pipeline.steps.find((step) => step.label === 'Safety')!.detail).toMatch(/opt-in/i);
+  });
+
+  it('draws quantfit verify-safety from the probe set to a bounded verdict', () => {
+    const pipeline = toolBySlug('quantfit')!.pipeline!;
+    expect(pipeline.steps.map((step) => step.label)).toEqual(['Probe set', 'Generate', 'Judge', 'Two axes', 'Verdict']);
+    expect(pipeline.steps.at(-1)!.detail).toMatch(/never absolute/);
+  });
+
   it('cites only report slugs that exist in the catalog', () => {
     // a dead /reports/<slug> link is worse than no evidence link at all
     const meta = fs.readFileSync(path.join(SRC, 'lib', 'reports', 'meta.ts'), 'utf8');

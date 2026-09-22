@@ -12,6 +12,8 @@ import { EDUCATION, EXPERIENCE, HERO_HEADLINE, HERO_SUMMARY, NEXT_LINKS, PROFILE
 
 const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
 const MAX_BORDERED = 12;
+// bullets an entry shows before its disclosure
+const VISIBLE_BULLETS = 2;
 const text = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 let page: HTMLElement;
@@ -93,6 +95,32 @@ describe('work page layout', () => {
     for (const item of items) {
       expect(item.closest('#research'), 'entrance items are the first research rows').not.toBeNull();
       expect(item.style.getPropertyValue('--entrance-items-after')).toBe(String(PROFILE_ITEMS_AFTER));
+    }
+  });
+
+  // R4 design re-judge: /work was 9,226px of bullets. Each entry shows its
+  // first two and folds the rest into one closed disclosure; every word stays
+  // on the page (and in find-in-page), one click away.
+  it('shows the first two bullets of each entry and folds the rest, word for word, into one closed disclosure', () => {
+    const rowsFor = (section: string) => [...page.querySelectorAll(`#${section} li.list-row`)];
+    const entries = [
+      ...rowsFor('research').map((row, i) => [row, RESEARCH[i].bullets] as const),
+      ...rowsFor('experience').map((row, i) => [row, EXPERIENCE[i].bullets] as const),
+    ];
+    expect(entries).toHaveLength(RESEARCH.length + EXPERIENCE.length);
+    for (const [row, bullets] of entries) {
+      const shown = [...row.querySelectorAll(':scope ul:not(details ul) > li')].map(text);
+      expect(shown).toEqual(bullets.slice(0, VISIBLE_BULLETS));
+      const folds = row.querySelectorAll('details');
+      if (bullets.length <= VISIBLE_BULLETS) {
+        expect(folds).toHaveLength(0);
+        continue;
+      }
+      expect(folds).toHaveLength(1);
+      const fold = folds[0] as HTMLDetailsElement;
+      expect(fold.open).toBe(false);
+      expect(text(fold.querySelector('summary')!)).toContain(`Show ${bullets.length - VISIBLE_BULLETS} more`);
+      expect([...fold.querySelectorAll('ul > li')].map(text)).toEqual(bullets.slice(VISIBLE_BULLETS));
     }
   });
 

@@ -83,6 +83,18 @@ describe('about page layout', () => {
     for (const p of paragraphs) expect(p.className.split(/\s+/), text(p).slice(0, 40)).toEqual(expect.arrayContaining(['text-copy-18', 'text-prose']));
   });
 
+  // R4 design re-judge: the page explained an architecture without a
+  // diagram. The lede's own sequence is drawn under it.
+  it('draws the decision path the lede describes, under the lede: router, debate when uncertain, signed provenance, and the RLAIF loop back', () => {
+    const column = page.querySelector('.profile-rail + div')!;
+    const figure = column.querySelector(':scope > figure.flow')!;
+    expect(figure).not.toBeNull();
+    expect(figure.previousElementSibling?.tagName).toBe('P');
+    expect([...figure.querySelectorAll('.flow-label')].map(text)).toEqual(['Action', 'Router', 'Debate', 'Provenance']);
+    expect(text(figure.querySelector('.flow-loop')!)).toContain('debate outcomes train the alignment encoder');
+    expect(text(figure.querySelector('figcaption')!)).not.toBe('');
+  });
+
   it('lists the repositories as hairline rows that reveal as they scroll in', () => {
     const rows = page.querySelectorAll('#ecosystem li[data-reveal] .list-row');
     expect(rows).toHaveLength(ECOSYSTEM.length);
