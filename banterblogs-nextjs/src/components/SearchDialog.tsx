@@ -6,6 +6,7 @@ import { BookOpen, FileText, Package, Search, X } from 'lucide-react';
 import type { SearchEntry, SearchEntryType, SiteSearch } from '@/lib/search';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
+import { rememberScrollAnchor } from '@/components/motion/scrollAnchor';
 
 const SEARCH_INDEX_URL = '/search.json';
 
@@ -124,6 +125,8 @@ export function SearchDialog() {
       setActiveIndex((i: number) => (i <= 0 ? options.length - 1 : i - 1));
     } else if (e.key === 'Enter' && activeIndex >= 0) {
       e.preventDefault();
+      // a script navigation keeps the page's place for Back itself
+      rememberScrollAnchor();
       router.push(options[activeIndex].href);
       close();
     }

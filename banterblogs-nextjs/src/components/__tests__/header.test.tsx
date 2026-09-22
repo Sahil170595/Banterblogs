@@ -16,6 +16,12 @@ vi.mock('../SearchDialog', () => ({
   SearchDialog: () => null,
 }));
 
+const { holdScrollAnchor, releaseScrollAnchor } = vi.hoisted(() => {
+  const releaseScrollAnchor = vi.fn();
+  return { releaseScrollAnchor, holdScrollAnchor: vi.fn(() => releaseScrollAnchor) };
+});
+vi.mock('@/components/motion/scrollAnchor', () => ({ holdScrollAnchor }));
+
 // CSS properties that make an element a backdrop root (Filter Effects 2), so a
 // backdrop-filter inside it blurs nothing behind it. Chrome includes an
 // element with a view-transition-name.
@@ -212,6 +218,32 @@ describe('header navigation state', () => {
 
   // re-judge P2-1: the site links sat in an unlabelled nav on desktop and in
   // no landmark at all in the phone menu
+  // R6: the open panel sits in the sticky bar's flow and pushes the page
+  // down by its height; Chromium's scroll anchoring made up for it, Firefox
+  // did not, and Back from a menu link returned TR142 539px off (phone).
+  // Back's place (motion/scrollAnchor.ts) is taken before the panel opens
+  // and held until it has gone.
+  it('keeps the reader’s place for Back from before the menu opens until it has gone', () => {
+    pathname.current = '/reports/technical-report-142';
+    holdScrollAnchor.mockClear();
+    releaseScrollAnchor.mockClear();
+    const { getByRole, container } = render(<Header />);
+    const toggle = getByRole('button', { name: 'Toggle navigation' });
+    holdScrollAnchor.mockImplementationOnce(() => {
+      // taken while the page is still where the reader left it
+      expect(container.querySelector('#mobile-nav')).toBeNull();
+      return releaseScrollAnchor;
+    });
+    fireEvent.click(toggle);
+    expect(holdScrollAnchor).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('#mobile-nav')).not.toBeNull();
+    expect(releaseScrollAnchor).not.toHaveBeenCalled();
+    // no motion armed: the panel goes at once
+    fireEvent.click(toggle);
+    expect(container.querySelector('#mobile-nav')).toBeNull();
+    expect(releaseScrollAnchor).toHaveBeenCalledTimes(1);
+  });
+
   it('puts the site links in a labelled primary navigation at every width', () => {
     const { getAllByRole, getByRole } = render(<Header />);
     expect(getAllByRole('navigation', { name: 'Primary' })).toHaveLength(1);

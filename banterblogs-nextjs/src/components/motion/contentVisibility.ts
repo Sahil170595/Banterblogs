@@ -11,6 +11,8 @@ export const CV_ATTRIBUTE = 'data-cv';
 export const CV_OFF = 'off';
 /** the elements whose children, or which themselves, skip rendering off screen */
 export const SKIPPING_CONTAINERS = '.report-prose, .archive-card-slot, .archive-section';
+/** the blocks that skip rendering off screen (reading.css, globals.css) */
+export const SKIPPED_BLOCKS = '.report-prose > p, .report-prose > pre, .report-prose > .table-scroll, .archive-card-slot, .archive-section';
 /** a focus scroll that has not started within this long is not coming */
 export const FOCUS_SCROLL_START_MS = 100;
 /** the longest a smooth focus scroll runs; also the fallback where scrollend is missing */

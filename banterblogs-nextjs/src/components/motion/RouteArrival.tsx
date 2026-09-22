@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { CV_ATTRIBUTE, CV_OFF } from './contentVisibility';
 import { HISTORY_RESTORE_WINDOW_MS } from './HistoryScrollGuard';
 import { onHistoryTraversal } from './historyTraversal';
+import { currentEntryKey, restoreScrollAnchor } from './scrollAnchor';
 
 /**
  * Settles how a new page arrives, in the commit that shows it. It sits
@@ -19,6 +20,9 @@ import { onHistoryTraversal } from './historyTraversal';
  *   still running from the last page ran on into this one. A #fragment only
  *   stops that scroll where it is; Back and Forward keep what the history
  *   restores (HistoryScrollGuard holds that restore instant).
+ * - Back and Forward then put the block that topped the view back where it
+ *   was (scrollAnchor.ts), a frame later: the browser restores the number
+ *   once the popstate that rendered this page returns.
  */
 export function RouteArrival() {
   const pathname = usePathname();
@@ -43,6 +47,8 @@ export function RouteArrival() {
     // the page a traversal reaches commits within the window its restore gets
     if (performance.now() - traversedAt.current < HISTORY_RESTORE_WINDOW_MS) {
       traversedAt.current = Number.NEGATIVE_INFINITY;
+      const entry = currentEntryKey();
+      requestAnimationFrame(() => restoreScrollAnchor(entry));
       return;
     }
     // an instant scroll also cancels a smooth one still in flight

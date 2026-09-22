@@ -5,7 +5,7 @@ import { cleanup, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import RootLayout from '@/app/layout';
-import { CV_ATTRIBUTE, CV_OFF, FOCUS_SCROLL_GIVE_UP_MS, FOCUS_SCROLL_START_MS, SKIPPING_CONTAINERS } from '../contentVisibility';
+import { CV_ATTRIBUTE, CV_OFF, FOCUS_SCROLL_GIVE_UP_MS, FOCUS_SCROLL_START_MS, SKIPPED_BLOCKS, SKIPPING_CONTAINERS } from '../contentVisibility';
 import { RouteArrival } from '../RouteArrival';
 import { MOTION_ATTRIBUTE, MOTION_GATE_SCRIPT } from '../prePaint';
 
@@ -65,6 +65,12 @@ describe('the stylesheets', () => {
 
   it('renders every skipped block once the page view turns skipping off', () => {
     expect(ruleBodies(GLOBALS_CSS, OFF_SELECTOR)).toMatch(/--cv:\s*visible/);
+  });
+
+  // Back renders the skipped blocks around its restore point (scrollAnchor.ts)
+  it('names every skipped block, so Back can render the ones around its restore point', () => {
+    const skipped = [...skippedSelectors(READING_CSS), ...skippedSelectors(GLOBALS_CSS)].map(([selector]) => selector.replace(/\s+/g, ' '));
+    expect(SKIPPED_BLOCKS.split(',').map((s) => s.trim()).sort()).toEqual([...new Set(skipped)].sort());
   });
 
   it('names every skipping container, so focus inside one is recognised', () => {
