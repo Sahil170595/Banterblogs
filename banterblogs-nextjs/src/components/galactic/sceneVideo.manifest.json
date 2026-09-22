@@ -1,0 +1,48 @@
+{
+  "fingerprint": "7c883f4dd059b814d0830d075016a98f5dcfdb60087fea2ffd68bda6699e1e9a",
+  "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "browser": "Chrome 153.0.8010.52",
+  "fps": 30,
+  "frames": 171,
+  "crossfadeFrames": 30,
+  "variants": [
+    {
+      "name": "phone",
+      "media": "(max-aspect-ratio: 5/8)",
+      "aspect": 0.625,
+      "width": 1080,
+      "height": 1728,
+      "sources": [
+        {
+          "src": "/landing/video/phone-1080x1728.393ea333.webm",
+          "type": "video/webm; codecs=\"av01.0.08M.10\"",
+          "bytes": 243218
+        },
+        {
+          "src": "/landing/video/phone-1080x1728.32fecda2.mp4",
+          "type": "video/mp4; codecs=\"avc1.640029\"",
+          "bytes": 393539
+        }
+      ]
+    },
+    {
+      "name": "tablet",
+      "media": "(max-aspect-ratio: 4/5)",
+      "aspect": 0.8,
+      "width": 1080,
+      "height": 1350,
+      "sources": [
+        {
+          "src": "/landing/video/tablet-1080x1350.ebe226f3.webm",
+          "type": "video/webm; codecs=\"av01.0.08M.10\"",
+          "bytes": 249825
+        },
+        {
+          "src": "/landing/video/tablet-1080x1350.dde16402.mp4",
+          "type": "video/mp4; codecs=\"avc1.640029\"",
+          "bytes": 371346
+        }
+      ]
+    }
+  ]
+}

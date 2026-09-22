@@ -7,6 +7,8 @@ import { NAV_RECEDE_ATTRIBUTE, NAV_RECEDE_RESET_MS, NAV_START_EVENT } from '@/co
 import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
 import { ScenePoster } from './ScenePoster';
 import { SCENE_CONTEXT_ATTRIBUTES } from './sceneOpening';
+import type { SceneVideoVariant } from './SceneVideo';
+import { ART_DIRECTION_QUERIES, allowsVideo, posterVariantFor, type VideoSignals } from './sceneVideoGate';
 import { SelectionCard } from './SelectionCard';
 import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
 import { SystemRail } from './SystemRail';
@@ -15,7 +17,8 @@ import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems'
 // Client island for the 3D scene. The scene chunk (three + fiber + drei)
 // loads only in capable, motion-permitted, fine-pointer browsers, and only
 // once the main thread is idle; everyone else gets the poster, a still of
-// the scene's opening frame (ScenePoster). The
+// the scene's opening frame (ScenePoster), and touch devices a loop of the
+// scene over it once the page has loaded (SceneVideo). The
 // accessible systems nav below renders in ALL modes — it is
 // the keyboard/screen-reader/no-WebGL path to the same selection cards the
 // canvas drives, and it puts the nine system names AND blurbs in the
@@ -24,6 +27,11 @@ import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems'
 
 // the poster stays underneath while the chunk loads, so nothing stands in
 const GalacticScene = dynamic(() => import('./GalacticScene'), {
+  ssr: false,
+  loading: () => null,
+});
+// the touch devices' loop (sceneVideoGate.ts); its chunk loads once it is armed
+const SceneVideo = dynamic(() => import('./SceneVideo'), {
   ssr: false,
   loading: () => null,
 });
@@ -83,7 +91,7 @@ export function prefersPoster(signals: SceneSignals): boolean {
   );
 }
 
-type NavigatorHints = Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+type NavigatorHints = Navigator & { deviceMemory?: number; connection?: { saveData?: boolean; effectiveType?: string } };
 
 // a GPU-backed context only: software WebGL refuses these attributes
 function hasWebGL(): boolean {
@@ -108,6 +116,19 @@ function shouldShowPoster(): boolean {
   // the WebGL probe creates a context; skip it when a cheap signal decides
   return prefersPoster(cheapSignals) || !hasWebGL();
 }
+
+function readVideoSignals(): VideoSignals {
+  const nav = navigator as NavigatorHints;
+  return {
+    reducedMotion: window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    coarsePointer: window.matchMedia(COARSE_POINTER_QUERY).matches,
+    saveData: nav.connection?.saveData,
+    effectiveType: nav.connection?.effectiveType,
+    hidden: document.visibilityState !== 'visible',
+  };
+}
+
+const currentPosterVariant = () => posterVariantFor((media) => window.matchMedia(media).matches);
 
 function whenIdle(callback: () => void): () => void {
   if (typeof window.requestIdleCallback === 'function') {
@@ -157,6 +178,11 @@ export function GalacticBackdrop() {
   const chipsRef = useRef<HTMLElement>(null);
   // a lost GPU context is not retried for the rest of the visit
   const contextLostRef = useRef(false);
+  // the touch devices' loop: armed after load and idle, framed like the poster
+  const [videoArmed, setVideoArmed] = useState(false);
+  const [videoVariant, setVideoVariant] = useState<SceneVideoVariant | null>(null);
+  // a loop that could not play is not retried for the rest of the visit
+  const videoUnavailableRef = useRef(false);
 
   useEffect(() => {
     // user intent wins: never advance the tour under an open card or a hover
@@ -251,6 +277,72 @@ export function GalacticBackdrop() {
   }, []);
 
   useEffect(() => {
+    // The loop costs nothing before the page has loaded: it is armed only
+    // after the load event and an idle period, for a visible page whose
+    // visitor allows motion and data (allowsVideo). Reduced motion takes it
+    // down again; the viewport's aspect picks its framing, as it picks the
+    // poster's.
+    if (mode !== 'poster') return;
+    const reducedMotion = window.matchMedia(REDUCED_MOTION_QUERY);
+    const artDirection = ART_DIRECTION_QUERIES.map((query) => window.matchMedia(query));
+    let armed = false;
+    let cancelIdle: (() => void) | undefined;
+    // the player's chunk carries the loop's manifest; this is where it loads
+    let pickVariant: ((posterVariant: string) => SceneVideoVariant | null) | undefined;
+    const arm = () => {
+      if (armed || cancelIdle || videoUnavailableRef.current || document.readyState !== 'complete') return;
+      if (!allowsVideo(readVideoSignals())) return;
+      cancelIdle = whenIdle(() => {
+        cancelIdle = undefined;
+        // hidden or reduced meanwhile: the next visibility or motion change re-arms
+        if (!allowsVideo(readVideoSignals())) return;
+        armed = true;
+        import('./SceneVideo').then(
+          ({ videoVariantFor }) => {
+            if (!armed) return;
+            pickVariant = videoVariantFor;
+            // a viewport whose poster has no loop (landscape) keeps the still
+            setVideoVariant(videoVariantFor(currentPosterVariant()));
+            setVideoArmed(true);
+          },
+          (error: unknown) => {
+            console.warn('[landing] the scene video could not load; keeping the poster', error);
+            videoUnavailableRef.current = true;
+          },
+        );
+      });
+    };
+    const onMotionChange = () => {
+      if (!reducedMotion.matches) return arm();
+      cancelIdle?.();
+      cancelIdle = undefined;
+      armed = false;
+      setVideoArmed(false);
+    };
+    const reframe = () => {
+      if (armed && pickVariant) setVideoVariant(pickVariant(currentPosterVariant()));
+    };
+    arm();
+    window.addEventListener('load', arm);
+    document.addEventListener('visibilitychange', arm);
+    reducedMotion.addEventListener('change', onMotionChange);
+    for (const query of artDirection) query.addEventListener('change', reframe);
+    return () => {
+      armed = false;
+      window.removeEventListener('load', arm);
+      document.removeEventListener('visibilitychange', arm);
+      reducedMotion.removeEventListener('change', onMotionChange);
+      for (const query of artDirection) query.removeEventListener('change', reframe);
+      cancelIdle?.();
+    };
+  }, [mode]);
+
+  const handleVideoUnavailable = useCallback(() => {
+    videoUnavailableRef.current = true;
+    setVideoArmed(false);
+  }, []);
+
+  useEffect(() => {
     const container = sceneRef.current;
     if (mode !== 'scene' || !container) return;
     const onContextLost = () => {
@@ -291,6 +383,7 @@ export function GalacticBackdrop() {
   };
 
   const isPoster = mode !== 'scene';
+  const video = mode === 'poster' && videoArmed ? videoVariant : null;
   const select = (event: MouseEvent<HTMLAnchorElement>, next: GalacticSelection) => {
     // plain click opens the card; modified/middle clicks keep native
     // link behavior so the hrefs stay real for users and crawlers
@@ -314,6 +407,9 @@ export function GalacticBackdrop() {
     <>
       {/* the server-rendered poster holds until the scene is live over it */}
       {(mode !== 'scene' || sceneStage !== 'live') && <ScenePoster />}
+      {video && (
+        <SceneVideo key={video.name} variant={video} paused={motionPaused} onUnavailable={handleVideoUnavailable} />
+      )}
       {mode === 'scene' && (
         <div
           ref={sceneRef}
@@ -335,9 +431,10 @@ export function GalacticBackdrop() {
         </div>
       )}
 
-      {mode === 'scene' && (
-        // WCAG 2.2.2: orbits, camera drift and the tour run indefinitely, so
-        // they need a stop control; it sits at the end of the bottom chrome row
+      {(mode === 'scene' || video) && (
+        // WCAG 2.2.2: orbits, camera drift and the tour (or the touch
+        // devices' loop) run indefinitely, so they need a stop control; it
+        // sits at the end of the bottom chrome row
         <button
           type="button"
           onClick={toggleMotion}
