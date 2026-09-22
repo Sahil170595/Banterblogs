@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import Link from 'next/link';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/cn';
 import { IntentLink } from './IntentLink';
@@ -75,6 +76,8 @@ export interface ButtonLinkProps extends ButtonStyle, Slots {
   href: string;
   className?: string;
   'aria-label'?: string;
+  /** inside the site: prefetch on intent (the default), or on sight with false */
+  intent?: boolean;
 }
 
 const isExternal = (href: string) => /^https?:\/\//.test(href);
@@ -83,7 +86,7 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
  * A Button that navigates: inside the site an IntentLink, which prefetches on
  * intent rather than on sight; outside it a plain link in a new tab.
  */
-export function ButtonLink({ href, variant, size, icon, iconEnd, className, children, ...rest }: ButtonLinkProps) {
+export function ButtonLink({ href, variant, size, icon, iconEnd, className, intent = true, children, ...rest }: ButtonLinkProps) {
   const content = (
     <Content icon={icon} iconEnd={iconEnd}>
       {children}
@@ -95,6 +98,13 @@ export function ButtonLink({ href, variant, size, icon, iconEnd, className, chil
       <a href={href} className={classes} target="_blank" rel="noopener noreferrer" {...rest}>
         {content}
       </a>
+    );
+  }
+  if (!intent) {
+    return (
+      <Link href={href} className={classes} {...rest}>
+        {content}
+      </Link>
     );
   }
   return (

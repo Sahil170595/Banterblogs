@@ -25,6 +25,8 @@ export const INTENT_DWELL_MS = 100;
 const SCROLL_LISTENER = { capture: true, passive: true } as const;
 
 const isMouse = (event: PointerEvent) => event.pointerType === 'mouse';
+// a link to the page it is on (the wordmark on the landing): nothing leaves
+const leadsHere = (link: HTMLAnchorElement) => link.pathname === window.location.pathname && link.search === window.location.search;
 
 /**
  * A link that prefetches its page on intent, not on sight: once the mouse has
@@ -135,9 +137,9 @@ export function IntentLink({
         onFocus?.(event);
       }}
       onNavigate={() => {
-        announceNavigation();
         const link = anchor.current;
-        if (link === null) return;
+        if (link === null || leadsHere(link)) return;
+        announceNavigation();
         comeBack();
         leaving.current = { undo: recedeAround(link), timer: window.setTimeout(comeBack, NAV_RECEDE_RESET_MS) };
         if (document.activeElement === link) link.blur();

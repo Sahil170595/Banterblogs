@@ -229,6 +229,26 @@ describe('intent link', () => {
     }
   });
 
+  // the wordmark on the landing leads to the landing: nothing leaves
+  it('neither recedes nor announces a link to the page it is on', () => {
+    const heard = vi.fn();
+    window.addEventListener(NAV_START_EVENT, heard);
+    try {
+      const { getByRole, getByText } = render(
+        <main>
+          <h1>Here</h1>
+          <IntentLink href={window.location.pathname}>This page</IntentLink>
+        </main>,
+      );
+      fireEvent.click(getByRole('link'));
+
+      expect(heard).not.toHaveBeenCalled();
+      expect(getByText('Here').hasAttribute(NAV_RECEDE_ATTRIBUTE)).toBe(false);
+    } finally {
+      window.removeEventListener(NAV_START_EVENT, heard);
+    }
+  });
+
   // Phase R4: removing the focused link made Chrome restyle the whole leaving
   // page inside the view transition's update (23-34ms on /reports, trace).
   // Focus goes to the document either way once the link's page is gone.
@@ -293,6 +313,16 @@ describe('button links', () => {
     expect(el.dataset.prefetch).toBe('auto');
   });
 
+  it('prefetch on sight only when asked, with intent={false}', () => {
+    const el = render(
+      <ButtonLink href="/reports" intent={false}>
+        Research
+      </ButtonLink>,
+    ).getByRole('link');
+
+    expect(el.dataset.prefetch).toBe('auto');
+  });
+
   it('open a page outside the site in a new tab, as a plain link with nothing to prefetch', () => {
     const el = render(<ButtonLink href="https://arxiv.org/abs/2605.27763">arXiv</ButtonLink>).getByRole('link');
 
@@ -319,7 +349,6 @@ describe('list and card links prefetch on intent', () => {
     'components/ui/OnwardLinks.tsx',
     // R5: the links in view as a page loads, and the ones a reader reaches
     // at the end of a page (breadcrumbs, back links, pagers, tag cells)
-    'components/ui/Button.tsx',
     'components/galactic/GalacticHero.tsx',
     'app/reports/[id]/page.tsx',
     'app/reports/compendium/page.tsx',
@@ -349,5 +378,6 @@ describe('list and card links prefetch on intent', () => {
     const source = fs.readFileSync(path.join(SRC, file), 'utf8');
     expect(source).not.toMatch(/<Link\b/);
     expect(source).not.toMatch(/from ['"]next\/link['"]/);
+    expect(source).not.toMatch(/\bintent=\{false\}/);
   });
 });
