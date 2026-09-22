@@ -203,6 +203,31 @@ describe('the pre-paint gate, once the page is up', () => {
     expect(layoutReads).toBe(0);
   });
 
+  // With skipping still off when the next page rendered, the report-open
+  // transition laid out all of TR138 (72ms of forced layout, was 33ms,
+  // keyboard path, local build): skipping goes back on at the click that
+  // leaves the page, before the router renders the next one.
+  it('turns skipping back on at a click to another page, before the next page renders', () => {
+    const { container } = mount();
+    const stop = (event: Event) => event.preventDefault();
+    html.setAttribute(CV_ATTRIBUTE, CV_OFF);
+    const away = container.querySelector<HTMLAnchorElement>('a[href="/reports"]')!;
+    away.addEventListener('click', stop);
+    away.click();
+    expect(html.hasAttribute(CV_ATTRIBUTE)).toBe(false);
+
+    // a new tab, a modified click or another page's #fragment leave this page as it is
+    for (const selector of ['a[target="_blank"]', 'a[href="/reports/technical-report-138#references"]']) {
+      html.setAttribute(CV_ATTRIBUTE, CV_OFF);
+      const link = container.querySelector<HTMLAnchorElement>(selector)!;
+      link.addEventListener('click', stop);
+      link.click();
+      expect(html.getAttribute(CV_ATTRIBUTE), selector).toBe(CV_OFF);
+    }
+    away.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+    expect(html.getAttribute(CV_ATTRIBUTE)).toBe(CV_OFF);
+  });
+
   // what the browser's :focus-visible heuristic decides for this focus: true
   // after a key or a script, false after a pointer press
   const focusAs = (el: HTMLElement, focusVisible: boolean) => {

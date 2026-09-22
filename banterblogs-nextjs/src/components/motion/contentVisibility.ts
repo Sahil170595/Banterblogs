@@ -26,7 +26,12 @@ export const SKIPPING_CONTAINERS = '.report-prose, .archive-card-slot, .archive-
  *   estimate, so the element is scrolled to again once laid out. A pointer
  *   press brings the element under the pointer, so it needs nothing.
  * The forced layout makes the positions exact before the scroll runs.
- * RouteArrival turns skipping back on for the next page.
+ *
+ * Skipping goes back on at a plain click on a link to another page of the
+ * site (not to its #fragment), before the router renders that page: left
+ * off, the report-open transition laid all of the next report out. The
+ * remembered block sizes (contain-intrinsic-size: auto) keep this page
+ * where it is. RouteArrival does the same for navigations without a click.
  */
 export const CONTENT_VISIBILITY_PREPAINT =
   `var cvOff=function(){if(d.getAttribute("${CV_ATTRIBUTE}")==="${CV_OFF}")return false;` +
@@ -36,8 +41,9 @@ export const CONTENT_VISIBILITY_PREPAINT =
   'document.addEventListener("click",function(e){' +
   'if(e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||!(e.target instanceof Element))return;' +
   'var a=e.target.closest("a[href]");if(!a||(a.target&&a.target!=="_self"))return;' +
-  'var u=new URL(a.href,location.href);' +
-  'if(u.hash&&u.origin===location.origin&&u.pathname===location.pathname&&u.search===location.search)cvOff()},true);' +
+  'var u=new URL(a.href,location.href);if(u.origin!==location.origin)return;' +
+  'if(u.pathname===location.pathname&&u.search===location.search){if(u.hash)cvOff();return}' +
+  `if(!u.hash)d.removeAttribute("${CV_ATTRIBUTE}")},true);` +
   'document.addEventListener("focusin",function(e){var t=e.target;' +
   `if(t instanceof Element&&t.closest("${SKIPPING_CONTAINERS}")&&t.matches(":focus-visible")&&cvOff())` +
   't.scrollIntoView({block:"nearest",inline:"nearest"})},true);';
