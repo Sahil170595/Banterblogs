@@ -1738,3 +1738,27 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end report page */
+
+/* R3-B1 */
+/* The warmed header glass (components/headerGlass.ts): once the page has
+   settled, the glass rests at a floor too faint to see instead of 0, so a
+   cold GPU compiles its blur then rather than on the first scrolled frame.
+   Only the keyframes change; the scroll timeline and range carry over. */
+:root {
+  --header-glass-floor: 0.01;
+}
+
+@keyframes header-surface-warm {
+  from {
+    opacity: var(--header-glass-floor);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header[data-glass="warm"]::before {
+      animation-name: header-surface-warm;
+    }
+  }
+}
+/* end R3-B1 */
