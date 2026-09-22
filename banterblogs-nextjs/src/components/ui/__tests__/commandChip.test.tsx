@@ -20,9 +20,14 @@ describe('CommandChip', () => {
     expect(classesIn(markup)).toContain('relative');
   });
 
-  it('scrolls a long command inside itself rather than widening the page', () => {
+  it('scrolls a long command inside itself rather than widening the page, with the prompt and the copy button held in view', () => {
     const markup = renderToStaticMarkup(<CommandChip command={'uvx chimeraforge plan --model-size 8b --hardware "RTX 4090 24GB"'} label="quickstart" />);
-    expect(classesIn(markup)).toEqual(expect.arrayContaining(['max-w-full', 'overflow-x-auto']));
-    expect(markup).toMatch(/<code class="[^"]*whitespace-nowrap/);
+    const chip = /^<div class="([^"]*)"/.exec(markup)![1].split(/\s+/);
+    expect(chip).toContain('max-w-full');
+    expect(chip).not.toContain('overflow-x-auto');
+    const code = /<code class="([^"]*)"/.exec(markup)![1].split(/\s+/);
+    expect(code).toEqual(expect.arrayContaining(['min-w-0', 'overflow-x-auto', 'whitespace-nowrap']));
+    // the copy button is the chip's own child, outside the scroller
+    expect(markup).toMatch(/<\/code><button/);
   });
 });
