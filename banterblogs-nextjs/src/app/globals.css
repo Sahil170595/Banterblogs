@@ -277,17 +277,22 @@ html {
 }
 
 /* Scene arrival (GalacticBackdrop.tsx), after Vercel's home: the canvas
-   layer stays hidden over the poster until the scene is drawing steadily,
-   then fades in over it on strong-out, and the poster leaves once the fade
-   ends.
+   layer stays all but invisible over the poster until the scene is drawing
+   steadily, then fades in over it on strong-out, and the poster leaves once
+   the fade ends.
    The fade runs only while motion is armed; otherwise the canvas swaps in at
    once. */
 :root {
   --duration-scene-crossfade: 1200ms;
+  /* not 0: at opacity 0 Chrome leaves the canvas out of the frame, and its
+     first composite then stalled the page for the whole fade (1.2-1.5 s,
+     measured); at 1% it is composited from its first frame, and 1% of the
+     scene over the poster cannot be seen */
+  --scene-loading-opacity: 0.01;
 }
 
 [data-scene-stage="loading"] {
-  opacity: 0;
+  opacity: var(--scene-loading-opacity);
 }
 
 html[data-motion="on"] [data-scene-stage="loading"] {

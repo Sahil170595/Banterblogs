@@ -35,6 +35,8 @@ const SCENE_MAX_WAIT_MS = 2500;
 // the crossfade's bounds from the phase R3 spec (B15: 1,200 ms)
 const CROSSFADE_MIN_MS = 1100;
 const CROSSFADE_MAX_MS = 1300;
+// 2% of the scene over the poster moves the disk band by ~4 of 255 levels
+const LOADING_OPACITY_MAX = 0.02;
 const GLOBALS_CSS = path.join(process.cwd(), 'src', 'app', 'globals.css');
 
 function installMatchMedia() {
@@ -233,10 +235,15 @@ describe('landing scene arrival styles', () => {
     expect(SCENE_CROSSFADE_FALLBACK_MS).toBeGreaterThan(crossfadeMs);
   });
 
-  it('hides the canvas while it loads', () => {
+  it('keeps the loading canvas drawn, but too faint to see over the poster', () => {
+    // at opacity 0 Chrome drops the canvas from the frame, and its first
+    // composite then stalled the page for the whole fade
     const loading = rules.filter((rule) => rule.selector === '[data-scene-stage="loading"]');
     expect(loading).toHaveLength(1);
-    expect(loading[0].declarations).toMatch(/opacity:\s*0;/);
+    expect(loading[0].declarations).toMatch(/opacity:\s*var\(--scene-loading-opacity\);/);
+    const floor = Number(/--scene-loading-opacity:\s*([\d.]+);/.exec(css)?.[1]);
+    expect(floor).toBeGreaterThan(0);
+    expect(floor).toBeLessThanOrEqual(LOADING_OPACITY_MAX);
   });
 
   it('fades on the token and strong-out, only while motion is armed', () => {

@@ -69,10 +69,10 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const COARSE_POINTER_QUERY = '(pointer: coarse)';
 // remembers "Pause motion" across visits; the value is 'paused' or absent
 export const MOTION_STORAGE_KEY = 'chimeraforge:landing-motion';
-// Scene arrival: the canvas layer stays hidden over the poster until the
-// scene is drawing steadily (sceneOpening.ts), fades in over it while motion
-// is armed (--duration-scene-crossfade in globals.css), then goes live
-// without it.
+// Scene arrival: the canvas layer stays all but invisible over the poster
+// until the scene is drawing steadily (sceneOpening.ts), fades in over it
+// while motion is armed (--duration-scene-crossfade in globals.css), then
+// goes live without it.
 type SceneStage = 'loading' | 'fading' | 'live';
 // longest the poster waits under the fade for its transitionend; outlasts
 // the crossfade token (pinned by sceneArrival.test.tsx)
