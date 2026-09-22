@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { GalacticBackdrop } from './GalacticBackdrop';
 
@@ -37,19 +37,21 @@ export function GalacticHero() {
           {/* py-4 grows each link to a >=44px-tall target; the matching -my-4
               keeps the row exactly where it was */}
           <div className="pointer-events-auto mt-4 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-[11px]">
-            <Link
+            {/* the main call to action stays warm, once the landing has painted */}
+            <IntentLink
               href="/reports"
+              warm
               className="-my-4 inline-flex items-center gap-1 py-4 text-primary transition-colors hover:text-primary/80"
             >
               Research archive
               <ArrowRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
-            <Link
+            </IntentLink>
+            <IntentLink
               href="/papers"
               className="-my-4 py-4 text-foreground/90 transition-colors hover:text-primary"
             >
               Papers
-            </Link>
+            </IntentLink>
           </div>
         </div>
 

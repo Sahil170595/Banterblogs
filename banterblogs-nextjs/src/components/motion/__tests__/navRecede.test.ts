@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { NAV_RECEDE_ATTRIBUTE, recedeAround } from '../navRecede';
+import { NAV_RECEDE_ATTRIBUTE, NAV_RECEDE_SCOPE_ATTRIBUTE, recedeAround } from '../navRecede';
 
 // Phase R4 (re-judge 3, P0-1): the next page cannot be drawn before it is
 // rendered, so the page a followed link leaves answers at once. Everything
@@ -53,6 +53,26 @@ describe('the page a followed link leaves', () => {
     undo();
 
     expect(receded()).toEqual([]);
+  });
+
+  // Phase R5 (design re-judge P1-C): the landing's copy answers its click,
+  // but the scene behind it stays lit for the push into the next page; its
+  // copy layer bounds the recede.
+  it('stops at the nearest recede scope inside the page', () => {
+    document.body.innerHTML = `
+      <main id="main">
+        <section id="hero">
+          <div id="scrim"></div>
+          <div id="hud" ${NAV_RECEDE_SCOPE_ATTRIBUTE}>
+            <div id="copy"><h1 id="title">Nine systems</h1><p id="row"><a id="cta" href="/reports">Research</a><a id="papers" href="/papers">Papers</a></p></div>
+            <p id="caption">Orbits</p>
+          </div>
+          <div id="scene"></div>
+        </section>
+      </main>`;
+    recedeAround(document.getElementById('cta')!);
+
+    expect(receded().sort()).toEqual(['caption', 'papers', 'title'].sort());
   });
 
   it('touches nothing for a link outside the page', () => {

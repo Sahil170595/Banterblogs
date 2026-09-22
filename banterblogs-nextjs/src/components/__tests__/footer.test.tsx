@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Footer } from '../Footer';
 
@@ -66,6 +66,18 @@ describe('site footer', () => {
       expect(links.length, href).toBeGreaterThan(0);
       for (const link of links) expect(link.dataset.prefetch, href).toBe('off');
     }
-    expect(footerLinks(container, '/reports')[0].dataset.prefetch).toBe('default');
+  });
+
+  // Phase R5 (final perf re-judge, P1-B): reaching the bottom of a page
+  // prefetched all ten of the footer's pages on sight
+  it('prefetches its pages on intent, not as a reader reaches the bottom', () => {
+    const { container } = render(<Footer />);
+
+    for (const href of ['/platform', '/reports', '/episodes', '/tools/chimeraforge']) {
+      const [link] = footerLinks(container, href);
+      expect(link.dataset.prefetch, href).toBe('off');
+      fireEvent.focus(link);
+      expect(link.dataset.prefetch, href).toBe('default');
+    }
   });
 });

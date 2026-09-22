@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
@@ -49,9 +49,9 @@ export default async function EpisodesPage() {
           <p className="max-w-[60ch] text-copy-14 text-muted-foreground">
             Archived 2026-06-26. These episodes were generated from git commits by a multi-persona pipeline between September 2025 and
             June 2026. The pipeline is retired; the research program continues at{' '}
-            <Link href="/reports" className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary">
+            <IntentLink href="/reports" className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary">
               /reports
-            </Link>
+            </IntentLink>
             .
           </p>
         }

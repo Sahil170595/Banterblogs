@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 import { CognitiveAgents } from '@/components/scenes/CognitiveAgents';
@@ -108,13 +108,13 @@ export default function CognitiveAgentsPage() {
       </a>
 
       <div className="mb-8 flex items-center justify-between gap-4">
-        <Link
+        <IntentLink
           href="/show"
           className="inline-flex items-center gap-2 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           back to show
-        </Link>
+        </IntentLink>
         <span className="signal-pill">Scene · 02</span>
       </div>
 

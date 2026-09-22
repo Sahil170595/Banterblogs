@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getAllEpisodes, toEpisodeSummary, extractHtmlHeadings, computeContentStats } from '@/lib/episodes';
 import { EpisodeNavigation } from '@/components/EpisodeNavigation';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { EpisodeStats } from '@/components/EpisodeStats';
 import { ArticleEnhancements } from '@/components/ContentEnhancer';
 import { ContentStats } from '@/components/ContentStats';
@@ -144,11 +144,11 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
               <nav aria-label="Breadcrumb">
                 <ol className="report-crumbs">
                   <li>
-                    <Link href="/episodes">Episode archive</Link>
+                    <IntentLink href="/episodes">Episode archive</IntentLink>
                   </li>
                   {platformArchive && (
                     <li>
-                      <Link href={platformArchive}>{platformLabel} episodes</Link>
+                      <IntentLink href={platformArchive}>{platformLabel} episodes</IntentLink>
                     </li>
                   )}
                 </ol>

@@ -1,6 +1,5 @@
 import '@/app/reading.css';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { ReportDetails, ReportHero, ReportMeta } from '@/components/reports/ReportHead';
@@ -9,6 +8,7 @@ import { ReportProgress } from '@/components/reports/ReportProgress';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
 import { ReportEnd } from '@/components/reports/reportEnd';
 import { NAV_BACK, NAV_FORWARD } from '@/components/reports/ReportTransitions';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { reportIdentity } from '@/components/reports/reportIdentity';
 import { computeContentStats } from '@/lib/episodes';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
@@ -100,15 +100,15 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           <nav aria-label="Breadcrumb">
             <ol className="report-crumbs">
               <li>
-                <Link href="/reports" transitionTypes={[NAV_BACK]}>
+                <IntentLink href="/reports" transitionTypes={[NAV_BACK]}>
                   Research archive
-                </Link>
+                </IntentLink>
               </li>
               {phase && (
                 <li>
-                  <Link href={`/reports?phase=${phase.key}`} transitionTypes={[NAV_BACK]}>
+                  <IntentLink href={`/reports?phase=${phase.key}`} transitionTypes={[NAV_BACK]}>
                     Phase {phase.number} · {phase.name}
-                  </Link>
+                  </IntentLink>
                 </li>
               )}
             </ol>
@@ -137,7 +137,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
         {(prevSlug || nextSlug) && (
           <nav className="report-pager mt-20 grid gap-4 border-t border-border/40 pt-8 sm:grid-cols-2" aria-label="Report navigation">
             {prevSlug ? (
-              <Link
+              <IntentLink
                 href={`/reports/${prevSlug}`}
                 transitionTypes={[NAV_BACK]}
                 className="block rounded-xl p-5 transition-colors duration-fast ease-standard hover:bg-card/70"
@@ -147,12 +147,12 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
                   Previous
                 </div>
                 <div className="report-pager-title line-clamp-1">{prevMeta?.title ?? toHumanTitle(prevSlug)}</div>
-              </Link>
+              </IntentLink>
             ) : (
               <div />
             )}
             {nextSlug && (
-              <Link
+              <IntentLink
                 href={`/reports/${nextSlug}`}
                 transitionTypes={[NAV_FORWARD]}
                 className="block rounded-xl p-5 text-right transition-colors duration-fast ease-standard hover:bg-card/70"
@@ -162,7 +162,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
                   <ArrowRight aria-hidden="true" className="h-3 w-3" />
                 </div>
                 <div className="report-pager-title line-clamp-1">{nextMeta?.title ?? toHumanTitle(nextSlug)}</div>
-              </Link>
+              </IntentLink>
             )}
           </nav>
         )}

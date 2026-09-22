@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { BookOpen, Github, Linkedin, Package, Rss, Twitter } from 'lucide-react';
 import { ReaderSettingsLauncher } from './AccessibilityPanelClient';
 import { Eyebrow } from './ui/Eyebrow';
+import { IntentLink } from './ui/IntentLink';
 import { Wordmark } from './ui/Wordmark';
 
 const FOOTER_LINKS = {
@@ -30,6 +31,8 @@ const FOOTER_LINKS = {
 
 // The feed and sitemap are route handlers, not pages: nothing to prefetch.
 const ROUTE_HANDLER_HREFS = new Set<string>(['/rss.xml', '/sitemap.xml']);
+const isPage = (href: string) => href.startsWith('/') && !ROUTE_HANDLER_HREFS.has(href);
+const FOOTER_LINK_CLASS = 'transition-colors duration-fast ease-standard hover:text-primary';
 // p-2 grows the 20px icon's hit area to 36px; -m-2 keeps the row where it was
 const ICON_LINK_CLASS = '-m-2 p-2 transition-colors duration-fast ease-standard hover:text-primary';
 
@@ -106,15 +109,22 @@ export function Footer() {
               <ul className="space-y-2 text-copy-14 text-muted-foreground">
                 {links.map((link) => (
                   <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      prefetch={ROUTE_HANDLER_HREFS.has(link.href) ? false : undefined}
-                      className="transition-colors duration-fast ease-standard hover:text-primary"
-                      target={link.href.startsWith('http') ? '_blank' : undefined}
-                      rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    >
-                      {link.label}
-                    </Link>
+                    {isPage(link.href) ? (
+                      // reaching the bottom of a page is not intent to leave it
+                      <IntentLink href={link.href} className={FOOTER_LINK_CLASS}>
+                        {link.label}
+                      </IntentLink>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        prefetch={false}
+                        className={FOOTER_LINK_CLASS}
+                        target={link.href.startsWith('http') ? '_blank' : undefined}
+                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
