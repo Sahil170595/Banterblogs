@@ -27,7 +27,6 @@ const HALO_FRAG = /* glsl */ `
   varying vec2 vPos;
   uniform float uTime;
   uniform float uShadow;   // shadow radius (photon-sphere silhouette)
-  uniform float uIgnite;
 
   ${NOISE_GLSL}
   ${EMBER_RAMP_GLSL}
@@ -75,7 +74,7 @@ const HALO_FRAG = /* glsl */ `
     // nothing renders inside the shadow — silhouette stays pure black;
     // mask applies to the arcs, the ring carries its own cutoff above
     float mask = smoothstep(uShadow * 1.0, uShadow * 1.09, r);
-    float alpha = clamp((glow * 0.9 * mask + ring), 0.0, 1.0) * uIgnite;
+    float alpha = clamp((glow * 0.9 * mask + ring), 0.0, 1.0);
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -96,16 +95,14 @@ export function GargantuaHalo({ shadowRadius }: GargantuaHaloProps) {
       uTime: { value: 0 },
       uShadow: { value: shadowRadius },
       uScale: { value: scale },
-      uIgnite: { value: 0 },
     }),
     [shadowRadius, scale],
   );
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock }) => {
     const mat = materialRef.current;
     if (!mat) return;
     mat.uniforms.uTime.value = clock.elapsedTime;
-    mat.uniforms.uIgnite.value = THREE.MathUtils.damp(mat.uniforms.uIgnite.value, 1, 1.4, delta);
   });
 
   return (

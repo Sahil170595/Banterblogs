@@ -10,17 +10,19 @@ import { STAR_SYSTEMS } from '../systems';
 // The scene's arrival (Vercel home's poster -> live canvas crossfade): the
 // poster holds until the scene is drawing steadily (sceneOpening.test.ts
 // covers when that is), the canvas fades in over it, and the poster leaves
-// once the fade has ended. The real scene is WebGL; this stand-in keeps the
-// props it was last rendered with.
+// once the fade has ended. The poster is a still of the scene's opening
+// frame, so the scene holds that frame until the crossfade starts. The real
+// scene is WebGL; this stand-in keeps the props it was last rendered with.
 interface SceneProps {
   paused: boolean;
+  awake: boolean;
   onReady: () => void;
 }
 const lastScene = vi.hoisted(() => ({ props: null as SceneProps | null }));
 vi.mock('../GalacticScene', () => ({
   default: (props: SceneProps) => {
     lastScene.props = props;
-    return <div data-testid="scene" data-paused={String(props.paused)} />;
+    return <div data-testid="scene" data-paused={String(props.paused)} data-awake={String(props.awake)} />;
   },
 }));
 
@@ -69,6 +71,7 @@ const advance = (ms: number) =>
 
 const poster = () => document.querySelector('[data-scene-poster]');
 const layer = () => document.querySelector<HTMLElement>('[data-scene-stage]');
+const scene = () => screen.getByTestId('scene');
 const sceneReady = () => act(() => lastScene.props?.onReady());
 const trackedSystem = () =>
   screen
@@ -141,6 +144,22 @@ describe('landing scene arrival', () => {
     expect(poster()).not.toBeNull();
   });
 
+  it('holds the scene on the poster frame until the crossfade starts, then wakes it', async () => {
+    render(<GalacticBackdrop />);
+    await advance(SCENE_MAX_WAIT_MS);
+    expect(scene().dataset.awake).toBe('false');
+    await advance(SCENE_CROSSFADE_FALLBACK_MS * 2);
+    expect(scene().dataset.awake).toBe('false');
+
+    await sceneReady();
+    expect(layer()?.dataset.sceneStage).toBe('fading');
+    expect(scene().dataset.awake).toBe('true');
+
+    fireEvent.transitionEnd(layer()!, { propertyName: 'opacity' });
+    expect(layer()?.dataset.sceneStage).toBe('live');
+    expect(scene().dataset.awake).toBe('true');
+  });
+
   it('fades the canvas in over the poster, which leaves only once the fade has ended', async () => {
     render(<GalacticBackdrop />);
     await advance(SCENE_MAX_WAIT_MS);
@@ -172,9 +191,11 @@ describe('landing scene arrival', () => {
     document.documentElement.removeAttribute('data-motion');
     render(<GalacticBackdrop />);
     await advance(SCENE_MAX_WAIT_MS);
+    expect(scene().dataset.awake).toBe('false');
     await sceneReady();
     expect(layer()?.dataset.sceneStage).toBe('live');
     expect(poster()).toBeNull();
+    expect(scene().dataset.awake).toBe('true');
   });
 
   it('crossfades again when the scene returns after a reduced-motion spell', async () => {
@@ -192,6 +213,8 @@ describe('landing scene arrival', () => {
     await advance(SCENE_MAX_WAIT_MS);
     expect(layer()?.dataset.sceneStage).toBe('loading');
     expect(poster()).not.toBeNull();
+    // a fresh scene opens on the poster frame again
+    expect(scene().dataset.awake).toBe('false');
   });
 
   it('pauses the render loop and the tour while the canvas is offscreen, and resumes on return', async () => {

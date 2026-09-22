@@ -312,6 +312,8 @@ export function GalacticBackdrop() {
             onReady={handleSceneReady}
             // an open card covers the scene, so it stops rendering behind it
             paused={motionPaused || selection !== null || offscreen}
+            // holds the poster's frame under the poster; wakes as it fades
+            awake={sceneStage !== 'loading'}
           />
         </div>
       )}
