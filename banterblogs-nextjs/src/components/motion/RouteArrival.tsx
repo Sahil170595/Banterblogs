@@ -3,13 +3,8 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { CV_ATTRIBUTE, CV_OFF } from './contentVisibility';
-
-// How long after a Back/Forward the page it reaches may take to commit; the
-// router renders the page it goes back to within a few hundred ms locally
-const TRAVERSAL_COMMIT_WINDOW_MS = 1500;
-
-// The Navigation API's navigate event, where the browser has it (Chromium).
-type NavigateEvent = Event & { navigationType?: string };
+import { HISTORY_RESTORE_WINDOW_MS } from './HistoryScrollGuard';
+import { onHistoryTraversal } from './historyTraversal';
 
 /**
  * Settles how a new page arrives, in the commit that shows it. It sits
@@ -23,32 +18,20 @@ type NavigateEvent = Event & { navigationType?: string };
  *   when the new page's top is already in view, so a smooth focus scroll
  *   still running from the last page ran on into this one. A #fragment only
  *   stops that scroll where it is; Back and Forward keep what the history
- *   restores.
+ *   restores (HistoryScrollGuard holds that restore instant).
  */
 export function RouteArrival() {
   const pathname = usePathname();
   const shownPath = useRef(pathname);
   const traversedAt = useRef(Number.NEGATIVE_INFINITY);
 
-  useEffect(() => {
-    const traversed = () => {
-      traversedAt.current = performance.now();
-    };
-    const navigation = (window as Window & { navigation?: EventTarget }).navigation;
-    const onNavigate = (event: Event) => {
-      if ((event as NavigateEvent).navigationType === 'traverse') traversed();
-    };
-    // without the Navigation API: a router history entry carries state, an #anchor's has none
-    const onPopState = (event: PopStateEvent) => {
-      if (event.state != null) traversed();
-    };
-    if (navigation) navigation.addEventListener('navigate', onNavigate);
-    else window.addEventListener('popstate', onPopState);
-    return () => {
-      if (navigation) navigation.removeEventListener('navigate', onNavigate);
-      else window.removeEventListener('popstate', onPopState);
-    };
-  }, []);
+  useEffect(
+    () =>
+      onHistoryTraversal(() => {
+        traversedAt.current = performance.now();
+      }),
+    [],
+  );
 
   useLayoutEffect(() => {
     if (shownPath.current === pathname) return;
@@ -57,7 +40,8 @@ export function RouteArrival() {
     if (location.hash) root.setAttribute(CV_ATTRIBUTE, CV_OFF);
     else root.removeAttribute(CV_ATTRIBUTE);
 
-    if (performance.now() - traversedAt.current < TRAVERSAL_COMMIT_WINDOW_MS) {
+    // the page a traversal reaches commits within the window its restore gets
+    if (performance.now() - traversedAt.current < HISTORY_RESTORE_WINDOW_MS) {
       traversedAt.current = Number.NEGATIVE_INFINITY;
       return;
     }
