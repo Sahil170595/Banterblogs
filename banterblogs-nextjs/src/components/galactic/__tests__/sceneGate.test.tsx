@@ -222,25 +222,35 @@ describe('landing scene lifecycle and motion control', () => {
     expect(scene()?.dataset.paused).toBe('false');
   });
 
-  // Phase R5 (design re-judge P1-C): the scene kept rendering at 15-25 fps
-  // while the next page rendered, and the landing answered its main click
-  // 140-297 ms late. A navigation away stands it still and recedes its rail;
-  // a navigation that never replaces the page gives both back.
-  it('stands the scene still and recedes its rail while a navigation away renders', async () => {
+  // Phase R5 (design re-judge P1-C): the landing answered its main click
+  // 140-297 ms late while the scene kept rendering. A navigation away recedes
+  // the rail and the pause control and holds the tour (the scene holds its
+  // own frame: navigationHold.test.tsx), all without a React render, which
+  // would lengthen the click's task; one that never replaces the page gives
+  // them back.
+  it('recedes the rail and holds the tour while a navigation away renders, without rendering', async () => {
     render(<GalacticBackdrop />);
     await advance(SCENE_MAX_WAIT_MS);
+    await advance(TICKER_START_DELAY_MS);
     const rail = screen.getByRole('navigation', { name: 'Systems orbiting the Chimera core' });
-    expect(scene()?.dataset.paused).toBe('false');
+    const pause = screen.getByRole('button', { name: 'Pause motion' });
+    // the next tour step falls inside the navigation
+    await advance(TICKER_INTERVAL_MS - NAV_RECEDE_RESET_MS / 2);
+    const before = trackedSystem();
 
     act(() => {
       window.dispatchEvent(new Event(NAV_START_EVENT));
     });
-    expect(scene()?.dataset.paused).toBe('true');
     expect(rail.closest(`[${NAV_RECEDE_ATTRIBUTE}]`)).not.toBeNull();
+    expect(pause.hasAttribute(NAV_RECEDE_ATTRIBUTE)).toBe(true);
+    // the scene's props are untouched: no render reaches the canvas
+    expect(scene()?.dataset.paused).toBe('false');
+    await advance(NAV_RECEDE_RESET_MS * 0.75);
+    expect(trackedSystem()).toBe(before);
 
     await advance(NAV_RECEDE_RESET_MS);
-    expect(scene()?.dataset.paused).toBe('false');
     expect(rail.closest(`[${NAV_RECEDE_ATTRIBUTE}]`)).toBeNull();
+    expect(pause.hasAttribute(NAV_RECEDE_ATTRIBUTE)).toBe(false);
   });
 
   it('falls back to the poster when reduced motion turns on', async () => {

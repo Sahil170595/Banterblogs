@@ -61,8 +61,6 @@ type SceneStage = 'loading' | 'fading' | 'live';
 // longest the poster waits under the fade for its transitionend; outlasts
 // the crossfade token (pinned by sceneArrival.test.tsx)
 export const SCENE_CROSSFADE_FALLBACK_MS = 2000;
-// the chrome's share of the page's recede (globals.css) while a navigation renders
-const RECEDED = { [NAV_RECEDE_ATTRIBUTE]: '' };
 
 export interface SceneSignals {
   reducedMotion: boolean;
@@ -148,11 +146,15 @@ export function GalacticBackdrop() {
   const [hoveredName, setHoveredName] = useState<string | null>(null);
   const [selectionOpener, setSelectionOpener] = useState<HTMLElement | null>(null);
   const [motionPaused, setMotionPaused] = useState(false);
-  // a navigation away is rendering the next page
-  const [leaving, setLeaving] = useState(false);
   // latest-value ref so the interval callback sees pause state without resubscribing
   const tickerPausedRef = useRef(false);
+  // a navigation away is rendering the next page; a ref, so the click's task renders nothing
+  const leavingRef = useRef(false);
   const sceneRef = useRef<HTMLDivElement>(null);
+  // the chrome that recedes with the copy when a navigation leaves
+  const railRef = useRef<HTMLDivElement>(null);
+  const pauseRef = useRef<HTMLButtonElement>(null);
+  const chipsRef = useRef<HTMLElement>(null);
   // a lost GPU context is not retried for the rest of the visit
   const contextLostRef = useRef(false);
 
@@ -171,23 +173,31 @@ export function GalacticBackdrop() {
   useEffect(() => {
     // "Pause motion" holds the tour on its current system too, and so do a
     // canvas nobody can see and a page on its way out
-    if (mode !== 'scene' || !tourStarted || motionPaused || offscreen || leaving) return;
+    if (mode !== 'scene' || !tourStarted || motionPaused || offscreen) return;
     const interval = setInterval(() => {
-      if (tickerPausedRef.current) return;
+      if (tickerPausedRef.current || leavingRef.current) return;
       setFeaturedIndex((index) => (index + 1) % STAR_SYSTEMS.length);
     }, TICKER_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [mode, tourStarted, motionPaused, offscreen, leaving]);
+  }, [mode, tourStarted, motionPaused, offscreen]);
 
   useEffect(() => {
-    // A navigation away: the scene stands still, freeing the main thread and
-    // the GPU for the next page, and the chrome recedes with the copy. One
-    // that never replaces the page gives both back.
+    // A navigation away: the chrome recedes with the copy and the tour holds
+    // (the scene holds its own frame: NavigationHold), all without a render,
+    // which would lengthen the click's task. One that never replaces the page
+    // gives them back.
     let reset: ReturnType<typeof setTimeout> | undefined;
+    const recede = (on: boolean) => {
+      for (const el of [railRef.current, pauseRef.current, chipsRef.current]) el?.toggleAttribute(NAV_RECEDE_ATTRIBUTE, on);
+    };
     const onLeave = () => {
-      setLeaving(true);
+      leavingRef.current = true;
+      recede(true);
       clearTimeout(reset);
-      reset = setTimeout(() => setLeaving(false), NAV_RECEDE_RESET_MS);
+      reset = setTimeout(() => {
+        leavingRef.current = false;
+        recede(false);
+      }, NAV_RECEDE_RESET_MS);
     };
     window.addEventListener(NAV_START_EVENT, onLeave);
     return () => {
@@ -318,7 +328,7 @@ export function GalacticBackdrop() {
             onStarHover={handleStarHover}
             onReady={handleSceneReady}
             // an open card covers the scene, so it stops rendering behind it
-            paused={motionPaused || selection !== null || offscreen || leaving}
+            paused={motionPaused || selection !== null || offscreen}
             // holds the poster's frame under the poster; wakes as it fades
             awake={sceneStage !== 'loading'}
           />
@@ -335,7 +345,7 @@ export function GalacticBackdrop() {
           title={motionLabel}
           // read by the hero pill's pulse (GalacticHero), which stops on 'paused'
           data-motion={motionPaused ? 'paused' : 'running'}
-          {...(leaving ? RECEDED : {})}
+          ref={pauseRef}
           className="pointer-events-auto absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/25 text-foreground/80 backdrop-blur-sm transition-colors hover:border-white/25 hover:text-primary sm:right-8"
         >
           {motionPaused ? (
@@ -351,7 +361,7 @@ export function GalacticBackdrop() {
           className={`transition-opacity ${selection ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
           aria-hidden={selection ? true : undefined}
           inert={selection ? true : undefined}
-          {...(leaving ? RECEDED : {})}
+          ref={railRef}
         >
           <SystemRail
             activeSystem={tickerSystem}
@@ -370,7 +380,7 @@ export function GalacticBackdrop() {
         <nav
           aria-label="Systems orbiting the Chimera core"
           className="pointer-events-auto absolute inset-x-4 bottom-20 z-30 sm:inset-x-8"
-          {...(leaving ? RECEDED : {})}
+          ref={chipsRef}
         >
           <ul className="flex flex-wrap gap-2">
             <li>
