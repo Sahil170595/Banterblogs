@@ -522,8 +522,10 @@ html[data-motion="on"] #mobile-nav[data-state="open"] {
   animation: menu-panel-in var(--duration-fast) var(--ease-strong-out) both;
 }
 
+/* backwards, not both: a transform animation left applied after it ends keeps
+   each row a stacking context, and later rows covered the search results */
 html[data-motion="on"] #mobile-nav[data-state="open"] .menu-item {
-  animation: menu-item-in var(--duration-base) var(--ease-strong-out) both;
+  animation: menu-item-in var(--duration-base) var(--ease-strong-out) backwards;
   animation-delay: calc(var(--i, 0) * var(--stagger-menu));
 }
 

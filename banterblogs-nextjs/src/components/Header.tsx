@@ -175,7 +175,9 @@ export function Header() {
             )}
           >
             <div className="container space-y-1 py-6">
-              <div className="menu-item mb-4" style={menuIndex(0)}>
+              {/* above the rows after it, which stack while they rise, so the
+                  results panel stays on top of the links */}
+              <div className="menu-item relative z-10 mb-4" style={menuIndex(0)}>
                 <SearchDialog />
               </div>
               {NAV_ITEMS.map((item, index) => {

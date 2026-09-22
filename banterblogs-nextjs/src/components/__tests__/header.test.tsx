@@ -213,11 +213,22 @@ describe('mobile menu motion', () => {
     expect(stagger).toBeGreaterThanOrEqual(33);
     expect(stagger).toBeLessThanOrEqual(40);
     const items = ruleBody('html[data-motion="on"] #mobile-nav[data-state="open"] .menu-item');
-    expect(items).toMatch(/animation:\s*menu-item-in var\(--duration-base\) var\(--ease-strong-out\) both;/);
+    // fill backwards, not both: a transform animation that stays applied after
+    // it ends keeps every row its own stacking context, and the rows painted
+    // later covered the search results (a tap on a result followed a nav link)
+    expect(items).toMatch(/animation:\s*menu-item-in var\(--duration-base\) var\(--ease-strong-out\) backwards;/);
     expect(items).toMatch(/animation-delay:\s*calc\(var\(--i, 0\) \* var\(--stagger-menu\)\)/);
     const rise = /@keyframes menu-item-in \{([\s\S]*?)\}\s*\}/.exec(CSS)?.[1] ?? '';
     expect(rise).toMatch(/opacity:\s*0/);
     expect(rise).toMatch(/transform:\s*translateY\(var\(--motion-menu\)\)/);
+  });
+
+  it('keeps the search row, and its results panel, above the rows that follow it', () => {
+    const { getByRole, container } = render(<Header />);
+    fireEvent.click(toggle(getByRole));
+    const [searchRow, ...rest] = [...container.querySelectorAll<HTMLElement>('#mobile-nav .menu-item')];
+    expect(searchRow.className.split(/\s+/)).toEqual(expect.arrayContaining(['relative', 'z-10']));
+    for (const row of rest) expect(row.className.split(/\s+/)).not.toContain('z-10');
   });
 
   it('leaves in one fade over the fast token, opacity only', () => {
