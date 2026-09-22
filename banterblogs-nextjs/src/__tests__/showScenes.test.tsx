@@ -159,13 +159,21 @@ function everyState(container: Element, visit: () => void) {
   }
 }
 
+// The sweep renders every reachable state and scores every text node in each;
+// the provenance scene took over vitest's 5 s default on a CI runner.
+const SWEEP_TIMEOUT_MS = 30_000;
+
 describe.each(PAGES)('/show/%s body', (_slug, Page) => {
-  it('clears AA in every state, and 3:1 where it dims a step not reached yet', () => {
-    const { container } = render(<Page />);
-    const failures = new Set<string>();
-    everyState(container, () => sweep(container).forEach((failure) => failures.add(failure)));
-    expect([...failures]).toEqual([]);
-  });
+  it(
+    'clears AA in every state, and 3:1 where it dims a step not reached yet',
+    () => {
+      const { container } = render(<Page />);
+      const failures = new Set<string>();
+      everyState(container, () => sweep(container).forEach((failure) => failures.add(failure)));
+      expect([...failures]).toEqual([]);
+    },
+    SWEEP_TIMEOUT_MS,
+  );
 });
 
 describe('ZK bit strips', () => {

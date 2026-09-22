@@ -6,6 +6,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 // the lists drift from the theme.
 export const TYPE_ROLES = [
   'display-72',
+  'display-32',
   'heading-48',
   'heading-32',
   'heading-24',

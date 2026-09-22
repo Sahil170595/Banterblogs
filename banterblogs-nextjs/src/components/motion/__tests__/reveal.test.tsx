@@ -12,7 +12,6 @@ import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE, MOTION_GATE_SCRIPT, MOTION_GATE_S
 
 vi.mock('next/font/google', () => ({
   Manrope: () => ({ variable: 'font-sans' }),
-  Space_Grotesk: () => ({ variable: 'font-display' }),
   JetBrains_Mono: () => ({ variable: 'font-mono' }),
 }));
 vi.mock('next/navigation', () => ({

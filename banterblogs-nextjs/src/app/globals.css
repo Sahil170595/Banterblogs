@@ -48,11 +48,13 @@
   --status-amber: 38 90% 62%;
   --status-blue: 212 85% 72%;
 
-  /* The page-title role (text-heading-48) steps with the viewport; so does
-     the one display exception (text-display-72, /show). */
+  /* The page-title role (text-heading-48) steps with the viewport; so do
+     the display roles (text-display-72 on /show, text-display-32 in the
+     landing's hero panel). */
   --type-heading-48: 1.75rem;
   --leading-heading-48: 1.08;
   --type-display-72: 3rem;
+  --type-display-32: 1.375rem;
 }
 
 @media (min-width: 640px) {
@@ -66,6 +68,7 @@
   :root {
     --type-heading-48: 3rem;
     --type-display-72: 4.5rem;
+    --type-display-32: 2rem;
   }
 }
 
@@ -125,11 +128,6 @@ html {
   p {
     text-wrap: pretty;
   }
-}
-
-/* Display font utility */
-.display {
-  font-family: var(--font-display), var(--font-sans), system-ui;
 }
 
 .chimera-shell {

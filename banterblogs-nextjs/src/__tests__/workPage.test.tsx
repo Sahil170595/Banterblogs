@@ -7,7 +7,9 @@ import WorkPage from '@/app/work/page';
 import { ENTRANCE_GROUP_CLASS, ENTRANCE_ITEM_ATTRIBUTE } from '@/components/motion/entrance';
 import { PROFILE_ITEMS_AFTER } from '@/components/ui/ProfileLayout';
 import { parseSpan } from '@/lib/timeline';
+import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 import {
+  COMBINED_PYPI_DOWNLOADS,
   EDUCATION,
   EXPERIENCE,
   HERO_HEADLINE,
@@ -18,6 +20,7 @@ import {
   RESEARCH,
   SKILLS,
   WORK_TITLE,
+  downloadFloor,
 } from '@/lib/work';
 
 // /work on the profile template (Phase R3-B): the identity and links in a
@@ -109,6 +112,67 @@ describe('work page copy', () => {
       const found = [...page.querySelectorAll(`a[href="${link.href}"]`)].map(text);
       expect(found, link.href).toContain(link.label);
     }
+  });
+});
+
+// R7: the copy follows the latest résumés (MLE v8 and the PhD CV v4 of
+// 2026-09-21, the later one winning where they disagree): its counts, its
+// added work, and none of the claims it withdrew or rescoped.
+const RETIRED_CLAIMS = [
+  // the speculative-decoding preprint's expansion and equivalence claims, retracted
+  '60,849',
+  "Cohen's h",
+  '25/27',
+  // endpoints that were not like for like; the per-response endpoints stay
+  '80–400×',
+  // a project-reported figure whose evaluation split is not recovered
+  '93% diagnostic accuracy',
+  // TR131 measured throughput, not safety
+  'PyTorch Direct caused larger safety degradation',
+  // the 2.25× is one N=8 comparison against Ollama, not a gain for both stacks
+  "vLLM/TGI's 2.25×",
+  // 57/41/2 is a descriptive two-model share, not a decomposition
+  'Decomposed the measured safety tax',
+  // eight of the nine are sole-author
+  'sole-author 2026 papers',
+  '22 Hugging Face',
+  // the owner confirmed a cumulative score
+  'SGPA',
+];
+
+describe('work page résumé currency', () => {
+  it('sums the two packages’ download floors from tools.ts for the lede, and fails on a count it cannot read', () => {
+    expect(downloadFloor('28,000+')).toBe(28_000);
+    expect(() => downloadFloor('many')).toThrow();
+    const floor = downloadFloor(CHIMERAFORGE_TOOL.downloads!) + downloadFloor(QUANTFIT_TOOL.downloads!);
+    expect(COMBINED_PYPI_DOWNLOADS).toBe(`${Math.floor(floor / 1000)}K+`);
+    expect(HERO_SUMMARY).toContain(`two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads`);
+  });
+
+  it('states the current record: the paper ledger, the models, the fixes, the degree scores', () => {
+    const all = text(page);
+    for (const fact of [
+      '9 papers in 2026 (8 sole-author; 1 presented at the ICML 2026 Workshop on Hypothesis Testing, 8 under double-blind review)',
+      'four upstream contributions',
+      '23 Hugging Face models',
+      'Hugging Face — 23 model releases',
+      'from about 40s in early benchmarks to 100–450 ms',
+      'CGPA: 9.1/10.0',
+    ]) {
+      expect(all, fact).toContain(fact);
+    }
+  });
+
+  it('carries none of the claims the later résumé withdrew or rescoped', () => {
+    const all = text(page);
+    for (const claim of RETIRED_CLAIMS) expect(all, claim).not.toContain(claim);
+  });
+
+  it('adds the graduate project to the roles, so the timeline draws it', () => {
+    const project = EXPERIENCE.find((job) => job.company === 'New York University');
+    expect(project?.dates).toBe('Sep 2024 – Dec 2024');
+    const lanes = [...page.querySelectorAll('figure.timeline ol > li .timeline-label')].map(text);
+    expect(lanes).toContain('New York University');
   });
 });
 
