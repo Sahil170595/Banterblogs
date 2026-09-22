@@ -9,6 +9,8 @@ import { blackbodyToRGB } from './blackbody';
 // colors (weighted toward cool stars, like a real population) and a faint
 // galactic band. Drifts imperceptibly so the void feels alive.
 
+const SKY_SPIN_RAD_PER_S = 0.004;
+
 interface StarfieldProps {
   count?: number;
 }
@@ -47,9 +49,10 @@ export function Starfield({ count = 7000 }: StarfieldProps) {
     return { positions, colors };
   }, [count]);
 
-  useFrame((_, delta) => {
+  // from scene time, so the sky holds with the rest of a held frame
+  useFrame(({ clock }) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.004;
+      pointsRef.current.rotation.y = clock.elapsedTime * SKY_SPIN_RAD_PER_S;
     }
   });
 
