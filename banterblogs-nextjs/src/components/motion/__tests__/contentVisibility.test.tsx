@@ -286,7 +286,7 @@ describe('the pre-paint gate, once the page is up', () => {
   // fits) is brought into view.
   describe('after the browser’s own focus scroll (a Tab already turned skipping off)', () => {
     const VIEWPORT = 900;
-    let scrollIntoView: ReturnType<typeof vi.fn>;
+    let scrollIntoView: ReturnType<typeof vi.fn<Element['scrollIntoView']>>;
     const focusAt = (top: number, height: number) => {
       const { container } = mount();
       document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
@@ -299,7 +299,7 @@ describe('the pre-paint gate, once the page is up', () => {
     beforeEach(() => {
       vi.useFakeTimers();
       vi.stubGlobal('innerHeight', VIEWPORT);
-      scrollIntoView = vi.fn();
+      scrollIntoView = vi.fn<Element['scrollIntoView']>();
       Element.prototype.scrollIntoView = scrollIntoView;
     });
     afterEach(() => {
