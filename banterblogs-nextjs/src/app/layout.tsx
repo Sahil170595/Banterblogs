@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { JetBrains_Mono, Manrope, Space_Grotesk } from "next/font/google";
+import { JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -15,10 +15,6 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
-// The landing's display face (its h1 and selection card) alone. Declared here
-// so its @font-face stays in the one global sheet, but not preloaded: the
-// landing fetches it once its heading is laid out, and no other page does.
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", preload: false });
 // Fallbacks with JetBrains Mono's 0.6em advance, so its swap moves nothing;
 // the automatic fallback is Arial-metric (pinned by monoFallback.test.ts).
 // Still preloaded: without the preload a late swap reflowed the landing's
@@ -111,7 +107,7 @@ export default function RootLayout({
             reduced motion) every animated element renders at rest */}
         <script id={MOTION_GATE_SCRIPT_ID} dangerouslySetInnerHTML={{ __html: MOTION_GATE_SCRIPT }} />
       </head>
-      <body className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-background text-foreground antialiased`}>
+      <body className={`${manrope.variable} ${jetbrainsMono.variable} min-h-screen bg-background text-foreground antialiased`}>
         {/* WCAG 2.4.1: let keyboard users bypass the header on every page. */}
         <a
           href="#main-content"

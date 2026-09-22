@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, X } from 'lucide-react';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 import { CORE_SELECTION, type GalacticSelection } from './systems';
 import { blackbodyToRGB } from './blackbody';
 
@@ -75,9 +76,7 @@ export function SelectionCard({ selection, onClose, restoreFocusTo }: SelectionC
             style={{ background: swatch, boxShadow: `0 0 12px ${swatch}` }}
             aria-hidden="true"
           />
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            {eyebrow}
-          </p>
+          <Eyebrow>{eyebrow}</Eyebrow>
         </div>
         <button
           ref={closeRef}
@@ -89,9 +88,10 @@ export function SelectionCard({ selection, onClose, restoreFocusTo }: SelectionC
         </button>
       </div>
 
-      <h2 className="display mt-3 text-2xl font-bold tracking-tight text-foreground">{name}</h2>
+      <h2 className="mt-3 text-heading-24 text-foreground">{name}</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>
-      <p className="mt-3 font-mono text-[10px] tracking-wide text-muted-foreground/80">{stats}</p>
+      {/* lower case: e and a are orbital elements */}
+      <p className="mt-3 font-mono text-xs tracking-wide text-muted-foreground/80">{stats}</p>
 
       <div className="mt-5">
         {isInternal ? (
