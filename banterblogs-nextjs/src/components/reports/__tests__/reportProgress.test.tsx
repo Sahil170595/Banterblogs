@@ -7,11 +7,12 @@ import { ReportProgress, SCROLL_TIMELINE_SUPPORT } from '../ReportProgress';
 
 // The reading bar: a 2px copper bar under the header, scaled on a scroll
 // timeline in CSS; a passive scroll listener stands in where scroll timelines
-// are missing. Decision (documented in globals.css): it is functional, but it
-// is a continuous scroll-linked motion, so under reduced motion it is not
-// shown; the contents list still marks the section being read, by colour.
+// are missing. Decision (documented in reading.css, the reading routes'
+// stylesheet): it is functional, but it is a continuous scroll-linked motion,
+// so under reduced motion it is not shown; the contents list still marks the
+// section being read, by colour.
 
-const CSS_TEXT = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+const CSS_TEXT = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'reading.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const html = document.documentElement;
 
 // the body of the first block opened by `prelude` at or after `from`, braces balanced

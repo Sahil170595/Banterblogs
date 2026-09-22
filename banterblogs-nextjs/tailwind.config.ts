@@ -1,6 +1,5 @@
 import type { Config } from "tailwindcss";
 import plugin from "tailwindcss/plugin";
-import typography from "@tailwindcss/typography";
 
 const MONO_STACK = ["var(--font-mono)", "ui-monospace", "monospace"];
 
@@ -143,7 +142,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [typography, labelRoles],
+  // The typography plugin builds into the reading routes' stylesheet only
+  // (tailwind.reading.config.ts), not the sheet every page loads.
+  plugins: [labelRoles],
 };
 
 export default config;

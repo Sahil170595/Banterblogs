@@ -1,3 +1,4 @@
+import '@/app/reading.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';

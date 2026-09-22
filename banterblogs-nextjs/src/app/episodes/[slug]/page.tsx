@@ -1,4 +1,5 @@
 import 'highlight.js/styles/github-dark.css';
+import '@/app/reading.css';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getAllEpisodes, toEpisodeSummary, extractHtmlHeadings, computeContentStats } from '@/lib/episodes';

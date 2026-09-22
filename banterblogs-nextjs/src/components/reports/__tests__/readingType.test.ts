@@ -7,12 +7,14 @@ import { describe, expect, it } from 'vitest';
 // 560-600 weight on -0.02em, h3 at 18-20px and 600, links that change only
 // their underline colour, and no more than seven font sizes on the page with
 // the header and footer. The rules live in one delimited report-page block of
-// globals.css.
+// reading.css, the stylesheet only the reading routes load; the tokens every
+// page uses (--prose, the page-title size) stay in globals.css.
 
 const GLOBALS_CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8');
-const START = GLOBALS_CSS.indexOf('/* report page');
-const END = GLOBALS_CSS.indexOf('/* end report page */');
-const BLOCK = START >= 0 && END > START ? GLOBALS_CSS.slice(START, END).replace(/\/\*[\s\S]*?\*\//g, '') : '';
+const READING_CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'reading.css'), 'utf8');
+const START = READING_CSS.indexOf('/* report page');
+const END = READING_CSS.indexOf('/* end report page */');
+const BLOCK = START >= 0 && END > START ? READING_CSS.slice(START, END).replace(/\/\*[\s\S]*?\*\//g, '') : '';
 
 const ROOT_PX = 16;
 const MIN_CONTRAST = 12;
@@ -81,12 +83,12 @@ function luminance(hsl: string): number {
 const token = (css: string, name: string) => new RegExp(`--${name}:\\s*([\\d.]+ [\\d.]+% [\\d.]+%)`).exec(css)?.[1];
 
 describe('report reading type', () => {
-  it('lives in one delimited block of globals.css', () => {
+  it('lives in one delimited block of reading.css', () => {
     expect(BLOCK).not.toBe('');
   });
 
   it('sets prose in its own colour token at 12:1 or better on the page background', () => {
-    const prose = token(BLOCK, 'prose');
+    const prose = token(GLOBALS_CSS, 'prose');
     const background = token(GLOBALS_CSS, 'background');
     expect(prose).toBeDefined();
     const ratio = (luminance(prose!) + 0.05) / (luminance(background!) + 0.05);
@@ -128,8 +130,8 @@ describe('report reading type', () => {
   it('sets table cells in the prose colour and keeps numeric columns tabular and right-aligned', () => {
     expect(value(declarationsOf(baseRules, '.report-prose td'), 'color')).toBe('hsl(var(--prose))');
     // Phase 0's rules, outside this block
-    expect(GLOBALS_CSS).toMatch(/\.table-scroll :is\(th, td\) \{\s*font-variant-numeric: tabular-nums;/);
-    expect(GLOBALS_CSS).toMatch(/\.table-scroll \.num \{\s*text-align: right;/);
+    expect(READING_CSS).toMatch(/\.table-scroll :is\(th, td\) \{\s*font-variant-numeric: tabular-nums;/);
+    expect(READING_CSS).toMatch(/\.table-scroll \.num \{\s*text-align: right;/);
   });
 
   it('turns a link underline ember on hover and changes nothing else: colour only, no motion', () => {

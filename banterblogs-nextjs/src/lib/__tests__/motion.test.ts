@@ -20,6 +20,8 @@ import tailwindConfig from '../../../tailwind.config';
 
 const SRC = path.join(process.cwd(), 'src');
 const GLOBALS_CSS = path.join(SRC, 'app', 'globals.css');
+// the reading routes' stylesheet (report page, contents marker, reading bar)
+const READING_CSS = path.join(SRC, 'app', 'reading.css');
 const CONTENT_MOTION_DIRS = [path.join(SRC, 'components', 'scenes'), path.join(SRC, 'components', 'galactic')];
 const MOTION_PRIMITIVES_DIR = path.join(SRC, 'components', 'motion');
 
@@ -318,9 +320,11 @@ describe('motion ratchet detectors', () => {
 });
 
 describe('motion ratchet', () => {
-  const files = [...sourceFiles(SRC, /\.tsx?$/), GLOBALS_CSS];
+  const files = [...sourceFiles(SRC, /\.tsx?$/), ...sourceFiles(SRC, /\.css$/)];
 
-  it('scans the whole component tree, modules included', () => {
+  it('scans the whole component tree, modules and every stylesheet included', () => {
+    expect(files).toContain(GLOBALS_CSS);
+    expect(files).toContain(READING_CSS);
     // a moved directory must fail loudly rather than pass an empty scan
     for (const known of [
       'components/Header.tsx',
@@ -357,7 +361,7 @@ describe('motion ratchet', () => {
     expect(source).toMatch(INTERSECTION_OBSERVER);
     expect(source).not.toMatch(/addEventListener\(\s*['"`]scroll/);
     expect([...source.matchAll(/(\w+)\.style\.(\w+)\s*=/g)].map((m) => `${m[1]}.${m[2]}`)).toEqual(['marker.transform']);
-    const css = fs.readFileSync(GLOBALS_CSS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const css = fs.readFileSync(READING_CSS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
     const easing = rulesIn(css).filter((rule) => /\.report-toc-marker/.test(rule.selector) && /transition\s*:/.test(rule.declarations));
     expect(easing.map((rule) => rule.selector)).toEqual(['html[data-motion="on"] .report-toc-marker[data-placed]', '.report-toc-marker']);
     expect(easing[0].declarations).toMatch(/transform var\(--duration-base\) var\(--ease-strong-out\)/);
