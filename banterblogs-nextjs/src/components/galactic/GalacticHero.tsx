@@ -22,16 +22,13 @@ export function GalacticHero() {
       <div className="pointer-events-none relative z-10 flex h-full flex-col">
         {/* Wherever the poster, or on a short window the disk, sits behind
             this block, its scrim is near-opaque (ember links keep 4.5:1 over
-            the arc); only the live scene on a tall window reads through the
-            light one. The two crossfade (.hero-scrim-* in globals.css). */}
-        <div className="relative isolate ml-5 mt-24 max-w-[300px] rounded-r-lg border-l border-primary/60 py-2 pl-4 pr-8 sm:ml-8 sm:mt-28 md:max-w-md md:pl-5">
+            the arc): below sm its own, from sm a layer over its light one.
+            Only the live scene on a tall window lifts that layer
+            (.hero-scrim-strong in globals.css). */}
+        <div className="relative isolate ml-5 mt-24 max-w-[300px] border-l border-primary/60 bg-gradient-to-r from-black/90 via-black/90 to-black/70 py-2 pl-4 pr-8 backdrop-blur-md rounded-r-lg sm:ml-8 sm:mt-28 sm:from-black/70 sm:via-black/45 sm:to-black/15 sm:backdrop-blur-[2px] md:max-w-md md:pl-5">
           <div
             aria-hidden="true"
-            className="hero-scrim-strong pointer-events-none absolute inset-0 -z-10 rounded-r-lg bg-gradient-to-r from-black/90 via-black/90 to-black/70 backdrop-blur-md"
-          />
-          <div
-            aria-hidden="true"
-            className="hero-scrim-light pointer-events-none absolute inset-0 -z-10 rounded-r-lg bg-gradient-to-r from-black/70 via-black/45 to-black/15 backdrop-blur-[2px]"
+            className="hero-scrim-strong pointer-events-none absolute inset-0 -z-10 hidden rounded-r-lg bg-gradient-to-r from-black/90 via-black/90 to-black/70 transition-opacity duration-700 sm:block"
           />
           <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.28em] text-primary/85">
             Chimera / system atlas 001
@@ -65,7 +62,7 @@ export function GalacticHero() {
 
         {/* on a plate: a star can sit right behind it */}
         <p
-          className="absolute bottom-8 right-20 hidden max-w-[280px] rounded-lg border border-white/10 bg-black/80 px-3 py-2 text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.08em] text-muted-foreground backdrop-blur-sm lg:block"
+          className="absolute bottom-8 right-20 hidden max-w-[280px] rounded-lg border border-white/10 bg-background/80 px-3 py-2 text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.08em] text-muted-foreground backdrop-blur-sm lg:block"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
           Orbits: Keplerian, solved per frame.

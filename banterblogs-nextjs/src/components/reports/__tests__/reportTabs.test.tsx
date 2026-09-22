@@ -241,9 +241,7 @@ describe('report archive motion wiring', () => {
     const strip = /\.tab-strip \{([^}]*)\}/.exec(css)?.[1] ?? '';
     const stops = /linear-gradient\(\s*to right,([^;]*)\);/.exec(strip)?.[1].split(/,(?![^(]*\))/).map((stop) => stop.trim()) ?? [];
     expect(stops).toHaveLength(4);
-    expect(stops[0]).toBe('rgb(0 0 0 / var(--tab-strip-edge-floor))');
-    expect(stops[3]).toBe('rgb(0 0 0 / var(--tab-strip-edge-floor))');
-    expect(Number(/--tab-strip-edge-floor:\s*([\d.]+);/.exec(GLOBALS_CSS)?.[1])).toBe(TAB_STRIP_EDGE_FLOOR);
+    for (const edge of [stops[0], stops[3]]) expect(edge).toBe(`rgb(0 0 0 / ${TAB_STRIP_EDGE_FLOOR})`);
   });
 
   it('scrolls the tab it selects fully into view, clear of the edge fades', () => {

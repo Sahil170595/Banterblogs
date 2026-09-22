@@ -13,12 +13,15 @@ import { GalacticHero } from '../GalacticHero';
 // 1440x850), and the physics caption sat on a bright star at 1.3-1.5:1.
 // The copy now keeps the strong scrim everywhere but the live scene on a
 // window of at least sm width and TALL_WINDOW_PX height, and the caption
-// sits on a dark plate.
+// sits on a dark plate. Everything but one media rule reuses utilities the
+// global sheet already has (it is close to the size where next/font's
+// @font-face CSS splits into a second render-blocking sheet).
 
 // shorter windows put the disk behind the copy and the system rail even in
 // the live scene (r5: rail numeral 4.47:1 at 1440x789, 4.63:1 at 1440x820)
 const TALL_WINDOW_PX = 801;
-const SM_PX = 640;
+// the lift fades over an existing duration utility
+const SCRIM_FADE = 'duration-700';
 const LIVE = '.group\\/hero:has([data-scene-stage="live"])';
 
 // comments and brace-less statements (@tailwind, @apply) out
@@ -65,34 +68,26 @@ const opacityOf = (selector: string, media: string) =>
 describe('hero copy scrim', () => {
   const copy = doc.querySelector('h1')!.parentElement!;
   const strong = copy.querySelector('.hero-scrim-strong');
-  const light = copy.querySelector('.hero-scrim-light');
 
-  it('draws the phone scrim and the desktop scrim as two layers behind the copy', () => {
-    for (const layer of [strong, light]) {
-      expect(layer, 'scrim layer').not.toBeNull();
-      expect(layer!.getAttribute('aria-hidden')).toBe('true');
-      expect(classes(layer)).toEqual(expect.arrayContaining(['absolute', 'inset-0', '-z-10', 'pointer-events-none']));
-    }
-    expect(classes(strong)).toEqual(expect.arrayContaining(['from-black/90', 'via-black/90', 'to-black/70', 'backdrop-blur-md']));
-    expect(classes(light)).toEqual(expect.arrayContaining(['from-black/70', 'via-black/45', 'to-black/15', 'backdrop-blur-[2px]']));
-    // the copy block stacks them under its text and draws no scrim of its own
-    expect(classes(copy)).toContain('isolate');
-    expect(classes(copy).some((c) => /^(?:\w+:)*(?:from|via|to)-black|backdrop-blur/.test(c))).toBe(false);
+  it('keeps the phone scrim below sm and lays the same near-opaque scrim over the light one from sm', () => {
+    // the block's own scrim is unchanged: near-opaque below sm, light from sm
+    expect(classes(copy)).toEqual(
+      expect.arrayContaining(['from-black/90', 'via-black/90', 'to-black/70', 'sm:from-black/70', 'sm:via-black/45', 'sm:to-black/15']),
+    );
+    expect(classes(copy)).toEqual(expect.arrayContaining(['relative', 'isolate']));
+    expect(strong, 'strong layer').not.toBeNull();
+    expect(strong!.getAttribute('aria-hidden')).toBe('true');
+    expect(classes(strong)).toEqual(
+      expect.arrayContaining(['absolute', 'inset-0', '-z-10', 'pointer-events-none', 'hidden', 'sm:block', 'from-black/90', 'via-black/90', 'to-black/70']),
+    );
   });
 
-  it('shows the strong scrim unless the live scene is behind the copy on a window at least sm wide and tall', () => {
-    expect(opacityOf('.hero-scrim-light', '')).toEqual(['0']);
-    const tall = `@media (min-width: ${SM_PX}px) and (min-height: ${TALL_WINDOW_PX}px)`;
-    expect(opacityOf(`${LIVE} .hero-scrim-light`, tall)).toEqual(['1']);
-    expect(opacityOf(`${LIVE} .hero-scrim-strong`, tall)).toEqual(['0']);
+  it('lifts the strong layer only where the live scene is behind the copy on a tall window, fading with it', () => {
+    expect(opacityOf(`${LIVE} .hero-scrim-strong`, `@media (min-height: ${TALL_WINDOW_PX}px)`)).toEqual(['0']);
     // nothing else ever lightens it
     const lighteners = RULES.filter((rule) => /\.hero-scrim-strong/.test(rule.selector) && /opacity:\s*0\b/.test(rule.body));
     expect(lighteners).toHaveLength(1);
-  });
-
-  it('crossfades between them with the scene', () => {
-    const fade = RULES.find((rule) => rule.media === '' && rule.selector.includes('.hero-scrim-strong') && rule.selector.includes('.hero-scrim-light'));
-    expect(fade?.body).toMatch(/transition:\s*opacity var\(--duration-scene-crossfade\)/);
+    expect(classes(strong)).toEqual(expect.arrayContaining(['transition-opacity', SCRIM_FADE]));
   });
 });
 
@@ -108,6 +103,6 @@ describe('physics caption', () => {
 
   it('sits on a dark plate, whatever star is behind it', () => {
     expect(caption).toBeDefined();
-    expect(classes(caption)).toEqual(expect.arrayContaining(['bg-black/80', 'rounded-lg', 'backdrop-blur-sm']));
+    expect(classes(caption)).toEqual(expect.arrayContaining(['bg-background/80', 'rounded-lg', 'backdrop-blur-sm']));
   });
 });

@@ -184,8 +184,9 @@ function pickEntryIndex(_records: ScenarioRecord[]): number {
 }
 
 // A phase row the walkthrough has not reached yet: dimmed, its text still
-// 3:1 or better on the panel (was opacity-30/40, 1.2-2.8:1)
-const NOT_REACHED = 'opacity-60';
+// 3:1 or better on the panel (was opacity-30/40, 1.2-2.8:1); the same 70%
+// as the ZK scene's stages
+const NOT_REACHED = 'opacity-70';
 
 // Status → icon + tint for the matrix cells.
 function StatusIcon({ status, className }: { status: PhaseEvent['status'] | 'leader-implicit' | 'empty'; className?: string }) {
@@ -259,7 +260,7 @@ function MatrixCell({
           ? 'border-primary/50 bg-primary/[0.08]'
           : status === 'timeout'
             ? // a vote that never came: a dashed edge, not a fade, so its label still reads in a dimmed row
-              'border-dashed border-border/70 bg-card/20'
+              'border-dashed border-border/60 bg-card/20'
             : status === 'leader-implicit'
               ? 'border-accent/50 bg-accent/[0.08]'
               : 'border-border/25 bg-card/10';

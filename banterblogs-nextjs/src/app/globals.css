@@ -296,25 +296,11 @@ html {
   }
 }
 
-/* The hero copy's scrims (GalacticHero). The poster is laid out by height,
-   so on a short window the lensed disk sits behind the copy, and where the
-   poster shows, a star or a system body can at any size: the near-opaque
-   scrim holds there. Only the live scene on a tall window reads through the
-   light one, and the two crossfade as the scene arrives. */
-.hero-scrim-strong,
-.hero-scrim-light {
-  transition: opacity var(--duration-scene-crossfade) var(--ease-standard);
-}
-
-.hero-scrim-light {
-  opacity: 0;
-}
-
-@media (min-width: 640px) and (min-height: 801px) {
-  .group\/hero:has([data-scene-stage="live"]) .hero-scrim-light {
-    opacity: 1;
-  }
-
+/* The hero copy's near-opaque scrim (GalacticHero). The poster is laid out
+   by height, so on a short window the lensed disk sits behind the copy, and
+   where the poster shows a star or a system body can at any size. Only the
+   live scene on a tall window lifts it, to the light scrim beneath. */
+@media (min-height: 801px) {
   .group\/hero:has([data-scene-stage="live"]) .hero-scrim-strong {
     opacity: 0;
   }
@@ -1861,19 +1847,15 @@ html[data-route-to="landing"]::view-transition-new(site-header) {
   initial-value: 0px;
 }
 
-/* A fade to nothing left a tab's count at the edge at 1.2-3.7:1; the edge
-   keeps a floor of the text (TAB_STRIP_EDGE_FLOOR in ReportTabs). */
-:root {
-  --tab-strip-edge-floor: 0.3;
-}
-
+/* A fade to nothing left a tab's count at the edge at 1.2-3.7:1; the edges
+   keep TAB_STRIP_EDGE_FLOOR (ReportTabs) of the text. */
 .tab-strip {
   mask-image: linear-gradient(
     to right,
-    rgb(0 0 0 / var(--tab-strip-edge-floor)),
+    rgb(0 0 0 / 0.3),
     #000 var(--tab-strip-fade-start),
     #000 calc(100% - var(--tab-strip-fade-end)),
-    rgb(0 0 0 / var(--tab-strip-edge-floor))
+    rgb(0 0 0 / 0.3)
   );
 }
 

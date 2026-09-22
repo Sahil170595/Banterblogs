@@ -41,7 +41,7 @@ export const ENTRANCE_CARD_STEPS = 3;
 export const TABS_ENTRANCE_GROUP = 2;
 /** --tab-strip-fade (globals.css, R4 a11y): a tab scrolled into view clears the edge fade */
 export const TAB_STRIP_FADE_PX = 40;
-/** --tab-strip-edge-floor (globals.css): what the fade keeps of a tab at the very edge */
+/** the .tab-strip mask's edge alpha (globals.css): what the fade keeps of a tab at the very edge */
 export const TAB_STRIP_EDGE_FLOOR = 0.3;
 
 type SwitchedBy = 'pointer' | 'keyboard';
