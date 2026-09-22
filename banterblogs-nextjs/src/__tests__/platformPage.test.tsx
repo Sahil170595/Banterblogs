@@ -137,11 +137,17 @@ describe('platform head', () => {
     expect([...stats.querySelectorAll('li')].map(text)).toEqual(['9 repositories', '4 languages', `${MEASUREMENTS.SHORT} research measurements`]);
   });
 
-  it('rises in the three head groups, then the two core engines join the sequence', () => {
-    const groups = [...page.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)].map((g) => g.style.getPropertyValue('--group'));
-    expect(groups).toEqual(['0', '1', '2']);
+  // the lede is the page's largest text (its LCP element), so it paints at
+  // once; Chrome credits a fade from 0 to LCP only when the fade ends
+  it('rises in steps, the title, then the stat row, then the two core engines, the lede painting at once', () => {
+    const groups = [...page.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)];
+    expect(groups.map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1']);
+    expect(groups[1].querySelector('ul[aria-label="The platform in numbers"]')).not.toBeNull();
+    const lede = [...page.querySelectorAll('header p')].find((p) => text(p).startsWith('Nine repositories'))!;
+    expect(lede.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
     const items = [...page.querySelectorAll<HTMLElement>(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)];
     expect(items.map((item) => text(item.querySelector('h3')!))).toEqual(CORE);
+    for (const item of items) expect(item.style.getPropertyValue('--entrance-items-after')).toBe('2');
   });
 
   it('keeps every sentence of the owner copy, and every label', () => {

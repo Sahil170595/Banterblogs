@@ -21,11 +21,11 @@ type SortKey = 'date' | 'title' | 'complexity' | 'files';
 // change resets it (keyed on the filter signature — no setState-in-effect).
 const PAGE_SIZE = 36;
 const OPTION_CLASS = 'bg-background text-foreground';
-// The toolbar, then the first rows, join the page head's first-load entrance;
-// entranceItem caps where the later ones start.
-const ENTRANCE_ROWS = 3;
+// The toolbar joins the page head's first-load entrance. The rows do not: a
+// row's preview is often the largest text in view, and Chrome credits a fade
+// from 0 to LCP only when it ends, so they paint at once and reveal below.
 const FIELD = 'h-10 rounded-full border border-border bg-background text-copy-14 text-foreground transition-colors duration-fast ease-standard hover:border-foreground/30 focus-visible:border-primary/60';
-const CHIP = 'pressable h-7 rounded-full px-3 text-label-13 font-medium';
+const CHIP = 'pressable h-7 shrink-0 rounded-full px-3 text-label-13 font-medium';
 
 export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,9 +103,10 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
 
   return (
     <div className="space-y-5">
-      <div {...entranceItem(0)} className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
+      <div {...entranceItem(0)} className="space-y-3 sm:space-y-4">
+        {/* on a phone: the search on its own line, then sort, order and the count on one */}
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
+          <div className="relative w-full sm:w-auto sm:flex-1">
             <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
@@ -122,7 +123,7 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <select
               value={sortBy}
               onChange={(e) => {
@@ -152,12 +153,13 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
             </button>
           </div>
 
-          <p className="text-label-13 text-muted-foreground sm:ml-2" aria-live="polite">
+          <p className="ml-auto text-label-13 text-muted-foreground sm:ml-2" aria-live="polite">
             Showing {filteredEpisodes.length} of {episodes.length} episodes
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        {/* one line that scrolls sideways on a phone, bleeding to the screen edges; wrapped from sm */}
+        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
           {chip('', 'All')}
           {allTags.map((tag) => chip(tag, tag))}
         </div>
@@ -181,8 +183,8 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
         <>
           {/* keyed on the filters, so a pointer pick replays the crossfade on a fresh list */}
           <ul key={filterKey} data-tab-panel="" data-switched={pointerPick ? '' : undefined}>
-            {filteredEpisodes.slice(0, visibleCount).map((episode, index) => (
-              <Reveal as="li" key={episode.id} {...(index < ENTRANCE_ROWS ? entranceItem(index + 1) : {})}>
+            {filteredEpisodes.slice(0, visibleCount).map((episode) => (
+              <Reveal as="li" key={episode.id}>
                 <EpisodeRow episode={episode} />
               </Reveal>
             ))}

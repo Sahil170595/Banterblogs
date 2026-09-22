@@ -7,10 +7,11 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { getAllEpisodes } from '@/lib/episodes';
 
-// The first row of the topic map joins the head's first-load entrance. The
-// head has no meta row, so the first cell follows the lede one group later.
+// The first row of the topic map joins the head's first-load entrance, one
+// group after the title. The lede is the largest text in view, its LCP
+// element, so it paints at once (PageHeader stillLede).
 const ENTRANCE_CELLS = 3;
-const HEAD_GROUPS = 2;
+const HEAD_GROUPS = 1;
 
 const METADATA_DESCRIPTION =
   'Browse episodes by topic — AI, benchmarks, deployment, architecture, and more.';
@@ -54,6 +55,7 @@ export default async function TagsPage() {
       <PageHeader
         eyebrow={<Eyebrow>Topic Map</Eyebrow>}
         title="Chimera Tags"
+        stillLede
         lede="Explore the full signal surface by topic, platform, and technology."
       />
 

@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { entranceGroup, entranceItem } from '@/components/motion/entrance';
-import { cn } from '@/lib/cn';
 
-// PageHeader's first-load entrance on the /show head: the eyebrow and title,
-// then the lede, then the first scene rows one item apart.
-const HEAD_GROUPS = 2;
+// PageHeader's first-load entrance on the /show head: the eyebrow and title
+// rise, then the first scene rows one item apart. The lede is the page's
+// largest text, its LCP element, so it paints at once: Chrome credits a fade
+// from 0 to LCP only when the fade ends.
+const HEAD_GROUPS = 1;
 const ENTRANCE_ROWS = 3;
 
 const SHOW_DESCRIPTION =
@@ -92,10 +93,7 @@ export default function ShowPage() {
             on <span className="text-primary">display</span>.
           </h1>
         </div>
-        <p
-          className={cn('text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed pt-2', entranceGroup(1).className)}
-          style={entranceGroup(1).style}
-        >
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed pt-2">
           Most AI demos are a chat box and a chart. These aren&apos;t. Each scene visualises the
           actual cryptographic, consensus, or verifier internals of a running system —
           deterministic data, real signatures, real Pedersen commitments. Pre-computed from the

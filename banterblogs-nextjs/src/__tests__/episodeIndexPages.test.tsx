@@ -55,13 +55,13 @@ const boxes = (page: HTMLElement) =>
 
 afterEach(cleanup);
 
-// a head with a meta or actions row rises in three groups; without one, the
-// first rows or cells take the third step, one group after the lede
-function expectIndexTemplate(page: HTMLElement, headGroups = 3) {
+// the head rises in its groups (fewer when its largest text paints at once),
+// then the first content items follow one group later
+function expectIndexTemplate(page: HTMLElement, headGroups = 3, minItems = 1) {
   expect(page.querySelectorAll('h1')).toHaveLength(1);
   expect(groups(page)).toEqual(['0', '1', '2'].slice(0, headGroups));
   const items = [...page.querySelectorAll<HTMLElement>(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)];
-  expect(items.length).toBeGreaterThanOrEqual(1);
+  expect(items.length).toBeGreaterThanOrEqual(minItems);
   for (const item of items) expect(item.style.getPropertyValue('--entrance-items-after')).toBe(String(headGroups));
   expect(page.innerHTML).not.toMatch(/signal-(panel|pill|divider)|glass-ultra|backdrop-blur/);
   expect(boxes(page)).toEqual([]);
@@ -75,9 +75,12 @@ describe('/episodes', () => {
     const all = text(page);
     expect(all).toContain('Archive');
     expect(all).toContain('The full development narrative across Banterpacks and Chimera Engine, from raw commits to benchmarked outcomes.');
-    expect(all).toContain(
-      'Archived 2026-06-26. These episodes were generated from git commits by a multi-persona pipeline between September 2025 and June 2026. The pipeline is retired; the research program continues at /reports.',
-    );
+    const notice =
+      'Archived 2026-06-26. These episodes were generated from git commits by a multi-persona pipeline between September 2025 and June 2026. The pipeline is retired; the research program continues at /reports.';
+    expect(all).toContain(notice);
+    // the page's largest text in view paints at once, outside the entrance
+    const noticeEl = [...page.querySelectorAll('p')].find((p) => text(p) === notice)!;
+    expect(noticeEl.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
     expect(page.querySelector('a[href="/reports"]')).not.toBeNull();
     const banterpacks = page.querySelector('a[href="/banterpacks"]')!;
     const chimera = page.querySelector('a[href="/chimera"]')!;
@@ -86,10 +89,13 @@ describe('/episodes', () => {
     for (const button of [banterpacks, chimera]) expect(button.classList.contains('pressable')).toBe(true);
   });
 
-  it('lists every episode as a row, the first ones joining the entrance', async () => {
+  it('lists every episode as a row; the toolbar joins the entrance, the rows paint at once and reveal below', async () => {
     const page = mount(await EpisodesPage());
     expect(page.querySelectorAll('article a.list-row')).toHaveLength(ARCHIVE.length);
-    expect(page.querySelectorAll(`[${ENTRANCE_ITEM_ATTRIBUTE}]`).length).toBeGreaterThanOrEqual(2);
+    const items = [...page.querySelectorAll(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)];
+    expect(items).toHaveLength(1);
+    expect(items[0].querySelector('input[type="search"]')).not.toBeNull();
+    for (const row of page.querySelectorAll('article')) expect(row.closest(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
   });
 });
 
@@ -121,21 +127,24 @@ describe.each([
 describe('/tags/[tag]', () => {
   it('lists every episode with the tag as a row that reveals, under the topic head', async () => {
     const page = mount(await TagPage({ params: Promise.resolve({ tag: 'architecture' }) }));
-    expectIndexTemplate(page, 2);
+    expectIndexTemplate(page, 3, 0);
+    expect(text(page.querySelector('header a[href="/tags"]')!)).toBe('Topic Map');
     expect(text(page.querySelector('h1')!)).toBe('architecture');
     expect(text(page.querySelector('header')!)).toContain('Topic Focus');
     expect(text(page)).toContain('3 episodes tagged with “architecture”.');
     const rows = [...page.querySelectorAll('article a.list-row')];
     expect(rows).toHaveLength(3);
     for (const row of rows) expect(row.closest('li[data-reveal]')).not.toBeNull();
-    expect(page.querySelectorAll(`[${ENTRANCE_ITEM_ATTRIBUTE}]`).length).toBeGreaterThanOrEqual(2);
   });
 });
 
 describe('/tags', () => {
   it('maps every tag to its page in a hairline grid, busiest first, with its count', async () => {
     const page = mount(await TagsPage());
-    expectIndexTemplate(page, 2);
+    // the lede, the largest text in view, paints at once; the cells follow the title
+    expectIndexTemplate(page, 1);
+    const lede = [...page.querySelectorAll('header p')].find((p) => text(p).startsWith('Explore the full signal surface'))!;
+    expect(lede.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
     expect(text(page.querySelector('h1')!)).toBe('Chimera Tags');
     expect(text(page.querySelector('header')!)).toContain('Topic Map');
     expect(text(page)).toContain('Explore the full signal surface by topic, platform, and technology.');

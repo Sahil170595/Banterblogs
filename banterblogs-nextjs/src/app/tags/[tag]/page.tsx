@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { EpisodeRow } from '@/components/EpisodeRow';
+import { ArrowLeft } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
-import { entranceItem } from '@/components/motion/entrance';
+import { ButtonLink } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 
-// The first rows join the head's first-load entrance. The head has no meta
-// row, so the first row follows the lede one group later.
-const ENTRANCE_ROWS = 3;
-const HEAD_GROUPS = 2;
+// The rows paint at once: a row's preview is often the largest text in view,
+// and Chrome credits a fade from 0 to LCP only when it ends.
 
 export async function generateMetadata({
   params,
@@ -67,11 +66,16 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
         eyebrow={<Eyebrow>Topic Focus</Eyebrow>}
         title={decodedTag}
         lede={`${filteredEpisodes.length} episode${filteredEpisodes.length !== 1 ? 's' : ''} tagged with “${decodedTag}”.`}
+        actions={
+          <ButtonLink href="/tags" variant="ghost" size="sm" icon={<ArrowLeft className="h-3.5 w-3.5" />}>
+            Topic Map
+          </ButtonLink>
+        }
       />
 
       <ul className="mt-10 md:mt-14">
-        {filteredEpisodes.map((episode, index) => (
-          <Reveal as="li" key={episode.id} {...(index < ENTRANCE_ROWS ? entranceItem(index, HEAD_GROUPS) : {})}>
+        {filteredEpisodes.map((episode) => (
+          <Reveal as="li" key={episode.id}>
             <EpisodeRow episode={episode} />
           </Reveal>
         ))}

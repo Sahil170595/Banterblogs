@@ -61,8 +61,9 @@ describe('compendium head', () => {
     }
   });
 
-  it('rises in three entrance groups, and draws its hero figure', () => {
+  it('rises in three entrance groups with the title painting at once, and draws its hero figure', () => {
     expect([...page.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)].map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1', '2']);
+    expect(page.querySelector('h1')!.closest(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
     expect(page.querySelector('.report-hero svg.rv')).not.toBeNull();
   });
 });

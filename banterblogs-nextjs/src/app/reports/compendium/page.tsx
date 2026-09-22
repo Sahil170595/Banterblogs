@@ -44,8 +44,10 @@ export const metadata: Metadata = {
 
 // the report catalog's key, which the archive card links and morphs from
 const COMPENDIUM_SLUG = 'compendium';
-// the head's first-load entrance: breadcrumb and title, the dek, the meta and details
-const HEAD_GROUP = { title: 0, dek: 1, meta: 2 } as const;
+// The head's first-load entrance: the breadcrumb, the dek, then the meta and
+// details. The title paints at once: on a phone it is the largest text in
+// view, and Chrome credits a fade from 0 to LCP only when it ends.
+const HEAD_GROUP = { crumbs: 0, dek: 1, meta: 2 } as const;
 const NOTE_HEADING = 'report-pager-label';
 
 /**
@@ -78,20 +80,18 @@ export default async function CompendiumPage() {
             <ReportProgress />
 
             <div className="report-head">
-                <div {...entranceGroup(HEAD_GROUP.title)}>
-                    <nav aria-label="Breadcrumb">
-                        <ol className="report-crumbs">
-                            <li>
-                                <Link href="/reports" transitionTypes={[NAV_BACK]}>
-                                    Research archive
-                                </Link>
-                            </li>
-                        </ol>
-                    </nav>
-                    <ReportTitleTransition slug={COMPENDIUM_SLUG}>
-                        <h1 className="report-title">{heading}</h1>
-                    </ReportTitleTransition>
-                </div>
+                <nav aria-label="Breadcrumb" {...entranceGroup(HEAD_GROUP.crumbs)}>
+                    <ol className="report-crumbs">
+                        <li>
+                            <Link href="/reports" transitionTypes={[NAV_BACK]}>
+                                Research archive
+                            </Link>
+                        </li>
+                    </ol>
+                </nav>
+                <ReportTitleTransition slug={COMPENDIUM_SLUG}>
+                    <h1 className="report-title">{heading}</h1>
+                </ReportTitleTransition>
                 {meta?.description && (
                     <p className={cn('report-dek', dek.className)} style={dek.style}>
                         {meta.description}
