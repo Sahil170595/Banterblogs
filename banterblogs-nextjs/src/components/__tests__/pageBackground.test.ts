@@ -30,6 +30,11 @@ describe('interior page background', () => {
     expect(layer).not.toMatch(/--accent/);
   });
 
+  it('reaches up under the header, so the horizon sits behind the bar with no seam where the page begins', () => {
+    const layer = rule('.chimera-shell::after') ?? '';
+    expect(layer).toMatch(/inset:\s*calc\(-1 \* var\(--site-header-height\)\) 0 0;/);
+  });
+
   it('sizes the horizon in fixed units, so a long page does not stretch it down the page', () => {
     const horizon = /radial-gradient\(ellipse ([^,]+) at ([^,]+),/.exec(rule('.chimera-shell::after') ?? '');
     expect(horizon).not.toBeNull();

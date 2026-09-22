@@ -209,7 +209,7 @@ export default async function ReportsIndex() {
       {/* ── Head: title, one-line intro, the program in three numbers ── */}
       <div>
         <h1
-          className="entrance-group text-[1.75rem] font-semibold leading-[1.08] tracking-[-0.025em] sm:text-4xl md:text-5xl md:leading-[1.05]"
+          className="entrance-group text-heading-48"
           style={{ '--group': HEAD_ENTRANCE_GROUP.title } as CSSProperties}
         >
           {TITLE_LINES.map((line, index) => (
@@ -228,7 +228,7 @@ export default async function ReportsIndex() {
         </p>
         <ul
           aria-label="The research program in numbers"
-          className="entrance-group mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground"
+          className="entrance-group mt-3 flex flex-wrap gap-x-5 gap-y-1 text-label-13 text-muted-foreground"
           style={{ '--group': HEAD_ENTRANCE_GROUP.stats } as CSSProperties}
         >
           <li>
@@ -261,7 +261,7 @@ export default async function ReportsIndex() {
       {/* ── Key Findings ── */}
       <section aria-labelledby="findings-heading" className="mt-28">
         <div className="max-w-2xl">
-          <h2 id="findings-heading" className="text-2xl font-semibold tracking-[-0.02em]">
+          <h2 id="findings-heading" className="text-heading-24">
             Key findings
           </h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
@@ -294,7 +294,7 @@ export default async function ReportsIndex() {
       {conclusive.length > 0 && (
         <section aria-labelledby="conclusive-heading" className="mt-24">
           <div className="max-w-2xl">
-            <h2 id="conclusive-heading" className="text-2xl font-semibold tracking-[-0.02em]">
+            <h2 id="conclusive-heading" className="text-heading-24">
               Conclusive reports and appendices
             </h2>
             <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">

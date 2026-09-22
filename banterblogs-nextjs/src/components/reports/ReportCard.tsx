@@ -36,10 +36,10 @@ export function ReportCard({ slug, title, description, synthesis = false, latest
           </div>
         </ReportFigureTransition>
         <ReportTitleTransition slug={slug}>
-          <h3 className="mt-4 text-[1.25rem] font-semibold leading-snug tracking-[-0.015em] text-foreground">{heading}</h3>
+          <h3 className="mt-4 text-heading-20 text-foreground">{heading}</h3>
         </ReportTitleTransition>
         {description && <p className="mt-2 line-clamp-2 text-[0.9375rem] leading-relaxed text-muted-foreground">{description}</p>}
-        <div data-card-meta="" className="mt-3 flex items-center gap-2 text-[0.8125rem] leading-5 text-muted-foreground/80">
+        <div data-card-meta="" className="mt-3 flex items-center gap-2 text-label-13 text-muted-foreground/80">
           {synthesis && <span className="card-badge">Synthesis</span>}
           {synthesis && ' '}
           {latest && <LivePulse label="Latest" />}

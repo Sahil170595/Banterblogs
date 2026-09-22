@@ -37,6 +37,9 @@ describe('copy button', () => {
     let [copyIcon, checkIcon] = iconClasses(button);
     expect(copyIcon).toEqual(expect.arrayContaining([...shown, ...tokens]));
     expect(checkIcon).toEqual(expect.arrayContaining([...faded, ...tokens]));
+    // success is the theme's status green, not a raw palette hue
+    expect(checkIcon).toContain('text-status-green');
+    expect(checkIcon.filter((c) => /-(?:emerald|green)-\d/.test(c))).toEqual([]);
     expect(status.textContent).toBe('');
 
     await act(async () => {

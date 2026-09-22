@@ -61,13 +61,13 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 // The most each pattern may count. Lower a ceiling whenever a count drops;
 // raising one is a regression.
 const CEILINGS: Record<Pattern, number> = {
-  arbitraryFontSize: 93,
-  arbitraryTracking: 50,
+  arbitraryFontSize: 89,
+  arbitraryTracking: 45,
   arbitraryShadow: 7,
   largeRadius: 12,
-  paletteHue: 13,
+  paletteHue: 12,
   transitionAll: 0,
-  backdrop: 10,
+  backdrop: 8,
   signalPanel: 55,
   signalPill: 18,
   signalDivider: 2,
@@ -209,6 +209,10 @@ describe('token ratchet', () => {
     const counts = countTree();
     const over = (Object.keys(CEILINGS) as Pattern[]).filter((name) => counts[name] > CEILINGS[name]).map((name) => `${name}: ${counts[name]} > ${CEILINGS[name]}`);
     expect(over).toEqual([]);
+  });
+
+  it('never sets a ceiling above main', () => {
+    for (const name of Object.keys(MAIN_COUNTS) as Pattern[]) expect(CEILINGS[name], name).toBeLessThanOrEqual(MAIN_COUNTS[name]);
   });
 
   it('keeps each ceiling at the current count, so a drop is locked in', () => {

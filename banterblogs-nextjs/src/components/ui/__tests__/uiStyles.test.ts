@@ -50,6 +50,23 @@ describe('list row', () => {
   });
 });
 
+// The old panel classes stay until the pages that use them move onto the
+// primitives (R3-B), but glass is for the header alone: an in-flow panel
+// blurs nothing worth blurring and costs a compositing layer each.
+describe('retired panel classes, until their last use goes', () => {
+  it.each(['.signal-panel', '.signal-panel-strong'])('%s draws no backdrop blur', (selector) => {
+    const panel = body(selector);
+    expect(panel).not.toBe('');
+    expect(panel).not.toMatch(/backdrop/);
+  });
+
+  it('sets the old pill in the mono label role', () => {
+    const pill = body('.signal-pill');
+    expect(pill).toMatch(/text-label-12-mono/);
+    expect(pill).not.toMatch(/tracking-\[/);
+  });
+});
+
 describe('section rhythm', () => {
   it('sets sections 64px apart on phones and 96px apart from 768px', () => {
     expect(body('.page-section + .page-section')).toMatch(/margin-top:\s*4rem/);
