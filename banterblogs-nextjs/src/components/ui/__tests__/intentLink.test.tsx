@@ -135,6 +135,8 @@ describe('list and card links prefetch on intent', () => {
     'app/reports/page.tsx',
     'app/show/page.tsx',
     'app/platform/page.tsx',
+    // the onward links that close /papers and /platform (R4 layout)
+    'components/ui/OnwardLinks.tsx',
   ];
 
   it.each(LIST_LINKS)('%s links through IntentLink, never a viewport-prefetching Link', (file) => {
