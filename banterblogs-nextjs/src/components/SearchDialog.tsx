@@ -13,7 +13,8 @@ const GROUP_LABEL: Record<SearchEntryType, string> = { report: 'Reports', tool: 
 const GROUP_ICON = { report: FileText, tool: Package, episode: BookOpen } as const;
 // a foreground tint, so the muted detail line keeps ~7:1, and an ember rule
 // on the leading edge, so the highlight does not rest on colour alone
-const ACTIVE_OPTION = 'bg-foreground/10 text-foreground shadow-[inset_2px_0_0_hsl(var(--primary))]';
+const ACTIVE_OPTION =
+  'relative bg-foreground/10 text-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary';
 
 // Module-level so the desktop and mobile Header instances share one fetch and
 // one index — and nothing loads at all until search is first opened.

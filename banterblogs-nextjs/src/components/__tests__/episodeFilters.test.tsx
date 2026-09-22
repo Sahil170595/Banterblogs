@@ -195,7 +195,10 @@ describe('episode filters', () => {
   // re-judge P2-17: selected and unselected chips differed by colour alone
   it('rings the selected chip, a cue that does not rest on colour', () => {
     renderFilters();
-    const ring = (name: string) => screen.getByRole('button', { name }).className.includes('shadow-[inset_0_0_0_1px_hsl(var(--primary))]');
+    const ring = (name: string) => {
+      const classes = screen.getByRole('button', { name }).className.split(/\s+/);
+      return ['ring-1', 'ring-inset', 'ring-primary'].every((c) => classes.includes(c));
+    };
     expect(ring('All')).toBe(true);
     expect(ring('chimera')).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: 'chimera' }));

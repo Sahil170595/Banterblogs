@@ -69,7 +69,7 @@ const ENTRANCE_ROWS = 3;
 const FIELD = 'h-10 rounded-full border border-border bg-background text-copy-14 text-foreground transition-colors duration-fast ease-standard hover:border-foreground/30 focus-visible:border-primary/60';
 const CHIP = 'pressable h-7 shrink-0 rounded-full px-3 text-label-13 font-medium';
 // an inset ember ring on the selected chip, a cue beyond its tint
-const CHIP_SELECTED = 'bg-primary/15 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary))]';
+const CHIP_SELECTED = 'bg-primary/15 text-primary ring-1 ring-inset ring-primary';
 
 export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS }: EpisodeFiltersProps) {
   const router = useRouter();

@@ -213,7 +213,7 @@ describe('site search dialog', () => {
     expect(contrast(tone(detail), surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(tone(icon), surface)).toBeGreaterThanOrEqual(3);
     // and a cue beyond colour: the ember rule on its leading edge
-    expect(classes(active).some((c) => c.includes('inset_2px_0_0_hsl(var(--primary))'))).toBe(true);
+    expect(classes(active)).toEqual(expect.arrayContaining(['before:w-0.5', 'before:bg-primary']));
   });
 
   it('says so when the index cannot load, instead of claiming no results', async () => {
