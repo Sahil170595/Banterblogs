@@ -30,8 +30,9 @@ export function videoVariantFor(posterVariant: string): SceneVideoVariant | null
   return VARIANTS.find((variant) => variant.name === posterVariant) ?? null;
 }
 
-// hides the codecs' differences from the poster's AVIF; the pictures match
-export const VIDEO_CROSSFADE_MS = 400;
+// hides the codecs' differences from the poster's AVIF; the pictures match.
+// --duration-morph (400 ms), the token the landing's own push-in uses.
+const CROSSFADE_TOKEN = 'var(--duration-morph)';
 // A browser can pause the loop itself: WebKit stops at the first wrap, and
 // a phone can interrupt playback. It is started again this many times in a
 // row before it is left standing, and a loop that ran this long before
@@ -236,7 +237,7 @@ export default function SceneVideo({ variant, paused, onUnavailable }: SceneVide
       className="pointer-events-none absolute inset-0 overflow-hidden"
       style={{
         opacity: shown ? 1 : 0,
-        transition: `opacity ${VIDEO_CROSSFADE_MS}ms var(--ease-strong-out)`,
+        transition: `opacity ${CROSSFADE_TOKEN} var(--ease-strong-out)`,
       }}
     >
       <video
