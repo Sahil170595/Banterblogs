@@ -197,6 +197,12 @@ html {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: hsl(var(--foreground));
+  /* A fixed box, 12 letters x (0.6em JetBrains Mono advance + 0.18em
+     tracking): the fallback mono is wider, so where the font is not
+     preloaded (the 404) its swap shifted the header (CLS 0.004). */
+  display: inline-block;
+  width: 9.36em;
+  white-space: nowrap;
 }
 
 /* In the components layer so utilities on shell children (.fixed, .z-50)
