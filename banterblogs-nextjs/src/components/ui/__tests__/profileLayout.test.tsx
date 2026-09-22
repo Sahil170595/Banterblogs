@@ -47,11 +47,12 @@ describe('ProfileLayout', () => {
     expect(h1.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-heading-48', 'lg:text-heading-32']));
   });
 
-  it('rises in three groups: the title with the lede first (the LCP text never waits), then the links, then the index', () => {
+  it('rises in three groups, the title, the links, then the index; the lede, the largest text and so the LCP element, paints at once', () => {
     const el = layout();
     const group = (selector: string) => el.querySelector<HTMLElement>(selector)!.closest<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)?.style.getPropertyValue('--group');
     expect(group('h1')).toBe('0');
-    expect(group('header.profile-rail + div > p')).toBe('0');
+    // a fade from 0 is credited to LCP only when it ends (~1 s measured on /work), even on group 0
+    expect(group('header.profile-rail + div > p')).toBeUndefined();
     expect(group('a[href="https://github.com/Sahil170595"]')).toBe('1');
     expect(group('nav[aria-label="On this page"]')).toBe('2');
     // the page's first rows follow the links, so phones (no index) keep an even cadence

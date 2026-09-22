@@ -109,7 +109,7 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
                 variant="ghost"
                 size="sm"
                 iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}
-                className="h-auto min-h-7 whitespace-normal px-2 py-1 text-left"
+                className="h-auto min-h-7 max-w-full shrink whitespace-normal px-2 py-1 text-left"
               >
                 {evidence.label}
               </ButtonLink>

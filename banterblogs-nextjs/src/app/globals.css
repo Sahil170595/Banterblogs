@@ -1790,11 +1790,11 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
 }
 
 .rail-line {
-  width: 2.5rem;
+  width: 2rem;
   height: 1px;
   background-color: currentColor;
   opacity: 0.5;
-  transform: scaleX(0.4);
+  transform: scaleX(0.5);
   transform-origin: left;
   transition:
     transform var(--duration-base) var(--ease-strong-out),

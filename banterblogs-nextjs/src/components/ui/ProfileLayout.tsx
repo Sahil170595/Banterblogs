@@ -34,8 +34,9 @@ const group = (index: number, classes?: string) => {
  * the page beside it. On wide screens the title steps down to 32px so a
  * sentence-long title fits the rail, and the rail sticks while the page
  * scrolls (.profile-rail in globals.css), wherever the screen is tall enough
- * to hold it. The title and the lede, the page's largest text, rise on the
- * first frame; the links follow, then the index.
+ * to hold it. The title rises on the first frame, the links and the index
+ * after it. The lede, the page's largest text and so its LCP element, stays
+ * out of the entrance: Chrome credits a fade from 0 to LCP only when it ends.
  */
 export function ProfileLayout({ eyebrow, title, lede, identity, sections, children }: ProfileLayoutProps) {
   return (
@@ -61,7 +62,7 @@ export function ProfileLayout({ eyebrow, title, lede, identity, sections, childr
         </nav>
       </header>
       <div className="mt-10 min-w-0 lg:mt-0">
-        <p {...group(0, 'max-w-[60ch] text-copy-18 text-prose')}>{lede}</p>
+        <p className="max-w-[60ch] text-copy-18 text-prose">{lede}</p>
         {children}
       </div>
     </div>
