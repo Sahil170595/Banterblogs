@@ -61,24 +61,24 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 // The most each pattern may count. Lower a ceiling whenever a count drops;
 // raising one is a regression.
 const CEILINGS: Record<Pattern, number> = {
-  arbitraryFontSize: 80,
-  arbitraryTracking: 38,
+  arbitraryFontSize: 77,
+  arbitraryTracking: 30,
   arbitraryShadow: 7,
-  largeRadius: 10,
+  largeRadius: 3,
   paletteHue: 12,
   transitionAll: 0,
-  backdrop: 8,
-  signalPanel: 31,
-  signalPill: 16,
+  backdrop: 6,
+  signalPanel: 24,
+  signalPill: 11,
   signalDivider: 2,
-  glassUltra: 2,
+  glassUltra: 0,
   shellWallpaper: 0,
 };
 
 // Patterns whose every use sits on a page R3-B rebuilds (the archived
-// episode pages: signal-divider in episodes/[slug], glass-ultra in
-// EpisodeCard), so R3-A leaves them at main's count. R3-B empties this list.
-const LEFT_FOR_PAGE_WORK: Pattern[] = ['signalDivider', 'glassUltra'];
+// episode pages: signal-divider in episodes/[slug]), so R3-A leaves them at
+// main's count. R3-B empties this list (glass-ultra went with EpisodeCard).
+const LEFT_FOR_PAGE_WORK: Pattern[] = ['signalDivider'];
 
 function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

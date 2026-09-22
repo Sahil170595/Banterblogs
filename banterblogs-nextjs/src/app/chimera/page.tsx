@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
+import { ButtonLink } from '@/components/ui/Button';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const METADATA_DESCRIPTION =
   'Development episodes covering the constitutional AI debate engine — heat-based escalation, multi-model consensus, and the RLAIF alignment loop.';
@@ -35,25 +37,21 @@ export default async function ChimeraPage() {
   const chimeraEpisodes = episodes.filter((ep) => ep.slug.startsWith('chimera-episode-'));
 
   return (
-    <div className="container py-16">
-      <div className="signal-panel-strong mb-12 p-8 md:p-10">
-        <div className="space-y-4">
-          <span className="signal-pill">Chimera Engine</span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Chimera Episodes</h1>
-          <p className="text-lg text-muted-foreground">
-            {chimeraEpisodes.length} episodes covering the constitutional AI debate engine and alignment architecture.
-          </p>
-          <Link
-            href="/platform"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-          >
+    <div className="container pb-24">
+      <PageHeader
+        eyebrow={<Eyebrow>Chimera Engine</Eyebrow>}
+        title="Chimera Episodes"
+        lede={`${chimeraEpisodes.length} episodes covering the constitutional AI debate engine and alignment architecture.`}
+        actions={
+          <ButtonLink href="/platform" iconEnd={<ArrowRight className="h-3.5 w-3.5" />}>
             Learn about Chimera on the Platform page
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
+          </ButtonLink>
+        }
+      />
 
-      <EpisodeFilters episodes={chimeraEpisodes.map(toEpisodeSummary)} />
+      <div className="mt-10 md:mt-14">
+        <EpisodeFilters episodes={chimeraEpisodes.map(toEpisodeSummary)} />
+      </div>
     </div>
   );
 }
