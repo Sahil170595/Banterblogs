@@ -13,6 +13,8 @@ export interface PageHeaderProps {
   actions?: ReactNode;
   /** the first-load entrance; on unless a page opts out */
   entrance?: boolean;
+  /** the lede paints at once, out of the entrance, where it is the page's largest text (its LCP element) */
+  stillLede?: boolean;
   className?: string;
 }
 
@@ -24,23 +26,27 @@ export interface PageHeaderProps {
  * never held back. A page joins its first cards or rows to the sequence with
  * entranceItem(i, HEAD_ENTRANCE_GROUPS). Keep the page's largest text block
  * (its LCP element, when the title is short) out of any delayed group or
- * item: Chrome credits a late fade from 0 to LCP only when it ends.
+ * item: Chrome credits a late fade from 0 to LCP only when it ends. Where
+ * the lede is that block, stillLede paints it at once and the meta row
+ * follows the title directly.
  */
-export function PageHeader({ title, eyebrow, lede, meta, actions, entrance = true, className }: PageHeaderProps) {
+export function PageHeader({ title, eyebrow, lede, meta, actions, entrance = true, stillLede = false, className }: PageHeaderProps) {
   // an entrance group's class and --group, merged with the element's own classes
-  const group = (index: number, classes?: string) => {
-    const props = entrance ? entranceGroup(index) : undefined;
+  const group = (index: number | null, classes?: string) => {
+    const props = entrance && index !== null ? entranceGroup(index) : undefined;
     return { className: cn(props?.className, classes) || undefined, style: props?.style };
   };
+  const ledeGroup = stillLede ? null : 1;
+  const metaGroup = stillLede ? 1 : 2;
   return (
     <header className={cn('pt-6 md:pt-10', className)}>
       <div {...group(0)}>
         {eyebrow && <div className="mb-3">{eyebrow}</div>}
         <h1 className="text-heading-48 text-foreground">{title}</h1>
       </div>
-      {lede && <p {...group(1, 'mt-4 max-w-[60ch] text-copy-17 text-prose')}>{lede}</p>}
+      {lede && <p {...group(ledeGroup, 'mt-4 max-w-[60ch] text-copy-17 text-prose')}>{lede}</p>}
       {(meta || actions) && (
-        <div {...group(2, 'mt-5 flex flex-wrap items-center gap-x-6 gap-y-3')}>
+        <div {...group(metaGroup, 'mt-5 flex flex-wrap items-center gap-x-6 gap-y-3')}>
           {meta}
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>

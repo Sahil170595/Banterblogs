@@ -197,6 +197,12 @@ html {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: hsl(var(--foreground));
+  /* A fixed box, 12 letters x (0.6em JetBrains Mono advance + 0.18em
+     tracking): the fallback mono is wider, so where the font is not
+     preloaded (the 404) its swap shifted the header (CLS 0.004). */
+  display: inline-block;
+  width: 9.36em;
+  white-space: nowrap;
 }
 
 /* In the components layer so utilities on shell children (.fixed, .z-50)
@@ -856,11 +862,15 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
 :root {
   /* items follow the three head groups unless they say otherwise */
   --entrance-items-after: 3;
+  /* not 0: Chrome skips opacity-0 elements as LCP candidates and credits a
+     fade only when it ends (a late group put /tools LCP at 992 ms against a
+     ~200 ms first paint); from 1% the step is a candidate on its first frame */
+  --entrance-start-opacity: 0.01;
 }
 
 @keyframes entrance-rise {
   from {
-    opacity: 0;
+    opacity: var(--entrance-start-opacity);
     transform: translateY(var(--motion-rise));
     filter: blur(var(--blur-enter));
   }
@@ -1767,3 +1777,200 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end report page */
+
+/* R3-B1 */
+/* The warmed header glass (components/headerGlass.ts): once the page has
+   settled, the glass rests at a floor too faint to see instead of 0, so a
+   cold GPU compiles its blur then rather than on the first scrolled frame.
+   Only the keyframes change; the scroll timeline and range carry over. */
+:root {
+  --header-glass-floor: 0.01;
+}
+
+@keyframes header-surface-warm {
+  from {
+    opacity: var(--header-glass-floor);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header[data-glass="warm"]::before {
+      animation-name: header-surface-warm;
+    }
+  }
+}
+
+/* The profile rail (components/ui/ProfileLayout.tsx): where the screen is
+   wide and tall enough to hold it, the identity, links and index stay beside
+   the page as it scrolls, pinned where they first sat. */
+@media (min-width: 1024px) and (min-height: 45rem) {
+  .profile-rail {
+    position: sticky;
+    top: calc(var(--site-header-height) + 2.5rem);
+    align-self: start;
+  }
+}
+
+/* The rail's index: a hairline between number and label that draws out to
+   its full length under the pointer (scale only, so the label never moves). */
+.rail-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.375rem;
+  color: hsl(var(--muted-foreground));
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.rail-link:hover,
+.rail-link:focus-visible {
+  color: hsl(var(--foreground));
+}
+
+.rail-line {
+  width: 2rem;
+  height: 1px;
+  background-color: currentColor;
+  opacity: 0.5;
+  transform: scaleX(0.5);
+  transform-origin: left;
+  transition:
+    transform var(--duration-base) var(--ease-strong-out),
+    opacity var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rail-link:hover .rail-line {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--duration-hover), var(--duration-fast);
+  }
+}
+
+.rail-link:focus-visible .rail-line {
+  opacity: 1;
+  transform: none;
+}
+
+/* A row whose title is its link (/work, /about): the row's hairline turns
+   ember with the title, and the title's arrow nudges, as on a linked
+   ListRow; the rest of the row stays selectable text. */
+.list-row:has(.row-link:hover)::before {
+  background-color: hsl(var(--primary) / 0.6);
+}
+
+.row-link {
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.row-link:hover,
+.row-link:hover .row-arrow {
+  color: hsl(var(--primary));
+}
+
+.row-link .row-arrow {
+  display: inline-block;
+  vertical-align: -0.125em;
+  transition:
+    transform var(--duration-base) var(--ease-strong-out),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row-link:hover .row-arrow {
+    transform: translate(calc(var(--motion-nudge) / 2), calc(var(--motion-nudge) / -2));
+    transition-duration: var(--duration-hover), var(--duration-fast);
+  }
+
+  .row-link:hover .row-arrow[data-direction="forward"] {
+    transform: translateX(var(--motion-nudge));
+  }
+}
+
+/* CommandChip (components/ui/CommandChip.tsx): a command on a plate one
+   step darker than the card it sits on, edged with an inset hairline. */
+.command-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--background) / 0.6);
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.08);
+  padding: 0.625rem 1rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  scrollbar-width: thin;
+}
+
+/* A product's facts on one line, a middot between each (ToolPage). */
+.meta-list {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.5rem;
+  row-gap: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-list li + li::before {
+  content: "\00B7";
+  margin-right: 0.5rem;
+  color: hsl(var(--muted-foreground) / 0.6);
+}
+
+/* The tool evidence table (ToolPage): hairline rows (an inset shadow per
+   cell, not a border) with tabular figures. On a phone each row stacks its
+   claim, detail and reports; the markup states the table roles, so the
+   stacking keeps them. */
+.evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.evidence-table th {
+  padding: 0 1.5rem 0.75rem 0;
+  vertical-align: bottom;
+}
+
+.evidence-table td {
+  padding: 1.25rem 1.5rem 1.25rem 0;
+  vertical-align: top;
+  box-shadow: inset 0 1px 0 hsl(var(--border) / 0.6);
+}
+
+.evidence-table :is(th, td):last-child {
+  padding-right: 0;
+}
+
+@media (max-width: 767px) {
+  .evidence-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .evidence-table :is(tbody, tr, td) {
+    display: block;
+  }
+
+  .evidence-table tbody tr {
+    padding-block: 1.25rem;
+    box-shadow: inset 0 1px 0 hsl(var(--border) / 0.6);
+  }
+
+  .evidence-table td {
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .evidence-table td + td {
+    margin-top: 0.5rem;
+  }
+}
+/* end R3-B1 */

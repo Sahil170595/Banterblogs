@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { Reveal } from '@/components/motion/Reveal';
+import { entranceGroup } from '@/components/motion/entrance';
+import { ButtonLink } from '@/components/ui/Button';
+import { ListRow } from '@/components/ui/ListRow';
+import { ProfileLayout } from '@/components/ui/ProfileLayout';
+import { Section } from '@/components/ui/Section';
+import { StatRow } from '@/components/ui/StatRow';
+import { ABOUT_LINKS, ECOSYSTEM } from '@/lib/about';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
-import { CHIMERAFORGE_TOOL } from '@/lib/tools';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/about' },
@@ -25,222 +31,114 @@ export const metadata: Metadata = {
   },
 };
 
+const SECTIONS = [
+  { id: 'what', label: 'What This Is' },
+  { id: 'ecosystem', label: 'The Ecosystem' },
+  { id: 'site', label: 'About This Site' },
+];
+// the R2 reading type: 18px in the prose colour, ~77 characters a line
+const READING = 'max-w-[39rem] text-copy-18 text-prose';
+// the first section's heading closes the entrance, after the rail's title and
+// identity; phones hide the rail index, so this keeps them at three groups
+const FIRST_HEADING_GROUP = 2;
+
 export default function AboutPage() {
   return (
-    <div className="container py-16">
-      {/* ── Hero ── */}
-      <div className="signal-panel-strong mb-16 p-8 md:p-12">
-        <div className="space-y-5 w-full">
-          <span className="signal-pill">About</span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Constitutional AI with signed, replayable decision traces.
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Chimera is a constitutional AI enforcement architecture. Every action routes through
-            an embedding-based safety classifier, escalates to multi-model debate when uncertain,
-            and produces cryptographically signed provenance chains with zero-knowledge proofs.
-            The system self-improves: debate outcomes train the alignment encoder through an RLAIF loop.
+    <ProfileLayout
+      eyebrow="About"
+      title="Constitutional AI with signed, replayable decision traces."
+      lede={
+        <>
+          Chimera is a constitutional AI enforcement architecture. Every action routes through
+          an embedding-based safety classifier, escalates to multi-model debate when uncertain,
+          and produces cryptographically signed provenance chains with zero-knowledge proofs.
+          The system self-improves: debate outcomes train the alignment encoder through an RLAIF loop.
+        </>
+      }
+      sections={SECTIONS}
+      identity={
+        <div className="space-y-4">
+          <p className="text-label-13 text-muted-foreground">
+            Built by <span className="font-medium text-foreground">Sahil Kadadekar</span> &middot;
+            Solo architect &middot; <span className="whitespace-nowrap">Sep 2025 &ndash; Present</span>
           </p>
-          <p className="text-sm text-muted-foreground/80">
-            Built by <span className="text-foreground font-medium">Sahil Kadadekar</span> &middot;
-            Solo architect &middot; Sep 2025 &ndash; Present
-          </p>
+          <StatRow
+            label="The program in numbers"
+            items={[
+              { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
+              { value: REPORTS.DISPLAY, label: 'Technical Reports' },
+            ]}
+          />
+        </div>
+      }
+    >
+      <div className="mt-14 md:mt-20">
+        <Section id="what" title="What This Is" headingProps={entranceGroup(FIRST_HEADING_GROUP)}>
+          <div className="space-y-10">
+            <div>
+              <h3 className="text-heading-20 text-foreground">The architecture</h3>
+              <p className={`mt-3 ${READING}`}>
+                A constitutional AI enforcement system spanning Python and Rust. An embedding
+                fast-path router handles routine queries and escalates uncertain ones to a
+                multi-model debate engine with heat-based escalation and three consensus
+                algorithms. The Rust runtime (7 crates) provides Ed25519 provenance chains, BFT consensus,
+                and zero-knowledge proofs for cross-trust-boundary communication. JARVIS is the agent layer —
+                multi-provider chat, voice (Whisper/Piper), semantic memory, tool execution with
+                human-in-the-loop approval, and proactive intelligence.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-heading-20 text-foreground">The research</h3>
+              <p className={`mt-3 ${READING}`}>
+                {MEASUREMENTS.DISPLAY} measurements across {REPORTS.DISPLAY} technical reports. Not wall-clock approximations —
+                CUDA event timing with defined hardware profiles and statistical methodology. Covers
+                model loading, ONNX conversion, TensorRT compilation, KV cache optimization,
+                multi-agent coordination, and safety analysis across Ollama, vLLM, and TGI.
+              </p>
+            </div>
+          </div>
+        </Section>
+
+        <Section id="ecosystem" title="The Ecosystem">
+          <ul>
+            {ECOSYSTEM.map((repo, index) => (
+              <Reveal as="li" key={repo.name}>
+                <ListRow index={String(index + 1).padStart(2, '0')} title={repo.name} meta={repo.lang} description={repo.what} />
+              </Reveal>
+            ))}
+          </ul>
+          <p className="mt-6 text-label-13 text-muted-foreground">9 repositories &middot; Python, Rust, TypeScript, C#</p>
+        </Section>
+
+        <Section id="site" title="About This Site">
+          <div className="space-y-5">
+            <p className={READING}>
+              268 episodes were auto-generated from git commits across the nine repositories (per-commit stream
+              archived 2026-06-26; each stream closes with a full retrospective). A multi-agent pipeline
+              (Chimera Multi-Agent) ingested commits and benchmark data, generated roundtable-style
+              commentary with four AI personas, and published to this Next.js site via GitHub + Vercel.
+            </p>
+            <p className={READING}>
+              The research archive surfaces {REPORTS.DISPLAY} technical reports with phase grouping, searchable titles,
+              and ISR with 15-minute revalidation. Every report links to real measurements and defined
+              methodology.
+            </p>
+          </div>
+        </Section>
+
+        <div className="page-section flex flex-wrap gap-3">
+          {ABOUT_LINKS.map((link, index) => (
+            <ButtonLink
+              key={link.href}
+              href={link.href}
+              variant={index === 0 ? 'primary' : 'secondary'}
+              iconEnd={index === 0 ? <ArrowRight className="h-4 w-4" /> : undefined}
+            >
+              {link.label}
+            </ButtonLink>
+          ))}
         </div>
       </div>
-
-      {/* ── What This Is ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          What This Is
-        </h2>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="signal-panel p-6">
-            <h3 className="font-semibold mb-3">The architecture</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              A constitutional AI enforcement system spanning Python and Rust. An embedding
-              fast-path router handles routine queries and escalates uncertain ones to a
-              multi-model debate engine with heat-based escalation and three consensus
-              algorithms. The Rust runtime (7 crates) provides Ed25519 provenance chains, BFT consensus,
-              and zero-knowledge proofs for cross-trust-boundary communication. JARVIS is the agent layer —
-              multi-provider chat, voice (Whisper/Piper), semantic memory, tool execution with
-              human-in-the-loop approval, and proactive intelligence.
-            </p>
-          </div>
-          <div className="signal-panel p-6">
-            <h3 className="font-semibold mb-3">The research</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {MEASUREMENTS.DISPLAY} measurements across {REPORTS.DISPLAY} technical reports. Not wall-clock approximations —
-              CUDA event timing with defined hardware profiles and statistical methodology. Covers
-              model loading, ONNX conversion, TensorRT compilation, KV cache optimization,
-              multi-agent coordination, and safety analysis across Ollama, vLLM, and TGI.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── The Ecosystem ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          The Ecosystem
-        </h2>
-
-        <div className="space-y-3">
-          {[
-            {
-              name: 'Banterpacks',
-              lang: 'Python, Rust',
-              what: 'Core monorepo — 6 subsystems: JARVIS (AI gateway), TDD002 (constitutional router), Chimera (debate engine), TDD005 (Rust runtime with ZK proofs + BFT), RLAIF (self-improving alignment), and Authoring (LLM providers).',
-            },
-            {
-              name: 'Banterhearts',
-              lang: 'Python',
-              what: `ML research platform — inference API, benchmarking infrastructure, AutoOpt agent, safety evaluation framework. Source of ${MEASUREMENTS.SHORT} measurements across ${REPORTS.DISPLAY} technical reports.`,
-            },
-            {
-              name: 'Chimeraforge',
-              lang: 'Python, Rust',
-              what: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — plans any registry / Ollama / HuggingFace model across 22 GPU profiles, and serves the same numbers to AI assistants over MCP.`,
-            },
-            {
-              name: 'Chimera Multi-Agent',
-              lang: 'Python',
-              what: 'Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the observability control plane (OTel, Datadog, DLQ).',
-            },
-            {
-              name: 'Chimeradroid',
-              lang: 'C# / Unity',
-              what: 'Android companion for JARVIS — voice, chat, session handoff, tool approval, mesh networking, offline-first.',
-            },
-            {
-              name: 'Echo',
-              lang: 'Python',
-              what: 'Messaging channel adapters — Slack and Discord bridges to JARVIS. Session tracking, device key auth.',
-            },
-            {
-              name: 'JARVIS Console',
-              lang: 'TypeScript / Next.js',
-              what: 'Web console for JARVIS — chat with streaming, control room dashboard, cognitive agent ELO, tool catalog, workflow management.',
-            },
-            {
-              name: 'This Site',
-              lang: 'TypeScript / Next.js',
-              what: 'Public presence. Episodes generated from git commits, research archive, platform documentation.',
-            },
-            {
-              name: 'Project Wyvern',
-              lang: 'Python, Rust, ROS 2',
-              what: 'Embodied autonomy plane. Governed mission execution between Chimera control and PX4/ArduPilot — 5-tier authority hierarchy, cryptographic mission replay, OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP in progress on PX4 + Gazebo.',
-            },
-          ].map((repo) => (
-            <div key={repo.name} className="signal-panel p-5 flex flex-col md:flex-row md:items-start gap-4">
-              <div className="md:w-48 shrink-0">
-                <h3 className="font-semibold text-foreground">{repo.name}</h3>
-                <div className="text-xs text-muted-foreground">
-                  {repo.lang}
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{repo.what}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 text-center text-sm text-muted-foreground/70">
-          9 repositories &middot; Python, Rust, TypeScript, C#
-        </div>
-      </section>
-
-      {/* ── Numbers ── */}
-      <section className="mb-20">
-        <div className="grid gap-4 grid-cols-2">
-          {[
-            { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
-            { value: REPORTS.DISPLAY, label: 'Technical Reports' },
-          ].map((stat) => (
-            <div key={stat.label} className="signal-panel p-5 text-center">
-              <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>
-              <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── This Site ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          About This Site
-        </h2>
-
-        <div className="signal-panel p-6 w-full">
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            268 episodes were auto-generated from git commits across the nine repositories (per-commit stream
-            archived 2026-06-26; each stream closes with a full retrospective). A multi-agent pipeline
-            (Chimera Multi-Agent) ingested commits and benchmark data, generated roundtable-style
-            commentary with four AI personas, and published to this Next.js site via GitHub + Vercel.
-          </p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            The research archive surfaces {REPORTS.DISPLAY} technical reports with phase grouping, searchable titles,
-            and ISR with 15-minute revalidation. Every report links to real measurements and defined
-            methodology.
-          </p>
-        </div>
-      </section>
-
-      {/* ── CTAs ── */}
-      <section>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/platform"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground pressable hover:bg-primary/90"
-          >
-            Platform Architecture
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/reports"
-            className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary pressable hover:border-primary hover:bg-primary/5"
-          >
-            Research Archive
-          </Link>
-          <Link
-            href="/papers"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
-          >
-            Papers
-          </Link>
-          <Link
-            href="/work"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
-          >
-            Work
-          </Link>
-          <Link
-            href="/episodes"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
-          >
-            Episodes
-          </Link>
-          <Link
-            href="https://substack.com/@sahilkadadekar"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
-          >
-            Substack
-          </Link>
-          <Link
-            href="https://linkedin.com/in/sahilkadadekar"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 px-5 py-2.5 text-sm font-semibold text-foreground pressable hover:border-primary/60 hover:text-primary"
-          >
-            LinkedIn
-          </Link>
-        </div>
-      </section>
-    </div>
+    </ProfileLayout>
   );
 }

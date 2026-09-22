@@ -5,6 +5,7 @@ import { Github, Linkedin, Menu, X } from 'lucide-react';
 import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from 'react';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from './SearchDialog';
+import { warmHeaderGlass } from './headerGlass';
 import { MOTION_ATTRIBUTE } from './motion/prePaint';
 import { Wordmark } from './ui/Wordmark';
 import { cn } from '@/lib/cn';
@@ -47,6 +48,7 @@ const motionArmed = () => document.documentElement.getAttribute(MOTION_ATTRIBUTE
 export function Header() {
   const [menu, setMenu] = useState<MenuState>('closed');
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   // On the galactic landing the nav floats transparent over the scene —
   // full-bleed space, nothing boxed off. Everywhere else it's the standard
@@ -60,6 +62,9 @@ export function Header() {
   const endFade = (event: AnimationEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) setMenu((state) => (state === 'closing' ? 'closed' : state));
   };
+
+  // the glass compiles its blur once the page settles, not on the first scroll (headerGlass.ts)
+  useEffect(() => (isLanding || !headerRef.current ? undefined : warmHeaderGlass(headerRef.current)), [isLanding]);
 
   // Escape closes the mobile disclosure — expected dismiss behavior, and the
   // menu is the only thing on screen once it is open.
@@ -78,6 +83,7 @@ export function Header() {
 
   return (
     <header
+      ref={headerRef}
       className={
         isLanding
           ? 'fixed top-0 z-50 w-full bg-transparent'
