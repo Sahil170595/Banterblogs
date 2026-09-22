@@ -1761,4 +1761,91 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
     }
   }
 }
+
+/* The profile rail (components/ui/ProfileLayout.tsx): where the screen is
+   wide and tall enough to hold it, the identity, links and index stay beside
+   the page as it scrolls, pinned where they first sat. */
+@media (min-width: 1024px) and (min-height: 45rem) {
+  .profile-rail {
+    position: sticky;
+    top: calc(var(--site-header-height) + 2.5rem);
+    align-self: start;
+  }
+}
+
+/* The rail's index: a hairline between number and label that draws out to
+   its full length under the pointer (scale only, so the label never moves). */
+.rail-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.375rem;
+  color: hsl(var(--muted-foreground));
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.rail-link:hover,
+.rail-link:focus-visible {
+  color: hsl(var(--foreground));
+}
+
+.rail-line {
+  width: 2.5rem;
+  height: 1px;
+  background-color: currentColor;
+  opacity: 0.5;
+  transform: scaleX(0.4);
+  transform-origin: left;
+  transition:
+    transform var(--duration-base) var(--ease-strong-out),
+    opacity var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rail-link:hover .rail-line {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--duration-hover), var(--duration-fast);
+  }
+}
+
+.rail-link:focus-visible .rail-line {
+  opacity: 1;
+  transform: none;
+}
+
+/* A row whose title is its link (/work, /about): the row's hairline turns
+   ember with the title, and the title's arrow nudges, as on a linked
+   ListRow; the rest of the row stays selectable text. */
+.list-row:has(.row-link:hover)::before {
+  background-color: hsl(var(--primary) / 0.6);
+}
+
+.row-link {
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.row-link:hover,
+.row-link:hover .row-arrow {
+  color: hsl(var(--primary));
+}
+
+.row-link .row-arrow {
+  display: inline-block;
+  vertical-align: -0.125em;
+  transition:
+    transform var(--duration-base) var(--ease-strong-out),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row-link:hover .row-arrow {
+    transform: translate(calc(var(--motion-nudge) / 2), calc(var(--motion-nudge) / -2));
+    transition-duration: var(--duration-hover), var(--duration-fast);
+  }
+
+  .row-link:hover .row-arrow[data-direction="forward"] {
+    transform: translateX(var(--motion-nudge));
+  }
+}
 /* end R3-B1 */
