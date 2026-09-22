@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import { NAV_RECEDE_RESET_MS, NAV_START_EVENT } from '@/components/motion/navRecede';
 import { BlackHole } from './BlackHole';
 import {
   SCENE_BACKGROUND,
@@ -77,6 +78,37 @@ function SceneClock({ paused, awake }: { paused: boolean; awake: boolean }) {
   return null;
 }
 
+/**
+ * A navigation away (navRecede's NAV_START_EVENT) stops the render loop, so
+ * the GPU and the main thread go to the next page, through the scene's own
+ * store rather than a React render: pausing through props re-rendered the
+ * whole scene inside the click's task. A navigation that never replaces the
+ * page lets it run again as it ran before.
+ */
+export function NavigationHold({ frozen }: { frozen: boolean }) {
+  const setFrameloop = useThree((state) => state.setFrameloop);
+  const frozenRef = useRef(frozen);
+  useEffect(() => {
+    frozenRef.current = frozen;
+  }, [frozen]);
+
+  useEffect(() => {
+    let reset: ReturnType<typeof setTimeout> | undefined;
+    const hold = () => {
+      setFrameloop('never');
+      clearTimeout(reset);
+      reset = setTimeout(() => setFrameloop(frozenRef.current ? 'demand' : 'always'), NAV_RECEDE_RESET_MS);
+    };
+    window.addEventListener(NAV_START_EVENT, hold);
+    return () => {
+      window.removeEventListener(NAV_START_EVENT, hold);
+      clearTimeout(reset);
+    };
+  }, [setFrameloop]);
+
+  return null;
+}
+
 // Reports once, when the scene is warm (sceneOpening.ts). Subscribers run
 // just before a frame is drawn, in the same task, so the state update this
 // triggers lands after that frame.
@@ -131,6 +163,7 @@ export default function GalacticScene({ onSelect, featuredName, onStarHover, onR
         />
       )}
       <SceneClock paused={paused} awake={awake} />
+      <NavigationHold frozen={frozen} />
       <SceneReadySignal onReady={onReady} />
       <color attach="background" args={[SCENE_BACKGROUND]} />
       <CameraRig />

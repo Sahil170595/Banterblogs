@@ -2,7 +2,7 @@ import 'highlight.js/styles/github-dark.css';
 import '@/app/reading.css';
 import fs from 'fs';
 import path from 'path';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { entranceGroup } from '@/components/motion/entrance';
@@ -85,9 +85,9 @@ export default async function CompendiumPage() {
                         <nav aria-label="Breadcrumb">
                             <ol className="report-crumbs">
                                 <li>
-                                    <Link href="/reports" transitionTypes={[NAV_BACK]}>
+                                    <IntentLink href="/reports" transitionTypes={[NAV_BACK]}>
                                         Research archive
-                                    </Link>
+                                    </IntentLink>
                                 </li>
                             </ol>
                         </nav>
@@ -132,7 +132,7 @@ export default async function CompendiumPage() {
                         <p className="mt-3 text-copy-16 text-prose">
                             Access all {REPORTS.DISPLAY} technical reports, {MEASUREMENTS.SHORT} measurements, and phase whitepapers.
                         </p>
-                        <Link
+                        <IntentLink
                             href="/reports"
                             transitionTypes={[NAV_BACK]}
                             className="group mt-3 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary"
@@ -141,7 +141,7 @@ export default async function CompendiumPage() {
                             <span aria-hidden="true" className="inline-block transition-transform duration-hover ease-strong-out group-hover:translate-x-[var(--motion-nudge)]">
                                 &rarr;
                             </span>
-                        </Link>
+                        </IntentLink>
                     </div>
                 </aside>
             </div>

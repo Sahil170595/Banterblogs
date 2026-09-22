@@ -74,7 +74,10 @@ export function Button({ variant, size, icon, iconEnd, className, type = 'button
 
 export interface ButtonLinkProps extends ButtonStyle, Slots {
   href: string;
-  /** an in-site page prefetches on intent (IntentLink), not when the button comes into view */
+  /**
+   * an in-site page prefetches on intent (IntentLink, the default), not when
+   * the button comes into view; false prefetches it on sight
+   */
   intent?: boolean;
   className?: string;
   'aria-label'?: string;
@@ -82,20 +85,34 @@ export interface ButtonLinkProps extends ButtonStyle, Slots {
 
 const isExternal = (href: string) => /^https?:\/\//.test(href);
 
-/** A Button that navigates: next/link inside the site, a new tab outside it. */
-export function ButtonLink({ href, intent = false, variant, size, icon, iconEnd, className, children, ...rest }: ButtonLinkProps) {
-  const external = isExternal(href);
-  const Anchor = intent && !external ? IntentLink : Link;
+/**
+ * A Button that navigates: inside the site an IntentLink, which prefetches on
+ * intent rather than on sight; outside it a plain link in a new tab.
+ */
+export function ButtonLink({ href, variant, size, icon, iconEnd, className, intent = true, children, ...rest }: ButtonLinkProps) {
+  const content = (
+    <Content icon={icon} iconEnd={iconEnd}>
+      {children}
+    </Content>
+  );
+  const classes = cn(button({ variant, size }), className);
+  if (isExternal(href)) {
+    return (
+      <a href={href} className={classes} target="_blank" rel="noopener noreferrer" {...rest}>
+        {content}
+      </a>
+    );
+  }
+  if (!intent) {
+    return (
+      <Link href={href} className={classes} {...rest}>
+        {content}
+      </Link>
+    );
+  }
   return (
-    <Anchor
-      href={href}
-      className={cn(button({ variant, size }), className)}
-      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      {...rest}
-    >
-      <Content icon={icon} iconEnd={iconEnd}>
-        {children}
-      </Content>
-    </Anchor>
+    <IntentLink href={href} className={classes} {...rest}>
+      {content}
+    </IntentLink>
   );
 }

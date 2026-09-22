@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft } from 'lucide-react';
 import { StreamingLadder } from '@/components/scenes/StreamingLadder';
 import sceneData from '@/data/scenes/streaming-ladder.json';
@@ -29,13 +29,13 @@ export default function StreamingLadderPage() {
   return (
     <div className="container py-12 md:py-20 max-w-5xl">
       <div className="mb-8 flex items-center justify-between gap-4">
-        <Link
+        <IntentLink
           href="/show"
           className="inline-flex items-center gap-2 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           back to show
-        </Link>
+        </IntentLink>
         <span className="signal-pill">Scene · 01</span>
       </div>
 

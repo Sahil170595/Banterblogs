@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem } from '@/components/motion/entrance';
@@ -103,9 +103,9 @@ export default function ToolsIndexPage() {
       <p className="mt-12 max-w-[60ch] text-copy-16 text-muted-foreground">
         quantfit is an independent tool, not one of the nine Chimera repositories — it productizes
         the safety-under-quantization research line.{' '}
-        <Link href="/platform" className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary">
+        <IntentLink href="/platform" className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary">
           See the platform
-        </Link>{' '}
+        </IntentLink>{' '}
         for the ecosystem itself.
       </p>
     </div>

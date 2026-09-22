@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type TransitionEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { Pause, Play } from 'lucide-react';
+import { NAV_RECEDE_ATTRIBUTE, NAV_RECEDE_RESET_MS, NAV_START_EVENT } from '@/components/motion/navRecede';
 import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
 import { ScenePoster } from './ScenePoster';
 import { SCENE_CONTEXT_ATTRIBUTES } from './sceneOpening';
@@ -147,7 +148,13 @@ export function GalacticBackdrop() {
   const [motionPaused, setMotionPaused] = useState(false);
   // latest-value ref so the interval callback sees pause state without resubscribing
   const tickerPausedRef = useRef(false);
+  // a navigation away is rendering the next page; a ref, so the click's task renders nothing
+  const leavingRef = useRef(false);
   const sceneRef = useRef<HTMLDivElement>(null);
+  // the chrome that recedes with the copy when a navigation leaves
+  const railRef = useRef<HTMLDivElement>(null);
+  const pauseRef = useRef<HTMLButtonElement>(null);
+  const chipsRef = useRef<HTMLElement>(null);
   // a lost GPU context is not retried for the rest of the visit
   const contextLostRef = useRef(false);
 
@@ -164,15 +171,40 @@ export function GalacticBackdrop() {
   }, [mode, tourStarted]);
 
   useEffect(() => {
-    // "Pause motion" holds the tour on its current system too, and so does
-    // a canvas nobody can see
+    // "Pause motion" holds the tour on its current system too, and so do a
+    // canvas nobody can see and a page on its way out
     if (mode !== 'scene' || !tourStarted || motionPaused || offscreen) return;
     const interval = setInterval(() => {
-      if (tickerPausedRef.current) return;
+      if (tickerPausedRef.current || leavingRef.current) return;
       setFeaturedIndex((index) => (index + 1) % STAR_SYSTEMS.length);
     }, TICKER_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [mode, tourStarted, motionPaused, offscreen]);
+
+  useEffect(() => {
+    // A navigation away: the chrome recedes with the copy and the tour holds
+    // (the scene holds its own frame: NavigationHold), all without a render,
+    // which would lengthen the click's task. One that never replaces the page
+    // gives them back.
+    let reset: ReturnType<typeof setTimeout> | undefined;
+    const recede = (on: boolean) => {
+      for (const el of [railRef.current, pauseRef.current, chipsRef.current]) el?.toggleAttribute(NAV_RECEDE_ATTRIBUTE, on);
+    };
+    const onLeave = () => {
+      leavingRef.current = true;
+      recede(true);
+      clearTimeout(reset);
+      reset = setTimeout(() => {
+        leavingRef.current = false;
+        recede(false);
+      }, NAV_RECEDE_RESET_MS);
+    };
+    window.addEventListener(NAV_START_EVENT, onLeave);
+    return () => {
+      window.removeEventListener(NAV_START_EVENT, onLeave);
+      clearTimeout(reset);
+    };
+  }, []);
 
   // pointerOver on star B can fire before pointerOut on star A — only the
   // owning star may clear its own hover
@@ -313,6 +345,7 @@ export function GalacticBackdrop() {
           title={motionLabel}
           // read by the hero pill's pulse (GalacticHero), which stops on 'paused'
           data-motion={motionPaused ? 'paused' : 'running'}
+          ref={pauseRef}
           className="pointer-events-auto absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-30 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/25 text-foreground/80 backdrop-blur-sm transition-colors hover:border-white/25 hover:text-primary sm:right-8"
         >
           {motionPaused ? (
@@ -328,6 +361,7 @@ export function GalacticBackdrop() {
           className={`transition-opacity ${selection ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
           aria-hidden={selection ? true : undefined}
           inert={selection ? true : undefined}
+          ref={railRef}
         >
           <SystemRail
             activeSystem={tickerSystem}
@@ -346,6 +380,7 @@ export function GalacticBackdrop() {
         <nav
           aria-label="Systems orbiting the Chimera core"
           className="pointer-events-auto absolute inset-x-4 bottom-20 z-30 sm:inset-x-8"
+          ref={chipsRef}
         >
           <ul className="flex flex-wrap gap-2">
             <li>
