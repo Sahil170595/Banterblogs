@@ -14,10 +14,10 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 // Every sentence of main's /papers prose (de0922c), verbatim.
 const OWNER_PROSE = [
   'Independent research on inference optimization, constitutional AI architectures, and empirical safety evaluation.',
-  'The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the speculative-decoding null result is public on arXiv; 8 more are under blind review at top ML venues and workshops, with 6 in preparation.',
+  'The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the speculative-decoding study is public on arXiv; 8 more are under blind review at top ML venues and workshops, with 6 in preparation.',
   `Each is backed by reproducible technical reports and artifact-level provenance from a ${MEASUREMENTS.DISPLAY} measurement program.`,
   'The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program.',
-  'The speculative-decoding null result is a public arXiv preprint.',
+  'The speculative-decoding study is a public arXiv preprint.',
   '8 papers submitted with PDFs, artifact manifests, and venue checklists complete.',
   'Now under blind review at top ML venues and workshops.',
   'Plus 5 workshop submissions under double-blind review.',
@@ -138,6 +138,18 @@ describe('papers', () => {
     }
     const rowLinks = [...page.querySelectorAll('article.list-row h3 a.row-link')].map((a) => a.getAttribute('href'));
     expect(rowLinks).toEqual(ARXIV.slice(PUBLISHED));
+  });
+
+  // R7: the owner's CV (2026-09-21) cites the speculative-decoding preprint by
+  // its scope alone; its expansion and equivalence claims were retracted, and
+  // the 57/41/2 split is a descriptive two-model share, not a causal one.
+  it('describes the speculative-decoding preprint by its scope, and the safety-cost split as the descriptive share it is', () => {
+    const preprint = [...page.querySelectorAll('article')][1];
+    expect(text(preprint)).toContain('Examines output differences and refusal behavior under temperature-zero speculative decoding.');
+    expect(text(page)).toContain(
+      'Across two shared anchor models, quantization, backend, and concurrency account for 57%, 41%, and 2% of normalized safety-score changes: descriptive shares, not a causal decomposition.',
+    );
+    for (const retired of ['60,849', '0.024', '25 of 27', 'null result', 'drives 57%']) expect(text(page), retired).not.toContain(retired);
   });
 
   it('counts the withheld submissions in the section description, never as a card or a title', () => {
