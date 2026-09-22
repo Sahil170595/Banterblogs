@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState, type MouseEvent } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, SortAsc, SortDesc } from 'lucide-react';
 import type { EpisodeSummary } from '@/lib/episodes';
 import { EpisodeSearch } from '@/lib/search';
@@ -17,6 +18,45 @@ interface EpisodeFiltersProps {
 }
 
 type SortKey = 'date' | 'title' | 'complexity' | 'files';
+type SortOrder = 'asc' | 'desc';
+
+const SORT_KEYS: readonly SortKey[] = ['date', 'title', 'complexity', 'files'];
+const SORT_ORDERS: readonly SortOrder[] = ['asc', 'desc'];
+
+interface Filters {
+  query: string;
+  tag: string;
+  sortBy: SortKey;
+  sortOrder: SortOrder;
+}
+
+const DEFAULT_FILTERS: Filters = { query: '', tag: '', sortBy: 'date', sortOrder: 'asc' };
+
+// The filters live in the URL (?q=&tag=&sort=&order=), defaults left out, so a
+// reload or a shared link opens the same list.
+export const FILTER_PARAMS = { query: 'q', tag: 'tag', sortBy: 'sort', sortOrder: 'order' } as const;
+
+const oneOf = <T extends string>(allowed: readonly T[], value: string | null, fallback: T): T =>
+  allowed.includes(value as T) ? (value as T) : fallback;
+
+function filtersFrom(params: URLSearchParams): Filters {
+  return {
+    query: params.get(FILTER_PARAMS.query) ?? DEFAULT_FILTERS.query,
+    tag: params.get(FILTER_PARAMS.tag) ?? DEFAULT_FILTERS.tag,
+    sortBy: oneOf(SORT_KEYS, params.get(FILTER_PARAMS.sortBy), DEFAULT_FILTERS.sortBy),
+    sortOrder: oneOf(SORT_ORDERS, params.get(FILTER_PARAMS.sortOrder), DEFAULT_FILTERS.sortOrder),
+  };
+}
+
+/** the query string for `filters`, keeping any other parameter in `base` */
+function queryFor(filters: Filters, base: string): string {
+  const params = new URLSearchParams(base);
+  for (const key of Object.keys(FILTER_PARAMS) as Array<keyof Filters>) {
+    params.delete(FILTER_PARAMS[key]);
+    if (filters[key] !== DEFAULT_FILTERS[key]) params.set(FILTER_PARAMS[key], filters[key]);
+  }
+  return params.toString();
+}
 
 // Incremental rendering: SSR-ing all 268 cards produced a ~2MB HTML document.
 // Render a page at a time; "Load more" extends the window, and any filter
@@ -28,12 +68,39 @@ const OPTION_CLASS = 'bg-background text-foreground';
 const ENTRANCE_ROWS = 3;
 const FIELD = 'h-10 rounded-full border border-border bg-background text-copy-14 text-foreground transition-colors duration-fast ease-standard hover:border-foreground/30 focus-visible:border-primary/60';
 const CHIP = 'pressable h-7 shrink-0 rounded-full px-3 text-label-13 font-medium';
+// an inset ember ring on the selected chip, a cue beyond its tint
+const CHIP_SELECTED = 'bg-primary/15 text-primary ring-1 ring-inset ring-primary';
 
 export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS }: EpisodeFiltersProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortKey>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedTag, setSelectedTag] = useState<string>('');
+  const router = useRouter();
+  const pathname = usePathname();
+  // The visitor's filters lead; the URL follows through router.replace (no
+  // history entry, no scroll). The list renders outside the Suspense boundary
+  // that reads the URL, so the prerendered default list hydrates in place.
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [urlParams, setUrlParams] = useState('');
+  // query strings written but not yet read back: while typing, an older write
+  // can land after a newer keystroke and must not replace it
+  const pendingWrites = useRef<string[]>([]);
+  const onUrlChange = useCallback((params: string) => {
+    setUrlParams(params);
+    const pending = pendingWrites.current;
+    const echo = pending.indexOf(params);
+    if (echo >= 0) {
+      pending.splice(0, echo + 1);
+      return;
+    }
+    pending.length = 0;
+    setFilters(filtersFrom(new URLSearchParams(params)));
+  }, []);
+  const { query: searchQuery, tag: selectedTag, sortBy, sortOrder } = filters;
+  const update = (patch: Partial<Filters>) => {
+    const next = { ...filters, ...patch };
+    setFilters(next);
+    const query = queryFor(next, urlParams);
+    pendingWrites.current.push(query);
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
   // only a tag picked with the pointer crossfades the list; typing and keys swap it at once
   const [pointerPick, setPointerPick] = useState(false);
   const filterKey = `${searchQuery}|${selectedTag}|${sortBy}|${sortOrder}`;
@@ -82,7 +149,7 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
   // a key press on a button reports no clicks (detail 0); a pointer click reports one or more
   const pickTag = (tag: string) => (event: MouseEvent<HTMLButtonElement>) => {
     setPointerPick(event.detail > 0);
-    setSelectedTag(tag);
+    update({ tag });
   };
 
   const chip = (tag: string, label: string) => {
@@ -95,7 +162,7 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
         aria-pressed={selected}
         className={cn(
           CHIP,
-          selected ? 'bg-primary/15 text-primary' : 'bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground',
+          selected ? CHIP_SELECTED : 'bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground',
         )}
       >
         {label}
@@ -105,6 +172,9 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
 
   return (
     <div className="space-y-5">
+      <Suspense fallback={null}>
+        <SearchParamsSync onChange={onUrlChange} />
+      </Suspense>
       <div {...entranceItem(0, entranceAfter)} className="space-y-3 sm:space-y-4">
         {/* on a phone: the search on its own line, then sort, order and the count on one */}
         <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
@@ -119,7 +189,7 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
               value={searchQuery}
               onChange={(e) => {
                 setPointerPick(false);
-                setSearchQuery(e.target.value);
+                update({ query: e.target.value });
               }}
               className={cn(FIELD, 'w-full pl-10 pr-4 text-base placeholder:text-muted-foreground md:text-copy-14')}
             />
@@ -130,7 +200,7 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
               value={sortBy}
               onChange={(e) => {
                 setPointerPick(false);
-                setSortBy(e.target.value as SortKey);
+                update({ sortBy: oneOf(SORT_KEYS, e.target.value, DEFAULT_FILTERS.sortBy) });
               }}
               aria-label="Sort episodes by"
               className={cn(FIELD, 'px-4')}
@@ -146,7 +216,7 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
               type="button"
               onClick={() => {
                 setPointerPick(false);
-                setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                update({ sortOrder: sortOrder === 'asc' ? 'desc' : 'asc' });
               }}
               aria-label={sortOrder === 'asc' ? 'Sorted ascending — switch to descending' : 'Sorted descending — switch to ascending'}
               className={cn(FIELD, 'pressable inline-flex w-10 items-center justify-center hover:text-primary')}
@@ -174,8 +244,7 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
             className="mt-5"
             onClick={() => {
               setPointerPick(false);
-              setSearchQuery('');
-              setSelectedTag('');
+              update({ query: DEFAULT_FILTERS.query, tag: DEFAULT_FILTERS.tag });
             }}
           >
             Clear filters
@@ -202,4 +271,11 @@ export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS 
       )}
     </div>
   );
+}
+
+// Reading the URL opts only this empty boundary out of the static prerender.
+function SearchParamsSync({ onChange }: { onChange: (params: string) => void }) {
+  const params = useSearchParams().toString();
+  useEffect(() => onChange(params), [params, onChange]);
+  return null;
 }

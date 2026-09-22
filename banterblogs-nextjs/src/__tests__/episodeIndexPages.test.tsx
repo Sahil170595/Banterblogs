@@ -37,6 +37,12 @@ const ARCHIVE = [
   make(1, 'chimera', ['architecture', 'chimera']),
   make(2, 'chimera', ['chimera']),
 ];
+// the episode filters read and write the URL through the app router
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/episodes',
+  useRouter: () => ({ replace: vi.fn() }),
+}));
 // the page renders the archive through the real pipeline; these tests need only its shape
 vi.mock('@/lib/episodes', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/episodes')>();
