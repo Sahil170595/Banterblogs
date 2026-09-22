@@ -128,6 +128,9 @@ describe('type roles', () => {
     ['heading-32', 32, '1.2', '-0.02em', '560'],
     ['heading-24', 24, '1.3333', '-0.02em', '560'],
     ['heading-20', 20, '1.375', '-0.015em', '560'],
+    // the standfirst under a short page title (R5: /work), at the copy weight
+    ['copy-24', 24, '1.4', '-0.01em', undefined],
+    ['copy-20', 20, '1.45', '-0.005em', undefined],
     ['copy-18', 18, '1.6', undefined, undefined],
     ['copy-17', 17, '1.6', undefined, undefined],
     ['copy-16', 16, '1.625', undefined, undefined],

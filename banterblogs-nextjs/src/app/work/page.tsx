@@ -1,23 +1,28 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, ChevronRight, ExternalLink, Github, Linkedin, type LucideIcon } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem } from '@/components/motion/entrance';
 import { ButtonLink } from '@/components/ui/Button';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { PROFILE_ITEMS_AFTER, ProfileLayout } from '@/components/ui/ProfileLayout';
 import { Section } from '@/components/ui/Section';
+import { TimelineFigure } from '@/components/ui/TimelineFigure';
 import { cn } from '@/lib/cn';
+import { monthOf } from '@/lib/timeline';
 import {
+  CAREER_TIMELINE,
   EDUCATION,
   EXPERIENCE,
   HERO_HEADLINE,
   HERO_SUMMARY,
   NEXT_LINKS,
+  PROFILE_CTA,
   PROFILE_LINKS,
   RESEARCH,
   SKILLS,
+  WORK_TITLE,
   type Experience,
   type ResearchItem,
 } from '@/lib/work';
@@ -58,6 +63,8 @@ const ENTRANCE_ROWS = 2;
 const RESEARCH_VISIBLE_BULLETS = 1;
 const ROLE_VISIBLE_BULLETS = 2;
 const CURRENT_ROLE = /Present$/;
+// a role still running reaches the month the page was built in
+const BUILT = monthOf(new Date());
 
 const isExternal = (href: string) => /^https?:\/\//.test(href);
 const ordinal = (index: number) => String(index + 1).padStart(2, '0');
@@ -66,14 +73,14 @@ const ordinal = (index: number) => String(index + 1).padStart(2, '0');
 function TitleLink({ href, children }: { href: string; children: ReactNode }) {
   const external = isExternal(href);
   return (
-    <Link href={href} className="row-link" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+    <IntentLink href={href} className="row-link" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
       {children}{' '}
       {external ? (
         <ArrowUpRight aria-hidden="true" className="row-arrow h-4 w-4 text-muted-foreground" />
       ) : (
         <ArrowRight aria-hidden="true" data-direction="forward" className="row-arrow h-4 w-4 text-muted-foreground" />
       )}
-    </Link>
+    </IntentLink>
   );
 }
 
@@ -84,9 +91,10 @@ const BULLET = 'relative pl-5 [overflow-wrap:anywhere] before:absolute before:le
 /**
  * An entry's bullets: the first `visible`, then the rest in one closed
  * disclosure (.more-details in globals.css), so the page skims as headlines
- * and every word stays on it, one click away.
+ * and every word stays on it, one click away. The summary names its entry
+ * for assistive tech (`entry`), so eight of them never read alike.
  */
-function Bullets({ items, visible }: { items: string[]; visible: number }) {
+function Bullets({ items, visible, entry }: { items: string[]; visible: number; entry: string }) {
   const shown = items.slice(0, visible);
   const folded = items.slice(visible);
   return (
@@ -104,6 +112,7 @@ function Bullets({ items, visible }: { items: string[]; visible: number }) {
             <ChevronRight aria-hidden="true" className="more-chevron h-3.5 w-3.5" />
             <span className="more-closed">Show {folded.length} more</span>
             <span className="more-open">Show fewer</span>
+            <span className="sr-only"> about {entry}</span>
           </summary>
           <ul className={cn('mt-3', BULLET_LIST)}>
             {folded.map((bullet) => (
@@ -133,7 +142,7 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
           <TitleLink href={item.href}>{item.label}</TitleLink>
         </h3>
         {item.meta && <p className="mt-1.5 text-label-13 text-muted-foreground">{item.meta}</p>}
-        <Bullets items={item.bullets} visible={RESEARCH_VISIBLE_BULLETS} />
+        <Bullets items={item.bullets} visible={RESEARCH_VISIBLE_BULLETS} entry={item.label} />
         {item.evidence && item.evidence.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-1">
             <span className="mr-2 text-label-12-mono text-muted-foreground/80">Evidence</span>
@@ -165,7 +174,7 @@ function RoleRow({ job }: { job: Experience }) {
         <p className="mt-1 text-copy-16 text-muted-foreground">
           {job.company} · {job.location}
         </p>
-        <Bullets items={job.bullets} visible={ROLE_VISIBLE_BULLETS} />
+        <Bullets items={job.bullets} visible={ROLE_VISIBLE_BULLETS} entry={`${job.role}, ${job.company}`} />
       </div>
     </Reveal>
   );
@@ -175,25 +184,40 @@ export default function WorkPage() {
   return (
     <ProfileLayout
       eyebrow="Work"
-      title={HERO_HEADLINE}
+      title={WORK_TITLE}
+      subtitle={HERO_HEADLINE}
       lede={HERO_SUMMARY}
       sections={SECTIONS}
+      figure={
+        <Reveal className="mt-10">
+          <TimelineFigure {...CAREER_TIMELINE} now={BUILT} />
+        </Reveal>
+      }
       identity={
-        <div className="flex flex-wrap gap-2">
-          {PROFILE_LINKS.map((link) => {
-            const Icon = LINK_ICONS[link.label];
-            return (
-              <ButtonLink
-                key={link.href}
-                href={link.href}
-                variant={isExternal(link.href) ? 'secondary' : 'primary'}
-                icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                iconEnd={isExternal(link.href) ? undefined : <ArrowRight className="h-4 w-4" />}
-              >
-                {link.label}
-              </ButtonLink>
-            );
-          })}
+        // the one call to action, then the profiles as quiet links
+        <div>
+          <ButtonLink intent href={PROFILE_CTA.href} variant="primary" iconEnd={<ArrowRight className="h-4 w-4" />}>
+            {PROFILE_CTA.label}
+          </ButtonLink>
+          <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+            {PROFILE_LINKS.map((link) => {
+              const Icon = LINK_ICONS[link.label];
+              return (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-7 items-center gap-1.5 text-copy-14 text-muted-foreground transition-colors duration-fast ease-standard hover:text-foreground"
+                  >
+                    {Icon && <Icon aria-hidden="true" className="h-4 w-4" />}
+                    {link.label}
+                    <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       }
     >
@@ -245,6 +269,7 @@ export default function WorkPage() {
           {NEXT_LINKS.map((link, index) => (
             <ButtonLink
               key={link.href}
+              intent
               href={link.href}
               variant={index === 0 ? 'primary' : 'secondary'}
               iconEnd={index === 0 ? <ArrowRight className="h-4 w-4" /> : undefined}

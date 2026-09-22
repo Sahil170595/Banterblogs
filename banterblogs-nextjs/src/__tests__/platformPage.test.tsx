@@ -1,5 +1,5 @@
+import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
-import type { ReactElement } from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import PlatformPage from '@/app/platform/page';
 import { STAR_SYSTEMS } from '@/components/galactic/systems';
@@ -7,11 +7,22 @@ import { ENTRANCE_GROUP_CLASS, ENTRANCE_ITEM_ATTRIBUTE } from '@/components/moti
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 
-// /platform on the R3 primitives: an unboxed PageHeader with the key numbers
-// in its stat row, each repository an interactive Card with its own drawing
-// from the archive's visual generator, subsystems and the data flow as
-// hairline grids rather than boxes inside boxes, reveals on every grid. The
-// owner's copy survives sentence for sentence.
+// /platform as an architecture page (R5 design re-judge P1-B: it was the
+// last card wall, 20 filled surfaces). An unboxed head with the key numbers;
+// each core engine one large drawing from the archive's generator over its
+// story and a hairline list of its subsystems; the gateway a figure of a
+// chat turn's path; every other system a hairline row with a small drawing.
+// No card surfaces: the only filled shapes are the drawings' plates and the
+// one figure. The owner's copy survives sentence for sentence.
+
+// prefetch never reaches the DOM; surface it on the anchor
+vi.mock('next/link', async () => {
+  const { createElement } = await import('react');
+  return {
+    default: ({ prefetch, children, onNavigate: _onNavigate, transitionTypes: _types, ...props }: { prefetch?: boolean | null; onNavigate?: unknown; transitionTypes?: unknown; children?: ReactNode }) =>
+      createElement('a', { ...props, 'data-prefetch': prefetch === false ? 'off' : 'auto' }, children),
+  };
+});
 
 // Every sentence of the page's prose at adc8433, verbatim.
 const OWNER_PROSE = [
@@ -73,38 +84,33 @@ const OWNER_PROSE = [
   `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements across inference, optimization, and safety.`,
   "Who built this, why, and where it's headed.",
 ];
-// every subsystem, gateway module and data-flow step name
-const LABELS = [
-  'JARVIS Gateway',
-  'Constitutional Router',
-  'Debate Engine',
-  'Rust Runtime',
-  'Inference API',
-  'Safety Research',
-  'Benchmarking',
-  'AutoOpt Agent',
-  'Calendar',
-  'Inbox',
-  'Memory',
-  'Smart Home',
-  'Proactive',
-  'Tools',
-  'Voice',
-  'Ingest',
-  'Process',
-  'Publish',
-  'Serve',
-];
+const SUBSYSTEMS: Record<string, string[]> = {
+  Banterpacks: ['JARVIS Gateway', 'Constitutional Router', 'Debate Engine', 'Rust Runtime'],
+  Banterhearts: ['Inference API', 'Safety Research', 'Benchmarking', 'AutoOpt Agent'],
+};
+const FOOTNOTES: Record<string, string> = {
+  Banterpacks: 'RLAIF self-improving loop · 3-stage tool approval',
+  Banterhearts: '37-file evaluation framework · 20 monitoring modules · 12 security modules',
+};
+const GATEWAY_MODULES = ['Calendar', 'Inbox', 'Memory', 'Smart Home', 'Proactive', 'Tools', 'Voice'];
+const DATA_FLOW = ['Ingest', 'Process', 'Publish', 'Serve'];
 const CORE = ['Banterpacks', 'Banterhearts'];
-const SUPPORTING = ['Chimera Multi-Agent', 'Chimeraforge', 'Chimeradroid', 'Echo', 'JARVIS Console', 'This Site', 'Project Wyvern'];
-const REPOSITORIES = [...CORE, ...SUPPORTING, 'quantfit'];
+const SUPPORTING = ['Chimera Multi-Agent', 'Chimeraforge', 'Chimeradroid', 'Echo', 'JARVIS Console', 'This Site'];
+const ROWS = [...SUPPORTING, 'Project Wyvern', 'quantfit'];
+const REPOSITORIES = [...CORE, ...ROWS];
 // the page's own links at adc8433, each kept
 const PAGE_LINKS = ['/tools/chimeraforge', '/tools/quantfit', '/show', '/show/streaming-ladder', '/show/zk-alignment-proof', '/show/bft-consensus', '/reports', '/episodes', '/about'];
-// where a repository card leads: the landing's destination for it, except the two CLIs, whose cards keep their tool pages
+// where a repository leads: the landing's destination for it, except the two CLIs, which keep their tool pages
 const TOOL_PAGES: Record<string, { href: string; label: string }> = {
   Chimeraforge: { href: '/tools/chimeraforge', label: 'pip install chimeraforge' },
   quantfit: { href: '/tools/quantfit', label: 'pip install quantfit' },
 };
+const destinationOf = (name: string) =>
+  TOOL_PAGES[name] ??
+  (() => {
+    const system = STAR_SYSTEMS.find((s) => s.name === name)!;
+    return { href: system.href, label: system.ctaLabel };
+  })();
 // rendering the real archive takes seconds; the page only counts it
 const ARCHIVED_EPISODES = 3;
 vi.mock('@/lib/episodes', async (importOriginal) => {
@@ -117,7 +123,9 @@ const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
 let element: ReactElement;
 let page: HTMLElement;
 const text = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
-const cardFor = (name: string) => [...page.querySelectorAll('article')].find((a) => text(a.querySelector('h3') ?? a) === name);
+// an engine is an article; any other system a row that is one link
+const articleFor = (name: string) => [...page.querySelectorAll('article, a.list-row')].find((a) => text(a.querySelector('h3') ?? a) === name);
+const namesIn = (section: string) => [...page.querySelectorAll(`#${section} a.list-row h3`)].map(text);
 
 beforeAll(async () => {
   element = await PlatformPage();
@@ -147,20 +155,83 @@ describe('platform head', () => {
     for (const item of items) expect(item.style.getPropertyValue('--entrance-items-after')).toBe('3');
   });
 
-  it('keeps every sentence of the owner copy, and every label', () => {
+  it('keeps every sentence of the owner copy, and every subsystem, module and step name', () => {
     const all = text(page);
     for (const sentence of OWNER_PROSE) expect(all, sentence).toContain(sentence);
-    for (const label of LABELS) expect(all, label).toContain(label);
+    for (const label of [...Object.values(SUBSYSTEMS).flat(), ...GATEWAY_MODULES, ...DATA_FLOW]) expect(all, label).toContain(label);
     expect(all).toContain(`${ARCHIVED_EPISODES} archived episodes documenting commits, decisions, and telemetry data points.`);
   });
 });
 
-describe('repositories', () => {
-  it('draws every repository as a card with its own picture from the archive generator, seeded by its name', () => {
+describe('core engines', () => {
+  it('gives each engine one large drawing and no card: the plate, then its name, stack, story and subsystems', () => {
+    const engines = [...page.querySelectorAll('#core-engines article')];
+    expect(engines.map((a) => text(a.querySelector('h3')!))).toEqual(CORE);
+    for (const engine of engines) {
+      const name = text(engine.querySelector('h3')!);
+      expect(engine.querySelectorAll('.repo-plate'), name).toHaveLength(1);
+      expect(engine.querySelector('.repo-plate svg.rv'), name).not.toBeNull();
+      expect(engine.firstElementChild?.classList.contains('repo-plate'), `${name} opens on its drawing`).toBe(true);
+      expect(engine.closest('.card-surface, .card-depth'), name).toBeNull();
+      expect(engine.querySelector('.card-surface'), name).toBeNull();
+    }
+  });
+
+  it('lists the subsystems as a hairline definition list, name and what it does, with no icons and no boxes', () => {
+    for (const name of CORE) {
+      const list = articleFor(name)!.querySelector('dl')!;
+      expect(list, name).not.toBeNull();
+      const rows = [...list.children];
+      expect(rows.map((row) => text(row.querySelector('dt')!))).toEqual(SUBSYSTEMS[name]);
+      for (const row of rows) {
+        expect(row.classList.contains('list-row')).toBe(true);
+        expect(text(row.querySelector('dd')!).length).toBeGreaterThan(0);
+      }
+      expect(list.querySelector('svg'), `${name}: no icon per subsystem`).toBeNull();
+      const classes = [list, ...list.querySelectorAll('*')].flatMap((el) => [...el.classList]);
+      expect(classes.filter((c) => BORDER_WIDTH.test(c) || /^bg-/.test(c) || /^rounded/.test(c) || c === 'card-surface')).toEqual([]);
+    }
+  });
+
+  it('closes each engine on its footnote as plain text, and a quiet link to where the landing sends it', () => {
+    for (const name of CORE) {
+      const engine = articleFor(name)!;
+      const { href, label } = destinationOf(name);
+      const link = engine.querySelector(`a[href="${href}"]`)!;
+      expect(link, name).not.toBeNull();
+      expect(text(link)).toBe(label);
+      expect(link.classList.contains('row-link'), name).toBe(true);
+      // no mono caps: the footnote reads at the label size, in sentence case
+      const footnote = [...engine.querySelectorAll('p')].find((p) => text(p) === FOOTNOTES[name])!;
+      expect(footnote, name).toBeDefined();
+      expect(footnote.className).not.toMatch(/label-12-mono|uppercase/);
+    }
+  });
+});
+
+describe('gateway', () => {
+  it('replaces the icon strip with a figure of a chat turn’s path, from the owner’s own sentences', () => {
+    const gateway = page.querySelector('#jarvis-gateway')!;
+    const figure = gateway.querySelector('figure.flow')!;
+    expect(figure).not.toBeNull();
+    const steps = [...figure.querySelectorAll('.flow-label')].map(text);
+    expect(steps).toEqual(['Chat turn', 'Constitutional router', 'Propose', 'Approve', 'Execute']);
+    expect([...figure.querySelectorAll('.flow-step')].map((s) => s.getAttribute('data-kind'))).toEqual(['io', 'step', 'step', 'step', 'result']);
+    expect(gateway.querySelectorAll('svg.lucide, svg[class*="lucide"]'), 'no icon strip').toHaveLength(0);
+  });
+
+  it('names the seven modules in one line under the figure', () => {
+    const modules = page.querySelector('#jarvis-gateway ul[aria-label="Gateway modules"]')!;
+    expect([...modules.querySelectorAll('li')].map(text)).toEqual(GATEWAY_MODULES);
+  });
+});
+
+describe('systems', () => {
+  it('draws every repository from the archive generator, seeded by its name', () => {
     const drawings = REPOSITORIES.map((name) => {
-      const card = cardFor(name);
-      expect(card, name).toBeDefined();
-      const svg = card!.querySelector('svg.rv');
+      const article = articleFor(name);
+      expect(article, name).toBeDefined();
+      const svg = article!.querySelector('svg.rv');
       expect(svg, name).not.toBeNull();
       return `${svg!.getAttribute('data-family')}|${svg!.innerHTML}`;
     });
@@ -169,32 +240,40 @@ describe('repositories', () => {
     expect(new Set(drawings.map((d) => d.split('|')[0])).size).toBeGreaterThanOrEqual(4);
   });
 
-  it('makes every repository an interactive card that leads where the landing sends it, or to its tool page', () => {
-    for (const name of REPOSITORIES) {
-      const card = cardFor(name)!;
-      expect(card.classList.contains('card-depth'), name).toBe(true);
-      const link = card.querySelector('a.card-link')!;
-      const expected = TOOL_PAGES[name] ?? (() => {
-        const system = STAR_SYSTEMS.find((s) => s.name === name)!;
-        return { href: system.href, label: system.ctaLabel };
-      })();
-      expect(link.getAttribute('href'), name).toBe(expected.href);
-      expect(text(link), name).toBe(expected.label);
-      if (/^https?:/.test(expected.href)) expect(link.getAttribute('target'), name).toBe('_blank');
+  it('sets every other system as a hairline row with a small drawing, the whole row one link to where the landing sends it', () => {
+    for (const name of ROWS) {
+      const row = articleFor(name)!;
+      expect(row.tagName, name).toBe('A');
+      // the ListRow hairline, and the card hover: its drawing and its call to action turn ember
+      expect(row.classList.contains('list-row'), name).toBe(true);
+      expect(row.classList.contains('card-depth'), name).toBe(true);
+      expect(row.querySelector('.card-surface'), name).toBeNull();
+      expect(row.querySelectorAll('.repo-plate'), name).toHaveLength(1);
+      const expected = destinationOf(name);
+      expect(row.getAttribute('href'), name).toBe(expected.href);
+      expect(text(row.querySelector('.card-cta')!), name).toBe(expected.label);
+      if (/^https?:/.test(expected.href)) {
+        expect(row.getAttribute('target'), name).toBe('_blank');
+        expect(row.getAttribute('rel'), name).toBe('noopener noreferrer');
+      }
     }
   });
 
-  it('sets subsystems, gateway modules and the data flow in hairline grids, never boxes inside boxes', () => {
-    const grids = [...page.querySelectorAll('.hairline-grid')];
-    expect(grids.length).toBeGreaterThanOrEqual(4);
-    for (const grid of grids) {
-      for (const cell of grid.children) {
-        const classes = [...cell.querySelectorAll('*'), cell].flatMap((el) => [...el.classList]);
-        expect(classes.filter((c) => BORDER_WIDTH.test(c) || /^bg-/.test(c) || /^rounded/.test(c) || c === 'card-surface')).toEqual([]);
-      }
+  // R4 design re-judge: Project Wyvern, still in development, and the
+  // standalone CLI keep their own sections
+  it('keeps the six supporting systems together, and Project Wyvern and quantfit in their own sections', () => {
+    expect(namesIn('supporting-systems')).toEqual(SUPPORTING);
+    expect(namesIn('in-development')).toEqual(['Project Wyvern']);
+    expect(namesIn('standalone-tools')).toEqual(['quantfit']);
+  });
+
+  it('sets the data flow in a hairline grid, never boxes', () => {
+    const grid = page.querySelector('#data-flow .hairline-grid')!;
+    expect([...grid.children].map((cell) => text(cell.querySelector('h3')!))).toEqual(DATA_FLOW);
+    for (const cell of grid.children) {
+      const classes = [...cell.querySelectorAll('*'), cell].flatMap((el) => [...el.classList]);
+      expect(classes.filter((c) => BORDER_WIDTH.test(c) || /^bg-/.test(c) || /^rounded/.test(c) || c === 'card-surface')).toEqual([]);
     }
-    const core = cardFor('Banterpacks')!;
-    expect(core.querySelectorAll('.hairline-grid > *')).toHaveLength(4);
   });
 
   it('keeps the page links', () => {
@@ -202,26 +281,19 @@ describe('repositories', () => {
     for (const href of PAGE_LINKS) expect(hrefs, href).toContain(href);
   });
 
-  // R4 design re-judge: seven supporting systems in three columns left the
-  // last card alone on its row. Project Wyvern, still in development, takes
-  // its own section, laid on its side as the standalone tool is.
-  it('ends no grid on an orphan: the six supporting systems fill their rows, and Project Wyvern has its own section', () => {
-    const supporting = [...page.querySelectorAll('#supporting-systems article')].map((a) => text(a.querySelector('h3')!));
-    expect(supporting).toEqual(SUPPORTING.filter((name) => name !== 'Project Wyvern'));
-    // two columns, then three: six fills both
-    expect(supporting.length % 2).toBe(0);
-    expect(supporting.length % 3).toBe(0);
-    const development = page.querySelector('#in-development')!;
-    expect([...development.querySelectorAll('article')].map((a) => text(a.querySelector('h3')!))).toEqual(['Project Wyvern']);
+  // perf re-judge: plain links in view at load prefetched their pages
+  it('prefetches every in-site link on intent, not on sight', () => {
+    const internal = [...page.querySelectorAll('a[href^="/"]')];
+    expect(internal.length).toBeGreaterThanOrEqual(PAGE_LINKS.length);
+    for (const link of internal) expect(link.getAttribute('data-prefetch'), link.getAttribute('href')!).toBe('off');
   });
 
-  it('spends ember only on the current page and on hover: the repository links and step numbers are neutral', () => {
+  it('spends ember only on the current page and on hover: the links and step numbers are neutral at rest', () => {
     // no element is painted ember at rest (hover:/group-hover: variants are fine)
     const ember = [...page.querySelectorAll('*')].filter((el) => [...el.classList].some((c) => c === 'text-primary' || c.startsWith('text-primary/')));
     expect(ember.map((el) => text(el).slice(0, 30))).toEqual([]);
-    for (const name of REPOSITORIES) {
-      const cta = cardFor(name)!.querySelector('a.card-link')!.parentElement!;
-      expect(cta.classList.contains('card-cta'), name).toBe(true);
+    for (const name of ROWS) {
+      const cta = articleFor(name)!.querySelector('.card-cta')!;
       expect(cta.classList.contains('text-foreground/80'), name).toBe(true);
     }
   });
@@ -230,19 +302,23 @@ describe('repositories', () => {
     const onward = page.querySelector('nav[aria-label="Onward"]')!;
     expect([...onward.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/reports', '/episodes', '/about']);
     expect(onward.querySelector('.card-surface, .card-depth')).toBeNull();
-    // every card left on the page is a repository with its picture
-    expect([...page.querySelectorAll('.card-surface')].every((card) => card.querySelector('svg.rv'))).toBe(true);
   });
 });
 
 describe('platform page', () => {
+  it('draws no card surfaces: the only plates are the drawings and the one figure', () => {
+    expect(page.querySelectorAll('.card-surface')).toHaveLength(0);
+    expect(page.querySelectorAll('.repo-plate')).toHaveLength(REPOSITORIES.length);
+    expect(page.querySelectorAll('figure')).toHaveLength(1);
+  });
+
   it('draws no boxed panels and no borders', () => {
     expect(page.innerHTML).not.toMatch(/signal-(panel|pill|divider)|glass-ultra|backdrop/);
     const bordered = [...page.querySelectorAll('*')].filter((el) => [...el.classList].some((c) => BORDER_WIDTH.test(c)));
     expect(bordered).toEqual([]);
   });
 
-  it('reveals the grids as they scroll in', () => {
-    expect(page.querySelectorAll('[data-reveal]').length).toBeGreaterThanOrEqual(REPOSITORIES.length + 3);
+  it('reveals the drawings, rows and the figure as they scroll in', () => {
+    expect(page.querySelectorAll('[data-reveal]').length).toBeGreaterThanOrEqual(REPOSITORIES.length + 1);
   });
 });
