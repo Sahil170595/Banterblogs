@@ -28,7 +28,6 @@ const DISK_FRAG = /* glsl */ `
   uniform float uTime;
   uniform float uInner;
   uniform float uOuter;
-  uniform float uIgnite;
 
   ${NOISE_GLSL}
   ${EMBER_RAMP_GLSL}
@@ -75,7 +74,7 @@ const DISK_FRAG = /* glsl */ `
     float outerFeather = 1.0 - smoothstep(uOuter * 0.8, uOuter, r);
     float alpha = innerFeather * outerFeather;
 
-    gl_FragColor = vec4(col, alpha * uIgnite);
+    gl_FragColor = vec4(col, alpha);
   }
 `;
 
@@ -92,17 +91,15 @@ export function AccretionDisk({ inner = 1.6, outer = 7.5 }: AccretionDiskProps) 
       uTime: { value: 0 },
       uInner: { value: inner },
       uOuter: { value: outer },
-      uIgnite: { value: 0 },
     }),
     [inner, outer],
   );
 
-  useFrame(({ clock }, delta) => {
+  // opens lit: the poster under the arriving canvas is this disk, lit
+  useFrame(({ clock }) => {
     const mat = materialRef.current;
     if (!mat) return;
     mat.uniforms.uTime.value = clock.elapsedTime;
-    // ignition: the disk lights up over the first ~1.8s (torch in a cave)
-    mat.uniforms.uIgnite.value = THREE.MathUtils.damp(mat.uniforms.uIgnite.value, 1, 1.4, delta);
   });
 
   // geometry is scaled in the vertex shader (uOuter), so the CPU-side

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent, type Transit
 import dynamic from 'next/dynamic';
 import { Pause, Play } from 'lucide-react';
 import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
+import { ScenePoster } from './ScenePoster';
+import { SCENE_CONTEXT_ATTRIBUTES } from './sceneOpening';
 import { SelectionCard } from './SelectionCard';
 import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
 import { SystemRail } from './SystemRail';
@@ -11,7 +13,8 @@ import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems'
 
 // Client island for the 3D scene. The scene chunk (three + fiber + drei)
 // loads only in capable, motion-permitted, fine-pointer browsers, and only
-// once the main thread is idle; everyone else gets the CSS poster. The
+// once the main thread is idle; everyone else gets the poster, a still of
+// the scene's opening frame (ScenePoster). The
 // accessible systems nav below renders in ALL modes — it is
 // the keyboard/screen-reader/no-WebGL path to the same selection cards the
 // canvas drives, and it puts the nine system names AND blurbs in the
@@ -23,26 +26,6 @@ const GalacticScene = dynamic(() => import('./GalacticScene'), {
   ssr: false,
   loading: () => null,
 });
-
-function Poster() {
-  return (
-    <div
-      aria-hidden="true"
-      data-scene-poster=""
-      className="absolute inset-0"
-      style={{
-        background: [
-          'radial-gradient(ellipse 34% 5% at 58% 53%, hsl(25 92% 58% / 0.72), transparent 72%)',
-          'radial-gradient(ellipse 22% 18% at 58% 49%, transparent 50%, hsl(27 95% 72% / 0.28) 55%, transparent 66%)',
-          'radial-gradient(circle 112px at 58% 51%, transparent 65px, hsl(31 92% 72% / 0.75) 68px, transparent 72px)',
-          'radial-gradient(circle at 58% 51%, #000 65px, transparent 67px)',
-          'radial-gradient(ellipse at 52% 25%, hsl(28 35% 10% / 0.45), transparent 55%)',
-          '#04060a',
-        ].join(', '),
-      }}
-    />
-  );
-}
 
 // Scene mode: links reveal on keyboard focus. Poster mode: the same links are
 // VISIBLE chips — sighted mouse/touch users without WebGL (or with reduced
@@ -101,12 +84,14 @@ export function prefersPoster(signals: SceneSignals): boolean {
 
 type NavigatorHints = Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
 
+// a GPU-backed context only: software WebGL refuses these attributes
 function hasWebGL(): boolean {
   const canvas = document.createElement('canvas');
-  const webgl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+  const webgl = canvas.getContext('webgl2', SCENE_CONTEXT_ATTRIBUTES) ?? canvas.getContext('webgl', SCENE_CONTEXT_ATTRIBUTES);
+  if (webgl === null) return false;
   // release the probe context — browsers cap live WebGL contexts
-  webgl?.getExtension('WEBGL_lose_context')?.loseContext();
-  return webgl !== null;
+  if ('getExtension' in webgl) webgl.getExtension('WEBGL_lose_context')?.loseContext();
+  return true;
 }
 
 function shouldShowPoster(): boolean {
@@ -296,7 +281,7 @@ export function GalacticBackdrop() {
   return (
     <>
       {/* the server-rendered poster holds until the scene is live over it */}
-      {(mode !== 'scene' || sceneStage !== 'live') && <Poster />}
+      {(mode !== 'scene' || sceneStage !== 'live') && <ScenePoster />}
       {mode === 'scene' && (
         <div
           ref={sceneRef}
@@ -312,6 +297,8 @@ export function GalacticBackdrop() {
             onReady={handleSceneReady}
             // an open card covers the scene, so it stops rendering behind it
             paused={motionPaused || selection !== null || offscreen}
+            // holds the poster's frame under the poster; wakes as it fades
+            awake={sceneStage !== 'loading'}
           />
         </div>
       )}

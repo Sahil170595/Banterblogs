@@ -1,0 +1,118 @@
+{
+  "fingerprint": "4b85bc3f36d4a605956c86366129fc8e5c5c72e44c0073ffc36cb21818cfb423",
+  "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "browser": "Chrome 153.0.8010.52",
+  "variants": [
+    {
+      "name": "phone",
+      "media": "(max-aspect-ratio: 5/8)",
+      "aspect": 0.625,
+      "avif": [
+        {
+          "src": "/landing/poster/phone-720w.3ceb1700.avif",
+          "width": 720,
+          "height": 1152,
+          "bytes": 14010
+        },
+        {
+          "src": "/landing/poster/phone-1080w.753ab5a6.avif",
+          "width": 1080,
+          "height": 1728,
+          "bytes": 19706
+        }
+      ],
+      "webp": [
+        {
+          "src": "/landing/poster/phone-720w.dc539582.webp",
+          "width": 720,
+          "height": 1152,
+          "bytes": 15322
+        },
+        {
+          "src": "/landing/poster/phone-1080w.0a6eb419.webp",
+          "width": 1080,
+          "height": 1728,
+          "bytes": 25596
+        }
+      ]
+    },
+    {
+      "name": "tablet",
+      "media": "(max-aspect-ratio: 4/5)",
+      "aspect": 0.8,
+      "avif": [
+        {
+          "src": "/landing/poster/tablet-1024w.39d9e931.avif",
+          "width": 1024,
+          "height": 1280,
+          "bytes": 19652
+        },
+        {
+          "src": "/landing/poster/tablet-1638w.6dae7aea.avif",
+          "width": 1638,
+          "height": 2048,
+          "bytes": 33482
+        }
+      ],
+      "webp": [
+        {
+          "src": "/landing/poster/tablet-1024w.e1829df3.webp",
+          "width": 1024,
+          "height": 1280,
+          "bytes": 21522
+        },
+        {
+          "src": "/landing/poster/tablet-1638w.99928bae.webp",
+          "width": 1638,
+          "height": 2048,
+          "bytes": 39396
+        }
+      ]
+    },
+    {
+      "name": "landscape",
+      "media": null,
+      "aspect": 2.4,
+      "avif": [
+        {
+          "src": "/landing/poster/landscape-1728w.02e575b3.avif",
+          "width": 1728,
+          "height": 720,
+          "bytes": 27034
+        },
+        {
+          "src": "/landing/poster/landscape-2592w.29da359b.avif",
+          "width": 2592,
+          "height": 1080,
+          "bytes": 45690
+        },
+        {
+          "src": "/landing/poster/landscape-3456w.973e1c9f.avif",
+          "width": 3456,
+          "height": 1440,
+          "bytes": 68495
+        }
+      ],
+      "webp": [
+        {
+          "src": "/landing/poster/landscape-1728w.0d12cb9b.webp",
+          "width": 1728,
+          "height": 720,
+          "bytes": 29454
+        },
+        {
+          "src": "/landing/poster/landscape-2592w.1e85216c.webp",
+          "width": 2592,
+          "height": 1080,
+          "bytes": 49146
+        },
+        {
+          "src": "/landing/poster/landscape-3456w.3c375f07.webp",
+          "width": 3456,
+          "height": 1440,
+          "bytes": 69804
+        }
+      ]
+    }
+  ]
+}
