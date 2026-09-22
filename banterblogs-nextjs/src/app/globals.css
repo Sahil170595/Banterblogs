@@ -284,21 +284,25 @@ html {
    ~1.4:1 against the orange — unreadable. A soft bottom-anchored gradient
    (no box edge, per the scene's no-bounding-box art direction) restores
    contrast without introducing a visible panel. Bleeds past the rail so the
-   fade never terminates mid-text. */
+   fade never terminates mid-text, and fades out 1.5rem below it: painted in
+   the rail's layer, a scrim reaching the bottom chrome row (the "Select a
+   system" pill, the physics caption, the pause control) dimmed that text to
+   2.0-2.4:1. */
 .galactic-system-rail::before {
   content: "";
   position: absolute;
   /* Bleeds well past the rail on both sides so the gradient never terminates
      in a visible vertical edge; the hero section's overflow-hidden clips it,
      so this cannot introduce horizontal scroll. */
-  inset: -1.5rem -8rem -6rem -8rem;
+  inset: -1.5rem -8rem -1.5rem -8rem;
   z-index: -1;
   pointer-events: none;
   background: linear-gradient(
     to top,
-    rgb(2 4 8 / 0.94) 0%,
-    rgb(2 4 8 / 0.88) 42%,
-    rgb(2 4 8 / 0.62) 72%,
+    transparent 0,
+    rgb(2 4 8 / 0.94) 1.5rem,
+    rgb(2 4 8 / 0.88) 45%,
+    rgb(2 4 8 / 0.62) 74%,
     transparent 100%
   );
 }
@@ -309,8 +313,9 @@ html {
   .galactic-system-rail::before {
     background: linear-gradient(
       to top,
-      rgb(2 4 8 / 0.72) 0%,
-      rgb(2 4 8 / 0.5) 55%,
+      transparent 0,
+      rgb(2 4 8 / 0.72) 1.5rem,
+      rgb(2 4 8 / 0.5) 58%,
       transparent 100%
     );
   }
@@ -522,8 +527,10 @@ html[data-motion="on"] #mobile-nav[data-state="open"] {
   animation: menu-panel-in var(--duration-fast) var(--ease-strong-out) both;
 }
 
+/* backwards, not both: a transform animation left applied after it ends keeps
+   each row a stacking context, and later rows covered the search results */
 html[data-motion="on"] #mobile-nav[data-state="open"] .menu-item {
-  animation: menu-item-in var(--duration-base) var(--ease-strong-out) both;
+  animation: menu-item-in var(--duration-base) var(--ease-strong-out) backwards;
   animation-delay: calc(var(--i, 0) * var(--stagger-menu));
 }
 
@@ -2094,3 +2101,70 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end R3-B1 */
+
+/* R4 a11y */
+/* The site ring (see "Site focus ring") on the other things the keyboard
+   reaches: disclosure summaries, which drew the UA's 1px ring, and the
+   focusable scroll boxes (report tables, command chips). */
+:root :is(summary, .table-scroll, [data-scroll-region]):focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
+}
+
+/* The report archive's tab strip (ReportTabs) scrolls sideways past eleven
+   long labels. Each edge with tabs beyond it fades, driven by the strip's own
+   scroll: none at the start, both mid-way, none at the end, and none at all
+   when everything fits (the timeline is inactive). The fade width matches
+   TAB_STRIP_FADE_PX, which keeps the active tab clear of it. Without scroll
+   timelines the fades stay off and the strip keeps its scrollbar. */
+@property --tab-strip-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --tab-strip-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.tab-strip {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--tab-strip-fade-start),
+    #000 calc(100% - var(--tab-strip-fade-end)),
+    transparent
+  );
+}
+
+@supports (animation-timeline: scroll()) {
+  .tab-strip {
+    scrollbar-width: none;
+    animation: tab-strip-fades linear both;
+    animation-timeline: scroll(self inline);
+  }
+
+  .tab-strip::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes tab-strip-fades {
+  0% {
+    --tab-strip-fade-start: 0px;
+    --tab-strip-fade-end: 2.5rem;
+  }
+  8%,
+  92% {
+    --tab-strip-fade-start: 2.5rem;
+    --tab-strip-fade-end: 2.5rem;
+  }
+  100% {
+    --tab-strip-fade-start: 2.5rem;
+    --tab-strip-fade-end: 0px;
+  }
+}
+/* end R4 a11y */

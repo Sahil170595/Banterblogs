@@ -39,6 +39,8 @@ export const ENTRANCE_CARDS = 6;
 export const ENTRANCE_CARD_STEPS = 3;
 /** the head's entrance group the tabs join, after the title and the intro */
 export const TABS_ENTRANCE_GROUP = 2;
+/** --tab-strip-fade (globals.css, R4 a11y): a tab scrolled into view clears the edge fade */
+export const TAB_STRIP_FADE_PX = 40;
 
 type SwitchedBy = 'pointer' | 'keyboard';
 
@@ -154,6 +156,26 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
     return () => observer.disconnect();
   }, [activeKey]);
 
+  // The strip scrolls sideways (eleven long labels); the active tab stays
+  // fully in view, clear of the edge fades. Reads first, then one write; the
+  // first placement, and every one without motion, is instant.
+  const placedRef = useRef(false);
+  useEffect(() => {
+    const list = listRef.current;
+    const tab = list?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    if (!list || !tab) return;
+    const { scrollLeft, clientWidth, scrollWidth } = list;
+    const start = tab.offsetLeft - TAB_STRIP_FADE_PX;
+    const end = tab.offsetLeft + tab.offsetWidth + TAB_STRIP_FADE_PX;
+    const first = !placedRef.current;
+    placedRef.current = true;
+    if (scrollWidth <= clientWidth) return;
+    const left = start < scrollLeft ? start : end > scrollLeft + clientWidth ? end - clientWidth : scrollLeft;
+    if (left === scrollLeft) return;
+    const smooth = !first && document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on';
+    list.scrollTo({ left: Math.max(0, left), behavior: smooth ? 'smooth' : 'auto' });
+  }, [activeKey]);
+
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // step from the focused tab, which leads the URL while a replace is in flight
     const focused = tabs.findIndex((tab) => tabId(tab.key) === (e.target as HTMLElement).id);
@@ -176,7 +198,7 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
           ref={listRef}
           role="tablist"
           aria-label="Report categories"
-          className="relative -mx-4 flex gap-1 overflow-x-auto px-4 pt-1 shadow-[inset_0_-1px_0_hsl(var(--border)/0.8)] scrollbar-none sm:mx-0 sm:px-0"
+          className="tab-strip relative -mx-4 flex gap-1 overflow-x-auto px-4 pt-1 shadow-[inset_0_-1px_0_hsl(var(--border)/0.8)] sm:mx-0 sm:px-0"
           onKeyDown={onKeyDown}
         >
           {tabs.map((group) => {

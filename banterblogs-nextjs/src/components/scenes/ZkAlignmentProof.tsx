@@ -24,6 +24,10 @@ import {
   Unlock,
 } from 'lucide-react';
 
+// One grouping on the server and in every visitor's locale; the default
+// locale made a de-DE render differ from the server's (React #418).
+const FIXED_POINT_FORMAT = new Intl.NumberFormat('en-US');
+
 // ---------------------------------------------------------------------------
 // Types (mirror zk-alignment-proof.json)
 // ---------------------------------------------------------------------------
@@ -359,10 +363,10 @@ function ProverPanel({
             fixed-point value
           </div>
           <div className="font-mono text-3xl md:text-4xl font-bold text-foreground leading-none">
-            {record.score_fixed.toLocaleString()}
+            {FIXED_POINT_FORMAT.format(record.score_fixed)}
           </div>
           <div className="text-[11px] text-muted-foreground mt-1">
-            threshold {record.threshold_fixed.toLocaleString()} ({record.threshold.toFixed(2)})
+            threshold {FIXED_POINT_FORMAT.format(record.threshold_fixed)} ({record.threshold.toFixed(2)})
           </div>
         </div>
       </div>
@@ -403,7 +407,7 @@ function BitStripProver({
         bit decomposition · 2<sup>13</sup> ... 2<sup>0</sup>
       </div>
       <div
-        role="grid"
+        role="list"
         aria-label="Per-bit values known to the prover, most significant bit first"
         className="grid grid-cols-14 gap-1"
         style={{ gridTemplateColumns: `repeat(${totalBits}, minmax(0, 1fr))` }}
@@ -417,7 +421,7 @@ function BitStripProver({
             return (
               <motion.div
                 key={bitIdx}
-                role="gridcell"
+                role="listitem"
                 aria-label={`bit ${bitIdx}: ${value ?? 'unknown'}`}
                 initial={reducedMotion ? false : { opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -557,7 +561,7 @@ function CommitRow({
 }) {
   return (
     <div className="flex items-center gap-3 text-xs flex-wrap">
-      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/90 shrink-0">
+      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/90 min-w-0 [overflow-wrap:anywhere]">
         {label}
       </span>
       <span
@@ -584,7 +588,7 @@ function CommitStrip({
 }) {
   return (
     <div
-      role="grid"
+      role="list"
       aria-label="Per-bit Pedersen commitments, opaque to verifier"
       className="grid gap-1"
       style={{ gridTemplateColumns: `repeat(${commitments.length}, minmax(0, 1fr))` }}
@@ -598,7 +602,7 @@ function CommitStrip({
           return (
             <motion.div
               key={bitIdx}
-              role="gridcell"
+              role="listitem"
               aria-label={`bit ${bitIdx} commitment ${isTampered ? '(tampered)' : ''}`}
               initial={reducedMotion ? false : { opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -763,7 +767,7 @@ function CheckStrip({
 }) {
   return (
     <div
-      role="grid"
+      role="list"
       aria-label="Per-bit verification results"
       className="grid gap-1"
       style={{ gridTemplateColumns: `repeat(${checks.length}, minmax(0, 1fr))` }}
@@ -779,7 +783,7 @@ function CheckStrip({
           return (
             <motion.div
               key={bitIdx}
-              role="gridcell"
+              role="listitem"
               aria-label={`bit ${bitIdx}: ${
                 isFailing ? `failed — ${c.reason ?? 'unknown'}` : wasChecked ? 'ok' : 'not reached'
               }`}

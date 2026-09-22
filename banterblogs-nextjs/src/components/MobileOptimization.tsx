@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { EPISODE_PAGER_ID } from './EpisodeNavigation';
 
 interface MobileNavigationProps {
   prevEpisode?: { slug: string; title: string } | null;
@@ -15,22 +16,52 @@ interface MobileNavigationProps {
 const PILL_LINK_CLASS =
   'flex items-center gap-1 px-3 py-1 rounded-full bg-muted/50 text-muted-foreground transition-colors duration-fast ease-standard hover:bg-muted/70 hover:text-foreground';
 
+// the pill shows once the reader has scrolled this share of a screen in
+const SHOW_AFTER_VIEWPORT_SHARE = 0.2;
+// where its job ends: the in-page pager does the same, and the footer's
+// controls sit in the band it covers
+const END_MARKERS = `#${EPISODE_PAGER_ID}, footer`;
+
 export function MobileNavigation({ prevEpisode, nextEpisode, className = '' }: MobileNavigationProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [scrolledIn, setScrolledIn] = useState(false);
+  const [endReached, setEndReached] = useState(false);
 
+  // one read of scrollY and innerHeight a frame, neither of which forces layout
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-
-      // Show navigation when scrolled past 20% and not at the very bottom
-      setIsVisible(scrollTop > windowHeight * 0.2 && scrollTop < documentHeight - windowHeight * 0.8);
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      setScrolledIn(window.scrollY > window.innerHeight * SHOW_AFTER_VIEWPORT_SHARE);
     };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(read);
+    };
+    schedule();
+    window.addEventListener('scroll', schedule, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', schedule);
+      cancelAnimationFrame(frame);
+    };
   }, []);
+
+  // reached = in view or already scrolled past; the observer hands over the
+  // geometry, so nothing is measured on scroll
+  useEffect(() => {
+    const markers = [...document.querySelectorAll(END_MARKERS)];
+    if (!markers.length || typeof IntersectionObserver === 'undefined') return undefined;
+    const reached = new Set<Element>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting || entry.boundingClientRect.top < 0) reached.add(entry.target);
+        else reached.delete(entry.target);
+      }
+      setEndReached(reached.size > 0);
+    });
+    for (const marker of markers) observer.observe(marker);
+    return () => observer.disconnect();
+  }, []);
+
+  const isVisible = scrolledIn && !endReached;
 
   return (
     <div

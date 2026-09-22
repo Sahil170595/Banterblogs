@@ -230,7 +230,7 @@ function RepositoryCard({ repository, core = false, wide = false }: { repository
 
 // The two core engines join the head's entrance, after its three groups.
 const CORE_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
-const SUPPORTING_GRID = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
+const SUPPORTING_GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3';
 // the last supporting card closes the grid on its side: two columns, then three
 const SUPPORTING_WIDE = 'sm:col-span-2 xl:col-span-3';
 
@@ -274,7 +274,7 @@ export default async function PlatformPage() {
 
       <div className="mt-8 md:mt-14">
         <Section id="core-engines" title="Core engines" aside>
-          <ul className="grid gap-4 xl:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {CORE_ENGINES.map((repository, index) => (
               <Reveal as="li" key={repository.name} {...entranceItem(index, CORE_ENTRANCE_AFTER)}>
                 <RepositoryCard repository={repository} core />
@@ -321,7 +321,7 @@ export default async function PlatformPage() {
           description="Independent CLIs shipped outside the Chimera ecosystem — their own repositories, not counted among the nine."
           aside
         >
-          <ul className="grid gap-4">
+          <ul className="grid grid-cols-1 gap-4">
             {STANDALONE_TOOLS.map((repository) => (
               <Reveal as="li" key={repository.name}>
                 <RepositoryCard repository={repository} wide />
@@ -377,7 +377,7 @@ export default async function PlatformPage() {
 
         {/* where to go next */}
         <div className="page-section">
-          <ul className="grid gap-4 md:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {explore.map((link) => (
               <Reveal as="li" key={link.href}>
                 <Card variant="interactive" href={link.href} className="flex h-full flex-col">

@@ -39,6 +39,13 @@ describe('/tools', () => {
     expect(el.querySelector('a[href="/platform"]')?.textContent).toBe('See the platform');
   });
 
+  // re-judge P1-7: at 320 the install chip's min-content widened the one
+  // implicit (auto) column, and the cards with it, to 320 and 314px
+  it('sizes the card grid’s phone column to the screen, so a long command scrolls inside its chip', () => {
+    const grid = page().querySelector('ul.grid')!;
+    expect(grid.className.split(/\s+/)).toContain('grid-cols-1');
+  });
+
   it('shows each CLI as an interactive card: its visual, facts, install chip with a copy button, and its links', () => {
     const el = page();
     const cards = [...el.querySelectorAll('article.card-depth')];
