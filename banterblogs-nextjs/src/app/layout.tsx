@@ -8,6 +8,7 @@ import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from "@/components/motion/prePaint";
 import { EntranceWindow } from "@/components/motion/EntranceWindow";
+import { HistoryScrollGuard } from "@/components/motion/HistoryScrollGuard";
 import { RouteTransition } from "@/components/motion/RouteTransition";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -116,6 +117,8 @@ export default function RootLayout({
         </a>
         {/* closes the first-load entrance window on the first client navigation */}
         <EntranceWindow />
+        {/* Back/Forward restores land at once, not in a long smooth glide */}
+        <HistoryScrollGuard />
         <ErrorBoundary>
           {/* .keyboard-navigation scopes the focus-visible ring in globals.css */}
           <div className="keyboard-navigation relative flex min-h-screen flex-col">

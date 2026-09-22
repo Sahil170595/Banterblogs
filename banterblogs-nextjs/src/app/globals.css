@@ -108,7 +108,8 @@ code, pre, kbd, samp {
   color: hsl(var(--foreground));
 }
 
-/* Smooth scrolling for anchor links; the padding keeps anchored headings
+/* Smooth scrolling for anchor links (Back/Forward restores are held instant
+   by motion/HistoryScrollGuard.tsx); the padding keeps anchored headings
    clear of the sticky header. */
 html {
   scroll-behavior: smooth;
