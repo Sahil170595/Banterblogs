@@ -41,6 +41,9 @@ export const FOCUS_SCROLL_GIVE_UP_MS = 1500;
  * off, the report-open transition laid all of the next report out. The
  * remembered block sizes (contain-intrinsic-size: auto) keep this page
  * where it is. RouteArrival does the same for navigations without a click.
+ * The same click stops any scroll still in flight where the page stands:
+ * the router's scroll to the next page's top, inside the view transition,
+ * did not stop a smooth focus scroll, which ran on into the next page.
  */
 export const CONTENT_VISIBILITY_PREPAINT =
   `var cvOff=function(){if(d.getAttribute("${CV_ATTRIBUTE}")==="${CV_OFF}")return false;` +
@@ -52,6 +55,7 @@ export const CONTENT_VISIBILITY_PREPAINT =
   'var a=e.target.closest("a[href]");if(!a||(a.target&&a.target!=="_self"))return;' +
   'var u=new URL(a.href,location.href);if(u.origin!==location.origin)return;' +
   'if(u.pathname===location.pathname&&u.search===location.search){if(u.hash)cvOff();return}' +
+  'scrollTo({top:scrollY,left:scrollX,behavior:"instant"});' +
   `if(!u.hash)d.removeAttribute("${CV_ATTRIBUTE}")},true);` +
   'var near={block:"nearest",inline:"nearest"};' +
   'document.addEventListener("focusin",function(e){var t=e.target;' +

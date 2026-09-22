@@ -228,6 +228,30 @@ describe('the pre-paint gate, once the page is up', () => {
     expect(html.getAttribute(CV_ATTRIBUTE)).toBe(CV_OFF);
   });
 
+  // Final WIG re-judge N3: Enter pressed while a Tab's smooth focus scroll
+  // was running carried that scroll onto the next page (Chromium: /reports
+  // opened at scrollY 324-1059, the title above the viewport). The router's
+  // own scroll, inside the view transition, does not stop it; an instant
+  // scroll where the page stands, at the click, does.
+  it('stops a scroll still in flight at the click that leaves the page', () => {
+    const { container } = mount();
+    const scrollTo = vi.fn();
+    vi.stubGlobal('scrollTo', scrollTo);
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 43 });
+    const stop = (event: Event) => event.preventDefault();
+    const away = container.querySelector<HTMLAnchorElement>('a[href="/reports"]')!;
+    away.addEventListener('click', stop);
+    away.click();
+    expect(scrollTo).toHaveBeenCalledWith({ top: 43, left: 0, behavior: 'instant' });
+
+    scrollTo.mockClear();
+    const inPage = container.querySelector<HTMLAnchorElement>('a[href="#references"]')!;
+    inPage.addEventListener('click', stop);
+    inPage.click();
+    expect(scrollTo).not.toHaveBeenCalled();
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
   // what the browser's :focus-visible heuristic decides for this focus: true
   // after a key or a script, false after a pointer press
   const focusAs = (el: HTMLElement, focusVisible: boolean) => {
