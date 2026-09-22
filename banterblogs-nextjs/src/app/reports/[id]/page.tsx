@@ -1,3 +1,4 @@
+import '@/app/reading.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
@@ -92,79 +93,82 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
     <DirectionalPage className="container pb-24 pt-8 md:pt-10">
       <ReportProgress />
 
-      {/* ── Head: where it sits, what it is, how long it takes ── */}
-      <div className="report-head">
-        <nav aria-label="Breadcrumb">
-          <ol className="report-crumbs">
-            <li>
-              <Link href="/reports" transitionTypes={[NAV_BACK]}>
-                Research archive
-              </Link>
-            </li>
-            {phase && (
+      {/* one centred frame: the head over the article column and the contents rail */}
+      <div className="report-frame">
+        {/* ── Head: where it sits, what it is, how long it takes ── */}
+        <div className="report-head">
+          <nav aria-label="Breadcrumb">
+            <ol className="report-crumbs">
               <li>
-                <Link href={`/reports?phase=${phase.key}`} transitionTypes={[NAV_BACK]}>
-                  Phase {phase.number} · {phase.name}
+                <Link href="/reports" transitionTypes={[NAV_BACK]}>
+                  Research archive
                 </Link>
               </li>
+              {phase && (
+                <li>
+                  <Link href={`/reports?phase=${phase.key}`} transitionTypes={[NAV_BACK]}>
+                    Phase {phase.number} · {phase.name}
+                  </Link>
+                </li>
+              )}
+            </ol>
+          </nav>
+
+          <ReportTitleTransition slug={id}>
+            <h1 className="report-title">{heading}</h1>
+          </ReportTitleTransition>
+          {meta.description && <p className="report-dek">{meta.description}</p>}
+          <ReportMeta label={label} phaseNumber={phase?.number ?? null} readingMinutes={readingMinutes} date={frontMatter?.date ?? null} />
+          {frontMatter && <ReportDetails frontMatter={frontMatter} />}
+        </div>
+
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportJsonLd({ id, title, description: meta.description })) }} />
+
+        {/* ── The column (hero, phone contents, body) beside the contents rail ── */}
+        <div className="report-layout">
+          <div className="min-w-0">
+            <ReportHero slug={id} />
+            <ReportTocMobile headings={headings} />
+            <ReportMarkdown sections={report.sections} />
+          </div>
+          <ReportTocSidebar headings={headings} />
+        </div>
+        <ReportEnd />
+
+        {/* ── Navigation ── */}
+        {(prevSlug || nextSlug) && (
+          <nav className="report-pager mt-20 grid gap-4 border-t border-border/40 pt-8 sm:grid-cols-2" aria-label="Report navigation">
+            {prevSlug ? (
+              <Link
+                href={`/reports/${prevSlug}`}
+                transitionTypes={[NAV_BACK]}
+                className="block rounded-xl p-5 transition-colors duration-fast ease-standard hover:bg-card/70"
+              >
+                <div className="report-pager-label">
+                  <ArrowLeft aria-hidden="true" className="h-3 w-3" />
+                  Previous
+                </div>
+                <div className="report-pager-title line-clamp-1">{prevMeta?.title ?? toHumanTitle(prevSlug)}</div>
+              </Link>
+            ) : (
+              <div />
             )}
-          </ol>
-        </nav>
-
-        <ReportTitleTransition slug={id}>
-          <h1 className="report-title">{heading}</h1>
-        </ReportTitleTransition>
-        {meta.description && <p className="report-dek">{meta.description}</p>}
-        <ReportMeta label={label} phaseNumber={phase?.number ?? null} readingMinutes={readingMinutes} date={frontMatter?.date ?? null} />
-        {frontMatter && <ReportDetails frontMatter={frontMatter} />}
+            {nextSlug && (
+              <Link
+                href={`/reports/${nextSlug}`}
+                transitionTypes={[NAV_FORWARD]}
+                className="block rounded-xl p-5 text-right transition-colors duration-fast ease-standard hover:bg-card/70"
+              >
+                <div className="report-pager-label justify-end">
+                  Next
+                  <ArrowRight aria-hidden="true" className="h-3 w-3" />
+                </div>
+                <div className="report-pager-title line-clamp-1">{nextMeta?.title ?? toHumanTitle(nextSlug)}</div>
+              </Link>
+            )}
+          </nav>
+        )}
       </div>
-
-      <ReportHero slug={id} />
-
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportJsonLd({ id, title, description: meta.description })) }} />
-
-      <ReportTocMobile headings={headings} />
-
-      {/* ── Content + Sidebar ── */}
-      <div className="mt-8 grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,1fr)_15rem]">
-        <ReportMarkdown sections={report.sections} />
-        <ReportTocSidebar headings={headings} />
-      </div>
-      <ReportEnd />
-
-      {/* ── Navigation ── */}
-      {(prevSlug || nextSlug) && (
-        <nav className="report-pager mt-20 grid gap-4 border-t border-border/40 pt-8 sm:grid-cols-2" aria-label="Report navigation">
-          {prevSlug ? (
-            <Link
-              href={`/reports/${prevSlug}`}
-              transitionTypes={[NAV_BACK]}
-              className="block rounded-xl p-5 transition-colors duration-fast ease-standard hover:bg-card/70"
-            >
-              <div className="report-pager-label">
-                <ArrowLeft aria-hidden="true" className="h-3 w-3" />
-                Previous
-              </div>
-              <div className="report-pager-title line-clamp-1">{prevMeta?.title ?? toHumanTitle(prevSlug)}</div>
-            </Link>
-          ) : (
-            <div />
-          )}
-          {nextSlug && (
-            <Link
-              href={`/reports/${nextSlug}`}
-              transitionTypes={[NAV_FORWARD]}
-              className="block rounded-xl p-5 text-right transition-colors duration-fast ease-standard hover:bg-card/70"
-            >
-              <div className="report-pager-label justify-end">
-                Next
-                <ArrowRight aria-hidden="true" className="h-3 w-3" />
-              </div>
-              <div className="report-pager-title line-clamp-1">{nextMeta?.title ?? toHumanTitle(nextSlug)}</div>
-            </Link>
-          )}
-        </nav>
-      )}
     </DirectionalPage>
   );
 }

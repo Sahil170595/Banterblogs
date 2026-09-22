@@ -25,34 +25,39 @@ const layout = () =>
   ).container.firstElementChild as HTMLElement;
 
 describe('ProfileLayout', () => {
-  it('puts the identity in a rail beside the page: eyebrow, title, links and an index of the sections', () => {
+  it('opens on the eyebrow and the title across the page, then the identity in a rail beside the page: links and an index of the sections', () => {
     const el = layout();
-    const rail = el.querySelector('header.profile-rail')!;
-    expect(rail.querySelector('h1')?.textContent).toBe('Founding ML engineer.');
-    expect(rail.textContent).toContain('Work');
+    const head = el.querySelector('header')!;
+    expect(head.querySelector('h1')?.textContent).toBe('Founding ML engineer.');
+    expect(head.textContent).toContain('Work');
+    // the title is not squeezed into the rail, so it keeps the one page-title size
+    expect(head.closest('.profile-rail')).toBeNull();
+    const rail = el.querySelector('.profile-rail')!;
     expect(rail.querySelector('a[href="https://github.com/Sahil170595"]')).not.toBeNull();
     const index = rail.querySelector('nav[aria-label="On this page"]')!;
     expect([...index.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['#research', '#experience']);
-    expect(el.querySelector('header.profile-rail + div section#research')).not.toBeNull();
+    expect(el.querySelector('.profile-rail + div section#research')).not.toBeNull();
   });
 
   it('sets the lede at the reading size in the prose colour within 60ch, at the top of the page column', () => {
-    const lede = layout().querySelector('header.profile-rail + div > p')!;
+    const lede = layout().querySelector('.profile-rail + div > p')!;
     expect(lede.textContent).toBe('Architected the platform.');
     expect(lede.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-copy-18', 'text-prose', 'max-w-[60ch]']));
   });
 
-  it('sets the title at the page-title role, stepping down to 32px in the rail on wide screens', () => {
+  it('sets the title at the page-title role on every screen, the size every interior page uses', () => {
     const h1 = layout().querySelector('h1')!;
-    expect(h1.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-heading-48', 'lg:text-heading-32']));
+    expect(h1.className.split(/\s+/)).toContain('text-heading-48');
+    expect(h1.className).not.toMatch(/:text-heading-(?!48)/);
   });
 
   it('rises in three groups, the title, the links, then the index; the lede, the largest text and so the LCP element, paints at once', () => {
+    // the head is group 0 itself, with the eyebrow and title inside it
     const el = layout();
     const group = (selector: string) => el.querySelector<HTMLElement>(selector)!.closest<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)?.style.getPropertyValue('--group');
     expect(group('h1')).toBe('0');
     // a fade from 0 is credited to LCP only when it ends (~1 s measured on /work), even on group 0
-    expect(group('header.profile-rail + div > p')).toBeUndefined();
+    expect(group('.profile-rail + div > p')).toBeUndefined();
     expect(group('a[href="https://github.com/Sahil170595"]')).toBe('1');
     expect(group('nav[aria-label="On this page"]')).toBe('2');
     // the page's first rows follow the links, so phones (no index) keep an even cadence

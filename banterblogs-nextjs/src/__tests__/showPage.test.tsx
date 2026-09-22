@@ -31,3 +31,21 @@ describe('/show head', () => {
     expect(page.querySelector('h1 br')).not.toBeNull();
   });
 });
+
+describe('/show type', () => {
+  // the one display exception keeps its size but takes the title weight, and
+  // the scene titles and labels come onto the roles every other page uses
+  it('sets the title in the display role, the scene titles in the heading roles and the labels in the 12px mono role', () => {
+    const page = render(<ShowPage />).container;
+    expect(page.querySelector('h1')!.className.split(/\s+/)).toContain('text-display-72');
+    const titles = [...page.querySelectorAll('ol h2')];
+    expect(titles).toHaveLength(SCENES);
+    for (const title of titles) {
+      expect(title.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-heading-24', 'md:text-heading-32']));
+      expect(title.className).not.toMatch(/font-bold|text-\dxl/);
+    }
+    // no arbitrary sub-12px labels
+    expect(page.innerHTML).not.toMatch(/text-\[\d+px\]/);
+    expect(page.querySelectorAll('.text-label-12-mono').length).toBeGreaterThanOrEqual(SCENES + 1);
+  });
+});

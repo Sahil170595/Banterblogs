@@ -67,9 +67,9 @@ describe('about page copy', () => {
 });
 
 describe('about page layout', () => {
-  it('puts the title, byline and numbers in the rail, with an index of the three sections', () => {
-    const rail = page.querySelector('header.profile-rail')!;
-    expect(rail.querySelector('h1')).not.toBeNull();
+  it('puts the title across the page, then the byline and numbers in the rail, with an index of the three sections', () => {
+    expect(page.querySelector('header h1')).not.toBeNull();
+    const rail = page.querySelector('.profile-rail')!;
     expect(text(rail)).toContain('Built by Sahil Kadadekar');
     expect(rail.querySelector('ul[aria-label="The program in numbers"]')).not.toBeNull();
     const index = [...rail.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute('href') ?? '');
@@ -78,9 +78,21 @@ describe('about page layout', () => {
   });
 
   it('sets the prose at the R2 reading type: 18px in the prose colour', () => {
-    const paragraphs = [...page.querySelectorAll('#what p, #site p, header.profile-rail + div > p')];
+    const paragraphs = [...page.querySelectorAll('#what p, #site p, .profile-rail + div > p')];
     expect(paragraphs.length).toBe(5);
     for (const p of paragraphs) expect(p.className.split(/\s+/), text(p).slice(0, 40)).toEqual(expect.arrayContaining(['text-copy-18', 'text-prose']));
+  });
+
+  // R4 design re-judge: the page explained an architecture without a
+  // diagram. The lede's own sequence is drawn under it.
+  it('draws the decision path the lede describes, under the lede: router, debate when uncertain, signed provenance, and the RLAIF loop back', () => {
+    const column = page.querySelector('.profile-rail + div')!;
+    const figure = column.querySelector(':scope > figure.flow')!;
+    expect(figure).not.toBeNull();
+    expect(figure.previousElementSibling?.tagName).toBe('P');
+    expect([...figure.querySelectorAll('.flow-label')].map(text)).toEqual(['Action', 'Router', 'Debate', 'Provenance']);
+    expect(text(figure.querySelector('.flow-loop')!)).toContain('debate outcomes train the alignment encoder');
+    expect(text(figure.querySelector('figcaption')!)).not.toBe('');
   });
 
   it('lists the repositories as hairline rows that reveal as they scroll in', () => {

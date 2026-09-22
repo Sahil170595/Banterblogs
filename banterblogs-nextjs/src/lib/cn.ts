@@ -5,6 +5,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 // imported so the config never reaches a client bundle; cn.test.ts fails if
 // the lists drift from the theme.
 export const TYPE_ROLES = [
+  'display-72',
   'heading-48',
   'heading-32',
   'heading-24',

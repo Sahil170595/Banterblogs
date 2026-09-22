@@ -38,6 +38,11 @@ const IMMUTABLE_CACHE = 'public, max-age=31536000, immutable';
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    // inlineCss stays off (measured in R4): it sends the global sheet twice
+    // per HTML response (<style> and the RSC payload, about +57 KB gzip on
+    // every page, uncached), slowed a warm navigation (88 -> 109 ms), and
+    // scored no better in local Lighthouse mobile (medians 84/92/91/90 against
+    // 92/93/92/91 on /papers, /platform, /episodes and TR138).
   },
   async redirects() {
     return [...CONCLUSIVE_REDIRECTS, ...STUB_ROUTE_REDIRECTS, ...RETIRED_ROUTE_REDIRECTS];

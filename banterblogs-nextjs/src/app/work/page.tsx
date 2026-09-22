@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, ExternalLink, Github, Linkedin, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ChevronRight, ExternalLink, Github, Linkedin, type LucideIcon } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem } from '@/components/motion/entrance';
 import { ButtonLink } from '@/components/ui/Button';
 import { PROFILE_ITEMS_AFTER, ProfileLayout } from '@/components/ui/ProfileLayout';
 import { Section } from '@/components/ui/Section';
+import { cn } from '@/lib/cn';
 import {
   EDUCATION,
   EXPERIENCE,
@@ -51,6 +52,11 @@ const SECTIONS = [
 const LINK_ICONS: Record<string, LucideIcon> = { GitHub: Github, LinkedIn: Linkedin, ORCID: ExternalLink };
 // the research rows that join the first-load entrance, after the rail
 const ENTRANCE_ROWS = 2;
+// bullets an entry shows before the rest fold away, so the page skims as
+// headlines (it was 9,226px of bullets at 1440): a research entry already
+// leads with its meta line and evidence, a role with the first two of its story
+const RESEARCH_VISIBLE_BULLETS = 1;
+const ROLE_VISIBLE_BULLETS = 2;
 const CURRENT_ROLE = /Present$/;
 
 const isExternal = (href: string) => /^https?:\/\//.test(href);
@@ -71,15 +77,44 @@ function TitleLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-function Bullets({ items }: { items: string[] }) {
+const BULLET_LIST = 'max-w-[68ch] space-y-3 text-copy-16 text-prose';
+// a long unbroken token (AWQ/GPTQ/…/GGUF;) breaks anywhere rather than widen a 320px page
+const BULLET = 'relative pl-5 [overflow-wrap:anywhere] before:absolute before:left-0 before:top-[0.7em] before:h-1 before:w-1 before:rounded-full before:bg-foreground/30';
+
+/**
+ * An entry's bullets: the first `visible`, then the rest in one closed
+ * disclosure (.more-details in globals.css), so the page skims as headlines
+ * and every word stays on it, one click away.
+ */
+function Bullets({ items, visible }: { items: string[]; visible: number }) {
+  const shown = items.slice(0, visible);
+  const folded = items.slice(visible);
   return (
-    <ul className="mt-4 max-w-[68ch] space-y-3 text-copy-16 text-prose">
-      {items.map((bullet) => (
-        <li key={bullet} className="relative pl-5 [overflow-wrap:anywhere] before:absolute before:left-0 before:top-[0.7em] before:h-1 before:w-1 before:rounded-full before:bg-foreground/30">
-          {bullet}
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className={cn('mt-4', BULLET_LIST)}>
+        {shown.map((bullet) => (
+          <li key={bullet} className={BULLET}>
+            {bullet}
+          </li>
+        ))}
+      </ul>
+      {folded.length > 0 && (
+        <details className="more-details">
+          <summary>
+            <ChevronRight aria-hidden="true" className="more-chevron h-3.5 w-3.5" />
+            <span className="more-closed">Show {folded.length} more</span>
+            <span className="more-open">Show fewer</span>
+          </summary>
+          <ul className={cn('mt-3', BULLET_LIST)}>
+            {folded.map((bullet) => (
+              <li key={bullet} className={BULLET}>
+                {bullet}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </>
   );
 }
 
@@ -98,7 +133,7 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
           <TitleLink href={item.href}>{item.label}</TitleLink>
         </h3>
         {item.meta && <p className="mt-1.5 text-label-13 text-muted-foreground">{item.meta}</p>}
-        <Bullets items={item.bullets} />
+        <Bullets items={item.bullets} visible={RESEARCH_VISIBLE_BULLETS} />
         {item.evidence && item.evidence.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-1">
             <span className="mr-2 text-label-12-mono text-muted-foreground/80">Evidence</span>
@@ -130,7 +165,7 @@ function RoleRow({ job }: { job: Experience }) {
         <p className="mt-1 text-copy-16 text-muted-foreground">
           {job.company} · {job.location}
         </p>
-        <Bullets items={job.bullets} />
+        <Bullets items={job.bullets} visible={ROLE_VISIBLE_BULLETS} />
       </div>
     </Reveal>
   );
