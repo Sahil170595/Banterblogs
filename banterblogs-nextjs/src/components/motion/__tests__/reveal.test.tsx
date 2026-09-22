@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import type { CSSProperties, ReactNode } from 'react';
 import { act, cleanup, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -493,5 +495,53 @@ describe('pre-paint motion gate', () => {
 
     expect(head).toContain(`<script id="${MOTION_GATE_SCRIPT_ID}">${MOTION_GATE_SCRIPT}</script>`);
     expect(markup.indexOf(MOTION_GATE_SCRIPT)).toBeLessThan(markup.indexOf('<p>page</p>'));
+  });
+});
+
+// Final WIG re-judge P1-C: the browser's minimal focus scroll parks a target
+// in the bottom 8% band the observer leaves out, so a focused link on /work
+// and a focused table on TR142 sat at opacity 0 for good. Held content with
+// focus inside it is at rest at once, and stays shown once focus moves on.
+describe('focus inside held content', () => {
+  const CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const ruleFor = (selector: string) =>
+    [...CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, prelude]) => prelude.split(',').map((s) => s.trim()).includes(selector))?.[2] ?? '';
+
+  it('is at rest while it holds focus, with nothing to animate', () => {
+    const rule = ruleFor(`html[${MOTION_ATTRIBUTE}="on"] [${REVEAL_ATTRIBUTE}="${REVEAL_PENDING}"]:focus-within`);
+    expect(rule).toMatch(/opacity:\s*1;/);
+    expect(rule).toMatch(/transform:\s*none;/);
+    expect(rule).toMatch(/filter:\s*none;/);
+  });
+
+  it('stays shown once focus moves on, and is no longer watched', async () => {
+    armMotion();
+    const restore = boxesAt(BELOW_FOLD);
+    try {
+      const { container } = render(
+        <>
+          <Reveal>
+            <a href="/work#pytorch">PyTorch PR</a>
+          </Reveal>
+          <Reveal>
+            <a href="/work#other">Another held row</a>
+          </Reveal>
+        </>,
+      );
+      await settle();
+      const [held, other] = [...container.querySelectorAll<HTMLElement>(`[${REVEAL_ATTRIBUTE}]`)];
+      expect(held.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_PENDING);
+
+      held.querySelector('a')!.focus();
+      expect(held.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_PENDING);
+
+      other.querySelector('a')!.focus();
+      expect(held.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_SHOWN);
+      expect(observer().observed.has(held)).toBe(false);
+      // the row focus moved into is at rest by the rule above until it leaves
+      expect(other.getAttribute(REVEAL_ATTRIBUTE)).toBe(REVEAL_PENDING);
+    } finally {
+      restore();
+    }
   });
 });

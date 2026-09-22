@@ -531,6 +531,15 @@ html[data-motion="on"] [data-reveal="pending"] {
   transform: translateY(var(--motion-reveal)) scale(var(--scale-reveal));
 }
 
+/* Focus can land in held content the observer has not reached (a focus
+   scroll parks its target in the bottom band it leaves out): it is at rest
+   at once, and revealObserver marks it shown when focus moves on. */
+html[data-motion="on"] [data-reveal="pending"]:focus-within {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
 /* Archive cards (components/reports/ReportCard.tsx). The link takes the
    pointer and its .card-lift child moves, so a lifted card never slips out
    from under the cursor; lift, glow and arrow run only where the device

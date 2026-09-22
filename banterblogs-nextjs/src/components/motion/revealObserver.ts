@@ -37,6 +37,20 @@ function revealEntering(entries: IntersectionObserverEntry[]) {
 const motionArmed = () =>
   document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on' && typeof IntersectionObserver !== 'undefined';
 
+// Held content with focus inside is at rest (globals.css, :focus-within).
+// Once focus moves on, it stays shown: marked now, from the at-rest style it
+// was drawn in, it has nothing to animate. No layout is read.
+const HELD = `[${REVEAL_ATTRIBUTE}="${REVEAL_PENDING}"]`;
+function keepShownAfterFocus(event: FocusEvent) {
+  if (!(event.target instanceof Element)) return;
+  let held = event.target.closest(HELD);
+  while (held) {
+    held.setAttribute(REVEAL_ATTRIBUTE, REVEAL_SHOWN);
+    shared?.unobserve(held);
+    held = held.parentElement?.closest(HELD) ?? null;
+  }
+}
+
 // One pass for everything armed in a task: measure it all, then hold what
 // sits below the fold. A hold dirties style and layout, so measuring after
 // each one would force a layout per element.
@@ -50,7 +64,10 @@ function measureThenHold() {
     (el) => el.isConnected && el.getAttribute(REVEAL_ATTRIBUTE) !== REVEAL_SHOWN && el.getBoundingClientRect().top >= fold,
   );
   if (!below.length) return;
-  shared ??= new IntersectionObserver(revealEntering, { rootMargin: REVEAL_ROOT_MARGIN });
+  if (!shared) {
+    shared = new IntersectionObserver(revealEntering, { rootMargin: REVEAL_ROOT_MARGIN });
+    document.addEventListener('focusout', keepShownAfterFocus, true);
+  }
   for (const el of below) {
     el.setAttribute(REVEAL_ATTRIBUTE, REVEAL_PENDING);
     shared.observe(el);
