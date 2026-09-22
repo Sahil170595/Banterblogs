@@ -111,4 +111,25 @@ describe('per-report visual', () => {
     expect(draw('technical-report-167', true)).toContain('data-accent="on"');
     expect(draw('technical-report-167')).not.toContain('data-accent');
   });
+
+  // /platform draws each repository with this generator, seeded by its name:
+  // a name carries no phase, so the page names the family itself.
+  it('draws the family a caller names, the seed still picking the composition', () => {
+    const named = (seed: string, family: (typeof VISUAL_FAMILIES)[number], variant?: 0 | 1) =>
+      renderToStaticMarkup(<ReportVisual slug={seed} family={family} variant={variant} />);
+    for (const family of VISUAL_FAMILIES) {
+      for (const variant of [0, 1] as const) {
+        const svg = named('banterpacks', family, variant);
+        expect(svg, `${family} ${variant}`).toContain(`data-family="${family}"`);
+        expect(svg, `${family} ${variant}`).toBe(named('banterpacks', family, variant));
+        expect(svg.length, `${family} ${variant}`).toBeLessThanOrEqual(MAX_VISUAL_BYTES);
+        expect(svg, `${family} ${variant}`).not.toMatch(/\sid="|NaN|Infinity/);
+      }
+    }
+    expect(named('banterpacks', 'arcs')).not.toBe(named('banterhearts', 'arcs'));
+    // a named family replaces only the phase's pick: a report slug keeps its synthesis marks
+    expect(renderToStaticMarkup(<ReportVisual slug="compendium" family="dots" />)).toContain('data-synthesis="true"');
+    // and without one, a report draws exactly as before
+    expect(renderToStaticMarkup(<ReportVisual slug="technical-report-138" family={undefined} />)).toBe(draw('technical-report-138'));
+  });
 });

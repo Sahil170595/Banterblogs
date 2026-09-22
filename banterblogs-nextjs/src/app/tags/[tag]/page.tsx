@@ -1,7 +1,23 @@
 import type { Metadata } from 'next';
-import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
-import { EpisodeCard } from '@/components/EpisodeCard';
 import { notFound } from 'next/navigation';
+import { EpisodeRow } from '@/components/EpisodeRow';
+import { ArrowLeft } from 'lucide-react';
+import { Reveal } from '@/components/motion/Reveal';
+import { entranceItem } from '@/components/motion/entrance';
+import { ButtonLink } from '@/components/ui/Button';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
+
+// the first rows join the head's first-load entrance, after its three groups
+const ENTRANCE_ROWS = 3;
+
+// Every topic is known at build: prerender them all, so a visit never runs
+// the archive through the markdown pipeline on the request.
+export async function generateStaticParams(): Promise<{ tag: string }[]> {
+  const episodes = await getAllEpisodes();
+  return [...new Set(episodes.flatMap((episode) => episode.tags))].map((tag) => ({ tag }));
+}
 
 export async function generateMetadata({
   params,
@@ -50,21 +66,28 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
     notFound();
   }
 
+  // Every row is server markup, so the whole topic is in the page without
+  // JavaScript and its episode links stay followable.
   return (
-    <div className="container py-16">
-      <div className="signal-panel-strong mb-10 p-8 md:p-10">
-        <span className="signal-pill">Topic Focus</span>
-        <h1 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight">{decodedTag}</h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          {filteredEpisodes.length} episode{filteredEpisodes.length !== 1 ? 's' : ''} tagged with &ldquo;{decodedTag}&rdquo;.
-        </p>
-      </div>
+    <div className="container pb-24">
+      <PageHeader
+        eyebrow={<Eyebrow>Topic Focus</Eyebrow>}
+        title={decodedTag}
+        lede={`${filteredEpisodes.length} episode${filteredEpisodes.length !== 1 ? 's' : ''} tagged with “${decodedTag}”.`}
+        actions={
+          <ButtonLink href="/tags" variant="ghost" size="sm" icon={<ArrowLeft className="h-3.5 w-3.5" />}>
+            Topic Map
+          </ButtonLink>
+        }
+      />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredEpisodes.map((episode) => (
-          <EpisodeCard key={episode.id} episode={episode} />
+      <ul className="mt-10 md:mt-14">
+        {filteredEpisodes.map((episode, index) => (
+          <Reveal as="li" key={episode.id} {...(index < ENTRANCE_ROWS ? entranceItem(index) : {})}>
+            <EpisodeRow episode={episode} />
+          </Reveal>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

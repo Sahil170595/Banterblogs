@@ -231,19 +231,6 @@ html {
   @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-label-12-mono text-muted-foreground;
 }
 
-.signal-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.5), transparent);
-}
-
-/* Glass Effects — used by EpisodeCard */
-.glass-ultra {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
 /* Markdown tables (rehype step in lib/episodes.ts) scroll inside their own
    box instead of widening the page; inferred numeric columns right-align. */
 .table-scroll {
@@ -1777,6 +1764,139 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end report page */
+
+/* R3-B2 */
+/* Hairline grid (/platform, /tags): each cell draws a 1px ring into the 1px
+   gap between cells, and the grid clips the rings at its own edge, so only
+   the rules between cells show, never a frame. The cells stay transparent:
+   the grid reads as ruling on whatever surface it sits on (a card that
+   brightens under the pointer included), an empty trailing slot is simply
+   blank, and a cell's content can rise into place without uncovering a
+   block of line colour. */
+.hairline-grid {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.hairline-grid > * {
+  box-shadow: 0 0 0 1px hsl(var(--border));
+}
+
+/* A repository's drawing (/platform) on a drafting plate: the report hero's
+   faint ember light and hairline grid at card size, the drawing at its own
+   16:9 in the middle. */
+.repo-plate {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--background) / 0.6);
+  background-image:
+    radial-gradient(ellipse 40% 90% at 50% 58%, hsl(var(--primary) / 0.07), transparent 70%),
+    linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
+  background-position: center;
+  background-size: auto, 1.25rem 1.25rem, 1.25rem 1.25rem;
+}
+
+.repo-plate .rv {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+}
+
+/* An archived episode's index row (components/EpisodeRow.tsx), on the
+   ListRow hairline: the number and date stand in a rail beside the title
+   from md, and in a line above it on a phone. */
+.episode-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rail arrow"
+    "body arrow";
+  column-gap: 1.5rem;
+  row-gap: 0.5rem;
+  padding-block: 1.5rem;
+}
+
+.episode-row-rail {
+  grid-area: rail;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+/* commit subjects carry long unbroken branch names */
+.episode-row-body {
+  grid-area: body;
+  overflow-wrap: anywhere;
+}
+
+.episode-row-arrow {
+  grid-area: arrow;
+  align-self: center;
+}
+
+@media (min-width: 768px) {
+  .episode-row {
+    grid-template-columns: 7rem minmax(0, 1fr) auto;
+    grid-template-areas: "rail body arrow";
+    padding-block: 1.75rem;
+  }
+
+  .episode-row-rail {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+/* A linked cell of a hairline grid (/tags): it tints under the pointer and
+   its arrow answers as a ListRow's does. The grid clips at its edge, so the
+   focus ring sits inside the cell. */
+.tag-cell {
+  display: block;
+  height: 100%;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.tag-cell:hover {
+  background-color: hsl(var(--card) / 0.7);
+}
+
+.tag-cell .row-arrow {
+  transition:
+    transform var(--duration-base) var(--ease-strong-out),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.tag-cell:hover .row-arrow {
+  color: hsl(var(--primary));
+}
+
+:root .tag-cell:focus-visible {
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tag-cell:hover .row-arrow {
+    transform: translateX(var(--motion-nudge));
+    transition-duration: var(--duration-hover), var(--duration-fast);
+  }
+}
+
+/* The episode page's floating controls (MobileOptimization, SocialFeatures):
+   an opaque raised surface, lighter than a card, with an inset hairline and
+   the layered tinted shadow; glass is for the header alone. */
+.floating-surface {
+  background-color: hsl(var(--card-raised));
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--foreground) / 0.08),
+    0 1px 2px hsl(220 60% 1% / 0.5),
+    0 8px 24px -6px hsl(220 60% 1% / 0.6);
+}
+/* end R3-B2 */
 
 /* R3-B1 */
 /* The warmed header glass (components/headerGlass.ts): once the page has

@@ -1,7 +1,16 @@
 import type { Metadata } from 'next';
-import { getAllEpisodes } from '@/lib/episodes';
 import Link from 'next/link';
-import { Tag } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { Reveal } from '@/components/motion/Reveal';
+import { entranceItem } from '@/components/motion/entrance';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { getAllEpisodes } from '@/lib/episodes';
+
+// The first row of the topic map joins the head's first-load entrance. The
+// head has no meta row, so the first cell follows the lede one group later.
+const ENTRANCE_CELLS = 3;
+const HEAD_GROUPS = 2;
 
 const METADATA_DESCRIPTION =
   'Browse episodes by topic — AI, benchmarks, deployment, architecture, and more.';
@@ -41,37 +50,32 @@ export default async function TagsPage() {
     .map(([tag, count]) => ({ tag, count }));
 
   return (
-    <div className="container py-16">
-      <div className="signal-panel-strong mb-10 p-8 md:p-10">
-        <span className="signal-pill">Topic Map</span>
-        <h1 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight">Chimera Tags</h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Explore the full signal surface by topic, platform, and technology.
-        </p>
-      </div>
+    <div className="container pb-24">
+      <PageHeader
+        eyebrow={<Eyebrow>Topic Map</Eyebrow>}
+        title="Chimera Tags"
+        lede="Explore the full signal surface by topic, platform, and technology."
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {sortedTags.map(({ tag, count }) => (
-          <Link
-            key={tag}
-            href={`/tags/${encodeURIComponent(tag)}`}
-            className="signal-panel group flex items-center justify-between gap-4 p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
-          >
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border/60 bg-background/60 text-primary">
-                <Tag className="h-4 w-4" />
-              </span>
-              <div>
-                <div className="text-sm font-semibold text-foreground">{tag}</div>
-                <div className="text-xs text-muted-foreground">Signal cluster</div>
-              </div>
-            </div>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              {count} episode{count !== 1 ? 's' : ''}
-            </span>
-          </Link>
+      {/* each cell is a link; its content rises into place while the rules hold still */}
+      <ul className="hairline-grid mt-10 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
+        {sortedTags.map(({ tag, count }, index) => (
+          <li key={tag}>
+            <Link href={`/tags/${encodeURIComponent(tag)}`} className="tag-cell group">
+              <Reveal className="flex items-center justify-between gap-4 p-5 md:p-6" {...(index < ENTRANCE_CELLS ? entranceItem(index, HEAD_GROUPS) : {})}>
+                <div className="min-w-0">
+                  <h2 className="text-heading-20 text-foreground transition-colors duration-fast ease-standard group-hover:text-primary">{tag}</h2>
+                  <p className="mt-1 text-copy-14 text-muted-foreground">Signal cluster</p>
+                </div>
+                <span className="flex shrink-0 items-center gap-3 text-label-13 text-muted-foreground">
+                  {count} episode{count !== 1 ? 's' : ''}
+                  <ArrowRight aria-hidden="true" className="row-arrow h-4 w-4" />
+                </span>
+              </Reveal>
+            </Link>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

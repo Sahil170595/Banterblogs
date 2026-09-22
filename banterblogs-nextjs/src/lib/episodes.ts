@@ -298,6 +298,18 @@ export function extractTreeHeadings(tree: Root): TocEntry[] {
   return headings;
 }
 
+const NAMED_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+const ENTITY = /&(?:#x([0-9a-f]+)|#(\d+)|(amp|lt|gt|quot|apos));/gi;
+
+// the character references rehype-stringify writes (&#x26;, &#x3C;, &amp;...)
+function decodeEntities(html: string): string {
+  return html.replace(ENTITY, (_match, hex: string | undefined, decimal: string | undefined, name: string | undefined) => {
+    if (hex) return String.fromCodePoint(parseInt(hex, 16));
+    if (decimal) return String.fromCodePoint(parseInt(decimal, 10));
+    return NAMED_ENTITIES[(name ?? '').toLowerCase()] ?? '';
+  });
+}
+
 /**
  * Extract headings from ALREADY-RENDERED HTML (episode.content), reading the
  * real ids rehype-slug emitted. Server-side companion to extractHeadings for
@@ -309,7 +321,7 @@ export function extractHtmlHeadings(html: string): TocEntry[] {
   let match: RegExpExecArray | null;
   while ((match = re.exec(html)) !== null) {
     if (/^<h\d[^>]*\sdata-demoted/.test(match[0])) continue; // the page title, demoted by the renderer
-    const text = match[3].replace(/<[^>]+>/g, '').trim();
+    const text = decodeEntities(match[3].replace(/<[^>]+>/g, '')).trim();
     if (text) headings.push({ id: match[2], text, level: Number(match[1]) });
   }
   return headings;
@@ -482,8 +494,9 @@ async function processEpisodeFile(
   const { content, data } = matter(fileContents);
   const metadata = resolveEpisodeMetadata(data ?? {}, content, id, platform, originalId);
 
-  // The episode page renders the title as its <h1>.
-  const htmlContent = await renderMarkdownToHtml(content, { demoteH1: true });
+  // The episode page renders the title as its <h1> and reveals the body's
+  // tables, code blocks and figures, as the report page does.
+  const htmlContent = await renderMarkdownToHtml(content, { demoteH1: true, markRevealTargets: true });
 
   const preview = metadata.preview ?? extractPreview(content);
   const tags = buildTags(content, metadata.tags);
@@ -932,8 +945,14 @@ function normalizePlatform(value: unknown): EpisodePlatform | undefined {
   return undefined;
 }
 
-function cleanHeading(heading: string): string {
-  return heading.replace(/^["*]+/, "").replace(/["*]+$/, "").trim();
+const BOLD_WRAP = /^\*+|\*+$/g;
+// a heading set wholly in one pair of quotes, with none inside
+const QUOTE_WRAP = /^"([^"]*)"$/;
+
+/** A markdown heading as a title: bold markers off, and quotes off only when they wrap the whole heading. */
+export function cleanHeading(heading: string): string {
+  const unbolded = heading.trim().replace(BOLD_WRAP, "").trim();
+  return unbolded.replace(QUOTE_WRAP, "$1").trim();
 }
 
 export async function getEpisode(slug: string): Promise<Episode | null> {

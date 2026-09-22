@@ -38,8 +38,9 @@ const LIKES_KEY = 'episode-likes';
 
 // Popovers stay mounted so they can enter and exit in CSS on the overlay
 // tokens; closed, they are inert and ignore the pointer.
+// They are opaque raised surfaces: glass is for the header alone.
 const POPOVER_CLASS =
-  'absolute bottom-full right-0 mb-2 origin-bottom-right bg-background/90 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl transition-[opacity,transform] duration-base ease-standard';
+  'floating-surface absolute bottom-full right-0 mb-2 origin-bottom-right rounded-xl transition-[opacity,transform] duration-base ease-standard';
 const popoverState = (open: boolean) =>
   open ? 'translate-y-0 scale-100 opacity-100' : 'pointer-events-none translate-y-1 scale-[0.98] opacity-0';
 const ICON_BUTTON_CLASS = 'p-2 rounded-full transition-colors duration-fast ease-standard';
@@ -98,7 +99,7 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
       name: 'Copy Link',
       icon: copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />,
       action: 'copy',
-      color: copied ? 'text-green-400' : 'text-muted-foreground'
+      color: copied ? 'text-status-green' : 'text-muted-foreground'
     }
   ];
 
@@ -144,8 +145,8 @@ export function SocialShare({ episode, className = '' }: SocialShareProps) {
           type="button"
           onClick={handleLike}
           className={`${ICON_BUTTON_CLASS} ${liked
-              ? 'bg-red-500/20 text-red-400'
-              : 'bg-muted/50 text-muted-foreground hover:bg-red-500/10 hover:text-red-400'
+              ? 'bg-primary/15 text-primary'
+              : 'bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary'
             }`}
           aria-label={liked ? 'Unlike episode' : 'Like episode'}
         >
@@ -265,7 +266,7 @@ export function BookmarkManager({ className = '' }: BookmarkManagerProps) {
                 <button
                   type="button"
                   onClick={() => removeBookmark(slug)}
-                  className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors duration-fast ease-standard"
+                  className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors duration-fast ease-standard"
                   aria-label={`Remove bookmark for ${slug}`}
                 >
                   <X className="h-3 w-3" />

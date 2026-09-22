@@ -1,13 +1,19 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import { Search, SortAsc, SortDesc } from 'lucide-react';
 import type { EpisodeSummary } from '@/lib/episodes';
 import { EpisodeSearch } from '@/lib/search';
-import { EpisodeCard } from './EpisodeCard';
+import { Reveal } from '@/components/motion/Reveal';
+import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
+import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/cn';
+import { EpisodeRow } from './EpisodeRow';
 
 interface EpisodeFiltersProps {
   episodes: EpisodeSummary[];
+  /** the page head's entrance groups the toolbar follows */
+  entranceAfter?: number;
 }
 
 type SortKey = 'date' | 'title' | 'complexity' | 'files';
@@ -17,12 +23,19 @@ type SortKey = 'date' | 'title' | 'complexity' | 'files';
 // change resets it (keyed on the filter signature — no setState-in-effect).
 const PAGE_SIZE = 36;
 const OPTION_CLASS = 'bg-background text-foreground';
+// The toolbar, then the first rows, join the page head's first-load entrance;
+// entranceItem caps where the later ones start.
+const ENTRANCE_ROWS = 3;
+const FIELD = 'h-10 rounded-full border border-border bg-background text-copy-14 text-foreground transition-colors duration-fast ease-standard hover:border-foreground/30 focus-visible:border-primary/60';
+const CHIP = 'pressable h-7 shrink-0 rounded-full px-3 text-label-13 font-medium';
 
-export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
+export function EpisodeFilters({ episodes, entranceAfter = HEAD_ENTRANCE_GROUPS }: EpisodeFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedTag, setSelectedTag] = useState<string>('');
+  // only a tag picked with the pointer crossfades the list; typing and keys swap it at once
+  const [pointerPick, setPointerPick] = useState(false);
   const filterKey = `${searchQuery}|${selectedTag}|${sortBy}|${sortOrder}`;
   const [visible, setVisible] = useState({ key: filterKey, count: PAGE_SIZE });
   const visibleCount = visible.key === filterKey ? visible.count : PAGE_SIZE;
@@ -32,23 +45,16 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
   const filteredEpisodes = useMemo(() => {
     let filtered: EpisodeSummary[] = episodes;
 
-    // Search filter
     if (searchQuery) {
-      const searchResults = searchInstance.search(searchQuery);
-      filtered = searchResults.map(r => r.item);
+      filtered = searchInstance.search(searchQuery).map((r) => r.item);
     }
 
-    // Tag filter
     if (selectedTag) {
-      filtered = filtered.filter(episode => 
-        episode.tags.some(tag => tag.toLowerCase().includes(selectedTag.toLowerCase()))
-      );
+      filtered = filtered.filter((episode) => episode.tags.some((tag) => tag.toLowerCase().includes(selectedTag.toLowerCase())));
     }
 
-    // Sort
-    const sorted = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let comparison = 0;
-      
       switch (sortBy) {
         case 'date':
           comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -63,127 +69,133 @@ export function EpisodeFilters({ episodes }: EpisodeFiltersProps) {
           comparison = a.filesChanged - b.filesChanged;
           break;
       }
-      
       return sortOrder === 'desc' ? -comparison : comparison;
     });
-
-    return sorted;
   }, [episodes, searchQuery, selectedTag, sortBy, sortOrder, searchInstance]);
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    episodes.forEach(episode => {
-      episode.tags.forEach(tag => tags.add(tag));
-    });
+    episodes.forEach((episode) => episode.tags.forEach((tag) => tags.add(tag)));
     return Array.from(tags).sort();
   }, [episodes]);
 
+  // a key press on a button reports no clicks (detail 0); a pointer click reports one or more
+  const pickTag = (tag: string) => (event: MouseEvent<HTMLButtonElement>) => {
+    setPointerPick(event.detail > 0);
+    setSelectedTag(tag);
+  };
+
+  const chip = (tag: string, label: string) => {
+    const selected = selectedTag === tag;
+    return (
+      <button
+        key={label}
+        type="button"
+        onClick={pickTag(tag)}
+        aria-pressed={selected}
+        className={cn(
+          CHIP,
+          selected ? 'bg-primary/15 text-primary' : 'bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground',
+        )}
+      >
+        {label}
+      </button>
+    );
+  };
+
   return (
-    <div className="mb-12 space-y-6">
-      <div className="signal-panel p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                name="q"
-                autoComplete="off"
-                placeholder="Search episodes, tags, or systems…"
-                aria-label="Search episodes, tags, or systems"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background/60 px-10 py-2.5 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortKey)}
-                aria-label="Sort episodes by"
-                className="rounded-xl border border-input bg-background text-foreground px-3 py-2.5 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                {/* opaque, or Windows draws the native list light with light text */}
-                <option className={OPTION_CLASS} value="date">Date</option>
-                <option className={OPTION_CLASS} value="title">Title</option>
-                <option className={OPTION_CLASS} value="complexity">Complexity</option>
-                <option className={OPTION_CLASS} value="files">Files</option>
-              </select>
-
-              <button
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                aria-label={sortOrder === 'asc' ? 'Sorted ascending — switch to descending' : 'Sorted descending — switch to ascending'}
-                className="flex items-center justify-center rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm ring-offset-background hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" aria-hidden="true" /> : <SortDesc className="h-4 w-4" aria-hidden="true" />}
-              </button>
-            </div>
+    <div className="space-y-5">
+      <div {...entranceItem(0, entranceAfter)} className="space-y-3 sm:space-y-4">
+        {/* on a phone: the search on its own line, then sort, order and the count on one */}
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
+          <div className="relative w-full sm:w-auto sm:flex-1">
+            <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              name="q"
+              autoComplete="off"
+              placeholder="Search episodes, tags, or systems…"
+              aria-label="Search episodes, tags, or systems"
+              value={searchQuery}
+              onChange={(e) => {
+                setPointerPick(false);
+                setSearchQuery(e.target.value);
+              }}
+              className={cn(FIELD, 'w-full pl-10 pr-4 text-base placeholder:text-muted-foreground md:text-copy-14')}
+            />
           </div>
 
-          <div className="text-sm text-muted-foreground">
+          <div className="flex shrink-0 items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setPointerPick(false);
+                setSortBy(e.target.value as SortKey);
+              }}
+              aria-label="Sort episodes by"
+              className={cn(FIELD, 'px-4')}
+            >
+              {/* opaque, or Windows draws the native list light with light text */}
+              <option className={OPTION_CLASS} value="date">Date</option>
+              <option className={OPTION_CLASS} value="title">Title</option>
+              <option className={OPTION_CLASS} value="complexity">Complexity</option>
+              <option className={OPTION_CLASS} value="files">Files</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPointerPick(false);
+                setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+              }}
+              aria-label={sortOrder === 'asc' ? 'Sorted ascending — switch to descending' : 'Sorted descending — switch to ascending'}
+              className={cn(FIELD, 'pressable inline-flex w-10 items-center justify-center hover:text-primary')}
+            >
+              {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" aria-hidden="true" /> : <SortDesc className="h-4 w-4" aria-hidden="true" />}
+            </button>
+          </div>
+
+          <p className="ml-auto text-label-13 text-muted-foreground sm:ml-2" aria-live="polite">
             Showing {filteredEpisodes.length} of {episodes.length} episodes
-          </div>
+          </p>
         </div>
-      </div>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => setSelectedTag('')}
-          aria-pressed={selectedTag === ''}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
-            selectedTag === ''
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
-          }`}
-        >
-          All
-        </button>
-        {allTags.map((tag) => (
-          <button
-            key={tag}
-            onClick={() => setSelectedTag(tag)}
-            aria-pressed={selectedTag === tag}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
-              selectedTag === tag
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
-            }`}
-          >
-            {tag}
-          </button>
-        ))}
+        {/* one line that scrolls sideways on a phone, bleeding to the screen edges; wrapped from sm */}
+        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+          {chip('', 'All')}
+          {allTags.map((tag) => chip(tag, tag))}
+        </div>
       </div>
 
       {filteredEpisodes.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
-          <p>No episodes match your filters yet. Try adjusting the search or tag selection.</p>
-          <button
-            type="button"
+        <div className="py-16 text-center">
+          <p className="text-copy-16 text-muted-foreground">No episodes match your filters yet. Try adjusting the search or tag selection.</p>
+          <Button
+            className="mt-5"
             onClick={() => {
+              setPointerPick(false);
               setSearchQuery('');
               setSelectedTag('');
             }}
-            className="mt-4 rounded-xl border border-input bg-background/60 px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
           >
             Clear filters
-          </button>
+          </Button>
         </div>
       ) : (
         <>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredEpisodes.slice(0, visibleCount).map((episode) => (
-              <EpisodeCard key={episode.id} episode={episode} />
+          {/* keyed on the filters, so a pointer pick replays the crossfade on a fresh list */}
+          <ul key={filterKey} data-tab-panel="" data-switched={pointerPick ? '' : undefined}>
+            {filteredEpisodes.slice(0, visibleCount).map((episode, index) => (
+              <Reveal as="li" key={episode.id} {...(index < ENTRANCE_ROWS ? entranceItem(index + 1, entranceAfter) : {})}>
+                <EpisodeRow episode={episode} />
+              </Reveal>
             ))}
-          </div>
+          </ul>
           {filteredEpisodes.length > visibleCount && (
-            <div className="flex justify-center pt-2">
-              <button
-                onClick={() => setVisible({ key: filterKey, count: visibleCount + PAGE_SIZE })}
-                className="rounded-xl border border-input bg-background/60 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
+            <div className="flex justify-center pt-6">
+              <Button onClick={() => setVisible({ key: filterKey, count: visibleCount + PAGE_SIZE })}>
                 Load more ({filteredEpisodes.length - visibleCount} remaining)
-              </button>
+              </Button>
             </div>
           )}
         </>

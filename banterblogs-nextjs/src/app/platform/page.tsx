@@ -1,455 +1,397 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
-import {
-  ArrowRight,
-  Brain,
-  Calendar,
-  Cpu,
-  Gauge,
-  Home,
-  Inbox,
-  Layers,
-  Mail,
-  Shield,
-  Smartphone,
-  Wrench,
-} from 'lucide-react';
-import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
+import { ArrowRight, ArrowUpRight, Brain, Calendar, Cpu, Gauge, Home, Inbox, Layers, Shield, Wrench, type LucideIcon } from 'lucide-react';
+import { STAR_SYSTEMS } from '@/components/galactic/systems';
+import { Reveal } from '@/components/motion/Reveal';
+import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
+import { ReportVisual, type Variant, type VisualFamily } from '@/components/reports/ReportVisual';
+import { Card, CardLink } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Section } from '@/components/ui/Section';
+import { StatRow } from '@/components/ui/StatRow';
+import { cn } from '@/lib/cn';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
+import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
+
+const METADATA_DESCRIPTION =
+  'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/platform' },
   title: 'Platform',
-  description:
-    'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
+  description: METADATA_DESCRIPTION,
   openGraph: {
     images: ['/opengraph-image.png'],
     title: 'Platform Architecture | Chimeraforge',
-    description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
+    description: METADATA_DESCRIPTION,
     url: 'https://chimeraforge.vercel.app/platform',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Platform Architecture | Chimeraforge',
-    description:
-      'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.',
+    description: METADATA_DESCRIPTION,
   },
 };
+
+// the ecosystem in numbers (the head's stat row)
+const REPOSITORY_COUNT = 9;
+const LANGUAGE_COUNT = 4;
+
+interface Subsystem {
+  icon: LucideIcon;
+  label: string;
+  detail?: string;
+}
+
+interface Repository {
+  name: string;
+  /** the drawing: the archive generator, seeded by the name, in the family chosen for the repository */
+  visual: readonly [VisualFamily, Variant];
+  /** languages and stack, one mono line */
+  meta?: string;
+  description: ReactNode;
+  subsystems?: Subsystem[];
+  footnote?: string;
+  /** where the card leads; by default the landing's destination for the repository */
+  link?: { href: string; label: string };
+}
+
+// Private repositories lead to their on-site pages and public ones to GitHub,
+// exactly as the landing's star systems do (components/galactic/systems.ts).
+function destination(repository: Repository): { href: string; label: string } {
+  if (repository.link) return repository.link;
+  const system = STAR_SYSTEMS.find((s) => s.name === repository.name);
+  if (!system) throw new Error(`[platform] no destination for ${repository.name}: add it to STAR_SYSTEMS or give it a link`);
+  return { href: system.href, label: system.ctaLabel };
+}
+
+// Each family says something about the repository it draws: concentric rings
+// for the enforcement core, measured bars for the research platform, a
+// dithered field for the agent pipeline, a fan of GPU profiles for the
+// planner, signal traces for the device and channel clients.
+const CORE_ENGINES: Repository[] = [
+  {
+    name: 'Banterpacks',
+    visual: ['arcs', 0],
+    meta: 'Python, Rust · 6 subsystems + 7 Rust crates',
+    description:
+      'The core monorepo. Six interconnected subsystems handling constitutional AI enforcement, multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant. All inter-service coupling is HTTP.',
+    subsystems: [
+      { icon: Brain, label: 'JARVIS Gateway', detail: 'AI agent layer — chat, voice, semantic memory, tools, proactive intelligence, smart home' },
+      { icon: Shield, label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), calibrated fast-path routing' },
+      { icon: Cpu, label: 'Debate Engine', detail: 'Chimera — heat-based escalation, weighted voting, ranked choice, Condorcet consensus' },
+      { icon: Wrench, label: 'Rust Runtime', detail: 'TDD005 — Ed25519 provenance, BFT consensus, ZK proofs, cognitive agents with ELO' },
+    ],
+    footnote: 'RLAIF self-improving loop · 3-stage tool approval',
+  },
+  {
+    name: 'Banterhearts',
+    visual: ['bars', 0],
+    meta: `Python · ${MEASUREMENTS.SHORT} measurements`,
+    description: `ML research platform and production inference backbone. ${MEASUREMENTS.DISPLAY} measurements across ${REPORTS.DISPLAY} technical reports, targeting consumer GPUs with sub-100ms inference.`,
+    subsystems: [
+      { icon: Cpu, label: 'Inference API', detail: 'Model selection, streaming, multi-backend dispatch' },
+      { icon: Shield, label: 'Safety Research', detail: 'Alignment under quantization, concurrency, cross-backend consistency' },
+      { icon: Gauge, label: 'Benchmarking', detail: '4 compilation backends, 5 quantization formats, GPU kernel profiling' },
+      { icon: Brain, label: 'AutoOpt Agent', detail: 'Thompson sampling, multi-armed bandit, SLA enforcement' },
+    ],
+    footnote: '37-file evaluation framework · 20 monitoring modules · 12 security modules',
+  },
+];
+
+const GATEWAY_MODULES: Subsystem[] = [
+  { icon: Calendar, label: 'Calendar' },
+  { icon: Inbox, label: 'Inbox' },
+  { icon: Brain, label: 'Memory' },
+  { icon: Home, label: 'Smart Home' },
+  { icon: Gauge, label: 'Proactive' },
+  { icon: Wrench, label: 'Tools' },
+  { icon: Layers, label: 'Voice' },
+];
+
+const SUPPORTING_SYSTEMS: Repository[] = [
+  {
+    name: 'Chimera Multi-Agent',
+    visual: ['dots', 1],
+    meta: 'Python · ClickHouse · OTel',
+    description:
+      'Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the observability control plane (OTel tracing, Datadog metrics, DLQ).',
+  },
+  {
+    name: 'Chimeraforge',
+    visual: ['fan', 0],
+    description: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — any registry / Ollama / HuggingFace model across 22 GPU profiles, plus an MCP server that serves the same numbers to AI assistants.`,
+    link: { href: '/tools/chimeraforge', label: 'pip install chimeraforge' },
+  },
+  {
+    name: 'Chimeradroid',
+    visual: ['wave', 0],
+    meta: 'C# / Unity · WebSocket streaming',
+    description:
+      'Android companion for JARVIS — Unity/C# with voice, chat, session handoff, tool approval, mesh networking, and offline-first support.',
+  },
+  {
+    name: 'Echo',
+    visual: ['wave', 1],
+    meta: 'Python · Slack Bolt · discord.py',
+    description: 'Messaging channel adapters — Slack and Discord bridges to JARVIS with session tracking and device key auth.',
+  },
+  {
+    name: 'JARVIS Console',
+    visual: ['bars', 1],
+    meta: 'TypeScript / Next.js · WebSocket',
+    description:
+      'Web console — chat with streaming, control room dashboard, cognitive agent ELO, tool catalog, workflow management, memory browser.',
+  },
+  {
+    name: 'This Site',
+    visual: ['dots', 0],
+    meta: 'TypeScript · Vercel',
+    description: `268 auto-generated episodes from git commits (stream archived 2026-06-26). Research archive with ${REPORTS.DISPLAY} technical reports. Next.js 16 with SSG + ISR.`,
+  },
+  {
+    name: 'Project Wyvern',
+    visual: ['fan', 1],
+    meta: 'Python, Rust · ROS 2 · PX4 + Gazebo',
+    description:
+      'Embodied autonomy. Governed mission-execution plane between Chimera control and PX4/ArduPilot — 5-tier authority hierarchy, cryptographic mission replay, OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP in progress.',
+  },
+];
+
+// shipped outside the 9-repo Chimera ecosystem
+const STANDALONE_TOOLS: Repository[] = [
+  {
+    name: 'quantfit',
+    visual: ['arcs', 1],
+    description: `GPU-aware quantization CLI with a built-in safety-drift check (v${QUANTFIT_TOOL.version}). Quantizes across the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF), refuses honestly when a model will not fit, and measures whether quantization broke refusals — a two-axis vector (refusal-robustness + over-refusal) against an unquantized baseline, with bounded Wilson-CI verdicts and an auditable drift report.`,
+    link: { href: '/tools/quantfit', label: 'pip install quantfit' },
+  },
+];
+
+const DATA_FLOW = [
+  { step: '1', title: 'Ingest', text: 'Banterhearts bench data and Banterpacks git commits flow into ClickHouse via dedicated agents.' },
+  { step: '2', title: 'Process', text: 'Watcher monitors pipeline health. Council generates episodes with performance insights baked in.' },
+  { step: '3', title: 'Publish', text: 'Publisher pushes episodes to GitHub. Vercel rebuilds the site. i18n translates to German, Chinese, Hindi.' },
+  { step: '4', title: 'Serve', text: 'JARVIS gateway dispatches inference locally. Chimeradroid extends access to mobile devices.' },
+];
+
+const PROSE_LINK = 'text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary';
+
+const isExternal = (href: string) => /^https?:\/\//.test(href);
+
+/**
+ * A repository: its drawing on a drafting plate, name, stack line and what it
+ * is, then where it leads. The whole card is the link (its CardLink stretches
+ * over it), so it lifts, rings ember and lights its drawing under the pointer.
+ * `wide` lays a card that ends a grid on its side.
+ */
+function RepositoryCard({ repository, core = false, wide = false }: { repository: Repository; core?: boolean; wide?: boolean }) {
+  const { href, label } = destination(repository);
+  const Arrow = isExternal(href) ? ArrowUpRight : ArrowRight;
+  return (
+    <Card as="article" variant="interactive" className={cn('flex h-full flex-col', wide && 'sm:flex-row sm:gap-6')}>
+      <div className={cn('repo-plate mb-5', core ? 'h-36 md:h-44' : 'h-28', wide && 'sm:mb-0 sm:h-auto sm:min-h-32 sm:w-2/5 sm:shrink-0')}>
+        <ReportVisual slug={repository.name} family={repository.visual[0]} variant={repository.visual[1]} />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <h3 className={core ? 'text-heading-24 text-foreground' : 'text-heading-20 text-foreground'}>{repository.name}</h3>
+        {repository.meta && <p className="mt-1 text-label-13 text-muted-foreground">{repository.meta}</p>}
+        <p className={cn('mt-3 text-muted-foreground', core ? 'text-copy-16' : 'text-copy-14')}>{repository.description}</p>
+        {/* the cells' text lines up with the prose above; the grid's outer rules are clipped */}
+        {repository.subsystems && (
+          <ul className="hairline-grid -mx-4 mt-5 sm:grid-cols-2">
+            {repository.subsystems.map((item) => (
+              <li key={item.label} className="p-4">
+                <div className="flex items-center gap-2">
+                  <item.icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="text-label-13 font-semibold text-foreground">{item.label}</span>
+                </div>
+                <p className="mt-1.5 text-copy-14 text-muted-foreground">{item.detail}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        {/* the footer sits at the card's foot, so cards in a row end together */}
+        <div className="mt-auto pt-5">
+          {repository.footnote && <p className="mb-4 text-label-12-mono text-muted-foreground/80">{repository.footnote}</p>}
+          <p className="inline-flex items-center gap-1.5 text-label-13 font-medium text-primary">
+            <CardLink href={href}>{label}</CardLink>
+            <Arrow aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// The two core engines join the head's entrance, after its three groups.
+const CORE_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
+const SUPPORTING_GRID = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
+// the last supporting card closes the grid on its side: two columns, then three
+const SUPPORTING_WIDE = 'sm:col-span-2 xl:col-span-3';
 
 export default async function PlatformPage() {
   const episodes = await getAllEpisodes();
   const stats = getEpisodeStats(episodes);
 
+  const explore = [
+    {
+      href: '/reports',
+      title: 'Research Archive',
+      blurb: `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements across inference, optimization, and safety.`,
+      cta: 'Browse reports',
+    },
+    {
+      href: '/episodes',
+      title: 'Episode Archive',
+      blurb: `${stats.totalEpisodes} archived episodes documenting commits, decisions, and telemetry data points.`,
+      cta: 'Browse episodes',
+    },
+    { href: '/about', title: 'About the Project', blurb: "Who built this, why, and where it's headed.", cta: 'Read more' },
+  ];
+
   return (
-    <div className="container py-16">
-      {/* ── Hero ── */}
-      <div className="signal-panel-strong mb-16 p-8 md:p-12">
-        <div className="space-y-5">
-          <span className="signal-pill">Platform Architecture</span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            What Powers Chimeraforge
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Nine repositories across Python, Rust, TypeScript, and C#. Constitutional AI
-            enforcement with cryptographic provenance, multi-model debate, and a self-improving
-            alignment loop — from the JARVIS gateway to mobile clients to channel adapters.
+    <div className="container pb-24">
+      <PageHeader
+        eyebrow={<Eyebrow dot="ember">Platform Architecture</Eyebrow>}
+        title="What Powers Chimeraforge"
+        lede="Nine repositories across Python, Rust, TypeScript, and C#. Constitutional AI enforcement with cryptographic provenance, multi-model debate, and a self-improving alignment loop — from the JARVIS gateway to mobile clients to channel adapters."
+        meta={
+          <StatRow
+            label="The platform in numbers"
+            items={[
+              { value: REPOSITORY_COUNT, label: 'repositories' },
+              { value: LANGUAGE_COUNT, label: 'languages' },
+              { value: MEASUREMENTS.SHORT, label: 'research measurements' },
+            ]}
+          />
+        }
+      />
+
+      <div className="mt-8 md:mt-14">
+        <Section id="core-engines" title="Core engines" aside>
+          <ul className="grid gap-4 xl:grid-cols-2">
+            {CORE_ENGINES.map((repository, index) => (
+              <Reveal as="li" key={repository.name} {...entranceItem(index, CORE_ENTRANCE_AFTER)}>
+                <RepositoryCard repository={repository} core />
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="jarvis-gateway" title="JARVIS Gateway" aside>
+          <p className="max-w-[60ch] text-copy-17 text-prose">
+            Multi-modal AI gateway with multi-provider routing (Anthropic, OpenAI, Gemini, Ollama). Every chat turn routes through the
+            constitutional router. Tool execution uses a 3-stage propose/approve/execute pipeline with cryptographic provenance on
+            every action.
           </p>
+          {/* two columns on a phone, the last module across both; one row from md */}
+          <ul className="hairline-grid mt-8 grid-cols-2 md:grid-cols-7">
+            {GATEWAY_MODULES.map((module) => (
+              <li key={module.label} className="last:col-span-2 md:last:col-span-1">
+                <Reveal className="flex flex-col items-center gap-2 px-3 py-5">
+                  <module.icon aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-label-13 font-semibold text-foreground">{module.label}</span>
+                </Reveal>
+              </li>
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="supporting-systems" title="Supporting systems" aside>
+          <ul className={SUPPORTING_GRID}>
+            {SUPPORTING_SYSTEMS.map((repository, index) => {
+              const wide = index === SUPPORTING_SYSTEMS.length - 1;
+              return (
+                <Reveal as="li" key={repository.name} className={cn(wide && SUPPORTING_WIDE)}>
+                  <RepositoryCard repository={repository} wide={wide} />
+                </Reveal>
+              );
+            })}
+          </ul>
+        </Section>
+
+        <Section
+          id="standalone-tools"
+          title="Standalone tools"
+          description="Independent CLIs shipped outside the Chimera ecosystem — their own repositories, not counted among the nine."
+          aside
+        >
+          <ul className="grid gap-4">
+            {STANDALONE_TOOLS.map((repository) => (
+              <Reveal as="li" key={repository.name}>
+                <RepositoryCard repository={repository} wide />
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="data-flow" title="How data flows" aside>
+          <ol className="hairline-grid sm:grid-cols-2 xl:grid-cols-4">
+            {DATA_FLOW.map((step) => (
+              <li key={step.step}>
+                <Reveal className="p-5">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-label-13 text-primary">{step.step}</span>
+                    {/* h3, not h4: the section heading above is an h2 */}
+                    <h3 className="text-copy-16 font-semibold text-foreground">{step.title}</h3>
+                  </div>
+                  <p className="mt-2 text-copy-14 text-muted-foreground">{step.text}</p>
+                </Reveal>
+              </li>
+            ))}
+          </ol>
+        </Section>
+
+        <Section id="see-it-run" title="See it run" aside>
+          <div className="max-w-[60ch] space-y-4 text-copy-17 text-prose">
+            <p>
+              The subsystems above are not diagrams on{' '}
+              <Link href="/show" className={PROSE_LINK}>
+                /show
+              </Link>
+              . Each scene replays pre-computed records from the Banterpacks pipeline — real Ed25519 signatures, real Pedersen
+              commitments, real tier verdicts — and labels the one deterministic stand-in where the public demo uses it.
+            </p>
+            <p>
+              Start with the{' '}
+              <Link href="/show/streaming-ladder" className={PROSE_LINK}>
+                five-tier streaming ladder
+              </Link>
+              , the{' '}
+              <Link href="/show/zk-alignment-proof" className={PROSE_LINK}>
+                zero-knowledge alignment proof
+              </Link>
+              , or{' '}
+              <Link href="/show/bft-consensus" className={PROSE_LINK}>
+                BFT consensus across four replicas
+              </Link>
+              .
+            </p>
+          </div>
+        </Section>
+
+        {/* where to go next */}
+        <div className="page-section">
+          <ul className="grid gap-4 md:grid-cols-3">
+            {explore.map((link) => (
+              <Reveal as="li" key={link.href}>
+                <Card variant="interactive" href={link.href} className="flex h-full flex-col">
+                  <h3 className="text-heading-20 text-foreground">{link.title}</h3>
+                  <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{link.blurb}</p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary">
+                    {link.cta} <ArrowRight aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
+                  </span>
+                </Card>
+              </Reveal>
+            ))}
+          </ul>
         </div>
       </div>
-
-      {/* ── Core Engines ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          Core Engines
-        </h2>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Banterpacks */}
-          <div className="signal-panel p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <Layers className="h-5 w-5" />
-              </span>
-              <div>
-                <h3 className="text-xl font-semibold">Banterpacks</h3>
-                <span className="text-xs text-muted-foreground">Python, Rust &middot; 6 subsystems + 7 Rust crates</span>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-              The core monorepo. Six interconnected subsystems handling constitutional AI enforcement,
-              multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant.
-              All inter-service coupling is HTTP.
-            </p>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              {[
-                { icon: Brain, label: 'JARVIS Gateway', detail: 'AI agent layer — chat, voice, semantic memory, tools, proactive intelligence, smart home' },
-                { icon: Shield, label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), calibrated fast-path routing' },
-                { icon: Cpu, label: 'Debate Engine', detail: 'Chimera — heat-based escalation, weighted voting, ranked choice, Condorcet consensus' },
-                { icon: Wrench, label: 'Rust Runtime', detail: 'TDD005 — Ed25519 provenance, BFT consensus, ZK proofs, cognitive agents with ELO' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-border/40 bg-card/30 p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-foreground">{item.label}</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{item.detail}</p>
-                </div>
-              ))}
-            </div>
-            <div className="text-xs text-muted-foreground/70">
-              RLAIF self-improving loop &middot; 3-stage tool approval
-            </div>
-          </div>
-
-          {/* Banterhearts */}
-          <div className="signal-panel p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <Gauge className="h-5 w-5" />
-              </span>
-              <div>
-                <h3 className="text-xl font-semibold">Banterhearts</h3>
-                <span className="text-xs text-muted-foreground">Python &middot; {MEASUREMENTS.SHORT} measurements</span>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-              ML research platform and production inference backbone. {MEASUREMENTS.DISPLAY} measurements
-              across {REPORTS.DISPLAY} technical reports, targeting consumer GPUs with sub-100ms inference.
-            </p>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              {[
-                { icon: Cpu, label: 'Inference API', detail: 'Model selection, streaming, multi-backend dispatch' },
-                { icon: Shield, label: 'Safety Research', detail: 'Alignment under quantization, concurrency, cross-backend consistency' },
-                { icon: Gauge, label: 'Benchmarking', detail: '4 compilation backends, 5 quantization formats, GPU kernel profiling' },
-                { icon: Brain, label: 'AutoOpt Agent', detail: 'Thompson sampling, multi-armed bandit, SLA enforcement' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-border/40 bg-card/30 p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-foreground">{item.label}</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{item.detail}</p>
-                </div>
-              ))}
-            </div>
-            <div className="text-xs text-muted-foreground/70">
-              37-file evaluation framework &middot; 20 monitoring modules &middot; 12 security modules
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── JARVIS Gateway ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          JARVIS Gateway
-        </h2>
-
-        <div className="signal-panel p-6 md:p-8">
-          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-            Multi-modal AI gateway with multi-provider routing (Anthropic, OpenAI, Gemini, Ollama).
-            Every chat turn routes through the constitutional router. Tool execution uses a 3-stage
-            propose/approve/execute pipeline with cryptographic provenance on every action.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {[
-              { icon: Calendar, label: 'Calendar' },
-              { icon: Inbox, label: 'Inbox' },
-              { icon: Brain, label: 'Memory' },
-              { icon: Home, label: 'Smart Home' },
-              { icon: Gauge, label: 'Proactive' },
-              { icon: Wrench, label: 'Tools' },
-              { icon: Layers, label: 'Voice' },
-            ].map((mod) => (
-              <div key={mod.label} className="flex flex-col items-center gap-2 rounded-xl border border-border/40 bg-card/30 p-4">
-                <mod.icon className="h-5 w-5 text-muted-foreground" />
-                <span className="text-xs font-semibold">{mod.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Supporting Systems ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          Supporting Systems
-        </h2>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Brain className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Chimera Multi-Agent</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Muse Protocol — 6-agent content pipeline with ClickHouse analytics.
-              Also the observability control plane (OTel tracing, Datadog metrics, DLQ).
-            </p>
-            <span className="text-[10px] text-muted-foreground/70">Python &middot; ClickHouse &middot; OTel</span>
-          </div>
-
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Gauge className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Chimeraforge</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              LLM deployment optimizer on PyPI (v{CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner
-              (VRAM, Quality, Safety, Latency, Cost) — any registry / Ollama / HuggingFace model across 22 GPU
-              profiles, plus an MCP server that serves the same numbers to AI assistants.
-            </p>
-            <Link
-              href="/tools/chimeraforge"
-              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-            >
-              pip install chimeraforge
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Smartphone className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Chimeradroid</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Android companion for JARVIS — Unity/C# with voice, chat, session handoff,
-              tool approval, mesh networking, and offline-first support.
-            </p>
-            <span className="text-[10px] text-muted-foreground/70">C# / Unity &middot; WebSocket streaming</span>
-          </div>
-
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Echo</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Messaging channel adapters — Slack and Discord bridges to JARVIS with
-              session tracking and device key auth.
-            </p>
-            <span className="text-[10px] text-muted-foreground/70">Python &middot; Slack Bolt &middot; discord.py</span>
-          </div>
-
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Layers className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">JARVIS Console</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Web console — chat with streaming, control room dashboard, cognitive agent ELO,
-              tool catalog, workflow management, memory browser.
-            </p>
-            <span className="text-[10px] text-muted-foreground/70">TypeScript / Next.js &middot; WebSocket</span>
-          </div>
-
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Gauge className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">This Site</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              268 auto-generated episodes from git commits (stream archived 2026-06-26). Research
-              archive with {REPORTS.DISPLAY} technical reports. Next.js 16 with SSG + ISR.
-            </p>
-            <span className="text-[10px] text-muted-foreground/70">TypeScript &middot; Vercel</span>
-          </div>
-
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Project Wyvern</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Embodied autonomy. Governed mission-execution plane between Chimera control
-              and PX4/ArduPilot — 5-tier authority hierarchy, cryptographic mission replay,
-              OpenAPI 3.1 mission contract. Phase 0 specs complete; SIM-ONLY MVP in progress.
-            </p>
-            <span className="text-[10px] text-muted-foreground/70">Python, Rust &middot; ROS 2 &middot; PX4 + Gazebo</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Standalone Tools (shipped outside the 9-repo Chimera ecosystem) ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          Standalone Tools
-        </h2>
-        <p className="text-xs text-muted-foreground/70 mb-8 max-w-2xl">
-          Independent CLIs shipped outside the Chimera ecosystem — their own repositories, not
-          counted among the nine.
-        </p>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="signal-panel p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">quantfit</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              GPU-aware quantization CLI with a built-in safety-drift check (v{QUANTFIT_TOOL.version}). Quantizes across
-              the SOTA matrix (AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF), refuses honestly when a
-              model will not fit, and measures whether quantization broke refusals — a two-axis vector
-              (refusal-robustness + over-refusal) against an unquantized baseline, with bounded
-              Wilson-CI verdicts and an auditable drift report.
-            </p>
-            <Link
-              href="/tools/quantfit"
-              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-            >
-              pip install quantfit
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Key Numbers ── */}
-      <section className="mb-20">
-        <div className="grid gap-4 grid-cols-2">
-          {[
-            { value: '9', label: 'Repositories' },
-            { value: MEASUREMENTS.SHORT, label: 'Research Measurements' },
-          ].map((item) => (
-            <div key={item.label} className="signal-panel p-5 text-center">
-              <div className="text-2xl md:text-3xl font-bold text-foreground">{item.value}</div>
-              <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{item.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Data Flow ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          How Data Flows
-        </h2>
-
-        <div className="signal-panel p-6 md:p-8">
-          <div className="grid gap-4 md:grid-cols-4 text-sm text-muted-foreground">
-            {[
-              {
-                step: '1',
-                title: 'Ingest',
-                text: 'Banterhearts bench data and Banterpacks git commits flow into ClickHouse via dedicated agents.',
-              },
-              {
-                step: '2',
-                title: 'Process',
-                text: 'Watcher monitors pipeline health. Council generates episodes with performance insights baked in.',
-              },
-              {
-                step: '3',
-                title: 'Publish',
-                text: 'Publisher pushes episodes to GitHub. Vercel rebuilds the site. i18n translates to German, Chinese, Hindi.',
-              },
-              {
-                step: '4',
-                title: 'Serve',
-                text: 'JARVIS gateway dispatches inference locally. Chimeradroid extends access to mobile devices.',
-              },
-            ].map((step) => (
-              <div key={step.step} className="rounded-xl border border-border/40 bg-card/30 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-xs font-bold text-foreground">
-                    {step.step}
-                  </span>
-                  {/* h3, not h4 — the section heading above is an h2 and
-                      skipping a level breaks the document outline */}
-                  <h3 className="font-semibold text-foreground">{step.title}</h3>
-                </div>
-                <p className="text-xs leading-relaxed">{step.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── See it run ── */}
-      <section className="mb-20">
-        <h2 className="text-sm font-semibold mb-8 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-          See it run
-        </h2>
-
-        <div className="signal-panel p-6 md:p-8">
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            The subsystems above are not diagrams on{' '}
-            <Link href="/show" className="text-primary transition-colors hover:text-primary/80">
-              /show
-            </Link>
-            . Each scene replays pre-computed records from the Banterpacks pipeline — real Ed25519
-            signatures, real Pedersen commitments, real tier verdicts — and labels the one
-            deterministic stand-in where the public demo uses it.
-          </p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Start with the{' '}
-            <Link href="/show/streaming-ladder" className="text-primary transition-colors hover:text-primary/80">
-              five-tier streaming ladder
-            </Link>
-            , the{' '}
-            <Link href="/show/zk-alignment-proof" className="text-primary transition-colors hover:text-primary/80">
-              zero-knowledge alignment proof
-            </Link>
-            , or{' '}
-            <Link href="/show/bft-consensus" className="text-primary transition-colors hover:text-primary/80">
-              BFT consensus across four replicas
-            </Link>
-            .
-          </p>
-        </div>
-      </section>
-
-      {/* ── Explore ── */}
-      <section>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Link
-            href="/reports"
-            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
-          >
-            <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              {REPORTS.DISPLAY} technical reports with {MEASUREMENTS.DISPLAY} measurements across inference, optimization, and safety.
-            </p>
-            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-              Browse reports <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-          <Link
-            href="/episodes"
-            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
-          >
-            <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Episode Archive</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              {stats.totalEpisodes} archived episodes documenting commits, decisions, and telemetry data points.
-            </p>
-            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-              Browse episodes <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-          <Link
-            href="/about"
-            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
-          >
-            <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">About the Project</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Who built this, why, and where it&apos;s headed.
-            </p>
-            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-              Read more <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

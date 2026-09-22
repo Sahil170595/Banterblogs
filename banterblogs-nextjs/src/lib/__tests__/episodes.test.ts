@@ -5,6 +5,7 @@ import {
     extractHeadings,
     extractHtmlHeadings,
     renderMarkdownToHtml,
+    cleanHeading,
     Episode,
 } from '../episodes';
 
@@ -68,6 +69,27 @@ describe('markdown reading surface', () => {
         it('keeps a demoted title out of the in-page heading list', async () => {
             const html = await renderMarkdownToHtml('# Title\n\n## Section\n', { demoteH1: true });
             expect(extractHtmlHeadings(html).map((h) => h.text)).toEqual(['Section']);
+        });
+
+        // the contents list is text: "Quality &#x26; Standards" showed its entity
+        it('reads heading text as text, entities decoded', async () => {
+            const html = await renderMarkdownToHtml('## Quality & Standards\n\n## A < B "quoted"\n');
+            expect(extractHtmlHeadings(html).map((h) => h.text)).toEqual(['Quality & Standards', 'A < B "quoted"']);
+        });
+    });
+
+    // 267 of the 291 episode titles end in a quoted name; stripping every
+    // trailing quote left them unbalanced (Episode 1: "The Architect's Blueprint)
+    describe('episode titles', () => {
+        it('keeps a quoted name whole', () => {
+            expect(cleanHeading('Episode 1: "The Architect\'s Blueprint"')).toBe('Episode 1: "The Architect\'s Blueprint"');
+            expect(cleanHeading('Episode 001: Preliminary Data Review')).toBe('Episode 001: Preliminary Data Review');
+        });
+
+        it('still unwraps a heading set wholly in quotes or bold', () => {
+            expect(cleanHeading('"The Title"')).toBe('The Title');
+            expect(cleanHeading('**The Title**')).toBe('The Title');
+            expect(cleanHeading('**"The Title"**')).toBe('The Title');
         });
     });
 

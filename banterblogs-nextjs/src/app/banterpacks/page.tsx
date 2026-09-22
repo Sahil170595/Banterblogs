@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
+import { ButtonLink } from '@/components/ui/Button';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const METADATA_DESCRIPTION =
   'Development episodes from the production monorepo — JARVIS gateway, intelligence pipeline, constitutional AI, and Rust runtime.';
@@ -37,25 +39,21 @@ export default async function BanterpacksPage() {
   );
 
   return (
-    <div className="container py-16">
-      <div className="signal-panel-strong mb-12 p-8 md:p-10">
-        <div className="space-y-4">
-          <span className="signal-pill">Banterpacks</span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Banterpacks Episodes</h1>
-          <p className="text-lg text-muted-foreground">
-            {banterpacksEpisodes.length} episodes covering development of the production monorepo — JARVIS gateway, intelligence pipeline, and constitutional AI.
-          </p>
-          <Link
-            href="/platform"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-          >
+    <div className="container pb-24">
+      <PageHeader
+        eyebrow={<Eyebrow>Banterpacks</Eyebrow>}
+        title="Banterpacks Episodes"
+        lede={`${banterpacksEpisodes.length} episodes covering development of the production monorepo — JARVIS gateway, intelligence pipeline, and constitutional AI.`}
+        actions={
+          <ButtonLink href="/platform" iconEnd={<ArrowRight className="h-3.5 w-3.5" />}>
             Learn about Banterpacks on the Platform page
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
+          </ButtonLink>
+        }
+      />
 
-      <EpisodeFilters episodes={banterpacksEpisodes.map(toEpisodeSummary)} />
+      <div className="mt-10 md:mt-14">
+        <EpisodeFilters episodes={banterpacksEpisodes.map(toEpisodeSummary)} />
+      </div>
     </div>
   );
 }

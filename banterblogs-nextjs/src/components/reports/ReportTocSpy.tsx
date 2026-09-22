@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
+import { REPORT_END_ATTRIBUTE } from './reportEnd';
 
 // Scroll-spy for the report contents. An IntersectionObserver, not a scroll
 // handler, marks the entry being read (aria-current="location") and moves the
@@ -13,8 +14,8 @@ import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
 
 /** a heading becomes the one being read once it rises past this share of the viewport */
 export const ACTIVATION_LINE = 0.3;
-/** marks the end of the report body; once it is on screen, the last section on screen is being read */
-export const REPORT_END_ATTRIBUTE = 'data-report-end';
+/** the end-of-body marker (reportEnd.tsx), for callers of the spy */
+export { REPORT_END_ATTRIBUTE };
 export const CURRENT_ATTRIBUTE = 'aria-current';
 export const CURRENT_VALUE = 'location';
 export const MARKER_PLACED_ATTRIBUTE = 'data-placed';

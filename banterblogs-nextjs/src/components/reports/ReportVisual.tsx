@@ -12,7 +12,7 @@ import { classifyReportSlug, PHASE_DEFINITIONS, type PhaseKey } from '@/lib/repo
 
 export const VISUAL_FAMILIES = ['dots', 'fan', 'bars', 'arcs', 'wave'] as const;
 export type VisualFamily = (typeof VISUAL_FAMILIES)[number];
-type Variant = 0 | 1;
+export type Variant = 0 | 1;
 
 /** markup budget per visual, so ~60 cards stay light in the archive HTML */
 export const MAX_VISUAL_BYTES = 1800;
@@ -625,8 +625,21 @@ export function visualStyleFor(slug: string): { family: VisualFamily; variant: V
   return { family: style[0], variant: style[1], synthesis };
 }
 
-export function ReportVisual({ slug, accent = false }: { slug: string; accent?: boolean }) {
-  const { family, variant, synthesis } = visualStyleFor(slug);
+export interface ReportVisualProps {
+  /** the seed: a report slug, or any stable name (a repository on /platform) */
+  slug: string;
+  accent?: boolean;
+  /** draw this family instead of the phase's; the seed still picks the composition */
+  family?: VisualFamily;
+  /** with a named family, its variant (default 0) */
+  variant?: Variant;
+}
+
+export function ReportVisual({ slug, accent = false, family: named, variant: namedVariant = 0 }: ReportVisualProps) {
+  const style = visualStyleFor(slug);
+  const family = named ?? style.family;
+  const variant = named ? namedVariant : style.variant;
+  const { synthesis } = style;
   const { shapes, layout, mirror } = DRAW[family](seeded(hashSlug(slug)), variant);
   const body = shapes.map((s, i) => createElement(s.tag, { key: i, className: s.cls, ...s.props }));
   return (

@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Cpu, Radio, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 import { EpisodeFilters } from '@/components/EpisodeFilters';
+import { ButtonLink } from '@/components/ui/Button';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const METADATA_DESCRIPTION =
   'Full development timeline across Banterpacks and Chimera Engine — 268 episodes from raw commits to benchmarked outcomes, now archived.';
@@ -37,64 +40,36 @@ export default async function EpisodesPage() {
   const banterpacksCount = episodes.length - chimeraCount;
 
   return (
-    <div className="container py-16">
-      <div className="signal-panel-strong mb-12 p-8 md:p-10">
-        <p className="mb-6 rounded-xl border border-border/60 bg-card/60 px-5 py-4 text-sm leading-relaxed text-muted-foreground">
-          Archived 2026-06-26. These episodes were generated from git commits by a multi-persona
-          pipeline between September 2025 and June 2026. The pipeline is retired; the research
-          program continues at{' '}
-          <Link href="/reports" className="text-primary underline-offset-4 hover:underline">
-            /reports
-          </Link>
-          .
-        </p>
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="space-y-4">
-            <span className="signal-pill">
-              <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-              Archive
-            </span>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Episode Archive</h1>
-            <p className="text-lg text-muted-foreground">
-              The full development narrative across Banterpacks and Chimera Engine, from raw commits to benchmarked outcomes.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 sm:min-w-[560px]">
-            <Link
-              href="/banterpacks"
-              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition-colors duration-fast ease-standard hover:border-primary hover:bg-card/80"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Radio className="h-4 w-4" />
-                </span>
-                <div>
-                  <div className="text-sm font-semibold">Banterpacks Episodes</div>
-                  <div className="text-xs text-muted-foreground">{banterpacksCount} episodes</div>
-                </div>
-              </div>
-              <ArrowRight className="h-4 w-4 text-primary" />
+    <div className="container pb-24">
+      <PageHeader
+        eyebrow={<Eyebrow dot="neutral">Archive</Eyebrow>}
+        title="Episode Archive"
+        lede="The full development narrative across Banterpacks and Chimera Engine, from raw commits to benchmarked outcomes."
+        meta={
+          <p className="max-w-[60ch] text-copy-14 text-muted-foreground">
+            Archived 2026-06-26. These episodes were generated from git commits by a multi-persona pipeline between September 2025 and
+            June 2026. The pipeline is retired; the research program continues at{' '}
+            <Link href="/reports" className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary">
+              /reports
             </Link>
-            <Link
-              href="/chimera"
-              className="group flex items-center justify-between rounded-2xl border border-primary/40 bg-card/60 px-5 py-4 text-foreground transition-colors duration-fast ease-standard hover:border-primary hover:bg-card/80"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Cpu className="h-4 w-4" />
-                </span>
-                <div>
-                  <div className="text-sm font-semibold">Chimera Episodes</div>
-                  <div className="text-xs text-muted-foreground">{chimeraCount} episodes</div>
-                </div>
-              </div>
-              <ArrowRight className="h-4 w-4 text-primary" />
-            </Link>
-          </div>
-        </div>
-      </div>
+            .
+          </p>
+        }
+        actions={
+          <>
+            <ButtonLink href="/banterpacks" iconEnd={<ArrowRight className="h-3.5 w-3.5" />}>
+              Banterpacks Episodes <span className="text-muted-foreground">{banterpacksCount} episodes</span>
+            </ButtonLink>
+            <ButtonLink href="/chimera" iconEnd={<ArrowRight className="h-3.5 w-3.5" />}>
+              Chimera Episodes <span className="text-muted-foreground">{chimeraCount} episodes</span>
+            </ButtonLink>
+          </>
+        }
+      />
 
-      <EpisodeFilters episodes={episodes.map(toEpisodeSummary)} />
+      <div className="mt-10 md:mt-14">
+        <EpisodeFilters episodes={episodes.map(toEpisodeSummary)} />
+      </div>
     </div>
   );
 }
