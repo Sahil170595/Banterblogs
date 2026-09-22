@@ -97,12 +97,14 @@ describe('report card', () => {
     expect(card().querySelector('p')?.className).toMatch(/\bline-clamp-2\b/);
   });
 
-  it('sends the card forward and pairs its visual and title with the report page hero and heading', () => {
+  // Phase R4: the title no longer travels (re-judge 3, P0-1); the visual is
+  // the one element the card shares with the report page.
+  it('sends the card forward and pairs only its visual with the report page hero', () => {
     const link = card().querySelector('a')!;
 
     expect(link.getAttribute('href')).toBe('/reports/technical-report-138');
     expect(link.getAttribute('data-transition-types')).toBe(NAV_FORWARD);
-    expect(viewTransitions.map((vt) => vt.name)).toEqual(['report-figure-technical-report-138', 'report-title-technical-report-138']);
+    expect(viewTransitions.map((vt) => vt.name)).toEqual(['report-figure-technical-report-138']);
   });
 
   it('has no border of its own, and moves a child while the link keeps the pointer', () => {

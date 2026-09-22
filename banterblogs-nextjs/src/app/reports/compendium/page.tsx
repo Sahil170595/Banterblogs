@@ -9,7 +9,7 @@ import { RevealScope } from '@/components/motion/RevealScope';
 import { ReportDetails, ReportHero, ReportMeta } from '@/components/reports/ReportHead';
 import { ReportProgress } from '@/components/reports/ReportProgress';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
-import { DirectionalPage, NAV_BACK, ReportTitleTransition } from '@/components/reports/ReportTransitions';
+import { NAV_BACK } from '@/components/reports/ReportTransitions';
 import { reportIdentity } from '@/components/reports/reportIdentity';
 import { ReportEnd } from '@/components/reports/reportEnd';
 import { cn } from '@/lib/cn';
@@ -74,7 +74,7 @@ export default async function CompendiumPage() {
     const dek = entranceGroup(HEAD_GROUP.dek);
 
     return (
-        <DirectionalPage className="container pb-24 pt-8 md:pt-10">
+        <div className="container pb-24 pt-8 md:pt-10">
             <ReportProgress />
 
             <div className="report-head">
@@ -88,9 +88,7 @@ export default async function CompendiumPage() {
                             </li>
                         </ol>
                     </nav>
-                    <ReportTitleTransition slug={COMPENDIUM_SLUG}>
-                        <h1 className="report-title">{heading}</h1>
-                    </ReportTitleTransition>
+                    <h1 className="report-title">{heading}</h1>
                 </div>
                 {meta?.description && (
                     <p className={cn('report-dek', dek.className)} style={dek.style}>
@@ -142,6 +140,6 @@ export default async function CompendiumPage() {
                     </Link>
                 </div>
             </aside>
-        </DirectionalPage>
+        </div>
     );
 }

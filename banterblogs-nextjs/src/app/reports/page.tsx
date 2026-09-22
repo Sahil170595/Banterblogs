@@ -6,7 +6,7 @@ import { discoverReportsUnique, toHumanTitle } from '@/lib/reports/locator';
 import { readReportMeta } from '@/lib/reports/meta';
 import { Reveal } from '@/components/motion/Reveal';
 import { ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabEntry, type ReportTabGroup } from '@/components/reports/ReportTabs';
-import { DirectionalPage, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
+import { NAV_FORWARD } from '@/components/reports/ReportTransitions';
 import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
@@ -205,7 +205,7 @@ export default async function ReportsIndex() {
   }
 
   return (
-    <DirectionalPage className="container pb-24 pt-6 md:pt-10">
+    <div className="container pb-24 pt-6 md:pt-10">
       {/* ── Head: title, one-line intro, the program in three numbers ── */}
       <div>
         <h1
@@ -309,9 +309,7 @@ export default async function ReportsIndex() {
                   transitionTypes={[NAV_FORWARD]}
                   className="-mx-3 block rounded-lg px-3 py-3 transition-colors duration-fast ease-standard hover:bg-card/70"
                 >
-                  <ReportTitleTransition slug={r.slug}>
-                    <div className="text-[0.9375rem] font-medium leading-snug text-foreground">{r.title}</div>
-                  </ReportTitleTransition>
+                  <div className="text-[0.9375rem] font-medium leading-snug text-foreground">{r.title}</div>
                   {r.description && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{r.description}</p>}
                 </Link>
               </Reveal>
@@ -319,6 +317,6 @@ export default async function ReportsIndex() {
           </ul>
         </section>
       )}
-    </DirectionalPage>
+    </div>
   );
 }

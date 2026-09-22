@@ -7,7 +7,7 @@ import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportProgress } from '@/components/reports/ReportProgress';
 import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
 import { ReportEnd } from '@/components/reports/reportEnd';
-import { DirectionalPage, NAV_BACK, NAV_FORWARD, ReportTitleTransition } from '@/components/reports/ReportTransitions';
+import { NAV_BACK, NAV_FORWARD } from '@/components/reports/ReportTransitions';
 import { reportIdentity } from '@/components/reports/reportIdentity';
 import { computeContentStats } from '@/lib/episodes';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
@@ -89,7 +89,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
   const nextMeta = nextSlug ? readReportMeta(nextSlug) : null;
 
   return (
-    <DirectionalPage className="container pb-24 pt-8 md:pt-10">
+    <div className="container pb-24 pt-8 md:pt-10">
       <ReportProgress />
 
       {/* ── Head: where it sits, what it is, how long it takes ── */}
@@ -111,9 +111,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           </ol>
         </nav>
 
-        <ReportTitleTransition slug={id}>
-          <h1 className="report-title">{heading}</h1>
-        </ReportTitleTransition>
+        <h1 className="report-title">{heading}</h1>
         {meta.description && <p className="report-dek">{meta.description}</p>}
         <ReportMeta label={label} phaseNumber={phase?.number ?? null} readingMinutes={readingMinutes} date={frontMatter?.date ?? null} />
         {frontMatter && <ReportDetails frontMatter={frontMatter} />}
@@ -165,6 +163,6 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           )}
         </nav>
       )}
-    </DirectionalPage>
+    </div>
   );
 }

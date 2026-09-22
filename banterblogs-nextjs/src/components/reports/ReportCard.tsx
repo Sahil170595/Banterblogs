@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
 import { describeReport } from './reportIdentity';
-import { NAV_FORWARD, ReportFigureTransition, ReportTitleTransition } from './ReportTransitions';
+import { NAV_FORWARD, ReportFigureTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
 
 export { describeReport };
@@ -35,9 +35,7 @@ export function ReportCard({ slug, title, description, synthesis = false, latest
             <ReportVisual slug={slug} accent={accent} />
           </div>
         </ReportFigureTransition>
-        <ReportTitleTransition slug={slug}>
-          <h3 className="mt-4 text-heading-20 text-foreground">{heading}</h3>
-        </ReportTitleTransition>
+        <h3 className="mt-4 text-heading-20 text-foreground">{heading}</h3>
         {description && <p className="mt-2 line-clamp-2 text-[0.9375rem] leading-relaxed text-muted-foreground">{description}</p>}
         <div data-card-meta="" className="mt-3 flex items-center gap-2 text-label-13 text-muted-foreground/80">
           {synthesis && <span className="card-badge">Synthesis</span>}

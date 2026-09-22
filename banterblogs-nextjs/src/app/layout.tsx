@@ -8,6 +8,7 @@ import { RouteGate } from "@/components/RouteGate";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from "@/components/motion/prePaint";
 import { EntranceWindow } from "@/components/motion/EntranceWindow";
+import { RouteTransition } from "@/components/motion/RouteTransition";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -117,12 +118,15 @@ export default function RootLayout({
           {/* .keyboard-navigation scopes the focus-visible ring in globals.css */}
           <div className="keyboard-navigation relative flex min-h-screen flex-col">
             <Header />
-            <main id="main-content" className="flex-1 chimera-shell">
-              {children}
-            </main>
-            <RouteGate hideOn={["/"]}>
-              <Footer />
-            </RouteGate>
+            {/* the page moves on every navigation; the header holds still (globals.css) */}
+            <RouteTransition>
+              <main id="main-content" className="flex-1 chimera-shell">
+                {children}
+              </main>
+              <RouteGate hideOn={["/"]}>
+                <Footer />
+              </RouteGate>
+            </RouteTransition>
           </div>
         </ErrorBoundary>
         <Analytics />

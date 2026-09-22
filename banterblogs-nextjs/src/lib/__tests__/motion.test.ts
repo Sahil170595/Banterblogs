@@ -44,7 +44,9 @@ const DURATION_TOKENS = {
   morph: '400ms',
   reveal: '600ms',
   exit: '120ms',
-  handoff: '100ms',
+  // Phase R4: 100 -> 40ms, so an arriving page shows before a travelling
+  // figure is far from its card (re-judge 3, P0-1)
+  handoff: '40ms',
 };
 const CURVE_TOKENS = {
   standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
@@ -71,8 +73,9 @@ const REST_TOKENS = [
   '--scale-enter',
   '--scale-icon',
   '--scale-reveal',
+  '--scale-push',
   '--blur-crossfade',
-  '--blur-morph',
+  '--blur-route',
   '--blur-enter',
 ];
 
