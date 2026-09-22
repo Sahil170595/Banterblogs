@@ -45,6 +45,22 @@ describe('ProfileLayout', () => {
     expect(lede.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-copy-18', 'text-prose', 'max-w-[60ch]']));
   });
 
+  // R5 design: /work's title was a 3-line sentence at 48px. A short title
+  // can carry that sentence under it, across the page, at the standfirst size.
+  it('sets an optional subtitle under the title in the head, at copy-24 (copy-20 on phones) in the prose colour', () => {
+    const el = render(
+      <ProfileLayout eyebrow="Work" title="Sahil Kadadekar" subtitle="Founding ML engineer." lede="Architected the platform." sections={[]}>
+        <section id="research">Rows</section>
+      </ProfileLayout>,
+    ).container;
+    const subtitle = el.querySelector('header h1 + p')!;
+    expect(subtitle.textContent).toBe('Founding ML engineer.');
+    expect(subtitle.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-copy-20', 'md:text-copy-24', 'text-prose']));
+    // it rises with the title, in the head's group
+    expect(subtitle.closest<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)?.style.getPropertyValue('--group')).toBe('0');
+    expect(layout().querySelector('header h1 + p')).toBeNull();
+  });
+
   it('sets the title at the page-title role on every screen, the size every interior page uses', () => {
     const h1 = layout().querySelector('h1')!;
     expect(h1.className.split(/\s+/)).toContain('text-heading-48');
