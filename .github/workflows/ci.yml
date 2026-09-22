@@ -59,9 +59,9 @@ jobs:
       options: --user 1001
     timeout-minutes: 30
     env:
-      # "off" until e2e/__snapshots__ holds baselines from an update_snapshots
-      # run; then "on" turns the screenshot assertion on
-      VISUAL_SCREENSHOTS: "off"
+      # e2e/__snapshots__ holds the baselines from an update_snapshots run
+      # (regenerate the same way when a page changes on purpose)
+      VISUAL_SCREENSHOTS: "on"
 
     steps:
       - name: Checkout repo
