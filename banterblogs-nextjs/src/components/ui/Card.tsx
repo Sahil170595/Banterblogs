@@ -27,14 +27,15 @@ const SURFACE = 'card-surface p-5 md:p-6';
 export function Card({ variant = 'plain', href, as: Tag = 'div', className, children }: CardProps) {
   if (variant === 'plain') return <Tag className={cn(SURFACE, className)}>{children}</Tag>;
   const lift = <div className={cn('card-lift', SURFACE, className)}>{children}</div>;
+  // the outer element fills its grid cell, so cards in a row share a height
   if (href) {
     return (
-      <Link href={href} className="card-depth group block rounded-xl">
+      <Link href={href} className="card-depth group block h-full rounded-xl">
         {lift}
       </Link>
     );
   }
-  return <Tag className="card-depth group relative rounded-xl">{lift}</Tag>;
+  return <Tag className="card-depth group relative h-full rounded-xl">{lift}</Tag>;
 }
 
 export interface CardLinkProps {

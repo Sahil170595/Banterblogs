@@ -21,8 +21,10 @@ export interface PageHeaderProps {
  * (28px on phones to 48px on desktop), a 17px lede in the prose colour, then
  * the meta row and actions. On a full page load it rises in three entrance
  * groups; the title's group starts on the first frame, so the LCP heading is
- * never held back. A page joins its first content to the sequence with
- * entranceItem(i, HEAD_ENTRANCE_GROUPS) or entranceGroup(3).
+ * never held back. A page joins its first cards or rows to the sequence with
+ * entranceItem(i, HEAD_ENTRANCE_GROUPS). Keep the page's largest text block
+ * (its LCP element, when the title is short) out of any delayed group or
+ * item: Chrome credits a late fade from 0 to LCP only when it ends.
  */
 export function PageHeader({ title, eyebrow, lede, meta, actions, entrance = true, className }: PageHeaderProps) {
   // an entrance group's class and --group, merged with the element's own classes

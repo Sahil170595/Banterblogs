@@ -61,19 +61,24 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 // The most each pattern may count. Lower a ceiling whenever a count drops;
 // raising one is a regression.
 const CEILINGS: Record<Pattern, number> = {
-  arbitraryFontSize: 89,
-  arbitraryTracking: 45,
+  arbitraryFontSize: 88,
+  arbitraryTracking: 39,
   arbitraryShadow: 7,
   largeRadius: 12,
   paletteHue: 12,
   transitionAll: 0,
   backdrop: 8,
-  signalPanel: 55,
-  signalPill: 18,
+  signalPanel: 49,
+  signalPill: 17,
   signalDivider: 2,
   glassUltra: 2,
   shellWallpaper: 0,
 };
+
+// Patterns whose every use sits on a page R3-B rebuilds (the archived
+// episode pages: signal-divider in episodes/[slug], glass-ultra in
+// EpisodeCard), so R3-A leaves them at main's count. R3-B empties this list.
+const LEFT_FOR_PAGE_WORK: Pattern[] = ['signalDivider', 'glassUltra'];
 
 function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -213,6 +218,15 @@ describe('token ratchet', () => {
 
   it('never sets a ceiling above main', () => {
     for (const name of Object.keys(MAIN_COUNTS) as Pattern[]) expect(CEILINGS[name], name).toBeLessThanOrEqual(MAIN_COUNTS[name]);
+  });
+
+  it('holds every ceiling below main, except where main already had none or only page work can lower it', () => {
+    for (const name of Object.keys(MAIN_COUNTS) as Pattern[]) {
+      if (MAIN_COUNTS[name] === 0 || LEFT_FOR_PAGE_WORK.includes(name)) continue;
+      expect(CEILINGS[name], name).toBeLessThan(MAIN_COUNTS[name]);
+    }
+    // and each listed exception really is still at main, so the list cannot go stale
+    for (const name of LEFT_FOR_PAGE_WORK) expect(CEILINGS[name], name).toBe(MAIN_COUNTS[name]);
   });
 
   it('keeps each ceiling at the current count, so a drop is locked in', () => {
