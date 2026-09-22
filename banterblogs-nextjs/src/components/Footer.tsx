@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, Github, Linkedin, Mail, Package, Rss, Twitter } from 'lucide-react';
+import { BookOpen, Github, Linkedin, Package, Rss, Twitter } from 'lucide-react';
 import { ReaderSettingsLauncher } from './AccessibilityPanelClient';
 import { Eyebrow } from './ui/Eyebrow';
 import { Wordmark } from './ui/Wordmark';
@@ -70,13 +70,6 @@ export function Footer() {
                 className={ICON_LINK_CLASS}
               >
                 <Linkedin className="h-5 w-5" />
-              </Link>
-              <Link
-                href="mailto:sahilkadadekar@gmail.com"
-                aria-label="Email"
-                className={ICON_LINK_CLASS}
-              >
-                <Mail className="h-5 w-5" />
               </Link>
               <Link
                 href="https://pypi.org/project/chimeraforge/"
