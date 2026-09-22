@@ -129,7 +129,7 @@ export default function BftConsensusPage() {
       </div>
 
       <header className="mb-10 md:mb-14 space-y-8 md:space-y-10">
-        <div className="text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
           A live walkthrough · TDD-005 BFT consensus
         </div>
 
@@ -158,27 +158,27 @@ export default function BftConsensusPage() {
 
         <div className="grid grid-cols-3 md:grid-cols-12 gap-2 md:gap-4">
           <div className="md:col-span-3 rounded-lg border border-border/30 bg-card/20 p-3 md:p-5 opacity-80">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1 md:mb-2">
               Most agents
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-muted-foreground/70 leading-none mb-1 md:mb-2">
               1 vote
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               the LLM&apos;s
             </div>
-            <p className="hidden md:block text-xs text-muted-foreground/80 leading-relaxed">
+            <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
               The model decides. If it&apos;s wrong or compromised, the wrong action runs.
             </p>
           </div>
           <div className="md:col-span-3 rounded-lg border border-border/60 bg-card/40 p-3 md:p-5">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-foreground/70 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-foreground/70 mb-1 md:mb-2">
               Majority vote
             </div>
             <div className="text-2xl md:text-4xl font-light tracking-tight text-foreground/85 leading-none mb-1 md:mb-2">
               N votes
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-muted-foreground/80 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">
               unsigned quorum
             </div>
             <p className="hidden md:block text-xs text-muted-foreground leading-relaxed">
@@ -187,13 +187,13 @@ export default function BftConsensusPage() {
             </p>
           </div>
           <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.10] via-primary/[0.05] to-transparent p-3 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-primary/90 mb-1 md:mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-1 md:mb-2">
               This system
             </div>
             <div className="text-3xl md:text-6xl font-bold tracking-tight text-primary leading-none mb-1 md:mb-3">
               3 of 4
             </div>
-            <div className="text-[9px] md:text-[11px] uppercase tracking-widest text-primary/80 mb-1 md:mb-3">
+            <div className="text-xs uppercase tracking-widest text-primary mb-1 md:mb-3">
               signed prepares + signed commits
             </div>
             <p className="hidden md:block text-sm text-foreground/90 leading-relaxed">
@@ -216,7 +216,7 @@ export default function BftConsensusPage() {
             majority wins — but no signatures, so a lying replica can corrupt the count.
           </p>
           <p>
-            <span className="text-primary/80 font-mono">this system:</span> 3-of-4 signed quorum +
+            <span className="text-primary font-mono">this system:</span> 3-of-4 signed quorum +
             equivocation detection — survives any one byzantine replica.
           </p>
         </div>
@@ -238,7 +238,7 @@ export default function BftConsensusPage() {
             log keyed on <span className="font-mono text-foreground/80">(replica, sequence)</span>,
             view change on 5s timeout) is{' '}
             <span className="text-foreground">protocol-faithful</span> to{' '}
-            <span className="font-mono text-foreground/80">
+            <span className="font-mono text-foreground/80 break-all">
               tdd005/crates/tdd005_orchestrator/src/bft.rs
             </span>{' '}
             — same constants, same phase ordering, same byzantine detection rule. This is the
@@ -282,7 +282,7 @@ export default function BftConsensusPage() {
           <span className="font-mono text-foreground">view % n</span>, equivocation log keyed by{' '}
           <span className="font-mono text-foreground">(replica_id, sequence)</span> → set of
           action_hashes, view change on 5s timeout) is ported from{' '}
-          <span className="font-mono text-foreground">
+          <span className="font-mono text-foreground break-all">
             tdd005/crates/tdd005_orchestrator/src/bft.rs
           </span>
           . Constants verbatim: n=4, f=1, quorum=2f+1=3, view_timeout_ms=5000. Verifiable by grep.

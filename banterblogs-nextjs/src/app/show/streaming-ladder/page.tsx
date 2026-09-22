@@ -40,7 +40,7 @@ export default function StreamingLadderPage() {
       </div>
 
       <header className="mb-10 md:mb-14 space-y-8 md:space-y-10">
-        <div className="text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
           A live walkthrough · TDD-012 streaming ladder
         </div>
 
@@ -70,13 +70,13 @@ export default function StreamingLadderPage() {
             to read as the differentiated outcome rather than a peer. */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
           <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-4 md:p-5">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
               Most chatbots
             </div>
             <div className="text-3xl md:text-4xl font-light tracking-tight text-muted-foreground/80 leading-none mb-2">
               0
             </div>
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
               checks on intermediate reasoning
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -84,13 +84,13 @@ export default function StreamingLadderPage() {
             </p>
           </div>
           <div className="md:col-span-3 rounded-lg border border-border/40 bg-card/30 p-4 md:p-5">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
               Safety-filtered
             </div>
             <div className="text-3xl md:text-4xl font-light tracking-tight text-muted-foreground/90 leading-none mb-2">
               1
             </div>
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground/70 mb-2">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
               classifier at the end
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -98,13 +98,13 @@ export default function StreamingLadderPage() {
             </p>
           </div>
           <div className="md:col-span-6 rounded-xl border-2 border-primary/70 bg-gradient-to-br from-primary/[0.08] via-primary/[0.04] to-transparent p-5 md:p-7 shadow-[0_0_60px_-18px_hsl(var(--primary)/0.55)] relative overflow-hidden">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-primary/90 mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-primary mb-2">
               This system
             </div>
             <div className="text-4xl md:text-6xl font-bold tracking-tight text-primary leading-none mb-3">
               5
             </div>
-            <div className="text-[11px] uppercase tracking-widest text-primary/80 mb-3">
+            <div className="text-xs uppercase tracking-widest text-primary mb-3">
               staged checks per step
             </div>
             <p className="text-sm text-foreground/90 leading-relaxed">
