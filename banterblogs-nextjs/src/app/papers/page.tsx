@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
 import { ReportVisual } from '@/components/reports/ReportVisual';
 import { Badge, PAPER_STATUS_TONE } from '@/components/ui/Badge';
 import { ButtonLink } from '@/components/ui/Button';
 import { Card, CardLink } from '@/components/ui/Card';
+import { ListRow } from '@/components/ui/ListRow';
+import { OnwardLinks, type OnwardLink } from '@/components/ui/OnwardLinks';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
@@ -187,70 +189,114 @@ const ARXIV_ABS = /^https?:\/\/arxiv\.org\/abs\//;
 // only credited to LCP when it ends.
 const FIRST_PAPERS_AFTER = HEAD_ENTRANCE_GROUPS;
 
-const CROSS_LINKS = [
+const CROSS_LINKS: OnwardLink[] = [
   {
     href: '/reports',
     title: 'Research Archive',
     blurb: `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements — the evidence layer behind these papers.`,
-    cta: 'Browse reports',
   },
-  { href: '/work', title: 'Work', blurb: 'Experience, education, and the engineering that surrounds the research.', cta: 'Read more' },
-  { href: '/platform', title: 'Platform Architecture', blurb: 'The constitutional AI ecosystem these findings are built into.', cta: 'Explore' },
+  { href: '/work', title: 'Work', blurb: 'Experience, education, and the engineering that surrounds the research.' },
+  { href: '/platform', title: 'Platform Architecture', blurb: 'The constitutional AI ecosystem these findings are built into.' },
 ];
 
-/**
- * A paper: status and venue, the title, the thesis, then its links. A paper
- * with a public preprint is an interactive card whose title leads there; the
- * published ones lead with their evidence report's picture.
- */
-function PaperCard({ paper, figure = false }: { paper: Paper; figure?: boolean }) {
+const ordinal = (index: number) => String(index + 1).padStart(2, '0');
+
+/** status and venue on one line */
+function StatusLine({ paper }: { paper: Paper }) {
   return (
-    <Card as="article" variant={paper.arxiv ? 'interactive' : 'plain'} className="flex h-full flex-col">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <Badge tone={PAPER_STATUS_TONE[paper.status]}>{paper.status}</Badge>
+      <span className="text-label-13 text-muted-foreground">
+        <span className="sr-only">Target: </span>
+        {paper.venue}
+      </span>
+    </div>
+  );
+}
+
+/** the paper's own links: its preprint and its demo */
+function PaperLinks({ paper, className }: { paper: Paper; className?: string }) {
+  if (!paper.arxiv && !paper.demo) return null;
+  return (
+    <div className={cn('flex flex-wrap items-center gap-2', className)}>
+      {paper.arxiv && (
+        <ButtonLink href={paper.arxiv} size="sm" iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}>
+          arXiv {paper.arxiv.replace(ARXIV_ABS, '')}
+        </ButtonLink>
+      )}
+      {paper.demo && (
+        <ButtonLink href={paper.demo.href} size="sm" iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}>
+          <span className="text-muted-foreground">Demo</span> {paper.demo.label}
+        </ButtonLink>
+      )}
+    </div>
+  );
+}
+
+/** the evidence reports, in tabular labels */
+function Evidence({ paper, className }: { paper: Paper; className?: string }) {
+  if (paper.trs.length === 0) return null;
+  return (
+    <div className={cn('flex flex-wrap items-center gap-x-1 gap-y-1', className)}>
+      <span className="mr-2 text-label-13 text-muted-foreground/80">Evidence</span>
+      {paper.trs.map((tr) => (
+        <ButtonLink key={tr.slug} href={`/reports/${tr.slug}`} variant="ghost" size="sm" className="px-2">
+          {tr.label}
+        </ButtonLink>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * A public paper: its evidence report's picture, status and venue, the title
+ * leading to the preprint, the thesis, then its links. The only papers set as
+ * cards, because they have a picture.
+ */
+function PaperCard({ paper }: { paper: Paper }) {
+  return (
+    <Card as="article" variant="interactive" className="flex h-full flex-col">
       {/* the evidence report's archive picture, inset on the card without a
           frame of its own */}
-      {figure && paper.trs[0] && (
+      {paper.trs[0] && (
         <div className="mb-5 h-28 overflow-hidden rounded-lg bg-background/60 md:h-32">
           <ReportVisual slug={paper.trs[0].slug} />
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <Badge tone={PAPER_STATUS_TONE[paper.status]}>{paper.status}</Badge>
-        <span className="text-label-13 text-muted-foreground">
-          <span className="sr-only">Target: </span>
-          {paper.venue}
-        </span>
-      </div>
+      <StatusLine paper={paper} />
       <h3 className="mt-3 text-heading-20 text-foreground">
         {paper.arxiv ? <CardLink href={paper.arxiv}>{paper.title}</CardLink> : paper.title}
         {paper.arxiv && <ArrowUpRight aria-hidden="true" className="card-arrow ml-1 inline-block h-4 w-4 align-baseline" />}
       </h3>
       <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{paper.thesis}</p>
-      {/* the paper's own links, then its evidence reports, one row each */}
-      {(paper.arxiv || paper.demo) && (
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          {paper.arxiv && (
-            <ButtonLink href={paper.arxiv} size="sm" iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}>
-              arXiv {paper.arxiv.replace(ARXIV_ABS, '')}
-            </ButtonLink>
-          )}
-          {paper.demo && (
-            <ButtonLink href={paper.demo.href} size="sm" iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}>
-              <span className="text-muted-foreground">Demo</span> {paper.demo.label}
-            </ButtonLink>
-          )}
-        </div>
-      )}
-      {paper.trs.length > 0 && (
-        <div className={cn('flex flex-wrap items-center gap-x-1 gap-y-2', paper.arxiv || paper.demo ? 'mt-3' : 'mt-5')}>
-          <span className="mr-2 text-label-12-mono text-muted-foreground/80">Evidence</span>
-          {paper.trs.map((tr) => (
-            <ButtonLink key={tr.slug} href={`/reports/${tr.slug}`} variant="ghost" size="sm" className="px-2">
-              {tr.label}
-            </ButtonLink>
-          ))}
-        </div>
-      )}
+      <PaperLinks paper={paper} className="mt-5" />
+      <Evidence paper={paper} className={paper.arxiv || paper.demo ? 'mt-3' : 'mt-5'} />
     </Card>
+  );
+}
+
+/**
+ * A paper without a picture: the /show row, numbered, its title leading to
+ * the preprint where there is one, the thesis and its links in the body, and
+ * status, venue and evidence in the meta column.
+ */
+function PaperRow({ paper, index }: { paper: Paper; index: number }) {
+  return (
+    <ListRow
+      as="article"
+      index={ordinal(index)}
+      title={paper.title}
+      titleHref={paper.arxiv}
+      description={paper.thesis}
+      aside={
+        <div className="space-y-3">
+          <StatusLine paper={paper} />
+          <Evidence paper={paper} />
+        </div>
+      }
+    >
+      <PaperLinks paper={paper} className="pt-2" />
+    </ListRow>
   );
 }
 
@@ -291,7 +337,7 @@ export default function PapersPage() {
           <ul className={PAPER_GRID}>
             {[...PRESENTED, ...PUBLIC_PREPRINTS].map((paper, index) => (
               <Reveal as="li" key={paper.title} {...entranceItem(index, FIRST_PAPERS_AFTER)}>
-                <PaperCard paper={paper} figure />
+                <PaperCard paper={paper} />
               </Reveal>
             ))}
           </ul>
@@ -300,26 +346,17 @@ export default function PapersPage() {
         <Section
           id="under-review"
           title="Under peer review"
-          description={`${UNDER_REVIEW_COUNT} papers submitted with PDFs, artifact manifests, and venue checklists complete. Now under blind review at top ML venues and workshops.`}
+          // the withheld submissions are counted here, never titled
+          description={`${UNDER_REVIEW_COUNT} papers submitted with PDFs, artifact manifests, and venue checklists complete. Now under blind review at top ML venues and workshops. Plus ${WITHHELD_WORKSHOP_SUBMISSIONS} workshop submissions under double-blind review. Their titles are withheld until decisions land.`}
           aside
         >
-          <ul className={PAPER_GRID}>
-            {UNDER_REVIEW_PAPERS.map((paper) => (
+          <ol>
+            {UNDER_REVIEW_PAPERS.map((paper, index) => (
               <Reveal as="li" key={paper.title}>
-                <PaperCard paper={paper} />
+                <PaperRow paper={paper} index={index} />
               </Reveal>
             ))}
-            {/* counted, never titled */}
-            <Reveal as="li">
-              <Card className="flex h-full flex-col items-start justify-center gap-3">
-                <Badge tone={PAPER_STATUS_TONE.Submitted}>Submitted</Badge>
-                <p className="text-copy-14 text-muted-foreground">
-                  Plus {WITHHELD_WORKSHOP_SUBMISSIONS} workshop submissions under double-blind review. Their titles are withheld until
-                  decisions land.
-                </p>
-              </Card>
-            </Reveal>
-          </ul>
+          </ol>
         </Section>
 
         <Section
@@ -328,13 +365,13 @@ export default function PapersPage() {
           description="Synthesis papers and methodology work derived from the published technical report archive, plus papers withdrawn from review and being revised for resubmission."
           aside
         >
-          <ul className={PAPER_GRID}>
-            {IN_PREP.map((paper) => (
+          <ol>
+            {IN_PREP.map((paper, index) => (
               <Reveal as="li" key={paper.title}>
-                <PaperCard paper={paper} />
+                <PaperRow paper={paper} index={index} />
               </Reveal>
             ))}
-          </ul>
+          </ol>
         </Section>
 
         {/* the program behind the papers, then where to go next */}
@@ -345,19 +382,7 @@ export default function PapersPage() {
             preparation. Each is backed by reproducible technical reports and artifact-level provenance from a {MEASUREMENTS.DISPLAY}{' '}
             measurement program.
           </p>
-          <ul className="mt-8 grid gap-4 md:grid-cols-3">
-            {CROSS_LINKS.map((link) => (
-              <Reveal as="li" key={link.href}>
-                <Card variant="interactive" href={link.href} className="flex h-full flex-col">
-                  <h3 className="text-heading-20 text-foreground">{link.title}</h3>
-                  <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{link.blurb}</p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary">
-                    {link.cta} <ArrowRight aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
-                  </span>
-                </Card>
-              </Reveal>
-            ))}
-          </ul>
+          <OnwardLinks links={CROSS_LINKS} className="mt-10" />
         </div>
       </div>
     </div>
