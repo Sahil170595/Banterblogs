@@ -5,6 +5,11 @@
 // wider than the poster image shows the same black at its sides.
 export const SCENE_BACKGROUND = '#04060a';
 
+// Both the gate's probe and the scene's own context ask for this: WebGL on
+// a software renderer (SwiftShader: VMs, remote desktops, blocklisted GPUs)
+// then fails, and the visit keeps the poster instead of seconds of blocking.
+export const SCENE_CONTEXT_ATTRIBUTES: { failIfMajorPerformanceCaveat: boolean } = { failIfMajorPerformanceCaveat: true };
+
 // A pause that is already on at mount still renders every frame this long,
 // so the warm-up gate below sees the frames it needs and the canvas takes
 // over from the poster.

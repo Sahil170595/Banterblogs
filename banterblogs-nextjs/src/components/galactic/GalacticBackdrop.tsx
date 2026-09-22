@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent, type Transit
 import dynamic from 'next/dynamic';
 import { Pause, Play } from 'lucide-react';
 import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
+import { SCENE_CONTEXT_ATTRIBUTES } from './sceneOpening';
 import { SelectionCard } from './SelectionCard';
 import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
 import { SystemRail } from './SystemRail';
@@ -101,12 +102,14 @@ export function prefersPoster(signals: SceneSignals): boolean {
 
 type NavigatorHints = Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
 
+// a GPU-backed context only: software WebGL refuses these attributes
 function hasWebGL(): boolean {
   const canvas = document.createElement('canvas');
-  const webgl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+  const webgl = canvas.getContext('webgl2', SCENE_CONTEXT_ATTRIBUTES) ?? canvas.getContext('webgl', SCENE_CONTEXT_ATTRIBUTES);
+  if (webgl === null) return false;
   // release the probe context — browsers cap live WebGL contexts
-  webgl?.getExtension('WEBGL_lose_context')?.loseContext();
-  return webgl !== null;
+  if ('getExtension' in webgl) webgl.getExtension('WEBGL_lose_context')?.loseContext();
+  return true;
 }
 
 function shouldShowPoster(): boolean {

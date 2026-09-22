@@ -6,7 +6,13 @@ import { PerformanceMonitor } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { BlackHole } from './BlackHole';
-import { SCENE_BACKGROUND, SCENE_OPENING_RENDER_MS, createWarmupGate, sceneTimeRate } from './sceneOpening';
+import {
+  SCENE_BACKGROUND,
+  SCENE_CONTEXT_ATTRIBUTES,
+  SCENE_OPENING_RENDER_MS,
+  createWarmupGate,
+  sceneTimeRate,
+} from './sceneOpening';
 import { StarSystems } from './StarSystems';
 import { Starfield } from './Starfield';
 import type { GalacticSelection } from './systems';
@@ -112,7 +118,7 @@ export default function GalacticScene({ onSelect, featuredName, onStarHover, onR
       camera={{ position: CAMERA_BASE.toArray(), fov: 42, near: 0.1, far: 400 }}
       dpr={dpr}
       frameloop={frozen ? 'demand' : 'always'}
-      gl={{ antialias: false, powerPreference: 'high-performance' }}
+      gl={{ ...SCENE_CONTEXT_ATTRIBUTES, antialias: false, powerPreference: 'high-performance' }}
       style={{ background: 'transparent' }}
       onPointerMissed={() => onSelect(null)}
     >
