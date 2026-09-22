@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "poster:render": "node scripts/render-scene-poster.mjs",
+    "video:render": "node scripts/render-scene-video.mjs",
     "verify": "eslint . && vitest --run && next build"
   },
   "dependencies": {

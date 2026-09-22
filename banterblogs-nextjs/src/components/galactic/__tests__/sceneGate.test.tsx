@@ -144,6 +144,21 @@ describe('landing scene lifecycle and motion control', () => {
     expect(screen.queryByRole('button', { name: 'Pause motion' })).toBeNull();
   });
 
+  // On a phone the open card and the poster's system links share the
+  // bottom of the screen; the links covered the card's facts and its call
+  // to action.
+  it('stacks an open card above the poster’s system links', async () => {
+    media.set(COARSE_POINTER, true);
+    render(<GalacticBackdrop />);
+    await advance(SCENE_MAX_WAIT_MS);
+
+    fireEvent.click(screen.getByRole('link', { name: new RegExp(`^${STAR_SYSTEMS[0].name}`) }));
+    const zIndex = (element: Element) => Number(/(?:^|\s)z-(\d+)(?:\s|$)/.exec(element.className)?.[1] ?? 0);
+    const card = screen.getByRole('dialog');
+    const links = screen.getByRole('navigation', { name: 'Systems orbiting the Chimera core' });
+    expect(zIndex(card)).toBeGreaterThan(zIndex(links));
+  });
+
   it('keeps software WebGL (SwiftShader, no GPU) on the poster', async () => {
     // a software renderer grants a plain context but refuses a strict one
     const getContext = vi
