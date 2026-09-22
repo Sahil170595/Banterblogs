@@ -1,6 +1,13 @@
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Terminal } from 'lucide-react';
-import { CopyButton } from './CopyButton';
+import { ArrowRight, ArrowUpRight, Minus } from 'lucide-react';
+import { Reveal } from './motion/Reveal';
+import { Badge } from './ui/Badge';
+import { ButtonLink } from './ui/Button';
+import { CommandChip } from './ui/CommandChip';
+import { Eyebrow } from './ui/Eyebrow';
+import { ListRow } from './ui/ListRow';
+import { PageHeader } from './ui/PageHeader';
+import { Section } from './ui/Section';
 import { readReportMeta } from '@/lib/reports/meta';
 import type { ToolDef } from '@/lib/tools';
 
@@ -15,193 +22,169 @@ function reportTitle(slug: string): string {
   return readReportMeta(slug)?.title ?? slug;
 }
 
+const reportLabel = (slug: string) => slug.replace('technical-report-', 'TR');
+const ordinal = (index: number) => String(index + 1).padStart(2, '0');
+
+/**
+ * The product template: the head with the install chip and the links, the
+ * principle the tool is built on, its features as rows, its commands, the
+ * evidence as a table and the limits it states about itself.
+ */
 export function ToolPage({ tool }: { tool: ToolDef }) {
   return (
-    <div className="container py-16">
-      {/* ── Hero ── */}
-      <div className="signal-panel-strong mb-12 p-8 md:p-10">
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-          <span className="signal-pill">CLI</span>
-          <span>v{tool.version}</span>
-          <span aria-hidden="true">·</span>
-          <span>{tool.license}</span>
-          <span aria-hidden="true">·</span>
-          <span>Python {tool.python}</span>
-          {!tool.ecosystem && (
-            <>
-              <span aria-hidden="true">·</span>
-              {/* quantfit is a standalone tool, not one of the nine repos —
-                  state it here so the page never inflates the ecosystem count */}
-              <span>Standalone tool</span>
-            </>
-          )}
-        </div>
-
-        <h1 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">{tool.name}</h1>
-        <p className="mt-2 text-lg text-primary">{tool.tagline}</p>
-        <p className="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-          {tool.summary}
-        </p>
-
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 font-mono text-sm backdrop-blur">
-            <span className="text-muted-foreground">$</span>
-            <code className="text-foreground">{tool.install}</code>
-            <CopyButton text={tool.install} label={`${tool.name} install command`} />
-          </div>
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
-            <Link
-              href={tool.pypi}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary transition-colors hover:text-primary/80"
-            >
+    <div className="container pb-24">
+      <PageHeader
+        eyebrow={
+          <span className="flex flex-wrap items-center gap-3">
+            <Badge tone="ember">CLI</Badge>
+            <Eyebrow as="span">{tool.tagline}</Eyebrow>
+          </span>
+        }
+        title={tool.name}
+        lede={tool.summary}
+        meta={
+          <ul aria-label="About this release" className="meta-list basis-full text-label-13 text-muted-foreground">
+            <li>
+              <span className="font-semibold text-foreground">v{tool.version}</span>
+            </li>
+            <li>{tool.license}</li>
+            <li>Python {tool.python}</li>
+            {/* quantfit is a standalone tool, not one of the nine repos —
+                state it here so the page never inflates the ecosystem count */}
+            {!tool.ecosystem && <li>Standalone tool</li>}
+          </ul>
+        }
+        actions={
+          <>
+            <CommandChip command={tool.install} label={`${tool.name} install command`} />
+            <ButtonLink href={tool.pypi} variant="primary" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
               PyPI
-              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
-            <Link
-              href={tool.repo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary"
-            >
+            </ButtonLink>
+            <ButtonLink href={tool.repo} variant="ghost" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
               Source
-              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
+            </ButtonLink>
             {tool.changelog && (
+              <ButtonLink href={tool.changelog} variant="ghost" iconEnd={<ArrowUpRight className="h-4 w-4" />}>
+                Changelog
+              </ButtonLink>
+            )}
+            <div className="basis-full">
+              <CommandChip command={tool.quickstart} label={`${tool.name} quickstart command`} className="text-muted-foreground" />
+            </div>
+          </>
+        }
+      />
+
+      <div className="mt-16 md:mt-24">
+        {/* the honesty commitment each tool leads with */}
+        <Section id="principle" title={tool.principle.title}>
+          <p className="max-w-[39rem] border-l-2 border-primary/60 pl-5 text-copy-18 text-prose">{tool.principle.body}</p>
+        </Section>
+
+        <Section id="features" title="Features">
+          <ul>
+            {tool.highlights.map((highlight, index) => (
+              <Reveal as="li" key={highlight.title}>
+                <ListRow index={ordinal(index)} title={highlight.title} description={highlight.body} />
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        <Section
+          id="commands"
+          title="Commands"
+          description={
+            <>
+              {tool.commands.length} commands. Full flags and output samples live in the{' '}
               <Link
-                href={tool.changelog}
+                href={tool.repo}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary"
+                className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary"
               >
-                Changelog
-                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+                README
               </Link>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-center gap-3 overflow-x-auto rounded-xl border border-border/40 bg-background/50 px-4 py-2.5 font-mono text-xs">
-          <Terminal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <code className="whitespace-nowrap text-muted-foreground">{tool.quickstart}</code>
-        </div>
-      </div>
-
-      {/* ── The honesty commitment each tool leads with ── */}
-      <section className="mb-16">
-        <div className="signal-panel p-6 md:p-8">
-          <h2 className="text-xl font-bold tracking-tight md:text-2xl">{tool.principle.title}</h2>
-          <p className="mt-3 max-w-3xl leading-relaxed text-muted-foreground">
-            {tool.principle.body}
-          </p>
-        </div>
-      </section>
-
-      {/* ── Highlights ── */}
-      <section className="mb-16">
-        <div className="grid gap-6 md:grid-cols-3">
-          {tool.highlights.map((highlight) => (
-            <div key={highlight.title} className="signal-panel p-5">
-              <h3 className="text-sm font-semibold">{highlight.title}</h3>
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{highlight.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Command surface ── */}
-      <section className="mb-16">
-        <h2 className="mb-1 text-2xl font-bold tracking-tight">Commands</h2>
-        <p className="mb-6 text-sm text-muted-foreground">
-          {tool.commands.length} commands. Full flags and output samples live in the{' '}
-          <Link
-            href={tool.repo}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary transition-colors hover:text-primary/80"
-          >
-            README
-          </Link>
-          .
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {tool.commands.map((command) => (
-            <div key={command.name} className="signal-panel px-4 py-3">
-              <code className="font-mono text-sm font-semibold text-primary">{command.name}</code>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{command.summary}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Evidence: the thing a PyPI page cannot do ── */}
-      <section className="mb-16">
-        <h2 className="mb-1 text-2xl font-bold tracking-tight">Evidence</h2>
-        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
-          Each capability traces to the measurements behind it. These are the published reports, not
-          a summary of them.
-        </p>
-        <div className="space-y-3">
-          {tool.evidence.map((item) => (
-            <div key={item.claim} className="signal-panel p-5">
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="md:max-w-2xl">
-                  <h3 className="text-sm font-semibold">{item.claim}</h3>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                    {item.detail}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
-                  {item.reports.map((slug) => (
-                    <Link
-                      key={slug}
-                      href={`/reports/${slug}`}
-                      className="inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
-                      title={reportTitle(slug)}
-                    >
-                      {slug.replace('technical-report-', 'TR')}
-                      <ArrowRight className="h-2.5 w-2.5" aria-hidden="true" />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Stated limits — published in the README, repeated rather than hidden ── */}
-      <section className="mb-16">
-        <h2 className="mb-1 text-2xl font-bold tracking-tight">What it does not do</h2>
-        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
-          The limits the tool states about itself.
-        </p>
-        <ul className="space-y-2.5">
-          {tool.limits.map((limit) => (
-            <li key={limit} className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" aria-hidden="true" />
-              {limit}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <div className="flex flex-wrap gap-6 border-t border-border/40 pt-8 text-sm font-semibold">
-        <Link
-          href="/tools"
-          className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary/80"
+              .
+            </>
+          }
         >
-          All tools
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-        <Link
-          href="/reports"
-          className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+          <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+            {tool.commands.map((command) => (
+              <Reveal as="li" key={command.name} className="list-row py-4">
+                <code className="font-mono text-copy-14 font-semibold text-foreground">{command.name}</code>
+                <p className="mt-1 text-copy-14 text-muted-foreground">{command.summary}</p>
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        {/* the thing a PyPI page cannot do */}
+        <Section
+          id="evidence"
+          title="Evidence"
+          description="Each capability traces to the measurements behind it. These are the published reports, not a summary of them."
         >
-          Research archive
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
+          <Reveal>
+            <table role="table" className="evidence-table">
+              <thead role="rowgroup">
+                <tr role="row" className="text-label-12-mono text-muted-foreground">
+                  <th role="columnheader" scope="col" className="w-[22%] font-medium">
+                    Capability
+                  </th>
+                  <th role="columnheader" scope="col" className="font-medium">
+                    What it rests on
+                  </th>
+                  <th role="columnheader" scope="col" className="w-[18%] font-medium">
+                    Reports
+                  </th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup">
+                {tool.evidence.map((item) => (
+                  <tr role="row" key={item.claim}>
+                    <td role="cell" className="text-copy-16 font-semibold text-foreground">
+                      {item.claim}
+                    </td>
+                    <td role="cell" className="text-copy-14 text-prose">
+                      {item.detail}
+                    </td>
+                    <td role="cell">
+                      <span className="flex flex-wrap gap-1">
+                        {item.reports.map((slug) => (
+                          <ButtonLink key={slug} href={`/reports/${slug}`} variant="ghost" size="sm" className="px-2 font-mono tabular-nums" aria-label={`${reportLabel(slug)}: ${reportTitle(slug)}`} iconEnd={<ArrowRight className="h-3 w-3" />}>
+                            {reportLabel(slug)}
+                          </ButtonLink>
+                        ))}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Reveal>
+        </Section>
+
+        {/* stated limits — published in the README, repeated rather than hidden */}
+        <Section id="limits" title="What it does not do" description="The limits the tool states about itself.">
+          <ul className="max-w-[39rem] space-y-3">
+            {tool.limits.map((limit) => (
+              <Reveal as="li" key={limit} className="flex gap-3 text-copy-16 text-prose">
+                <Minus aria-hidden="true" className="mt-1.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                {limit}
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        <div className="page-section flex flex-wrap gap-3">
+          <ButtonLink href="/tools" iconEnd={<ArrowRight className="h-4 w-4" />}>
+            All tools
+          </ButtonLink>
+          <ButtonLink href="/reports" iconEnd={<ArrowRight className="h-4 w-4" />}>
+            Research archive
+          </ButtonLink>
+        </div>
       </div>
     </div>
   );
