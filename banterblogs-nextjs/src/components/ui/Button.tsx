@@ -20,9 +20,11 @@ const button = cva(
         secondary: 'border border-border text-foreground hover:border-foreground/30 hover:bg-foreground/5',
         ghost: 'text-muted-foreground hover:bg-foreground/10 hover:text-foreground',
       },
+      // the padding keeps a one-line pill, hairline included, inside its
+      // floor (28px, 36px), so only a wrapped label grows it
       size: {
-        sm: 'min-h-7 gap-1.5 px-3 py-1 text-label-13',
-        md: 'min-h-9 gap-2 px-4 py-1.5 text-copy-14',
+        sm: 'min-h-7 gap-1.5 px-3 py-0.5 text-label-13',
+        md: 'min-h-9 gap-2 px-4 py-1 text-copy-14',
       },
     },
     defaultVariants: { variant: 'secondary', size: 'md' },

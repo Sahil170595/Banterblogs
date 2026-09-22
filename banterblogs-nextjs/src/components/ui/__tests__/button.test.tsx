@@ -45,6 +45,21 @@ describe('Button and ButtonLink', () => {
     }
   });
 
+  // a one-line pill must fit its floor exactly as the fixed height did, or
+  // every row of buttons shifts the page below it
+  it('fits a one-line label, its padding and the hairline inside the height floor', () => {
+    // tailwind.config.ts: label-13 on a 20px line, copy-14 on 1.6
+    const LINE_PX = { sm: 20, md: 14 * 1.6 };
+    const FLOOR_PX = { sm: 28, md: 36 };
+    const HAIRLINE_PX = 2;
+    const SPACING_PX: Record<string, number> = { '0': 0, '0.5': 2, '1': 4, '1.5': 6, '2': 8 };
+    for (const size of BUTTON_SIZES) {
+      const classes = classesOf(renderToStaticMarkup(<Button size={size} variant="secondary">Go</Button>));
+      const padding = SPACING_PX[classes.map((c) => /^py-([\d.]+)$/.exec(c)?.[1]).find(Boolean) ?? '0'];
+      expect(LINE_PX[size] + 2 * padding + HAIRLINE_PX, size).toBeLessThanOrEqual(FLOOR_PX[size]);
+    }
+  });
+
   it('keeps its icons whole while the label wraps', () => {
     const markup = renderToStaticMarkup(<Button icon={<svg />}>A long label that wraps</Button>);
     expect(markup).toMatch(/<span aria-hidden="true" class="inline-flex shrink-0">/);
