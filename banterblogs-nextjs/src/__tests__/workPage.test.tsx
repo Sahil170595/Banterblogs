@@ -96,6 +96,14 @@ describe('work page layout', () => {
     }
   });
 
+  // re-judge P1-7: "AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF;" has no break
+  // opportunity and ran the page to 353px at 320
+  it('lets a long unbroken token in a bullet break anywhere, so it never widens the page', () => {
+    const bullets = [...page.querySelectorAll('li.list-row ul > li')];
+    expect(bullets.length).toBeGreaterThan(0);
+    for (const bullet of bullets) expect(bullet.className.split(/\s+/)).toContain('[overflow-wrap:anywhere]');
+  });
+
   it('reveals every row as it scrolls in', () => {
     const rows = RESEARCH.length + EXPERIENCE.length;
     expect(page.querySelectorAll('li.list-row[data-reveal]').length).toBeGreaterThanOrEqual(rows);

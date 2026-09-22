@@ -26,6 +26,30 @@ describe('Button and ButtonLink', () => {
     expect(ghost.some((c) => /^border$/.test(c))).toBe(false);
   });
 
+  // re-judge P1-7 (WCAG 1.4.10): a nowrap, unshrinkable pill with a long
+  // label widened /banterpacks to 376px and /chimera to 348px at 320
+  it('wraps a long label inside its container instead of widening it, at its usual height on one line', () => {
+    for (const size of BUTTON_SIZES) {
+      for (const markup of [
+        renderToStaticMarkup(<Button size={size}>Go</Button>),
+        renderToStaticMarkup(<ButtonLink href="/platform" size={size}>Learn about Banterpacks on the Platform page</ButtonLink>),
+      ]) {
+        const classes = classesOf(markup);
+        expect(classes, size).not.toContain('whitespace-nowrap');
+        expect(classes, size).not.toContain('shrink-0');
+        expect(classes, size).toEqual(expect.arrayContaining(['max-w-full', 'text-center']));
+        // a floor, not a fixed height, so a second line has room
+        expect(classes.filter((c) => /^h-\d/.test(c)), size).toEqual([]);
+        expect(classes, size).toContain(size === 'sm' ? 'min-h-7' : 'min-h-9');
+      }
+    }
+  });
+
+  it('keeps its icons whole while the label wraps', () => {
+    const markup = renderToStaticMarkup(<Button icon={<svg />}>A long label that wraps</Button>);
+    expect(markup).toMatch(/<span aria-hidden="true" class="inline-flex shrink-0">/);
+  });
+
   it('is a type="button" unless told otherwise, and lets a caller class win a conflict', () => {
     expect(renderToStaticMarkup(<Button>Go</Button>)).toMatch(/^<button type="button"/);
     expect(renderToStaticMarkup(<Button type="submit">Go</Button>)).toMatch(/^<button type="submit"/);

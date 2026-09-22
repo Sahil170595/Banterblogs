@@ -75,7 +75,7 @@ function Bullets({ items }: { items: string[] }) {
   return (
     <ul className="mt-4 max-w-[68ch] space-y-3 text-copy-16 text-prose">
       {items.map((bullet) => (
-        <li key={bullet} className="relative pl-5 before:absolute before:left-0 before:top-[0.7em] before:h-1 before:w-1 before:rounded-full before:bg-foreground/30">
+        <li key={bullet} className="relative pl-5 [overflow-wrap:anywhere] before:absolute before:left-0 before:top-[0.7em] before:h-1 before:w-1 before:rounded-full before:bg-foreground/30">
           {bullet}
         </li>
       ))}
@@ -109,7 +109,7 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
                 variant="ghost"
                 size="sm"
                 iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}
-                className="h-auto min-h-7 max-w-full shrink whitespace-normal px-2 py-1 text-left"
+                className="px-2 text-left"
               >
                 {evidence.label}
               </ButtonLink>

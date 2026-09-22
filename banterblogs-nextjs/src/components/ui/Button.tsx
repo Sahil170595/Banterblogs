@@ -8,9 +8,11 @@ export const BUTTON_SIZES = ['sm', 'md'] as const;
 
 // A pill that settles on press (.pressable in globals.css). Ember is spent
 // only on primary; secondary is a hairline; ghost is text until hovered.
-// `relative` keeps it above a card's stretched link.
+// `relative` keeps it above a card's stretched link. A label longer than its
+// container wraps inside the pill (a height floor, not a fixed height) rather
+// than widening the page.
 const button = cva(
-  'pressable relative inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full font-medium disabled:pointer-events-none disabled:opacity-50',
+  'pressable relative inline-flex max-w-full items-center justify-center rounded-full text-center font-medium disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -19,8 +21,8 @@ const button = cva(
         ghost: 'text-muted-foreground hover:bg-foreground/10 hover:text-foreground',
       },
       size: {
-        sm: 'h-7 gap-1.5 px-3 text-label-13',
-        md: 'h-9 gap-2 px-4 text-copy-14',
+        sm: 'min-h-7 gap-1.5 px-3 py-1 text-label-13',
+        md: 'min-h-9 gap-2 px-4 py-1.5 text-copy-14',
       },
     },
     defaultVariants: { variant: 'secondary', size: 'md' },

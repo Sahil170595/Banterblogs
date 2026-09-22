@@ -118,7 +118,7 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
             </>
           }
         >
-          <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
             {tool.commands.map((command) => (
               <Reveal as="li" key={command.name} className="list-row py-4">
                 <code className="font-mono text-copy-14 font-semibold text-foreground">{command.name}</code>

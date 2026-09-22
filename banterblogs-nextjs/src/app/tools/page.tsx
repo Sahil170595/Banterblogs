@@ -92,7 +92,7 @@ export default function ToolsIndexPage() {
         lede="The parts of this program you can install and run today. Both are command-line tools on PyPI, both come out of the research archive, and both are built to say what they do not know."
       />
 
-      <ul className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2">
+      <ul className="mt-10 grid grid-cols-1 gap-4 md:mt-14 lg:grid-cols-2">
         {TOOLS.map((tool, index) => (
           <Reveal as="li" key={tool.slug} {...entranceItem(index, CARDS_AFTER)}>
             <ToolCard tool={tool} />
