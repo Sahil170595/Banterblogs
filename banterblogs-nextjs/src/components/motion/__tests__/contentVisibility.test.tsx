@@ -42,10 +42,13 @@ const ruleBodies = (css: string, selector: string) =>
     .filter(([, prelude]) => prelude.split(',').map((s) => s.trim()).includes(selector))
     .map(([, , body]) => body)
     .join(';');
+// every skipping rule takes its value from one custom property, so a single
+// rule turns them all off (the global sheet is close to a size limit)
+const SKIPPING = /content-visibility:\s*var\(--cv,\s*auto\)/;
 const skippedSelectors = (css: string) =>
   [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .filter(([, , body]) => /content-visibility:\s*auto/.test(body))
-    .flatMap(([, prelude]) => prelude.split(',').map((s) => s.trim()));
+    .filter(([, , body]) => /content-visibility:\s*(?:auto|var\()/.test(body))
+    .flatMap(([, prelude, body]) => prelude.split(',').map((s) => [s.trim(), body] as const));
 
 const html = document.documentElement;
 const OFF_SELECTOR = `html[${CV_ATTRIBUTE}="${CV_OFF}"]`;
@@ -54,16 +57,18 @@ describe('the stylesheets', () => {
   it.each([
     ['reading.css', READING_CSS],
     ['globals.css', GLOBALS_CSS],
-  ])('%s renders every block it skips once the page view turns skipping off', (_name, css) => {
+  ])('%s skips each block through --cv, falling back to auto', (_name, css) => {
     const skipped = skippedSelectors(css);
     expect(skipped.length).toBeGreaterThan(0);
-    for (const selector of skipped) {
-      expect(ruleBodies(css, `${OFF_SELECTOR} ${selector}`), selector).toMatch(/content-visibility:\s*visible/);
-    }
+    for (const [selector, body] of skipped) expect(body, selector).toMatch(SKIPPING);
+  });
+
+  it('renders every skipped block once the page view turns skipping off', () => {
+    expect(ruleBodies(GLOBALS_CSS, OFF_SELECTOR)).toMatch(/--cv:\s*visible/);
   });
 
   it('names every skipping container, so focus inside one is recognised', () => {
-    const containers = [...skippedSelectors(READING_CSS), ...skippedSelectors(GLOBALS_CSS)];
+    const containers = [...skippedSelectors(READING_CSS), ...skippedSelectors(GLOBALS_CSS)].map(([selector]) => selector);
     for (const selector of containers) {
       const container = selector.split('>')[0].trim();
       expect(SKIPPING_CONTAINERS.split(',').map((s) => s.trim()), selector).toContain(container);

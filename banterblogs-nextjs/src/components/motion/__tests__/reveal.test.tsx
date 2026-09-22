@@ -511,7 +511,9 @@ describe('focus inside held content', () => {
     const rule = ruleFor(`html[${MOTION_ATTRIBUTE}="on"] [${REVEAL_ATTRIBUTE}="${REVEAL_PENDING}"]:focus-within`);
     expect(rule).toMatch(/opacity:\s*1;/);
     expect(rule).toMatch(/transform:\s*none;/);
-    expect(rule).toMatch(/filter:\s*none;/);
+    // the held state sets nothing else (no blur: globals.css, <Reveal>)
+    const held = ruleFor(`html[${MOTION_ATTRIBUTE}="on"] [${REVEAL_ATTRIBUTE}="${REVEAL_PENDING}"]`);
+    expect(held.match(/([\w-]+):/g)?.map((property) => property.slice(0, -1)).sort()).toEqual(['opacity', 'transform']);
   });
 
   it('stays shown once focus moves on, and is no longer watched', async () => {

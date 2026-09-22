@@ -550,7 +550,6 @@ html[data-motion="on"] [data-reveal="pending"] {
 html[data-motion="on"] [data-reveal="pending"]:focus-within {
   opacity: 1;
   transform: none;
-  filter: none;
 }
 
 /* Archive cards (components/reports/ReportCard.tsx). The link takes the
@@ -935,23 +934,23 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
 }
 
 .archive-card-slot {
-  content-visibility: auto;
+  content-visibility: var(--cv, auto);
   contain-intrinsic-block-size: auto var(--archive-estimate-card);
   overflow-clip-margin: var(--card-glow-extent);
 }
 
 .archive-section {
-  content-visibility: auto;
+  content-visibility: var(--cv, auto);
   contain-intrinsic-block-size: auto var(--archive-estimate-section);
   overflow-clip-margin: var(--card-glow-extent);
 }
 
-/* ...until the page view needs exact positions (a Tab, focus from a script,
-   an in-page #jump: components/motion/contentVisibility.ts): focus scrolled
-   to an estimate left the card off screen once the cards above rendered. */
-html[data-cv="off"] .archive-card-slot,
-html[data-cv="off"] .archive-section {
-  content-visibility: visible;
+/* Skipping here and in reading.css, until the page view needs exact
+   positions (a Tab, focus from a script, an in-page #jump:
+   components/motion/contentVisibility.ts): a jump or a focus scroll aimed
+   at an estimate missed once the blocks it passed rendered. */
+html[data-cv="off"] {
+  --cv: visible;
 }
 
 /* Reduced motion: nothing moves, but colour and opacity may still fade

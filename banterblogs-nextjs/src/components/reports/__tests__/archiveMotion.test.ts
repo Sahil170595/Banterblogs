@@ -128,7 +128,8 @@ describe('archive rendering', () => {
 
   it.each(['.archive-card-slot', '.archive-section'])('skips %s off screen, keeping its drawn height once rendered', (selector) => {
     const body = declarationsOf(selector);
-    expect(body).toMatch(/content-visibility:\s*auto/);
+    // auto unless the page view has turned skipping off (--cv, contentVisibility.ts)
+    expect(body).toMatch(/content-visibility:\s*var\(--cv, auto\)/);
     expect(body).toMatch(/contain-intrinsic-block-size:\s*auto var\(--archive-estimate-[\w-]+\)/);
     expect(body).toMatch(/overflow-clip-margin:\s*var\(--card-glow-extent\)/);
   });

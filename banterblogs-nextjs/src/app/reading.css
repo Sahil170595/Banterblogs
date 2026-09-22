@@ -110,7 +110,8 @@
    content-visibility contains layout and paint, so only blocks whose margins
    collapse with their siblings rather than their children, and that paint
    inside their own box, take it. Each keeps its drawn height once rendered
-   and holds an estimate until then. */
+   and holds an estimate until then. Once the page view needs exact
+   positions, --cv (globals.css) renders every block. */
 :root {
   /* a paragraph of three or four lines at 18/28.8px */
   --prose-estimate-text: 7rem;
@@ -119,23 +120,14 @@
 }
 
 .report-prose > p {
-  content-visibility: auto;
+  content-visibility: var(--cv, auto);
   contain-intrinsic-block-size: auto var(--prose-estimate-text);
 }
 
 .report-prose > pre,
 .report-prose > .table-scroll {
-  content-visibility: auto;
+  content-visibility: var(--cv, auto);
   contain-intrinsic-block-size: auto var(--prose-estimate-block);
-}
-
-/* Once the page view needs exact positions (a Tab, an in-page #jump, a
-   #fragment: components/motion/contentVisibility.ts), every block renders:
-   a position computed through estimates sent jumps and focus astray. */
-html[data-cv="off"] .report-prose > p,
-html[data-cv="off"] .report-prose > pre,
-html[data-cv="off"] .report-prose > .table-scroll {
-  content-visibility: visible;
 }
 
 @media print {
