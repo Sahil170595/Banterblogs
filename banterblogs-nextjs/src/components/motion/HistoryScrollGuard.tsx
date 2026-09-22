@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
+import { adoptFragmentEntries } from './fragmentHistory';
 import { onHistoryTraversal } from './historyTraversal';
+import { watchScrollAnchors } from './scrollAnchor';
 
 // How long a Back/Forward restore may take to land. The router restores the
 // scroll position after it renders the page it goes back to; on the archive
@@ -13,6 +15,10 @@ export const HISTORY_RESTORE_WINDOW_MS = 1500;
  * document's smooth scroll-behavior (kept for in-page anchors) would animate
  * down a long page. Hold the document at instant scrolling while a history
  * traversal (historyTraversal.ts) settles.
+ *
+ * It also hands the entries #jumps make to the router (fragmentHistory.ts),
+ * so Back can return into them, and keeps each page's place as the reader
+ * leaves it (scrollAnchor.ts), so Back returns to the same content.
  */
 export function HistoryScrollGuard() {
   useEffect(() => {
@@ -25,9 +31,13 @@ export function HistoryScrollGuard() {
       timer = window.setTimeout(release, HISTORY_RESTORE_WINDOW_MS);
     };
     const stopWatching = onHistoryTraversal(hold);
+    const stopAdopting = adoptFragmentEntries();
+    const stopAnchors = watchScrollAnchors();
 
     return () => {
       stopWatching();
+      stopAdopting();
+      stopAnchors();
       window.clearTimeout(timer);
       release();
     };

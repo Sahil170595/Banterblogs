@@ -4,6 +4,12 @@ import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HISTORY_RESTORE_WINDOW_MS, HistoryScrollGuard } from '@/components/motion/HistoryScrollGuard';
 
+const { watchScrollAnchors, stopWatchingAnchors } = vi.hoisted(() => {
+  const stopWatchingAnchors = vi.fn();
+  return { stopWatchingAnchors, watchScrollAnchors: vi.fn(() => stopWatchingAnchors) };
+});
+vi.mock('@/components/motion/scrollAnchor', () => ({ watchScrollAnchors }));
+
 // Browser Back to a long page (the /reports archive) restores its scroll with
 // window.scrollTo, which the document-wide `scroll-behavior: smooth` animated:
 // the archive showed its top, then glided ~2,900px down over ~3 s (final
@@ -110,6 +116,35 @@ describe('history scroll guard', () => {
     });
     unmount();
     expect(root.style.scrollBehavior).toBe('');
+  });
+
+  // R6: Back returns into the entries #jumps make (fragmentHistory.ts),
+  // watched from the guard's mount
+  it('hands #jump entries to the router while mounted', () => {
+    history.replaceState({ __NA: true }, '', '/reports/technical-report-142');
+    const replaceState = vi.spyOn(history, 'replaceState');
+    const { unmount } = render(<HistoryScrollGuard />);
+    history.pushState(null, '', '#references');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(replaceState).toHaveBeenCalledWith(null, '', location.href);
+    unmount();
+    replaceState.mockClear();
+    history.pushState(null, '', '#methods');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(replaceState).not.toHaveBeenCalled();
+    replaceState.mockRestore();
+    history.replaceState(null, '', '/');
+  });
+
+  // R6: Back lands on the same content (scrollAnchor.ts)
+  it('keeps each page’s place as the reader leaves it, while mounted', () => {
+    watchScrollAnchors.mockClear();
+    stopWatchingAnchors.mockClear();
+    const { unmount } = render(<HistoryScrollGuard />);
+    expect(watchScrollAnchors).toHaveBeenCalledTimes(1);
+    expect(stopWatchingAnchors).not.toHaveBeenCalled();
+    unmount();
+    expect(stopWatchingAnchors).toHaveBeenCalledTimes(1);
   });
 
   it('is mounted once, in the root layout', () => {

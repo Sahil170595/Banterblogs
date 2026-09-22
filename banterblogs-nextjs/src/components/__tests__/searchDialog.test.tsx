@@ -3,8 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SearchEntry } from '@/lib/search';
 import { contrast, over, token } from '@/test/contrast';
 
-const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+const { push, rememberScrollAnchor } = vi.hoisted(() => ({ push: vi.fn(), rememberScrollAnchor: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
+vi.mock('@/components/motion/scrollAnchor', () => ({ rememberScrollAnchor }));
 
 const INDEX: SearchEntry[] = [
   { type: 'episode', slug: 'episode-138', href: '/episodes/episode-138', title: 'Episode 138: TR138 notes' },
@@ -36,6 +37,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   push.mockReset();
+  rememberScrollAnchor.mockReset();
   scrollIntoView.mockReset();
   Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
 });
@@ -84,6 +86,20 @@ describe('site search dialog', () => {
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(push).toHaveBeenCalledWith('/reports/technical-report-138');
+  });
+
+  // R6: Back restores the page by the block that topped the view
+  // (motion/scrollAnchor.ts), taken as the reader leaves. A result link's
+  // click is taken on the window; Enter leaves through the router, so the
+  // dialog takes it first.
+  it('keeps the place in the page before Enter leaves it', async () => {
+    const input = await renderDialog();
+    await open(input, 'TR138');
+    await screen.findAllByRole('option');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(rememberScrollAnchor).toHaveBeenCalledTimes(1);
+    expect(rememberScrollAnchor.mock.invocationCallOrder[0]).toBeLessThan(push.mock.invocationCallOrder[0]);
   });
 
   it('fades the results panel in and out on the overlay tokens, keeping the last results while it leaves', async () => {

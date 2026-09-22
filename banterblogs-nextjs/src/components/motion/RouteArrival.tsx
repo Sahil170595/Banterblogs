@@ -3,8 +3,8 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { CV_ATTRIBUTE, CV_OFF } from './contentVisibility';
-import { HISTORY_RESTORE_WINDOW_MS } from './HistoryScrollGuard';
 import { onHistoryTraversal } from './historyTraversal';
+import { currentEntryKey, restoreScrollAnchor } from './scrollAnchor';
 
 /**
  * Settles how a new page arrives, in the commit that shows it. It sits
@@ -19,16 +19,25 @@ import { onHistoryTraversal } from './historyTraversal';
  *   still running from the last page ran on into this one. A #fragment only
  *   stops that scroll where it is; Back and Forward keep what the history
  *   restores (HistoryScrollGuard holds that restore instant).
+ * - Back and Forward then put the block that topped the view back where it
+ *   was (scrollAnchor.ts), a frame later: the browser restores the number
+ *   once the popstate that rendered this page returns.
+ *
+ * A page belongs to the traversal that asked for it by its path, not by how
+ * soon it renders: a slow device can take seconds, and a page taken for a
+ * new one is started at the top, far from where the reader left. The mark
+ * lasts one arrival, so a traversal that changes no page never stands in for
+ * the next one that does.
  */
 export function RouteArrival() {
   const pathname = usePathname();
   const shownPath = useRef(pathname);
-  const traversedAt = useRef(Number.NEGATIVE_INFINITY);
+  const traversedTo = useRef<string | null>(null);
 
   useEffect(
     () =>
-      onHistoryTraversal(() => {
-        traversedAt.current = performance.now();
+      onHistoryTraversal((destination) => {
+        traversedTo.current = destination;
       }),
     [],
   );
@@ -40,9 +49,11 @@ export function RouteArrival() {
     if (location.hash) root.setAttribute(CV_ATTRIBUTE, CV_OFF);
     else root.removeAttribute(CV_ATTRIBUTE);
 
-    // the page a traversal reaches commits within the window its restore gets
-    if (performance.now() - traversedAt.current < HISTORY_RESTORE_WINDOW_MS) {
-      traversedAt.current = Number.NEGATIVE_INFINITY;
+    const traversed = traversedTo.current === pathname;
+    traversedTo.current = null;
+    if (traversed) {
+      const entry = currentEntryKey();
+      requestAnimationFrame(() => restoreScrollAnchor(entry));
       return;
     }
     // an instant scroll also cancels a smooth one still in flight

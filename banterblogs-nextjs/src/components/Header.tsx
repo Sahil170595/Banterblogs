@@ -8,6 +8,7 @@ import { SearchDialog } from './SearchDialog';
 import { warmHeaderGlass } from './headerGlass';
 import { announceNavigation } from './motion/navRecede';
 import { MOTION_ATTRIBUTE } from './motion/prePaint';
+import { holdScrollAnchor } from './motion/scrollAnchor';
 import { IntentLink } from './ui/IntentLink';
 import { Wordmark } from './ui/Wordmark';
 import { cn } from '@/lib/cn';
@@ -66,6 +67,21 @@ export function Header() {
 
   // fades out when motion is armed; otherwise, and when a link is followed, goes at once
   const closeMenu = (instant = false) => setMenu(!instant && motionArmed() ? 'closing' : 'closed');
+
+  // The open panel sits in the bar's flow and pushes the page down, so Back's
+  // place (scrollAnchor.ts) is taken before it opens and held until it has gone.
+  const releasePlace = useRef<(() => void) | null>(null);
+  const openMenu = () => {
+    releasePlace.current?.();
+    releasePlace.current = holdScrollAnchor();
+    setMenu('open');
+  };
+  useEffect(() => {
+    if (menu !== 'closed') return;
+    releasePlace.current?.();
+    releasePlace.current = null;
+  }, [menu]);
+  useEffect(() => () => releasePlace.current?.(), []);
   const endFade = (event: AnimationEvent<HTMLElement>) => {
     if (event.target === event.currentTarget) setMenu((state) => (state === 'closing' ? 'closed' : state));
   };
@@ -185,7 +201,7 @@ export function Header() {
             <button
               ref={toggleRef}
               className={cn('inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/10 hover:text-foreground lg:hidden', COLOR_TRANSITION)}
-              onClick={() => (menu === 'open' ? closeMenu() : setMenu('open'))}
+              onClick={() => (menu === 'open' ? closeMenu() : openMenu())}
               aria-label="Toggle navigation"
               aria-expanded={menu === 'open'}
               aria-controls="mobile-nav"
