@@ -1,18 +1,17 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { IntentLink } from '@/components/ui/IntentLink';
-import { ArrowRight, ArrowUpRight, Brain, Calendar, Cpu, Gauge, Home, Inbox, Layers, Shield, Wrench, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { STAR_SYSTEMS } from '@/components/galactic/systems';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
 import { ReportVisual, type Variant, type VisualFamily } from '@/components/reports/ReportVisual';
-import { Card, CardLink } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
+import { FlowFigure, type FlowStep } from '@/components/ui/FlowFigure';
+import { IntentLink } from '@/components/ui/IntentLink';
 import { OnwardLinks, type OnwardLink } from '@/components/ui/OnwardLinks';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
-import { cn } from '@/lib/cn';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
 import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
@@ -43,21 +42,20 @@ const REPOSITORY_COUNT = 9;
 const LANGUAGE_COUNT = 4;
 
 interface Subsystem {
-  icon: LucideIcon;
   label: string;
-  detail?: string;
+  detail: string;
 }
 
 interface Repository {
   name: string;
   /** the drawing: the archive generator, seeded by the name, in the family chosen for the repository */
   visual: readonly [VisualFamily, Variant];
-  /** languages and stack, one mono line */
+  /** languages and stack, one line */
   meta?: string;
   description: ReactNode;
   subsystems?: Subsystem[];
   footnote?: string;
-  /** where the card leads; by default the landing's destination for the repository */
+  /** where the repository leads; by default the landing's destination for it */
   link?: { href: string; label: string };
 }
 
@@ -82,10 +80,10 @@ const CORE_ENGINES: Repository[] = [
     description:
       'The core monorepo. Six interconnected subsystems handling constitutional AI enforcement, multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant. All inter-service coupling is HTTP.',
     subsystems: [
-      { icon: Brain, label: 'JARVIS Gateway', detail: 'AI agent layer — chat, voice, semantic memory, tools, proactive intelligence, smart home' },
-      { icon: Shield, label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), calibrated fast-path routing' },
-      { icon: Cpu, label: 'Debate Engine', detail: 'Chimera — heat-based escalation, weighted voting, ranked choice, Condorcet consensus' },
-      { icon: Wrench, label: 'Rust Runtime', detail: 'TDD005 — Ed25519 provenance, BFT consensus, ZK proofs, cognitive agents with ELO' },
+      { label: 'JARVIS Gateway', detail: 'AI agent layer — chat, voice, semantic memory, tools, proactive intelligence, smart home' },
+      { label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), calibrated fast-path routing' },
+      { label: 'Debate Engine', detail: 'Chimera — heat-based escalation, weighted voting, ranked choice, Condorcet consensus' },
+      { label: 'Rust Runtime', detail: 'TDD005 — Ed25519 provenance, BFT consensus, ZK proofs, cognitive agents with ELO' },
     ],
     footnote: 'RLAIF self-improving loop · 3-stage tool approval',
   },
@@ -95,24 +93,31 @@ const CORE_ENGINES: Repository[] = [
     meta: `Python · ${MEASUREMENTS.SHORT} measurements`,
     description: `ML research platform and production inference backbone. ${MEASUREMENTS.DISPLAY} measurements across ${REPORTS.DISPLAY} technical reports, targeting consumer GPUs with sub-100ms inference.`,
     subsystems: [
-      { icon: Cpu, label: 'Inference API', detail: 'Model selection, streaming, multi-backend dispatch' },
-      { icon: Shield, label: 'Safety Research', detail: 'Alignment under quantization, concurrency, cross-backend consistency' },
-      { icon: Gauge, label: 'Benchmarking', detail: '4 compilation backends, 5 quantization formats, GPU kernel profiling' },
-      { icon: Brain, label: 'AutoOpt Agent', detail: 'Thompson sampling, multi-armed bandit, SLA enforcement' },
+      { label: 'Inference API', detail: 'Model selection, streaming, multi-backend dispatch' },
+      { label: 'Safety Research', detail: 'Alignment under quantization, concurrency, cross-backend consistency' },
+      { label: 'Benchmarking', detail: '4 compilation backends, 5 quantization formats, GPU kernel profiling' },
+      { label: 'AutoOpt Agent', detail: 'Thompson sampling, multi-armed bandit, SLA enforcement' },
     ],
     footnote: '37-file evaluation framework · 20 monitoring modules · 12 security modules',
   },
 ];
 
-const GATEWAY_MODULES: Subsystem[] = [
-  { icon: Calendar, label: 'Calendar' },
-  { icon: Inbox, label: 'Inbox' },
-  { icon: Brain, label: 'Memory' },
-  { icon: Home, label: 'Smart Home' },
-  { icon: Gauge, label: 'Proactive' },
-  { icon: Wrench, label: 'Tools' },
-  { icon: Layers, label: 'Voice' },
-];
+const GATEWAY_MODULES = ['Calendar', 'Inbox', 'Memory', 'Smart Home', 'Proactive', 'Tools', 'Voice'];
+
+// A chat turn's path through the gateway, drawn from the section's own
+// sentences: every turn routes through the constitutional router, and a tool
+// runs through the propose/approve/execute pipeline with provenance.
+const GATEWAY_PATH: { title: string; caption: string; steps: FlowStep[] } = {
+  title: 'A chat turn through the gateway',
+  caption: 'Every turn passes the constitutional router; a tool runs only once it is proposed and approved, and every action carries cryptographic provenance.',
+  steps: [
+    { label: 'Chat turn', detail: 'text or voice, on Anthropic, OpenAI, Gemini or Ollama', kind: 'io' },
+    { label: 'Constitutional router', detail: 'every turn routes through it' },
+    { label: 'Propose', detail: 'a tool call, as a discrete step' },
+    { label: 'Approve', detail: 'human in the loop' },
+    { label: 'Execute', detail: 'sandboxed, with cryptographic provenance', kind: 'result' },
+  ],
+};
 
 const SUPPORTING_SYSTEMS: Repository[] = [
   {
@@ -156,7 +161,7 @@ const SUPPORTING_SYSTEMS: Repository[] = [
   },
 ];
 
-// the ninth repository, still in development, on its own row
+// the ninth repository, still in development, in its own section
 const IN_DEVELOPMENT: Repository[] = [
   {
     name: 'Project Wyvern',
@@ -187,57 +192,93 @@ const DATA_FLOW = [
 const PROSE_LINK = 'text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary';
 
 const isExternal = (href: string) => /^https?:\/\//.test(href);
+const outside = (href: string) => (isExternal(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {});
 
 /**
- * A repository: its drawing on a drafting plate, name, stack line and what it
- * is, then where it leads. The whole card is the link (its CardLink stretches
- * over it), so it lifts, rings ember and lights its drawing under the pointer.
- * `wide` lays a card that ends a grid on its side.
+ * A core engine: a column of the page under a hairline, not a card. Its
+ * drawing on a drafting plate, the page's one large visual per engine; its
+ * name, stack and story; its subsystems as a hairline definition list, each
+ * name over what it does; then its footnote and where it leads.
  */
-function RepositoryCard({ repository, core = false, wide = false }: { repository: Repository; core?: boolean; wide?: boolean }) {
+function Engine({ repository }: { repository: Repository }) {
   const { href, label } = destination(repository);
   const Arrow = isExternal(href) ? ArrowUpRight : ArrowRight;
   return (
-    <Card as="article" variant="interactive" className={cn('flex h-full flex-col', wide && 'sm:flex-row sm:gap-6')}>
-      <div className={cn('repo-plate mb-5', core ? 'h-36 md:h-44' : 'h-28', wide && 'sm:mb-0 sm:h-auto sm:min-h-32 sm:w-2/5 sm:shrink-0')}>
+    <article className="list-row pt-8">
+      <div className="repo-plate aspect-video max-h-64">
         <ReportVisual slug={repository.name} family={repository.visual[0]} variant={repository.visual[1]} />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className={core ? 'text-heading-24 text-foreground' : 'text-heading-20 text-foreground'}>{repository.name}</h3>
-        {repository.meta && <p className="mt-1 text-label-13 text-muted-foreground">{repository.meta}</p>}
-        <p className={cn('mt-3 text-muted-foreground', core ? 'text-copy-16' : 'text-copy-14')}>{repository.description}</p>
-        {/* the cells' text lines up with the prose above; the grid's outer rules are clipped */}
-        {repository.subsystems && (
-          <ul className="hairline-grid -mx-4 mt-5 sm:grid-cols-2">
-            {repository.subsystems.map((item) => (
-              <li key={item.label} className="p-4">
-                <div className="flex items-center gap-2">
-                  <item.icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-label-13 font-semibold text-foreground">{item.label}</span>
-                </div>
-                <p className="mt-1.5 text-copy-14 text-muted-foreground">{item.detail}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-        {/* the footer sits at the card's foot, so cards in a row end together;
-            the link is neutral and turns ember with the card's hover (.card-cta) */}
-        <div className="mt-auto pt-5">
-          {repository.footnote && <p className="mb-4 text-label-12-mono text-muted-foreground/80">{repository.footnote}</p>}
-          <p className="card-cta inline-flex items-center gap-1.5 text-label-13 font-medium text-foreground/80">
-            <CardLink href={href}>{label}</CardLink>
-            <Arrow aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
-          </p>
-        </div>
+      <h3 className="mt-6 text-heading-24 text-foreground">{repository.name}</h3>
+      {repository.meta && <p className="mt-1 text-label-13 text-muted-foreground">{repository.meta}</p>}
+      <p className="mt-3 max-w-[60ch] text-copy-16 text-muted-foreground">{repository.description}</p>
+      {repository.subsystems && (
+        <dl className="mt-6">
+          {repository.subsystems.map((item) => (
+            <div key={item.label} className="list-row grid gap-1 py-4">
+              <dt className="text-copy-14 font-semibold text-foreground">{item.label}</dt>
+              <dd className="text-copy-14 text-muted-foreground">{item.detail}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      <div className="list-row pt-4">
+        {repository.footnote && <p className="text-label-13 text-muted-foreground">{repository.footnote}</p>}
+        <p className="mt-4">
+          <IntentLink href={href} className="row-link text-copy-14 font-medium text-foreground" {...outside(href)}>
+            {label} <Arrow aria-hidden="true" {...(isExternal(href) ? {} : { 'data-direction': 'forward' })} className="row-arrow h-4 w-4 text-muted-foreground" />
+          </IntentLink>
+        </p>
       </div>
-    </Card>
+    </article>
+  );
+}
+
+/**
+ * Any other repository: a hairline row with its drawing small on the left,
+ * its name, stack and story, and where it leads. The row is one link, a
+ * linked ListRow (a.list-row: its hairline and title turn ember) that
+ * answers as a card does (.card-depth: the drawing's accent lights and the
+ * call to action turns ember, its arrow sliding in), without a box.
+ */
+function RepositoryRow({ repository }: { repository: Repository }) {
+  const { href, label } = destination(repository);
+  const Arrow = isExternal(href) ? ArrowUpRight : ArrowRight;
+  return (
+    <IntentLink
+      href={href}
+      className="card-depth group list-row grid grid-cols-[6rem_minmax(0,1fr)] items-start gap-x-6 py-6 sm:grid-cols-[10rem_minmax(0,1fr)] md:py-8"
+      {...outside(href)}
+    >
+      <div className="repo-plate aspect-video">
+        <ReportVisual slug={repository.name} family={repository.visual[0]} variant={repository.visual[1]} />
+      </div>
+      <div className="min-w-0">
+        <h3 className="text-heading-20 text-foreground transition-colors duration-fast ease-standard group-hover:text-primary">{repository.name}</h3>
+        {repository.meta && <p className="mt-1 text-label-13 text-muted-foreground">{repository.meta}</p>}
+        <p className="mt-2 max-w-[60ch] text-copy-14 text-muted-foreground md:text-copy-16">{repository.description}</p>
+        <p className="card-cta mt-3 inline-flex items-center gap-1.5 text-label-13 font-medium text-foreground/80">
+          {label}
+          <Arrow aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
+        </p>
+      </div>
+    </IntentLink>
+  );
+}
+
+function RepositoryRows({ repositories }: { repositories: Repository[] }) {
+  return (
+    <ul>
+      {repositories.map((repository) => (
+        <Reveal as="li" key={repository.name}>
+          <RepositoryRow repository={repository} />
+        </Reveal>
+      ))}
+    </ul>
   );
 }
 
 // The two core engines join the head's entrance, after its three groups.
 const CORE_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
-// six systems fill two columns, then three, with no card left alone on a row
-const SUPPORTING_GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3';
 
 export default async function PlatformPage() {
   const episodes = await getAllEpisodes();
@@ -277,10 +318,10 @@ export default async function PlatformPage() {
 
       <div className="mt-8 md:mt-14">
         <Section id="core-engines" title="Core engines" aside>
-          <ul className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-12 xl:grid-cols-2">
             {CORE_ENGINES.map((repository, index) => (
               <Reveal as="li" key={repository.name} {...entranceItem(index, CORE_ENTRANCE_AFTER)}>
-                <RepositoryCard repository={repository} core />
+                <Engine repository={repository} />
               </Reveal>
             ))}
           </ul>
@@ -292,37 +333,25 @@ export default async function PlatformPage() {
             constitutional router. Tool execution uses a 3-stage propose/approve/execute pipeline with cryptographic provenance on
             every action.
           </p>
-          {/* two columns on a phone, the last module across both; one row from md */}
-          <ul className="hairline-grid mt-8 grid-cols-2 md:grid-cols-7">
-            {GATEWAY_MODULES.map((module) => (
-              <li key={module.label} className="last:col-span-2 md:last:col-span-1">
-                <Reveal className="flex flex-col items-center gap-2 px-3 py-5">
-                  <module.icon aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-label-13 font-semibold text-foreground">{module.label}</span>
-                </Reveal>
-              </li>
-            ))}
-          </ul>
+          <Reveal className="mt-8">
+            <FlowFigure {...GATEWAY_PATH} />
+          </Reveal>
+          <div className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-label-13">
+            <p className="text-muted-foreground">Modules</p>
+            <ul aria-label="Gateway modules" className="flex flex-wrap gap-x-4 gap-y-1 text-foreground">
+              {GATEWAY_MODULES.map((module) => (
+                <li key={module}>{module}</li>
+              ))}
+            </ul>
+          </div>
         </Section>
 
         <Section id="supporting-systems" title="Supporting systems" aside>
-          <ul className={SUPPORTING_GRID}>
-            {SUPPORTING_SYSTEMS.map((repository) => (
-              <Reveal as="li" key={repository.name}>
-                <RepositoryCard repository={repository} />
-              </Reveal>
-            ))}
-          </ul>
+          <RepositoryRows repositories={SUPPORTING_SYSTEMS} />
         </Section>
 
         <Section id="in-development" title="In development" aside>
-          <ul className="grid grid-cols-1 gap-4">
-            {IN_DEVELOPMENT.map((repository) => (
-              <Reveal as="li" key={repository.name}>
-                <RepositoryCard repository={repository} wide />
-              </Reveal>
-            ))}
-          </ul>
+          <RepositoryRows repositories={IN_DEVELOPMENT} />
         </Section>
 
         <Section
@@ -331,13 +360,7 @@ export default async function PlatformPage() {
           description="Independent CLIs shipped outside the Chimera ecosystem — their own repositories, not counted among the nine."
           aside
         >
-          <ul className="grid grid-cols-1 gap-4">
-            {STANDALONE_TOOLS.map((repository) => (
-              <Reveal as="li" key={repository.name}>
-                <RepositoryCard repository={repository} wide />
-              </Reveal>
-            ))}
-          </ul>
+          <RepositoryRows repositories={STANDALONE_TOOLS} />
         </Section>
 
         <Section id="data-flow" title="How data flows" aside>
