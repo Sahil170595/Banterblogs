@@ -2111,4 +2111,60 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   outline-offset: 2px;
   box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
 }
+
+/* The report archive's tab strip (ReportTabs) scrolls sideways past eleven
+   long labels. Each edge with tabs beyond it fades, driven by the strip's own
+   scroll: none at the start, both mid-way, none at the end, and none at all
+   when everything fits (the timeline is inactive). The fade width matches
+   TAB_STRIP_FADE_PX, which keeps the active tab clear of it. Without scroll
+   timelines the fades stay off and the strip keeps its scrollbar. */
+@property --tab-strip-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --tab-strip-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.tab-strip {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--tab-strip-fade-start),
+    #000 calc(100% - var(--tab-strip-fade-end)),
+    transparent
+  );
+}
+
+@supports (animation-timeline: scroll()) {
+  .tab-strip {
+    scrollbar-width: none;
+    animation: tab-strip-fades linear both;
+    animation-timeline: scroll(self inline);
+  }
+
+  .tab-strip::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes tab-strip-fades {
+  0% {
+    --tab-strip-fade-start: 0px;
+    --tab-strip-fade-end: 2.5rem;
+  }
+  8%,
+  92% {
+    --tab-strip-fade-start: 2.5rem;
+    --tab-strip-fade-end: 2.5rem;
+  }
+  100% {
+    --tab-strip-fade-start: 2.5rem;
+    --tab-strip-fade-end: 0px;
+  }
+}
 /* end R4 a11y */
