@@ -47,6 +47,17 @@ describe('site footer', () => {
     }
   });
 
+  it('carries the orbital wordmark and sets its headings in the mono label role, with no gradient tile', () => {
+    const { container } = render(<Footer />);
+
+    expect(container.querySelector('[data-wordmark="orbital"]')?.textContent).toBe('Chimeraforge');
+    expect(container.innerHTML).not.toMatch(/>CF<|bg-gradient|rounded-2xl/);
+    for (const heading of container.querySelectorAll('h2')) {
+      expect(heading.className.split(/\s+/)).toContain('text-label-12-mono');
+      expect(heading.className).not.toMatch(/tracking-\[/);
+    }
+  });
+
   it('does not prefetch the feed and sitemap route handlers', () => {
     const { container } = render(<Footer />);
 

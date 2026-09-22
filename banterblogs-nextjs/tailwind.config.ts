@@ -1,5 +1,16 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 import typography from "@tailwindcss/typography";
+
+const MONO_STACK = ["var(--font-mono)", "ui-monospace", "monospace"];
+
+// The parts of the two label roles a fontSize entry cannot carry.
+const labelRoles = plugin(({ addUtilities }) => {
+  addUtilities({
+    ".text-label-13": { fontVariantNumeric: "tabular-nums" },
+    ".text-label-12-mono": { fontFamily: MONO_STACK.join(", "), textTransform: "uppercase" },
+  });
+});
 
 const config: Config = {
   content: [
@@ -53,6 +64,24 @@ const config: Config = {
         "spring-snappy": "var(--ease-spring-snappy)",
         "spring-bouncy": "var(--ease-spring-bouncy)",
       },
+      // Type roles (pinned by designTokens.test.ts), after Geist's names at
+      // the sizes R1 and R2 shipped. They extend the default scale, so pages
+      // not yet on the roles keep rendering. heading-48 is the page title and
+      // steps 28 -> 36 -> 48px through --type-heading-48 (globals.css);
+      // copy-17 is the page lede; label-13 sets tabular figures and
+      // label-12-mono is the one mono eyebrow (labelRoles below).
+      fontSize: {
+        "heading-48": ["var(--type-heading-48)", { lineHeight: "var(--leading-heading-48)", letterSpacing: "-0.025em", fontWeight: "600" }],
+        "heading-32": ["2rem", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "600" }],
+        "heading-24": ["1.5rem", { lineHeight: "1.3333", letterSpacing: "-0.02em", fontWeight: "600" }],
+        "heading-20": ["1.25rem", { lineHeight: "1.375", letterSpacing: "-0.015em", fontWeight: "600" }],
+        "copy-18": ["1.125rem", { lineHeight: "1.6" }],
+        "copy-17": ["1.0625rem", { lineHeight: "1.6" }],
+        "copy-16": ["1rem", { lineHeight: "1.625" }],
+        "copy-14": ["0.875rem", { lineHeight: "1.6" }],
+        "label-13": ["0.8125rem", { lineHeight: "1.25rem" }],
+        "label-12-mono": ["0.75rem", { lineHeight: "1rem", letterSpacing: "0.06em", fontWeight: "500" }],
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -87,6 +116,14 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        // reading text, brighter than muted (globals.css report page block)
+        prose: "hsl(var(--prose))",
+        // status hues for badges and dots; ember is primary
+        status: {
+          green: "hsl(var(--status-green))",
+          amber: "hsl(var(--status-amber))",
+          blue: "hsl(var(--status-blue))",
+        },
         chart: {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",
@@ -98,11 +135,11 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
         display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif"],
-        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        mono: MONO_STACK,
       },
     },
   },
-  plugins: [typography],
+  plugins: [typography, labelRoles],
 };
 
 export default config;

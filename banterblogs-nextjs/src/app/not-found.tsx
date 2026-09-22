@@ -17,7 +17,7 @@ const DESTINATIONS = [
   {
     href: '/papers',
     title: 'Papers',
-    blurb: 'The accepted workshop paper, the papers under peer review and the ones in preparation.',
+    blurb: 'The workshop paper presented at ICML 2026, the papers under peer review and the ones in preparation.',
   },
   {
     href: '/tools',

@@ -1,19 +1,28 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { ArrowRight, FileText, Layers } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { Reveal } from '@/components/motion/Reveal';
+import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
+import { ReportVisual } from '@/components/reports/ReportVisual';
+import { Badge, PAPER_STATUS_TONE } from '@/components/ui/Badge';
+import { ButtonLink } from '@/components/ui/Button';
+import { Card, CardLink } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Section } from '@/components/ui/Section';
+import { StatRow } from '@/components/ui/StatRow';
+import { cn } from '@/lib/cn';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 interface Paper {
   title: string;
   thesis: string;
   venue: string;
-  status: 'Presented' | 'Preprint' | 'Submitted' | 'In preparation' | 'Synthesis' | 'Pre-execution';
+  status: keyof typeof PAPER_STATUS_TONE;
   trs: { label: string; slug: string }[];
   arxiv?: string;
   demo?: { label: string; href: string };
 }
 
-const ACCEPTED: Paper[] = [
+const PRESENTED: Paper[] = [
   {
     title: 'A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving',
     thesis:
@@ -141,16 +150,16 @@ const IN_PREP: Paper[] = [
   },
 ];
 
-// Counts are derived so the hero, the tiles, and the metadata cannot drift from
-// the arrays the page actually renders.
+// Counts are derived so the stat row and the metadata cannot drift from the
+// arrays the page actually renders.
 // Workshop submissions still in double-blind review; their titles stay off
 // public pages until decisions land.
 const WITHHELD_WORKSHOP_SUBMISSIONS = 5;
 const UNDER_REVIEW_COUNT = UNDER_REVIEW_PAPERS.length + WITHHELD_WORKSHOP_SUBMISSIONS;
 const IN_PREP_COUNT = IN_PREP.length;
-const TOTAL_PAPERS = ACCEPTED.length + PUBLIC_PREPRINTS.length + UNDER_REVIEW_COUNT + IN_PREP_COUNT;
+const TOTAL_PAPERS = PRESENTED.length + PUBLIC_PREPRINTS.length + UNDER_REVIEW_COUNT + IN_PREP_COUNT;
 
-const METADATA_DESCRIPTION = `${ACCEPTED.length} paper presented at the ICML 2026 Workshop on Hypothesis Testing · ${PUBLIC_PREPRINTS.length} public preprint · ${UNDER_REVIEW_COUNT} under peer review · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
+const METADATA_DESCRIPTION = `${PRESENTED.length} paper presented at the ICML 2026 Workshop on Hypothesis Testing · ${PUBLIC_PREPRINTS.length} public preprint · ${UNDER_REVIEW_COUNT} under peer review · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/papers' },
@@ -170,223 +179,187 @@ export const metadata: Metadata = {
   },
 };
 
-function StatusBadge({ status }: { status: Paper['status'] }) {
-  const styles: Record<Paper['status'], string> = {
-    'Presented': 'border-accent/60 bg-accent/15 text-accent',
-    'Preprint': 'border-accent/40 bg-accent/10 text-accent/90',
-    'Submitted': 'border-primary/60 bg-primary/15 text-primary',
-    'In preparation': 'border-border/60 bg-muted/30 text-foreground/80',
-    Synthesis: 'border-border/60 bg-muted/30 text-muted-foreground',
-    'Pre-execution': 'border-border/60 bg-background text-muted-foreground/70',
-  };
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${styles[status]}`}
-    >
-      {status}
-    </span>
-  );
-}
+const ARXIV_ABS = /^https?:\/\/arxiv\.org\/abs\//;
 
-function PaperCard({ paper }: { paper: Paper }) {
+// The first papers join the head's entrance, after its three groups. The
+// first section's heading and description do not: that description is the
+// page's largest text, its LCP element, and a fade from 0 that starts late is
+// only credited to LCP when it ends.
+const FIRST_PAPERS_AFTER = HEAD_ENTRANCE_GROUPS;
+
+const CROSS_LINKS = [
+  {
+    href: '/reports',
+    title: 'Research Archive',
+    blurb: `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements — the evidence layer behind these papers.`,
+    cta: 'Browse reports',
+  },
+  { href: '/work', title: 'Work', blurb: 'Experience, education, and the engineering that surrounds the research.', cta: 'Read more' },
+  { href: '/platform', title: 'Platform Architecture', blurb: 'The constitutional AI ecosystem these findings are built into.', cta: 'Explore' },
+];
+
+/**
+ * A paper: status and venue, the title, the thesis, then its links. A paper
+ * with a public preprint is an interactive card whose title leads there; the
+ * published ones lead with their evidence report's picture.
+ */
+function PaperCard({ paper, figure = false }: { paper: Paper; figure?: boolean }) {
   return (
-    <article className="signal-panel p-6 md:p-7 group">
-      <header className="mb-3 flex items-start justify-between gap-3">
-        <h3 className="text-lg md:text-xl font-semibold leading-snug text-foreground">
-          {paper.title}
-        </h3>
-        <StatusBadge status={paper.status} />
-      </header>
-      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{paper.thesis}</p>
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">Target:</span>
-        <span className="text-foreground/80 font-medium">{paper.venue}</span>
-      </div>
-      {paper.arxiv && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">arXiv:</span>
-          <Link
-            href={paper.arxiv}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full border border-border/60 px-2.5 py-0.5 font-mono text-foreground/80 transition-colors duration-fast ease-standard hover:border-primary/60 hover:text-primary"
-          >
-            {paper.arxiv.replace(/^https?:\/\/arxiv\.org\/abs\//, '')}
-          </Link>
+    <Card as="article" variant={paper.arxiv ? 'interactive' : 'plain'} className="flex h-full flex-col">
+      {/* the evidence report's archive picture, inset on the card without a
+          frame of its own */}
+      {figure && paper.trs[0] && (
+        <div className="mb-5 h-28 overflow-hidden rounded-lg bg-background/60 md:h-32">
+          <ReportVisual slug={paper.trs[0].slug} />
         </div>
       )}
-      {paper.demo && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">Demo:</span>
-          <Link
-            href={paper.demo.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full border border-border/60 px-2.5 py-0.5 text-foreground/80 transition-colors duration-fast ease-standard hover:border-primary/60 hover:text-primary"
-          >
-            {paper.demo.label}
-          </Link>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <Badge tone={PAPER_STATUS_TONE[paper.status]}>{paper.status}</Badge>
+        <span className="text-label-13 text-muted-foreground">
+          <span className="sr-only">Target: </span>
+          {paper.venue}
+        </span>
+      </div>
+      <h3 className="mt-3 text-heading-20 text-foreground">
+        {paper.arxiv ? <CardLink href={paper.arxiv}>{paper.title}</CardLink> : paper.title}
+        {paper.arxiv && <ArrowUpRight aria-hidden="true" className="card-arrow ml-1 inline-block h-4 w-4 align-baseline" />}
+      </h3>
+      <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{paper.thesis}</p>
+      {/* the paper's own links, then its evidence reports, one row each */}
+      {(paper.arxiv || paper.demo) && (
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {paper.arxiv && (
+            <ButtonLink href={paper.arxiv} size="sm" iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}>
+              arXiv {paper.arxiv.replace(ARXIV_ABS, '')}
+            </ButtonLink>
+          )}
+          {paper.demo && (
+            <ButtonLink href={paper.demo.href} size="sm" iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}>
+              <span className="text-muted-foreground">Demo</span> {paper.demo.label}
+            </ButtonLink>
+          )}
         </div>
       )}
       {paper.trs.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/30 pt-4 text-xs">
-          <span className="text-muted-foreground/70 uppercase tracking-[0.16em]">Evidence:</span>
+        <div className={cn('flex flex-wrap items-center gap-x-1 gap-y-2', paper.arxiv || paper.demo ? 'mt-3' : 'mt-5')}>
+          <span className="mr-2 text-label-12-mono text-muted-foreground/80">Evidence</span>
           {paper.trs.map((tr) => (
-            <Link
-              key={tr.slug}
-              href={`/reports/${tr.slug}`}
-              className="rounded-full border border-border/60 px-2.5 py-0.5 text-foreground/80 transition-colors duration-fast ease-standard hover:border-primary/60 hover:text-primary"
-            >
+            <ButtonLink key={tr.slug} href={`/reports/${tr.slug}`} variant="ghost" size="sm" className="px-2">
               {tr.label}
-            </Link>
+            </ButtonLink>
           ))}
         </div>
       )}
-    </article>
+    </Card>
   );
 }
 
+const PAPER_GRID = 'grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2';
+
 export default function PapersPage() {
   return (
-    <div className="container py-16">
-      {/* ── Hero ── */}
-      <div className="signal-panel-strong mb-12 p-8 md:p-12">
-        <div className="space-y-5 max-w-3xl">
-          <span className="signal-pill">Papers</span>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            {ACCEPTED.length} presented · {PUBLIC_PREPRINTS.length} public preprint · {UNDER_REVIEW_COUNT} under peer
-            review
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Independent research on inference optimization, constitutional AI architectures, and empirical safety
-            evaluation. The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the
-            speculative-decoding null result is public on arXiv; {UNDER_REVIEW_COUNT} more are under blind review at
-            top ML venues and workshops, with {IN_PREP_COUNT} in preparation. Each is backed by reproducible technical reports
-            and artifact-level provenance from a {MEASUREMENTS.DISPLAY} measurement program.
+    <div className="container pb-24">
+      <PageHeader
+        title="Papers"
+        lede="Independent research on inference optimization, constitutional AI architectures, and empirical safety evaluation."
+        meta={
+          <>
+            <StatRow
+              label="The papers in numbers"
+              items={[
+                { value: PRESENTED.length, label: 'presented' },
+                { value: PUBLIC_PREPRINTS.length, label: 'public preprint' },
+                { value: UNDER_REVIEW_COUNT, label: 'under peer review' },
+                { value: TOTAL_PAPERS, label: 'papers total' },
+                { value: MEASUREMENTS.SHORT, label: 'measurements' },
+              ]}
+            />
+            <p className="text-label-13 text-muted-foreground">
+              Author: <span className="font-medium text-foreground">Sahil Kadadekar</span> · Independent research
+            </p>
+          </>
+        }
+      />
+
+      <div className="mt-8 md:mt-14">
+        <Section
+          id="published"
+          title="Published & public"
+          description="The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program. The speculative-decoding null result is a public arXiv preprint."
+          aside
+        >
+          <ul className={PAPER_GRID}>
+            {[...PRESENTED, ...PUBLIC_PREPRINTS].map((paper, index) => (
+              <Reveal as="li" key={paper.title} {...entranceItem(index, FIRST_PAPERS_AFTER)}>
+                <PaperCard paper={paper} figure />
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        <Section
+          id="under-review"
+          title="Under peer review"
+          description={`${UNDER_REVIEW_COUNT} papers submitted with PDFs, artifact manifests, and venue checklists complete. Now under blind review at top ML venues and workshops.`}
+          aside
+        >
+          <ul className={PAPER_GRID}>
+            {UNDER_REVIEW_PAPERS.map((paper) => (
+              <Reveal as="li" key={paper.title}>
+                <PaperCard paper={paper} />
+              </Reveal>
+            ))}
+            {/* counted, never titled */}
+            <Reveal as="li">
+              <Card className="flex h-full flex-col items-start justify-center gap-3">
+                <Badge tone={PAPER_STATUS_TONE.Submitted}>Submitted</Badge>
+                <p className="text-copy-14 text-muted-foreground">
+                  Plus {WITHHELD_WORKSHOP_SUBMISSIONS} workshop submissions under double-blind review. Their titles are withheld until
+                  decisions land.
+                </p>
+              </Card>
+            </Reveal>
+          </ul>
+        </Section>
+
+        <Section
+          id="in-preparation"
+          title="In preparation"
+          description="Synthesis papers and methodology work derived from the published technical report archive, plus papers withdrawn from review and being revised for resubmission."
+          aside
+        >
+          <ul className={PAPER_GRID}>
+            {IN_PREP.map((paper) => (
+              <Reveal as="li" key={paper.title}>
+                <PaperCard paper={paper} />
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+
+        {/* the program behind the papers, then where to go next */}
+        <div className="page-section">
+          <p className="max-w-[60ch] text-copy-17 text-prose">
+            The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the speculative-decoding null result is
+            public on arXiv; {UNDER_REVIEW_COUNT} more are under blind review at top ML venues and workshops, with {IN_PREP_COUNT} in
+            preparation. Each is backed by reproducible technical reports and artifact-level provenance from a {MEASUREMENTS.DISPLAY}{' '}
+            measurement program.
           </p>
-          <p className="text-sm text-muted-foreground/80">
-            Author: <span className="text-foreground font-medium">Sahil Kadadekar</span> · Independent research
-          </p>
+          <ul className="mt-8 grid gap-4 md:grid-cols-3">
+            {CROSS_LINKS.map((link) => (
+              <Reveal as="li" key={link.href}>
+                <Card variant="interactive" href={link.href} className="flex h-full flex-col">
+                  <h3 className="text-heading-20 text-foreground">{link.title}</h3>
+                  <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{link.blurb}</p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-label-13 font-medium text-primary">
+                    {link.cta} <ArrowRight aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
+                  </span>
+                </Card>
+              </Reveal>
+            ))}
+          </ul>
         </div>
       </div>
-
-      {/* ── Stats ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-        {[
-          { value: String(ACCEPTED.length), label: 'Presented · ICML 2026 Workshop' },
-          { value: String(UNDER_REVIEW_COUNT), label: 'Under peer review' },
-          { value: String(TOTAL_PAPERS), label: 'Papers total' },
-          { value: MEASUREMENTS.SHORT, label: 'Measurements' },
-        ].map((s) => (
-          <div key={s.label} className="signal-panel p-5 text-center">
-            <div className="text-2xl md:text-3xl font-bold text-foreground">{s.value}</div>
-            <div className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Published & public ── */}
-      <section className="mb-16">
-        <div className="mb-8 border-b border-accent/40 pb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-accent flex items-center gap-2">
-            <FileText className="h-4 w-4 text-accent" />
-            Published &amp; public
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground/70">
-            The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first
-            peer-reviewed paper from the program. The speculative-decoding null result is a public arXiv preprint.
-          </p>
-        </div>
-        <div className="grid gap-5 md:grid-cols-2">
-          {[...ACCEPTED, ...PUBLIC_PREPRINTS].map((p) => (
-            <PaperCard key={p.title} paper={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── Under Peer Review ── */}
-      <section className="mb-16">
-        <div className="mb-8 border-b border-border/40 pb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            Under Peer Review
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground/70">
-            {UNDER_REVIEW_COUNT} papers submitted with PDFs, artifact manifests, and venue checklists complete. Now
-            under blind review at top ML venues and workshops.
-          </p>
-        </div>
-        <div className="grid gap-5 md:grid-cols-2">
-          {UNDER_REVIEW_PAPERS.map((p) => (
-            <PaperCard key={p.title} paper={p} />
-          ))}
-        </div>
-        <p className="mt-5 text-sm text-muted-foreground">
-          Plus {WITHHELD_WORKSHOP_SUBMISSIONS} workshop submissions under double-blind review. Their titles are
-          withheld until decisions land.
-        </p>
-      </section>
-
-      {/* ── In Preparation ── */}
-      <section className="mb-16">
-        <div className="mb-8 border-b border-border/40 pb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <Layers className="h-4 w-4 text-accent" />
-            In Preparation
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground/70">
-            Synthesis papers and methodology work derived from the published technical report archive, plus papers
-            withdrawn from review and being revised for resubmission.
-          </p>
-        </div>
-        <div className="grid gap-5 md:grid-cols-2">
-          {IN_PREP.map((p) => (
-            <PaperCard key={p.title} paper={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── Cross-Links ── */}
-      <section>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Link
-            href="/reports"
-            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
-          >
-            <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Research Archive</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              {REPORTS.DISPLAY} technical reports with {MEASUREMENTS.DISPLAY} measurements — the evidence layer behind these papers.
-            </p>
-            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-              Browse reports <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-          <Link
-            href="/work"
-            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
-          >
-            <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Work</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Experience, education, and the engineering that surrounds the research.
-            </p>
-            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-              Read more <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-          <Link
-            href="/platform"
-            className="block group signal-panel p-5 transition-colors duration-fast ease-standard hover:border-primary/40"
-          >
-            <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">Platform Architecture</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              The constitutional AI ecosystem these findings are built into.
-            </p>
-            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-              Explore <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }
