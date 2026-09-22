@@ -129,6 +129,15 @@
   contain-intrinsic-block-size: auto var(--prose-estimate-block);
 }
 
+/* Once the page view needs exact positions (a Tab, an in-page #jump, a
+   #fragment: components/motion/contentVisibility.ts), every block renders:
+   a position computed through estimates sent jumps and focus astray. */
+html[data-cv="off"] .report-prose > p,
+html[data-cv="off"] .report-prose > pre,
+html[data-cv="off"] .report-prose > .table-scroll {
+  content-visibility: visible;
+}
+
 @media print {
   .report-prose > * {
     content-visibility: visible;

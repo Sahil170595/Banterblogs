@@ -924,6 +924,14 @@ html[data-motion="on"] [data-tab-panel][data-switched] {
   overflow-clip-margin: var(--card-glow-extent);
 }
 
+/* ...until the page view needs exact positions (a Tab, focus from a script,
+   an in-page #jump: components/motion/contentVisibility.ts): focus scrolled
+   to an estimate left the card off screen once the cards above rendered. */
+html[data-cv="off"] .archive-card-slot,
+html[data-cv="off"] .archive-section {
+  content-visibility: visible;
+}
+
 /* Reduced motion: nothing moves, but colour and opacity may still fade
    (reduced is not none). Distance, scale and blur tokens go to rest values,
    transitions keep only colour and opacity, and CSS keyframe animations end

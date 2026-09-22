@@ -8,6 +8,11 @@
 // full page load, and a page head's first-load entrance (entrance.ts) plays
 // only while it is set. The window closes once no entrance-* animation is
 // left running, or at the first client-side navigation (EntranceWindow).
+//
+// Ahead of the reduced-motion return, it also arms the off-screen skipping
+// gate (contentVisibility.ts), which every visitor needs.
+
+import { CONTENT_VISIBILITY_PREPAINT } from './contentVisibility';
 
 export const MOTION_GATE_SCRIPT_ID = 'motion-gate';
 export const MOTION_ATTRIBUTE = 'data-motion';
@@ -18,6 +23,7 @@ export const ENTRANCE_ANIMATION_PREFIX = 'entrance-';
 export const MOTION_GATE_SCRIPT =
   '(function(){try{' +
   'var d=document.documentElement,mm=function(q){return window.matchMedia(q)};' +
+  CONTENT_VISIBILITY_PREPAINT +
   'if(!mm("(prefers-reduced-motion: no-preference)").matches)return;' +
   `d.setAttribute("${MOTION_ATTRIBUTE}","on");` +
   `d.setAttribute("${ENTRANCE_ATTRIBUTE}",location.pathname);` +
