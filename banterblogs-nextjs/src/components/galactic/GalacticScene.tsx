@@ -86,7 +86,7 @@ interface GalacticSceneProps {
   onStarHover: (name: string, hovering: boolean) => void;
   /** the scene is drawing steadily; the poster over it can fade out */
   onReady: () => void;
-  /** "Pause motion", or a selection card covering the scene */
+  /** "Pause motion", a selection card covering the scene, or an offscreen canvas */
   paused: boolean;
 }
 

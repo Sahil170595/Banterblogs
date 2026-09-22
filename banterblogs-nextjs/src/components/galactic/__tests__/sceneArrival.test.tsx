@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GalacticBackdrop, SCENE_CROSSFADE_FALLBACK_MS } from '../GalacticBackdrop';
+import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from '../TrackingTicker';
+import { STAR_SYSTEMS } from '../systems';
 
 // The scene's arrival (Vercel home's poster -> live canvas crossfade): the
 // poster holds until the scene is drawing steadily (sceneOpening.test.ts
@@ -21,6 +23,11 @@ vi.mock('../GalacticScene', () => ({
     return <div data-testid="scene" data-paused={String(props.paused)} />;
   },
 }));
+
+type ObserverCallback = (entries: Array<Partial<IntersectionObserverEntry>>) => void;
+const observers = vi.hoisted(
+  () => [] as Array<{ callback: ObserverCallback; targets: Element[]; disconnected: boolean }>,
+);
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 // covers both the idle-callback deadline and the setTimeout fallback
@@ -61,6 +68,11 @@ const advance = (ms: number) =>
 const poster = () => document.querySelector('[data-scene-poster]');
 const layer = () => document.querySelector<HTMLElement>('[data-scene-stage]');
 const sceneReady = () => act(() => lastScene.props?.onReady());
+const trackedSystem = () =>
+  screen
+    .queryAllByRole('link')
+    .find((link) => link.getAttribute('aria-current') === 'step')
+    ?.getAttribute('aria-label');
 
 describe('landing scene arrival', () => {
   let media: ReturnType<typeof installMatchMedia>;
@@ -75,16 +87,34 @@ describe('landing scene arrival', () => {
           HTMLCanvasElement['getContext']
         >,
     );
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        targets: Element[] = [];
+        disconnected = false;
+        constructor(public callback: ObserverCallback) {
+          observers.push(this);
+        }
+        observe(target: Element) {
+          this.targets.push(target);
+        }
+        disconnect() {
+          this.disconnected = true;
+        }
+      },
+    );
     // the pre-paint gate arms motion for visitors who allow it
     document.documentElement.setAttribute('data-motion', 'on');
     localStorage.clear();
     lastScene.props = null;
+    observers.length = 0;
   });
 
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     document.documentElement.removeAttribute('data-motion');
     Reflect.deleteProperty(navigator, 'hardwareConcurrency');
     Reflect.deleteProperty(window, 'matchMedia');
@@ -160,6 +190,30 @@ describe('landing scene arrival', () => {
     await advance(SCENE_MAX_WAIT_MS);
     expect(layer()?.dataset.sceneStage).toBe('loading');
     expect(poster()).not.toBeNull();
+  });
+
+  it('pauses the render loop and the tour while the canvas is offscreen, and resumes on return', async () => {
+    render(<GalacticBackdrop />);
+    await advance(SCENE_MAX_WAIT_MS);
+    await sceneReady();
+    await advance(TICKER_START_DELAY_MS);
+    expect(trackedSystem()).toBe(`01 — ${STAR_SYSTEMS[0].name}`);
+
+    const observer = observers.find((candidate) => candidate.targets.includes(layer()!));
+    expect(observer).toBeDefined();
+    act(() => observer!.callback([{ isIntersecting: false }]));
+    expect(screen.getByTestId('scene').dataset.paused).toBe('true');
+    await advance(TICKER_INTERVAL_MS * 2);
+    expect(trackedSystem()).toBe(`01 — ${STAR_SYSTEMS[0].name}`);
+
+    act(() => observer!.callback([{ isIntersecting: true }]));
+    expect(screen.getByTestId('scene').dataset.paused).toBe('false');
+    await advance(TICKER_INTERVAL_MS);
+    expect(trackedSystem()).toBe(`02 — ${STAR_SYSTEMS[1].name}`);
+
+    // the observer goes with the scene
+    await act(async () => media.set(REDUCED_MOTION, true));
+    expect(observer!.disconnected).toBe(true);
   });
 });
 

@@ -28,6 +28,8 @@ const NON_REVEAL_OBSERVERS: Record<string, string> = {
   [path.join('components', 'TableOfContents.tsx')]: 'scroll-spy: marks the heading in view; nothing moves',
   [path.join('components', 'reports', 'ReportTocSpy.tsx')]:
     'scroll-spy: marks the section being read and moves the contents marker to it; content never hides or moves',
+  [path.join('components', 'galactic', 'GalacticBackdrop.tsx')]:
+    'pauses the landing scene while its canvas is offscreen; nothing is revealed and nothing moves',
 };
 const REPORT_TOC_SPY = path.join(SRC, 'components', 'reports', 'ReportTocSpy.tsx');
 

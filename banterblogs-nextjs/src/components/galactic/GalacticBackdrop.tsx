@@ -153,6 +153,7 @@ function storeMotionPaused(paused: boolean): void {
 export function GalacticBackdrop() {
   const [mode, setMode] = useState<'pending' | 'scene' | 'poster'>('pending');
   const [sceneStage, setSceneStage] = useState<SceneStage>('loading');
+  const [offscreen, setOffscreen] = useState(false);
   const [selection, setSelection] = useState<GalacticSelection | null>(null);
   // Tracking-ticker tour: -1 = pre-start (scene gets its cold open first)
   const [featuredIndex, setFeaturedIndex] = useState(-1);
@@ -178,14 +179,15 @@ export function GalacticBackdrop() {
   }, [mode, tourStarted]);
 
   useEffect(() => {
-    // "Pause motion" holds the tour on its current system too
-    if (mode !== 'scene' || !tourStarted || motionPaused) return;
+    // "Pause motion" holds the tour on its current system too, and so does
+    // a canvas nobody can see
+    if (mode !== 'scene' || !tourStarted || motionPaused || offscreen) return;
     const interval = setInterval(() => {
       if (tickerPausedRef.current) return;
       setFeaturedIndex((index) => (index + 1) % STAR_SYSTEMS.length);
     }, TICKER_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [mode, tourStarted, motionPaused]);
+  }, [mode, tourStarted, motionPaused, offscreen]);
 
   // pointerOver on star B can fire before pointerOut on star A — only the
   // owning star may clear its own hover
@@ -219,6 +221,7 @@ export function GalacticBackdrop() {
         // every arrival, including a return after reduced motion, starts
         // hidden over the poster
         setSceneStage('loading');
+        setOffscreen(false);
         setMode('scene');
       });
     };
@@ -241,6 +244,15 @@ export function GalacticBackdrop() {
     // dispatched at the canvas without bubbling, so listen in the capture phase
     container.addEventListener('webglcontextlost', onContextLost, true);
     return () => container.removeEventListener('webglcontextlost', onContextLost, true);
+  }, [mode]);
+
+  useEffect(() => {
+    const container = sceneRef.current;
+    if (mode !== 'scene' || !container || typeof IntersectionObserver === 'undefined') return;
+    // an offscreen canvas stops rendering (demand frameloop) until it returns
+    const observer = new IntersectionObserver(([entry]) => setOffscreen(!entry.isIntersecting));
+    observer.observe(container);
+    return () => observer.disconnect();
   }, [mode]);
 
   useEffect(() => {
@@ -299,7 +311,7 @@ export function GalacticBackdrop() {
             onStarHover={handleStarHover}
             onReady={handleSceneReady}
             // an open card covers the scene, so it stops rendering behind it
-            paused={motionPaused || selection !== null}
+            paused={motionPaused || selection !== null || offscreen}
           />
         </div>
       )}
