@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { NAV_RECEDE_SCOPE_ATTRIBUTE } from '@/components/motion/navRecede';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 import { IntentLink } from '@/components/ui/IntentLink';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { GalacticBackdrop } from './GalacticBackdrop';
@@ -34,20 +35,21 @@ export function GalacticHero() {
             aria-hidden="true"
             className="hero-scrim-strong pointer-events-none absolute inset-0 -z-10 hidden rounded-r-lg bg-gradient-to-r from-black/90 via-black/90 to-black/70 transition-opacity duration-700 sm:block"
           />
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.28em] text-primary/85">
-            Chimera / system atlas 001
-          </p>
-          <h1 className="display mt-3 text-xl font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-2xl md:text-3xl">
+          {/* an interior page head in miniature: the mono eyebrow, the title
+              role at the size this panel holds, the copy role */}
+          <Eyebrow>Chimera / system atlas 001</Eyebrow>
+          <h1 className="mt-3 text-display-32 text-foreground">
             Nine systems.
             <br />
-            <span className="text-foreground/45">One constitutional core.</span>
+            {/* /55 keeps AA at 22px on phones; /45 measured 4.2:1 */}
+            <span className="text-foreground/55">One constitutional core.</span>
           </h1>
-          <p className="mt-3 max-w-xs text-[11px] leading-relaxed text-muted-foreground sm:text-[12px]">
+          <p className="mt-3 max-w-xs text-copy-14 text-muted-foreground">
             {REPORTS.DISPLAY} technical reports and {MEASUREMENTS.DISPLAY} measurements in orbit.
           </p>
           {/* py-4 grows each link to a >=44px-tall target; the matching -my-4
               keeps the row exactly where it was */}
-          <div className="pointer-events-auto mt-4 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-[11px]">
+          <div className="pointer-events-auto mt-4 flex items-center gap-4 text-label-12-mono">
             {/* the main call to action stays warm, once the landing has painted */}
             <IntentLink
               href="/reports"
@@ -66,9 +68,10 @@ export function GalacticHero() {
           </div>
         </div>
 
-        {/* on a plate: a star can sit right behind it */}
+        {/* on a plate: a star can sit right behind it. It shares the hint's
+            bottom edge, which keeps its top below the poster's system links. */}
         <p
-          className="absolute bottom-8 right-20 hidden max-w-[280px] rounded-lg border border-white/10 bg-background/80 px-3 py-2 text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.08em] text-muted-foreground backdrop-blur-sm lg:block"
+          className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-20 hidden max-w-xs rounded-lg border border-white/10 bg-background/80 px-3 py-2 text-right text-label-12-mono text-muted-foreground backdrop-blur-sm lg:block"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
           Orbits: Keplerian, solved per frame.
@@ -77,7 +80,7 @@ export function GalacticHero() {
         </p>
 
         <p
-          className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/80 backdrop-blur-sm"
+          className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-white/10 bg-black/25 px-4 py-2 text-label-12-mono text-foreground/80 backdrop-blur-sm"
           style={{ textShadow: '0 1px 10px rgb(0 0 0), 0 0 4px rgb(0 0 0)' }}
         >
           <span className="h-1 w-1 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))]" />

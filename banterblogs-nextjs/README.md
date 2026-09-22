@@ -38,7 +38,7 @@ Headline counts (episodes / reports / measurements) are single-sourced from `src
 | Styling | Tailwind CSS 3.4, Framer Motion 12, Radix UI primitives |
 | Markdown | remark, rehype, highlight.js |
 | Search | Fuse.js |
-| Fonts | Manrope (body), Space Grotesk (headings), JetBrains Mono (code) |
+| Fonts | Manrope (titles and copy), JetBrains Mono (labels and code) |
 | Testing | Vitest + Testing Library |
 | Analytics | Vercel Analytics + Speed Insights |
 | Hosting | Vercel |

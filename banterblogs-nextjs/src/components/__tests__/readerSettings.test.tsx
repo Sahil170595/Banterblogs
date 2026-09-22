@@ -10,7 +10,6 @@ import { ReaderSettingsLauncher } from '../AccessibilityPanelClient';
 
 vi.mock('next/font/google', () => ({
   Manrope: () => ({ variable: 'font-sans' }),
-  Space_Grotesk: () => ({ variable: 'font-display' }),
   JetBrains_Mono: () => ({ variable: 'font-mono' }),
 }));
 vi.mock('next/navigation', () => ({

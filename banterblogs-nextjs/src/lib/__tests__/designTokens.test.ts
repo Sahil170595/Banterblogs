@@ -157,7 +157,7 @@ describe('type roles', () => {
     expect([at(null), at('640px'), at('768px')]).toEqual([28, 36, 48]);
   });
 
-  it('names the one display exception (/show) at the page-title weight: 48px on phones, 72px from md', () => {
+  it('names the /show display at the page-title weight: 48px on phones, 72px from md', () => {
     const [size, options] = fontSize['display-72'];
     expect(size).toBe('var(--type-display-72)');
     expect(options).toEqual({ lineHeight: '0.95', letterSpacing: '-0.04em', fontWeight: '540' });
@@ -168,14 +168,29 @@ describe('type roles', () => {
     expect([at(null), at('768px')]).toEqual([48, 72]);
   });
 
+  // Phase R7: the landing heading sat in its own face at 30/600; it now takes
+  // the title weight, tracking and leading at the size its hero panel holds
+  // with both lines unbroken (22px leaves 16px spare on a 320px phone)
+  it('names the landing title (display-32) at the page-title weight, tracking and leading: 22px on phones, 32px from md', () => {
+    const [size, options] = fontSize['display-32'];
+    expect(size).toBe('var(--type-display-32)');
+    expect(options).toEqual(fontSize['heading-48'][1]);
+    const at = (query: string | null) => {
+      const scope = query ? new RegExp(`@media \\(min-width: ${query}\\) \\{\\s*:root \\{([^}]*)\\}`).exec(css)?.[1] : /:root \{([^}]*--type-display-32[^}]*)\}/.exec(css)?.[1];
+      return rem(/--type-display-32:\s*([\d.]+rem)/.exec(scope ?? '')?.[1] ?? 'NaN');
+    };
+    expect([at(null), at('768px')]).toEqual([22, 32]);
+  });
+
   it('holds every page title to the one title role: no page sets its h1 in another size or weight', () => {
-    // the profile pages stepped their title down to 32px, /show set 72px bold, reading pages 44px
-    const pages = ['app/show/page.tsx', 'components/ui/ProfileLayout.tsx', 'components/ui/PageHeader.tsx'];
+    // the profile pages stepped their title down to 32px, /show set 72px bold, reading pages 44px,
+    // the landing 30px semibold in a face of its own
+    const pages = ['app/show/page.tsx', 'components/ui/ProfileLayout.tsx', 'components/ui/PageHeader.tsx', 'components/galactic/GalacticHero.tsx'];
     for (const page of pages) {
       const source = fs.readFileSync(path.join(SRC, page), 'utf8');
       const h1 = /<h1 className="([^"]*)"/.exec(source)?.[1] ?? '';
-      expect(h1.split(/\s+/).filter((c) => /^(?:[\w-]+:)?(?:text-(?:\d?xl|\[)|font-(?:bold|semibold|medium)|tracking-)/.test(c)), page).toEqual([]);
-      expect(h1, page).toMatch(/\btext-(?:heading-48|display-72)\b/);
+      expect(h1.split(/\s+/).filter((c) => /^(?:[\w-]+:)?(?:text-(?:\d?xl|\[)|font-(?:bold|semibold|medium|display)|tracking-|leading-|display$)/.test(c)), page).toEqual([]);
+      expect(h1, page).toMatch(/\btext-(?:heading-48|display-72|display-32)\b/);
       expect(h1, page).not.toMatch(/:text-heading-(?!48)/);
     }
   });
