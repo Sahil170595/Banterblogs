@@ -284,10 +284,11 @@ html {
    once. */
 :root {
   --duration-scene-crossfade: 1200ms;
-  /* not 0: at opacity 0 Chrome leaves the canvas out of the frame, and its
-     first composite then stalled the page for the whole fade (1.2-1.5 s,
-     measured); at 1% it is composited from its first frame, and 1% of the
-     scene over the poster cannot be seen */
+  /* not 0: starting from opacity 0, the fade froze into one 1.2-1.5 s frame
+     in 6 of 6 runs (measured); from 1% there were no long frames in 13 runs.
+     Likely Chrome skips compositing an opacity-0 WebGL layer and its first
+     composite stalls (inferred, not confirmed). 1% of the scene over the
+     poster cannot be seen. */
   --scene-loading-opacity: 0.01;
 }
 
