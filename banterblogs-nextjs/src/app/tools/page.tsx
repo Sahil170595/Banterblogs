@@ -32,8 +32,10 @@ export const metadata: Metadata = {
   },
 };
 
-// The cards follow the head's two groups (it has no meta row) into the entrance.
-const CARDS_AFTER = 2;
+// The lede is the largest text in the fold, so it paints at once (a fade from
+// 0 is credited to LCP only when it ends: 992 ms measured); the cards follow
+// the title, the head's one staged group, into the entrance.
+const CARDS_AFTER = 1;
 
 /**
  * A CLI as an interactive card: its drawing (the archive's generator, seeded
@@ -86,6 +88,7 @@ export default function ToolsIndexPage() {
       <PageHeader
         eyebrow={<Eyebrow dot="green">Shipped</Eyebrow>}
         title="Tools"
+        stillLede
         lede="The parts of this program you can install and run today. Both are command-line tools on PyPI, both come out of the research archive, and both are built to say what they do not know."
       />
 

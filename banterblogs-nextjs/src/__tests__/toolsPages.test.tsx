@@ -66,10 +66,18 @@ describe('/tools', () => {
     expect(a).not.toBe(b);
   });
 
-  it('opens on the header entrance, the cards joining it, and draws no boxed panels', () => {
+  it('opens on the title, the cards following it; the lede, the largest text in the fold, paints at once', () => {
     const el = page();
-    expect(groupsOf(el)).toEqual(['0', '1']);
-    expect(el.querySelectorAll(`li[${ENTRANCE_ITEM_ATTRIBUTE}] article.card-depth`)).toHaveLength(TOOLS.length);
+    expect(groupsOf(el)).toEqual(['0']);
+    const lede = [...el.querySelectorAll('header p')].find((p) => text(p).startsWith('The parts of this program'))!;
+    expect(lede.closest(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
+    const cards = [...el.querySelectorAll<HTMLElement>(`li[${ENTRANCE_ITEM_ATTRIBUTE}]`)];
+    expect(cards.map((li) => li.querySelector('article.card-depth'))).toHaveLength(TOOLS.length);
+    for (const li of cards) expect(li.style.getPropertyValue('--entrance-items-after')).toBe('1');
+  });
+
+  it('draws no boxed panels', () => {
+    const el = page();
     expect(renderToStaticMarkup(<ToolsIndexPage />)).not.toMatch(/signal-(panel|pill|divider)/);
     expect(bordered(el).length).toBeLessThanOrEqual(MAX_BORDERED);
   });
@@ -87,10 +95,21 @@ describe.each(TOOLS.map((tool) => [tool.slug, tool] as const))('/tools/%s', (_sl
     expect(all.includes('Standalone tool'), 'standalone').toBe(!tool.ecosystem);
     expect(header.querySelector(`.command-chip button[aria-label="Copy ${tool.name} install command"]`)).not.toBeNull();
     expect(text(header.querySelector('.command-chip code')!)).toBe(tool.install);
-    expect(all).toContain(tool.quickstart);
     const links = [...header.querySelectorAll('a')].map((a) => [text(a), a.getAttribute('href')]);
     expect(links).toEqual([['PyPI', tool.pypi], ['Source', tool.repo], ...(tool.changelog ? [['Changelog', tool.changelog]] : [])]);
-    expect(groupsOf(el)).toEqual(['0', '1', '2']);
+  });
+
+  it('follows the head with the quickstart, copyable, and stages title, facts and links, then the quickstart; the summary paints at once', () => {
+    const el = page();
+    const quickstart = [...el.querySelectorAll('.command-chip')].find((chip) => text(chip).includes(tool.quickstart))!;
+    expect(quickstart).toBeDefined();
+    expect(quickstart.querySelector(`button[aria-label="Copy ${tool.name} quickstart command"]`)).not.toBeNull();
+    const group = (node: Element) => node.closest<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)?.style.getPropertyValue('--group');
+    expect(group(el.querySelector('h1')!)).toBe('0');
+    expect(group(el.querySelector('header .command-chip')!)).toBe('1');
+    expect(group(quickstart)).toBe('2');
+    const summary = [...el.querySelectorAll('header p')].find((p) => text(p) === tool.summary)!;
+    expect(group(summary)).toBeUndefined();
   });
 
   it('keeps the principle, and sets the highlights as rows', () => {

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Minus } from 'lucide-react';
 import { Reveal } from './motion/Reveal';
+import { entranceGroup } from './motion/entrance';
 import { Badge } from './ui/Badge';
 import { ButtonLink } from './ui/Button';
 import { CommandChip } from './ui/CommandChip';
@@ -8,6 +9,7 @@ import { Eyebrow } from './ui/Eyebrow';
 import { ListRow } from './ui/ListRow';
 import { PageHeader } from './ui/PageHeader';
 import { Section } from './ui/Section';
+import { cn } from '@/lib/cn';
 import { readReportMeta } from '@/lib/reports/meta';
 import type { ToolDef } from '@/lib/tools';
 
@@ -24,6 +26,10 @@ function reportTitle(slug: string): string {
 
 const reportLabel = (slug: string) => slug.replace('technical-report-', 'TR');
 const ordinal = (index: number) => String(index + 1).padStart(2, '0');
+// the head stages the title, then the facts with the links (its summary, the
+// largest text in the fold, paints at once); the quickstart closes it
+const QUICKSTART_GROUP = 2;
+const quickstartEntrance = entranceGroup(QUICKSTART_GROUP);
 
 /**
  * The product template: the head with the install chip and the links, the
@@ -41,6 +47,7 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
           </span>
         }
         title={tool.name}
+        stillLede
         lede={tool.summary}
         meta={
           <ul aria-label="About this release" className="meta-list basis-full text-label-13 text-muted-foreground">
@@ -68,12 +75,14 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
                 Changelog
               </ButtonLink>
             )}
-            <div className="basis-full">
-              <CommandChip command={tool.quickstart} label={`${tool.name} quickstart command`} className="text-muted-foreground" />
-            </div>
           </>
         }
       />
+      {/* outside the head's action row, so a long command scrolls inside
+          the chip instead of widening the row past a phone's edge */}
+      <div className={cn(quickstartEntrance.className, 'mt-3')} style={quickstartEntrance.style}>
+        <CommandChip command={tool.quickstart} label={`${tool.name} quickstart command`} />
+      </div>
 
       <div className="mt-16 md:mt-24">
         {/* the honesty commitment each tool leads with */}
