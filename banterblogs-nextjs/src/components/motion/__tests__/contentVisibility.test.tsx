@@ -140,6 +140,8 @@ const resetPage = () => {
   history.replaceState(null, '', pathname.current);
   html.removeAttribute(CV_ATTRIBUTE);
   trackLayout();
+  // a route change also sets the new page's scroll (routeArrival.test.tsx)
+  vi.stubGlobal('scrollTo', vi.fn());
 };
 const nativeScrollIntoView = Element.prototype.scrollIntoView;
 const tearDown = () => {
