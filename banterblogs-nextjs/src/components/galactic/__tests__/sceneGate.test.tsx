@@ -8,6 +8,7 @@ import {
   prefersPoster,
   type SceneSignals,
 } from '../GalacticBackdrop';
+import { NAV_RECEDE_ATTRIBUTE, NAV_RECEDE_RESET_MS, NAV_START_EVENT } from '@/components/motion/navRecede';
 import { SCENE_CONTEXT_ATTRIBUTES } from '../sceneOpening';
 import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from '../TrackingTicker';
 import { STAR_SYSTEMS } from '../systems';
@@ -219,6 +220,27 @@ describe('landing scene lifecycle and motion control', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close details' }));
     expect(scene()?.dataset.paused).toBe('false');
+  });
+
+  // Phase R5 (design re-judge P1-C): the scene kept rendering at 15-25 fps
+  // while the next page rendered, and the landing answered its main click
+  // 140-297 ms late. A navigation away stands it still and recedes its rail;
+  // a navigation that never replaces the page gives both back.
+  it('stands the scene still and recedes its rail while a navigation away renders', async () => {
+    render(<GalacticBackdrop />);
+    await advance(SCENE_MAX_WAIT_MS);
+    const rail = screen.getByRole('navigation', { name: 'Systems orbiting the Chimera core' });
+    expect(scene()?.dataset.paused).toBe('false');
+
+    act(() => {
+      window.dispatchEvent(new Event(NAV_START_EVENT));
+    });
+    expect(scene()?.dataset.paused).toBe('true');
+    expect(rail.closest(`[${NAV_RECEDE_ATTRIBUTE}]`)).not.toBeNull();
+
+    await advance(NAV_RECEDE_RESET_MS);
+    expect(scene()?.dataset.paused).toBe('false');
+    expect(rail.closest(`[${NAV_RECEDE_ATTRIBUTE}]`)).toBeNull();
   });
 
   it('falls back to the poster when reduced motion turns on', async () => {

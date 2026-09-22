@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { NAV_RECEDE_ATTRIBUTE, NAV_RECEDE_SCOPE_ATTRIBUTE, recedeAround } from '@/components/motion/navRecede';
 import { GalacticBackdrop } from '../GalacticBackdrop';
 import { GalacticHero } from '../GalacticHero';
 import { landingJsonLd } from '../landingJsonLd';
@@ -14,6 +15,24 @@ describe('landing hero calls to action', () => {
   it('leads to the research archive, then the papers', () => {
     expect(hero).toMatch(/href="\/reports"[^>]*>\s*Research archive/);
     expect(hero).toMatch(/href="\/papers"[^>]*>\s*Papers/);
+  });
+
+  // Phase R5 (design re-judge P1-C): a click answers at once in the copy,
+  // which bounds the recede, while the scene behind it stays lit for the
+  // push into the next page
+  it('bounds the recede of a followed call to action to the copy layer', () => {
+    document.body.innerHTML = `<main>${hero}</main>`;
+    try {
+      recedeAround(document.querySelector<HTMLAnchorElement>('a[href="/reports"]')!);
+      const receded = [...document.querySelectorAll(`[${NAV_RECEDE_ATTRIBUTE}]`)];
+
+      expect(receded.some((el) => el.contains(document.querySelector('h1')))).toBe(true);
+      expect(receded.some((el) => el.querySelector('a[href="/papers"]') || el.matches('a[href="/papers"]'))).toBe(true);
+      expect(document.querySelector('[data-scene-poster]')?.closest(`[${NAV_RECEDE_ATTRIBUTE}]`)).toBeNull();
+      expect(receded.every((el) => el.closest(`[${NAV_RECEDE_SCOPE_ATTRIBUTE}]`))).toBe(true);
+    } finally {
+      document.body.innerHTML = '';
+    }
   });
 });
 
