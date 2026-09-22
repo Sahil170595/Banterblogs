@@ -11,6 +11,13 @@ import { getAllEpisodes, toEpisodeSummary } from '@/lib/episodes';
 // The rows paint at once: a row's preview is often the largest text in view,
 // and Chrome credits a fade from 0 to LCP only when it ends.
 
+// Every topic is known at build: prerender them all, so a visit never runs
+// the archive through the markdown pipeline on the request.
+export async function generateStaticParams(): Promise<{ tag: string }[]> {
+  const episodes = await getAllEpisodes();
+  return [...new Set(episodes.flatMap((episode) => episode.tags))].map((tag) => ({ tag }));
+}
+
 export async function generateMetadata({
   params,
 }: {

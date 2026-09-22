@@ -2,16 +2,17 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
-import { entranceItem } from '@/components/motion/entrance';
+import { entranceGroup } from '@/components/motion/entrance';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { cn } from '@/lib/cn';
 import { getAllEpisodes } from '@/lib/episodes';
 
-// The first row of the topic map joins the head's first-load entrance, one
-// group after the title. The lede is the largest text in view, its LCP
-// element, so it paints at once (PageHeader stillLede).
+// The head is the largest text in view (the title on a desktop, the lede on a
+// phone), and Chrome credits a fade from 0 to LCP only when it ends, so the
+// head paints at once and the first-load entrance is the topic map's: its
+// first row rises cell by cell, one group apart.
 const ENTRANCE_CELLS = 3;
-const HEAD_GROUPS = 1;
 
 const METADATA_DESCRIPTION =
   'Browse episodes by topic — AI, benchmarks, deployment, architecture, and more.';
@@ -55,7 +56,7 @@ export default async function TagsPage() {
       <PageHeader
         eyebrow={<Eyebrow>Topic Map</Eyebrow>}
         title="Chimera Tags"
-        stillLede
+        entrance={false}
         lede="Explore the full signal surface by topic, platform, and technology."
       />
 
@@ -64,7 +65,10 @@ export default async function TagsPage() {
         {sortedTags.map(({ tag, count }, index) => (
           <li key={tag}>
             <Link href={`/tags/${encodeURIComponent(tag)}`} className="tag-cell group">
-              <Reveal className="flex items-center justify-between gap-4 p-5 md:p-6" {...(index < ENTRANCE_CELLS ? entranceItem(index, HEAD_GROUPS) : {})}>
+              <Reveal
+                className={cn('flex items-center justify-between gap-4 p-5 md:p-6', index < ENTRANCE_CELLS && entranceGroup(index).className)}
+                style={index < ENTRANCE_CELLS ? entranceGroup(index).style : undefined}
+              >
                 <div className="min-w-0">
                   <h2 className="text-heading-20 text-foreground transition-colors duration-fast ease-standard group-hover:text-primary">{tag}</h2>
                   <p className="mt-1 text-copy-14 text-muted-foreground">Signal cluster</p>

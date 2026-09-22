@@ -142,13 +142,28 @@ describe('/tags/[tag]', () => {
   });
 });
 
+// A topic page rendered on demand ran the whole archive through the markdown
+// pipeline per request: /tags/architecture took 4-13 s to first paint on the
+// local production server. Every topic is known at build.
+describe('/tags/[tag] at build', () => {
+  it('prerenders every topic in the archive', async () => {
+    const { generateStaticParams } = await import('@/app/tags/[tag]/page');
+    const params = await generateStaticParams();
+    expect(params.map((p) => p.tag).sort()).toEqual(['ai', 'architecture', 'chimera', 'performance']);
+  });
+});
+
 describe('/tags', () => {
   it('maps every tag to its page in a hairline grid, busiest first, with its count', async () => {
     const page = mount(await TagsPage());
-    // the lede, the largest text in view, paints at once; the cells follow the title
-    expectIndexTemplate(page, 1);
-    const lede = [...page.querySelectorAll('header p')].find((p) => text(p).startsWith('Explore the full signal surface'))!;
-    expect(lede.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
+    // the head is the largest text in view, so it paints at once and the
+    // topic map's first row rises cell by cell, one group apart
+    expect(page.querySelectorAll('h1')).toHaveLength(1);
+    expect(page.querySelector('header')!.querySelector(`.${ENTRANCE_GROUP_CLASS}`)).toBeNull();
+    expect(groups(page)).toEqual(['0', '1', '2']);
+    for (const group of page.querySelectorAll(`.${ENTRANCE_GROUP_CLASS}`)) expect(group.closest('.hairline-grid')).not.toBeNull();
+    expect(page.innerHTML).not.toMatch(/signal-(panel|pill|divider)|glass-ultra|backdrop-blur/);
+    expect(boxes(page)).toEqual([]);
     expect(text(page.querySelector('h1')!)).toBe('Chimera Tags');
     expect(text(page.querySelector('header')!)).toContain('Topic Map');
     expect(text(page)).toContain('Explore the full signal surface by topic, platform, and technology.');
