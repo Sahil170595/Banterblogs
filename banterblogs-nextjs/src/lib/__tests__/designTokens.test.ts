@@ -62,23 +62,23 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 // raising one is a regression.
 const CEILINGS: Record<Pattern, number> = {
   arbitraryFontSize: 77,
-  arbitraryTracking: 30,
+  arbitraryTracking: 29,
   arbitraryShadow: 7,
-  largeRadius: 3,
-  paletteHue: 12,
+  largeRadius: 2,
+  paletteHue: 0,
   transitionAll: 0,
-  backdrop: 6,
-  signalPanel: 24,
-  signalPill: 11,
-  signalDivider: 2,
+  backdrop: 2,
+  signalPanel: 20,
+  signalPill: 10,
+  signalDivider: 0,
   glassUltra: 0,
   shellWallpaper: 0,
 };
 
-// Patterns whose every use sits on a page R3-B rebuilds (the archived
-// episode pages: signal-divider in episodes/[slug]), so R3-A leaves them at
-// main's count. R3-B empties this list (glass-ultra went with EpisodeCard).
-const LEFT_FOR_PAGE_WORK: Pattern[] = ['signalDivider'];
+// Patterns whose every use sat on a page R3-B rebuilt, which R3-A left at
+// main's count. R3-B emptied it: glass-ultra went with EpisodeCard and
+// signal-divider with the old episode head. A new entry is a regression.
+const LEFT_FOR_PAGE_WORK: Pattern[] = [];
 
 function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

@@ -1,11 +1,26 @@
 import 'highlight.js/styles/github-dark.css';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
+import { getAllEpisodes, toEpisodeSummary, extractHtmlHeadings, computeContentStats } from '@/lib/episodes';
+import { EpisodeNavigation } from '@/components/EpisodeNavigation';
+import Link from 'next/link';
+import { EpisodeStats } from '@/components/EpisodeStats';
+import { ArticleEnhancements } from '@/components/ContentEnhancer';
+import { ContentStats } from '@/components/ContentStats';
+import { MobileNavigation } from '@/components/MobileOptimization';
+import { EpisodeFloatingUI } from '@/components/EpisodeFloatingUI';
+import { ContentRecommendations, recommendEpisodes } from '@/components/ContentRecommendations';
+import { platformLabel as platformLabelOf } from '@/components/EpisodeRow';
+import { entranceGroup } from '@/components/motion/entrance';
+import { RevealScope } from '@/components/motion/RevealScope';
+import { ReportProgress } from '@/components/reports/ReportProgress';
+import { ReportTocMobile, ReportTocSidebar } from '@/components/reports/ReportToc';
+import { ReportEnd } from '@/components/reports/reportEnd';
+import { cn } from '@/lib/cn';
+
 export const runtime = 'nodejs';
 // Prerendered at build and never revalidated: the archive ships inside the
 // deployment, so a regeneration would only redo work for identical output.
-import { getAllEpisodes, toEpisodeSummary, extractHtmlHeadings, computeContentStats } from '@/lib/episodes';
-import { EpisodeNavigation } from '@/components/EpisodeNavigation';
 
 export async function generateStaticParams() {
   const episodes = await getAllEpisodes();
@@ -52,13 +67,13 @@ export async function generateMetadata({
     },
   };
 }
-import { EpisodeStats } from '@/components/EpisodeStats';
-import { TableOfContents } from '@/components/TableOfContents';
-import { ArticleEnhancements } from '@/components/ContentEnhancer';
-import { ContentStats } from '@/components/ContentStats';
-import { MobileNavigation } from '@/components/MobileOptimization';
-import { EpisodeFloatingUI } from '@/components/EpisodeFloatingUI';
-import { ContentRecommendations, recommendEpisodes } from '@/components/ContentRecommendations';
+
+// the head's first-load entrance: breadcrumb and title, the dek, the meta and counts
+const HEAD_GROUP = { title: 0, dek: 1, meta: 2 } as const;
+// each platform's archive, the breadcrumb's second step
+const PLATFORM_ARCHIVE: Record<string, string> = { Chimera: '/chimera', Banterpacks: '/banterpacks' };
+// the episode's date, as the old head printed it, in every time zone alike
+const EPISODE_DATE = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 
 export default async function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -99,7 +114,8 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
   const nextEpisode = currentIndex >= 0 && currentIndex < allEpisodes.length - 1 ? allEpisodes[currentIndex + 1] : null;
 
   const displayId = episode.displayId ?? episode.id;
-  const platformLabel = episode.platform === 'chimera' ? 'Chimera' : episode.platform === 'benchmark' ? 'Benchmarks' : 'Banterpacks';
+  const platformLabel = platformLabelOf(episode);
+  const platformArchive = PLATFORM_ARCHIVE[platformLabel];
 
   // Derive TOC headings and stats server-side so the article HTML rides the
   // RSC payload exactly once (the server-rendered body below) instead of four
@@ -110,6 +126,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
+      <ReportProgress />
       <EpisodeFloatingUI episode={summary} />
 
       <MobileNavigation
@@ -117,88 +134,77 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
         nextEpisode={nextEpisode && { slug: nextEpisode.slug, title: nextEpisode.title }}
       />
 
-      <div className="container py-16">
-        <div className="max-w-5xl mx-auto">
-          <div className="signal-panel-strong mb-10 p-8 md:p-10">
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span className="signal-pill">Episode {displayId}</span>
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                {platformLabel}
-              </span>
-              <span>
-                {new Date(episode.date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  timeZone: 'UTC',
-                })}
-              </span>
-            </div>
-
-            <h1 className="mt-5 text-4xl md:text-5xl font-bold tracking-tight">{episode.title}</h1>
-            <p className="mt-4 text-lg text-muted-foreground">{episode.subtitle}</p>
-
-            <div className="signal-divider my-6" />
-
-            <EpisodeStats
-              filesChanged={episode.filesChanged}
-              linesAdded={episode.linesAdded}
-              readingTime={episode.readingTime}
-              complexity={episode.complexity}
-            />
+      {/* the report page's reading register: breadcrumb, title, dek and meta, then the body and its contents */}
+      <div className="container pb-24 pt-8 md:pt-10">
+        <div className="report-head">
+          <div {...entranceGroup(HEAD_GROUP.title)}>
+            <nav aria-label="Breadcrumb">
+              <ol className="report-crumbs">
+                <li>
+                  <Link href="/episodes">Episode archive</Link>
+                </li>
+                {platformArchive && (
+                  <li>
+                    <Link href={platformArchive}>{platformLabel} episodes</Link>
+                  </li>
+                )}
+              </ol>
+            </nav>
+            <h1 className="report-title">{episode.title}</h1>
           </div>
-
-          <div className="signal-panel mb-10 p-6">
-            <ContentStats stats={contentStats} />
-          </div>
-
-          {/* From xl the TOC gets its own column: 16rem rail + 2rem gap leaves
-              the panel 46rem inside max-w-5xl, wide enough for the 65ch text. */}
-          <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-8">
-            <div className="signal-panel p-8">
-              {/* Server-rendered article body — SEO/no-JS complete on first paint.
-                  Prose sits inside the panel so the text column keeps its ~65ch measure. */}
-              <div
-                id="episode-article"
-                className="prose prose-zinc prose-invert
-                prose-headings:font-bold prose-headings:text-foreground
-                prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-10
-                prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8
-                prose-h4:text-xl prose-h4:mb-3 prose-h4:mt-6
-                prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6
-                prose-a:text-primary prose-a:underline prose-a:underline-offset-4 prose-a:decoration-primary/50 hover:prose-a:decoration-primary
-                prose-strong:text-foreground prose-strong:font-semibold
-                prose-code:text-sm prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-                prose-pre:bg-muted prose-pre:border prose-pre:border-border
-                prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:pl-6 prose-blockquote:py-4 prose-blockquote:rounded-r-lg
-                prose-ul:list-disc prose-ol:list-decimal
-                prose-li:text-muted-foreground prose-li:mb-2
-                prose-img:rounded-xl prose-img:shadow-lg prose-img:border prose-img:border-border
-                prose-table:border prose-table:border-border prose-table:rounded-lg
-                prose-th:bg-muted prose-th:font-semibold prose-th:text-foreground
-                prose-td:border prose-td:border-border prose-td:text-muted-foreground"
-                dangerouslySetInnerHTML={{ __html: episode.content }}
+          {episode.subtitle && (
+            <p className={cn('report-dek', entranceGroup(HEAD_GROUP.dek).className)} style={entranceGroup(HEAD_GROUP.dek).style}>
+              {episode.subtitle}
+            </p>
+          )}
+          <div {...entranceGroup(HEAD_GROUP.meta)}>
+            <ul className="report-meta" aria-label="About this episode">
+              <li>
+                <strong>Episode {displayId}</strong>
+              </li>
+              <li>{platformLabel}</li>
+              <li>
+                <time dateTime={episode.date}>{EPISODE_DATE.format(new Date(episode.date))}</time>
+              </li>
+            </ul>
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+              <EpisodeStats
+                filesChanged={episode.filesChanged}
+                linesAdded={episode.linesAdded}
+                readingTime={episode.readingTime}
+                complexity={episode.complexity}
               />
-              <ArticleEnhancements articleId="episode-article" />
+              <ContentStats stats={contentStats} />
             </div>
-            <aside className="hidden xl:block">
-              <TableOfContents headings={headings} />
-            </aside>
-          </div>
-
-          <EpisodeNavigation
-            prevEpisode={prevEpisode && { slug: prevEpisode.slug, title: prevEpisode.title }}
-            nextEpisode={nextEpisode && { slug: nextEpisode.slug, title: nextEpisode.title }}
-          />
-
-          <div className="mt-16">
-            {/* scored on the server: only the picks reach the page */}
-            <ContentRecommendations
-              current={summary}
-              recommendations={recommendEpisodes(episode, allEpisodes).map(toEpisodeSummary)}
-            />
           </div>
         </div>
+
+        <ReportTocMobile headings={headings} />
+
+        <div className="mt-10 grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,1fr)_15rem]">
+          <div className="min-w-0">
+            {/* Server-rendered article body, complete without JavaScript; its tables,
+                code blocks and figures reveal as they scroll in. */}
+            <article id="episode-article">
+              <RevealScope className="report-prose prose prose-invert" html={episode.content} />
+            </article>
+            <ArticleEnhancements articleId="episode-article" />
+          </div>
+          <ReportTocSidebar headings={headings} />
+        </div>
+        <ReportEnd />
+
+        <EpisodeNavigation
+          prevEpisode={prevEpisode && { slug: prevEpisode.slug, title: prevEpisode.title }}
+          nextEpisode={nextEpisode && { slug: nextEpisode.slug, title: nextEpisode.title }}
+        />
+
+        {/* scored on the server: only the picks reach the page */}
+        <ContentRecommendations
+          className="mt-20"
+          current={summary}
+          recommendations={recommendEpisodes(episode, allEpisodes).map(toEpisodeSummary)}
+        />
       </div>
     </>
   );

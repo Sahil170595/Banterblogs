@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { ArrowRight, BookOpen, Clock, Eye, Sparkles, Star, Tag, TrendingUp, Zap } from 'lucide-react';
+import { Reveal } from '@/components/motion/Reveal';
+import { ListRow } from '@/components/ui/ListRow';
 import type { EpisodeSummary } from '@/lib/episodes';
 
 // Server component: the episode page scores the archive here and renders only
@@ -53,87 +53,40 @@ function recommendationReason(current: Scored, episode: EpisodeSummary): string 
   return 'Nearby in the archive';
 }
 
-function rankIcon(index: number) {
-  switch (index) {
-    case 0:
-      return <Star className="h-4 w-4 text-primary" />;
-    case 1:
-      return <TrendingUp className="h-4 w-4 text-primary/80" />;
-    case 2:
-      return <Zap className="h-4 w-4 text-primary/70" />;
-    default:
-      return <BookOpen className="h-4 w-4 text-muted-foreground" />;
-  }
-}
-
 interface ContentRecommendationsProps {
   current: EpisodeSummary;
   recommendations: EpisodeSummary[];
   className?: string;
 }
 
-export function ContentRecommendations({ current, recommendations, className = '' }: ContentRecommendationsProps) {
+/** The picks as ListRows under a section heading, each with why it was picked. */
+export function ContentRecommendations({ current, recommendations, className }: ContentRecommendationsProps) {
   if (recommendations.length === 0) return null;
 
   return (
-    <div className={`content-recommendations ${className}`}>
-      <div className="signal-panel p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold text-foreground">Recommended Episodes</h3>
-        </div>
-
-        <p className="text-sm text-muted-foreground mb-4">
-          Based on your current reading, you might enjoy these episodes
-        </p>
-
-        <div className="space-y-3">
-          {recommendations.map((episode, index) => (
-            <div key={episode.id} className="group">
-              <Link
-                href={`/episodes/${episode.slug}`}
-                className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-colors duration-fast ease-standard"
-              >
-                <div className="flex-shrink-0">{rankIcon(index)}</div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                      {episode.title}
-                    </h4>
-                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                      #{episode.displayId ?? episode.id}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground mb-1 line-clamp-2">{episode.preview}</p>
-
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {episode.readingTime} min
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Tag className="h-3 w-3" />
-                      {episode.tags.length} tags
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      {episode.complexity} complexity
-                    </div>
-                  </div>
-                </div>
-
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-              </Link>
-
-              <div className="ml-7 mt-1">
-                <p className="text-xs text-primary/70">{recommendationReason(current, episode)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <section aria-labelledby="recommended-heading" className={className}>
+      <h2 id="recommended-heading" className="text-heading-24 text-foreground">
+        Recommended Episodes
+      </h2>
+      <p className="mt-2 text-copy-16 text-muted-foreground">Based on your current reading, you might enjoy these episodes</p>
+      <ul className="mt-6">
+        {recommendations.map((episode) => (
+          <Reveal as="li" key={episode.id}>
+            <ListRow
+              href={`/episodes/${episode.slug}`}
+              index={`#${episode.displayId ?? episode.id}`}
+              title={episode.title}
+              description={episode.preview}
+              meta={[
+                recommendationReason(current, episode),
+                `${episode.readingTime} min`,
+                `${episode.tags.length} tags`,
+                `${episode.complexity} complexity`,
+              ].join(' · ')}
+            />
+          </Reveal>
+        ))}
+      </ul>
+    </section>
   );
 }

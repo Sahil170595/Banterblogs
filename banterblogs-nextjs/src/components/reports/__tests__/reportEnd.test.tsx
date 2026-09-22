@@ -22,7 +22,7 @@ describe('report end marker', () => {
 
   it('comes from a module server pages can read values from', () => {
     expect(read('components/reports/reportEnd.tsx')).not.toMatch(/^['"]use client['"]/m);
-    for (const page of ['app/reports/[id]/page.tsx']) {
+    for (const page of ['app/reports/[id]/page.tsx', 'app/episodes/[slug]/page.tsx']) {
       const source = read(page);
       expect(source, page).toMatch(/<ReportEnd \/>/);
       expect(source, page).not.toMatch(/import \{[^}]*REPORT_END_ATTRIBUTE[^}]*\} from '@\/components\/reports\/ReportTocSpy'/);

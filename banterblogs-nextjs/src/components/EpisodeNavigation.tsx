@@ -1,7 +1,5 @@
-'use client';
-
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface EpisodeLink {
   slug: string;
@@ -13,40 +11,34 @@ interface EpisodeNavigationProps {
   nextEpisode: EpisodeLink | null;
 }
 
+/** Previous and next, as the report page's pager: a hairline above, the titles lighting ember. */
 export function EpisodeNavigation({ prevEpisode, nextEpisode }: EpisodeNavigationProps) {
+  if (!prevEpisode && !nextEpisode) return null;
   return (
-    <div className="mt-16 pt-8 border-t border-border">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {prevEpisode && (
-          <Link
-            href={`/episodes/${prevEpisode.slug}`}
-            className="group flex items-center space-x-4 rounded-lg border border-border p-4 hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-accent-foreground" />
-            <div>
-              <div className="text-sm text-muted-foreground group-hover:text-accent-foreground">
-                Previous Episode
-              </div>
-              <div className="font-medium">{prevEpisode.title}</div>
-            </div>
-          </Link>
-        )}
-        
-        {nextEpisode && (
-          <Link
-            href={`/episodes/${nextEpisode.slug}`}
-            className="group flex items-center space-x-4 rounded-lg border border-border p-4 hover:bg-accent hover:text-accent-foreground transition-colors md:ml-auto"
-          >
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground group-hover:text-accent-foreground">
-                Next Episode
-              </div>
-              <div className="font-medium">{nextEpisode.title}</div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-accent-foreground" />
-          </Link>
-        )}
-      </div>
-    </div>
+    <nav className="report-pager mt-20 grid gap-4 border-t border-border/40 pt-8 sm:grid-cols-2" aria-label="Episode navigation">
+      {prevEpisode ? (
+        <Link href={`/episodes/${prevEpisode.slug}`} className="block rounded-xl p-5 transition-colors duration-fast ease-standard hover:bg-card/70">
+          <div className="report-pager-label">
+            <ArrowLeft aria-hidden="true" className="h-3 w-3" />
+            Previous Episode
+          </div>
+          <div className="report-pager-title line-clamp-1">{prevEpisode.title}</div>
+        </Link>
+      ) : (
+        <div />
+      )}
+      {nextEpisode && (
+        <Link
+          href={`/episodes/${nextEpisode.slug}`}
+          className="block rounded-xl p-5 text-right transition-colors duration-fast ease-standard hover:bg-card/70"
+        >
+          <div className="report-pager-label justify-end">
+            Next Episode
+            <ArrowRight aria-hidden="true" className="h-3 w-3" />
+          </div>
+          <div className="report-pager-title line-clamp-1">{nextEpisode.title}</div>
+        </Link>
+      )}
+    </nav>
   );
 }

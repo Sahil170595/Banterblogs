@@ -25,7 +25,6 @@ const MOTION_PRIMITIVES_DIR = path.join(SRC, 'components', 'motion');
 
 // Observers outside the primitives that reveal nothing, each with its reason.
 const NON_REVEAL_OBSERVERS: Record<string, string> = {
-  [path.join('components', 'TableOfContents.tsx')]: 'scroll-spy: marks the heading in view; nothing moves',
   [path.join('components', 'reports', 'ReportTocSpy.tsx')]:
     'scroll-spy: marks the section being read and moves the contents marker to it; content never hides or moves',
 };
@@ -251,7 +250,8 @@ describe('motion ratchet detectors', () => {
   const plain = path.join(SRC, 'components', 'Plain.tsx');
   const scene = path.join(SRC, 'components', 'scenes', 'Scene.tsx');
   const primitive = path.join(SRC, 'components', 'motion', 'Primitive.ts');
-  const scrollSpy = path.join(SRC, 'components', 'TableOfContents.tsx');
+  // a listed non-reveal observer (the episode pages now share the report contents)
+  const scrollSpy = path.join(SRC, 'components', 'reports', 'ReportTocSpy.tsx');
 
   it('flags transition-all and transition: all outside the animated surfaces only', () => {
     expect(motionViolations(plain, '<a className="transition-all hover:text-primary" />')).toHaveLength(1);

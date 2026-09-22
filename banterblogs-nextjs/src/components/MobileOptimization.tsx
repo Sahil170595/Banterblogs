@@ -9,9 +9,9 @@ interface MobileNavigationProps {
   className?: string;
 }
 
-// Floating prev/next pill on phones. It stays mounted so its enter and exit
-// run in CSS on the overlay tokens; while hidden it is inert and ignores the
-// pointer.
+// Floating prev/next pill on phones, an opaque raised surface (glass is for
+// the header alone). It stays mounted so its enter and exit run in CSS on the
+// overlay tokens; while hidden it is inert and ignores the pointer.
 const PILL_LINK_CLASS =
   'flex items-center gap-1 px-3 py-1 rounded-full bg-muted/50 text-muted-foreground transition-colors duration-fast ease-standard hover:bg-muted/70 hover:text-foreground';
 
@@ -39,7 +39,7 @@ export function MobileNavigation({ prevEpisode, nextEpisode, className = '' }: M
         isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'
       } ${className}`}
     >
-      <div className="flex items-center gap-2 bg-background/90 backdrop-blur-xl border border-border/50 rounded-full px-4 py-2 shadow-2xl">
+      <div className="floating-surface flex items-center gap-2 rounded-full px-4 py-2">
         {prevEpisode && (
           <a href={`/episodes/${prevEpisode.slug}`} data-navigation="prev" className={PILL_LINK_CLASS}>
             <ArrowLeft className="h-4 w-4" />
@@ -47,7 +47,7 @@ export function MobileNavigation({ prevEpisode, nextEpisode, className = '' }: M
           </a>
         )}
 
-        <div className="w-px h-4 bg-border/50" />
+        <div aria-hidden="true" className="h-4 w-px bg-border/60" />
 
         {nextEpisode && (
           <a href={`/episodes/${nextEpisode.slug}`} data-navigation="next" className={PILL_LINK_CLASS}>

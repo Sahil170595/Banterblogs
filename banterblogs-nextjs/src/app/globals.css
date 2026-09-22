@@ -225,11 +225,6 @@ html {
   @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-label-12-mono text-muted-foreground;
 }
 
-.signal-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.5), transparent);
-}
-
 /* Markdown tables (rehype step in lib/episodes.ts) scroll inside their own
    box instead of widening the page; inferred numeric columns right-align. */
 .table-scroll {
@@ -1850,5 +1845,16 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
     transform: translateX(var(--motion-nudge));
     transition-duration: var(--duration-hover), var(--duration-fast);
   }
+}
+
+/* The episode page's floating controls (MobileOptimization, SocialFeatures):
+   an opaque raised surface, lighter than a card, with an inset hairline and
+   the layered tinted shadow; glass is for the header alone. */
+.floating-surface {
+  background-color: hsl(var(--card-raised));
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--foreground) / 0.08),
+    0 1px 2px hsl(220 60% 1% / 0.5),
+    0 8px 24px -6px hsl(220 60% 1% / 0.6);
 }
 /* end R3-B2 */

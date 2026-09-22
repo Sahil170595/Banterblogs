@@ -37,8 +37,8 @@ export function ArticleEnhancements({ articleId }: ArticleEnhancementsProps) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className =
-        'code-copy-button absolute right-2 top-2 rounded-md border border-border/60 bg-background/90 px-2 py-1 ' +
-        'text-xs font-medium text-muted-foreground opacity-0 transition-opacity hover:text-foreground ' +
+        'code-copy-button absolute right-2 top-2 rounded-md bg-muted px-2 py-1 ' +
+        'text-label-13 font-medium text-muted-foreground opacity-0 transition-opacity hover:text-foreground ' +
         'focus:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring group-hover:opacity-100';
       button.textContent = 'Copy';
       button.setAttribute('aria-label', 'Copy code to clipboard');
