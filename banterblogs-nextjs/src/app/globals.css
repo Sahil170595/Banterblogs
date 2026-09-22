@@ -856,11 +856,15 @@ html[data-motion="on"] .live-dot[data-inview="true"]::after {
 :root {
   /* items follow the three head groups unless they say otherwise */
   --entrance-items-after: 3;
+  /* not 0: Chrome skips opacity-0 elements as LCP candidates and credits a
+     fade only when it ends (a late group put /tools LCP at 992 ms against a
+     ~200 ms first paint); from 1% the step is a candidate on its first frame */
+  --entrance-start-opacity: 0.01;
 }
 
 @keyframes entrance-rise {
   from {
-    opacity: 0;
+    opacity: var(--entrance-start-opacity);
     transform: translateY(var(--motion-rise));
     filter: blur(var(--blur-enter));
   }
