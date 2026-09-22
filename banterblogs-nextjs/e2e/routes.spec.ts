@@ -38,6 +38,15 @@ const REFLOW_ROUTES = [
   '/show/zk-alignment-proof',
 ] as const;
 
+// Every page blocks its first paint on one stylesheet: the global sheet,
+// with next/font's faces merged into it. Turbopack stops merging them once
+// the global sheet grows past its CSS merge size (R5: 4 KB of new rules put
+// both on every page, +300 ms FCP in local Lighthouse mobile). The reading
+// routes add their own sheet.
+const READING_ROUTES = new Set<string>(['/reports/technical-report-138']);
+const GLOBAL_SHEETS = 1;
+const READING_SHEETS = 2;
+
 const SCREENSHOTS_ON = process.env.VISUAL_SCREENSHOTS === 'on';
 // share of pixels a fold may differ by before the screenshot fails
 const MAX_DIFF_PIXEL_RATIO = 0.01;
@@ -63,6 +72,13 @@ for (const route of [...ROUTES, MISSING_ROUTE]) {
 
       await expect(page.locator('h1').first()).toBeAttached();
       expect(errors).toEqual([]);
+    });
+
+    test('blocks its first paint on one stylesheet, two on a reading route', async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'desktop', 'the sheets do not depend on the viewport');
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
+      const sheets = await page.evaluate(() => new Set([...document.querySelectorAll('link[rel="stylesheet"]')].map((link) => link.getAttribute('href'))).size);
+      expect(sheets).toBe(READING_ROUTES.has(route) ? READING_SHEETS : GLOBAL_SHEETS);
     });
 
     test('matches its fold', { tag: '@screenshot' }, async ({ page }) => {

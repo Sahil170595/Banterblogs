@@ -11,6 +11,8 @@ export interface ProfileSection {
 export interface ProfileLayoutProps {
   eyebrow: ReactNode;
   title: ReactNode;
+  /** a standfirst under a short title, across the page */
+  subtitle?: ReactNode;
   /** the page's opening paragraph, at the reading size */
   lede: ReactNode;
   /** in the rail: links, a byline, stats */
@@ -33,19 +35,21 @@ const group = (index: number, classes?: string) => {
 
 /**
  * The profile template (/work, /about): the eyebrow and the title across the
- * page at the one page-title size, then the identity in a rail on the left
+ * page at the one page-title size (a short title may carry a standfirst
+ * under it), then the identity in a rail on the left
  * and the page beside it. The rail sticks while the page scrolls
  * (.profile-rail in globals.css), wherever the screen is tall enough to hold
  * it. The title rises on the first frame, the links and the index after it.
  * The lede, the page's largest text and so its LCP element, stays out of the
  * entrance: Chrome credits a fade from 0 to LCP only when it ends.
  */
-export function ProfileLayout({ eyebrow, title, lede, identity, sections, figure, children }: ProfileLayoutProps) {
+export function ProfileLayout({ eyebrow, title, subtitle, lede, identity, sections, figure, children }: ProfileLayoutProps) {
   return (
     <div className="container pb-24 pt-6 md:pt-10">
       <header {...group(0)}>
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1 className="mt-3 text-heading-48 text-foreground">{title}</h1>
+        {subtitle && <p className="mt-4 max-w-[60ch] text-copy-20 text-prose md:text-copy-24">{subtitle}</p>}
       </header>
       <div className="mt-10 lg:mt-14 lg:grid lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:gap-x-16 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] xl:gap-x-24">
         <div className="profile-rail">

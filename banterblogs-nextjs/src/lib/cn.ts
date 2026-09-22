@@ -10,6 +10,8 @@ export const TYPE_ROLES = [
   'heading-32',
   'heading-24',
   'heading-20',
+  'copy-24',
+  'copy-20',
   'copy-18',
   'copy-17',
   'copy-16',
