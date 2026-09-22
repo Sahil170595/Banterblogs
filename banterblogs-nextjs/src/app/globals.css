@@ -1856,3 +1856,30 @@ html[data-route-to="landing"]::view-transition-new(site-header) {
   }
 }
 /* end R4 a11y */
+
+/* R5 design */
+/* TimelineFigure (components/ui/TimelineFigure.tsx): each bar draws out from
+   its start, one lane after another, where the figure is in view as the page
+   paints, else once it scrolls in; while it waits below the fold it is
+   clipped to its start. Everything else it draws with utilities: the global
+   sheet sits just under the size at which Turbopack stops merging the font
+   faces into it, and past it every page blocks on two sheets
+   (e2e/routes.spec.ts). Both ends of the draw are named, since a basic shape
+   and none do not interpolate. */
+@keyframes timeline-draw {
+  from {
+    clip-path: inset(-0.5rem 100% -0.5rem 0);
+  }
+  to {
+    clip-path: inset(-0.5rem -0.5rem -0.5rem 0);
+  }
+}
+
+html[data-motion="on"] :is([data-reveal=""], [data-reveal="shown"]) .timeline-bar {
+  animation: timeline-draw var(--duration-reveal) var(--ease-strong-out) calc(var(--stagger-group) + var(--lane, 0) * var(--stagger-item)) backwards;
+}
+
+html[data-motion="on"] [data-reveal="pending"] .timeline-bar {
+  clip-path: inset(-0.5rem 100% -0.5rem 0);
+}
+/* end R5 design */
