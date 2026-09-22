@@ -131,6 +131,12 @@ export function SearchDialog() {
 
   const optionId = (index: number) => `${listboxId}-option-${index}`;
 
+  // the list is capped at 24rem: the arrows keep the highlight in sight
+  useEffect(() => {
+    if (activeIndex < 0) return;
+    document.getElementById(`${listboxId}-option-${activeIndex}`)?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, listboxId]);
+
   return (
     <div className="relative w-full max-w-md" onBlur={handleBlur}>
       <div className="relative group">

@@ -20,12 +20,15 @@ const INDEX: SearchEntry[] = [
 ];
 
 let fetchMock: ReturnType<typeof vi.fn>;
+// jsdom lays nothing out and has no scrollIntoView
+const scrollIntoView = vi.fn();
 
 beforeEach(() => {
   // the index loader is module state: start every test from a cold page
   vi.resetModules();
   fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => INDEX }));
   vi.stubGlobal('fetch', fetchMock);
+  Element.prototype.scrollIntoView = scrollIntoView;
 });
 
 afterEach(() => {
@@ -33,6 +36,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   push.mockReset();
+  scrollIntoView.mockReset();
+  Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
 });
 
 async function renderDialog(): Promise<HTMLInputElement> {
@@ -186,6 +191,20 @@ describe('site search dialog', () => {
     listbox.dispatchEvent(press);
     expect(press.defaultPrevented).toBe(true);
     for (const option of options) expect(option.getAttribute('tabindex')).toBe('-1');
+  });
+
+  // the list is capped at 24rem; a highlight driven past its fold by the
+  // arrows would sit out of sight
+  it('keeps the highlighted result scrolled into view in the capped list', async () => {
+    const input = await renderDialog();
+    await open(input, 'TR138');
+    const options = await screen.findAllByRole('option');
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ block: 'nearest' });
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(options[1]);
   });
 
   // re-judge P1-3: the highlighted row was a light accent plate that left
