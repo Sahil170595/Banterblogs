@@ -9,6 +9,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from "@/components/motion/prePaint";
 import { RouteArrival } from "@/components/motion/RouteArrival";
 import { EntranceWindow } from "@/components/motion/EntranceWindow";
+import { HistoryScrollGuard } from "@/components/motion/HistoryScrollGuard";
 import { RouteTransition } from "@/components/motion/RouteTransition";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -119,6 +120,8 @@ export default function RootLayout({
         <EntranceWindow />
         {/* ahead of the page, so a new page is settled before the router scrolls */}
         <RouteArrival />
+        {/* Back/Forward restores land at once, not in a long smooth glide */}
+        <HistoryScrollGuard />
         <ErrorBoundary>
           {/* .keyboard-navigation scopes the focus-visible ring in globals.css */}
           <div className="keyboard-navigation relative flex min-h-screen flex-col">
