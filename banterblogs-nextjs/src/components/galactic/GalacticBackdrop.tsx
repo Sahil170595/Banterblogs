@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type TransitionEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { Pause, Play } from 'lucide-react';
+import { MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
 import { SelectionCard } from './SelectionCard';
 import { TICKER_INTERVAL_MS, TICKER_START_DELAY_MS } from './TrackingTicker';
 import { SystemRail } from './SystemRail';
@@ -17,15 +18,17 @@ import { CORE_SELECTION, STAR_SYSTEMS, type GalacticSelection } from './systems'
 // server-rendered HTML (SSR emits the poster branch, so the sr-only spans
 // there are what crawlers and text-only agents read).
 
+// the poster stays underneath while the chunk loads, so nothing stands in
 const GalacticScene = dynamic(() => import('./GalacticScene'), {
   ssr: false,
-  loading: () => <Poster />,
+  loading: () => null,
 });
 
 function Poster() {
   return (
     <div
       aria-hidden="true"
+      data-scene-poster=""
       className="absolute inset-0"
       style={{
         background: [
@@ -66,6 +69,14 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const COARSE_POINTER_QUERY = '(pointer: coarse)';
 // remembers "Pause motion" across visits; the value is 'paused' or absent
 export const MOTION_STORAGE_KEY = 'chimeraforge:landing-motion';
+// Scene arrival: the canvas layer stays all but invisible over the poster
+// until the scene is drawing steadily (sceneOpening.ts), fades in over it
+// while motion is armed (--duration-scene-crossfade in globals.css), then
+// goes live without it.
+type SceneStage = 'loading' | 'fading' | 'live';
+// longest the poster waits under the fade for its transitionend; outlasts
+// the crossfade token (pinned by sceneArrival.test.tsx)
+export const SCENE_CROSSFADE_FALLBACK_MS = 2000;
 
 export interface SceneSignals {
   reducedMotion: boolean;
@@ -141,6 +152,8 @@ function storeMotionPaused(paused: boolean): void {
 
 export function GalacticBackdrop() {
   const [mode, setMode] = useState<'pending' | 'scene' | 'poster'>('pending');
+  const [sceneStage, setSceneStage] = useState<SceneStage>('loading');
+  const [offscreen, setOffscreen] = useState(false);
   const [selection, setSelection] = useState<GalacticSelection | null>(null);
   // Tracking-ticker tour: -1 = pre-start (scene gets its cold open first)
   const [featuredIndex, setFeaturedIndex] = useState(-1);
@@ -166,14 +179,15 @@ export function GalacticBackdrop() {
   }, [mode, tourStarted]);
 
   useEffect(() => {
-    // "Pause motion" holds the tour on its current system too
-    if (mode !== 'scene' || !tourStarted || motionPaused) return;
+    // "Pause motion" holds the tour on its current system too, and so does
+    // a canvas nobody can see
+    if (mode !== 'scene' || !tourStarted || motionPaused || offscreen) return;
     const interval = setInterval(() => {
       if (tickerPausedRef.current) return;
       setFeaturedIndex((index) => (index + 1) % STAR_SYSTEMS.length);
     }, TICKER_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [mode, tourStarted, motionPaused]);
+  }, [mode, tourStarted, motionPaused, offscreen]);
 
   // pointerOver on star B can fire before pointerOut on star A — only the
   // owning star may clear its own hover
@@ -204,6 +218,10 @@ export function GalacticBackdrop() {
       }
       cancelIdle = whenIdle(() => {
         cancelIdle = undefined;
+        // every arrival, including a return after reduced motion, starts
+        // hidden over the poster
+        setSceneStage('loading');
+        setOffscreen(false);
         setMode('scene');
       });
     };
@@ -228,6 +246,33 @@ export function GalacticBackdrop() {
     return () => container.removeEventListener('webglcontextlost', onContextLost, true);
   }, [mode]);
 
+  useEffect(() => {
+    const container = sceneRef.current;
+    if (mode !== 'scene' || !container || typeof IntersectionObserver === 'undefined') return;
+    // an offscreen canvas stops rendering (demand frameloop) until it returns
+    const observer = new IntersectionObserver(([entry]) => setOffscreen(!entry.isIntersecting));
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [mode]);
+
+  useEffect(() => {
+    if (sceneStage !== 'fading') return;
+    const fallback = setTimeout(() => setSceneStage('live'), SCENE_CROSSFADE_FALLBACK_MS);
+    return () => clearTimeout(fallback);
+  }, [sceneStage]);
+
+  const handleSceneReady = useCallback(() => {
+    // the pre-paint gate arms motion only for visitors who allow it
+    // (prePaint.ts); without it the canvas swaps in at once
+    const armed = document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on';
+    setSceneStage((stage) => (stage === 'loading' ? (armed ? 'fading' : 'live') : stage));
+  }, []);
+
+  const handleSceneTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
+    // the layer's own fade, not a transition inside the scene
+    if (event.target === event.currentTarget && event.propertyName === 'opacity') setSceneStage('live');
+  };
+
   const isPoster = mode !== 'scene';
   const select = (event: MouseEvent<HTMLAnchorElement>, next: GalacticSelection) => {
     // plain click opens the card; modified/middle clicks keep native
@@ -250,18 +295,25 @@ export function GalacticBackdrop() {
 
   return (
     <>
-      {mode === 'scene' ? (
-        <div ref={sceneRef} className="absolute inset-0 z-0 isolate overflow-hidden" aria-hidden="true">
+      {/* the server-rendered poster holds until the scene is live over it */}
+      {(mode !== 'scene' || sceneStage !== 'live') && <Poster />}
+      {mode === 'scene' && (
+        <div
+          ref={sceneRef}
+          data-scene-stage={sceneStage}
+          onTransitionEnd={handleSceneTransitionEnd}
+          className="absolute inset-0 z-0 isolate overflow-hidden"
+          aria-hidden="true"
+        >
           <GalacticScene
             onSelect={selectFromScene}
             featuredName={tickerSystem?.name ?? null}
             onStarHover={handleStarHover}
+            onReady={handleSceneReady}
             // an open card covers the scene, so it stops rendering behind it
-            paused={motionPaused || selection !== null}
+            paused={motionPaused || selection !== null || offscreen}
           />
         </div>
-      ) : (
-        <Poster />
       )}
 
       {mode === 'scene' && (

@@ -339,6 +339,35 @@ html {
   transform: scaleX(1);
 }
 
+/* Scene arrival (GalacticBackdrop.tsx), after Vercel's home: the canvas
+   layer stays all but invisible over the poster until the scene is drawing
+   steadily, then fades in over it on strong-out, and the poster leaves once
+   the fade ends.
+   The fade runs only while motion is armed; otherwise the canvas swaps in at
+   once. */
+:root {
+  --duration-scene-crossfade: 1200ms;
+  /* not 0: starting from opacity 0, the fade froze into one 1.2-1.5 s frame
+     in 6 of 6 runs (measured); from 1% there were no long frames in 13 runs.
+     Likely Chrome skips compositing an opacity-0 WebGL layer and its first
+     composite stalls (inferred, not confirmed). 1% of the scene over the
+     poster cannot be seen. */
+  --scene-loading-opacity: 0.01;
+}
+
+[data-scene-stage="loading"] {
+  opacity: var(--scene-loading-opacity);
+}
+
+html[data-motion="on"] [data-scene-stage="loading"] {
+  will-change: opacity;
+}
+
+html[data-motion="on"] [data-scene-stage="fading"] {
+  transition: opacity var(--duration-scene-crossfade) var(--ease-strong-out);
+  will-change: opacity;
+}
+
 /* Site focus ring. Anchored at :root instead of the .keyboard-navigation
    wrapper so it does not depend on that wrapper; specificity is unchanged
    (buttons/fields 0,2,1; links 0,3,0). */
