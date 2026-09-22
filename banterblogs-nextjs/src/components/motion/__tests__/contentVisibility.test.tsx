@@ -5,7 +5,7 @@ import { cleanup, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import RootLayout from '@/app/layout';
-import { CV_ATTRIBUTE, CV_OFF, SKIPPING_CONTAINERS } from '../contentVisibility';
+import { CV_ATTRIBUTE, CV_OFF, FOCUS_SCROLL_GIVE_UP_MS, FOCUS_SCROLL_START_MS, SKIPPING_CONTAINERS } from '../contentVisibility';
 import { RouteArrival } from '../RouteArrival';
 import { MOTION_ATTRIBUTE, MOTION_GATE_SCRIPT } from '../prePaint';
 
@@ -255,13 +255,61 @@ describe('the pre-paint gate, once the page is up', () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest' });
   });
 
-  it('leaves the browser’s own focus scroll alone once the page is laid out (a Tab already turned skipping off)', () => {
-    const { container } = mount();
-    const scrollIntoView = vi.fn();
-    Element.prototype.scrollIntoView = scrollIntoView;
-    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
-    focusAs(container.querySelector<HTMLElement>('.table-scroll')!, true);
-    expect(scrollIntoView).not.toHaveBeenCalled();
+  // Once the page is laid out the browser's own focus scroll lands, but
+  // Firefox leaves an element that is partly in view where it is: 12 of 24
+  // archive cards and 6 of 40 TR142 tables stayed cut by the viewport's
+  // bottom edge. Once that scroll settles, what is not fully in view (and
+  // fits) is brought into view.
+  describe('after the browser’s own focus scroll (a Tab already turned skipping off)', () => {
+    const VIEWPORT = 900;
+    let scrollIntoView: ReturnType<typeof vi.fn>;
+    const focusAt = (top: number, height: number) => {
+      const { container } = mount();
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+      const table = container.querySelector<HTMLElement>('.table-scroll')!;
+      table.getBoundingClientRect = () => ({ top, bottom: top + height, height, left: 0, right: 100, width: 100, x: 0, y: top, toJSON: () => ({}) });
+      focusAs(table, true);
+      return table;
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.stubGlobal('innerHeight', VIEWPORT);
+      scrollIntoView = vi.fn();
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    // (this file runs the pre-paint script more than once, so each of its
+    // listener sets answers; a page runs it once)
+    it('brings an element the browser left partly out of view fully into it', () => {
+      const table = focusAt(771, 348);
+      expect(scrollIntoView).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(FOCUS_SCROLL_START_MS);
+      expect(scrollIntoView).toHaveBeenCalled();
+      expect(scrollIntoView.mock.contexts.every((context) => context === table)).toBe(true);
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest' });
+    });
+
+    it('waits for a focus scroll under way to end, then checks where it left the element', () => {
+      focusAt(771, 348);
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(FOCUS_SCROLL_START_MS);
+      expect(scrollIntoView).not.toHaveBeenCalled();
+      window.dispatchEvent(new Event('scrollend'));
+      expect(scrollIntoView).toHaveBeenCalled();
+    });
+
+    it('leaves alone an element fully in view, or one taller than the view', () => {
+      focusAt(300, 348);
+      vi.advanceTimersByTime(FOCUS_SCROLL_GIVE_UP_MS);
+      cleanup();
+      focusAt(-40, VIEWPORT + 200);
+      vi.advanceTimersByTime(FOCUS_SCROLL_GIVE_UP_MS);
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
   });
 
   it('leaves skipping on when a pointer press focuses skipped content', () => {
