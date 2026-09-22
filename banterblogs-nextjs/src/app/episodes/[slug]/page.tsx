@@ -128,7 +128,6 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <ReportProgress />
-      <EpisodeFloatingUI episode={summary} />
 
       <MobileNavigation
         prevEpisode={prevEpisode && { slug: prevEpisode.slug, title: prevEpisode.title }}
@@ -209,6 +208,10 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
           />
         </div>
       </div>
+
+      {/* fixed-position, so it sits after the article in reading and Tab
+          order without moving on screen */}
+      <EpisodeFloatingUI episode={summary} />
     </>
   );
 }
