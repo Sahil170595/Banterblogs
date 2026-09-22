@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { entranceGroup, entranceItem } from '@/components/motion/entrance';
+import { cn } from '@/lib/cn';
+
+// PageHeader's first-load entrance on the /show head: the eyebrow and title,
+// then the lede, then the first scene rows one item apart.
+const HEAD_GROUPS = 2;
+const ENTRANCE_ROWS = 3;
 
 const SHOW_DESCRIPTION =
   'Interactive scenes from the Chimera constitutional AI ecosystem — real cryptographic, consensus, and verifier internals rendered as visual demos.';
@@ -75,15 +82,20 @@ export default function ShowPage() {
   return (
     <div className="container py-12 md:py-20 max-w-5xl">
       <header className="mb-16 space-y-4">
-        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Chimera · Show
+        <div {...entranceGroup(0)}>
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Chimera · Show
+          </div>
+          <h1 className="mt-4 text-5xl md:text-7xl font-bold tracking-tight leading-[0.95]">
+            The internals,
+            <br />
+            on <span className="text-primary">display</span>.
+          </h1>
         </div>
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[0.95]">
-          The internals,
-          <br />
-          on <span className="text-primary">display</span>.
-        </h1>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed pt-2">
+        <p
+          className={cn('text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed pt-2', entranceGroup(1).className)}
+          style={entranceGroup(1).style}
+        >
           Most AI demos are a chat box and a chart. These aren&apos;t. Each scene visualises the
           actual cryptographic, consensus, or verifier internals of a running system —
           deterministic data, real signatures, real Pedersen commitments. Pre-computed from the
@@ -94,8 +106,8 @@ export default function ShowPage() {
       </header>
 
       <ol className="space-y-1">
-        {scenes.map((s) => (
-          <li key={s.slug}>
+        {scenes.map((s, index) => (
+          <li key={s.slug} {...(index < ENTRANCE_ROWS ? entranceItem(index, HEAD_GROUPS) : {})}>
             {s.available ? (
               <Link
                 href={`/show/${s.slug}`}
