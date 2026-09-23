@@ -37,7 +37,9 @@ export function GalacticHero() {
           />
           {/* an interior page head in miniature: the mono eyebrow, the title
               role at the size this panel holds, the copy role */}
-          <Eyebrow>Chimera / system atlas 001</Eyebrow>
+          {/* ember, the owner's mark on the landing: it reads over the copy
+              scrim, and landingContrast.spec.ts holds it to AA */}
+          <Eyebrow className="text-primary">Chimera / system atlas 001</Eyebrow>
           <h1 className="mt-3 text-display-32 text-foreground">
             Nine systems.
             <br />
