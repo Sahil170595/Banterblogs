@@ -323,7 +323,7 @@ const REPORT_CATALOG: Record<string, { title: string; description: string }> = {
   // Phase 6 — Serving-State Safety Certification (was Banterhearts pre-rename Phase 4.5)
   'technical-report-conclusive-phase6': {
     title: 'Conclusive Report: Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152)',
-    description: 'Measurement-validity substrate (judge triangulation, KV-cache safety null, speculative decoding null, mechanistic probing, portability validation) plus the FP8 KV-cache standardized batteries and serving-state factorial. The inference-flag safety null line for optimized LLM serving.',
+    description: 'Measurement-validity substrate (judge triangulation, KV-cache safety null, speculative-decoding safety-invariance screen, mechanistic probing, portability validation) plus the FP8 KV-cache standardized batteries and serving-state factorial. The inference-flag safety null line for optimized LLM serving.',
   },
   'technical-report-conclusive-phase6-extended-appendices': {
     title: 'Phase 6 Extended Appendices',

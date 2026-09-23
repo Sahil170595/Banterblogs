@@ -49,6 +49,10 @@ const WITHDRAWN = [
   '25/27 per-task',
   '25 of 27 per-task',
   'speculative-decoding null result',
+  // the CV cites that preprint by its scope; nothing public calls it a null
+  'Speculative decoding null',
+  'speculative decoding null',
+  'clean null',
   // a deepfake speedup over endpoints that were not like for like
   '80–400×',
   '80-400x',

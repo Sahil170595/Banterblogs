@@ -38,7 +38,7 @@ const PRESENTED: Paper[] = [
 
 const PUBLIC_PREPRINTS: Paper[] = [
   {
-    title: 'Typical-Acceptance Invariance Screen for Speculative Decoding Safety',
+    title: 'Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion',
     thesis: 'Examines output differences and refusal behavior under temperature-zero speculative decoding.',
     venue: 'Public preprint',
     status: 'Preprint',
@@ -51,7 +51,7 @@ const UNDER_REVIEW_PAPERS: Paper[] = [
   {
     title: 'Quality Is Not a Safety Proxy Under Quantization',
     thesis:
-      'Across a 51-row matrix (6 models, 4 families, a 7-level GGUF ladder + AWQ/GPTQ INT4), retained quality does not waive direct safety testing: 9 hidden-danger rows (plus 1 near-hidden) hold quality steady or better while refusal falls 12-68pp. A calibrated refusal-template-drift screen (RTSI) routes all 10 to direct safety testing; Claude Sonnet 4 relabels 11,470 items and agrees with the gemma3:12b judge on 89.9% of rows (κ = 0.873).',
+      'Across a 51-row matrix (6 models, 4 families, a 7-level GGUF ladder + AWQ/GPTQ INT4), retained quality does not waive direct safety testing: 10 hidden-danger rows (plus 1 near-hidden) hold quality steady or better while refusal falls 10-68pp. A calibrated refusal-template-drift screen (RTSI) routes 10 of the 11 under blocked validation; Claude Sonnet 4 relabels 11,470 items and agrees with the gemma3:12b judge on 89.9% of rows (κ = 0.873).',
     venue: 'Top ML venue (under review)',
     status: 'Submitted',
     trs: [

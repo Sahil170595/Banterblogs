@@ -103,9 +103,9 @@ export const PHASE_DEFINITIONS: PhaseDefinition[] = [
     number: '6',
     label: 'Phase 6 — Serving-State Safety Certification (TR144–TR149+TR152)',
     description:
-      'Measurement-validity substrate (judge triangulation, KV-cache safety null, speculative decoding null, mechanistic probing, portability validation) plus the FP8 KV-cache standardized batteries and serving-state factorial.',
+      'Measurement-validity substrate (judge triangulation, KV-cache safety null, speculative-decoding safety-invariance screen, mechanistic probing, portability validation) plus the FP8 KV-cache standardized batteries and serving-state factorial.',
     featuredSummary:
-      'Serving-state safety certification — measurement-validity substrate (judge triangulation, KV-cache safety null, speculative decoding null, mechanistic probing, portability validation) + FP8 KV-cache standardized batteries + serving-state factorial.',
+      'Serving-state safety certification — measurement-validity substrate (judge triangulation, KV-cache safety null, speculative-decoding safety-invariance screen, mechanistic probing, portability validation) + FP8 KV-cache standardized batteries + serving-state factorial.',
     minTR: 144,
     maxTR: 152,
     hasWhitepaper: true,
