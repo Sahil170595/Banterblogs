@@ -50,6 +50,12 @@ describe('landing hero type', () => {
     expect(classes(h1.nextElementSibling)).toContain('text-copy-14');
   });
 
+  // the owner keeps the landing's eyebrow ember; it reads over the copy
+  // scrim, and the e2e landingContrast spec holds it to AA
+  it('sets the landing eyebrow in ember', () => {
+    expect(classes(h1.previousElementSibling)).toContain('text-primary');
+  });
+
   it(`keeps every read line of the landing copy and the selection card at ${FLOOR_PX}px or more`, () => {
     for (const file of ['GalacticHero.tsx', 'SelectionCard.tsx']) {
       const source = fs.readFileSync(path.join(GALACTIC, file), 'utf8');
