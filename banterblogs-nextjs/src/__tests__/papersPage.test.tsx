@@ -83,7 +83,7 @@ describe('papers head', () => {
     for (const item of items) expect(item.style.getPropertyValue('--entrance-items-after')).toBe(String(HEAD_ENTRANCE_GROUPS));
     expect(items.map((item) => item.querySelector('article')?.querySelector('h3')?.textContent)).toEqual([
       'A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving',
-      'Typical-Acceptance Invariance Screen for Speculative Decoding Safety',
+      'Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion',
     ]);
   });
 });
@@ -150,6 +150,18 @@ describe('papers', () => {
       'Across two shared anchor models, quantization, backend, and concurrency account for 57%, 41%, and 2% of normalized safety-score changes: descriptive shares, not a causal decomposition.',
     );
     for (const retired of ['60,849', '0.024', '25 of 27', 'null result', 'drives 57%']) expect(text(page), retired).not.toContain(retired);
+  });
+
+  // The corrected regime ledger (Banterhearts rebuttal_2026,
+  // regimes_corrected_v1.csv, 45 rows) counts 10 hidden-danger cells and 1
+  // near-hidden; blocked RTSI recall is 10 of 11 under model, family and
+  // quantization blocking. TR125/TR142 still carry the earlier 9.
+  it('gives the quantization paper the corrected ledger counts and the blocked recall', () => {
+    const thesis = text(page);
+    expect(thesis).toContain('10 hidden-danger rows (plus 1 near-hidden)');
+    expect(thesis).toContain('refusal falls 10-68pp');
+    expect(thesis).toContain('routes 10 of the 11 under blocked validation');
+    for (const stale of ['9 hidden-danger rows', 'routes all 10', 'refusal falls 12-68pp']) expect(thesis, stale).not.toContain(stale);
   });
 
   it('counts the withheld submissions in the section description, never as a card or a title', () => {
