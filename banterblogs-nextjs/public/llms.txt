@@ -18,8 +18,8 @@ Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar
 - 9 repositories across Python, Rust, TypeScript, and C#
 - 1,463,000+ research measurements across 55 technical reports
 - 1 paper presented at the ICML 2026 Workshop on Hypothesis Testing (workshop, not the main conference)
-- 8 papers under peer review (3 at top ML venues, 5 at workshops)
-- 1 public preprint: Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion (arXiv:2606.25097)
+- 5 papers under peer review, all workshop submissions
+- 2 public preprints: Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion (arXiv:2606.25097) and Quality Is Not a Safety Proxy Under Quantization (arXiv:2606.10154)
 - 268 development episodes (194 Banterpacks + 74 Chimera) — per-commit episode stream now archived; the final episode in each stream is a full retrospective, and ongoing work is documented in the research reports
 - PyPI package: `pip install chimeraforge`
 - QuantSafe Certifier — live HuggingFace Space: signed release-gate for quantized models (RTSI + Ed25519), built on arXiv:2606.10154
@@ -96,14 +96,12 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 ### Presented — ICML 2026 Workshop on Hypothesis Testing
 - A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving (TR138; working title "Batch Inference Safety Under Non-Determinism") — accepted 2026-05-22 and presented at the ICML 2026 Workshop on Hypothesis Testing. arXiv: https://arxiv.org/abs/2605.27763 (cs.LG). This is a workshop paper, not the ICML 2026 main conference.
 
-### Public preprint
+### Public preprints
 - Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion (TR144) — arXiv:2606.25097. Examines output differences and refusal behavior under temperature-zero speculative decoding.
+- Quality Is Not a Safety Proxy Under Quantization (TR125, TR134, TR142) — arXiv:2606.10154 · live demo: QuantSafe Certifier (https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier)
 
 ### Under peer review
-1. Quality Is Not a Safety Proxy Under Quantization (TR125, TR134, TR142) — target: top ML venue · arXiv:2606.10154 · live demo: QuantSafe Certifier (https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier)
-2. Many-Shot Jailbreak Under Quantization (TR140) — target: top ML venue
-3. Multi-Turn Jailbreak × Quantization (TR139) — target: top ML venue
-4. Five workshop submissions — titles withheld during double-blind review.
+- Five workshop submissions — titles withheld during double-blind review.
 
 ### Reviewing
 - Nine paper reviews for three ML workshops and two conference ethics reviews (2026).
@@ -117,6 +115,8 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - KV-Cache Quantization and Safety (TR145)
 - Serving-Stack Physics: When Continuous Batching Stops Amortizing (TR164, TR130, TR132) — bandwidth-amortization model; revising for resubmission
 - Compile-Stack Attribution (TR126, TR147) — withdrawn from venue review; revising for resubmission
+- Many-Shot Jailbreak Under Quantization (TR140) — out of review; revising for resubmission
+- Multi-Turn Jailbreak × Quantization (TR139) — out of review; revising for resubmission
 
 ## JARVIS Gateway
 

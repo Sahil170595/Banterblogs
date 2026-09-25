@@ -133,7 +133,7 @@ const RETIRED_CLAIMS = [
   "vLLM/TGI's 2.25×",
   // 57/41/2 is a descriptive two-model share, not a decomposition
   'Decomposed the measured safety tax',
-  // eight of the nine are sole-author
+  // résumé v8 counts the roster as first-author, not sole-author
   'sole-author 2026 papers',
   '22 Hugging Face',
   // the owner confirmed a cumulative score
@@ -152,7 +152,7 @@ describe('work page résumé currency', () => {
   it('states the current record: the paper ledger, the models, the fixes, the degree scores', () => {
     const all = text(page);
     for (const fact of [
-      '9 papers in 2026 (8 sole-author; 1 presented at the ICML 2026 Workshop on Hypothesis Testing, 8 under double-blind review)',
+      '6 first-author 2026 papers (1 presented at the ICML 2026 Workshop on Hypothesis Testing, 5 under double-blind review) plus 2 public arXiv preprints',
       'four upstream contributions',
       '23 Hugging Face models',
       'Hugging Face — 23 model releases',
