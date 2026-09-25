@@ -11,18 +11,16 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 // the lists and hover depth on the linked papers. The owner's copy survives
 // sentence for sentence.
 
-// Every sentence of main's /papers prose (de0922c), verbatim.
+// Every sentence of main's /papers prose, verbatim.
 const OWNER_PROSE = [
   'Independent research on inference optimization, constitutional AI architectures, and empirical safety evaluation.',
-  'The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the speculative-decoding study is public on arXiv; 8 more are under blind review at top ML venues and workshops, with 6 in preparation.',
+  'The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and 2 more studies are public on arXiv; 5 workshop submissions are under double-blind review, with 8 in preparation.',
   `Each is backed by reproducible technical reports and artifact-level provenance from a ${MEASUREMENTS.DISPLAY} measurement program.`,
   'The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program.',
-  'The speculative-decoding study is a public arXiv preprint.',
-  '8 papers submitted with PDFs, artifact manifests, and venue checklists complete.',
-  'Now under blind review at top ML venues and workshops.',
-  'Plus 5 workshop submissions under double-blind review.',
-  'Their titles are withheld until decisions land.',
-  'Synthesis papers and methodology work derived from the published technical report archive, plus papers withdrawn from review and being revised for resubmission.',
+  'The speculative-decoding screen and the quantization safety-proxy study are public arXiv preprints.',
+  'Double-blind, so the titles stay off this page until the decisions land.',
+  '5 workshop submissions, with PDFs, artifact manifests, and venue checklists complete.',
+  'Synthesis papers and methodology work derived from the published technical report archive, plus papers out of review and being revised for resubmission.',
   `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements — the evidence layer behind these papers.`,
   'Experience, education, and the engineering that surrounds the research.',
   'The constitutional AI ecosystem these findings are built into.',
@@ -30,12 +28,14 @@ const OWNER_PROSE = [
 const ARXIV = ['https://arxiv.org/abs/2605.27763', 'https://arxiv.org/abs/2606.25097', 'https://arxiv.org/abs/2606.10154'];
 const DEMO = 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier';
 // every evidence link on main, in order
-const EVIDENCE = [138, 144, 125, 134, 142, 140, 139, 134, 135, 136, 137, 123, 127, 133, 112, 114, 115, 145, 164, 130, 132, 126, 147];
+const EVIDENCE = [138, 144, 125, 134, 142, 134, 135, 136, 137, 123, 127, 133, 112, 114, 115, 145, 164, 130, 132, 126, 147, 140, 139];
 const LISTED_PAPERS = 11;
-// the presented paper and the public preprint
-const PUBLISHED = 2;
-const UNDER_REVIEW_ROWS = 3;
-const IN_PREP_ROWS = 6;
+// the presented paper and the two public preprints
+const PUBLISHED = 3;
+// the three named papers were decided on 2026-09-24; only the withheld
+// workshop submissions are still out, and they are counted, never listed
+const UNDER_REVIEW_ROWS = 0;
+const IN_PREP_ROWS = 8;
 const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
 
 let page: HTMLElement;
@@ -58,8 +58,8 @@ describe('papers head', () => {
     const stats = page.querySelector('ul[aria-label="The papers in numbers"]')!;
     expect([...stats.querySelectorAll('li')].map(text)).toEqual([
       '1 presented',
-      '1 public preprint',
-      '8 under peer review',
+      '2 public preprints',
+      '5 under peer review',
       '16 papers total',
       `${MEASUREMENTS.SHORT} measurements`,
     ]);
@@ -79,11 +79,12 @@ describe('papers head', () => {
     const firstHead = page.querySelector('#published-heading')!.parentElement!;
     expect(firstHead.closest(`.${ENTRANCE_GROUP_CLASS}, [${ENTRANCE_ITEM_ATTRIBUTE}]`)).toBeNull();
     const items = [...page.querySelectorAll<HTMLElement>(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)];
-    expect(items).toHaveLength(2);
+    expect(items).toHaveLength(PUBLISHED);
     for (const item of items) expect(item.style.getPropertyValue('--entrance-items-after')).toBe(String(HEAD_ENTRANCE_GROUPS));
     expect(items.map((item) => item.querySelector('article')?.querySelector('h3')?.textContent)).toEqual([
       'A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving',
       'Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion',
+      'Quality Is Not a Safety Proxy Under Quantization',
     ]);
   });
 });
@@ -95,10 +96,11 @@ describe('papers', () => {
     const badges = articles.map((article) => article.querySelector('.text-label-12-mono.rounded-full'));
     expect(badges.every(Boolean)).toBe(true);
     const tones = Object.fromEntries(badges.map((badge) => [text(badge!), badge!.className.match(/text-(status-\w+|foreground\/80)/)?.[1]]));
+    // no named paper carries Submitted any more: the only papers still out are
+    // the withheld workshop submissions, badged in the section, not on a row
     expect(tones).toEqual({
       Presented: 'status-green',
       Preprint: 'status-blue',
-      Submitted: 'status-amber',
       Synthesis: 'foreground/80',
       'In preparation': 'foreground/80',
     });
@@ -120,7 +122,7 @@ describe('papers', () => {
 
   // R4 design re-judge: 10 of 12 cards were text-only boxes of uneven height,
   // one of them filler. Cards stay only where there is a picture.
-  it('keeps cards for the two public papers only, each with its evidence report picture, its title leading to the preprint', () => {
+  it('keeps cards for the public papers only, each with its evidence report picture, its title leading to the preprint', () => {
     const cards = [...page.querySelectorAll('article.card-depth')];
     expect(cards).toHaveLength(PUBLISHED);
     expect(cards.map((card) => card.querySelector('h3 a.card-link')?.getAttribute('href'))).toEqual(ARXIV.slice(0, PUBLISHED));
@@ -130,7 +132,7 @@ describe('papers', () => {
     expect(surfaces.every((surface) => surface.querySelector('svg.rv'))).toBe(true);
   });
 
-  it('sets the papers under review and in preparation as numbered hairline rows, the title leading to a preprint where there is one', () => {
+  it('sets the papers in preparation as numbered hairline rows, and lists no row under review', () => {
     for (const [section, count] of [['#under-review', UNDER_REVIEW_ROWS], ['#in-preparation', IN_PREP_ROWS]] as const) {
       const rows = [...page.querySelectorAll(`${section} article.list-row`)];
       expect(rows, section).toHaveLength(count);
@@ -164,10 +166,26 @@ describe('papers', () => {
     for (const stale of ['9 hidden-danger rows', 'routes all 10', 'refusal falls 12-68pp']) expect(thesis, stale).not.toContain(stale);
   });
 
-  it('counts the withheld submissions in the section description, never as a card or a title', () => {
-    const description = page.querySelector('#under-review-heading')!.parentElement!;
-    expect(text(description)).toContain('Plus 5 workshop submissions under double-blind review. Their titles are withheld until decisions land.');
+  it('counts the withheld submissions under one Submitted badge, never as a card or a title', () => {
+    const section = page.querySelector('#under-review')!;
+    const badge = section.querySelector('.text-label-12-mono.rounded-full')!;
+    expect(text(badge)).toBe('Submitted');
+    expect(badge.className).toContain('text-status-amber');
+    expect(text(badge.nextElementSibling!)).toBe('5 workshop submissions, with PDFs, artifact manifests, and venue checklists complete.');
     expect([...page.querySelectorAll('.card-surface, article')].filter((el) => /workshop submissions/.test(text(el)))).toEqual([]);
+  });
+
+  // the three named papers were decided on 2026-09-24: the quantization
+  // safety-proxy study keeps its arXiv preprint, the other two are revising
+  it('moves the decided papers off review status, into the preprints and the revising rows', () => {
+    const status = (title: string) => {
+      const article = [...page.querySelectorAll('article')].find((el) => text(el.querySelector('h3')!) === title)!;
+      const badge = article.querySelector('.text-label-12-mono.rounded-full')!;
+      return `${text(badge)} · ${text(badge.nextElementSibling!)}`;
+    };
+    expect(status('Quality Is Not a Safety Proxy Under Quantization')).toBe('Preprint · Target: Public preprint');
+    expect(status('Many-Shot Jailbreak Under Quantization')).toBe('In preparation · Target: Revising for resubmission');
+    expect(status('Multi-Turn Jailbreak × Quantization')).toBe('In preparation · Target: Revising for resubmission');
   });
 
   it('closes on one quiet onward line: the three links with their reasons, no cards and no ember', () => {

@@ -45,15 +45,12 @@ const PUBLIC_PREPRINTS: Paper[] = [
     trs: [{ label: 'TR144', slug: 'technical-report-144' }],
     arxiv: 'https://arxiv.org/abs/2606.25097',
   },
-];
-
-const UNDER_REVIEW_PAPERS: Paper[] = [
   {
     title: 'Quality Is Not a Safety Proxy Under Quantization',
     thesis:
       'Across a 51-row matrix (6 models, 4 families, a 7-level GGUF ladder + AWQ/GPTQ INT4), retained quality does not waive direct safety testing: 10 hidden-danger rows (plus 1 near-hidden) hold quality steady or better while refusal falls 10-68pp. A calibrated refusal-template-drift screen (RTSI) routes 10 of the 11 under blocked validation; Claude Sonnet 4 relabels 11,470 items and agrees with the gemma3:12b judge on 89.9% of rows (κ = 0.873).',
-    venue: 'Top ML venue (under review)',
-    status: 'Submitted',
+    venue: 'Public preprint',
+    status: 'Preprint',
     trs: [
       { label: 'TR125', slug: 'technical-report-125' },
       { label: 'TR134', slug: 'technical-report-134' },
@@ -61,22 +58,6 @@ const UNDER_REVIEW_PAPERS: Paper[] = [
     ],
     arxiv: 'https://arxiv.org/abs/2606.10154',
     demo: { label: 'QuantSafe Certifier (HF Space)', href: 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier' },
-  },
-  {
-    title: 'Many-Shot Jailbreak Under Quantization',
-    thesis:
-      'Q2_K is the recurring vulnerability threshold for many-shot and long-context attacks. Message-array vs faux-dialogue prompt formatting (92% vs 0% ASR) across 4 model families. Format mediates effect more strongly than quantization alone.',
-    venue: 'Top ML venue (under review)',
-    status: 'Submitted',
-    trs: [{ label: 'TR140', slug: 'technical-report-140' }],
-  },
-  {
-    title: 'Multi-Turn Jailbreak × Quantization',
-    thesis:
-      '8 attack strategies × 4 models × 6 quantization levels: 10,600 conversations, 37,825 judge labels. Threshold-specific shift in risk rather than universal multi-turn amplification.',
-    venue: 'Top ML venue (under review)',
-    status: 'Submitted',
-    trs: [{ label: 'TR139', slug: 'technical-report-139' }],
   },
 ];
 
@@ -149,18 +130,35 @@ const IN_PREP: Paper[] = [
       { label: 'TR147', slug: 'technical-report-147' },
     ],
   },
+  {
+    title: 'Many-Shot Jailbreak Under Quantization',
+    thesis:
+      'Q2_K is the recurring vulnerability threshold for many-shot and long-context attacks. Message-array vs faux-dialogue prompt formatting (92% vs 0% ASR) across 4 model families. Format mediates effect more strongly than quantization alone.',
+    venue: 'Revising for resubmission',
+    status: 'In preparation',
+    trs: [{ label: 'TR140', slug: 'technical-report-140' }],
+  },
+  {
+    title: 'Multi-Turn Jailbreak × Quantization',
+    thesis:
+      '8 attack strategies × 4 models × 6 quantization levels: 10,600 conversations, 37,825 judge labels. Threshold-specific shift in risk rather than universal multi-turn amplification.',
+    venue: 'Revising for resubmission',
+    status: 'In preparation',
+    trs: [{ label: 'TR139', slug: 'technical-report-139' }],
+  },
 ];
 
 // Counts are derived so the stat row and the metadata cannot drift from the
 // arrays the page actually renders.
-// Workshop submissions still in double-blind review; their titles stay off
-// public pages until decisions land.
-const WITHHELD_WORKSHOP_SUBMISSIONS = 5;
-const UNDER_REVIEW_COUNT = UNDER_REVIEW_PAPERS.length + WITHHELD_WORKSHOP_SUBMISSIONS;
+// Every paper still out is a workshop submission in double-blind review; their
+// titles stay off public pages until decisions land.
+const UNDER_REVIEW_COUNT = 5;
 const IN_PREP_COUNT = IN_PREP.length;
 const TOTAL_PAPERS = PRESENTED.length + PUBLIC_PREPRINTS.length + UNDER_REVIEW_COUNT + IN_PREP_COUNT;
 
-const METADATA_DESCRIPTION = `${PRESENTED.length} paper presented at the ICML 2026 Workshop on Hypothesis Testing · ${PUBLIC_PREPRINTS.length} public preprint · ${UNDER_REVIEW_COUNT} under peer review · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
+const PREPRINT_LABEL = PUBLIC_PREPRINTS.length === 1 ? 'public preprint' : 'public preprints';
+
+const METADATA_DESCRIPTION = `${PRESENTED.length} paper presented at the ICML 2026 Workshop on Hypothesis Testing · ${PUBLIC_PREPRINTS.length} ${PREPRINT_LABEL} · ${UNDER_REVIEW_COUNT} under peer review · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/papers' },
@@ -325,7 +323,7 @@ export default function PapersPage() {
               label="The papers in numbers"
               items={[
                 { value: PRESENTED.length, label: 'presented' },
-                { value: PUBLIC_PREPRINTS.length, label: 'public preprint' },
+                { value: PUBLIC_PREPRINTS.length, label: PREPRINT_LABEL },
                 { value: UNDER_REVIEW_COUNT, label: 'under peer review' },
                 { value: TOTAL_PAPERS, label: 'papers total' },
                 { value: MEASUREMENTS.SHORT, label: 'measurements' },
@@ -342,7 +340,7 @@ export default function PapersPage() {
         <Section
           id="published"
           title="Published & public"
-          description="The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program. The speculative-decoding study is a public arXiv preprint."
+          description="The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program. The speculative-decoding screen and the quantization safety-proxy study are public arXiv preprints."
           aside
         >
           <ul className={PAPER_GRID}>
@@ -357,23 +355,22 @@ export default function PapersPage() {
         <Section
           id="under-review"
           title="Under peer review"
-          // the withheld submissions are counted here, never titled
-          description={`${UNDER_REVIEW_COUNT} papers submitted with PDFs, artifact manifests, and venue checklists complete. Now under blind review at top ML venues and workshops. Plus ${WITHHELD_WORKSHOP_SUBMISSIONS} workshop submissions under double-blind review. Their titles are withheld until decisions land.`}
+          description="Double-blind, so the titles stay off this page until the decisions land."
           aside
         >
-          <ol>
-            {UNDER_REVIEW_PAPERS.map((paper, index) => (
-              <Reveal as="li" key={paper.title}>
-                <PaperRow paper={paper} index={index} />
-              </Reveal>
-            ))}
-          </ol>
+          {/* the withheld submissions are counted here, never titled */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <Badge tone={PAPER_STATUS_TONE.Submitted}>Submitted</Badge>
+            <p className="text-copy-16 text-muted-foreground">
+              {UNDER_REVIEW_COUNT} workshop submissions, with PDFs, artifact manifests, and venue checklists complete.
+            </p>
+          </div>
         </Section>
 
         <Section
           id="in-preparation"
           title="In preparation"
-          description="Synthesis papers and methodology work derived from the published technical report archive, plus papers withdrawn from review and being revised for resubmission."
+          description="Synthesis papers and methodology work derived from the published technical report archive, plus papers out of review and being revised for resubmission."
           aside
         >
           <ol>
@@ -388,8 +385,8 @@ export default function PapersPage() {
         {/* the program behind the papers, then where to go next */}
         <div className="page-section">
           <p className="max-w-[60ch] text-copy-17 text-prose">
-            The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and the speculative-decoding study is
-            public on arXiv; {UNDER_REVIEW_COUNT} more are under blind review at top ML venues and workshops, with {IN_PREP_COUNT} in
+            The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, and {PUBLIC_PREPRINTS.length} more studies
+            are public on arXiv; {UNDER_REVIEW_COUNT} workshop submissions are under double-blind review, with {IN_PREP_COUNT} in
             preparation. Each is backed by reproducible technical reports and artifact-level provenance from a {MEASUREMENTS.DISPLAY}{' '}
             measurement program.
           </p>

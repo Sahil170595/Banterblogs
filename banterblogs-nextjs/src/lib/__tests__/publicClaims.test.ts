@@ -3,11 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// Two standing rules for everything the site publishes about the papers.
+// Three standing rules for everything the site publishes about the papers.
 // Double-blind: no venue, track or submission id of a paper under review (the
 // résumés name them for reviewers; the site never does). Withdrawn claims: a
 // claim the owner's latest CV retracted or rescoped does not come back on a
-// report sync or a copy edit.
+// report sync or a copy edit. Decided papers: a paper whose decision has
+// landed is never described as under review again.
 
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
@@ -60,6 +61,11 @@ const WITHDRAWN = [
   'Quantization drives 57%',
 ];
 
+// The three named papers that were under review were decided on 2026-09-24.
+// Only the withheld workshop submissions are still out, so no surface may
+// carry a named paper's review status again without a new decision.
+const DECIDED_STATUS = ['Top ML venue (under review)', 'target: top ML venue', 'under blind review at top ML venues'];
+
 function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(dir, entry.name);
@@ -106,6 +112,14 @@ describe('public claims about the papers', () => {
     expect(unallowedIcml('presented at the ICML 2026 main track')).toHaveLength(1);
     expect(unallowedIcml('presented at the ICML 2026 Workshop on Hypothesis Testing')).toEqual([]);
     const offenders = surfaces().flatMap((file) => unallowedIcml(fs.readFileSync(file, 'utf8')).map((context) => `${label(file)}: …${context}…`));
+    expect(offenders).toEqual([]);
+  });
+
+  it('describes no decided paper as still under review', () => {
+    const offenders = surfaces().flatMap((file) => {
+      const source = fs.readFileSync(file, 'utf8');
+      return DECIDED_STATUS.filter((claim) => source.includes(claim)).map((claim) => `${label(file)}: ${claim}`);
+    });
     expect(offenders).toEqual([]);
   });
 
