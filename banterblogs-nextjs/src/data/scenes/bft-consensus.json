@@ -65,59 +65,79 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Clean quorum — all 4 replicas agree. The leader proposes; three replicas verify and"
+          "copy": "Clean quorum — all 4 replicas agree."
         },
         {
           "target_phase": null,
-          "copy": "agree. Two rounds of voting, no faults, no surprises. This is what PBFT looks like"
+          "copy": "The leader proposes; three replicas verify and agree."
         },
         {
           "target_phase": null,
-          "copy": "when nothing's wrong."
+          "copy": "Two rounds of voting, no faults, no surprises."
+        },
+        {
+          "target_phase": null,
+          "copy": "This is what PBFT looks like when nothing's wrong."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "PrePrepare phase. Leader for view 0 is r0. r0 signs the proposal (action + SHA3-256"
+          "copy": "PrePrepare phase. Leader for view 0 is r0."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "hash) with its Ed25519 key and broadcasts to the other three replicas. The proposal"
+          "copy": "r0 signs the proposal (action + SHA3-256 hash) with its Ed25519 key,"
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "hash is what gets signed — not the raw action bytes."
+          "copy": "and broadcasts to the other three replicas."
+        },
+        {
+          "target_phase": "pre_prepare",
+          "copy": "The proposal hash is what gets signed — not the raw action bytes."
         },
         {
           "target_phase": "prepare",
-          "copy": "Prepare phase. r1, r2, r3 each independently verify the proposal hash matches the"
+          "copy": "Prepare phase. r1, r2, r3 each independently:"
         },
         {
           "target_phase": "prepare",
-          "copy": "action bytes they received, sign their Prepares with their own Ed25519 keys, and"
+          "copy": "verify the proposal hash matches the action bytes they received,"
         },
         {
           "target_phase": "prepare",
-          "copy": "broadcast. 4 prepares (leader's implicit + r1/r2/r3) — quorum (3) reached."
+          "copy": "sign their Prepares with their own Ed25519 keys, and broadcast."
+        },
+        {
+          "target_phase": "prepare",
+          "copy": "4 prepares (leader's implicit + r1/r2/r3) — quorum (3) reached."
         },
         {
           "target_phase": "commit",
-          "copy": "Commit phase. All 4 replicas see the prepare quorum, each signs and broadcasts a"
+          "copy": "Commit phase. All 4 replicas see the prepare quorum,"
         },
         {
           "target_phase": "commit",
-          "copy": "Commit. 4 Commits = quorum + 1. Every replica's state machine moves to Executed."
+          "copy": "each signs and broadcasts a Commit."
+        },
+        {
+          "target_phase": "commit",
+          "copy": "4 Commits = quorum + 1. Every replica's state machine moves to Executed."
         },
         {
           "target_phase": "verdict",
-          "copy": "Verdict: COMMITTED. 4 prepares, 4 commits, no faults. The orchestrator runs the"
+          "copy": "Verdict: COMMITTED. 4 prepares, 4 commits, no faults."
         },
         {
           "target_phase": "verdict",
-          "copy": "tool. Any replica can prove the commit with 3+ signed Commit messages -- the proof"
+          "copy": "The orchestrator runs the tool."
         },
         {
           "target_phase": "verdict",
-          "copy": "is self-contained, no audit service in the loop."
+          "copy": "Any replica can prove the commit with 3+ signed Commit messages —"
+        },
+        {
+          "target_phase": "verdict",
+          "copy": "the proof is self-contained, no audit service in the loop."
         }
       ],
       "action": {
@@ -365,67 +385,79 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "One replica goes silent — quorum still reached. PBFT tolerates f=1 byzantine fault"
+          "copy": "One replica goes silent — quorum still reached."
         },
         {
           "target_phase": null,
-          "copy": "out of n=4 replicas. One silent replica doesn't block consensus: the other three"
+          "copy": "PBFT tolerates f=1 byzantine fault out of n=4 replicas."
         },
         {
           "target_phase": null,
-          "copy": "still hit the 2f+1=3 quorum threshold. The system commits without it. That's what"
+          "copy": "One silent replica doesn't block consensus:"
         },
         {
           "target_phase": null,
-          "copy": "'tolerates 1 fault' means."
+          "copy": "the other three still hit the 2f+1=3 quorum threshold."
+        },
+        {
+          "target_phase": null,
+          "copy": "The system commits without it. That's what 'tolerates 1 fault' means."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "PrePrepare phase. Leader r0 signs the proposal. This is a deploy-production call —"
+          "copy": "PrePrepare phase. Leader r0 signs the proposal."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "the stakes are real. r0 doesn't get to make this call alone; the next two rounds"
+          "copy": "This is a deploy-production call — the stakes are real."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "collect votes from the other three replicas."
+          "copy": "r0 doesn't get to make this call alone;"
+        },
+        {
+          "target_phase": "pre_prepare",
+          "copy": "the next two rounds collect votes from the other three replicas."
         },
         {
           "target_phase": "prepare",
-          "copy": "Prepare phase. r1 and r2 verify and Prepare. r3 doesn't respond at all — silent"
+          "copy": "Prepare phase. r1 and r2 verify and Prepare."
         },
         {
           "target_phase": "prepare",
-          "copy": "through the entire view timeout. In PBFT a non-ratifying replica simply doesn't send"
+          "copy": "r3 doesn't respond at all — silent through the entire view timeout."
         },
         {
           "target_phase": "prepare",
-          "copy": "anything; no signed counter-vote (that would trigger the equivocation detector). r0"
+          "copy": "In PBFT a non-ratifying replica simply doesn't send anything;"
         },
         {
           "target_phase": "prepare",
-          "copy": "+ r1 + r2 = 3 prepares — quorum reached without r3."
+          "copy": "no signed counter-vote (that would trigger the equivocation detector)."
+        },
+        {
+          "target_phase": "prepare",
+          "copy": "r0 + r1 + r2 = 3 prepares — quorum reached without r3."
         },
         {
           "target_phase": "commit",
-          "copy": "Commit phase. r0, r1, r2 see the 3-prepare quorum and Commit. r3 stays silent"
+          "copy": "Commit phase. r0, r1, r2 see the 3-prepare quorum and Commit."
         },
         {
           "target_phase": "commit",
-          "copy": "through this phase too. 3 Commits = quorum. The action runs."
+          "copy": "r3 stays silent through this phase too. 3 Commits = quorum. The action runs."
         },
         {
           "target_phase": "verdict",
-          "copy": "Verdict: COMMITTED without r3. 3 of 4 replicas reached the 2f+1=3 quorum. r3's"
+          "copy": "Verdict: COMMITTED without r3. 3 of 4 replicas reached the 2f+1=3 quorum."
         },
         {
           "target_phase": "verdict",
-          "copy": "silence is logged but doesn't get veto power -- a single non-responder can't block"
+          "copy": "r3's silence is logged but doesn't get veto power —"
         },
         {
           "target_phase": "verdict",
-          "copy": "consensus, by design."
+          "copy": "a single non-responder can't block consensus, by design."
         }
       ],
       "action": {
@@ -672,47 +704,55 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Equivocation caught — byzantine replica detected, system still commits. A byzantine"
+          "copy": "Equivocation caught — byzantine replica detected, system still commits."
         },
         {
           "target_phase": null,
-          "copy": "replica votes on two different action hashes for the same sequence. PBFT tracks"
+          "copy": "A byzantine replica votes on two different action hashes for the same sequence."
         },
         {
           "target_phase": null,
-          "copy": "(replica_id, sequence) → set-of-action-hashes. The moment a replica's set has >1"
+          "copy": "PBFT tracks (replica_id, sequence) → set-of-action-hashes."
         },
         {
           "target_phase": null,
-          "copy": "hash, it's flagged byzantine and BOTH of its votes are discarded. The protocol"
+          "copy": "The moment a replica's set has >1 hash,"
         },
         {
           "target_phase": null,
-          "copy": "survives because f=1: up to 1 byzantine fault is tolerated."
+          "copy": "it's flagged byzantine and BOTH of its votes are discarded."
+        },
+        {
+          "target_phase": null,
+          "copy": "The protocol survives because f=1: up to 1 byzantine fault is tolerated."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "PrePrepare phase. Leader r0 signs the proposal cleanly. The (replica_id, sequence) →"
+          "copy": "PrePrepare phase. Leader r0 signs the proposal cleanly."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "set-of-hashes equivocation log starts tracking each replica's votes as they arrive."
+          "copy": "The equivocation log, (replica_id, sequence) → set-of-hashes,"
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "Watch r2."
+          "copy": "starts tracking each replica's votes as they arrive. Watch r2."
         },
         {
           "target_phase": "prepare",
-          "copy": "Prepare phase. r1 and r3 verify the proposal hash, sign, and broadcast. r2 sends TWO"
+          "copy": "Prepare phase. r1 and r3 verify the proposal hash, sign, and broadcast."
         },
         {
           "target_phase": "prepare",
-          "copy": "Prepares with different action_hashes for the same sequence. The equivocation log"
+          "copy": "r2 sends TWO Prepares with different action_hashes for the same sequence."
         },
         {
           "target_phase": "prepare",
-          "copy": "catches it on the second one. r2 is flagged byzantine; both its votes are discarded."
+          "copy": "The equivocation log catches it on the second one."
+        },
+        {
+          "target_phase": "prepare",
+          "copy": "r2 is flagged byzantine; both its votes are discarded."
         },
         {
           "target_phase": "prepare",
@@ -720,35 +760,43 @@
         },
         {
           "target_phase": "commit",
-          "copy": "Commit phase. r2's votes are excluded. Prepare quorum (3) was reached via r0 + r1 +"
+          "copy": "Commit phase. r2's votes are excluded."
         },
         {
           "target_phase": "commit",
-          "copy": "r3. Each of those three signs and broadcasts a Commit. 3 Commits = quorum. The"
+          "copy": "Prepare quorum (3) was reached via r0 + r1 + r3."
         },
         {
           "target_phase": "commit",
-          "copy": "action commits cleanly — the byzantine replica didn't stop honest consensus."
+          "copy": "Each of those three signs and broadcasts a Commit. 3 Commits = quorum."
+        },
+        {
+          "target_phase": "commit",
+          "copy": "The action commits cleanly — the byzantine replica didn't stop honest consensus."
         },
         {
           "target_phase": "verdict",
-          "copy": "Verdict: COMMITTED, with r2 flagged byzantine. The equivocation is preserved in the"
+          "copy": "Verdict: COMMITTED, with r2 flagged byzantine."
         },
         {
           "target_phase": "verdict",
-          "copy": "audit log. r2's signature key gets the byzantine mark for operator review. This is"
+          "copy": "The equivocation is preserved in the audit log."
         },
         {
           "target_phase": "verdict",
-          "copy": "what 'tolerates 1 byzantine fault' means at runtime: correct answer reached even"
+          "copy": "r2's signature key gets the byzantine mark for operator review."
         },
         {
           "target_phase": "verdict",
-          "copy": "when one of four replicas actively corrupts. n=3f+1 with f=1 was designed for"
+          "copy": "This is what 'tolerates 1 byzantine fault' means at runtime:"
         },
         {
           "target_phase": "verdict",
-          "copy": "precisely this case."
+          "copy": "correct answer reached even when one of four replicas actively corrupts."
+        },
+        {
+          "target_phase": "verdict",
+          "copy": "n=3f+1 with f=1 was designed for precisely this case."
         }
       ],
       "action": {
@@ -1006,63 +1054,83 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Quorum not reached — too many replicas offline. PBFT needs 2f+1=3 honest replicas"
+          "copy": "Quorum not reached — too many replicas offline."
         },
         {
           "target_phase": null,
-          "copy": "voting yes. If two of the four are offline or fail to respond within 5000ms, the"
+          "copy": "PBFT needs 2f+1=3 honest replicas voting yes."
         },
         {
           "target_phase": null,
-          "copy": "leader sees only itself + maybe one prepare. 2 votes != quorum. The action doesn't"
+          "copy": "If two of the four are offline or fail to respond within 5000ms,"
         },
         {
           "target_phase": null,
-          "copy": "commit. Honest failure surfaces; no silent rollforward."
+          "copy": "the leader sees only itself + maybe one prepare."
+        },
+        {
+          "target_phase": null,
+          "copy": "2 votes != quorum. The action doesn't commit."
+        },
+        {
+          "target_phase": null,
+          "copy": "Honest failure surfaces; no silent rollforward."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "PrePrepare phase. Leader r0 signs and broadcasts as normal. The leader doesn't know"
+          "copy": "PrePrepare phase. Leader r0 signs and broadcasts as normal."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "yet that two replicas won't respond -- that only surfaces when the view timer"
+          "copy": "The leader doesn't know yet that two replicas won't respond —"
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "expires."
+          "copy": "that only surfaces when the view timer expires."
         },
         {
           "target_phase": "prepare",
-          "copy": "Prepare phase. r1 verifies and Prepares. r2 and r3 don't respond within the 5000ms"
+          "copy": "Prepare phase. r1 verifies and Prepares."
         },
         {
           "target_phase": "prepare",
-          "copy": "view timeout. Leader + r1 = 2 prepares. Quorum (3) NOT reached."
+          "copy": "r2 and r3 don't respond within the 5000ms view timeout."
+        },
+        {
+          "target_phase": "prepare",
+          "copy": "Leader + r1 = 2 prepares. Quorum (3) NOT reached."
         },
         {
           "target_phase": "commit",
-          "copy": "Commit phase never starts. With only 2 prepares, the prepare quorum threshold wasn't"
+          "copy": "Commit phase never starts."
         },
         {
           "target_phase": "commit",
-          "copy": "reached. Replicas don't progress to Commit. The consensus instance is held open."
+          "copy": "With only 2 prepares, the prepare quorum threshold wasn't reached."
+        },
+        {
+          "target_phase": "commit",
+          "copy": "Replicas don't progress to Commit. The consensus instance is held open."
         },
         {
           "target_phase": "verdict",
-          "copy": "Verdict: NOT COMMITTED. With 2 replicas offline, the system honestly cannot reach"
+          "copy": "Verdict: NOT COMMITTED."
         },
         {
           "target_phase": "verdict",
-          "copy": "quorum. The pending instance waits — no silent rollback, no"
+          "copy": "With 2 replicas offline, the system honestly cannot reach quorum."
         },
         {
           "target_phase": "verdict",
-          "copy": "quietly-committed-with-fewer-votes. The orchestrator sees 'stalled' and can retry,"
+          "copy": "The pending instance waits — no silent rollback,"
         },
         {
           "target_phase": "verdict",
-          "copy": "escalate, or fail loud."
+          "copy": "no quietly-committed-with-fewer-votes."
+        },
+        {
+          "target_phase": "verdict",
+          "copy": "The orchestrator sees 'stalled' and can retry, escalate, or fail loud."
         }
       ],
       "action": {
@@ -1225,59 +1293,71 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Leader times out — view change elects new leader. The leader (r0) goes silent for 5"
+          "copy": "Leader times out — view change elects new leader."
         },
         {
           "target_phase": null,
-          "copy": "seconds (timeout). Replicas vote to change views. Quorum (3) vote yes — view"
+          "copy": "The leader (r0) goes silent for 5 seconds (timeout). Replicas vote to change views."
         },
         {
           "target_phase": null,
-          "copy": "advances 0→1. New leader = replicas[1 % 4] = r1. r1 re-proposes the action under the"
+          "copy": "Quorum (3) vote yes — view advances 0→1. New leader = replicas[1 % 4] = r1."
         },
         {
           "target_phase": null,
-          "copy": "new view; consensus completes. Liveness preserved despite leader failure."
+          "copy": "r1 re-proposes the action under the new view; consensus completes."
+        },
+        {
+          "target_phase": null,
+          "copy": "Liveness preserved despite leader failure."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "PrePrepare phase. r0 is leader for view 0 (replicas[view % 4]). r0 has gone silent"
+          "copy": "PrePrepare phase. r0 is leader for view 0 (replicas[view % 4])."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "for 5+ seconds. No PrePrepare signed, nothing broadcast. The view timer is ticking;"
+          "copy": "r0 has gone silent for 5+ seconds. No PrePrepare signed, nothing broadcast."
         },
         {
           "target_phase": "pre_prepare",
-          "copy": "replicas will soon vote for a new leader."
+          "copy": "The view timer is ticking; replicas will soon vote for a new leader."
         },
         {
           "target_phase": "prepare",
-          "copy": "Prepare phase never starts under view 0. The leader's PrePrepare never arrived —"
+          "copy": "Prepare phase never starts under view 0."
         },
         {
           "target_phase": "prepare",
-          "copy": "nothing to verify against. Replicas pivot to voting on a new view instead."
+          "copy": "The leader's PrePrepare never arrived — nothing to verify against."
+        },
+        {
+          "target_phase": "prepare",
+          "copy": "Replicas pivot to voting on a new view instead."
         },
         {
           "target_phase": "commit",
-          "copy": "Commit phase never starts under view 0. Replicas observe the leader timeout and"
+          "copy": "Commit phase never starts under view 0."
         },
         {
           "target_phase": "commit",
-          "copy": "broadcast ViewChange messages."
+          "copy": "Replicas observe the leader timeout and broadcast ViewChange messages."
         },
         {
           "target_phase": "verdict",
-          "copy": "Verdict: COMMITTED under view 1 after view change. The view-change proof (3 signed"
+          "copy": "Verdict: COMMITTED under view 1 after view change."
         },
         {
           "target_phase": "verdict",
-          "copy": "ViewChange messages) is retained. Anyone reviewing the audit can see leadership"
+          "copy": "The view-change proof (3 signed ViewChange messages) is retained."
         },
         {
           "target_phase": "verdict",
-          "copy": "transferred r0 → r1 cleanly, with cryptographic evidence at every step."
+          "copy": "Anyone reviewing the audit can see leadership transferred r0 → r1 cleanly,"
+        },
+        {
+          "target_phase": "verdict",
+          "copy": "with cryptographic evidence at every step."
         }
       ],
       "action": {

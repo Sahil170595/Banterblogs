@@ -3,6 +3,7 @@ import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 import { CognitiveAgents } from '@/components/scenes/CognitiveAgents';
+import { DemoFidelity } from '@/components/show/DemoFidelity';
 import sceneDataRaw from '@/data/scenes/cognitive-agents.json';
 import type { ComponentProps } from 'react';
 
@@ -201,14 +202,34 @@ export default function CognitiveAgentsPage() {
             Below is a working example. The walkthrough plays automatically — five real tasks running through
             all four agents in parallel, the meta-controller composing the verdicts.
           </p>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            <span className="font-mono text-foreground/80">Scope:</span> this walkthrough uses the agents&apos;{' '}
-            static default weights. The system can also adapt weights over time based on which agent style
-            tends to be right for which task class — that learning behavior is a separate scene.
-          </p>
+          <DemoFidelity
+            statement={
+              <>
+                The four agents run the Rust code&apos;s rules, ported verbatim. How their verdicts are
+                combined here is a demonstration, not a port.
+              </>
+            }
+          >
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              <span className="font-mono text-foreground/80">Scope:</span> this walkthrough uses the agents&apos;{' '}
+              static default weights. The system can also adapt weights over time based on which agent style
+              tends to be right for which task class — that learning behavior is a separate scene.
+            </p>
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              The meta-controller layer in this walkthrough — flag-priority overrides on top of raw confidence
+              ranking — is a <span className="text-foreground/90">demonstration composition</span>, not a port of
+              any single Rust function. The Rust code has{' '}
+              <span className="font-mono text-foreground">process_task</span> (sort by confidence) and{' '}
+              <span className="font-mono text-foreground">route_task</span> (keyword route on input text) as two
+              separate paths. This demo shows what an orchestrator using the agents&apos; flags as routing signals
+              would look like, with the structural agents themselves running unchanged. ELO-based weight adaptation
+              lives at <span className="font-mono text-foreground">meta_controller.rs:479-523</span> and is out of
+              scope for this scene&apos;s walkthrough.
+            </p>
+          </DemoFidelity>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] md:text-xs font-mono text-muted-foreground/70 pt-1">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-muted-foreground/70 pt-1">
           <span>spec · TDD-005 cognitive layer</span>
           <span>generated · {new Date(sceneData.generated_at).toISOString().slice(0, 10)}</span>
           <span>scenarios · {sceneData.records.length}</span>
@@ -225,17 +246,6 @@ export default function CognitiveAgentsPage() {
           — the demo&apos;s JS port mirrors the Rust constants verbatim (CWE regex bodies and case-sensitivity,
           entropy thresholds, risk weights, default agent weights, domain taxonomies, verb/ambiguity/contradiction
           lists). Verifiable by grep.
-        </p>
-        <p>
-          The meta-controller layer in this walkthrough — flag-priority overrides on top of raw confidence
-          ranking — is a <span className="text-foreground/90">demonstration composition</span>, not a port of
-          any single Rust function. The Rust code has{' '}
-          <span className="font-mono text-foreground">process_task</span> (sort by confidence) and{' '}
-          <span className="font-mono text-foreground">route_task</span> (keyword route on input text) as two
-          separate paths. This demo shows what an orchestrator using the agents&apos; flags as routing signals
-          would look like, with the structural agents themselves running unchanged. ELO-based weight adaptation
-          lives at <span className="font-mono text-foreground">meta_controller.rs:479-523</span> and is out of
-          scope for this scene&apos;s walkthrough.
         </p>
       </footer>
     </div>
