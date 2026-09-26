@@ -9,7 +9,7 @@ import {
   useRef,
   useCallback,
 } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import {
   Play,
@@ -31,6 +31,15 @@ const FIXED_POINT_FORMAT = new Intl.NumberFormat('en-US');
 // A stage the walkthrough has not reached yet: dimmed, its text still 3:1
 // or better (was 0.3, 1.4-1.9:1); its ember hex needs 0.7 (3.3:1)
 const NOT_REACHED_OPACITY = 0.7;
+
+// The per-bit strips: every bit on one row from md up; below it the bits wrap
+// onto two rows, since 14 cells on a 390px phone left each 19px, too narrow
+// for its 12px labels. The counts come from the data, so they ride as vars.
+const BIT_STRIP_ROWS_NARROW = 2;
+const BIT_STRIP_GRID =
+  'grid gap-1 grid-cols-[repeat(var(--bit-cols-narrow),minmax(0,1fr))] md:grid-cols-[repeat(var(--bit-cols),minmax(0,1fr))]';
+const bitStripColumns = (bits: number) =>
+  ({ '--bit-cols': bits, '--bit-cols-narrow': Math.ceil(bits / BIT_STRIP_ROWS_NARROW) }) as CSSProperties;
 
 // ---------------------------------------------------------------------------
 // Types (mirror zk-alignment-proof.json)
@@ -134,6 +143,9 @@ type SceneData = {
 };
 
 type ZonePhase = 'prover' | 'construction' | 'verifier' | 'verdict';
+
+// the order the walkthrough moves through the zones
+const ZONE_ORDER: ZonePhase[] = ['prover', 'construction', 'verifier', 'verdict'];
 
 const ZONE_META: Record<ZonePhase, { name: string; plain: string }> = {
   prover: { name: 'Prover', plain: 'knows the actual score' },
@@ -289,11 +301,11 @@ function ScenarioPicker({
             }`}
           >
             <div className="flex items-center justify-between gap-2 mb-1">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <span
-                className={`font-mono text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${badge.tone}`}
+                className={`font-mono text-[12px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${badge.tone}`}
               >
                 {badge.label}
               </span>
@@ -330,6 +342,7 @@ function ProverPanel({
       initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
       transition={{ duration: 0.4 }}
+      data-zone="prover"
       className={`rounded-xl border p-5 md:p-6 ${
         visible
           ? 'border-accent/40 bg-accent/[0.04]'
@@ -343,33 +356,33 @@ function ProverPanel({
             Prover side — what is known
           </h3>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
           {bits}-bit fixed-point
         </span>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-6 items-center mb-4">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+          <div className="text-[12px] uppercase tracking-widest text-muted-foreground mb-1">
             similarity score
           </div>
           <div className="font-mono text-3xl md:text-4xl font-bold text-foreground leading-none">
             {record.similarity_score.toFixed(4)}
           </div>
-          <div className="text-[11px] text-muted-foreground mt-1">cosine vs constitution centroid</div>
+          <div className="text-[12px] text-muted-foreground mt-1">cosine vs constitution centroid</div>
         </div>
         <div className="hidden md:flex flex-col items-center text-muted-foreground/70">
-          <span className="font-mono text-[10px] uppercase tracking-widest">×10000</span>
+          <span className="font-mono text-[12px] uppercase tracking-widest">×10000</span>
           <span className="font-mono text-2xl leading-none">→</span>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+          <div className="text-[12px] uppercase tracking-widest text-muted-foreground mb-1">
             fixed-point value
           </div>
           <div className="font-mono text-3xl md:text-4xl font-bold text-foreground leading-none">
             {FIXED_POINT_FORMAT.format(record.score_fixed)}
           </div>
-          <div className="text-[11px] text-muted-foreground mt-1">
+          <div className="text-[12px] text-muted-foreground mt-1">
             threshold {FIXED_POINT_FORMAT.format(record.threshold_fixed)} ({record.threshold.toFixed(2)})
           </div>
         </div>
@@ -379,7 +392,7 @@ function ProverPanel({
         <div className="rounded border border-primary/40 bg-primary/[0.06] p-4 text-sm text-foreground/90">
           <div className="flex items-center gap-2 mb-1.5">
             <Lock className="h-4 w-4 text-primary" aria-hidden />
-            <span className="font-mono text-[10px] uppercase tracking-widest text-primary">
+            <span className="font-mono text-[12px] uppercase tracking-widest text-primary">
               AlignmentProof::create refuses
             </span>
           </div>
@@ -407,14 +420,14 @@ function BitStripProver({
   const cells = Array.from({ length: totalBits }, (_, i) => bits[i] ?? null);
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-        bit decomposition · 2<sup>13</sup> ... 2<sup>0</sup>
+      <div className="text-[12px] uppercase tracking-widest text-muted-foreground mb-2">
+        bit decomposition · 2<sup className="text-[12px]">13</sup> ... 2<sup className="text-[12px]">0</sup>
       </div>
       <div
         role="list"
         aria-label="Per-bit values known to the prover, most significant bit first"
-        className="grid grid-cols-14 gap-1"
-        style={{ gridTemplateColumns: `repeat(${totalBits}, minmax(0, 1fr))` }}
+        className={BIT_STRIP_GRID}
+        style={bitStripColumns(totalBits)}
       >
         {cells
           .slice()
@@ -439,15 +452,16 @@ function BitStripProver({
                 }`}
               >
                 <span className="text-sm md:text-base font-bold leading-none">{value ?? '?'}</span>
-                {/* the index at 10px, its digits too (not the 75% a sup gets) */}
-                <span className="mt-0.5 text-[10px] leading-none tracking-tight text-muted-foreground">
-                  2<sup className="text-[10px]">{bitIdx}</sup>
+                {/* the index at the 12px floor, its digits too (not the 75% a sup
+                    gets); spaced so the raised digits clear the bit above */}
+                <span className="mt-1.5 text-[12px] leading-none tracking-tight text-muted-foreground">
+                  2<sup className="text-[12px]">{bitIdx}</sup>
                 </span>
               </motion.div>
             );
           })}
       </div>
-      <div className="mt-2 text-[10px] text-muted-foreground/80 font-mono">
+      <div className="mt-2 text-[12px] text-muted-foreground/80 font-mono">
         prover also holds {bits.length} fresh blindings <span className="text-muted-foreground/70">r_i</span> — one per bit, never sent
       </div>
     </div>
@@ -458,17 +472,67 @@ function BitStripProver({
 // Construction Zone — Pedersen commits + Schnorr OR per bit
 // ---------------------------------------------------------------------------
 
+// A zone the walkthrough has not reached: its name and what it holds, its
+// outcome "pending". The same in every scenario, so it cannot hint which way
+// the scenario goes (a refused one used to read "Construction skipped" from
+// the first beat).
+function PendingZone({
+  zone,
+  title,
+  note,
+  Icon,
+  reducedMotion,
+}: {
+  zone: ZonePhase;
+  title: string;
+  note: string;
+  Icon: typeof Lock;
+  reducedMotion: boolean;
+}) {
+  return (
+    <motion.div
+      initial={reducedMotion ? false : { opacity: 0 }}
+      animate={{ opacity: NOT_REACHED_OPACITY }}
+      transition={{ duration: 0.4 }}
+      data-zone={zone}
+      className="rounded-xl border border-border/30 bg-card/10 p-5 md:p-6"
+    >
+      <header className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-muted-foreground" aria-hidden />
+          <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
+        </div>
+        <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">{note}</span>
+      </header>
+      <div className="font-mono text-xs text-muted-foreground">pending</div>
+    </motion.div>
+  );
+}
+
 function ConstructionPanel({
   record,
   visible,
+  reached,
   reducedMotion,
   sceneData,
 }: {
   record: ScenarioRecord;
   visible: boolean;
+  reached: boolean;
   reducedMotion: boolean;
   sceneData: SceneData;
 }) {
+  if (!reached) {
+    return (
+      <PendingZone
+        zone="construction"
+        title="Construction — Pedersen + Schnorr OR per bit"
+        note="Fiat-Shamir · SHA3-512"
+        Icon={Lock}
+        reducedMotion={reducedMotion}
+      />
+    );
+  }
   const refused = record.expected_outcome === 'creation_refused';
   if (refused) {
     return (
@@ -476,6 +540,7 @@ function ConstructionPanel({
         initial={reducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
         transition={{ duration: 0.4 }}
+        data-zone="construction"
         className="rounded-xl border border-border/30 bg-card/10 p-5 md:p-6"
       >
         <div className="flex items-center gap-2 mb-2">
@@ -499,6 +564,7 @@ function ConstructionPanel({
       initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
       transition={{ duration: 0.4 }}
+      data-zone="construction"
       className={`rounded-xl border p-5 md:p-6 ${
         visible
           ? 'border-primary/40 bg-primary/[0.04]'
@@ -512,7 +578,7 @@ function ConstructionPanel({
             Construction — Pedersen + Schnorr OR per bit
           </h3>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
           Fiat-Shamir · SHA3-512
         </span>
       </header>
@@ -531,7 +597,7 @@ function ConstructionPanel({
       </div>
 
       <div className="space-y-3">
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90">
           per-bit Pedersen commits · C_i = b_i · G + r_i · H
         </div>
         <CommitStrip
@@ -539,15 +605,15 @@ function ConstructionPanel({
           tamperedBit={record.tampered_bit}
           reducedMotion={reducedMotion}
         />
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 pt-2">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 pt-2">
           per-bit Schnorr OR proof · 6 scalars · prove b_i ∈ &#123;0, 1&#125; without revealing which
         </div>
         <BitProofDetail proof={range.bit_proofs[0]} bitIndex={0} reducedMotion={reducedMotion} />
-        <div className="text-[10px] text-muted-foreground font-mono">
+        <div className="text-[12px] text-muted-foreground font-mono">
           + {range.bit_proofs.length - 1} more identical-shape proofs (one per bit)
         </div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 pt-2">
-          value commitment · Σ(2<sup>i</sup> · C_i) — homomorphic sum binds the bits together
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 pt-2">
+          value commitment · Σ(2<sup className="text-[12px]">i</sup> · C_i) — homomorphic sum binds the bits together
         </div>
         <CommitRow label="C_value" hex={range.value_commitment_hex} tone="primary" />
       </div>
@@ -566,13 +632,13 @@ function CommitRow({
 }) {
   return (
     <div className="flex items-center gap-3 text-xs flex-wrap">
-      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/90 min-w-0 [overflow-wrap:anywhere]">
+      <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground/90 min-w-0 [overflow-wrap:anywhere]">
         {label}
       </span>
       <span
         className={`font-mono ${
           tone === 'primary' ? 'text-primary' : 'text-foreground/80'
-        } break-all`}
+        } whitespace-nowrap`}
         aria-label={`commitment hex ${hex}`}
         title={hex}
       >
@@ -595,8 +661,8 @@ function CommitStrip({
     <div
       role="list"
       aria-label="Per-bit Pedersen commitments, opaque to verifier"
-      className="grid gap-1"
-      style={{ gridTemplateColumns: `repeat(${commitments.length}, minmax(0, 1fr))` }}
+      className={BIT_STRIP_GRID}
+      style={bitStripColumns(commitments.length)}
     >
       {commitments
         .slice()
@@ -612,22 +678,24 @@ function CommitStrip({
               initial={reducedMotion ? false : { opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: reducedMotion ? 0 : idx * 0.02 }}
-              className={`aspect-[2/3] min-h-[44px] flex flex-col items-center justify-center rounded border font-mono p-1 ${
+              // below md the cell takes its height from its four 12px lines,
+              // which outgrow a 2:3 box on a narrow phone
+              className={`md:aspect-[2/3] min-h-[44px] flex flex-col items-center justify-center rounded border font-mono px-0.5 py-1 md:p-1 ${
                 isTampered
                   ? 'border-primary bg-primary/25 shadow-[0_0_18px_-2px_hsl(var(--primary)/0.55)]'
                   : 'border-border/60 bg-card/30 text-muted-foreground'
               }`}
               title={hex}
             >
-              <span className="text-[8px] md:text-[9px] tracking-tight text-foreground/70">
+              <span className="text-[12px] tracking-tight text-foreground/70">
                 {hex.slice(0, 4)}
               </span>
-              <span className="text-[8px] md:text-[9px] text-muted-foreground">…</span>
-              <span className="text-[8px] md:text-[9px] tracking-tight text-foreground/70">
+              <span className="text-[12px] text-muted-foreground">…</span>
+              <span className="text-[12px] tracking-tight text-foreground/70">
                 {hex.slice(-4)}
               </span>
-              <span className="mt-0.5 text-[10px] leading-none tracking-tight text-muted-foreground">
-                b<sub className="text-[10px]">{bitIdx}</sub>
+              <span className="mt-0.5 text-[12px] leading-none tracking-tight text-muted-foreground">
+                b<sub className="text-[12px]">{bitIdx}</sub>
               </span>
             </motion.div>
           );
@@ -650,9 +718,10 @@ function BitProofDetail({
       initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="rounded border border-border/40 bg-card/20 p-3 md:p-4 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-[10px] font-mono"
+      // one scalar a line on a phone: two 12px scalars side by side need a 390px screen
+      className="rounded border border-border/40 bg-card/20 p-3 md:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-[12px] font-mono"
     >
-      <div className="col-span-2 md:col-span-3 text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+      <div className="sm:col-span-2 md:col-span-3 text-[12px] uppercase tracking-widest text-muted-foreground mb-1">
         bit-{bitIndex} proof bundle (verifier-visible only)
       </div>
       <ScalarRow label="a_0" hex={proof.a0_hex} />
@@ -672,7 +741,7 @@ function ScalarRow({ label, hex }: { label: string; hex: string }) {
         {label}
       </span>
       <span
-        className="text-foreground/80 break-all"
+        className="text-foreground/80 whitespace-nowrap"
         aria-label={`${label} ${hex}`}
         title={hex}
       >
@@ -689,12 +758,25 @@ function ScalarRow({ label, hex }: { label: string; hex: string }) {
 function VerifierPanel({
   record,
   visible,
+  reached,
   reducedMotion,
 }: {
   record: ScenarioRecord;
   visible: boolean;
+  reached: boolean;
   reducedMotion: boolean;
 }) {
+  if (!reached) {
+    return (
+      <PendingZone
+        zone="verifier"
+        title="Verifier side — runs verify()"
+        note="knows: threshold, action_hash, constitution_hash, bundle"
+        Icon={Eye}
+        reducedMotion={reducedMotion}
+      />
+    );
+  }
   const refused = record.expected_outcome === 'creation_refused';
   if (refused) {
     return (
@@ -702,6 +784,7 @@ function VerifierPanel({
         initial={reducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
         transition={{ duration: 0.4 }}
+        data-zone="verifier"
         className="rounded-xl border border-border/30 bg-card/10 p-5 md:p-6"
       >
         <div className="flex items-center gap-2 mb-2">
@@ -727,6 +810,7 @@ function VerifierPanel({
       initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: visible ? 1 : NOT_REACHED_OPACITY }}
       transition={{ duration: 0.4 }}
+      data-zone="verifier"
       className={`rounded-xl border p-5 md:p-6 ${
         visible
           ? allOk
@@ -742,18 +826,18 @@ function VerifierPanel({
             Verifier side — runs verify()
           </h3>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
           knows: threshold, action_hash, constitution_hash, bundle
         </span>
       </header>
 
       <div className="space-y-3 mb-4">
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90">
           per-bit Schnorr OR check (e_0 + e_1 ≟ Fiat-Shamir(C, a_0, a_1) &amp; branch equations)
         </div>
         <CheckStrip checks={checks} failingBit={failingBit} reducedMotion={reducedMotion} />
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 pt-2">
-          homomorphic sum check · Σ(2<sup>i</sup> · C_i) ≟ C_value
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 pt-2">
+          homomorphic sum check · Σ(2<sup className="text-[12px]">i</sup> · C_i) ≟ C_value
         </div>
         <SumCheckRow allOk={allOk} failingBit={failingBit} />
       </div>
@@ -774,8 +858,8 @@ function CheckStrip({
     <div
       role="list"
       aria-label="Per-bit verification results"
-      className="grid gap-1"
-      style={{ gridTemplateColumns: `repeat(${checks.length}, minmax(0, 1fr))` }}
+      className={BIT_STRIP_GRID}
+      style={bitStripColumns(checks.length)}
     >
       {checks
         .slice()
@@ -806,8 +890,8 @@ function CheckStrip({
               <span className="text-sm font-bold leading-none">
                 {isFailing ? '×' : wasChecked ? '✓' : '·'}
               </span>
-              <span className="mt-0.5 text-[10px] leading-none tracking-tight text-muted-foreground">
-                b<sub className="text-[10px]">{bitIdx}</sub>
+              <span className="mt-0.5 text-[12px] leading-none tracking-tight text-muted-foreground">
+                b<sub className="text-[12px]">{bitIdx}</sub>
               </span>
             </motion.div>
           );
@@ -915,39 +999,39 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
   return (
     <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr] gap-4 md:gap-6 items-baseline">
       <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
           proof construction
         </div>
         <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           {stalled ? '—' : `~${proofCostMs}ms`}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1.5">
+        <div className="text-[12px] text-muted-foreground mt-1.5">
           {stalled
             ? 'no bundle constructed'
             : `14 × Pedersen commit + 14 × Schnorr OR · estimate from zk.rs §perf, not a benchmark`}
         </div>
       </div>
       <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
           bundle on the wire
         </div>
         <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           {stalled ? '—' : `~${bundleBytes} B`}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1.5">
+        <div className="text-[12px] text-muted-foreground mt-1.5">
           {stalled
             ? 'nothing sent'
             : 'value commit (32B) + 14 bit commits (32B each) + 14 Schnorr proofs (6×32B each)'}
         </div>
       </div>
       <div className="md:border-l md:border-border/30 md:pl-6">
-        <div className="text-[11px] uppercase tracking-widest text-primary/95 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-primary/95 mb-1.5">
           what verifier learns
         </div>
         <div className="font-mono text-2xl md:text-3xl text-primary font-bold leading-tight">
           {stalled ? 'nothing' : 'a valid 14-bit score'}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+        <div className="text-[12px] text-muted-foreground mt-2 leading-relaxed">
           {stalled
             ? 'the action never reached the wire'
             : `proves: prover knew a 14-bit integer committing to C_value. ≥-threshold binding is by prover-side refusal-to-create, not the range proof.`}
@@ -1057,6 +1141,11 @@ function ZkAlignmentProofScene({ data }: { data: SceneData }) {
   }, [beatIndex, record.beats]);
 
   const verdictRevealed = revealedZones.has('verdict');
+  // A zone shows its outcome once the walkthrough reaches it or a zone after
+  // it: a refused scenario never narrates construction, and shows it skipped
+  // once the verifier beats come.
+  const contentReached = (zone: 'construction' | 'verifier') =>
+    ZONE_ORDER.slice(ZONE_ORDER.indexOf(zone)).some((z) => revealedZones.has(z));
 
   const currentBeat = record.beats[beatIndex];
   const finalBeat = beatIndex >= record.beats.length - 1;
@@ -1071,10 +1160,10 @@ function ZkAlignmentProofScene({ data }: { data: SceneData }) {
 
       <div className="rounded-xl border border-border/40 bg-card/30 p-5 md:p-7">
         <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="font-mono text-[12px] uppercase tracking-[0.2em] text-muted-foreground">
             scenario · {record.scenario_id}
           </div>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/80">
+          <div className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground/80">
             action · <span className="text-foreground/80">{record.action}</span>
           </div>
         </div>
@@ -1092,12 +1181,14 @@ function ZkAlignmentProofScene({ data }: { data: SceneData }) {
         <ConstructionPanel
           record={record}
           visible={revealedZones.has('construction')}
+          reached={contentReached('construction')}
           reducedMotion={reducedMotion}
           sceneData={data}
         />
         <VerifierPanel
           record={record}
           visible={revealedZones.has('verifier')}
+          reached={contentReached('verifier')}
           reducedMotion={reducedMotion}
         />
         <VerdictPanel
@@ -1151,14 +1242,14 @@ function ZkAlignmentProofScene({ data }: { data: SceneData }) {
           ))}
         </div>
 
-        <div className="ml-auto font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="ml-auto font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
           {finalBeat ? 'final' : `beat ${beatIndex + 1} / ${record.beats.length}`}
         </div>
       </div>
 
       {/* Narration line + sr-only live region (persistent, outside AnimatePresence) */}
       <div className="rounded-xl border border-border/40 bg-card/15 p-4 md:p-5 min-h-[80px]">
-        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
+        <div className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1">
           {currentBeat?.target_phase
             ? ZONE_META[currentBeat.target_phase as ZonePhase]?.name ?? currentBeat.target_phase
             : 'narration'}
@@ -1173,12 +1264,12 @@ function ZkAlignmentProofScene({ data }: { data: SceneData }) {
 
       {/* Protocol disclosures */}
       <details className="rounded-xl border border-border/40 bg-card/15 p-4 md:p-5">
-        <summary className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground cursor-pointer">
+        <summary className="font-mono text-[12px] uppercase tracking-[0.2em] text-muted-foreground cursor-pointer">
           protocol details · ristretto255 · {data.protocol.bits_per_range_proof}-bit range
         </summary>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-accent/90 mb-1.5">
+            <div className="text-[12px] uppercase tracking-widest text-accent/90 mb-1.5">
               revealed to verifier
             </div>
             <ul className="space-y-1 text-foreground/80">
@@ -1190,7 +1281,7 @@ function ZkAlignmentProofScene({ data }: { data: SceneData }) {
             </ul>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-primary/90 mb-1.5">
+            <div className="text-[12px] uppercase tracking-widest text-primary/90 mb-1.5">
               hidden from verifier
             </div>
             <ul className="space-y-1 text-foreground/80">

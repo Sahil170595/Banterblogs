@@ -1,6 +1,6 @@
 'use client';
 
-import { computeDwell } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, computeDwell, STICKY_NARRATION } from './_shared';
 
 import {
   useState,
@@ -188,6 +188,20 @@ function pickEntryIndex(_records: ScenarioRecord[]): number {
 // as the ZK scene's stages
 const NOT_REACHED = 'opacity-70';
 
+// The phase × replica grid. Below sm each phase's label takes a line of its
+// own, so the four cells share the full width: a 12px "byzantine" needs more
+// than the 40px a cell kept beside a 64px label column on a phone.
+const MATRIX_GRID = 'grid grid-cols-4 sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3';
+const MATRIX_ROW_HEADER =
+  'col-span-4 sm:col-span-1 flex flex-wrap items-baseline gap-x-2 sm:flex-col sm:flex-nowrap sm:items-stretch sm:justify-center sm:gap-x-0 text-left';
+
+// Soft hyphens: a label breaks at a syllable in a narrow cell, never mid-letter
+const CELL_LABEL_BREAKS: Record<string, string> = {
+  byzantine: 'byzan­tine',
+  refused: 're­fused',
+  timeout: 'time­out',
+};
+
 // Status → icon + tint for the matrix cells.
 function StatusIcon({ status, className }: { status: PhaseEvent['status'] | 'leader-implicit' | 'empty'; className?: string }) {
   switch (status) {
@@ -231,6 +245,8 @@ function statusLabel(status: PhaseEvent['status']): string {
 // - B5: phaseId is now the *actual* phase the cell represents
 //   (including view_change). leaderImplicit only triggers for the
 //   prepare phase.
+// A pending cell sits in a phase the walkthrough has not reached: neutral,
+// its outcome held back until the phase is revealed.
 function MatrixCell({
   event,
   isLeader,
@@ -238,6 +254,7 @@ function MatrixCell({
   isCurrentPhase,
   reducedMotion,
   replicaId,
+  pending = false,
 }: {
   event: PhaseEvent | null;
   isLeader: boolean;
@@ -245,9 +262,10 @@ function MatrixCell({
   isCurrentPhase: boolean;
   reducedMotion: boolean;
   replicaId: string;
+  pending?: boolean;
 }) {
-  const leaderImplicit = phaseId === 'prepare' && isLeader && !event;
-  const status = event?.status ?? (leaderImplicit ? 'leader-implicit' : 'empty');
+  const leaderImplicit = !pending && phaseId === 'prepare' && isLeader && !event;
+  const status = pending ? 'empty' : (event?.status ?? (leaderImplicit ? 'leader-implicit' : 'empty'));
 
   // V1/V4: punchier saturation per state so the matrix tells the story
   // without requiring the narration text.
@@ -267,12 +285,14 @@ function MatrixCell({
 
   const phaseName =
     phaseId === 'view_change' ? 'view change' : PHASE_META[phaseId as PhaseId]?.name ?? phaseId;
-  const labelText = leaderImplicit
-    ? 'leader'
-    : event
-      ? statusLabel(event.status)
-      : '—';
-  const ariaLabel = `${replicaId} ${phaseName}: ${labelText}`;
+  const labelText = pending
+    ? '—'
+    : leaderImplicit
+      ? 'leader'
+      : event
+        ? statusLabel(event.status)
+        : '—';
+  const ariaLabel = `${replicaId} ${phaseName}: ${pending ? 'pending' : labelText}`;
 
   return (
     <motion.div
@@ -287,34 +307,38 @@ function MatrixCell({
             }
       }
       transition={{ duration: 0.3 }}
-      // 52px floor below sm so four replicas fit a 390px screen (was 368px wide)
-      className={`relative aspect-square min-h-[52px] sm:min-h-[64px] rounded border ${tone} flex flex-col items-center justify-center gap-1 p-2 text-center`}
+      // 52px floor below sm so four replicas fit a 390px screen (was 368px wide);
+      // there the label's padding and tracking tighten to hold 12px type
+      className={`relative aspect-square min-h-[52px] sm:min-h-[64px] rounded border ${tone} flex flex-col items-center justify-center gap-1 p-1 sm:p-2 text-center`}
     >
       <StatusIcon status={status} className="h-4 w-4 md:h-5 md:w-5" />
       <span
-        className={`text-[9px] md:text-[10px] font-mono uppercase tracking-widest ${
+        className={`text-[12px] leading-tight font-mono uppercase tracking-wider sm:tracking-widest ${
           status === 'equivocation' ? 'text-foreground font-bold' : 'text-muted-foreground'
         }`}
         aria-hidden
       >
-        {labelText}
+        {CELL_LABEL_BREAKS[labelText] ?? labelText}
       </span>
     </motion.div>
   );
 }
 
+// Held pending until its phase is revealed, so it cannot tell the ending.
 function VoteCounter({
   count,
   quorum,
   label,
+  revealed,
   reducedMotion,
 }: {
   count: number;
   quorum: number;
   label: string;
+  revealed: boolean;
   reducedMotion: boolean;
 }) {
-  const reached = count >= quorum;
+  const reached = revealed && count >= quorum;
   // v1 audit A2: announce the quorum-reached transition to screen
   // readers. The animated count by itself isn't a live region; this
   // sibling sr-only span surfaces the state change.
@@ -326,27 +350,27 @@ function VoteCounter({
           : 'border-border/40 bg-card/30'
       }`}
       role="group"
-      aria-label={`${label}: ${count} of ${quorum} needed for quorum`}
+      aria-label={revealed ? `${label}: ${count} of ${quorum} needed for quorum` : `${label}: pending`}
     >
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
+      <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1">
         {label}
       </div>
       <div className="flex items-baseline gap-1">
         <motion.span
-          key={count}
+          key={revealed ? count : 'pending'}
           initial={reducedMotion ? false : { opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
           className={`font-mono text-2xl md:text-3xl font-bold leading-none ${
-            reached ? 'text-accent' : 'text-foreground'
+            reached ? 'text-accent' : revealed ? 'text-foreground' : 'text-muted-foreground'
           }`}
         >
-          {count}
+          {revealed ? count : '—'}
         </motion.span>
         <span className="font-mono text-sm text-muted-foreground/80">/ {quorum}</span>
       </div>
-      <div className="text-[10px] text-muted-foreground/90 mt-1">
-        {reached ? 'quorum reached' : `${quorum - count} more needed`}
+      <div className="text-[12px] text-muted-foreground/90 mt-1">
+        {!revealed ? 'pending' : reached ? 'quorum reached' : `${quorum - count} more needed`}
       </div>
       <span role="status" aria-live="polite" className="sr-only">
         {reached ? `${label} quorum reached: ${count} of ${quorum}` : ''}
@@ -403,7 +427,7 @@ function VerdictPanel({
               {headline}
             </div>
             {outcome.equivocation_replica && (
-              <span className="ml-auto rounded border border-primary/60 bg-primary/15 text-foreground px-2.5 py-1 text-[11px] md:text-xs font-mono uppercase tracking-widest flex items-center gap-1.5">
+              <span className="ml-auto rounded border border-primary/60 bg-primary/15 text-foreground px-2.5 py-1 text-xs font-mono uppercase tracking-widest flex items-center gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5 text-primary" aria-hidden />
                 {outcome.equivocation_replica} byzantine
               </span>
@@ -439,7 +463,7 @@ function AftermathPanel({
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="mt-6 md:mt-8 signal-panel-strong p-5 md:p-7"
         >
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
             What happens after this consensus instance
           </div>
           {record.aftermath && (
@@ -464,13 +488,13 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
   return (
     <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.6fr] gap-4 md:gap-6 items-baseline">
       <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
           BFT round cost
         </div>
         <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           ~{lat.actual_total_ms}ms
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1.5">
+        <div className="text-[12px] text-muted-foreground mt-1.5">
           {lat.message_count} signed messages + state transitions
           {lat.is_estimate && (
             <span className="text-muted-foreground/70">
@@ -481,7 +505,7 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
         </div>
       </div>
       <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
           single-trusted-leader
         </div>
         <div
@@ -490,18 +514,18 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
         >
           ~{lat.naive_total_ms}ms
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1.5">
+        <div className="text-[12px] text-muted-foreground mt-1.5">
           one RPC to a service you have to trust
         </div>
       </div>
       <div className="md:border-l md:border-border/30 md:pl-6">
-        <div className="text-[11px] uppercase tracking-widest text-primary/95 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-primary/95 mb-1.5">
           tolerates
         </div>
         <div className="font-mono text-5xl md:text-6xl text-primary font-bold leading-none tracking-tight">
           f={record.f_value}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+        <div className="text-[12px] text-muted-foreground mt-2 leading-relaxed">
           byzantine fault out of n={record.replica_count} replicas.{' '}
           {isStalled
             ? 'This scenario stalled — no comparison number, the system correctly chose not to commit.'
@@ -654,6 +678,9 @@ function BftConsensusScene({ data }: { data: SceneData }) {
   const activePhaseId = (activeBeat?.target_phase ?? null) as PhaseId | null;
   const isIntroBeat = activeBeat?.target_phase === null;
   const verdictRevealed = revealedPhases.has('verdict');
+  // no beat targets the view change: the commit beats narrate the ViewChange
+  // broadcast, so its votes show from there
+  const viewChangeRevealed = revealedPhases.has('commit');
 
   // Phase-reveal announcer (dedup'd).
   const lastPhaseRef = useRef<string>('');
@@ -711,10 +738,10 @@ function BftConsensusScene({ data }: { data: SceneData }) {
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div>
-            <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
               Cluster · n={data.cluster.n} · f={data.cluster.f} · quorum={data.cluster.quorum}
             </div>
-            <div className="font-mono text-[10px] md:text-xs text-muted-foreground/80">
+            <div className="font-mono text-xs text-muted-foreground/80">
               view {record.view}
               {record.outcome.view_changed && (
                 <>
@@ -726,7 +753,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-widest text-primary/90 mb-1">
+            <div className="text-[12px] uppercase tracking-widest text-primary/90 mb-1">
               leader
             </div>
             <div className="font-mono text-sm md:text-base text-primary flex items-center gap-1.5 justify-end">
@@ -740,8 +767,9 @@ function BftConsensusScene({ data }: { data: SceneData }) {
       {/* Two-column: timeline left, walkthrough + matrix right. */}
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 md:gap-6 mb-6 md:mb-8">
         {/* Scenario timeline. */}
-        <div className="md:sticky md:top-4 md:self-start">
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+        {/* pinned below the sticky site header, not under it */}
+        <div className="md:sticky md:top-[calc(var(--site-header-height)+0.75rem)] md:self-start">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
             Scenarios
           </div>
           <div
@@ -786,7 +814,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                       : 'border-border/40 bg-card/30 hover:border-border'
                   }`}
                 >
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
                     scenario {idx + 1}
                   </span>
                   <span
@@ -797,7 +825,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                     {r.plain.split(' — ')[0]}
                   </span>
                   <span
-                    className={`font-mono text-[10px] uppercase tracking-widest mt-1 ${statusTone}`}
+                    className={`font-mono text-[12px] uppercase tracking-widest mt-1 ${statusTone}`}
                   >
                     {statusBadge}
                   </span>
@@ -817,111 +845,115 @@ function BftConsensusScene({ data }: { data: SceneData }) {
             transition={{ duration: 0.35, ease: 'easeOut' }}
             className="signal-panel-strong p-5 md:p-7"
           >
-            <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
               Proposed action
             </div>
-            <pre className="font-mono text-[11px] md:text-[12px] text-foreground/90 leading-relaxed bg-background/40 border border-border/40 rounded p-3 overflow-x-auto">
+            <pre className="font-mono text-[12px] text-foreground/90 leading-relaxed bg-background/40 border border-border/40 rounded p-3 overflow-x-auto">
               {JSON.stringify(record.action, null, 2)}
             </pre>
-            <div className="text-[10px] md:text-[11px] font-mono text-muted-foreground/80 mt-2 break-all">
+            <div className="text-[12px] font-mono text-muted-foreground/80 mt-2 break-all">
               <span className="text-muted-foreground/90">action_hash · </span>
               {record.action_hash_hex.slice(0, 16)}…{record.action_hash_hex.slice(-12)}
             </div>
           </motion.div>
 
-          {/* Narration */}
-          <div className="signal-panel-strong p-5 md:p-7 min-h-[180px] md:min-h-[160px] relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Walkthrough · beat {beatIdx + 1} of {beats.length}
-                {isIntroBeat && (
-                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
-                    intro
-                  </span>
-                )}
-                {!isIntroBeat && activePhaseId && (
-                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
-                    → {activePhaseId}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={togglePlay}
-                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                  aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
-                >
-                  {playing ? (
-                    <Pause className="h-3.5 w-3.5" aria-hidden />
-                  ) : (
-                    <Play className="h-3.5 w-3.5" aria-hidden />
+          {/* Narration — pinned on wide screens while the matrix below scrolls */}
+          <div className={STICKY_NARRATION}>
+            <div className="signal-panel-strong p-5 md:p-7 relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Walkthrough · beat {beatIdx + 1} of {beats.length}
+                  {isIntroBeat && (
+                    <span className="ml-2 text-primary font-mono normal-case tracking-normal">
+                      intro
+                    </span>
                   )}
-                </button>
-                <button
-                  onClick={restart}
-                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                  aria-label="Restart walkthrough"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-                </button>
+                  {!isIntroBeat && activePhaseId && (
+                    <span className="ml-2 text-primary font-mono normal-case tracking-normal">
+                      → {activePhaseId}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={togglePlay}
+                    className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                    aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
+                  >
+                    {playing ? (
+                      <Pause className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      <Play className="h-3.5 w-3.5" aria-hidden />
+                    )}
+                  </button>
+                  <button
+                    onClick={restart}
+                    className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                    aria-label="Restart walkthrough"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[5rem]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${record.step_id}-${beatIdx}`}
-                  initial={reducedMotion ? false : { opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <Typewriter text={activeBeat?.copy ?? ''} reducedMotion={reducedMotion} />
-                </motion.div>
-              </AnimatePresence>
-            </div>
+              {/* two lines: every beat is at most 84 characters */}
+              <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[2lh]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${record.step_id}-${beatIdx}`}
+                    initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <Typewriter text={activeBeat?.copy ?? ''} reducedMotion={reducedMotion} />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
 
-            <div
-              className="mt-4 flex gap-0.5 flex-wrap"
-              role="radiogroup"
-              aria-label="Beat selector"
-              onKeyDown={handleBeatKey}
-            >
-              {beats.map((_, i) => (
-                <button
-                  key={`${record.step_id}-${i}`}
-                  onClick={() => {
-                    setBeatIdx(i);
-                    setHasInteracted(true);
-                  }}
-                  className="group inline-flex items-center justify-center h-8 w-10 md:w-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
-                  role="radio"
-                  aria-checked={i === beatIdx}
-                  aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
-                  tabIndex={i === beatIdx ? 0 : -1}
-                >
-                  <span
-                    className={`h-1 w-full rounded-full transition-colors ${
-                      i === beatIdx
-                        ? 'bg-primary'
-                        : i < beatIdx
-                        ? 'bg-accent/60 group-hover:bg-accent'
-                        : 'bg-border/40 group-hover:bg-border'
-                    }`}
-                  />
-                </button>
-              ))}
+              <div
+                className={`mt-4 ${BEAT_BAR_GRID}`}
+                style={beatBarColumns(beats.length)}
+                role="radiogroup"
+                aria-label="Beat selector"
+                onKeyDown={handleBeatKey}
+              >
+                {beats.map((_, i) => (
+                  <button
+                    key={`${record.step_id}-${i}`}
+                    onClick={() => {
+                      setBeatIdx(i);
+                      setHasInteracted(true);
+                    }}
+                    className="group inline-flex items-center justify-center h-8 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
+                    role="radio"
+                    aria-checked={i === beatIdx}
+                    aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
+                    tabIndex={i === beatIdx ? 0 : -1}
+                  >
+                    <span
+                      className={`h-1 w-full rounded-full transition-colors ${
+                        i === beatIdx
+                          ? 'bg-primary'
+                          : i < beatIdx
+                          ? 'bg-accent/60 group-hover:bg-accent'
+                          : 'bg-border/40 group-hover:bg-border'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* The PBFT matrix — 3 rows (PrePrepare/Prepare/Commit) × 4 cols (replicas). */}
           <div className="signal-panel-strong p-4 md:p-5">
-            <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
               PBFT phase × replica matrix
             </div>
             {/* Header row */}
-            <div className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">
+            <div className={`${MATRIX_GRID} mb-2`}>
+              <div className="hidden sm:block text-[12px] font-mono uppercase tracking-widest text-muted-foreground/70">
                 phase
               </div>
               {replicas.map((r) => {
@@ -929,7 +961,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                 return (
                   <div
                     key={r}
-                    className={`flex items-center justify-center gap-1 text-[10px] md:text-[11px] font-mono uppercase tracking-widest ${
+                    className={`flex items-center justify-center gap-1 text-[12px] font-mono uppercase tracking-widest ${
                       isLeader ? 'text-primary' : 'text-muted-foreground/90'
                     }`}
                   >
@@ -948,18 +980,16 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                   <div
                     key={phaseId}
                     role="row"
-                    className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3 mb-2"
+                    className={`${MATRIX_GRID} mb-2`}
                   >
                     <div
                       role="rowheader"
-                      className={`flex flex-col justify-center text-left ${
-                        phaseRevealed ? 'opacity-100' : NOT_REACHED
-                      }`}
+                      className={`${MATRIX_ROW_HEADER} ${phaseRevealed ? 'opacity-100' : NOT_REACHED}`}
                     >
                       <span className="text-[12px] md:text-[13px] font-bold text-foreground/95">
                         {PHASE_META[phaseId].name}
                       </span>
-                      <span className="text-[9px] md:text-[10px] text-muted-foreground">
+                      <span className="text-[12px] text-muted-foreground">
                         {PHASE_META[phaseId].plain}
                       </span>
                     </div>
@@ -971,7 +1001,6 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                         <div
                           key={`${phaseId}-${r}`}
                           className={phaseRevealed ? 'opacity-100' : NOT_REACHED}
-                          aria-hidden={!phaseRevealed}
                         >
                           <MatrixCell
                             event={ev}
@@ -980,6 +1009,7 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                             isCurrentPhase={isCurrentPhase && phaseRevealed}
                             reducedMotion={reducedMotion}
                             replicaId={r}
+                            pending={!phaseRevealed}
                           />
                         </div>
                       );
@@ -994,12 +1024,14 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                 count={record.counts.prepares_total}
                 quorum={record.quorum_size}
                 label="prepare votes"
+                revealed={revealedPhases.has('prepare')}
                 reducedMotion={reducedMotion}
               />
               <VoteCounter
                 count={record.counts.commits_total}
                 quorum={record.quorum_size}
                 label="commit votes"
+                revealed={revealedPhases.has('commit')}
                 reducedMotion={reducedMotion}
               />
             </div>
@@ -1013,25 +1045,25 @@ function BftConsensusScene({ data }: { data: SceneData }) {
             <div className="signal-panel-strong p-4 md:p-5 border-l-2 border-primary/60">
               <div className="flex items-center gap-2 mb-3">
                 <Vote className="h-4 w-4 text-primary" aria-hidden />
-                <div className="text-[11px] uppercase tracking-[0.2em] text-primary/90 font-mono">
+                <div className="text-[12px] uppercase tracking-[0.2em] text-primary/90 font-mono">
                   View change · view {record.view} → {record.view_after}
                 </div>
               </div>
               <div
                 role="grid"
                 aria-label="View change votes by replica"
-                className="grid grid-cols-[64px_repeat(4,minmax(0,1fr))] sm:grid-cols-[80px_repeat(4,1fr)] gap-2 md:gap-3"
+                className={MATRIX_GRID}
               >
-                <div role="rowheader" className="flex flex-col justify-center text-left">
+                <div role="rowheader" className={MATRIX_ROW_HEADER}>
                   <span className="text-[12px] font-bold text-foreground/95">View change</span>
-                  <span className="text-[10px] text-muted-foreground/80">
+                  <span className="text-[12px] text-muted-foreground/80">
                     replicas vote new leader
                   </span>
                 </div>
                 {replicas.map((r) => {
                   const ev = record.matrix[r]?.['view_change'] ?? null;
                   return (
-                    <div key={`vc-${r}`}>
+                    <div key={`vc-${r}`} className={viewChangeRevealed ? undefined : NOT_REACHED}>
                       <MatrixCell
                         event={ev}
                         isLeader={r === record.leader_after}
@@ -1039,15 +1071,22 @@ function BftConsensusScene({ data }: { data: SceneData }) {
                         isCurrentPhase={false}
                         reducedMotion={reducedMotion}
                         replicaId={r}
+                        pending={!viewChangeRevealed}
                       />
                     </div>
                   );
                 })}
               </div>
-              <div className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-                3 ViewChange messages (quorum reached) → view advances → new leader (
-                <span className="text-primary font-mono">{record.leader_after}</span>) re-proposes
-                the action.
+              <div className="text-[12px] text-muted-foreground mt-3 leading-relaxed">
+                {viewChangeRevealed ? (
+                  <>
+                    3 ViewChange messages (quorum reached) → view advances → new leader (
+                    <span className="text-primary font-mono">{record.leader_after}</span>) re-proposes
+                    the action.
+                  </>
+                ) : (
+                  'pending'
+                )}
               </div>
             </div>
           )}

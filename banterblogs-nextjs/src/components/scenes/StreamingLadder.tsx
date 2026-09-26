@@ -1,6 +1,6 @@
 'use client';
 
-import { computeDwell, useSceneReducedMotion } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, computeDwell, STICKY_NARRATION, useSceneReducedMotion } from './_shared';
 
 import { useState, useMemo, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
 import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
@@ -178,7 +178,8 @@ type TierState =
   | 'skipped'
   | 'not-invoked'
   | 'final-pass'
-  | 'final-fire';
+  | 'final-fire'
+  | 'pending';
 
 type ClassifiedTier = {
   state: TierState;
@@ -186,6 +187,16 @@ type ClassifiedTier = {
   sublabel: string;
   fake_provider: boolean;
   confidence_for_bar: number | null;
+};
+
+// A tier the walkthrough has not reached: neutral, its verdict held back
+// until a beat reaches it
+const PENDING_TIER: ClassifiedTier = {
+  state: 'pending',
+  label: 'pending',
+  sublabel: '',
+  fake_provider: false,
+  confidence_for_bar: null,
 };
 
 // Per-tier classifier — keyed by tier id, each returns a normalised
@@ -359,7 +370,7 @@ const TIER_CLASSIFIERS: Record<string, (rec: StepRecord) => ClassifiedTier> = {
   },
 };
 
-function classifyTier(rec: StepRecord, tierId: string): ClassifiedTier {
+export function classifyTier(rec: StepRecord, tierId: string): ClassifiedTier {
   const fn = TIER_CLASSIFIERS[tierId];
   if (fn) return fn(rec);
   return { state: 'not-invoked', label: '', sublabel: '', fake_provider: false, confidence_for_bar: null };
@@ -408,9 +419,18 @@ const STATE_THEME: Record<TierState, { ring: string; glow: string; text: string;
     bar: 'bg-primary',
     iconBg: 'bg-background',
   },
+  // a plain edge, not the dashed one that says a tier was skipped
+  pending: {
+    ring: 'border-border/40',
+    glow: '',
+    text: 'text-muted-foreground',
+    bar: 'bg-border/20',
+    iconBg: 'bg-background',
+  },
 };
 
 function StateIcon({ state, className }: { state: TierState; className?: string }) {
+  if (state === 'pending') return <span className={`${className} block`} aria-hidden />;
   if (state === 'ran-fire') return <AlertTriangle className={className} aria-hidden />;
   if (state === 'ran-pass') return <CheckCircle2 className={className} aria-hidden />;
   if (state === 'skipped') return <CornerDownRight className={className} aria-hidden />;
@@ -647,14 +667,14 @@ function StreamingLadderScene({ data }: { data: SceneData }) {
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3 md:mb-4">
           <div className="space-y-1">
-            <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Reasoning step · index {record.step_index}
             </div>
-            <div className="font-mono text-[10px] md:text-xs text-muted-foreground/80">
+            <div className="font-mono text-xs text-muted-foreground/80">
               {record.step_id} · {record.trigger_verdict ? 'flagged' : 'not flagged'} by gate
             </div>
           </div>
-          <div className="flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-mono text-muted-foreground">
+          <div className="flex items-center gap-3 md:gap-4 text-xs font-mono text-muted-foreground">
             <span title="model's own top-1 token probability">
               top1·{record.trigger_signals.min_top1.toFixed(2)}
             </span>
@@ -676,235 +696,242 @@ function StreamingLadderScene({ data }: { data: SceneData }) {
         )}
       </motion.div>
 
-      {/* Narration block — typewriter sits here. */}
-      <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 min-h-[180px] md:min-h-[150px] relative">
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Walkthrough · beat {beatIdx + 1} of {beats.length}
-            {isIntroBeat && (
-              <span className="ml-2 text-primary font-mono normal-case tracking-normal">intro</span>
-            )}
-            {!isIntroBeat && activeTierId && (
-              <span className="ml-2 text-primary font-mono normal-case tracking-normal">
-                → {activeTierId}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={togglePlay}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
-            >
-              {playing ? <Pause className="h-3.5 w-3.5" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
-            </button>
-            <button
-              onClick={restart}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label="Restart walkthrough"
-            >
-              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          </div>
-        </div>
-
-        <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[5rem] md:min-h-[4.5rem]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${record.step_id}-${beatIdx}`}
-              initial={reducedMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
-              transition={{ duration: 0.25 }}
-            >
-              <Typewriter text={activeBeat?.copy ?? ''} />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Beat dots — each wrapped in a 24x24 hit target for WCAG 2.5.5. */}
-        <div className="mt-4 flex gap-0.5 flex-wrap" role="tablist" aria-label="Beat selector">
-          {beats.map((_, i) => (
-            <button
-              key={`${record.step_id}-${i}`}
-              onClick={() => {
-                setBeatIdx(i);
-                setHasInteracted(true);
-              }}
-              className="group inline-flex items-center justify-center h-6 w-8 md:w-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
-              role="tab"
-              aria-selected={i === beatIdx}
-              aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
-            >
-              <span
-                className={`h-1 w-full rounded-full transition-colors ${
-                  i === beatIdx
-                    ? 'bg-primary'
-                    : i < beatIdx
-                    ? 'bg-accent/60 group-hover:bg-accent'
-                    : 'bg-border/40 group-hover:bg-border'
-                }`}
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tier ladder */}
-      <div className="relative">
-        <div
-          aria-hidden
-          className="absolute left-[15px] md:left-[calc(50%-0.5px)] top-2 bottom-2 w-px bg-gradient-to-b from-border/10 via-border/60 to-border/10"
-        />
-
-        <div className="space-y-3 md:space-y-4">
-          {tierClassifications.map((ts) => {
-            const theme = STATE_THEME[ts.state];
-            const isActive = activeTierId === ts.tier.id;
-            const isRevealed = revealedTierIds.has(ts.tier.id);
-            const isIdle = !isActive && isRevealed;
-            const isHidden = !isRevealed;
-            const plain = TIER_PLAIN[ts.tier.id as TierId];
-            return (
-              <motion.div
-                key={ts.tier.id}
-                animate={
-                  reducedMotion
-                    ? { opacity: isHidden ? 0.5 : 1 }
-                    : { opacity: isHidden ? 0.18 : isIdle ? 0.55 : 1, scale: isActive ? 1.005 : 1 }
-                }
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-                aria-hidden={isHidden}
-                className="relative grid grid-cols-[32px_1fr] md:grid-cols-[1fr_40px_1fr] items-stretch gap-3 md:gap-4"
-              >
-                {/* Desktop left column — plain-language label, what it does, cost cascade. */}
-                <div className="hidden md:flex flex-col items-end justify-center pr-2 text-right gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="text-[15px] font-bold tracking-tight text-foreground">
-                      {plain?.plain || ts.tier.name}
-                    </div>
-                    {plain?.Icon && (
-                      <plain.Icon className="h-4 w-4 text-muted-foreground/70" aria-hidden />
-                    )}
-                  </div>
-                  <div className="text-[12px] text-muted-foreground leading-snug max-w-[240px]">
-                    {plain?.what_it_does || ts.tier.description}
-                  </div>
-                  {plain && (
-                    <div className="mt-0.5">
-                      <CostCascade
-                        costLog={plain.cost_log}
-                        label={plain.cost_label}
-                        faded={ts.state === 'skipped' || ts.state === 'not-invoked'}
-                      />
-                    </div>
-                  )}
-                  <div className="text-[10px] text-muted-foreground/70 font-mono uppercase tracking-widest mt-1">
-                    {ts.tier.name} · {ts.tier.spec}
-                  </div>
-                </div>
-
-                {/* Spine node */}
-                <div className="relative flex items-center justify-center">
-                  <motion.div
-                    animate={
-                      reducedMotion ? { scale: 1 } : { scale: isActive ? 1.15 : 1 }
-                    }
-                    transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-                    className={`relative z-10 flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border-2 ${theme.iconBg} ${theme.ring} ${
-                      isActive ? theme.glow : ''
-                    } ${theme.text}`}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      <motion.span
-                        key={`${ts.tier.id}-${ts.state}`}
-                        initial={reducedMotion ? false : { opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={reducedMotion ? undefined : { opacity: 0, scale: 0.6 }}
-                        transition={{ duration: 0.18 }}
-                      >
-                        <StateIcon state={ts.state} className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                      </motion.span>
-                    </AnimatePresence>
-                  </motion.div>
-                </div>
-
-                {/* Right column — verdict card */}
-                <motion.div
-                  transition={{ duration: 0.3 }}
-                  className={`relative rounded-lg border ${theme.ring} bg-card/40 backdrop-blur-sm p-3 md:p-4 transition-shadow ${
-                    isActive ? theme.glow : ''
-                  }`}
+      {/* The narrated section: the narration pins on wide screens while the
+          ladder and the aftermath scroll beneath it */}
+      <div>
+        <div className={`${STICKY_NARRATION} mb-6 md:mb-8`}>
+          <div className="signal-panel-strong p-5 md:p-7 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                Walkthrough · beat {beatIdx + 1} of {beats.length}
+                {isIntroBeat && (
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">intro</span>
+                )}
+                {!isIntroBeat && activeTierId && (
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
+                    → {activeTierId}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={togglePlay}
+                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                  aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
                 >
-                  {/* Mobile-only plain-language header + cost cascade. */}
-                  <div className="md:hidden mb-2 flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
-                        {plain?.Icon && (
-                          <plain.Icon className="h-3.5 w-3.5 text-muted-foreground/70" aria-hidden />
-                        )}
-                        <div className="text-[14px] font-bold tracking-tight text-foreground">
-                          {plain?.plain || ts.tier.name}
-                        </div>
+                  {playing ? <Pause className="h-3.5 w-3.5" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
+                </button>
+                <button
+                  onClick={restart}
+                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                  aria-label="Restart walkthrough"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              </div>
+            </div>
+
+            {/* two lines: every beat is at most 84 characters */}
+            <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[2lh]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${record.step_id}-${beatIdx}`}
+                  initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Typewriter text={activeBeat?.copy ?? ''} />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Beat dots — each wrapped in a 24x24 hit target for WCAG 2.5.5. */}
+            <div
+              className={`mt-4 ${BEAT_BAR_GRID}`}
+              style={beatBarColumns(beats.length)}
+              role="tablist"
+              aria-label="Beat selector"
+            >
+              {beats.map((_, i) => (
+                <button
+                  key={`${record.step_id}-${i}`}
+                  onClick={() => {
+                    setBeatIdx(i);
+                    setHasInteracted(true);
+                  }}
+                  className="group inline-flex items-center justify-center h-6 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
+                  role="tab"
+                  aria-selected={i === beatIdx}
+                  aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
+                >
+                  <span
+                    className={`h-1 w-full rounded-full transition-colors ${
+                      i === beatIdx
+                        ? 'bg-primary'
+                        : i < beatIdx
+                        ? 'bg-accent/60 group-hover:bg-accent'
+                        : 'bg-border/40 group-hover:bg-border'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Tier ladder */}
+        <div className="relative">
+          <div
+            aria-hidden
+            className="absolute left-[15px] md:left-[calc(50%-0.5px)] top-2 bottom-2 w-px bg-gradient-to-b from-border/10 via-border/60 to-border/10"
+          />
+
+          <div className="space-y-3 md:space-y-4">
+            {tierClassifications.map((classified) => {
+              const isActive = activeTierId === classified.tier.id;
+              const isRevealed = revealedTierIds.has(classified.tier.id);
+              const isIdle = !isActive && isRevealed;
+              const isHidden = !isRevealed;
+              // an unreached tier shows the neutral pending state, not its verdict
+              const ts = isHidden ? { ...PENDING_TIER, tier: classified.tier } : classified;
+              const theme = STATE_THEME[ts.state];
+              const quietCost = ts.state === 'skipped' || ts.state === 'not-invoked' || ts.state === 'pending';
+              const plain = TIER_PLAIN[ts.tier.id as TierId];
+              return (
+                <motion.div
+                  key={ts.tier.id}
+                  animate={
+                    reducedMotion
+                      ? { opacity: isHidden ? 0.5 : 1 }
+                      : { opacity: isHidden ? 0.18 : isIdle ? 0.55 : 1, scale: isActive ? 1.005 : 1 }
+                  }
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  aria-hidden={isHidden}
+                  data-tier={ts.tier.id}
+                  className="relative grid grid-cols-[32px_1fr] md:grid-cols-[1fr_40px_1fr] items-stretch gap-3 md:gap-4"
+                >
+                  {/* Desktop left column — plain-language label, what it does, cost cascade. */}
+                  <div className="hidden md:flex flex-col items-end justify-center pr-2 text-right gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="text-[15px] font-bold tracking-tight text-foreground">
+                        {plain?.plain || ts.tier.name}
                       </div>
-                      <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-                        {plain?.what_it_does || ts.tier.description}
-                      </div>
+                      {plain?.Icon && (
+                        <plain.Icon className="h-4 w-4 text-muted-foreground/70" aria-hidden />
+                      )}
+                    </div>
+                    <div className="text-[12px] text-muted-foreground leading-snug max-w-[240px]">
+                      {plain?.what_it_does || ts.tier.description}
                     </div>
                     {plain && (
-                      <CostCascade
-                        costLog={plain.cost_log}
-                        label={plain.cost_label}
-                        faded={ts.state === 'skipped' || ts.state === 'not-invoked'}
-                      />
+                      <div className="mt-0.5">
+                        <CostCascade costLog={plain.cost_log} label={plain.cost_label} faded={quietCost} />
+                      </div>
                     )}
+                    <div className="text-[12px] text-muted-foreground/70 font-mono uppercase tracking-widest mt-1">
+                      {ts.tier.name} · {ts.tier.spec}
+                    </div>
                   </div>
 
-                  <AnimatePresence mode="wait" initial={false}>
+                  {/* Spine node */}
+                  <div className="relative flex items-center justify-center">
                     <motion.div
-                      key={`${ts.tier.id}-${record.step_id}`}
-                      initial={reducedMotion ? false : { opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
-                      transition={{ duration: 0.22 }}
+                      animate={
+                        reducedMotion ? { scale: 1 } : { scale: isActive ? 1.15 : 1 }
+                      }
+                      transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+                      className={`relative z-10 flex h-7 w-7 md:h-9 md:w-9 items-center justify-center rounded-full border-2 ${theme.iconBg} ${theme.ring} ${
+                        isActive ? theme.glow : ''
+                      } ${theme.text}`}
                     >
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                        <div className={`font-mono text-sm md:text-base font-bold ${theme.text}`}>
-                          {ts.label}
-                          {ts.fake_provider && (
-                            <span
-                              className="ml-2 text-[9px] uppercase tracking-widest text-muted-foreground/80 font-sans"
-                              title="this tier ran against a deterministic fake provider for the public demo"
-                            >
-                              fake provider
-                            </span>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={`${ts.tier.id}-${ts.state}`}
+                          initial={reducedMotion ? false : { opacity: 0, scale: 0.6 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={reducedMotion ? undefined : { opacity: 0, scale: 0.6 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <StateIcon state={ts.state} className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        </motion.span>
+                      </AnimatePresence>
+                    </motion.div>
+                  </div>
+
+                  {/* Right column — verdict card */}
+                  <motion.div
+                    transition={{ duration: 0.3 }}
+                    className={`relative rounded-lg border ${theme.ring} bg-card/40 backdrop-blur-sm p-3 md:p-4 transition-shadow ${
+                      isActive ? theme.glow : ''
+                    }`}
+                  >
+                    {/* Mobile-only plain-language header + cost cascade. */}
+                    <div className="md:hidden mb-2 flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1.5">
+                          {plain?.Icon && (
+                            <plain.Icon className="h-3.5 w-3.5 text-muted-foreground/70" aria-hidden />
                           )}
+                          <div className="text-[14px] font-bold tracking-tight text-foreground">
+                            {plain?.plain || ts.tier.name}
+                          </div>
                         </div>
-                        <div className="text-[11px] md:text-xs font-mono text-muted-foreground">
-                          {ts.sublabel}
+                        <div className="text-[12px] text-muted-foreground leading-snug mt-0.5">
+                          {plain?.what_it_does || ts.tier.description}
                         </div>
                       </div>
+                      {plain && (
+                        <CostCascade costLog={plain.cost_log} label={plain.cost_label} faded={quietCost} />
+                      )}
+                    </div>
 
-                      <TierBody record={record} tier={ts.tier} state={ts.state} />
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.div
+                        key={`${ts.tier.id}-${record.step_id}-${ts.state === 'pending' ? 'pending' : 'reached'}`}
+                        initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
+                        transition={{ duration: 0.22 }}
+                      >
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                          <div className={`font-mono text-sm md:text-base font-bold ${theme.text}`}>
+                            {ts.label}
+                            {ts.fake_provider && (
+                              <span
+                                className="ml-2 text-[12px] uppercase tracking-widest text-muted-foreground/80 font-sans"
+                                title="this tier ran against a deterministic fake provider for the public demo"
+                              >
+                                fake provider
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs font-mono text-muted-foreground">
+                            {ts.sublabel}
+                          </div>
+                        </div>
 
-                      <ConfidenceBar value={ts.confidence_for_bar} barClass={theme.bar} label={ts.label} />
-                    </motion.div>
-                  </AnimatePresence>
+                        <TierBody record={record} tier={ts.tier} state={ts.state} />
+
+                        <ConfidenceBar value={ts.confidence_for_bar} barClass={theme.bar} label={ts.label} />
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Aftermath — keyed by step_id so motion delays don't replay
-          stale across record switches. */}
-      <AftermathPanel
-        key={`aftermath-${record.step_id}`}
-        record={record}
-        visible={revealedTierIds.has('enforcement')}
-        reducedMotion={Boolean(reducedMotion)}
-      />
+        {/* Aftermath — keyed by step_id so motion delays don't replay
+            stale across record switches. */}
+        <AftermathPanel
+          key={`aftermath-${record.step_id}`}
+          record={record}
+          visible={revealedTierIds.has('enforcement')}
+          reducedMotion={Boolean(reducedMotion)}
+        />
+      </div>
 
       {/* Journey panel — production cost estimate vs naive worst case. */}
       <div className="mt-8 md:mt-10">
@@ -913,7 +940,7 @@ function StreamingLadderScene({ data }: { data: SceneData }) {
 
       {/* Record scrubber — radio-group semantics, not toggle. */}
       <div className="mt-6 md:mt-8">
-        <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Try a different reasoning step · {data.records.length} scenarios
         </div>
         <div
@@ -939,7 +966,7 @@ function StreamingLadderScene({ data }: { data: SceneData }) {
                 aria-checked={isActive}
                 tabIndex={isActive ? 0 : -1}
               >
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
                   step {r.step_index}
                 </span>
                 <span className="text-xs md:text-sm text-foreground/90 leading-tight line-clamp-2">
@@ -947,7 +974,7 @@ function StreamingLadderScene({ data }: { data: SceneData }) {
                   {(r.summary || r.step_content).length > 60 ? '…' : ''}
                 </span>
                 <span
-                  className={`text-[10px] font-mono mt-1 flex items-center gap-1 ${
+                  className={`text-[12px] font-mono mt-1 flex items-center gap-1 ${
                     isRewind ? 'text-primary' : 'text-accent/90'
                   }`}
                 >
@@ -969,12 +996,13 @@ function StreamingLadderScene({ data }: { data: SceneData }) {
 }
 
 function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; state: TierState }) {
-  if (state === 'skipped' || state === 'not-invoked') return null;
+  if (state === 'skipped' || state === 'not-invoked' || state === 'pending') return null;
 
   if (tier.id === 'gate') {
     const ts = record.trigger_signals;
+    // three across from 360px; under it a 12px label ("entropy") outran its gauge
     return (
-      <div className="mt-2 md:mt-3 grid grid-cols-3 gap-2 md:gap-3">
+      <div className="mt-2 md:mt-3 grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 md:gap-3">
         <SignalGauge
           label="top-1 prob"
           value={ts.min_top1}
@@ -1001,10 +1029,10 @@ function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; sta
     return (
       <div className="mt-2 md:mt-3 space-y-1">
         {fired.slice(0, 3).map((rv) => (
-          <div key={rv.rule_name} className="text-[11px] md:text-xs">
+          <div key={rv.rule_name} className="text-xs">
             <span className="font-mono text-primary">{rv.rule_name}</span>
             {Object.keys(rv.evidence || {}).length > 0 && (
-              <span className="ml-2 text-muted-foreground/80 font-mono text-[10px] md:text-xs break-all">
+              <span className="ml-2 text-muted-foreground/80 font-mono text-xs break-all">
                 {JSON.stringify(rv.evidence).slice(0, 120)}
               </span>
             )}
@@ -1015,7 +1043,7 @@ function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; sta
   }
   if (tier.id === 't2' && record.t2?.reasoning && record.t2.reasoning !== 'fake') {
     return (
-      <p className="mt-2 md:mt-3 text-[11px] md:text-xs text-muted-foreground leading-relaxed">
+      <p className="mt-2 md:mt-3 text-xs text-muted-foreground leading-relaxed">
         {record.t2.reasoning}
       </p>
     );
@@ -1023,10 +1051,10 @@ function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; sta
   if (tier.id === 't2_5' && record.t2_5?.corrected_step_content) {
     return (
       <div className="mt-2 md:mt-3 rounded border-l-2 border-primary/60 bg-primary/5 pl-3 py-2">
-        <div className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-primary mb-1">
+        <div className="text-[12px] font-mono uppercase tracking-widest text-primary mb-1">
           Correction:
         </div>
-        <p className="text-[11px] md:text-xs italic text-foreground/90">
+        <p className="text-xs italic text-foreground/90">
           {record.t2_5.corrected_step_content}
         </p>
       </div>
@@ -1034,7 +1062,7 @@ function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; sta
   }
   if (tier.id === 't3' && record.t3?.models_used && record.t3.models_used.length > 0) {
     return (
-      <div className="mt-2 md:mt-3 text-[11px] md:text-xs font-mono text-muted-foreground">
+      <div className="mt-2 md:mt-3 text-xs font-mono text-muted-foreground">
         models · {record.t3.models_used.join(', ')}
       </div>
     );
@@ -1043,7 +1071,7 @@ function TierBody({ record, tier, state }: { record: StepRecord; tier: Tier; sta
     const evidence = (record.enforcement.evidence || {}) as Record<string, unknown>;
     const src = evidence.enforcement_source;
     return (
-      <div className="mt-2 md:mt-3 text-[11px] md:text-xs font-mono text-muted-foreground space-y-0.5">
+      <div className="mt-2 md:mt-3 text-xs font-mono text-muted-foreground space-y-0.5">
         {src != null && <div>source · {String(src)}</div>}
         {record.enforcement.rewind_steps_so_far != null && (
           <div>rewinds used · {record.enforcement.rewind_steps_so_far}</div>
@@ -1094,7 +1122,7 @@ function SignalGauge({
   const pct = Math.round(clamped * 100);
   return (
     <div className="rounded border border-border/40 bg-background/40 p-2 group relative focus-within:border-border">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+      <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
         {label}
       </div>
       <div
@@ -1112,11 +1140,11 @@ function SignalGauge({
           className="h-full w-full origin-left bg-accent/70"
         />
       </div>
-      <div className="font-mono text-[11px] text-foreground">{raw ?? clamped.toFixed(2)}</div>
+      <div className="font-mono text-[12px] text-foreground">{raw ?? clamped.toFixed(2)}</div>
       {hint && (
         <div
           tabIndex={0}
-          className="hidden group-hover:block group-focus-within:block absolute left-1/2 -translate-x-1/2 -bottom-1.5 translate-y-full z-20 w-48 rounded border border-border/60 bg-background/95 backdrop-blur p-2 text-[10px] text-muted-foreground leading-snug pointer-events-none"
+          className="hidden group-hover:block group-focus-within:block absolute left-1/2 -translate-x-1/2 -bottom-1.5 translate-y-full z-20 w-48 rounded border border-border/60 bg-background/95 backdrop-blur p-2 text-[12px] text-muted-foreground leading-snug pointer-events-none"
         >
           {hint}
         </div>
@@ -1146,7 +1174,7 @@ function CostCascade({ costLog, label, faded }: { costLog: number; label: string
           />
         ))}
       </div>
-      <span className={`font-mono text-[10px] ${faded ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
+      <span className={`font-mono text-[12px] ${faded ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
         {label}
       </span>
     </div>
@@ -1173,35 +1201,35 @@ function JourneyPanel({ record }: { record: StepRecord }) {
   return (
     <div className="signal-panel-strong p-4 md:p-5 mb-6 md:mb-8 grid grid-cols-3 gap-3 md:gap-4">
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1">
           this step cost
         </div>
         <div className="font-mono text-xl md:text-2xl text-foreground font-bold leading-tight">
           {fmtMs(actual)}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-0.5">
+        <div className="text-[12px] text-muted-foreground mt-0.5">
           production estimate
         </div>
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1">
           worst case
         </div>
         <div className="font-mono text-xl md:text-2xl text-muted-foreground/80 line-through font-bold leading-tight">
           {fmtMs(naive)}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-0.5">
+        <div className="text-[12px] text-muted-foreground mt-0.5">
           if every tier ran to budget
         </div>
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90 mb-1">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1">
           saved
         </div>
         <div className="font-mono text-xl md:text-2xl text-primary font-bold leading-tight">
           {saved_pct.toFixed(1)}%
         </div>
-        <div className="text-[11px] text-muted-foreground mt-0.5">
+        <div className="text-[12px] text-muted-foreground mt-0.5">
           by short-circuiting
         </div>
       </div>
@@ -1236,7 +1264,7 @@ function AftermathPanel({
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="mt-6 md:mt-8 signal-panel-strong p-5 md:p-7"
         >
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
             What the user sees
           </div>
 

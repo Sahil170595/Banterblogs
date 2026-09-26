@@ -46,13 +46,19 @@ afterEach(() => {
 });
 
 // re-judge P1-9: `inert: ''` is false to React 19, so hidden cards kept
-// eight focusable buttons (axe aria-hidden-focus)
+// eight focusable buttons (axe aria-hidden-focus). A card the walkthrough
+// has not reached now shows only "pending", so it holds nothing focusable;
+// it must still carry inert, in case a control ever lands in it again.
 describe('Provenance chain', () => {
-  it('makes every card it hides inert, so nothing inside takes focus', () => {
+  it('makes every card it hides inert, with nothing inside to take focus', () => {
     const { container } = render(provenance());
-    const hidden = [...container.querySelectorAll('[aria-hidden="true"]')].filter((el) => el.querySelector(TABBABLE));
+    const hidden = [...container.querySelectorAll('[aria-hidden="true"][data-phase]')];
     expect(hidden.length).toBeGreaterThan(0);
-    for (const card of hidden) expect(card.hasAttribute('inert'), card.textContent?.slice(0, 40)).toBe(true);
+    for (const card of hidden) {
+      const label = card.textContent?.slice(0, 40);
+      expect(card.hasAttribute('inert'), label).toBe(true);
+      expect(card.querySelector(TABBABLE), label).toBeNull();
+    }
   });
 });
 

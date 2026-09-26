@@ -32,7 +32,8 @@ const AA_LARGE = 3;
 // the bar for text a scene dims to mark a step it has not reached
 const DIMMED_STATE = 3;
 const LARGE_TEXT_PX = 24;
-const MIN_INDEX_PX = 10;
+// the site's reading floor; the bit strips reflow to two rows on phones to hold it
+const MIN_INDEX_PX = 12;
 // options walked per selector; every scene has fewer
 const MAX_STATES = 40;
 const NAMED_SIZE: Record<string, number> = { xs: 12, sm: 14, base: 16, lg: 18, xl: 20, '2xl': 24, '3xl': 30, '4xl': 36, '5xl': 48, '6xl': 60, '7xl': 72 };
@@ -177,7 +178,7 @@ describe.each(PAGES)('/show/%s body', (_slug, Page) => {
 });
 
 describe('ZK bit strips', () => {
-  it('set each bit index at 10px or larger', () => {
+  it(`set each bit index at ${MIN_INDEX_PX}px or larger`, () => {
     const { container } = render(<ZkAlignmentProofPage />);
     const indices = [...container.querySelectorAll('[role="listitem"] span')].filter((span) => span.querySelector('sup, sub'));
     expect(indices.length).toBeGreaterThan(0);
