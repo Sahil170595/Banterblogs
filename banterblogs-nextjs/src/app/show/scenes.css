@@ -1,0 +1,9 @@
+@config "../../../tailwind.scenes.config.ts";
+
+/* The /show scenes' stylesheet: each scene page imports it. Utilities only,
+ * scoped to the scene root; the base layer, the tokens and the page chrome's
+ * utilities come from globals.css, which every page loads first. See
+ * tailwind.scenes.config.ts for why the scenes ride in their own sheet.
+ */
+
+@tailwind utilities;

@@ -1,3 +1,4 @@
+import '@/app/show/scenes.css';
 import type { Metadata } from 'next';
 import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft } from 'lucide-react';

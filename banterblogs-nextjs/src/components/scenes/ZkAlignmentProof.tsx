@@ -1,6 +1,6 @@
 'use client';
 
-import { computeDwell } from './_shared';
+import { computeDwell, SCENE_ROOT } from './_shared';
 
 import {
   useState,
@@ -1095,9 +1095,11 @@ function useBeatController({
 // do not animate load no framer code.
 export function ZkAlignmentProof({ data }: { data: SceneData }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <ZkAlignmentProofScene data={data} />
-    </MotionConfig>
+    <div {...SCENE_ROOT}>
+      <MotionConfig reducedMotion="user">
+        <ZkAlignmentProofScene data={data} />
+      </MotionConfig>
+    </div>
   );
 }
 

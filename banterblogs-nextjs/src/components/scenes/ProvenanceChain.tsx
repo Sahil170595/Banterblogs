@@ -1,6 +1,6 @@
 'use client';
 
-import { BEAT_BAR_GRID, beatBarColumns, CLEAR_OF_STICKY_NARRATION, computeDwell, STICKY_NARRATION } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, CLEAR_OF_STICKY_NARRATION, computeDwell, SCENE_ROOT, STICKY_NARRATION } from './_shared';
 
 import {
   useState,
@@ -555,9 +555,11 @@ function AftermathPanel({
 // do not animate load no framer code.
 export function ProvenanceChain({ data }: { data: SceneData }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <ProvenanceChainScene data={data} />
-    </MotionConfig>
+    <div {...SCENE_ROOT}>
+      <MotionConfig reducedMotion="user">
+        <ProvenanceChainScene data={data} />
+      </MotionConfig>
+    </div>
   );
 }
 

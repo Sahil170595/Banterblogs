@@ -1,6 +1,6 @@
 'use client';
 
-import { BEAT_BAR_GRID, beatBarColumns, computeDwell, STICKY_NARRATION } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, computeDwell, SCENE_ROOT, STICKY_NARRATION } from './_shared';
 
 import {
   useState,
@@ -543,9 +543,11 @@ function JourneyPanel({ record }: { record: ScenarioRecord }) {
 // do not animate load no framer code.
 export function BftConsensus({ data }: { data: SceneData }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <BftConsensusScene data={data} />
-    </MotionConfig>
+    <div {...SCENE_ROOT}>
+      <MotionConfig reducedMotion="user">
+        <BftConsensusScene data={data} />
+      </MotionConfig>
+    </div>
   );
 }
 

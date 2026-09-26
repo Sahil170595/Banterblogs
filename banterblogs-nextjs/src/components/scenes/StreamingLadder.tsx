@@ -1,6 +1,6 @@
 'use client';
 
-import { BEAT_BAR_GRID, beatBarColumns, computeDwell, STICKY_NARRATION, useSceneReducedMotion } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, computeDwell, SCENE_ROOT, STICKY_NARRATION, useSceneReducedMotion } from './_shared';
 
 import { useState, useMemo, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
 import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
@@ -531,9 +531,11 @@ function pickEntryIndex(records: StepRecord[]): number {
 // do not animate load no framer code.
 export function StreamingLadder({ data }: { data: SceneData }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <StreamingLadderScene data={data} />
-    </MotionConfig>
+    <div {...SCENE_ROOT}>
+      <MotionConfig reducedMotion="user">
+        <StreamingLadderScene data={data} />
+      </MotionConfig>
+    </div>
   );
 }
 

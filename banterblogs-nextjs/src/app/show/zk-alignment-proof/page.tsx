@@ -1,3 +1,4 @@
+import '@/app/show/scenes.css';
 import type { Metadata } from 'next';
 import type { ComponentProps } from 'react';
 import { IntentLink } from '@/components/ui/IntentLink';

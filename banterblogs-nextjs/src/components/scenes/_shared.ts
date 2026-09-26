@@ -91,3 +91,8 @@ export function beatBarColumns(n: number): CSSProperties {
 
 export const BEAT_BAR_GRID =
   'grid gap-x-0.5 grid-cols-[repeat(var(--beat-cols-narrow),minmax(0,1fr))] sm:grid-cols-[repeat(var(--beat-cols-mid),minmax(0,1fr))] lg:grid-cols-[repeat(var(--beat-cols-wide),minmax(0,1fr))]';
+
+// The element every scene renders inside: the scene sheet
+// (src/app/show/scenes.css) scopes its utilities to it, and display:
+// contents keeps it out of the page's layout.
+export const SCENE_ROOT = { 'data-scene': '', style: { display: 'contents' } } as const;

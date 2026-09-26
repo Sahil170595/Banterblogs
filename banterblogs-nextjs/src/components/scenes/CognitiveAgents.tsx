@@ -1,6 +1,6 @@
 'use client';
 
-import { BEAT_BAR_GRID, beatBarColumns, computeDwell, STICKY_NARRATION } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, computeDwell, SCENE_ROOT, STICKY_NARRATION } from './_shared';
 
 import {
   useState,
@@ -777,9 +777,11 @@ function AftermathPanel({
 // do not animate load no framer code.
 export function CognitiveAgents({ data }: { data: SceneData }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <CognitiveAgentsScene data={data} />
-    </MotionConfig>
+    <div {...SCENE_ROOT}>
+      <MotionConfig reducedMotion="user">
+        <CognitiveAgentsScene data={data} />
+      </MotionConfig>
+    </div>
   );
 }
 
