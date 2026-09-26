@@ -4,6 +4,7 @@ import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 import { BftConsensus } from '@/components/scenes/BftConsensus';
+import { DemoFidelity } from '@/components/show/DemoFidelity';
 import sceneDataRaw from '@/data/scenes/bft-consensus.json';
 
 // Build-time JSON shape validation.
@@ -228,43 +229,52 @@ export default function BftConsensusPage() {
             matrix: who voted what, who got flagged byzantine, when quorum was reached, when it
             wasn&apos;t.
           </p>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            <span className="font-mono text-foreground/80">Scope:</span> the Ed25519 signatures and
-            SHA3-256 action hashes are real — generated here in the browser-build pipeline using
-            Node&apos;s built-in{' '}
-            <span className="font-mono text-foreground/80">node:crypto</span>. The protocol
-            structure (n=4, f=1, quorum=2f+1=3, leader ={' '}
-            <span className="font-mono text-foreground/80">replicas[view % n]</span>, equivocation
-            log keyed on <span className="font-mono text-foreground/80">(replica, sequence)</span>,
-            view change on 5s timeout) is{' '}
-            <span className="text-foreground">protocol-faithful</span> to{' '}
-            <span className="font-mono text-foreground/80 break-all">
-              tdd005/crates/tdd005_orchestrator/src/bft.rs
-            </span>{' '}
-            — same constants, same phase ordering, same byzantine detection rule. This is the
-            in-process VirtualBftCluster pattern (Patch 90), not a production multi-host PBFT
-            deployment.
-          </p>
-          <p className="text-xs md:text-sm text-muted-foreground/80 leading-relaxed">
-            <span className="font-mono text-foreground/70">Honest divergence:</span> the action hash
-            shown on screen is{' '}
-            <span className="font-mono text-foreground/70">
-              sha3_256(JSON.stringify(action))
-            </span>{' '}
-            (canonicalised JS object). The Rust runtime hashes{' '}
-            <span className="font-mono text-foreground/70">serde_json::to_vec(&amp;Action)</span>{' '}
-            of its enum, so the two byte strings differ by serializer — what&apos;s preserved is the
-            <em> hash-then-sign </em> structure, not the input bytes. Same goes for replica names:
-            the production cluster names replicas{' '}
-            <span className="font-mono text-foreground/70">analytical</span>,{' '}
-            <span className="font-mono text-foreground/70">creative</span>,{' '}
-            <span className="font-mono text-foreground/70">adversarial</span>,{' '}
-            <span className="font-mono text-foreground/70">domain_expert</span> (the cognitive
-            agents from scene 02). This demo uses r0–r3 for visual room.
-          </p>
+          <DemoFidelity
+            statement={
+              <>
+                Real Ed25519 signatures and SHA3-256 hashes, and the same protocol rules as the Rust
+                code, run as four replicas in one process, not across machines.
+              </>
+            }
+          >
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              <span className="font-mono text-foreground/80">Scope:</span> the Ed25519 signatures and
+              SHA3-256 action hashes are real — generated here in the browser-build pipeline using
+              Node&apos;s built-in{' '}
+              <span className="font-mono text-foreground/80">node:crypto</span>. The protocol
+              structure (n=4, f=1, quorum=2f+1=3, leader ={' '}
+              <span className="font-mono text-foreground/80">replicas[view % n]</span>, equivocation
+              log keyed on <span className="font-mono text-foreground/80">(replica, sequence)</span>,
+              view change on 5s timeout) is{' '}
+              <span className="text-foreground">protocol-faithful</span> to{' '}
+              <span className="font-mono text-foreground/80 break-all">
+                tdd005/crates/tdd005_orchestrator/src/bft.rs
+              </span>{' '}
+              — same constants, same phase ordering, same byzantine detection rule. This is the
+              in-process VirtualBftCluster pattern (Patch 90), not a production multi-host PBFT
+              deployment.
+            </p>
+            <p className="text-xs md:text-sm text-muted-foreground/80 leading-relaxed">
+              <span className="font-mono text-foreground/70">Honest divergence:</span> the action hash
+              shown on screen is{' '}
+              <span className="font-mono text-foreground/70">
+                sha3_256(JSON.stringify(action))
+              </span>{' '}
+              (canonicalised JS object). The Rust runtime hashes{' '}
+              <span className="font-mono text-foreground/70">serde_json::to_vec(&amp;Action)</span>{' '}
+              of its enum, so the two byte strings differ by serializer — what&apos;s preserved is the
+              <em> hash-then-sign </em> structure, not the input bytes. Same goes for replica names:
+              the production cluster names replicas{' '}
+              <span className="font-mono text-foreground/70">analytical</span>,{' '}
+              <span className="font-mono text-foreground/70">creative</span>,{' '}
+              <span className="font-mono text-foreground/70">adversarial</span>,{' '}
+              <span className="font-mono text-foreground/70">domain_expert</span> (the cognitive
+              agents from scene 02). This demo uses r0–r3 for visual room.
+            </p>
+          </DemoFidelity>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] md:text-xs font-mono text-muted-foreground/70 pt-1">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-muted-foreground/70 pt-1">
           <span>spec · TDD-005 bft.rs</span>
           <span>generated · {new Date(sceneData.generated_at).toISOString().slice(0, 10)}</span>
           <span>

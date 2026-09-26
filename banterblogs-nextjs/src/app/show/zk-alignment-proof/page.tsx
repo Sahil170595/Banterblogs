@@ -4,6 +4,7 @@ import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 import { ZkAlignmentProof } from '@/components/scenes/ZkAlignmentProof';
+import { DemoFidelity } from '@/components/show/DemoFidelity';
 import sceneDataRaw from '@/data/scenes/zk-alignment-proof.json';
 
 // ---------------------------------------------------------------------------
@@ -242,33 +243,42 @@ export default function ZkAlignmentProofPage() {
             tamper. Each scenario shows what the prover knows, what gets sent on the wire, and what
             the verifier sees.
           </p>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            <span className="font-mono text-foreground/80">Scope:</span> the Pedersen commitments,
-            Schnorr OR proofs, and Fiat-Shamir challenges are{' '}
-            <span className="text-foreground">real</span> — generated at build time via{' '}
-            <span className="font-mono text-foreground/80">@noble/curves</span> Ristretto255 +
-            Node&apos;s <span className="font-mono text-foreground/80">sha3-512</span>. Every bundle
-            actually verifies (or actually fails) within the same library. The protocol shape (per-bit
-            Pedersen commit + Schnorr OR + homomorphic sum, 14-bit fixed-point ×10000) is{' '}
-            <span className="text-foreground">protocol-faithful</span> to{' '}
-            <span className="font-mono text-foreground/80 break-all">
-              tdd005/crates/tdd004_provenance/src/zk.rs
-            </span>
-            .
-          </p>
-          <p className="text-xs md:text-sm text-muted-foreground/80 leading-relaxed">
-            <span className="font-mono text-foreground/70">Honest divergence:</span> the H generator
-            differs between implementations. Rust derives it via{' '}
-            <span className="font-mono text-foreground/70">SHA3-512 hash-to-curve</span> of the
-            domain string; this build uses RFC 9380 (SHA-512) via{' '}
-            <span className="font-mono text-foreground/70">@noble/curves</span>. The two H points
-            don&apos;t share bytes, but each is an independent generator with no known discrete log
-            w.r.t. G. Proofs built here verify here; proofs built in Rust verify in Rust. Cross-impl
-            verification would require matching the hash-to-curve algorithm.
-          </p>
+          <DemoFidelity
+            statement={
+              <>
+                Real proofs, built and verified here. The Rust runtime derives one generator
+                differently, so proofs don&apos;t carry across between the two.
+              </>
+            }
+          >
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              <span className="font-mono text-foreground/80">Scope:</span> the Pedersen commitments,
+              Schnorr OR proofs, and Fiat-Shamir challenges are{' '}
+              <span className="text-foreground">real</span> — generated at build time via{' '}
+              <span className="font-mono text-foreground/80">@noble/curves</span> Ristretto255 +
+              Node&apos;s <span className="font-mono text-foreground/80">sha3-512</span>. Every bundle
+              actually verifies (or actually fails) within the same library. The protocol shape (per-bit
+              Pedersen commit + Schnorr OR + homomorphic sum, 14-bit fixed-point ×10000) is{' '}
+              <span className="text-foreground">protocol-faithful</span> to{' '}
+              <span className="font-mono text-foreground/80 break-all">
+                tdd005/crates/tdd004_provenance/src/zk.rs
+              </span>
+              .
+            </p>
+            <p className="text-xs md:text-sm text-muted-foreground/80 leading-relaxed">
+              <span className="font-mono text-foreground/70">Honest divergence:</span> the H generator
+              differs between implementations. Rust derives it via{' '}
+              <span className="font-mono text-foreground/70">SHA3-512 hash-to-curve</span> of the
+              domain string; this build uses RFC 9380 (SHA-512) via{' '}
+              <span className="font-mono text-foreground/70">@noble/curves</span>. The two H points
+              don&apos;t share bytes, but each is an independent generator with no known discrete log
+              w.r.t. G. Proofs built here verify here; proofs built in Rust verify in Rust. Cross-impl
+              verification would require matching the hash-to-curve algorithm.
+            </p>
+          </DemoFidelity>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] md:text-xs font-mono text-muted-foreground/70 pt-1">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-muted-foreground/70 pt-1">
           <span>spec · TDD-005 zk.rs</span>
           <span>generated · {new Date(sceneData.generated_at).toISOString().slice(0, 10)}</span>
           <span>

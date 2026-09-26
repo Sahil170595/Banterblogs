@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { IntentLink } from '@/components/ui/IntentLink';
 import { ArrowLeft } from 'lucide-react';
 import { StreamingLadder } from '@/components/scenes/StreamingLadder';
+import { DemoFidelity } from '@/components/show/DemoFidelity';
 import sceneData from '@/data/scenes/streaming-ladder.json';
 
 const LADDER_DESCRIPTION =
@@ -121,16 +122,25 @@ export default function StreamingLadderPage() {
             Below is a working example. The walkthrough plays automatically — five real reasoning
             steps moving through the five-tier ladder, real verdicts, real costs.
           </p>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            <span className="font-mono text-foreground/80">Public-demo caveat:</span> the T2 LLM
-            judge runs against a deterministic fake provider for reproducibility. T1 (the 15-rule
-            verifier), T2.5 (text-protocol self-correct), T3 (the panel client), and the enforcer
-            are the real code paths. Cost numbers shown are production estimates, not the offline
-            runner&apos;s in-process microseconds.
-          </p>
+          <DemoFidelity
+            statement={
+              <>
+                The T2 LLM judge answers from a fixed stand-in so the demo is reproducible; the
+                verifier, self-correct, panel and enforcer are the real code paths.
+              </>
+            }
+          >
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              <span className="font-mono text-foreground/80">Public-demo caveat:</span> the T2 LLM
+              judge runs against a deterministic fake provider for reproducibility. T1 (the 15-rule
+              verifier), T2.5 (text-protocol self-correct), T3 (the panel client), and the enforcer
+              are the real code paths. Cost numbers shown are production estimates, not the offline
+              runner&apos;s in-process microseconds.
+            </p>
+          </DemoFidelity>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] md:text-xs font-mono text-muted-foreground/70 pt-1">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-muted-foreground/70 pt-1">
           <span>spec · {sceneData.spec_ref}</span>
           <span>generated · {new Date(sceneData.generated_at).toISOString().slice(0, 10)}</span>
           <span>scenarios · {sceneData.records.length}</span>
@@ -144,7 +154,7 @@ export default function StreamingLadderPage() {
           Every verdict on this page was produced by the actual P102.x streaming pipeline running
           over the example reasoning steps. The 15 deterministic rules, the T2.5 self-correct text
           protocol, the panel client, and the enforcer all ran for real on real input. The T2 LLM
-          judge ran against a fake provider — see the public-demo caveat above. The build pipeline
+          judge ran against a fake provider — see “How faithful is this demo?” above. The build pipeline
           lives at <span className="font-mono text-foreground">demo/build-data.mjs</span> in
           Banterpacks.
         </p>
