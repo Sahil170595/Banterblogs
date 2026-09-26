@@ -1,6 +1,6 @@
 'use client';
 
-import { computeDwell } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, CLEAR_OF_STICKY_NARRATION, computeDwell, SCENE_ROOT, STICKY_NARRATION } from './_shared';
 
 import {
   useState,
@@ -251,14 +251,14 @@ function TimelineNode({
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2">
           <span
-            className={`font-mono text-[11px] uppercase tracking-widest ${
+            className={`font-mono text-[12px] uppercase tracking-widest ${
               isActive ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
             event {rec.step_index + 1}
           </span>
           <span
-            className={`font-mono text-[11px] ${
+            className={`font-mono text-[12px] ${
               tampered ? 'text-primary' : 'text-accent/90'
             }`}
             aria-hidden
@@ -282,12 +282,16 @@ function TimelineNode({
 // narration walks through the beats. Verify card optionally goes to
 // emphasizedVerify mode (full-width, larger title) when active or when
 // the verify beat is past — v1 audit C11 progressive-focus pattern.
+// Until a beat reaches it, a card keeps its name and what it does and shows
+// `pending` in place of its body: hashes, signatures and check results are
+// outcomes the narration has not reached.
 function PhaseCard({
   phaseId,
   isActive,
   isRevealed,
   reducedMotion,
   children,
+  pending = <div className="font-mono text-xs text-muted-foreground">pending</div>,
   emphasized = false,
   failedWrap = false,
 }: {
@@ -296,6 +300,7 @@ function PhaseCard({
   isRevealed: boolean;
   reducedMotion: boolean;
   children: ReactNode;
+  pending?: ReactNode;
   emphasized?: boolean;
   failedWrap?: boolean;
 }) {
@@ -321,6 +326,7 @@ function PhaseCard({
       transition={{ duration: 0.35, ease: 'easeOut' }}
       aria-hidden={!isRevealed}
       inert={!isRevealed}
+      data-phase={phaseId}
       className={`relative rounded-lg border ${border} ${bg} backdrop-blur-sm ${
         emphasized ? 'p-5 md:p-7' : 'p-4 md:p-5'
       }`}
@@ -343,7 +349,7 @@ function PhaseCard({
           {meta.plain}
         </div>
       </div>
-      {children}
+      {isRevealed ? children : pending}
     </motion.div>
   );
 }
@@ -351,13 +357,21 @@ function PhaseCard({
 // Pretty hex display — truncated by default (head + … + tail) with a
 // click-to-expand affordance. v1 audit C10 — full hex inline reads as a
 // debug terminal dump; Etherscan-style truncation is the industry pattern.
+// The collapsed hex never breaks mid-value: at 12px a row holds 16…12 in a
+// phase card (308px at 1280, 324px on a 390px phone), and a row with a
+// prefix ("sib 1 → ", ~60px) holds 10…8. Past that the button wraps instead.
+const HEX_HEAD = 16;
+const HEX_TAIL = 12;
+const PREFIXED_HEX_HEAD = 10;
+const PREFIXED_HEX_TAIL = 8;
+
 function HexBlock({
   hex,
   ariaLabel,
   prefix,
   alwaysExpanded = false,
-  headChars = 16,
-  tailChars = 12,
+  headChars = prefix ? PREFIXED_HEX_HEAD : HEX_HEAD,
+  tailChars = prefix ? PREFIXED_HEX_TAIL : HEX_TAIL,
 }: {
   hex: string;
   ariaLabel: string;
@@ -383,19 +397,19 @@ function HexBlock({
 
   return (
     <div
-      className="font-mono text-[11px] md:text-[12px] text-foreground/90 break-all leading-relaxed flex items-baseline gap-1.5"
+      className="font-mono text-[12px] text-foreground/90 leading-relaxed flex flex-wrap items-baseline gap-x-1.5"
       role="group"
       aria-label={`${ariaLabel} (${hex.length / 2} bytes)`}
     >
-      {prefix && <span className="text-muted-foreground/80">{prefix}</span>}
-      <span className={showExpanded ? '' : 'tracking-wide'}>
+      {prefix && <span className="shrink-0 whitespace-nowrap text-muted-foreground/80">{prefix}</span>}
+      <span className={showExpanded ? 'min-w-0 flex-1 break-all' : 'whitespace-nowrap tracking-wide'}>
         {showExpanded ? chunked : collapsed}
       </span>
       {isLong && !alwaysExpanded && (
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
-          className="shrink-0 ml-1 inline-flex items-center gap-0.5 rounded border border-border/40 hover:border-border bg-background/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-colors"
+          className={`${CLEAR_OF_STICKY_NARRATION} shrink-0 ml-1 inline-flex items-center gap-0.5 rounded border border-border/40 hover:border-border bg-background/40 px-1.5 py-0.5 text-[12px] font-mono text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-colors`}
           aria-label={expanded ? `Collapse ${ariaLabel}` : `Expand ${ariaLabel} (${hex.length} hex chars)`}
           aria-expanded={expanded}
         >
@@ -414,17 +428,21 @@ function HexBlock({
   );
 }
 
+// `passed` null: the verify beat has not come, so the check shows what it
+// checks and "pending", not its result
 function VerificationRow({
   label,
   passed,
 }: {
   label: string;
-  passed: boolean;
+  passed: boolean | null;
 }) {
   return (
     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded border bg-background/40 border-border/40">
       <div className="flex items-center gap-2">
-        {passed ? (
+        {passed === null ? (
+          <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        ) : passed ? (
           <CheckCircle2 className="h-3.5 w-3.5 text-accent" aria-hidden />
         ) : (
           <ShieldAlert className="h-3.5 w-3.5 text-primary" aria-hidden />
@@ -432,11 +450,11 @@ function VerificationRow({
         <span className="text-[12px] text-foreground/90">{label}</span>
       </div>
       <span
-        className={`font-mono text-[10px] uppercase tracking-widest ${
-          passed ? 'text-accent' : 'text-primary'
+        className={`font-mono text-[12px] uppercase tracking-widest ${
+          passed === null ? 'text-muted-foreground' : passed ? 'text-accent' : 'text-primary'
         }`}
       >
-        {passed ? 'verifies ✓' : 'fails ✗'}
+        {passed === null ? 'pending' : passed ? 'verifies ✓' : 'fails ✗'}
       </span>
     </div>
   );
@@ -449,28 +467,27 @@ function JourneyPanel({ record }: { record: EventRecord }) {
   return (
     <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.6fr] gap-4 md:gap-6 items-baseline">
       <div>
-        {/* v1 audit C15: sub-labels bumped from text-[9px] muted/70 to
-            text-[11px] muted/90 for AA contrast. */}
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+        {/* sub-labels at muted/90 for AA contrast (v1 audit C15) */}
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
           per-event audit cost
         </div>
         <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           ~{lat.actual_total_ms}ms
           {isEstimate && (
             <span
-              className="ml-1.5 align-middle text-[10px] font-mono text-muted-foreground/80 normal-case tracking-normal"
+              className="ml-1.5 align-middle text-[12px] font-mono text-muted-foreground/80 normal-case tracking-normal"
               title="Estimate from per-phase rust costs, not a benchmark"
             >
               (est.)
             </span>
           )}
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1.5">
+        <div className="text-[12px] text-muted-foreground mt-1.5">
           SHA3-256 hash + Ed25519 sign + Merkle proof ({lat.breakdown?.merkle_steps ?? '?'} levels)
         </div>
       </div>
       <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90 mb-1.5">
           centralized audit DB
         </div>
         <div
@@ -479,18 +496,18 @@ function JourneyPanel({ record }: { record: EventRecord }) {
         >
           ~{lat.naive_total_ms}ms
         </div>
-        <div className="text-[11px] text-muted-foreground mt-1.5">
+        <div className="text-[12px] text-muted-foreground mt-1.5">
           network + replicated DB write — and you have to trust the operator
         </div>
       </div>
       <div className="md:border-l md:border-border/30 md:pl-6">
-        <div className="text-[11px] uppercase tracking-widest text-primary/95 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-primary/95 mb-1.5">
           saved
         </div>
         <div className="font-mono text-5xl md:text-6xl text-primary font-bold leading-none tracking-tight">
           {saved.toFixed(1)}%
         </div>
-        <div className="text-[11px] text-muted-foreground mt-2">
+        <div className="text-[12px] text-muted-foreground mt-2">
           and verifiable in any language with crypto primitives
         </div>
       </div>
@@ -517,7 +534,7 @@ function AftermathPanel({
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="mt-6 md:mt-8 signal-panel-strong p-5 md:p-7"
         >
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
             What happens with this event
           </div>
           {record.aftermath && (
@@ -538,9 +555,11 @@ function AftermathPanel({
 // do not animate load no framer code.
 export function ProvenanceChain({ data }: { data: SceneData }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <ProvenanceChainScene data={data} />
-    </MotionConfig>
+    <div {...SCENE_ROOT}>
+      <MotionConfig reducedMotion="user">
+        <ProvenanceChainScene data={data} />
+      </MotionConfig>
+    </div>
   );
 }
 
@@ -741,18 +760,18 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div>
-            <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
               Trace · {data.records.length} events · single chain
             </div>
-            <div className="font-mono text-[10px] md:text-xs text-muted-foreground/80 break-all">
+            <div className="font-mono text-xs text-muted-foreground/80 break-all">
               {data.trace.trace_id}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[9px] uppercase tracking-widest text-primary mb-1">
+            <div className="text-[12px] uppercase tracking-widest text-primary mb-1">
               Merkle root
             </div>
-            <div className="font-mono text-[10px] md:text-[11px] text-primary/90 break-all">
+            <div className="font-mono text-[12px] text-primary/90 break-all">
               {fmtHex(data.trace.merkle_root_hex, 12, 8)}
             </div>
           </div>
@@ -763,8 +782,9 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
           Mobile: timeline collapses to a horizontal scroller above the cards. */}
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 md:gap-6 mb-6 md:mb-8">
         {/* Timeline (also doubles as the scenario scrubber). */}
-        <div className="md:sticky md:top-4 md:self-start">
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+        {/* pinned below the sticky site header, not under it */}
+        <div className="md:sticky md:top-[calc(var(--site-header-height)+0.75rem)] md:self-start">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
             Event timeline
           </div>
           <div
@@ -800,15 +820,15 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
           >
             <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3">
               <div className="space-y-1">
-                <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   Event {record.step_index + 1} of {data.records.length}
                 </div>
-                <div className="font-mono text-[10px] md:text-xs text-muted-foreground/80">
+                <div className="font-mono text-xs text-muted-foreground/80">
                   {record.event.event_type} · {record.event.agent_id}
                 </div>
               </div>
               {v.tampered && (
-                <span className="rounded border border-primary/60 bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest flex items-center gap-1">
+                <span className="rounded border border-primary/60 bg-primary/10 text-primary px-2 py-0.5 text-[12px] font-mono uppercase tracking-widest flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" aria-hidden /> tampered
                 </span>
               )}
@@ -823,91 +843,95 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
             )}
           </motion.div>
 
-          {/* Narration */}
-          <div className="signal-panel-strong p-5 md:p-7 min-h-[180px] md:min-h-[160px] relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Walkthrough · beat {beatIdx + 1} of {beats.length}
-                {isIntroBeat && (
-                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
-                    intro
-                  </span>
-                )}
-                {!isIntroBeat && activePhaseId && (
-                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
-                    → {activePhaseId}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={togglePlay}
-                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                  aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
-                >
-                  {playing ? (
-                    <Pause className="h-3.5 w-3.5" aria-hidden />
-                  ) : (
-                    <Play className="h-3.5 w-3.5" aria-hidden />
+          {/* Narration — pinned on wide screens while the phase cards scroll */}
+          <div className={STICKY_NARRATION}>
+            <div className="signal-panel-strong p-5 md:p-7 relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Walkthrough · beat {beatIdx + 1} of {beats.length}
+                  {isIntroBeat && (
+                    <span className="ml-2 text-primary font-mono normal-case tracking-normal">
+                      intro
+                    </span>
                   )}
-                </button>
-                <button
-                  onClick={restart}
-                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                  aria-label="Restart walkthrough"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-                </button>
+                  {!isIntroBeat && activePhaseId && (
+                    <span className="ml-2 text-primary font-mono normal-case tracking-normal">
+                      → {activePhaseId}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={togglePlay}
+                    className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                    aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
+                  >
+                    {playing ? (
+                      <Pause className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      <Play className="h-3.5 w-3.5" aria-hidden />
+                    )}
+                  </button>
+                  <button
+                    onClick={restart}
+                    className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                    aria-label="Restart walkthrough"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[5rem]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${record.step_id}-${beatIdx}`}
-                  initial={reducedMotion ? false : { opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <Typewriter
-                    text={activeBeat?.copy ?? ''}
-                    reducedMotion={reducedMotion}
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </div>
+              {/* two lines: every beat is at most 84 characters */}
+              <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[2lh]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${record.step_id}-${beatIdx}`}
+                    initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <Typewriter
+                      text={activeBeat?.copy ?? ''}
+                      reducedMotion={reducedMotion}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
 
-            <div
-              className="mt-4 flex gap-0.5 flex-wrap"
-              role="radiogroup"
-              aria-label="Beat selector"
-              onKeyDown={handleBeatKey}
-            >
-              {beats.map((_, i) => (
-                <button
-                  key={`${record.step_id}-${i}`}
-                  onClick={() => {
-                    setBeatIdx(i);
-                    setHasInteracted(true);
-                  }}
-                  className="group inline-flex items-center justify-center h-6 w-8 md:w-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
-                  role="radio"
-                  aria-checked={i === beatIdx}
-                  aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
-                  tabIndex={i === beatIdx ? 0 : -1}
-                >
-                  <span
-                    className={`h-1 w-full rounded-full transition-colors ${
-                      i === beatIdx
-                        ? 'bg-primary'
-                        : i < beatIdx
-                        ? 'bg-accent/60 group-hover:bg-accent'
-                        : 'bg-border/40 group-hover:bg-border'
-                    }`}
-                  />
-                </button>
-              ))}
+              <div
+                className={`mt-4 ${BEAT_BAR_GRID}`}
+                style={beatBarColumns(beats.length)}
+                role="radiogroup"
+                aria-label="Beat selector"
+                onKeyDown={handleBeatKey}
+              >
+                {beats.map((_, i) => (
+                  <button
+                    key={`${record.step_id}-${i}`}
+                    onClick={() => {
+                      setBeatIdx(i);
+                      setHasInteracted(true);
+                    }}
+                    className="group inline-flex items-center justify-center h-6 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
+                    role="radio"
+                    aria-checked={i === beatIdx}
+                    aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
+                    tabIndex={i === beatIdx ? 0 : -1}
+                  >
+                    <span
+                      className={`h-1 w-full rounded-full transition-colors ${
+                        i === beatIdx
+                          ? 'bg-primary'
+                          : i < beatIdx
+                          ? 'bg-accent/60 group-hover:bg-accent'
+                          : 'bg-border/40 group-hover:bg-border'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -921,7 +945,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
               isRevealed={revealedPhases.has('event')}
               reducedMotion={reducedMotion}
             >
-              <div className="space-y-1.5 text-[11px] md:text-xs font-mono">
+              <div className="space-y-1.5 text-xs font-mono">
                 <div className="flex justify-between gap-2">
                   <span className="text-muted-foreground/90">agent_id</span>
                   <span className="text-foreground/90 truncate">
@@ -937,7 +961,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
                   <span className="text-foreground/90">{record.event.timestamp_ms}</span>
                 </div>
                 <div className="pt-1.5">
-                  <div className="text-muted-foreground/80 text-[10px] uppercase tracking-widest mb-1">
+                  <div className="text-muted-foreground/80 text-[12px] uppercase tracking-widest mb-1">
                     payload_hash (SHA3-256)
                   </div>
                   <HexBlock
@@ -947,7 +971,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
                 </div>
                 {Object.keys(record.event.metadata).length > 0 && (
                   <div className="pt-1.5">
-                    <div className="text-muted-foreground/80 text-[10px] uppercase tracking-widest mb-1">
+                    <div className="text-muted-foreground/80 text-[12px] uppercase tracking-widest mb-1">
                       metadata
                     </div>
                     {Object.entries(record.event.metadata).map(([k, val]) => (
@@ -974,7 +998,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
               isRevealed={revealedPhases.has('canonical')}
               reducedMotion={reducedMotion}
             >
-              <div className="space-y-1.5 text-[11px] md:text-xs">
+              <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between font-mono">
                   <span className="text-muted-foreground/90">total length</span>
                   <span className="text-foreground/90">
@@ -990,7 +1014,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
                   <span className="text-foreground/90">1</span>
                 </div>
                 <div className="pt-1.5">
-                  <div className="text-muted-foreground/80 text-[10px] uppercase tracking-widest mb-1 font-mono">
+                  <div className="text-muted-foreground/80 text-[12px] uppercase tracking-widest mb-1 font-mono">
                     first 32 bytes (hex)
                   </div>
                   <HexBlock
@@ -1008,9 +1032,9 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
               isRevealed={revealedPhases.has('sign')}
               reducedMotion={reducedMotion}
             >
-              <div className="space-y-2 text-[11px] md:text-xs">
+              <div className="space-y-2 text-xs">
                 <div>
-                  <div className="text-muted-foreground/80 text-[10px] uppercase tracking-widest mb-1 font-mono">
+                  <div className="text-muted-foreground/80 text-[12px] uppercase tracking-widest mb-1 font-mono">
                     SHA3-256 hash (32 bytes)
                   </div>
                   <HexBlock
@@ -1019,7 +1043,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
                   />
                 </div>
                 <div>
-                  <div className="text-muted-foreground/80 text-[10px] uppercase tracking-widest mb-1 font-mono">
+                  <div className="text-muted-foreground/80 text-[12px] uppercase tracking-widest mb-1 font-mono">
                     Ed25519 signature (64 bytes)
                   </div>
                   <HexBlock
@@ -1028,7 +1052,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
                   />
                 </div>
                 <div>
-                  <div className="text-muted-foreground/80 text-[10px] uppercase tracking-widest mb-1 font-mono">
+                  <div className="text-muted-foreground/80 text-[12px] uppercase tracking-widest mb-1 font-mono">
                     public key (32 bytes)
                   </div>
                   <HexBlock
@@ -1046,7 +1070,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
               isRevealed={revealedPhases.has('chain')}
               reducedMotion={reducedMotion}
             >
-              <div className="space-y-2 text-[11px] md:text-xs">
+              <div className="space-y-2 text-xs">
                 {record.event.prev_event_hash_hex ? (
                   <>
                     <div className="text-foreground/85">
@@ -1074,7 +1098,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
               isRevealed={revealedPhases.has('merkle')}
               reducedMotion={reducedMotion}
             >
-              <div className="space-y-2 text-[11px] md:text-xs">
+              <div className="space-y-2 text-xs">
                 <div className="flex justify-between font-mono">
                   <span className="text-muted-foreground/90">leaf index</span>
                   <span className="text-foreground/90">
@@ -1094,7 +1118,7 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
                   </span>
                 </div>
                 <div className="pt-1.5">
-                  <div className="text-muted-foreground/80 text-[10px] uppercase tracking-widest mb-1 font-mono">
+                  <div className="text-muted-foreground/80 text-[12px] uppercase tracking-widest mb-1 font-mono">
                     sibling hashes (path to root)
                   </div>
                   <div className="space-y-1">
@@ -1122,6 +1146,14 @@ function ProvenanceChainScene({ data }: { data: SceneData }) {
                 reducedMotion={reducedMotion}
                 emphasized
                 failedWrap={!v.all_pass && revealedPhases.has('verify')}
+                // what it checks stays; each result waits for the verify beat
+                pending={
+                  <div className="space-y-2 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
+                    <VerificationRow label="Ed25519 signature" passed={null} />
+                    <VerificationRow label="Chain link (prev_event_hash)" passed={null} />
+                    <VerificationRow label="Merkle proof against root" passed={null} />
+                  </div>
+                }
               >
                 <div className="space-y-2 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
                   <VerificationRow label="Ed25519 signature" passed={v.sig_verifies} />

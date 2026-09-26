@@ -1,6 +1,6 @@
 'use client';
 
-import { computeDwell } from './_shared';
+import { BEAT_BAR_GRID, beatBarColumns, computeDwell, SCENE_ROOT, STICKY_NARRATION } from './_shared';
 
 import {
   useState,
@@ -274,7 +274,7 @@ function SignalRow({
   const pct = Math.round(Math.min(100, Math.max(0, value * 100)));
   return (
     <div className="space-y-1">
-      <div className="flex items-baseline justify-between font-mono text-[10px]">
+      <div className="flex items-baseline justify-between font-mono text-[12px]">
         <span className="text-muted-foreground/90">{label}</span>
         <span className="text-foreground/90">{pct}%</span>
       </div>
@@ -302,7 +302,7 @@ function FlagBadge({ children, tone = 'risk' }: { children: ReactNode; tone?: 'r
     ? 'border-primary/60 bg-primary/10 text-primary'
     : 'border-accent/40 bg-accent/10 text-accent';
   return (
-    <span className={`inline-flex items-center gap-1 rounded border ${cls} px-1.5 py-0.5 text-[11px] font-mono`}>
+    <span className={`inline-flex items-center gap-1 rounded border ${cls} px-1.5 py-0.5 text-[12px] font-mono`}>
       <Flag className="h-2.5 w-2.5" aria-hidden />
       {children}
     </span>
@@ -331,7 +331,7 @@ function AnalyticalCard({
       plain="task decomposition"
       confidence={verdict.confidence}
     >
-      <div className="space-y-2 text-[11px] md:text-xs">
+      <div className="space-y-2 text-xs">
         <div className="flex items-center justify-between gap-2">
           <span className="font-mono text-muted-foreground/90">assessment</span>
           <span className={`font-mono font-bold ${verdict.assessment === 'ready' ? 'text-accent' : 'text-primary'}`}>
@@ -351,7 +351,7 @@ function AnalyticalCard({
             ))}
           </div>
         )}
-        <div className="pt-1 font-mono text-[10px] text-muted-foreground/70">
+        <div className="pt-1 font-mono text-[12px] text-muted-foreground/70">
           conf · {conf}%
         </div>
       </div>
@@ -385,7 +385,7 @@ function CreativeCard({
         <SignalRow label="novelty" value={verdict.novelty_score} agentLabel="Creative" reducedMotion={reducedMotion} />
         <SignalRow label="reframing" value={verdict.reframing_potential} agentLabel="Creative" reducedMotion={reducedMotion} />
         <SignalRow label="cross-domain" value={verdict.cross_domain_score} agentLabel="Creative" reducedMotion={reducedMotion} />
-        <div className="pt-1 font-mono text-[10px] text-muted-foreground/70">
+        <div className="pt-1 font-mono text-[12px] text-muted-foreground/70">
           conf · {conf}% · bigrams · {verdict.bigram_count}
         </div>
       </div>
@@ -422,12 +422,12 @@ function AdversarialCard({
       plain="structural risk"
       confidence={verdict.confidence}
     >
-      <div className="space-y-2 text-[11px] md:text-xs">
+      <div className="space-y-2 text-xs">
         <div className="flex items-baseline justify-between">
           <span className="font-mono text-muted-foreground/90">recommendation</span>
           <span className={`font-mono font-bold uppercase ${recColor}`}>{verdict.recommendation}</span>
         </div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-muted-foreground/90 text-[11px]">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-muted-foreground/90 text-[12px]">
           <div>risk · <span className={risk > 30 ? 'text-primary font-bold' : 'text-foreground/90'}>{risk}%</span></div>
           <div>entropy · <span className="text-foreground/90">{verdict.entropy.toFixed(2)}</span></div>
           <div>tool×· <span className="text-foreground/90">{verdict.tool_multiplier.toFixed(1)}</span></div>
@@ -440,7 +440,7 @@ function AdversarialCard({
             ))}
           </div>
         )}
-        <div className="pt-1 font-mono text-[10px] text-muted-foreground/70">
+        <div className="pt-1 font-mono text-[12px] text-muted-foreground/70">
           conf · {conf}% (1 − risk)
         </div>
       </div>
@@ -470,23 +470,23 @@ function DomainExpertCard({
       plain="multi-domain taxonomy"
       confidence={verdict.confidence}
     >
-      <div className="space-y-2 text-[11px] md:text-xs">
+      <div className="space-y-2 text-xs">
         <div className="flex items-baseline justify-between">
           <span className="font-mono text-muted-foreground/90">detected</span>
           <span className="font-mono font-bold text-foreground/90">{verdict.detected_domain}</span>
         </div>
-        <div className="flex items-baseline justify-between font-mono text-[11px] text-muted-foreground/90">
+        <div className="flex items-baseline justify-between font-mono text-[12px] text-muted-foreground/90">
           <span>primary configured</span>
           <span className="text-foreground/90">{verdict.primary_domain}</span>
         </div>
-        <div className="flex items-baseline justify-between font-mono text-[11px] text-muted-foreground/90">
+        <div className="flex items-baseline justify-between font-mono text-[12px] text-muted-foreground/90">
           <span>domains touched</span>
           <span className="text-foreground/90">{verdict.domains_touched}</span>
         </div>
         {verdict.domain_scores.length > 0 && (
           <div className="space-y-1 pt-1">
             {verdict.domain_scores.slice(0, 3).map((d) => (
-              <div key={d.domain} className="flex items-baseline justify-between text-[11px] font-mono text-muted-foreground/90">
+              <div key={d.domain} className="flex items-baseline justify-between text-[12px] font-mono text-muted-foreground/90">
                 <span>{d.domain}</span>
                 <span className="text-foreground/90">{Math.round(d.score * 100)}% · {d.hits} hits</span>
               </div>
@@ -500,7 +500,7 @@ function DomainExpertCard({
             ))}
           </div>
         )}
-        <div className="pt-1 font-mono text-[10px] text-muted-foreground/70">
+        <div className="pt-1 font-mono text-[12px] text-muted-foreground/70">
           conf · {conf}%
         </div>
       </div>
@@ -543,6 +543,7 @@ function AgentCard({
       }
       transition={{ duration: 0.35, ease: 'easeOut' }}
       aria-hidden={!isRevealed}
+      data-agent={agentId}
       // D19 fix: announce the selection state to screen readers.
       aria-label={isSelected ? `${title} agent, selected by the meta-controller` : undefined}
       className={`relative rounded-lg border ${
@@ -559,17 +560,24 @@ function AgentCard({
               {title}
             </div>
           </div>
-          <div className="text-[11px] text-muted-foreground leading-snug">{plain}</div>
+          <div className="text-[12px] text-muted-foreground leading-snug">{plain}</div>
         </div>
         {isSelected && (
-          // D11 fix: badge bumped from text-[9px] to text-[11px].
-          <span className="rounded border border-primary/60 bg-primary/15 text-primary px-2 py-0.5 text-[11px] font-mono font-bold uppercase tracking-widest">
+          <span className="rounded border border-primary/60 bg-primary/15 text-primary px-2 py-0.5 text-[12px] font-mono font-bold uppercase tracking-widest">
             selected
           </span>
         )}
       </div>
-      {children}
-      <ConfidenceBar value={confidence} label={title} isSelected={isSelected} reducedMotion={reducedMotion} />
+      {/* until a beat reaches the agent, its verdict, metrics and confidence
+          wait: the card keeps only its name and role */}
+      {isRevealed ? (
+        <>
+          {children}
+          <ConfidenceBar value={confidence} label={title} isSelected={isSelected} reducedMotion={reducedMotion} />
+        </>
+      ) : (
+        <div className="font-mono text-xs text-muted-foreground">pending</div>
+      )}
     </motion.div>
   );
 }
@@ -597,12 +605,12 @@ function MetaControllerCard({
         <div className="flex items-center gap-2">
           <Scale className="h-4 w-4 text-primary" aria-hidden />
           <div className="font-bold tracking-tight text-foreground text-[15px]">Meta-controller</div>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/80 ml-1">
+          <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground/80 ml-1">
             composes
           </span>
         </div>
         <span
-          className="rounded border border-primary/60 bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest"
+          className="rounded border border-primary/60 bg-primary/10 text-primary px-2 py-0.5 text-[12px] font-mono uppercase tracking-widest"
           aria-label={`Selected agent: ${meta.selected_style}${isOverride ? ' (via flag override)' : ''}`}
         >
           <span aria-hidden>→ </span>
@@ -646,7 +654,7 @@ function MetaControllerCard({
           );
         })}
       </div>
-      <div className="rounded border border-border/40 bg-background/40 p-3 text-[11px] md:text-xs font-mono text-muted-foreground leading-relaxed flex items-start gap-2">
+      <div className="rounded border border-border/40 bg-background/40 p-3 text-xs font-mono text-muted-foreground leading-relaxed flex items-start gap-2">
         <DecisionIcon
           className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${isOverride ? 'text-primary' : 'text-accent'}`}
           aria-hidden
@@ -671,18 +679,18 @@ function JourneyPanel({ record, agentCount }: { record: TaskRecord; agentCount: 
       <div>
         {/* D12 fix: smaller, lighter sub-labels so the dominant number
             in each column is the actual content, not the label. */}
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
           this task cost
         </div>
         <div className="font-mono text-2xl md:text-3xl text-foreground font-bold leading-tight">
           {lat.actual_total_ms}ms
         </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
+        <div className="text-[12px] text-muted-foreground/80 mt-1.5">
           {agentCount} structural agents in parallel + meta
         </div>
       </div>
       <div>
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-muted-foreground/70 mb-1.5">
           {agentCount}-LLM ensemble would cost
         </div>
         <div
@@ -691,18 +699,18 @@ function JourneyPanel({ record, agentCount }: { record: TaskRecord; agentCount: 
         >
           ~{lat.naive_total_ms}ms
         </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-1.5">
+        <div className="text-[12px] text-muted-foreground/80 mt-1.5">
           parallel LLM calls, ~{perAgentMs}ms each
         </div>
       </div>
       <div className="md:border-l md:border-border/30 md:pl-6">
-        <div className="text-[10px] uppercase tracking-widest text-primary/90 mb-1.5">
+        <div className="text-[12px] uppercase tracking-widest text-primary/90 mb-1.5">
           saved
         </div>
         <div className="font-mono text-5xl md:text-6xl text-primary font-bold leading-none tracking-tight">
           {saved.toFixed(1)}%
         </div>
-        <div className="text-[10px] text-muted-foreground/80 mt-2">
+        <div className="text-[12px] text-muted-foreground/80 mt-2">
           no LLM, no API bill
         </div>
       </div>
@@ -729,7 +737,7 @@ function AftermathPanel({
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="mt-6 md:mt-8 signal-panel-strong p-5 md:p-7"
         >
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
             What the orchestrator does with this
           </div>
           {record.aftermath && (
@@ -739,12 +747,12 @@ function AftermathPanel({
           )}
           {Object.values(record.meta.surfaced_flags).some((flags) => flags.length > 0) && (
             <div className="rounded border border-border/40 bg-background/40 p-3 space-y-2">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground/90">
+              <div className="text-[12px] uppercase tracking-widest text-muted-foreground/90">
                 surfaced flags — recorded regardless of winner
               </div>
               {Object.entries(record.meta.surfaced_flags).map(([style, flags]) =>
                 flags.length > 0 ? (
-                  <div key={style} className="flex flex-wrap items-center gap-2 text-[11px]">
+                  <div key={style} className="flex flex-wrap items-center gap-2 text-[12px]">
                     <span className="font-mono text-muted-foreground/80 min-w-[100px]">{style}:</span>
                     <div className="flex flex-wrap gap-1">
                       {flags.map((f, i) => (
@@ -769,9 +777,11 @@ function AftermathPanel({
 // do not animate load no framer code.
 export function CognitiveAgents({ data }: { data: SceneData }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <CognitiveAgentsScene data={data} />
-    </MotionConfig>
+    <div {...SCENE_ROOT}>
+      <MotionConfig reducedMotion="user">
+        <CognitiveAgentsScene data={data} />
+      </MotionConfig>
+    </div>
   );
 }
 
@@ -965,10 +975,10 @@ function CognitiveAgentsScene({ data }: { data: SceneData }) {
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3 md:mb-4">
           <div className="space-y-1">
-            <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Scenario {record.step_index + 1} of {data.records.length}
             </div>
-            <div className="font-mono text-[10px] md:text-xs text-muted-foreground/80">
+            <div className="font-mono text-xs text-muted-foreground/80">
               {record.step_id} · primary domain · {record.primary_domain}
             </div>
           </div>
@@ -983,123 +993,130 @@ function CognitiveAgentsScene({ data }: { data: SceneData }) {
         )}
       </motion.div>
 
-      {/* Narration */}
-      <div className="signal-panel-strong p-5 md:p-7 mb-6 md:mb-8 min-h-[180px] md:min-h-[160px] relative">
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Walkthrough · beat {beatIdx + 1} of {beats.length}
-            {isIntroBeat && (
-              <span className="ml-2 text-primary font-mono normal-case tracking-normal">intro</span>
-            )}
-            {!isIntroBeat && activeAgentId && (
-              <span className="ml-2 text-primary font-mono normal-case tracking-normal">
-                → {activeAgentId}
-              </span>
-            )}
+      {/* The narrated section: the narration pins on wide screens while the
+          agents, the meta-controller and the aftermath scroll beneath it */}
+      <div>
+        <div className={`${STICKY_NARRATION} mb-6 md:mb-8`}>
+          <div className="signal-panel-strong p-5 md:p-7 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                Walkthrough · beat {beatIdx + 1} of {beats.length}
+                {isIntroBeat && (
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">intro</span>
+                )}
+                {!isIntroBeat && activeAgentId && (
+                  <span className="ml-2 text-primary font-mono normal-case tracking-normal">
+                    → {activeAgentId}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={togglePlay}
+                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                  aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
+                >
+                  {playing ? <Pause className="h-3.5 w-3.5" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
+                </button>
+                <button
+                  onClick={restart}
+                  className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                  aria-label="Restart walkthrough"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              </div>
+            </div>
+
+            {/* two lines: every beat is at most 84 characters */}
+            <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[2lh]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${record.step_id}-${beatIdx}`}
+                  initial={false}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Typewriter text={activeBeat?.copy ?? ''} reducedMotion={reducedMotion} />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* C5 fix: beat scrubber gets arrow-key handler too. */}
+            <div
+              className={`mt-4 ${BEAT_BAR_GRID}`}
+              style={beatBarColumns(beats.length)}
+              role="radiogroup"
+              aria-label="Beat selector"
+              onKeyDown={handleBeatKey}
+            >
+              {beats.map((_, i) => (
+                <button
+                  key={`${record.step_id}-${i}`}
+                  onClick={() => {
+                    setBeatIdx(i);
+                    setHasInteracted(true);
+                  }}
+                  className="group inline-flex items-center justify-center h-6 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
+                  role="radio"
+                  aria-checked={i === beatIdx}
+                  aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
+                  tabIndex={i === beatIdx ? 0 : -1}
+                >
+                  <span
+                    className={`h-1 w-full rounded-full transition-colors ${
+                      i === beatIdx
+                        ? 'bg-primary'
+                        : i < beatIdx
+                        ? 'bg-accent/60 group-hover:bg-accent'
+                        : 'bg-border/40 group-hover:bg-border'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={togglePlay}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}
-            >
-              {playing ? <Pause className="h-3.5 w-3.5" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
-            </button>
-            <button
-              onClick={restart}
-              className="rounded border border-border/50 hover:border-border bg-background/60 p-2 transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              aria-label="Restart walkthrough"
-            >
-              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          </div>
         </div>
 
-        <div className="text-base md:text-lg leading-relaxed text-foreground/95 font-serif min-h-[5rem] md:min-h-[5rem]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${record.step_id}-${beatIdx}`}
-              initial={false}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
-              transition={{ duration: 0.25 }}
-            >
-              <Typewriter text={activeBeat?.copy ?? ''} reducedMotion={reducedMotion} />
-            </motion.div>
-          </AnimatePresence>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          <AnalyticalCard
+            verdict={record.verdicts.analytical}
+            isSelected={selectedStyle === 'analytical' && metaRevealed}
+            isRevealed={revealedAgents.has('analytical')}
+            reducedMotion={reducedMotion}
+          />
+          <CreativeCard
+            verdict={record.verdicts.creative}
+            isSelected={selectedStyle === 'creative' && metaRevealed}
+            isRevealed={revealedAgents.has('creative')}
+            reducedMotion={reducedMotion}
+          />
+          <AdversarialCard
+            verdict={record.verdicts.adversarial}
+            isSelected={selectedStyle === 'adversarial' && metaRevealed}
+            isRevealed={revealedAgents.has('adversarial')}
+            reducedMotion={reducedMotion}
+          />
+          <DomainExpertCard
+            verdict={record.verdicts.domain_expert}
+            isSelected={selectedStyle === 'domain_expert' && metaRevealed}
+            isRevealed={revealedAgents.has('domain_expert')}
+            reducedMotion={reducedMotion}
+          />
         </div>
 
-        {/* C5 fix: beat scrubber gets arrow-key handler too. */}
-        <div
-          className="mt-4 flex gap-0.5 flex-wrap"
-          role="radiogroup"
-          aria-label="Beat selector"
-          onKeyDown={handleBeatKey}
-        >
-          {beats.map((_, i) => (
-            <button
-              key={`${record.step_id}-${i}`}
-              onClick={() => {
-                setBeatIdx(i);
-                setHasInteracted(true);
-              }}
-              className="group inline-flex items-center justify-center h-6 w-8 md:w-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
-              role="radio"
-              aria-checked={i === beatIdx}
-              aria-label={`Jump to beat ${i + 1} of ${beats.length}`}
-              tabIndex={i === beatIdx ? 0 : -1}
-            >
-              <span
-                className={`h-1 w-full rounded-full transition-colors ${
-                  i === beatIdx
-                    ? 'bg-primary'
-                    : i < beatIdx
-                    ? 'bg-accent/60 group-hover:bg-accent'
-                    : 'bg-border/40 group-hover:bg-border'
-                }`}
-              />
-            </button>
-          ))}
-        </div>
-      </div>
+        {metaRevealed && (
+          <MetaControllerCard record={record} reducedMotion={reducedMotion} />
+        )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-        <AnalyticalCard
-          verdict={record.verdicts.analytical}
-          isSelected={selectedStyle === 'analytical' && metaRevealed}
-          isRevealed={revealedAgents.has('analytical')}
-          reducedMotion={reducedMotion}
-        />
-        <CreativeCard
-          verdict={record.verdicts.creative}
-          isSelected={selectedStyle === 'creative' && metaRevealed}
-          isRevealed={revealedAgents.has('creative')}
-          reducedMotion={reducedMotion}
-        />
-        <AdversarialCard
-          verdict={record.verdicts.adversarial}
-          isSelected={selectedStyle === 'adversarial' && metaRevealed}
-          isRevealed={revealedAgents.has('adversarial')}
-          reducedMotion={reducedMotion}
-        />
-        <DomainExpertCard
-          verdict={record.verdicts.domain_expert}
-          isSelected={selectedStyle === 'domain_expert' && metaRevealed}
-          isRevealed={revealedAgents.has('domain_expert')}
+        <AftermathPanel
+          key={`aftermath-${record.step_id}`}
+          record={record}
+          visible={metaRevealed}
           reducedMotion={reducedMotion}
         />
       </div>
-
-      {metaRevealed && (
-        <MetaControllerCard record={record} reducedMotion={reducedMotion} />
-      )}
-
-      <AftermathPanel
-        key={`aftermath-${record.step_id}`}
-        record={record}
-        visible={metaRevealed}
-        reducedMotion={reducedMotion}
-      />
 
       <div className="mt-8 md:mt-10">
         {/* D3 fix: agentCount derived from data instead of hardcoded. */}
@@ -1107,7 +1124,7 @@ function CognitiveAgentsScene({ data }: { data: SceneData }) {
       </div>
 
       <div className="mt-6 md:mt-8">
-        <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Try a different task · {data.records.length} scenarios
         </div>
         <div
@@ -1133,13 +1150,14 @@ function CognitiveAgentsScene({ data }: { data: SceneData }) {
                 aria-label={`Scenario ${r.step_index + 1}: ${r.task_description.slice(0, 80)}${r.task_description.length > 80 ? '…' : ''} (selected by ${sel})`}
                 tabIndex={isActive ? 0 : -1}
               >
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground">
                   scenario {r.step_index + 1}
                 </span>
-                <span className="text-xs md:text-sm text-foreground/90 leading-tight line-clamp-2">
+                {/* the whole task: the card grows, and the row with it */}
+                <span className="text-xs md:text-sm text-foreground/90 leading-tight [overflow-wrap:anywhere]">
                   {r.task_description}
                 </span>
-                <span className="text-[10px] font-mono mt-1 flex items-center gap-1 text-primary">
+                <span className="text-[12px] font-mono mt-auto pt-1 flex items-center gap-1 text-primary">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
                   → {sel}
                 </span>

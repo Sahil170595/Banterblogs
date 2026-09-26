@@ -10,8 +10,19 @@ const SCENES = ['streaming-ladder', 'bft-consensus', 'cognitive-agents', 'proven
 const SCREENSHOTS_ON = process.env.VISUAL_SCREENSHOTS === 'on';
 // share of pixels a page may differ by before the screenshot fails
 const MAX_DIFF_PIXEL_RATIO = 0.01;
+// the global sheet (fonts merged in, as routes.spec.ts holds every other page
+// to) and the scenes' own (src/app/show/scenes.css)
+const SCENE_SHEETS = 2;
 
 for (const slug of SCENES) {
+  test(`/show/${slug} blocks its first paint on the global sheet and the scene sheet`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'the sheets do not depend on the viewport');
+    await page.goto(`/show/${slug}`, { waitUntil: 'domcontentloaded' });
+    const sheets = await page.evaluate(() => new Set([...document.querySelectorAll('link[rel="stylesheet"]')].map((link) => link.getAttribute('href'))).size);
+    expect(sheets).toBe(SCENE_SHEETS);
+  });
+
+
   test(`/show/${slug} matches its full page`, { tag: '@screenshot' }, async ({ page }) => {
     test.skip(!SCREENSHOTS_ON, 'screenshot baselines come from the CI image; see e2e/README.md');
     await page.emulateMedia({ reducedMotion: 'reduce' });
