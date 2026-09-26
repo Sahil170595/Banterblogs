@@ -61,55 +61,59 @@
       "beats": [
         {
           "target_agent": null,
-          "copy": "A potentially risky task. Watch how the rule-based agents split on this. Adversarial"
+          "copy": "A potentially risky task. Watch how the rule-based agents split on this."
         },
         {
           "target_agent": null,
-          "copy": "is the one to watch — but Analytical will weigh in too."
+          "copy": "Adversarial is the one to watch — but Analytical will weigh in too."
         },
         {
           "target_agent": "analytical",
-          "copy": "Analytical decomposes the task: 0 verbs found. Analytical reads English verbs"
+          "copy": "Analytical decomposes the task: 0 verbs found."
         },
         {
           "target_agent": "analytical",
-          "copy": "(\"delete\", \"execute\"), not shell binaries like rm. Shell inputs come back empty"
+          "copy": "Analytical reads English verbs (\"delete\", \"execute\"), not shell binaries like rm."
         },
         {
           "target_agent": "analytical",
-          "copy": "here; Adversarial picks up the slack. Assessment \"ready\", confidence 100%."
+          "copy": "Shell inputs come back empty here; Adversarial picks up the slack."
+        },
+        {
+          "target_agent": "analytical",
+          "copy": "Assessment \"ready\", confidence 100%."
         },
         {
           "target_agent": "creative",
-          "copy": "Creative: novelty 50%, reframing 20%, cross-domain 50%. Compares against 0"
+          "copy": "Creative: novelty 50%, reframing 20%, cross-domain 50%."
         },
         {
           "target_agent": "creative",
-          "copy": "remembered tasks. Confidence 41%."
+          "copy": "Compares against 0 remembered tasks. Confidence 41%."
         },
         {
           "target_agent": "adversarial",
-          "copy": "Adversarial: Shannon entropy 4.21, tool multiplier 1.0, 2 flags. Flags:"
+          "copy": "Adversarial: Shannon entropy 4.21, tool multiplier 1.0, 2 flags."
         },
         {
           "target_agent": "adversarial",
-          "copy": "cwe78_os_command_injection + privilege_escalation:sudo. CWE: catalog of common"
+          "copy": "Flags: cwe78_os_command_injection + privilege_escalation:sudo."
         },
         {
           "target_agent": "adversarial",
-          "copy": "software weaknesses — regex caught an injection pattern. Recommendation \"block\"."
+          "copy": "CWE: catalog of common software weaknesses — regex caught an injection pattern."
         },
         {
           "target_agent": "adversarial",
-          "copy": "Risk score 65%."
+          "copy": "Recommendation \"block\". Risk score 65%."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "DomainExpert: primary configured \"security\", best-detected \"general\". 0 domains"
+          "copy": "DomainExpert: primary configured \"security\", best-detected \"general\"."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "touched; no boundary flags. Confidence 30%."
+          "copy": "0 domains touched; no boundary flags. Confidence 30%."
         },
         {
           "target_agent": "meta",
@@ -121,19 +125,19 @@
         },
         {
           "target_agent": "meta",
-          "copy": "Selected: adversarial via flag override. adversarial recommended \"block\" — security"
+          "copy": "Selected: adversarial via flag override."
         },
         {
           "target_agent": "meta",
-          "copy": "priority overrides confidence ranking. Total cost: ~8.5ms across four parallel"
+          "copy": "adversarial recommended \"block\" — security priority overrides confidence ranking."
         },
         {
           "target_agent": "meta",
-          "copy": "structural agents (no LLM calls). 4-LLM ensemble in parallel would cost ~50ms"
+          "copy": "Total cost: ~8.5ms across four parallel structural agents (no LLM calls)."
         },
         {
           "target_agent": "meta",
-          "copy": "wall-clock for the same diversity."
+          "copy": "4-LLM ensemble in parallel would cost ~50ms wall-clock for the same diversity."
         }
       ],
       "verdicts": {
@@ -258,43 +262,43 @@
       "beats": [
         {
           "target_agent": null,
-          "copy": "A potentially risky task. Watch how the rule-based agents split on this. Adversarial"
+          "copy": "An infrastructure task that crosses domains: Kubernetes, Terraform, TLS, admin."
         },
         {
           "target_agent": null,
-          "copy": "is the one to watch — but Analytical will weigh in too."
+          "copy": "DomainExpert is the one to watch — it flags crossovers single-domain reviewers miss."
         },
         {
           "target_agent": "analytical",
-          "copy": "Analytical: 2 verbs, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment"
+          "copy": "Analytical: 2 verbs, 0 parameters, nesting depth 0, ambiguity 0.00."
         },
         {
           "target_agent": "analytical",
-          "copy": "\"ready\". Confidence 100%."
+          "copy": "Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
-          "copy": "Creative: novelty 50%, reframing 20%, cross-domain 50%. Compares against 0"
+          "copy": "Creative: novelty 50%, reframing 20%, cross-domain 50%."
         },
         {
           "target_agent": "creative",
-          "copy": "remembered tasks. Confidence 41%."
+          "copy": "Compares against 0 remembered tasks. Confidence 41%."
         },
         {
           "target_agent": "adversarial",
-          "copy": "Adversarial: Shannon entropy 4.17, tool multiplier 1.0. 1 flag:"
+          "copy": "Adversarial: Shannon entropy 4.17, tool multiplier 1.0."
         },
         {
           "target_agent": "adversarial",
-          "copy": "privilege_escalation:admin. Recommendation \"allow\". Risk score 20%."
+          "copy": "1 flag: privilege_escalation:admin. Recommendation \"allow\". Risk score 20%."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "DomainExpert: primary configured \"security\", best-detected \"infrastructure\". 3"
+          "copy": "DomainExpert: primary configured \"security\", best-detected \"infrastructure\"."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "domains touched; cross domain:infrastructure+security. Confidence 41%."
+          "copy": "3 domains touched; cross_domain:infrastructure+security. Confidence 41%."
         },
         {
           "target_agent": "meta",
@@ -302,23 +306,27 @@
         },
         {
           "target_agent": "meta",
-          "copy": "domain_expert at 41%. Flags can override the raw confidence ranking. Selected:"
+          "copy": "domain_expert at 41%. Flags can override the raw confidence ranking."
         },
         {
           "target_agent": "meta",
-          "copy": "domain_expert via flag override. Flags: cross_domain:infrastructure+security +"
+          "copy": "Selected: domain_expert via flag override."
         },
         {
           "target_agent": "meta",
-          "copy": "security_infra_crossover. Boundary risk routed. Total cost: ~8.5ms (four parallel"
+          "copy": "Flags: cross_domain:infrastructure+security + security_infra_crossover."
         },
         {
           "target_agent": "meta",
-          "copy": "agents, no LLM calls). 4-LLM ensemble in parallel would cost ~50ms wall-clock for"
+          "copy": "Boundary risk routed."
         },
         {
           "target_agent": "meta",
-          "copy": "the same diversity."
+          "copy": "Total cost: ~8.5ms (four parallel agents, no LLM calls)."
+        },
+        {
+          "target_agent": "meta",
+          "copy": "4-LLM ensemble in parallel would cost ~50ms wall-clock for the same diversity."
         }
       ],
       "verdicts": {
@@ -463,19 +471,19 @@
       "beats": [
         {
           "target_agent": null,
-          "copy": "An ML-flavored task. DomainExpert's taxonomy is built for this. Creative looks for"
+          "copy": "An ML-flavored task. DomainExpert's taxonomy is built for this."
         },
         {
           "target_agent": null,
-          "copy": "reframings nearby."
+          "copy": "Creative looks for reframings nearby."
         },
         {
           "target_agent": "analytical",
-          "copy": "Analytical: 1 verb, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment"
+          "copy": "Analytical: 1 verb, 0 parameters, nesting depth 0, ambiguity 0.00."
         },
         {
           "target_agent": "analytical",
-          "copy": "\"ready\". Confidence 100%."
+          "copy": "Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
@@ -487,19 +495,19 @@
         },
         {
           "target_agent": "adversarial",
-          "copy": "Adversarial: Shannon entropy 4.08, tool multiplier 1.0, 0 flags. Recommendation"
+          "copy": "Adversarial: Shannon entropy 4.08, tool multiplier 1.0, 0 flags."
         },
         {
           "target_agent": "adversarial",
-          "copy": "\"allow\". Risk score 0%."
+          "copy": "Recommendation \"allow\". Risk score 0%."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "DomainExpert: primary configured \"ml\", best-detected \"ml\". 2 domains touched; cross"
+          "copy": "DomainExpert: primary configured \"ml\", best-detected \"ml\"."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "domain:ml+infrastructure. Confidence 48%."
+          "copy": "2 domains touched; cross_domain:ml+infrastructure. Confidence 48%."
         },
         {
           "target_agent": "meta",
@@ -507,23 +515,23 @@
         },
         {
           "target_agent": "meta",
-          "copy": "domain_expert at 48%. Flags can override the raw confidence ranking. Selected:"
+          "copy": "domain_expert at 48%. Flags can override the raw confidence ranking."
         },
         {
           "target_agent": "meta",
-          "copy": "domain_expert via flag override. domain_expert flagged"
+          "copy": "Selected: domain_expert via flag override."
         },
         {
           "target_agent": "meta",
-          "copy": "cross_domain:ml+infrastructure — boundary risk routed. Total cost: ~8.5ms across"
+          "copy": "domain_expert flagged cross_domain:ml+infrastructure — boundary risk routed."
         },
         {
           "target_agent": "meta",
-          "copy": "four parallel structural agents (no LLM calls). 4-LLM ensemble in parallel would"
+          "copy": "Total cost: ~8.5ms across four parallel structural agents (no LLM calls)."
         },
         {
           "target_agent": "meta",
-          "copy": "cost ~50ms wall-clock for the same diversity."
+          "copy": "4-LLM ensemble in parallel would cost ~50ms wall-clock for the same diversity."
         }
       ],
       "verdicts": {
@@ -660,11 +668,11 @@
         },
         {
           "target_agent": "analytical",
-          "copy": "Analytical: 2 verbs, 1 parameter (/tmp/output.txt), nesting depth 0. Ambiguity 0.00."
+          "copy": "Analytical: 2 verbs, 1 parameter (/tmp/output.txt), nesting depth 0."
         },
         {
           "target_agent": "analytical",
-          "copy": "Assessment \"ready\". Confidence 100%."
+          "copy": "Ambiguity 0.00. Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
@@ -676,19 +684,19 @@
         },
         {
           "target_agent": "adversarial",
-          "copy": "Adversarial: Shannon entropy 4.27, tool multiplier 1.0, 0 flags. Recommendation"
+          "copy": "Adversarial: Shannon entropy 4.27, tool multiplier 1.0, 0 flags."
         },
         {
           "target_agent": "adversarial",
-          "copy": "\"allow\". Risk score 0%."
+          "copy": "Recommendation \"allow\". Risk score 0%."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "DomainExpert: primary configured \"data\", best-detected \"data\". 1 domain touched; no"
+          "copy": "DomainExpert: primary configured \"data\", best-detected \"data\"."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "boundary flags. Confidence 44%."
+          "copy": "1 domain touched; no boundary flags. Confidence 44%."
         },
         {
           "target_agent": "meta",
@@ -700,15 +708,15 @@
         },
         {
           "target_agent": "meta",
-          "copy": "Selected: analytical at 100%. Task was well-formed: verbs match parameters, no"
+          "copy": "Selected: analytical at 100%."
         },
         {
           "target_agent": "meta",
-          "copy": "contradictions, low ambiguity. No flag forced an override. Total cost: ~8.5ms; 4-LLM"
+          "copy": "Task was well-formed: verbs match parameters, no contradictions, low ambiguity."
         },
         {
           "target_agent": "meta",
-          "copy": "ensemble in parallel ~50ms."
+          "copy": "Total cost: ~8.5ms; 4-LLM ensemble in parallel ~50ms."
         }
       ],
       "verdicts": {
@@ -843,11 +851,11 @@
         },
         {
           "target_agent": "analytical",
-          "copy": "Analytical: 0 verbs, 0 parameters, nesting depth 0, ambiguity 0.00. Assessment"
+          "copy": "Analytical: 0 verbs, 0 parameters, nesting depth 0, ambiguity 0.00."
         },
         {
           "target_agent": "analytical",
-          "copy": "\"ready\". Confidence 100%."
+          "copy": "Assessment \"ready\". Confidence 100%."
         },
         {
           "target_agent": "creative",
@@ -859,39 +867,43 @@
         },
         {
           "target_agent": "adversarial",
-          "copy": "Adversarial: Shannon entropy 3.54, tool multiplier 1.0, 0 flags. Recommendation"
+          "copy": "Adversarial: Shannon entropy 3.54, tool multiplier 1.0, 0 flags."
         },
         {
           "target_agent": "adversarial",
-          "copy": "\"allow\". Risk score 0%."
+          "copy": "Recommendation \"allow\". Risk score 0%."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "DomainExpert: primary configured \"general\", best-detected \"general\". 0 domains"
+          "copy": "DomainExpert: primary configured \"general\", best-detected \"general\"."
         },
         {
           "target_agent": "domain_expert",
-          "copy": "touched; no boundary flags. Confidence 40%."
+          "copy": "0 domains touched; no boundary flags. Confidence 40%."
         },
         {
           "target_agent": "meta",
-          "copy": "All four agents converged on high confidence with zero flags — a tell. When agents"
+          "copy": "All four agents converged on high confidence with zero flags — a tell."
         },
         {
           "target_agent": "meta",
-          "copy": "agree without surfacing anything, the input was too thin to read. The orchestrator"
+          "copy": "When agents agree without surfacing anything, the input was too thin to read."
         },
         {
           "target_agent": "meta",
-          "copy": "has to escalate beyond the structural layer. Selected: analytical (the system's"
+          "copy": "The orchestrator has to escalate beyond the structural layer."
         },
         {
           "target_agent": "meta",
-          "copy": "tie-break default). Every agent returned high confidence on a task that means"
+          "copy": "Selected: analytical (the system's tie-break default)."
         },
         {
           "target_agent": "meta",
-          "copy": "nothing. Rule-based analysis can't detect vagueness — that's the honest limitation."
+          "copy": "Every agent returned high confidence on a task that means nothing."
+        },
+        {
+          "target_agent": "meta",
+          "copy": "Rule-based analysis can't detect vagueness — that's the honest limitation."
         },
         {
           "target_agent": "meta",

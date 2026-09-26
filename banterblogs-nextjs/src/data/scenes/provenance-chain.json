@@ -21,23 +21,27 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Event 1 of 5. An agent was spawned — the genesis event. Every audit trail starts"
+          "copy": "Event 1 of 5. An agent was spawned — the genesis event."
         },
         {
           "target_phase": null,
-          "copy": "somewhere. No predecessor here, just a public key and a starting hash."
+          "copy": "Every audit trail starts somewhere."
+        },
+        {
+          "target_phase": null,
+          "copy": "No predecessor here, just a public key and a starting hash."
         },
         {
           "target_phase": "event",
-          "copy": "Genesis event. agent_id \"agent-orchestrator\" is being created. Payload hash"
+          "copy": "Genesis event. agent_id \"agent-orchestrator\" is being created."
         },
         {
           "target_phase": "event",
-          "copy": "0eb9efc80f67… commits to the spawn parameters. The arguments stay in the host system"
+          "copy": "Payload hash 0eb9efc80f67… commits to the spawn parameters."
         },
         {
           "target_phase": "event",
-          "copy": "— only the hash chains."
+          "copy": "The arguments stay in the host system — only the hash chains."
         },
         {
           "target_phase": "canonical",
@@ -45,23 +49,27 @@
         },
         {
           "target_phase": "canonical",
-          "copy": "length-prefixed strings, metadata sorted by key. Re-encoding the same event always"
+          "copy": "length-prefixed strings, metadata sorted by key."
         },
         {
           "target_phase": "canonical",
-          "copy": "produces these exact bytes."
+          "copy": "Re-encoding the same event always produces these exact bytes."
         },
         {
           "target_phase": "sign",
-          "copy": "SHA3-256 of the canonical bytes: 9c8aaa3c248546…. Ed25519 signs that hash with the"
+          "copy": "SHA3-256 of the canonical bytes: 9c8aaa3c248546…."
         },
         {
           "target_phase": "sign",
-          "copy": "agent's private key → 64-byte signature. The 32-byte public key is attached so"
+          "copy": "Ed25519 signs that hash with the agent's private key → 64-byte signature."
         },
         {
           "target_phase": "sign",
-          "copy": "anyone can verify without contacting the signer."
+          "copy": "The 32-byte public key is attached,"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "so anyone can verify without contacting the signer."
         },
         {
           "target_phase": "chain",
@@ -73,23 +81,31 @@
         },
         {
           "target_phase": "merkle",
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes)."
         },
         {
           "target_phase": "merkle",
-          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
+          "copy": "Walking those siblings reconstructs the root e38439a06313…."
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "copy": "Public key 0d49ff0d4743…, root e38439a06313…. Signature verifies ✓, chain link clean"
+          "copy": "Public key 0d49ff0d4743…, root e38439a06313…."
         },
         {
           "target_phase": "verify",
-          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+          "copy": "Signature verifies ✓, chain link clean ✓, Merkle proof against root ✓."
         },
         {
           "target_phase": "verify",
-          "copy": "\"audit service\" in the loop to trust."
+          "copy": "Three independent checks — all local, all crypto."
+        },
+        {
+          "target_phase": "verify",
+          "copy": "No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -159,19 +175,19 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Event 2 of 5. The agent read a file. Every tool call becomes a signed event. The"
+          "copy": "Event 2 of 5. The agent read a file. Every tool call becomes a signed event."
         },
         {
           "target_phase": null,
-          "copy": "signature names the agent; the chain link places it in time."
+          "copy": "The signature names the agent; the chain link places it in time."
         },
         {
           "target_phase": "event",
-          "copy": "tool.executed from agent-tools. File path and byte count go into metadata, and"
+          "copy": "tool.executed from agent-tools. File path and byte count go into metadata,"
         },
         {
           "target_phase": "event",
-          "copy": "payload hash 291b1cfc1328… is what gets signed and chained."
+          "copy": "and payload hash 291b1cfc1328… is what gets signed and chained."
         },
         {
           "target_phase": "canonical",
@@ -179,23 +195,23 @@
         },
         {
           "target_phase": "canonical",
-          "copy": "length-prefixed strings, metadata sorted by key. Re-encoding the same event always"
+          "copy": "length-prefixed strings, metadata sorted by key."
         },
         {
           "target_phase": "canonical",
-          "copy": "produces these exact bytes."
+          "copy": "Re-encoding the same event always produces these exact bytes."
         },
         {
           "target_phase": "sign",
-          "copy": "Hash once with SHA3-256, sign with Ed25519, attach public key. 96 bytes of crypto"
+          "copy": "Hash once with SHA3-256, sign with Ed25519, attach public key."
         },
         {
           "target_phase": "sign",
-          "copy": "material per event (32 + 64 + 32) — a one-time fixed cost regardless of payload"
+          "copy": "96 bytes of crypto material per event (32 + 64 + 32) —"
         },
         {
           "target_phase": "sign",
-          "copy": "size."
+          "copy": "a one-time fixed cost regardless of payload size."
         },
         {
           "target_phase": "chain",
@@ -207,23 +223,31 @@
         },
         {
           "target_phase": "merkle",
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes)."
         },
         {
           "target_phase": "merkle",
-          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
+          "copy": "Walking those siblings reconstructs the root e38439a06313…."
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…. Signature verifies ✓, chain link clean"
+          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…."
         },
         {
           "target_phase": "verify",
-          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+          "copy": "Signature verifies ✓, chain link clean ✓, Merkle proof against root ✓."
         },
         {
           "target_phase": "verify",
-          "copy": "\"audit service\" in the loop to trust."
+          "copy": "Three independent checks — all local, all crypto."
+        },
+        {
+          "target_phase": "verify",
+          "copy": "No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -294,43 +318,55 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Event 3 of 5. The agent wrote a file. Writes get the same treatment as reads — one"
+          "copy": "Event 3 of 5. The agent wrote a file. Writes get the same treatment as reads —"
         },
         {
           "target_phase": null,
-          "copy": "signed event, one chain link, one Merkle leaf. Same cost."
+          "copy": "one signed event, one chain link, one Merkle leaf. Same cost."
         },
         {
           "target_phase": "event",
-          "copy": "Same agent (agent-tools), different tool. Each tool call gets its own payload hash,"
+          "copy": "Same agent (agent-tools), different tool."
         },
         {
           "target_phase": "event",
-          "copy": "metadata, and Merkle leaf — regardless of whether it reads or writes."
+          "copy": "Each tool call gets its own payload hash, metadata, and Merkle leaf —"
+        },
+        {
+          "target_phase": "event",
+          "copy": "regardless of whether it reads or writes."
         },
         {
           "target_phase": "canonical",
-          "copy": "Encode to canonical bytes: 234 bytes. The first ~32 bytes match the previous event"
+          "copy": "Encode to canonical bytes: 234 bytes. The first ~32 bytes match the previous event,"
         },
         {
           "target_phase": "canonical",
-          "copy": "(same domain tag + schema version + agent_id prefix) — correct and deterministic,"
+          "copy": "(same domain tag + schema version + agent_id prefix) —"
         },
         {
           "target_phase": "canonical",
-          "copy": "not a copy-paste. The rest diverge based on event_type, payload, and metadata."
+          "copy": "correct and deterministic, not a copy-paste."
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "The rest diverge based on event_type, payload, and metadata."
         },
         {
           "target_phase": "sign",
-          "copy": "Signature 6b3f5d685cca42… is a real Ed25519 signature, not a hash truncation or"
+          "copy": "Signature 6b3f5d685cca42… is a real Ed25519 signature,"
         },
         {
           "target_phase": "sign",
-          "copy": "placeholder. Verifiable with curve25519 in any language, including the one running"
+          "copy": "not a hash truncation or placeholder."
         },
         {
           "target_phase": "sign",
-          "copy": "in your browser."
+          "copy": "Verifiable with curve25519 in any language,"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "including the one running in your browser."
         },
         {
           "target_phase": "chain",
@@ -342,23 +378,31 @@
         },
         {
           "target_phase": "merkle",
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes)."
         },
         {
           "target_phase": "merkle",
-          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
+          "copy": "Walking those siblings reconstructs the root e38439a06313…."
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…. Signature verifies ✓, chain link clean"
+          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…."
         },
         {
           "target_phase": "verify",
-          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+          "copy": "Signature verifies ✓, chain link clean ✓, Merkle proof against root ✓."
         },
         {
           "target_phase": "verify",
-          "copy": "\"audit service\" in the loop to trust."
+          "copy": "Three independent checks — all local, all crypto."
+        },
+        {
+          "target_phase": "verify",
+          "copy": "No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -429,51 +473,59 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Event 4 of 5. A tool call failed. Failures get the same audit treatment as"
+          "copy": "Event 4 of 5. A tool call failed."
         },
         {
           "target_phase": null,
-          "copy": "successes. Every event is logged — an after-the-fact narrative can't quietly omit"
+          "copy": "Failures get the same audit treatment as successes. Every event is logged —"
         },
         {
           "target_phase": null,
-          "copy": "the parts that went wrong."
+          "copy": "an after-the-fact narrative can't quietly omit the parts that went wrong."
         },
         {
           "target_phase": "event",
-          "copy": "tool.failed — failures get the full treatment too. error_code and timeout are in"
+          "copy": "tool.failed — failures get the full treatment too."
         },
         {
           "target_phase": "event",
-          "copy": "metadata, signed alongside everything else. No \"happy path\" log to selectively"
+          "copy": "error_code and timeout are in metadata, signed alongside everything else."
         },
         {
           "target_phase": "event",
-          "copy": "trust."
+          "copy": "No \"happy path\" log to selectively trust."
         },
         {
           "target_phase": "canonical",
-          "copy": "Encode to canonical bytes: 252 bytes. The first ~32 bytes match the previous event"
+          "copy": "Encode to canonical bytes: 252 bytes. The first ~32 bytes match the previous event,"
         },
         {
           "target_phase": "canonical",
-          "copy": "(same domain tag + schema version + agent_id prefix) — correct and deterministic,"
+          "copy": "(same domain tag + schema version + agent_id prefix) —"
         },
         {
           "target_phase": "canonical",
-          "copy": "not a copy-paste. The rest diverge based on event_type, payload, and metadata."
+          "copy": "correct and deterministic, not a copy-paste."
+        },
+        {
+          "target_phase": "canonical",
+          "copy": "The rest diverge based on event_type, payload, and metadata."
         },
         {
           "target_phase": "sign",
-          "copy": "Even though this tool call failed, the failure event gets the same SHA3-256 +"
+          "copy": "Even though this tool call failed,"
         },
         {
           "target_phase": "sign",
-          "copy": "Ed25519 + public-key bundle. Failures are first-class citizens of the chain; you"
+          "copy": "the failure event gets the same SHA3-256 + Ed25519 + public-key bundle."
         },
         {
           "target_phase": "sign",
-          "copy": "can't selectively skip signing the embarrassing ones."
+          "copy": "Failures are first-class citizens of the chain;"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "you can't selectively skip signing the embarrassing ones."
         },
         {
           "target_phase": "chain",
@@ -485,23 +537,31 @@
         },
         {
           "target_phase": "merkle",
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). Walking those siblings reconstructs the"
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes)."
         },
         {
           "target_phase": "merkle",
-          "copy": "root e38439a06313…. Proof size stays small even as the chain grows."
+          "copy": "Walking those siblings reconstructs the root e38439a06313…."
+        },
+        {
+          "target_phase": "merkle",
+          "copy": "Proof size stays small even as the chain grows."
         },
         {
           "target_phase": "verify",
-          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…. Signature verifies ✓, chain link clean"
+          "copy": "Public key 2d6e3d8280f2…, root e38439a06313…."
         },
         {
           "target_phase": "verify",
-          "copy": "✓, Merkle proof against root ✓. Three independent checks — all local, all crypto. No"
+          "copy": "Signature verifies ✓, chain link clean ✓, Merkle proof against root ✓."
         },
         {
           "target_phase": "verify",
-          "copy": "\"audit service\" in the loop to trust."
+          "copy": "Three independent checks — all local, all crypto."
+        },
+        {
+          "target_phase": "verify",
+          "copy": "No \"audit service\" in the loop to trust."
         }
       ],
       "event": {
@@ -572,27 +632,31 @@
       "beats": [
         {
           "target_phase": null,
-          "copy": "Event 5 of 5. The agent despawned — then someone tampered with the record. This"
+          "copy": "Event 5 of 5. The agent despawned — then someone tampered with the record."
         },
         {
           "target_phase": null,
-          "copy": "event was signed honestly, then metadata was mutated after the fact. Signature"
+          "copy": "This event was signed honestly, then metadata was mutated after the fact."
         },
         {
           "target_phase": null,
-          "copy": "verification catches it."
+          "copy": "Signature verification catches it."
         },
         {
           "target_phase": "event",
-          "copy": "agent.despawn from the orchestrator. Metadata claims 3 tools ran (we'll come back to"
+          "copy": "agent.despawn from the orchestrator."
         },
         {
           "target_phase": "event",
-          "copy": "that). Payload hash 38554786e330… commits to the original event bytes. The signature"
+          "copy": "Metadata claims 3 tools ran (we'll come back to that)."
         },
         {
           "target_phase": "event",
-          "copy": "lives or dies on whether those bytes change."
+          "copy": "Payload hash 38554786e330… commits to the original event bytes."
+        },
+        {
+          "target_phase": "event",
+          "copy": "The signature lives or dies on whether those bytes change."
         },
         {
           "target_phase": "canonical",
@@ -600,23 +664,27 @@
         },
         {
           "target_phase": "canonical",
-          "copy": "length-prefixed strings, metadata sorted by key. Re-encoding the same event always"
+          "copy": "length-prefixed strings, metadata sorted by key."
         },
         {
           "target_phase": "canonical",
-          "copy": "produces these exact bytes."
+          "copy": "Re-encoding the same event always produces these exact bytes."
         },
         {
           "target_phase": "sign",
-          "copy": "Ed25519 signs over the original canonical bytes (before any tampering). That"
+          "copy": "Ed25519 signs over the original canonical bytes (before any tampering)."
         },
         {
           "target_phase": "sign",
-          "copy": "signature commits to a specific byte sequence — changing any field after the fact"
+          "copy": "That signature commits to a specific byte sequence —"
         },
         {
           "target_phase": "sign",
-          "copy": "invalidates the signature even if the chain link still matches."
+          "copy": "changing any field after the fact invalidates the signature,"
+        },
+        {
+          "target_phase": "sign",
+          "copy": "even if the chain link still matches."
         },
         {
           "target_phase": "chain",
@@ -628,35 +696,43 @@
         },
         {
           "target_phase": "merkle",
-          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). 2 levels had odd node counts, so the"
+          "copy": "Merkle proof: 3 sibling hashes (~96 bytes). 2 levels had odd node counts,"
         },
         {
           "target_phase": "merkle",
-          "copy": "last entry is paired with itself (the \"duplicate-last-for-odd\" rule). The verifier"
+          "copy": "so the last entry is paired with itself (the \"duplicate-last-for-odd\" rule)."
         },
         {
           "target_phase": "merkle",
-          "copy": "walks each level from leaf to root."
+          "copy": "The verifier walks each level from leaf to root."
         },
         {
           "target_phase": "verify",
-          "copy": "This event was signed honestly. Then someone changed \"tools_run\" from \"3\" to \"30\""
+          "copy": "This event was signed honestly."
         },
         {
           "target_phase": "verify",
-          "copy": "after the fact. The signature was made over the original bytes — the new bytes are"
+          "copy": "Then someone changed \"tools_run\" from \"3\" to \"30\" after the fact."
         },
         {
           "target_phase": "verify",
-          "copy": "not what got signed. Result: signature FAILS to verify ✗. Merkle proof and chain"
+          "copy": "The signature was made over the original bytes —"
         },
         {
           "target_phase": "verify",
-          "copy": "link still pass — they prove position, not content. The signature is what catches"
+          "copy": "the new bytes are not what got signed."
         },
         {
           "target_phase": "verify",
-          "copy": "the content tamper. One failure is enough."
+          "copy": "Result: signature FAILS to verify ✗."
+        },
+        {
+          "target_phase": "verify",
+          "copy": "Merkle proof and chain link still pass — they prove position, not content."
+        },
+        {
+          "target_phase": "verify",
+          "copy": "The signature is what catches the content tamper. One failure is enough."
         }
       ],
       "event": {
