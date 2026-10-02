@@ -32,9 +32,10 @@ const VENUES: RegExp[] = [
   /\bSaTML\b/i,
 ];
 
-// An accepted paper's venue is named, as the ICML workshop's is; it is cut
-// from a surface before the venue scan, so every other mention still fails
-const ACCEPTED_VENUES = ['NeurIPS 2026 Workshop on Foundation and Large Model Security'];
+// An accepted paper's venue is named, as the ICML workshop's is, and so is the
+// owner's reviewing role, which carries no paper of theirs. Each is cut from a
+// surface before the venue scan, so every other mention still fails.
+const ACCEPTED_VENUES = ['NeurIPS 2026 Workshop on Foundation and Large Model Security', 'NeurIPS 2026 reviewer'];
 const withoutAccepted = (source: string) => ACCEPTED_VENUES.reduce((rest, venue) => rest.split(venue).join(''), source);
 
 // ICML is named only for the presented workshop paper and the public

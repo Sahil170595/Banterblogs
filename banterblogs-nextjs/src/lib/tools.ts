@@ -95,7 +95,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/Chimeraforge',
   changelog: 'https://github.com/Sahil170595/Chimeraforge/blob/main/CHANGELOG.md',
   ecosystem: true,
-  downloads: '28,000+',
+  downloads: '32,000+',
   principle: {
     title: 'The trust principle',
     body: 'Every number is labeled measured, extrapolated, derived, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are derived: exact arithmetic over the model’s real architecture, not a measurement. Throughput is a measured lookup only on the rig the corpus was measured on; on any other GPU it is scaled by memory bandwidth and labeled extrapolated, otherwise an explicit roofline estimate, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
@@ -194,7 +194,7 @@ export const QUANTFIT_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/quantfit',
   changelog: 'https://github.com/Sahil170595/quantfit/blob/main/CHANGELOG.md',
   ecosystem: false,
-  downloads: '13,000+',
+  downloads: '15,000+',
   principle: {
     title: 'Safety drift is a vector, not a number',
     body: 'verify-safety generates from both the unquantized baseline and the quantized model over a curated probe set, judges each response with a local classifier, and reports two axes: refusal-robustness drift (did the quant start complying with what should be refused — the dangerous direction) and over-refusal drift (did it start refusing what should be answered — the usability direction). A scalar refusal-delta can read zero while both axes move in opposite directions. Verdicts are bounded, never absolute: a no-detection result bounds the drift, it does not certify safety.',

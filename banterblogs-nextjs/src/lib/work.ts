@@ -31,7 +31,7 @@ export const COMBINED_PYPI_DOWNLOADS = `${Math.floor(
   [CHIMERAFORGE_TOOL, QUANTFIT_TOOL].reduce((sum, tool) => sum + downloadFloor(tool.downloads ?? ''), 0) / THOUSAND,
 )}K+`;
 
-export const HERO_SUMMARY = `Architected Attunica's multimodal psychotherapy platform and AWS ECS/Bedrock cutover; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake-simulation latency from about 40s in early benchmarks to 100–450 ms per response. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints, four upstream contributions, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
+export const HERO_SUMMARY = `Architected Attunica's multimodal psychotherapy platform and AWS ECS/Bedrock cutover; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake-simulation latency from about 40s in early benchmarks to 100–450 ms per response. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints, five merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
 
 export interface ResearchItem {
   label: string;
@@ -61,7 +61,6 @@ export const RESEARCH: ResearchItem[] = [
     bullets: [
       'Built the Banterhearts execution substrate: shared multi-backend evaluation and serving harnesses (Transformers, Ollama, ONNX, vLLM, SGLang, TGI), per-sample JSONL provenance, seed/config/git manifests, checkpointed OpenAI/Anthropic batch judges, disagreement-aware triangulation, fail-closed analyzers, and frozen-byte paper packages under dependency-locked CI.',
       'Led the independent program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Presented at the ICML 2026 Workshop on Hypothesis Testing; accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security (safety-embedding directions, the first paper on Chimera’s own thesis); 1 more paper under double-blind review; two studies public on arXiv, on quantization safety and temperature-zero speculative decoding. Every paper is first-author.',
-      'Service: nine paper reviews for three ML workshops, two conference ethics reviews, and one review for Advances in Artificial Intelligence and Machine Learning (AAIML), a Scopus-indexed journal; hackathon judge for Build for the Border (May 2026) and AI Healthcare Hack NYC (Jul 2026).',
       'Tested three serving-performance assumptions: an M/D/1 model with linear parallel-service scaling underestimated queue wait by up to 20.4×; Ollama NUM_PARALLEL changes showed no significant effect in 30 contrasts; direct PyTorch lost more per-agent throughput than Ollama as concurrency rose from one to eight (86.4% versus 82.1%). A separate N=8 comparison found up to 2.25× vLLM throughput over Ollama.',
       'Isolated deployment effects with a 78,183-row, four-stack ablation; separate safety experiments found chat-template divergence could exceed numerical-precision effects. Designed controls for backend, template, and concurrency identity so changes in the serving environment were not misattributed to model weights; deployment rules include Q4_K_M and compile-prefill-only on Linux.',
       'The TAIS preprint examines output differences and refusal behavior under temperature-zero speculative decoding.',
@@ -153,6 +152,21 @@ export const RESEARCH: ResearchItem[] = [
         href: 'https://gist.github.com/Sahil170595/062d40cb18e2b2e27e99c1efbfa3ccdb',
       },
     ],
+  },
+  {
+    label: 'PyTorch PR #190555 — merged',
+    href: 'https://github.com/pytorch/pytorch/pull/190555',
+    bullets: [
+      'Merged PyTorch PR #190555 (jansel-approved, 0b96f88; Inductor): split cross-device extern kernels out of CUDA-graph partitions, which were capturing CPU storage and failing memory-pool checks; same-device kernels stay graph-eligible, with regressions for custom ops, multi-output ops, index_put, and SDPA dropout.',
+    ],
+  },
+  {
+    label: 'PyTorch PR #199075 — approved',
+    href: 'https://github.com/pytorch/pytorch/pull/199075',
+    bullets: [
+      "Approved PyTorch PR #199075 (guilhermeleobas-approved; Dynamo): Python random float draws were traced as float32 while Inductor's CPU kernels received float64 buffers, so x * rng.random() returned values around -9e34; the graph input now uses the same full-precision conversion as runtime, with an Inductor regression test (fixes #198187).",
+    ],
+    evidence: [{ label: 'Fixes PyTorch #198187', href: 'https://github.com/pytorch/pytorch/issues/198187' }],
   },
   {
     label: 'Ollama PR #16669 — merged',
@@ -287,6 +301,27 @@ export const CAREER_TIMELINE = {
   caption: `${EXPERIENCE.length} roles since ${FIRST_START}; the ${STILL_RUNNING} still running reach the present.`,
   lanes: CHRONOLOGICAL.map((job) => ({ label: job.company, detail: job.role, dates: job.dates })),
 };
+
+// PhD2027_v4's service list; all reviews completed
+export const SERVICE = [
+  {
+    role: 'NeurIPS 2026 reviewer',
+    detail:
+      'Workshops: FLMSec (2), JUDGe (3), RTCA (5). Ethics: main conference (1), Evaluations & Datasets track (1). All 12 reviews completed.',
+    dates: '2026',
+  },
+  {
+    role: 'Journal reviewer',
+    detail:
+      'Advances in Artificial Intelligence and Machine Learning (AAIML; ISSN 2582-9793), a Scopus- and Web of Science-indexed journal. One review completed.',
+    dates: '2026',
+  },
+  {
+    role: 'Hackathon judge',
+    detail: 'Build for the Border (May 2026) and AI Healthcare Hack NYC (Jul 2026).',
+    dates: '2026',
+  },
+];
 
 export const EDUCATION = [
   {

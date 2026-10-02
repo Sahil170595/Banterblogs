@@ -108,7 +108,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - One submission — title and venue withheld during double-blind review.
 
 ### Reviewing
-- Nine paper reviews for three ML workshops and two conference ethics reviews (2026).
+- NeurIPS 2026 reviewer: 10 workshop reviews (FLMSec 2, JUDGe 3, RTCA 5) and 2 ethics reviews (main conference, Evaluations & Datasets track); all 12 completed.
 - Reviewer for Advances in Artificial Intelligence and Machine Learning (AAIML; ISSN 2582-9793), a Scopus- and Web of Science-indexed journal.
 - Hackathon judge: Build for the Border (May 2026) and AI Healthcare Hack NYC (Jul 2026).
 
@@ -172,6 +172,8 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 - Ollama PR #16669 (merged 2026-06-22) — fix inverted iGPU/dGPU Vulkan classification on Windows hybrid graphics (two enumeration bugs in the Go discovery path)
 - vLLM PR #45207 (merged 2026-07-07) — pad Mamba page size instead of scaling block_size in unify_kv_cache_spec_page_size (hybrid attention/Mamba KV layout fix)
 - Triton PR #10819 (merged 2026-07-08) — tl.flip compile-time crash on documented default dim=None
+- PyTorch PR #190555 (merged 2026-09-29) — Inductor: split cross-device extern kernels out of CUDA-graph partitions, which were capturing CPU storage and failing memory-pool checks
+- PyTorch PR #199075 (approved, not yet merged) — Dynamo: trace Python random float draws at the precision runtime passes them, fixing wrong CPU Inductor results (fixes #198187)
 - Triton PR #10822 (closed unmerged 2026-07-13; maintainers fixed the issue separately) — proposed a shared-memory gather fallback when no warp-local layout exists
 
 ## Links
