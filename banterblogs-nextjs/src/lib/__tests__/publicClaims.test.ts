@@ -29,7 +29,13 @@ const VENUES: RegExp[] = [
   /\b[A-Z][A-Za-z]+ Workshop\b/,
   /\bmain[- ]track\b/i,
   /\bsubmission (?:#|id\b)/i,
+  /\bSaTML\b/i,
 ];
+
+// An accepted paper's venue is named, as the ICML workshop's is; it is cut
+// from a surface before the venue scan, so every other mention still fails
+const ACCEPTED_VENUES = ['NeurIPS 2026 Workshop on Foundation and Large Model Security'];
+const withoutAccepted = (source: string) => ACCEPTED_VENUES.reduce((rest, venue) => rest.split(venue).join(''), source);
 
 // ICML is named only for the presented workshop paper and the public
 // reproducibility challenge; every other mention is an offender
@@ -61,10 +67,17 @@ const WITHDRAWN = [
   'Quantization drives 57%',
 ];
 
-// The three named papers that were under review were decided on 2026-09-24.
-// Only the withheld workshop submissions are still out, so no surface may
-// carry a named paper's review status again without a new decision.
-const DECIDED_STATUS = ['Top ML venue (under review)', 'target: top ML venue', 'under blind review at top ML venues'];
+// The three named papers that were under review were decided on 2026-09-24,
+// the five workshop submissions on 2026-09-30 (one accepted, four rejected).
+// No surface may carry a decided paper's review status again.
+const DECIDED_STATUS = [
+  'Top ML venue (under review)',
+  'target: top ML venue',
+  'under blind review at top ML venues',
+  'Five workshop submissions',
+  '5 workshop submissions',
+  '5 under double-blind review',
+];
 
 function sourceFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -95,14 +108,14 @@ describe('public claims about the papers', () => {
   });
 
   it('names no venue, track or submission id of a paper under review', () => {
-    for (const named of ['the Workshop on Example Topics', 'the Example Workshop', 'a main-track paper']) {
-      expect(VENUES.some((venue) => venue.test(named)), named).toBe(true);
+    for (const named of ['the Workshop on Example Topics', 'the Example Workshop', 'a main-track paper', 'IEEE SaTML 2027', 'the NeurIPS 2026 main conference']) {
+      expect(VENUES.some((venue) => venue.test(withoutAccepted(named))), named).toBe(true);
     }
-    for (const allowed of ['the ICML 2026 Workshop on Hypothesis Testing', 'three ML workshops', 'Plus 5 workshop submissions']) {
-      expect(VENUES.some((venue) => venue.test(allowed)), allowed).toBe(false);
+    for (const allowed of ['the ICML 2026 Workshop on Hypothesis Testing', 'three ML workshops', '1 under double-blind review', 'accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security']) {
+      expect(VENUES.some((venue) => venue.test(withoutAccepted(allowed))), allowed).toBe(false);
     }
     const offenders = surfaces().flatMap((file) => {
-      const source = fs.readFileSync(file, 'utf8');
+      const source = withoutAccepted(fs.readFileSync(file, 'utf8'));
       return VENUES.filter((venue) => venue.test(source)).map((venue) => `${label(file)}: ${venue}`);
     });
     expect(offenders).toEqual([]);

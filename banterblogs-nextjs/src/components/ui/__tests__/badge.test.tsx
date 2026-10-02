@@ -17,9 +17,10 @@ describe('Badge', () => {
     }
   });
 
-  it('maps paper status to tone: presented green, preprint blue, under review amber, in preparation neutral', () => {
+  it('maps paper status to tone: presented and accepted green, preprint blue, under review amber, in preparation neutral', () => {
     expect(PAPER_STATUS_TONE).toEqual({
       Presented: 'green',
+      Accepted: 'green',
       Preprint: 'blue',
       Submitted: 'amber',
       'In preparation': 'neutral',

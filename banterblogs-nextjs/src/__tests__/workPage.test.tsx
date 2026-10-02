@@ -133,8 +133,13 @@ const RETIRED_CLAIMS = [
   "vLLM/TGI's 2.25×",
   // 57/41/2 is a descriptive two-model share, not a decomposition
   'Decomposed the measured safety tax',
-  // résumé v8 counts the roster as first-author, not sole-author
+  // résumé v8 counts the roster as first-author, not sole-author; the
+  // judge paper under review has co-authors
   'sole-author 2026 papers',
+  'The program is sole-author',
+  // the workshop decisions landed 2026-09-30: one accepted, four rejected
+  '5 under double-blind review',
+  '5 workshop submissions',
   '22 Hugging Face',
   // the owner confirmed a cumulative score
   'SGPA',
@@ -152,7 +157,7 @@ describe('work page résumé currency', () => {
   it('states the current record: the paper ledger, the models, the fixes, the degree scores', () => {
     const all = text(page);
     for (const fact of [
-      '6 first-author 2026 papers (1 presented at the ICML 2026 Workshop on Hypothesis Testing, 5 under double-blind review) plus 2 public arXiv preprints',
+      '2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints',
       'four upstream contributions',
       '23 Hugging Face models',
       'Hugging Face — 23 model releases',
@@ -173,6 +178,19 @@ describe('work page résumé currency', () => {
     expect(project?.dates).toBe('Sep 2024 – Dec 2024');
     const lanes = [...page.querySelectorAll('figure.timeline ol > li .timeline-label')].map(text);
     expect(lanes).toContain('New York University');
+  });
+
+  it('links the two companies to their sites, in a new tab', () => {
+    for (const [company, href] of [
+      ['GhostEye Inc. (YC S25)', 'https://ghosteye.ai'],
+      ['Attunica, LLC', 'https://attunica.ai'],
+    ]) {
+      const link = [...page.querySelectorAll('a')].find((a) => text(a) === company);
+      expect(link, company).toBeDefined();
+      expect(link!.getAttribute('href')).toBe(href);
+      expect(link!.getAttribute('target')).toBe('_blank');
+      expect(link!.getAttribute('rel')).toBe('noopener noreferrer');
+    }
   });
 });
 
