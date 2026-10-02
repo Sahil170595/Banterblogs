@@ -98,7 +98,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving (TR138; working title "Batch Inference Safety Under Non-Determinism") — accepted 2026-05-22 and presented at the ICML 2026 Workshop on Hypothesis Testing. arXiv: https://arxiv.org/abs/2605.27763 (cs.LG). This is a workshop paper, not the ICML 2026 main conference.
 
 ### Accepted — NeurIPS 2026 Workshop on Foundation and Large Model Security
-- A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings — the first paper on Chimera's own thesis, from Banterpacks. In tested prompt-controlled settings, raw safe centroids discriminate weakly or inversely; safe-minus-unsafe directions reach ROC-AUC 0.588–0.793. This is a workshop paper, not the main conference.
+- A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings — the first paper on Chimera's own thesis, from Banterpacks. In tested prompt-controlled settings, raw safe centroids discriminate weakly or inversely; safe-minus-unsafe directions reach ROC-AUC 0.588–0.793. arXiv: https://arxiv.org/abs/2610.01801 (cs.LG). This is a workshop paper, not the main conference.
 
 ### Public preprints
 - Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion (TR144) — arXiv:2606.25097. Examines output differences and refusal behavior under temperature-zero speculative decoding.

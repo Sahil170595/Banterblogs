@@ -218,6 +218,11 @@ describe('work page résumé currency', () => {
     expect(RESEARCH.flatMap((item) => item.bullets).filter((bullet) => bullet.startsWith('Service:'))).toEqual([]);
   });
 
+  it('cites both workshop papers on arXiv', () => {
+    const evidence = RESEARCH.flatMap((item) => item.evidence ?? []).map((link) => link.href);
+    for (const arxiv of ['https://arxiv.org/abs/2605.27763', 'https://arxiv.org/abs/2610.01801']) expect(evidence, arxiv).toContain(arxiv);
+  });
+
   it('links the two companies to their sites, in a new tab', () => {
     for (const [company, href] of [
       ['GhostEye Inc. (YC S25)', 'https://ghosteye.ai'],

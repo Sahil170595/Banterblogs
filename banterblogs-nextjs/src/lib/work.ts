@@ -70,6 +70,10 @@ export const RESEARCH: ResearchItem[] = [
     ],
     evidence: [
       { label: 'arXiv:2605.27763 — ICML 2026 workshop paper, presented', href: 'https://arxiv.org/abs/2605.27763' },
+      {
+        label: 'arXiv:2610.01801 — accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security',
+        href: 'https://arxiv.org/abs/2610.01801',
+      },
       { label: 'arXiv:2606.10154', href: 'https://arxiv.org/abs/2606.10154' },
       { label: 'arXiv:2606.25097 — TAIS preprint', href: 'https://arxiv.org/abs/2606.25097' },
     ],
