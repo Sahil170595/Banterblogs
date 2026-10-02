@@ -218,6 +218,26 @@ describe('work page résumé currency', () => {
     expect(RESEARCH.flatMap((item) => item.bullets).filter((bullet) => bullet.startsWith('Service:'))).toEqual([]);
   });
 
+  // résumé v8 (2026-10-01): five Attunica bullets, not nine. Its finding that
+  // the serving role bypassed row-level security stays on the résumé: on a
+  // public page it reads as a disclosed hole in a PHI system.
+  it('carries the Attunica role as résumé v8 states it, without the row-level-security finding', () => {
+    const attunica = EXPERIENCE.find((job) => job.company === 'Attunica, LLC')!;
+    expect(attunica.bullets).toHaveLength(5);
+    const all = attunica.bullets.join(' ');
+    for (const fact of [
+      'shipped to 2 pilots (NYU Silver MSW program; a 120-therapist clinic)',
+      'three-sample median judging',
+      '40-fixture judge-validity benchmark',
+      'held-out weighted kappa 0.66 vs 0.05 null',
+      'fail-safe restricted-role FORCE-RLS rollout',
+    ]) {
+      expect(all, fact).toContain(fact);
+    }
+    expect(all).not.toMatch(/bypass/i);
+    expect(HERO_SUMMARY).toContain("Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic");
+  });
+
   it('cites both workshop papers on arXiv', () => {
     const evidence = RESEARCH.flatMap((item) => item.evidence ?? []).map((link) => link.href);
     for (const arxiv of ['https://arxiv.org/abs/2605.27763', 'https://arxiv.org/abs/2610.01801']) expect(evidence, arxiv).toContain(arxiv);
