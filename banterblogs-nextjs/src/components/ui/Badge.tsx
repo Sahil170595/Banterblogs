@@ -20,9 +20,10 @@ const badge = cva('inline-flex items-center gap-1.5 whitespace-nowrap rounded-fu
   defaultVariants: { tone: 'neutral' },
 });
 
-/** The tone each paper status reads in: presented, public preprint, under review, in preparation. */
+/** The tone each paper status reads in: green once peer review passes, blue public, amber in review, neutral in preparation. */
 export const PAPER_STATUS_TONE = {
   Presented: 'green',
+  Accepted: 'green',
   Preprint: 'blue',
   Submitted: 'amber',
   'In preparation': 'neutral',

@@ -172,7 +172,19 @@ function RoleRow({ job }: { job: Experience }) {
       <div className="min-w-0">
         <h3 className="text-heading-20 text-foreground">{job.role}</h3>
         <p className="mt-1 text-copy-16 text-muted-foreground">
-          {job.company} · {job.location}
+          {job.href ? (
+            <a
+              href={job.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary"
+            >
+              {job.company}
+            </a>
+          ) : (
+            job.company
+          )}{' '}
+          · {job.location}
         </p>
         <Bullets items={job.bullets} visible={ROLE_VISIBLE_BULLETS} entry={`${job.role}, ${job.company}`} />
       </div>
