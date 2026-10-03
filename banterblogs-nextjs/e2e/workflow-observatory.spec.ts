@@ -1,0 +1,33 @@
+import { readFile } from 'node:fs/promises';
+import { expect, test } from '@playwright/test';
+import { collectErrors } from './consoleErrors';
+
+test('workflow executes real controls and refuses a success toast without a record', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/work/projects/workflow-observatory');
+  await page.getByRole('combobox', { name: 'Requested room', exact: true }).selectOption('south');
+  await page.getByRole('button', { name: 'Run workflow', exact: true }).click();
+  await expect(page.getByRole('status', { name: 'Workflow status', exact: true })).toContainText('Complete');
+  await expect(page.getByRole('row', { name: /Spectral scan South lab Committed/ })).toBeVisible();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export trace', exact: true }).click();
+  const file = await (await pending).path();
+  expect(file).toBeTruthy();
+  const exported = JSON.parse(await readFile(file!, 'utf8'));
+  expect(exported.trace.entries).toHaveLength(5);
+  expect(exported.trace.status).toBe('complete');
+  await page.getByRole('button', { name: 'Reset observatory', exact: true }).click();
+  await page.getByLabel('Trace file', { exact: true }).setInputFiles(file!);
+  const replay = page.getByRole('region', { name: 'Recomputed event replay', exact: true });
+  await expect(replay).toBeVisible();
+  await page.getByRole('slider', { name: 'Replay frame' }).fill(String(exported.events.length));
+  await expect(replay).toContainText('Conditions met');
+  await expect(page.getByRole('status', { name: 'Workflow status', exact: true })).toContainText('Ready');
+  await page.getByRole('combobox', { name: 'Injected failure', exact: true }).selectOption('false-toast');
+  await page.getByRole('button', { name: 'Run workflow', exact: true }).click();
+  await expect(page.getByRole('status', { name: 'Workflow status', exact: true })).toContainText('Failed');
+  await expect(page.getByRole('status', { name: 'Fixture notice', exact: true })).toContainText('Reservation saved');
+  await expect(page.getByRole('row', { name: /Spectral scan/ })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(errors).toEqual([]);
+});
