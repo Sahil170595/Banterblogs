@@ -1,0 +1,81 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import RetrievalDemo from '@/components/projects/retrieval-ranking/RetrievalDemo';
+import { DEFAULT_CONFIG, runRetrieval } from '@/lib/projects/retrieval-ranking/engine';
+import { freshCorpus } from '@/lib/projects/retrieval-ranking/corpus';
+import project from './project.json';
+import styles from './page.module.css';
+
+export const metadata: Metadata = { title: project.title, description: project.summary };
+const codeRoot = 'https://github.com/Sahil170595/Banterblogs/blob/codex/demo-retrieval-ranking/banterblogs-nextjs';
+const library = `${codeRoot}/src/lib/projects/retrieval-ranking`;
+
+export default function Page() {
+  const baseline = runRetrieval(freshCorpus(), DEFAULT_CONFIG);
+  return <main className={styles.page}>
+    <header className={styles.header}>
+      <Link href="/work" className={styles.back}><ArrowLeft size={16} />Work</Link>
+      <h1>{project.title}</h1>
+      <p>Lexical retrieval, constraint relaxation, and rank fusion with inspectable evidence. Synthetic documents; no live embedding, reranking, or language-model service.</p>
+      <nav aria-label="Project sections"><a href="#demo">Workbench</a><a href="#findings">Findings</a><a href="#method">Method</a><a href="#reproduce">Reproduce</a><a href={project.sourceUrl}>Source</a></nav>
+    </header>
+    <RetrievalDemo />
+    <article className={styles.article}>
+      <section id="findings">
+        <p className={styles.eyebrow}>Findings / evidence boundaries</p>
+        <h2>More results can mean fewer guarantees</h2>
+        <p>The engineering question is not simply which document ranks first. It is whether a retrieval pipeline can expand a sparse candidate pool without obscuring the constraints it stopped enforcing, and whether its final order can be reconstructed from the evidence it actually used. A strong-looking list is not sufficient: a dropped filter, a shallow channel, or a post-retrieval gate can each change who reaches the final stage.</p>
+        <p>I built the source pipeline around separate planning, embedding, search, reranking, inspection, and evaluation boundaries. For this public workbench I independently implemented the source-informed filter-relaxation loop and reciprocal rank fusion in TypeScript, replaced the original supplied records with newly authored fictional engineering notes, and added deterministic score inspection and replay. The browser version is a working retrieval application, not a recording of provider calls.</p>
+        <h3>Locally computed: the starter run</h3>
+        <p>This table is calculated by the same engine during server rendering from the published corpus and default configuration. The first channel counts only positive body-text matches after its depth cutoff. The second channel receives the final remaining filters. These are fixture mechanics, not measured relevance gains or latency benchmarks.</p>
+        <div className={styles.tableScroll}><table><caption>Default query: search latency / target {DEFAULT_CONFIG.threshold} / depth {DEFAULT_CONFIG.depth}</caption><thead><tr><th>Attempt</th><th>Remaining fields</th><th>Attribute matches</th><th>Body hits</th></tr></thead><tbody>{baseline.attempts.map((a, i) => <tr key={i}><th scope="row">{a.dropped ? `Drop ${a.dropped.field}` : 'Initial'}</th><td>{a.activeFilters.map((f) => f.field).join(', ') || 'none'}</td><td>{a.attributeCount}</td><td>{a.bodyCount}</td></tr>)}</tbody></table></div>
+        <p>The default run accepts {baseline.acceptedCount} documents and displays {baseline.rows.length}. Among those displayed, {baseline.rows.filter((r) => r.violations.length > 0).length} violate at least one originally requested filter. The result quota and the relaxation target are separate checks: a metadata-only match can satisfy the former without helping the body-driven target. A green quota status therefore does not mean every original constraint is satisfied.</p>
+        <h3>Derived: rank agreement is not semantic confidence</h3>
+        <p>RRF adds one reciprocal term for each channel that contains a document. A document present in both lists often beats one present in only a single list, even when the latter has a much larger raw lexical score. The fused value has no calibrated probability interpretation. Its benefit here is that unlike raw scores from differently scaled channels, positions have a common definition. An absent channel contributes zero, not a fabricated rank or fallback score.</p>
+        <h3>Source-observed: fallback behavior changes the contract</h3>
+        <p>The original planner can fall back to a filter-free plan when structured extraction fails, retaining criteria as query text. The original reranker can preserve retrieval order and copy retrieval scores when its provider call fails. Optional criterion scoring rejects missing or failed hard evidence, but the submission layer can refill a short list from the original ranking to meet a fixed quota. That last fallback can reintroduce records that failed a hard check. Here, rejected records remain rejected; a shortage is a visible outcome.</p>
+        <p>The original inspector is written at a post-rerank, pre-scorer boundary. If the optional scorer changes the submitted order, that inspection artifact is not the final submission. The public export instead includes the configuration, corpus, attempts, channel lists, displayed accepted records, all rejected records, and accepted/truncated counts from one computed run. The full inputs reproduce accepted records outside the display limit.</p>
+        <p>This is not a held-out relevance evaluation. The synthetic notes have no independent relevance judgments, and the default query is deliberately chosen to expose disagreement and relaxation. No original tuned query scores, per-query best-of-run selection, or historic aggregate benchmark is carried into this publication. A credible quality claim would require a frozen system, unseen queries, independent labels, and a declared evaluation protocol.</p>
+      </section>
+      <section id="method">
+        <p className={styles.eyebrow}>Method / full system and browser reduction</p>
+        <h2>Separate eligibility, retrieval, and ranking</h2>
+        <h3>The original provider pipeline</h3>
+        <ol>
+          <li><strong>Plan.</strong> A structured configuration supplies a description plus hard and soft criteria. An LLM maps confident hard criteria to an allowlisted attribute schema and supported operators. Unmapped criteria and soft preferences remain in the semantic query. Optional hypothetical-document expansion adds generated query text; it is not evidence about an actual record.</li>
+          <li><strong>Embed and retrieve.</strong> Voyage produces query embeddings, with batching, retries for transient failures, and output-dimension checks. Turbopuffer executes filtered vector retrieval. Sparse results trigger prioritized filter dropping and repeated retrieval. The source target is 25 candidates, with a separate minimum of 10; these are workflow constants, not universal recommendations.</li>
+          <li><strong>Optionally fuse.</strong> The hybrid path adds a BM25 branch over stored summary text and combines its ranks with vector ranks using unweighted RRF, k = 60. Although the second call uses a worker thread, the vector branch finishes first because it determines the filters the keyword branch must reuse. The inspected implementation is not simultaneous vector/BM25 search.</li>
+          <li><strong>Rerank.</strong> Voyage scores the candidate text against the query. Optional switches enrich the document, incorporate soft criteria, or add a small deterministic token-evidence bonus. Input/output length and identifier coverage are checked. A provider failure produces an identity pass-through, not a successful learned rerank.</li>
+          <li><strong>Inspect and score.</strong> Markdown and JSON inspection artifacts precede optional LLM criterion scoring. Hard checks are boolean; soft scores follow a bounded rubric. Invalid or failed scorer responses become all-fail records. The pipeline orders survivors using hard passes, soft totals, and the prior score, then applies its quota fallback.</li>
+          <li><strong>Submit.</strong> The pipeline deduplicates identifiers, checks a fixed submission count, and sends the selected list to an external evaluator. Inspection write errors and insufficient candidate counts can stop the run. Ingestion, model training, and a web interface were outside that source system.</li>
+        </ol>
+        <p>That architecture establishes useful component boundaries, but its outputs depend on live models, provider data, schema interpretation, and evaluation access. None of those services, original records, generated reports, supplied queries, identifiers, or endpoints are embedded in this demo. The public implementation contains no network retrieval adapter and does not pretend that a lexical score reproduces an embedding or an LLM judgment.</p>
+        <h3>Two actually computed lexical channels</h3>
+        <p>The body channel is an explicit damped TF-IDF feature score, not BM25 and not semantic retrieval. ASCII letter/number tokens are lowercased; there is no stemming, stopword removal, synonym expansion, or language detection. Repeated query terms are deduplicated. For every distinct query token, the engine computes document frequency over the entire current corpus and counts occurrences in the document body.</p>
+        <pre><code>{'idf(t) = ln(1 + (N + 1) / (df(t) + 1))\nbody(t,d) = idf(t) * tf(t,d)/(tf(t,d)+1)\n            / sqrt(max(1, length(d))/max(1, averageLength))\nbodyScore(d) = sum(body(t,d))'}</code></pre>
+        <p>Corpus-wide statistics remain fixed while filters relax. Otherwise removing a filter could change both eligibility and score calibration, making the trace harder to interpret. Documents with zero body evidence never enter that channel.</p>
+        <p>The metadata channel assigns 3 for presence in a title and 2 for presence in tags, divided by the number of distinct query tokens. Presence is boolean within each field, so repeating a title word cannot inflate its weight. A term may contribute to both fields. This is a transparent alternate feature channel, not a second model and not a synthetic precomputed provider score.</p>
+        <h3>Source-informed orchestration</h3>
+        <p>Attribute predicates intersect. The year filter is a lower bound; the other fields use exact equality. Relaxation removes year first, then kind, then topic, then collection. This ordering adapts the source policy to document metadata rather than copying its original record schema. The body channel drives the target even when the displayed ranking mode is metadata-only. Each attempt records both the attribute-eligible pool and the positive body hits after the depth limit.</p>
+        <p>Protected filters and a strict no-relax mode are additional browser policies. The source did not provide protected filters. They let a visitor distinguish a preference that may be dropped from a constraint that must remain enforced. A high target combined with a low channel depth can never be reached, even with no filters; the trace leaves that condition visible rather than inventing candidates.</p>
+        <pre><code>{'RRF(d) = sum over present channels: 1 / (k + rank(d))\nrank starts at 1; missing channel contributes 0\ntie: ascending document id'}</code></pre>
+        <p>Each channel is truncated before fusion, matching the staged nature of the source system. The result list may be the RRF union or one channel alone. Unlike the additional fused-pool cutoff in the source, this browser keeps the channel union through the token gate, then applies the display limit. The optional coverage preference orders accepted documents by the fraction of query tokens observed anywhere in their text, then by the selected score. It is a deterministic browser adaptation, not the original learned reranker; the original score and retrieval position remain inspectable.</p>
+        <h3>A gate with literal semantics</h3>
+        <p>Required tokens are exact lexical checks across title, body, and tags after retrieval. Every required token must be present. This is useful for inspecting loss after ranking, but it does not translate a natural-language requirement into a reliable hard criterion. The gate operates only on the retrieved pool, so a relevant document omitted by channel depth cannot be recovered by it. Rejected documents carry the precise missing tokens, and no quota fallback pads them back into the accepted list.</p>
+        <h3>Failure and publication boundaries</h3>
+        <p>Empty-token queries, no lexical matches, all-gated pools, quota shortages, an unmet relaxation target, relaxed constraint violations, and display truncation are distinct observable conditions. Invalid settings or corpus JSON produce an actionable error while retaining the last valid run. Static fixtures and runtime inputs share a strict schema; unknown fields, duplicate ids, duplicate filters, non-finite numbers, and out-of-range sizes are rejected.</p>
+        <p>The starter corpus is wholly synthetic. Edited or replayed text is user-supplied, not automatically verified as synthetic. Nothing is sent to a service or saved in local storage; exported JSON contains all supplied text, so it is an artifact to review before sharing. The corpus is small and bounded, lexical matching is English/ASCII-oriented, and the score is a design choice rather than a trained model. There is no throughput measurement, hosted backend, semantic recall claim, or production search deployment implied by this workbench.</p>
+      </section>
+      <section id="reproduce">
+        <p className={styles.eyebrow}>Reproduce / inspect the implementation</p>
+        <h2>A run is its inputs, not a screenshot</h2>
+        <p>The default experiment is defined in <a href={`${library}/engine.ts`}>engine.ts</a> and the 18 fictional notes in <a href={`${library}/corpus.ts`}>corpus.ts</a>. No random generator or seed is involved. Reset constructs fresh validated copies of both. A query, filter, depth, or corpus edit changes the computed output; exporting always captures the last applied run rather than unsubmitted control edits.</p>
+        <p>The version-1 JSON envelope identifies algorithm <code>lexical-rrf-v1</code> and includes the full corpus, configuration, result rows, score components, and attempt trace. Replay validates the envelope and recomputes its complete result. A supplied result that differs from recomputation is rejected; importing JSON is not permission to render a forged score. This consistency check is not a cryptographic signature or proof that the chosen corpus is truthful.</p>
+        <p>For counterexamples, protect a year with no matching notes, set channel depth below the relaxation target, use a token absent from the corpus, or require a token missing from every retrieved record. Compare strict and relaxed filters, or switch between body and metadata ranking. The operation is the same deterministic engine each time; there is no recorded success path substituting for an actual failure.</p>
+        <pre><code>{'node node_modules/vitest/vitest.mjs run src/lib/projects/retrieval-ranking src/components/projects/retrieval-ranking src/app/work/projects/retrieval-ranking --maxWorkers=1 --cache=false\n\nnode node_modules/eslint/bin/eslint.js src/lib/projects/retrieval-ranking src/components/projects/retrieval-ranking src/app/work/projects/retrieval-ranking e2e/retrieval-ranking.spec.ts'}</code></pre>
+        <p>The <a href={`${library}/engine.test.ts`}>domain tests</a> cover exact score contributions, rank fusion, filter priority, shared final predicates, protected-filter exhaustion, post-retrieval rejection, invalid inputs, and replay tampering. The <a href={`${codeRoot}/src/components/projects/retrieval-ranking/RetrievalDemo.test.tsx`}>component tests</a> exercise changed controls, shortages, corpus replacement, export, replay, and reset. These tests establish deterministic behavior; they do not certify provider performance or held-out retrieval quality.</p>
+      </section>
+    </article>
+  </main>;
+}
