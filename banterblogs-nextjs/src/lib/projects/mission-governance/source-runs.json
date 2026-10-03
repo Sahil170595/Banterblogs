@@ -1,0 +1,538 @@
+{
+ "commit": "67dcee21214de567d00f7fe5879ce46a423b08bc",
+ "atValidation": [
+  {
+   "fault": "healthy",
+   "count": 3,
+   "timeoutSeconds": 600,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "passed",
+     null
+    ],
+    [
+     "telemetry_freshness",
+     "passed",
+     null
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "completed",
+   "progress": 3,
+   "reason": "mission.completed",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "completed",
+     "wyvern_executor",
+     "mission.completed"
+    ]
+   ]
+  },
+  {
+   "fault": "battery",
+   "count": 3,
+   "timeoutSeconds": 600,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "failed",
+     "battery_24_below_25"
+    ],
+    [
+     "telemetry_freshness",
+     "passed",
+     null
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "rtl",
+   "progress": 1,
+   "reason": "degraded.battery_low",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "rtl",
+     "safety_guard",
+     "degraded.battery_low"
+    ]
+   ]
+  },
+  {
+   "fault": "link",
+   "count": 3,
+   "timeoutSeconds": 600,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "passed",
+     null
+    ],
+    [
+     "telemetry_freshness",
+     "passed",
+     null
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "rtl",
+   "progress": 1,
+   "reason": "degraded.link_quality",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "rtl",
+     "safety_guard",
+     "degraded.link_quality"
+    ]
+   ]
+  },
+  {
+   "fault": "estimator",
+   "count": 3,
+   "timeoutSeconds": 600,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "passed",
+     null
+    ],
+    [
+     "telemetry_freshness",
+     "passed",
+     null
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "rtl",
+   "progress": 1,
+   "reason": "degraded.estimator",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "rtl",
+     "safety_guard",
+     "degraded.estimator"
+    ]
+   ]
+  },
+  {
+   "fault": "stale",
+   "count": 3,
+   "timeoutSeconds": 600,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "passed",
+     null
+    ],
+    [
+     "telemetry_freshness",
+     "failed",
+     "telemetry_age_2500ms_exceeds_1500ms"
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "completed",
+   "progress": 3,
+   "reason": "mission.completed",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "completed",
+     "wyvern_executor",
+     "mission.completed"
+    ]
+   ]
+  },
+  {
+   "fault": "missing",
+   "count": 3,
+   "timeoutSeconds": 600,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "warning",
+     "no_telemetry_available"
+    ],
+    [
+     "telemetry_freshness",
+     "warning",
+     "no_telemetry_available"
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "completed",
+   "progress": 3,
+   "reason": "mission.completed",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "completed",
+     "wyvern_executor",
+     "mission.completed"
+    ]
+   ]
+  },
+  {
+   "fault": "battery",
+   "count": 1,
+   "timeoutSeconds": 600,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "failed",
+     "battery_24_below_25"
+    ],
+    [
+     "telemetry_freshness",
+     "passed",
+     null
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "completed",
+   "progress": 1,
+   "reason": "mission.completed",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "completed",
+     "wyvern_executor",
+     "mission.completed"
+    ]
+   ]
+  },
+  {
+   "fault": "healthy",
+   "count": 3,
+   "timeoutSeconds": 1,
+   "checks": [
+    [
+     "geofence_containment",
+     "passed",
+     null
+    ],
+    [
+     "altitude_limit",
+     "passed",
+     null
+    ],
+    [
+     "battery_threshold",
+     "passed",
+     null
+    ],
+    [
+     "telemetry_freshness",
+     "passed",
+     null
+    ],
+    [
+     "remote_id_compliance",
+     "passed",
+     null
+    ],
+    [
+     "airspace_authorization",
+     "passed",
+     null
+    ]
+   ],
+   "state": "rtl",
+   "progress": 0,
+   "reason": "timeout.mission",
+   "timeline": [
+    [
+     "staging",
+     "harness",
+     "harness"
+    ],
+    [
+     "executing",
+     "wyvern_executor",
+     "mission.executing"
+    ],
+    [
+     "rtl",
+     "safety_guard",
+     "timeout.mission"
+    ]
+   ]
+  }
+ ],
+ "inFlight": [
+  {
+   "fault": "battery",
+   "count": 6,
+   "afterPolls": 2,
+   "state": "rtl",
+   "progress": 3,
+   "reason": "degraded.battery_low"
+  },
+  {
+   "fault": "link",
+   "count": 6,
+   "afterPolls": 2,
+   "state": "rtl",
+   "progress": 3,
+   "reason": "degraded.link_quality"
+  },
+  {
+   "fault": "estimator",
+   "count": 6,
+   "afterPolls": 2,
+   "state": "rtl",
+   "progress": 3,
+   "reason": "degraded.estimator"
+  },
+  {
+   "fault": "stale",
+   "count": 6,
+   "afterPolls": 2,
+   "state": "completed",
+   "progress": 6,
+   "reason": "mission.completed"
+  },
+  {
+   "fault": "missing",
+   "count": 6,
+   "afterPolls": 2,
+   "state": "completed",
+   "progress": 6,
+   "reason": "mission.completed"
+  }
+ ],
+ "resumed": {
+  "fault": "battery",
+  "count": 6,
+  "afterPolls": 2,
+  "state": "executing",
+  "progress": 2,
+  "reason": "mission.resumed",
+  "timeline": [
+   [
+    "staging",
+    "harness",
+    "harness"
+   ],
+   [
+    "executing",
+    "wyvern_executor",
+    "mission.executing"
+   ],
+   [
+    "paused",
+    "operator",
+    "operator.pause"
+   ],
+   [
+    "resuming",
+    "operator",
+    "operator.resume"
+   ],
+   [
+    "executing",
+    "wyvern_executor",
+    "mission.resumed"
+   ]
+  ]
+ }
+}

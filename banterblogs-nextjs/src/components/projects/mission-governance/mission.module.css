@@ -1,0 +1,339 @@
+/* The mission demo (MissionDemo, FlightMap); segmented choices and hints are
+   the shared project controls (demo- classes, app/reading.css). A flight
+   that finished its route while the guard could not see the vehicle is
+   status red; a return to launch is ember. No text under 12px. */
+
+.demo {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.headline {
+  max-width: 58rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
+  text-wrap: balance;
+}
+
+.caption {
+  max-width: 70ch;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ── the fault matrix ── */
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.tableScroll:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.matrix {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.matrix thead th {
+  padding: 0.5rem 0.5rem 0.75rem;
+  text-align: left;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.matrix tbody tr {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.matrix tbody th {
+  width: 26%;
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.matrix td {
+  padding: 0.25rem;
+}
+
+.matrix td button {
+  display: grid;
+  gap: 0.125rem;
+  width: 100%;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  padding: 0.5rem;
+  text-align: left;
+  font: inherit;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.matrix td button strong {
+  font-weight: 500;
+}
+
+.matrix td button span {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.matrix td[data-blind] button strong {
+  color: hsl(var(--status-red));
+}
+
+.matrix td[data-home] button strong {
+  color: hsl(var(--primary));
+}
+
+.matrix td button:hover {
+  background-color: hsl(var(--foreground) / 0.05);
+}
+
+.matrix td button[aria-pressed="true"] {
+  background-color: hsl(var(--foreground) / 0.09);
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.2);
+}
+
+.matrix td button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 1px;
+}
+
+/* ── the lab ── */
+.lab {
+  display: grid;
+  gap: 1.25rem;
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+  padding: 1.25rem;
+}
+
+.controlsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: start;
+  gap: 1.5rem;
+}
+
+.mapPanel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.map {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.625rem;
+  background-color: hsl(var(--background));
+  box-shadow: inset 0 0 0 1px hsl(var(--border));
+}
+
+.fence {
+  fill: hsl(var(--foreground) / 0.04);
+  stroke: hsl(var(--foreground) / 0.45);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.planned {
+  fill: none;
+  stroke: hsl(var(--foreground) / 0.3);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.flown {
+  fill: none;
+  stroke: hsl(var(--foreground));
+  stroke-width: 2;
+}
+
+.waypoint {
+  fill: hsl(var(--background));
+  stroke: hsl(var(--foreground) / 0.6);
+  stroke-width: 1.5;
+}
+
+.reached {
+  fill: hsl(var(--foreground));
+}
+
+.rtl {
+  fill: none;
+  stroke: hsl(var(--primary));
+  stroke-width: 2.5;
+}
+
+.exit {
+  fill: hsl(var(--status-red));
+}
+
+.mapFigure {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0;
+}
+
+.mapNote {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.result {
+  display: grid;
+  gap: 0.125rem;
+  font-size: 0.8125rem;
+}
+
+.result strong {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.result[data-state="rtl"] strong {
+  color: hsl(var(--primary));
+}
+
+.result[data-state="stopped"] strong {
+  color: hsl(var(--status-amber));
+}
+
+.result[data-state="unwatched"] strong {
+  color: hsl(var(--status-red));
+}
+
+.result span {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.panels {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.panels h3 {
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.checks,
+.events {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+}
+
+.checks li {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  column-gap: 0.5rem;
+  align-items: baseline;
+}
+
+.checks svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  align-self: center;
+}
+
+.checks em,
+.events em {
+  grid-column: 2;
+  font-size: 0.75rem;
+  font-style: normal;
+  color: hsl(var(--muted-foreground));
+  overflow-wrap: anywhere;
+}
+
+.checks li[data-status="failed"] {
+  color: hsl(var(--status-red));
+}
+
+.checks li[data-status="warning"] {
+  color: hsl(var(--status-amber));
+}
+
+.events li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-items: baseline;
+}
+
+.events li > span {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+}
+
+.events li strong {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 500;
+}
+
+.events li[data-state="rtl"] strong {
+  color: hsl(var(--primary));
+}
+
+.events li[data-logged] strong {
+  color: hsl(var(--status-red));
+}
+
+@media (max-width: 850px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 450px) {
+  .lab {
+    padding: 1rem;
+  }
+}
