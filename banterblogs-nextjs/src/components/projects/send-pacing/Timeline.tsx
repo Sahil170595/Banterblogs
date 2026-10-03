@@ -1,6 +1,6 @@
-import { readyAt, SOURCE_SETTINGS, type ReplayResult } from '@/lib/projects/send-pacing/scheduler';
+import { businessClose, readyAt, SOURCE_SETTINGS, type ReplayResult } from '@/lib/projects/send-pacing/scheduler';
 import { along, span } from '../geometry';
-import { clock } from './format';
+import { clock, Spell } from './format';
 import styles from './pacing.module.css';
 
 // The schedule over the campaign: one row per message in send order. A thin
@@ -12,14 +12,8 @@ import styles from './pacing.module.css';
 const US = 1_000_000;
 const MINUTE = 60 * US;
 const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
 // room past the end so the last instant's ticks stay inside the track
 const RIGHT_PAD = 0.02;
-const words = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
-const Say = (n: number) => {
-  const word = words[n] ?? String(n);
-  return word[0].toUpperCase() + word.slice(1);
-};
 
 export function Timeline({ result }: { result: ReplayResult }) {
   const late = new Set(result.violations.filter((v) => v.code === 'before_preparation').map((v) => v.index));
@@ -30,7 +24,7 @@ export function Timeline({ result }: { result: ReplayResult }) {
   const step = to - from > 3 * HOUR ? HOUR : 15 * MINUTE;
   const ticks: number[] = [];
   for (let t = Math.ceil(from / step) * step; t <= to; t += step) ticks.push(t);
-  const closing = from - (from % DAY) + SOURCE_SETTINGS.businessEnd * HOUR;
+  const closing = businessClose(from);
   const showClosing = closing > from && closing < to && closing !== result.end;
   // the busiest instant: where sends pile up, if more than one shares it
   const piles = new Map<number, number>();
@@ -72,7 +66,7 @@ export function Timeline({ result }: { result: ReplayResult }) {
       <figcaption className={styles.legend}>
         {pileSize > 1 && (
           <span className={styles.pileNote}>
-            {Say(pileSize)} messages go at the same instant, {clock(pileAt).slice(0, 5)}
+            {Spell(pileSize)} messages go at the same instant, {clock(pileAt).slice(0, 5)}
             {pileAt === result.end
               ? ', the campaign’s end: anything scheduled past it is clamped back to it.'
               : pileAt === closing
@@ -84,7 +78,7 @@ export function Timeline({ result }: { result: ReplayResult }) {
           <i className={styles.wait} /> waiting since the previous send
         </span>
         <span>
-          <i className={styles.plan} /> where the plan put it (under the tick when it went there)
+          <i className={styles.plan} /> planned slot, hidden under the tick when sent on schedule
         </span>
         <span>
           <i className={styles.send} /> sent

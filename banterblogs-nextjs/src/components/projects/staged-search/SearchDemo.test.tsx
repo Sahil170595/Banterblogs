@@ -35,9 +35,13 @@ describe('staged search demo', () => {
     render(<SearchDemo />);
     expect(
       screen.getByText(
-        /Asked for 4 notes matching 3 filters, the search drops filters while it has fewer than 6 candidates, its default threshold\. Here it drops every filter, reports “ready” and returns 4 notes, two of which do not match the request\. At a threshold of 1 to 3 it drops nothing and reports a shortfall: 2 notes, both matching\./,
+        /Asked for 4 notes matching 3 filters and containing “cache”, the search drops filters while it has fewer than 6 candidates, its default threshold\. Here it drops every filter, reports “ready” and returns 4 notes, two of which do not match the request\. At thresholds 1 to 3 it drops nothing and reports a shortfall: 2 notes, both matching\./,
       ),
     ).toBeTruthy();
+    // the hard criterion is part of the request, beside the filters it can drop
+    const request = screen.getByText('The request').parentElement!;
+    expect(within(request).getByText('contains “cache”').closest('[data-hard]')).toBeTruthy();
+    expect(within(request).getByText('hard, never dropped')).toBeTruthy();
     expect(within(ladder()).getAllByRole('row')).toHaveLength(4);
     expect(within(results()).getByText('Ready')).toBeTruthy();
     expect(within(results()).getAllByText('no, outside the request')).toHaveLength(2);
@@ -68,6 +72,8 @@ describe('staged search demo', () => {
     render(<SearchDemo />);
     fireEvent.click(within(ladder()).getByRole('button', { name: /^1 to 3/ }));
     expect(within(results()).getByText('Shortfall')).toBeTruthy();
+    // the row stands for a range of thresholds, and the verdict says so
+    expect(within(results()).getByText('2 of 4 results at thresholds 1 to 3')).toBeTruthy();
     expect(within(results()).getByText('No filter dropped.')).toBeTruthy();
     expect(scrollIntoView).toHaveBeenCalled();
     expect(results().classList.contains('demo-revealed')).toBe(true);

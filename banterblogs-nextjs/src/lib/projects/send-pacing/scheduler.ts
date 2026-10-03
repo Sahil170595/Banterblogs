@@ -75,6 +75,9 @@ const clip = (x: number, low: number, high: number) => Math.min(Math.max(x, low)
 const dayOf = (t: number) => Math.floor(t / DAY) * DAY;
 const timeOfDay = (t: number) => t - dayOf(t);
 
+/** the close of business on the day a campaign starts, in epoch microseconds */
+export const businessClose = (start: number) => dayOf(start) + SOURCE_SETTINGS.businessEnd * HOUR;
+
 // NumPy's pairwise float sum, as add.reduce runs it from the first element
 function pairwise(a: number[], from: number, n: number): number {
   if (n < 8) {

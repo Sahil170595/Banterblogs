@@ -216,8 +216,10 @@
   max-width: 30rem;
 }
 
+/* wraps: on touch screens the buttons carry their names and outgrow a phone's row */
 .commands {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 

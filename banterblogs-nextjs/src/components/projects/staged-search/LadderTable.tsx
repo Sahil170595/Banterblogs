@@ -1,23 +1,23 @@
 'use client';
 
-import { useMemo } from 'react';
-import { ladder, type Rung } from '@/lib/projects/staged-search/ladder';
+import type { Rung } from '@/lib/projects/staged-search/ladder';
 import { DEFAULT_SETTINGS, type Query, type Settings } from '@/lib/projects/staged-search/schema';
 import { controls } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
-import { formatFilter, thresholdRange } from './format';
+import { atThresholds, formatFilter, formatHard, thresholdRange } from './format';
 import styles from './search.module.css';
 
 // The hero: the lab's query at every candidate threshold, grouped where the
 // outcome is the same. Each result is a square, plain when it fits every
 // filter the query asked for, crossed when relaxation let it through.
 
-const holds = (rung: Rung, threshold: number) => rung.from <= threshold && (rung.to === null || threshold <= rung.to);
+/** whether a ladder row covers this threshold */
+export const holds = (rung: Rung, threshold: number) => rung.from <= threshold && (rung.to === null || threshold <= rung.to);
+const quoted = (terms: string[]) => terms.map((t) => `“${t}”`).join(' and ');
 const words = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const say = (n: number) => words[n] ?? String(n);
 const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
 const reports = (status: 'ready' | 'shortfall') => (status === 'ready' ? '“ready”' : 'a shortfall');
-const range = (rung: Rung) => (rung.to === rung.from ? `${rung.from}` : `${rung.from} to ${rung.to}`);
 
 export const LADDER_COLUMNS = {
   threshold: 'Threshold',
@@ -42,13 +42,14 @@ function Headline({ rungs, query, limit }: { rungs: Rung[]; query: Query; limit:
   const allMatch = strict !== null && first.broken.every((b) => !b.length);
   return (
     <p className={styles.headline}>
-      Asked for {plural(limit, 'note')} matching {plural(query.filters.length, 'filter')}, the search drops filters while it has fewer than{' '}
+      Asked for {plural(limit, 'note')} matching {plural(query.filters.length, 'filter')}
+      {query.hard_criteria.length > 0 && ` and containing ${quoted(query.hard_criteria)}`}, the search drops filters while it has fewer than{' '}
       {DEFAULT_SETTINGS.relax_threshold} candidates, its default threshold. Here it {dropped}, reports {reports(report.status)} and returns{' '}
       {plural(report.selected.length, 'note')}, {say(breaking)} of which {breaking === 1 ? 'does' : 'do'} not match the request.
       {strict && (
         <>
           {' '}
-          At a threshold of {range(first)} it drops nothing and reports {reports(strict.status)}: {plural(strict.selected.length, 'note')}
+          At {atThresholds(first.from, first.to)} it drops nothing and reports {reports(strict.status)}: {plural(strict.selected.length, 'note')}
           {allMatch ? `, ${strict.selected.length === 2 ? 'both' : 'all'} matching.` : '.'}
         </>
       )}
@@ -56,8 +57,17 @@ function Headline({ rungs, query, limit }: { rungs: Rung[]; query: Query; limit:
   );
 }
 
-export function LadderTable({ query, settings, onPick }: { query: Query; settings: Settings; onPick: (threshold: number) => void }) {
-  const rungs = useMemo(() => ladder(query, settings), [query, settings]);
+export function LadderTable({
+  rungs,
+  query,
+  settings,
+  onPick,
+}: {
+  rungs: Rung[];
+  query: Query;
+  settings: Settings;
+  onPick: (threshold: number) => void;
+}) {
   return (
     <div className={styles.hero}>
       <Headline rungs={rungs} query={query} limit={settings.limit} />
@@ -72,6 +82,12 @@ export function LadderTable({ query, settings, onPick }: { query: Query; setting
           <code key={i}>{formatFilter(f)}</code>
         ))}
         {query.filters.length === 0 && <em>no filters</em>}
+        {/* the hard criteria are part of the request too; relaxation never drops them */}
+        {query.hard_criteria.map((term) => (
+          <span key={term} data-hard="" className={styles.hard}>
+            <code>{formatHard(term)}</code> <small>hard, never dropped</small>
+          </span>
+        ))}
         <span>· {plural(settings.limit, 'result')}</span>
       </p>
       <p className={styles.legend}>

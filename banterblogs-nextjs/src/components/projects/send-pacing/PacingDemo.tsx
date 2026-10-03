@@ -8,7 +8,7 @@ import type { SweepRow } from '@/lib/projects/send-pacing/sweep';
 import { controls, UnderTheHood } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
 import { revealResult } from '../reveal';
-import { clock } from './format';
+import { clock, spell } from './format';
 import { Ledger } from './Ledger';
 import { Timeline } from './Timeline';
 import styles from './pacing.module.css';
@@ -18,7 +18,6 @@ const DURATIONS = [1, 2, 4, 8];
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const MAX_SEED = 0xffffffff;
 const count = (n: number) => n.toLocaleString('en-US');
-const words = ['none', 'one', 'two', 'three', 'four', 'five'];
 const same = (a: Omit<Replay, 'seed'>, b: Replay) => a.count === b.count && a.durationHours === b.durationHours && a.startHour === b.startHour;
 
 export const SWEEP_COLUMNS = {
@@ -97,15 +96,14 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
     }
   }
 
-  const say = (n: number) => words[n] ?? String(n);
   return (
     <div className={styles.demo}>
       <div className={styles.hero}>
         <p className={styles.headline}>
           {late === 0
             ? `In this run of ${replay.count} messages, every one is typed before it goes.`
-            : `In this run of ${replay.count} messages, ${say(late)} go${late === 1 ? 'es' : ''} out before ${late === 1 ? 'it' : 'they'} could have been typed${
-                atEnd > 1 ? `, and ${say(atEnd)} land on the campaign’s final instant, ${clock(result.end).slice(0, 5)}` : ''
+            : `In this run of ${replay.count} messages, ${spell(late)} go${late === 1 ? 'es' : ''} out before ${late === 1 ? 'it' : 'they'} could have been typed${
+                atEnd > 1 ? `, and ${spell(atEnd)} land on the campaign’s final instant, ${clock(result.end).slice(0, 5)}` : ''
               }.`}
         </p>
         <p className={controls.lead}>
@@ -115,8 +113,8 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
         </p>
         <p className={styles.runLine}>
           <span>Seed {replay.seed}</span> {replay.count} messages, {clock(result.start).slice(0, 5)} to {clock(result.end).slice(0, 5)} UTC ·{' '}
-          {late ? `${say(late)} sent before ${late === 1 ? 'it was' : 'they were'} typed` : 'every message typed before it went'}
-          {atEnd > 1 && ` · ${say(atEnd)} at the campaign's final instant`}
+          {late ? `${spell(late)} sent before ${late === 1 ? 'it was' : 'they were'} typed` : 'every message typed before it went'}
+          {atEnd > 1 && ` · ${spell(atEnd)} at the campaign's final instant`}
         </p>
         <div ref={chartRef} className={styles.chartAnchor}>
           <ProjectFigureTransition slug="send-pacing">
@@ -191,6 +189,10 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
                   </td>
                   <td role="cell" data-label={SWEEP_COLUMNS.atEnd}>
                     {row.atEnd.toFixed(1)}
+                    {/* a zero here is no all-clear when the pile moved to the close of business */}
+                    {row.closeHour !== null &&
+                      row.atClose > 0 &&
+                      `, but ${row.atClose.toFixed(1)} a run pile at ${String(row.closeHour).padStart(2, '0')}:00, when business hours close`}
                   </td>
                 </tr>
               ))}

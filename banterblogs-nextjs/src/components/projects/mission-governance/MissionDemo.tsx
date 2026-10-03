@@ -31,6 +31,9 @@ const MID_FLIGHT_WORDS: Record<Fault, string> = {
   missing: 'telemetry stops',
 };
 const POLICY_WORDS = { rtl: 'return to launch', hold: 'hold position', land: 'land' } as const;
+// faults the pre-flight check has no test for (validation.py checks the fence,
+// altitude, battery, telemetry age and regulation, never link or estimator)
+const UNTESTED_AT_CHECK: Partial<Record<Fault, string>> = { link: 'the link', estimator: 'the estimator' };
 const say = (n: number) => ['no', 'one', 'two', 'three', 'four', 'five', 'six'][n] ?? String(n);
 
 export const MATRIX_COLUMNS = {
@@ -67,8 +70,9 @@ function verdict(flight: Flight): string {
 }
 
 /** what the guard did, in words, after the check's verdict */
-function guardLine(flight: Flight, when: Scenario['when']): string {
-  const check = when === 'validation' ? `check ${verdict(flight)}` : 'check passed';
+function guardLine(flight: Flight, when: Scenario['when'], fault: Fault): string {
+  const untested = when === 'validation' && flight.validation.passed ? UNTESTED_AT_CHECK[fault] : undefined;
+  const check = untested ? `check does not test ${untested}` : when === 'validation' ? `check ${verdict(flight)}` : 'check passed';
   if (flewBlind(flight)) return `${check} · guard logged ${flight.logged.map((c) => `“${guardWords(c)}”`).join(', ')} and did nothing else`;
   if (flight.state === 'rtl') return `${check} · guard saw ${guardWords(flight.reason)} and sent it home`;
   return check;
@@ -170,7 +174,7 @@ export function MissionDemo() {
                         >
                           <button type="button" aria-pressed={selected} title={codes(f)} onClick={() => pick(fault, when)}>
                             <strong>{outcome(f, total)}</strong>
-                            <span>{guardLine(f, when)}</span>
+                            <span>{guardLine(f, when, fault)}</span>
                           </button>
                         </td>
                       );
@@ -213,7 +217,7 @@ export function MissionDemo() {
             value={route}
             options={[
               { value: 'sample', label: 'Sample route, twice' },
-              { value: 'notched', label: 'Notched fence' },
+              { value: 'notched', label: 'Notched fence', note: 'this page’s example' },
             ]}
             onChange={setRoute}
           />
@@ -272,6 +276,9 @@ export function MissionDemo() {
           <section aria-label="Event log">
             <h3 className={styles.logTitle}>Event log, on a simulated clock</h3>
             <ol className={styles.events}>
+              {!flight.flown && shown.length === 0 && (
+                <li data-empty="">No lifecycle events: the mission failed its pre-flight check and never reached approval.</li>
+              )}
               {shown.map((e, i) => (
                 <li key={i} data-state={e.state}>
                   <span>{(e.at / 1000).toFixed(1)} s</span>

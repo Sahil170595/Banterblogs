@@ -1,5 +1,5 @@
 import { ForEngineers, ProjectPage, projectSections, type ProjectFinding } from '@/components/projects/ProjectPage';
-import { formatFilter } from '@/components/projects/staged-search/format';
+import { atThresholds, formatFilter } from '@/components/projects/staged-search/format';
 import { SearchDemo } from '@/components/projects/staged-search/SearchDemo';
 import { brokenFilters, RERANK_TOP_K, RRF_K, runSearch } from '@/lib/projects/staged-search/engine';
 import { EXAMPLE_CORPUS, EXAMPLE_QUERY } from '@/lib/projects/staged-search/example';
@@ -52,15 +52,15 @@ const Say = (n: number) => say(n)[0].toUpperCase() + say(n).slice(1);
 const FINDINGS: ProjectFinding[] = [
   {
     value: `${RUN.dropped.length} of ${EXAMPLE_QUERY.filters.length} filters`,
-    label: `dropped at the default threshold of ${DEFAULT_SETTINGS.relax_threshold} candidates, and the search still reports “${RUN.status}”.`,
+    label: `dropped one at a time while the search found fewer than ${DEFAULT_SETTINGS.relax_threshold} candidate notes, its default threshold, and it still reports “${RUN.status}”.`,
   },
   {
     value: `${outside.length} of ${RUN.selected.length} outside`,
     label: `results fail a filter the request asked for; one is a ${farDoc.year} ${farDoc.collection} ${farDoc.kind}. StrataSearch’s output does not flag them: the red labels in the demo are this page’s addition.`,
   },
   {
-    value: `${strict.report!.selected.length} of ${DEFAULT_SETTINGS.limit}${strictAllMatch ? ', all match' : ''}`,
-    label: `results at thresholds ${strict.from} to ${strict.to}, where nothing is dropped and the search reports a shortfall instead.`,
+    value: `${strict.report!.selected.length} of ${DEFAULT_SETTINGS.limit} returned${strictAllMatch ? (strict.report!.selected.length === 2 ? ', both match' : ', all match') : ''}`,
+    label: `at ${atThresholds(strict.from, strict.to)}, where nothing is dropped and the search reports a shortfall instead.`,
   },
 ];
 

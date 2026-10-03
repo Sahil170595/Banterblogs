@@ -1,7 +1,8 @@
-import { runReplay, SOURCE_REPLAY, type Replay } from './scheduler';
+import { businessClose, runReplay, SOURCE_REPLAY, SOURCE_SETTINGS, type Replay } from './scheduler';
 
 // The replay over many seeds: how often the audit finds each kind of
-// violation, and how many messages land exactly on the campaign's end.
+// violation, and how many messages land exactly on the campaign's end, or on
+// the close of business when that falls inside the campaign.
 
 export const SWEEP_SEEDS = 1000;
 
@@ -18,6 +19,10 @@ export interface SweepRow {
   afterHours: number;
   /** messages per run, on average, sent at exactly the campaign's end */
   atEnd: number;
+  /** the hour business closes, when that falls inside the campaign, else null */
+  closeHour: number | null;
+  /** messages per run, on average, sent at exactly that close; 0 when it falls outside */
+  atClose: number;
 }
 
 export const SWEEP_VARIANTS: { label: string; replay: Omit<Replay, 'seed'> }[] = [
@@ -34,8 +39,15 @@ export function sweep(seeds = SWEEP_SEEDS): SweepRow[] {
     let burst = 0;
     let afterHours = 0;
     let atEnd = 0;
+    let atClose = 0;
+    let closeInside = false;
     for (let seed = 0; seed < seeds; seed++) {
       const result = runReplay({ seed, ...replay });
+      const close = businessClose(result.start);
+      if (close > result.start && close < result.end) {
+        closeInside = true;
+        atClose += result.schedule.filter((row) => row.sendTime === close).length;
+      }
       const codes = new Set(result.violations.map((v) => v.code));
       if (codes.has('before_preparation')) beforePreparation++;
       const late = new Set(result.violations.filter((v) => v.code === 'before_preparation').map((v) => v.index));
@@ -45,6 +57,16 @@ export function sweep(seeds = SWEEP_SEEDS): SweepRow[] {
       if (codes.has('outside_business_hours')) afterHours++;
       atEnd += result.schedule.filter((row) => row.sendTime === result.end).length;
     }
-    return { label, replay, beforePreparation, lastTwoLate, burst, afterHours, atEnd: atEnd / seeds };
+    return {
+      label,
+      replay,
+      beforePreparation,
+      lastTwoLate,
+      burst,
+      afterHours,
+      atEnd: atEnd / seeds,
+      closeHour: closeInside ? SOURCE_SETTINGS.businessEnd : null,
+      atClose: atClose / seeds,
+    };
   });
 }

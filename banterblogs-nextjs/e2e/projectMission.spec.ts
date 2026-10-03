@@ -15,6 +15,8 @@ test('the fault matrix and its headline are in the server HTML, before any scrip
     page.getByText(/With no telemetry at all, the mission passes its pre-flight check with two warnings and flies all 6 waypoints/),
   ).toBeVisible();
   await expect(page.getByRole('region', { name: 'Each fault and how the flight ends' })).toContainText('home after waypoint 3');
+  await expect(page.getByRole('region', { name: 'Each fault and how the flight ends' })).toContainText('check does not test the link');
+  await expect(page.getByText('Status: a simulation-phase build.')).toBeAttached();
   await context.close();
 });
 
@@ -32,7 +34,8 @@ test('a cell flies; a resumed mission is unwatched; the notched fence passes', a
   await page.getByRole('group', { name: 'When' }).getByText('After a pause and resume').click();
   await expect(page.getByText(/executing at waypoint 2, unwatched/).first()).toBeVisible();
 
-  await page.getByRole('group', { name: 'Route' }).getByText('Notched fence').click();
+  // the option names itself as this page's own example
+  await page.getByRole('radio', { name: 'Notched fence, this page’s example' }).check();
   await expect(page.getByText(/the straight leg between them crosses the notch/)).toBeVisible();
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

@@ -36,6 +36,8 @@ const SWEEP: SweepRow[] = [
     burst: 1,
     afterHours: 0,
     atEnd: 3,
+    atClose: 0,
+    closeHour: null,
   },
   {
     label: '12 over 2 hours from 16:00',
@@ -45,6 +47,8 @@ const SWEEP: SweepRow[] = [
     burst: 9,
     afterHours: 0,
     atEnd: 0,
+    atClose: 6.5,
+    closeHour: 17,
   },
 ];
 const ledger = () => screen.getByRole('region', { name: 'Message ledger' });
@@ -63,6 +67,7 @@ describe('send pacing demo', () => {
     expect(
       screen.getByText(/Three messages go at the same instant, 11:00, the campaign’s end: anything scheduled past it is clamped back to it\./),
     ).toBeTruthy();
+    expect(screen.getByText('planned slot, hidden under the tick when sent on schedule')).toBeTruthy();
   });
 
   it('titles the sweep and names every value’s column, so a phone can stack each row as a card', () => {
@@ -88,6 +93,25 @@ describe('send pacing demo', () => {
     // the close of business is drawn, and the pile at it said in words
     expect(screen.getByText('business hours end, 17:00')).toBeTruthy();
     expect(screen.getByText(/at the same instant, 17:00, when business hours close/)).toBeTruthy();
+  });
+
+  // its 0.0 at the campaign's end is no all-clear: the pile moved to 17:00
+  it('says where the 16:00 setup’s pile goes, beside its zero at the campaign end', () => {
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    const row = screen.getByRole('button', { name: '12 over 2 hours from 16:00' }).closest('tr')!;
+    expect(row.querySelector('[data-label="Messages at the final instant, average per run"]')!.textContent).toBe(
+      '0.0, but 6.5 a run pile at 17:00, when business hours close',
+    );
+  });
+
+  it('spells counts under ten and gives larger ones as digits, in one style', () => {
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    fireEvent.click(screen.getByRole('button', { name: '12 over 2 hours from 16:00' }));
+    // seed 10 of this setup sends six before they are typed
+    fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '10' } });
+    const line = screen.getByText(/^Seed 10/).closest('p')!.textContent!;
+    expect(line).toMatch(/six sent before they were typed/);
+    expect(line).not.toMatch(/ [0-9] (sent before|at the)/);
   });
 
   it('keeps the run while the seed field is cleared', () => {

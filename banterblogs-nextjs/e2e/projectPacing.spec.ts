@@ -20,6 +20,9 @@ test('the run’s finding and the flagged sends are in the server HTML, before a
   ).toBeVisible();
   await page.getByText(UNDER_THE_HOOD, { exact: true }).click();
   await expect(page.getByRole('region', { name: 'Message ledger' }).getByText('sent before it could be typed')).toHaveCount(2);
+  // the 16:00 setup's zero at the campaign end, with where its pile went
+  await expect(page.getByText(/^0\.0, but [\d.]+ a run pile at 17:00, when business hours close$/)).toBeVisible();
+  await expect(page.getByText('Status: documented, not fixed.')).toBeAttached();
   await context.close();
 });
 

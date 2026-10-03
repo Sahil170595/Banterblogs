@@ -12,6 +12,17 @@ describe('the seed sweep', () => {
     expect(rows[0].atEnd).toBeGreaterThanOrEqual(3);
   });
 
+  // the 16:00 setup reads 0 at the campaign's end because its pile sits at
+  // 17:00, the close of business, inside the campaign
+  it('finds the pile at the close of business when that falls inside the campaign', () => {
+    const late = rows.find((r) => r.replay.startHour === 16)!;
+    expect(late.atEnd).toBe(0);
+    expect(late.atClose).toBeGreaterThan(1);
+    expect(late.closeHour).toBe(17);
+    expect(rows[0].atClose).toBe(0);
+    expect(rows[0].closeHour).toBeNull();
+  });
+
   it('traces it to the quarter-hour plan: clock hours added to the start, clamped to the end', () => {
     const result = runReplay(SOURCE_REPLAY);
     const clockHourSeconds = 9 * 3600;

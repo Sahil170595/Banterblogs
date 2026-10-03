@@ -63,3 +63,21 @@ test('an example loads with its deciding signal; a fixture compares with the sou
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });
+
+test('the write-up says why an urgent read scores below a same-day one', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto(PAGE);
+  await expect(page.getByText('An urgent read is not a same-day one.')).toBeAttached();
+  await expect(page.getByText(/from same day to urgent takes it from P1 to P2\./)).toBeAttached();
+  await context.close();
+});
+
+// on a touch screen the file buttons show their names, so their row has to wrap
+test('on a phone the open file panel keeps the page to the screen', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone', 'touch screens show the icon labels');
+  await page.goto(PAGE);
+  await page.getByText('Export or import the signals and the decision').click();
+  await expect(page.getByRole('button', { name: 'Import a file', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth])).toEqual([PHONE.width, PHONE.width]);
+});

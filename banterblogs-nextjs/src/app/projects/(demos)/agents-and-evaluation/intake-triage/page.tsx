@@ -38,6 +38,15 @@ const operationalUnderGate = OPERATIONAL_IDS.reduce((n, id) => n + by[id].decisi
 const operationalRegion = REPORT.combinations - REPORT.gated;
 const scored = FIXTURES.map((f) => ({ ...f, port: scoreUrgency(f.signals) }));
 const agree = scored.filter((f) => f.port.urgency === f.source.urgency && f.port.classification === f.source.classification).length;
+// the lab's opening message, a same-day reschedule, with its same-day wording
+// off and its time read moved from same day to urgent
+const opening = FIXTURES.find((f) => f.id === 'schedule')!;
+const openingUrgency = scoreUrgency(opening.signals).urgency;
+const urgentRead = scoreUrgency({
+  ...opening.signals,
+  regex: { ...opening.signals.regex, same_day_hit: false },
+  llm: { ...opening.signals.llm, time_sensitivity: 'urgent' },
+}).urgency;
 const cohort = URGENCIES.map((u) => `${scored.filter((f) => f.port.urgency === u).length} ${u}`).join(', ');
 
 const FINDINGS: ProjectFinding[] = [
@@ -123,6 +132,12 @@ export default function IntakeTriagePage() {
           same-day with a required action {signed(SAME_DAY_WEIGHT)}, a complaint with a time element {signed(COMPLAINT_WEIGHT)}, for
           information with no action {signed(FYI_WEIGHT)}, spam {signed(SPAM_WEIGHT)}, urgent wording 0. A score of {signed(P1_AT)} or
           more is P1, {signed(P3_AT)} or less P3, anything between P2.
+        </p>
+        <p>
+          <strong>An urgent read is not a same-day one.</strong> Only a same-day time read or same-day wording earns the{' '}
+          {signed(SAME_DAY_WEIGHT)}, and only with a required action. An urgent time read earns nothing on its own: it counts only as the time
+          element in a complaint&apos;s {signed(COMPLAINT_WEIGHT)}. So with its same-day wording off, moving the opening message&apos;s time read
+          from same day to urgent takes it from {openingUrgency} to {urgentRead}.
         </p>
         <p>
           <strong>Structure overrides the proposal.</strong> The classification starts from perception&apos;s proposal. Spam wins first; a

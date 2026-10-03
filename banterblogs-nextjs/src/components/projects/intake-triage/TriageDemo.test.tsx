@@ -74,6 +74,20 @@ describe('intake triage demo', () => {
     expect(screen.getByText('Not summed: a safety gate decided first.')).toBeTruthy();
   });
 
+  it('names a state loaded from the table by its signal, and a change to it as your own', () => {
+    render(<TriageDemo report={REPORT} />);
+    const start = () => screen.getByRole('combobox', { name: /Start from one of Intakegate/ }) as HTMLSelectElement;
+    fireEvent.click(screen.getByRole('button', { name: /Load the example for Concern is about caregiving/ }));
+    expect(start().selectedOptions[0].textContent).toBe('From the table: Concern is about caregiving');
+    fireEvent.click(within(group('Concern is about caregiving')).getByRole('radio', { name: /Yes/ }));
+    expect(start().selectedOptions[0].textContent).toBe('Your own signals');
+  });
+
+  it('says why the opening message’s classes become an existing patient request', () => {
+    render(<TriageDemo report={REPORT} />);
+    expect(screen.getByText(/This message matches a known patient \(under Referral references\), so \d+ of the proposed classes become an existing patient request\./)).toBeTruthy();
+  });
+
   it('rescores an imported file and refuses one whose decision does not follow', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     render(<TriageDemo report={REPORT} />);

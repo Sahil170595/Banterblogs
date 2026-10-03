@@ -17,6 +17,7 @@ const GATE_LABELS = {
   operational: 'Operational score',
 } as const;
 const SAFETY_IDS = ['safeguarding_hit', 'safety_severity', 'safety_is_caregiving'];
+const EXISTING = 'existing_patient_request';
 /** the lab opens on a same-day reschedule: two signals say same-day, so neither alone decides */
 export const OPENING_FIXTURE = FIXTURES.find((f) => f.id === 'schedule')!;
 const byId = (id: string) => PRIORITY_SIGNALS.find((s) => s.id === id)!;
@@ -29,22 +30,32 @@ function SignalControl({ signal, signals, focused, onChange }: { signal: Priorit
   const note = (o: (typeof options)[number]) =>
     o.changes === 'urgency' ? o.urgency : o.changes === 'classification' ? CLASSIFICATION_LABELS[o.classification].toLowerCase() : undefined;
   if (signal.id === 'classification') {
+    // a known patient turns most proposals into an existing patient request; say why the tags repeat
+    const toExisting = options.filter((o) => o.value !== EXISTING && o.classification === EXISTING).length;
     return (
-      <label className={controls.field} data-focus={focused || undefined}>
-        {signal.label}
-        <select value={String(current)} onChange={(event) => onChange(withValue(signals, signal, event.target.value))}>
-          {options.map((o) => {
-            const own = CLASSIFICATION_LABELS[o.value as keyof typeof CLASSIFICATION_LABELS];
-            const becomes = note(o);
-            return (
-              <option key={String(o.value)} value={String(o.value)}>
-                {own}
-                {becomes && becomes !== own.toLowerCase() ? ` (would become: ${becomes})` : ''}
-              </option>
-            );
-          })}
-        </select>
-      </label>
+      <div data-focus={focused || undefined}>
+        <label className={controls.field}>
+          {signal.label}
+          <select value={String(current)} onChange={(event) => onChange(withValue(signals, signal, event.target.value))}>
+            {options.map((o) => {
+              const own = CLASSIFICATION_LABELS[o.value as keyof typeof CLASSIFICATION_LABELS];
+              const becomes = note(o);
+              return (
+                <option key={String(o.value)} value={String(o.value)}>
+                  {own}
+                  {becomes && becomes !== own.toLowerCase() ? ` (would become: ${becomes})` : ''}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+        {signals.intake.known_patient && toExisting > 0 && (
+          <p className={controls.hint}>
+            This message matches a known patient (under Referral references), so {toExisting} of the proposed classes become an existing patient
+            request.
+          </p>
+        )}
+      </div>
     );
   }
   return (
@@ -63,11 +74,14 @@ function SignalControl({ signal, signals, focused, onChange }: { signal: Priorit
 export function SignalLab({
   signals,
   fixtureId,
+  origin = null,
   focus,
   onSignals,
 }: {
   signals: Signals;
   fixtureId: string | null;
+  /** what to call signals that are not an example message: where they came from */
+  origin?: string | null;
   focus: string | null;
   onSignals: (signals: Signals, fixtureId: string | null) => void;
 }) {
@@ -131,7 +145,7 @@ export function SignalLab({
               onSignals(next.signals, next.id);
             }}
           >
-            {fixtureId === null && <option value="custom">Your own signals</option>}
+            {fixtureId === null && <option value="custom">{origin ?? 'Your own signals'}</option>}
             {FIXTURES.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.subject}: {f.note}

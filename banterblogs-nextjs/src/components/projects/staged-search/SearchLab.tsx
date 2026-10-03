@@ -34,6 +34,7 @@ export function SearchLab({
   query,
   draftError,
   settings,
+  thresholds,
   onDraft,
   onSettings,
   onLoad,
@@ -43,6 +44,8 @@ export function SearchLab({
   query: Query;
   draftError: string | null;
   settings: Settings;
+  /** the thresholds the ladder row for this setting covers, in a phrase: "thresholds 1 to 3" */
+  thresholds: string;
   onDraft: (draft: Draft) => void;
   onSettings: (settings: Settings) => void;
   onLoad: (query: Query, settings: Settings) => void;
@@ -116,7 +119,7 @@ export function SearchLab({
             <p className={styles.verdict}>
               <strong data-status={report.status}>{report.status === 'ready' ? 'Ready' : 'Shortfall'}</strong>
               <span>
-                {report.selected.length} of {settings.limit} results at a threshold of {settings.relax_threshold}
+                {report.selected.length} of {settings.limit} results at {thresholds}
               </span>
             </p>
             <p className={styles.droppedLine}>

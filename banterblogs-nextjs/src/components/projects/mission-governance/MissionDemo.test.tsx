@@ -93,8 +93,23 @@ describe('mission demo', () => {
   it('passes the notched fence and marks where its leg leaves', () => {
     render(<MissionDemo />);
     fireEvent.click(screen.getByRole('radio', { name: 'Healthy telemetry' }));
-    fireEvent.click(screen.getByRole('radio', { name: 'Notched fence' }));
+    // the notched fence is this page's own construction, and says so
+    fireEvent.click(screen.getByRole('radio', { name: 'Notched fence, this page’s example' }));
     expect(within(checks()).getByText('geofence containment').closest('li')?.getAttribute('data-status')).toBe('passed');
     expect(screen.getByText(/the straight leg between them crosses the notch/)).toBeTruthy();
+  });
+
+  it('says why a mission stopped at the pre-flight check has no lifecycle events', () => {
+    render(<MissionDemo />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Battery below the floor' }));
+    expect(within(log()).getByText('No lifecycle events: the mission failed its pre-flight check and never reached approval.')).toBeTruthy();
+  });
+
+  // the check has no link test, so a weak link takes off and the guard brings it home
+  it('says a weak link at the pre-flight check is not tested there', () => {
+    render(<MissionDemo />);
+    const row = within(matrix()).getByRole('row', { name: /Weak link/ });
+    const [atCheck] = within(row).getAllByRole('button');
+    expect(atCheck.textContent).toMatch(/^home after waypoint 1check does not test the link · guard saw link weak and sent it home$/);
   });
 });

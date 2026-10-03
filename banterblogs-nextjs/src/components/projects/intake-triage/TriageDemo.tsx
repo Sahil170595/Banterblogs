@@ -18,6 +18,8 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
   const [signals, setSignals] = useState<Signals>(OPENING_FIXTURE.signals);
   const [fixtureId, setFixtureId] = useState<string | null>(OPENING_FIXTURE.id);
   const [focus, setFocus] = useState<string | null>(null);
+  // where signals the visitor did not pick from the examples came from: a table row, or their own changes
+  const [origin, setOrigin] = useState<string | null>(null);
   const labRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -30,6 +32,7 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
           setSignals(example.signals);
           setFixtureId(null);
           setFocus(signal.id);
+          setOrigin(`From the table: ${signal.label}`);
           revealResult(labRef.current);
         }}
       />
@@ -37,10 +40,12 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
         <SignalLab
           signals={signals}
           fixtureId={fixtureId}
+          origin={origin}
           focus={focus}
           onSignals={(next, id) => {
             setSignals(next);
             setFixtureId(id);
+            setOrigin(null);
             if (id !== null) setFocus(null);
           }}
         />

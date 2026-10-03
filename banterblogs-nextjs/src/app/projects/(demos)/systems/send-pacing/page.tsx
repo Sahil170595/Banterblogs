@@ -47,8 +47,8 @@ const FINDINGS: ProjectFinding[] = [
     label: `of tempoledger’s own example, ${SOURCE_REPLAY.count} messages over ${SOURCE_REPLAY.durationHours} hours, send their last two messages before they could have been typed.`,
   },
   {
-    value: `About ${source.atEnd.toFixed(0)} a run`,
-    label: `messages land on the campaign’s last instant. The plan treats clock times such as 09:00 as delays from the start, so a ${SOURCE_REPLAY.durationHours}-hour campaign gets slots nine hours out and more, clamped back to its end.`,
+    value: `About ${source.atEnd.toFixed(0)} messages a run`,
+    label: `land on the campaign’s last instant. The plan treats clock times such as 09:00 as delays from the start, so a ${SOURCE_REPLAY.durationHours}-hour campaign gets slots nine hours out and more, clamped back to its end.`,
   },
   {
     value: `${count(source.burst)} of ${count(SWEEP_SEEDS)} runs`,
@@ -97,6 +97,12 @@ export default function SendPacingPage() {
         the messages in two hours breaks the burst limit in {count(denser.burst)}. Starting at 16:00, the business-hours clamp piles sends at 17:00
         instead, and {count(late.burst)} seeds break the burst limit. tempoledger&apos;s README says this plainly: a sampled distribution, a final
         projection and a queue are separate contracts, and clamping one does not keep the others.
+      </p>
+      <p>
+        <strong>Status: documented, not fixed.</strong> tempoledger&apos;s own failure catalog lists the pile-up, relative offsets containing clock
+        hours hitting a short campaign&apos;s end, with the work that remains: telling clock windows from relative delays. It lists sends before
+        preparation finishes too, with a lower-bound-aware projection as the fix. Its release notice says the heuristic&apos;s feasibility limitations
+        are documented rather than represented as solved.
       </p>
 
       <h2 id="limits">{PLAIN.limits}</h2>

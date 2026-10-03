@@ -96,9 +96,13 @@ export default function MissionGovernancePage() {
       </p>
       <p>
         Two more gaps. The pre-flight fence check tests the waypoints, not the legs between them, so a straight leg can cross a concave fence between
-        two waypoints inside it; pick the notched fence in the demo. And the resume route sets a paused mission back to executing without restarting
-        the executor, whose loop ended at the pause: after a resume, a battery failure goes unseen and the mission stays {resumed.state} at waypoint{' '}
-        {resumed.progress}, with nothing polling, guarding or completing it.
+        two waypoints inside it; pick the notched fence, this page&apos;s own example, in the demo. And the resume route sets a paused mission back to
+        executing without restarting the executor, whose loop ended at the pause: after a resume, a battery failure goes unseen and the mission stays{' '}
+        {resumed.state} at waypoint {resumed.progress}, with nothing polling, guarding or completing it.
+      </p>
+      <p>
+        <strong>Status: a simulation-phase build.</strong> ProjectWyvern&apos;s roadmap puts it in phase 1, a simulation-only MVP, in progress, with
+        battery and link-loss handling planned for phase 3, the hardware MVP. These gaps are what a simulation-phase build has not wired yet.
       </p>
 
       <h2 id="limits">{PLAIN.limits}</h2>

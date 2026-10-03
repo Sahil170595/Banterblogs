@@ -16,6 +16,9 @@ test('the ladder and its headline are in the server HTML, before any script runs
     page.getByText(/Here it drops every filter, reports “ready” and returns 4 notes, two of which do not match the request/),
   ).toBeVisible();
   await expect(page.getByRole('region', { name: 'Search results' })).toContainText('no, outside the request');
+  // the hard criterion is in the request, apart from the filters relaxation drops
+  await expect(page.getByText('contains “cache”', { exact: true })).toBeVisible();
+  await expect(page.getByText('hard, never dropped', { exact: true })).toBeVisible();
   await context.close();
 });
 

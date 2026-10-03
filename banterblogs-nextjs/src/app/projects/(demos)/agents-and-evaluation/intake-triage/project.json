@@ -1,7 +1,7 @@
 {
   "slug": "intake-triage",
   "title": "Intake Triage Scorer",
-  "dek": "Intakegate is a triage pipeline I built for messages to a children's therapy service: it reads each message and proposes how soon a person should review it. This page runs its priority scorer, rule for rule: two safety gates, then a points total, tested over every combination of what it reads.",
+  "dek": "Intakegate is a triage pipeline I built for messages to a children's therapy service: it proposes how soon a person should review each one, from P0, same-hour review, to P3, the lowest. This page runs its scorer, rule for rule: two safety gates, then a points total, over every combination it reads.",
   "summary": "All 12,672 signal combinations scored: shouting “URGENT” never moves a message’s priority, and once a safety gate fires, nothing else does.",
   "collection": "agents-and-evaluation",
   "alsoIn": [],

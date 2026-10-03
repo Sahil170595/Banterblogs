@@ -1,11 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { EXAMPLE_QUERY } from '@/lib/projects/staged-search/example';
+import { ladder } from '@/lib/projects/staged-search/ladder';
 import { DEFAULT_SETTINGS, type Query, type Settings } from '@/lib/projects/staged-search/schema';
 import { revealResult } from '../reveal';
 import { fromQuery, toQuery, type Draft } from './draft';
-import { LadderTable } from './LadderTable';
+import { atThresholds } from './format';
+import { holds, LadderTable } from './LadderTable';
 import { SearchLab } from './SearchLab';
 import styles from './search.module.css';
 
@@ -20,6 +22,10 @@ export function SearchDemo() {
   const [draftError, setDraftError] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const resultsRef = useRef<HTMLElement>(null);
+  const rungs = useMemo(() => ladder(query, settings), [query, settings]);
+  // a picked row stands for every threshold it covers, and the results say so
+  const rung = rungs.find((r) => holds(r, settings.relax_threshold));
+  const thresholds = rung ? atThresholds(rung.from, rung.to) : atThresholds(settings.relax_threshold, settings.relax_threshold);
 
   function editDraft(next: Draft) {
     setDraft(next);
@@ -38,6 +44,7 @@ export function SearchDemo() {
   return (
     <div className={styles.demo}>
       <LadderTable
+        rungs={rungs}
         query={query}
         settings={settings}
         onPick={(threshold) => {
@@ -51,6 +58,7 @@ export function SearchDemo() {
           query={query}
           draftError={draftError}
           settings={settings}
+          thresholds={thresholds}
           onDraft={editDraft}
           onSettings={setSettings}
           onLoad={load}
