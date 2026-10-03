@@ -14,7 +14,21 @@ const DRAFT = 'Select Rectangle (draft)';
 beforeEach(() => {
   window.localStorage.clear();
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
-  vi.stubGlobal('PointerEvent', MouseEvent);
+  // jsdom has no PointerEvent; this one carries the fields the editor reads
+  vi.stubGlobal(
+    'PointerEvent',
+    class extends MouseEvent {
+      pointerId: number;
+      pointerType: string;
+      isPrimary: boolean;
+      constructor(type: string, init: PointerEventInit = {}) {
+        super(type, init);
+        this.pointerId = init.pointerId ?? 1;
+        this.pointerType = init.pointerType ?? 'mouse';
+        this.isPrimary = init.isPrimary ?? true;
+      }
+    },
+  );
   HTMLCanvasElement.prototype.setPointerCapture = vi.fn();
   HTMLCanvasElement.prototype.releasePointerCapture = vi.fn();
   vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({
@@ -195,6 +209,97 @@ describe('editable whiteboard controls', () => {
     fireEvent.keyDown(screen.getByLabelText('Editable whiteboard'), { key: 'ArrowRight' });
     fireEvent.keyUp(screen.getByLabelText('Editable whiteboard'), { key: 'ArrowRight' });
     expect(details.textContent).toContain('#3 edit · moved Rectangle (draft)');
+  });
+  // live QA: focusing a board partly below the fold scrolled the page mid-press,
+  // and the shape landed where the pointer had been, not where it was
+  it('takes focus on a press without scrolling the page', () => {
+    const focus = vi.spyOn(HTMLCanvasElement.prototype, 'focus');
+    render(<WhiteboardDemo />);
+    fireEvent.pointerDown(screen.getByLabelText('Editable whiteboard'), { clientX: 700, clientY: 400, button: 0 });
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+  });
+  // live QA: a drawn shape stayed selected, so the colour picked for the next one recoloured it
+  it('clears the selection when a drawing tool is picked, so a colour is for the next shape', () => {
+    render(<WhiteboardDemo />);
+    fireEvent.click(screen.getByRole('button', { name: 'Rectangle tool' }));
+    const canvas = screen.getByLabelText('Editable whiteboard');
+    fireEvent.pointerDown(canvas, { clientX: 700, clientY: 400, button: 0 });
+    fireEvent.pointerUp(canvas, { clientX: 850, clientY: 500 });
+    fireEvent.click(screen.getByRole('button', { name: 'Ellipse tool' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Blue fill' }));
+    expect(screen.getByTestId('log-count').textContent).toBe('1 command');
+    expect(document.getElementById('whiteboard-selection')?.textContent).toBe('No object selected');
+  });
+  // live QA: deleting from the list or the toolbar dropped focus to the page, and Control Z did nothing
+  it('keeps focus in the editor after a delete or a clear, so undo works at once', () => {
+    render(<WhiteboardDemo />);
+    const canvas = screen.getByLabelText('Editable whiteboard');
+    fireEvent.click(screen.getByRole('button', { name: DRAFT }));
+    fireEvent.keyDown(screen.getByRole('button', { name: DRAFT }), { key: 'Delete' });
+    expect(document.activeElement).toBe(canvas);
+    fireEvent.keyDown(document.activeElement!, { key: 'z', ctrlKey: true });
+    expect(screen.getByTestId('object-count').textContent).toBe(OPENING);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear board' }));
+    expect(document.activeElement).toBe(canvas);
+  });
+  // live QA: a refusal showed above the board, kept the bad value in the field and
+  // refused the next valid edit with it
+  it('refuses a bad property beside the fields, puts the real values back, and takes the next edit', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<WhiteboardDemo />);
+    fireEvent.click(screen.getByRole('button', { name: DRAFT }));
+    fireEvent.change(screen.getByLabelText('X position'), { target: { value: '-50' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply properties' }));
+    const inspector = screen.getByRole('complementary', { name: 'Object inspector' });
+    expect(inspector.querySelector('[role="alert"]')?.textContent).toMatch(/inside/i);
+    expect((screen.getByLabelText('X position') as HTMLInputElement).value).toBe('90');
+    fireEvent.change(screen.getByLabelText('Stroke width'), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply properties' }));
+    expect(screen.getByTestId('log-count').textContent).toBe('1 command');
+    expect(inspector.querySelector('[role="alert"]')).toBeNull();
+  });
+  // live QA: a drag logged "changed x, y, width, height"; an edit of one field sent all five
+  it('records only the fields an edit changed', () => {
+    render(<WhiteboardDemo />);
+    const details = screen.getByText(/Under the hood/).closest('details')!;
+    const canvas = screen.getByLabelText('Editable whiteboard');
+    fireEvent.pointerDown(canvas, { clientX: 100, clientY: 180, button: 0 });
+    fireEvent.pointerUp(canvas, { clientX: 140, clientY: 200 });
+    expect(details.textContent).toContain('#1 edit · moved Rectangle (draft)');
+    fireEvent.change(screen.getByLabelText('Width'), { target: { value: '220' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply properties' }));
+    expect(details.textContent).toContain('#2 edit · changed width of Rectangle (draft)');
+  });
+  it('lets Escape cancel an armed reset', () => {
+    render(<WhiteboardDemo />);
+    fireEvent.click(screen.getByRole('button', { name: 'Reset board' }));
+    fireEvent.keyDown(screen.getByRole('button', { name: /Confirm reset/ }), { key: 'Escape' });
+    expect(screen.getByRole('button', { name: 'Reset board' })).toBeTruthy();
+  });
+  // live QA: lines draw in ink and text in its fill, so a pastel swatch did nothing to a
+  // line and made text unreadable
+  it('offers fill colours only for shapes that have a fill', () => {
+    render(<WhiteboardDemo />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select Text: Draft' }));
+    expect(screen.getByRole('button', { name: 'Rose fill' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Line tool' }));
+    expect(screen.getByRole('button', { name: 'Rose fill' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Ellipse tool' }));
+    expect(screen.getByRole('button', { name: 'Rose fill' }).hasAttribute('disabled')).toBe(false);
+  });
+  // live QA: a zoomed board could not be panned by touch on a phone
+  it('pans a zoomed board with a touch drag on empty board', () => {
+    render(<WhiteboardDemo />);
+    fireEvent.change(screen.getByLabelText('Board zoom'), { target: { value: '2' } });
+    const canvas = screen.getByLabelText('Editable whiteboard');
+    const viewport = canvas.parentElement!.parentElement!;
+    Object.defineProperties(viewport, { scrollWidth: { value: 1920 }, clientWidth: { value: 960 }, scrollHeight: { value: 1200 }, clientHeight: { value: 600 } });
+    fireEvent.pointerDown(canvas, { clientX: 900, clientY: 560, button: 0, pointerType: 'touch' });
+    fireEvent.pointerMove(canvas, { clientX: 700, clientY: 460, pointerType: 'touch' });
+    fireEvent.pointerUp(canvas, { clientX: 700, clientY: 460, pointerType: 'touch' });
+    expect(viewport.scrollLeft).toBe(200);
+    expect(viewport.scrollTop).toBe(100);
+    expect(screen.getByTestId('log-count').textContent).toBe('0 commands');
   });
   // icon buttons have no tooltip on touch, so their names show there (reading.css)
   it('gives every icon button its name as text that touch screens show', () => {
