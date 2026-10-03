@@ -1,6 +1,6 @@
 /* The flight routing demo (FlightRoutingDemo and its parts); buttons,
    fields and the segmented choices are the shared project controls
-   (../controls.module.css). Site tokens only: ember marks an on-time world
+   (the demo- classes in app/reading.css). Site tokens only: ember marks an on-time world
    and the next choice, plain foreground a late one, a hairline an empty
    slot, status red a failure. No text under 12px. */
 
