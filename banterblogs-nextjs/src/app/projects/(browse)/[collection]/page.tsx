@@ -5,9 +5,9 @@ import { collectionsWithProjects, projectsIn, readProjectCatalog } from '@/lib/p
 import { getCollection, isCollectionKey } from '@/lib/projects/collections';
 import { collectionMetadata } from '@/lib/projects/metadata';
 
-// One page per collection that lists a project; an empty collection has none.
-export const dynamicParams = false;
-
+// One page per collection that lists a project. Any other path renders
+// notFound() below: dynamicParams = false would 404 too, but logs an internal
+// NoFallbackError on the server for every miss.
 export function generateStaticParams() {
   return collectionsWithProjects(readProjectCatalog()).map((c) => ({ collection: c.key }));
 }
