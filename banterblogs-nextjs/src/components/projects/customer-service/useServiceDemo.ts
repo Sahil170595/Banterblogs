@@ -1,10 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { createSession, exportTrace, replayTrace, step } from '@/lib/projects/customer-service/engine';
+import { ZodError } from 'zod';
+import { createSession, exportTrace, replayTrace, score, step } from '@/lib/projects/customer-service/engine';
 import { measureControls, type ControlMeasurement } from '@/lib/projects/customer-service/measurements';
 import type { Config, Session } from '@/lib/projects/customer-service/model';
 import { scriptedActions, type Preset } from '@/lib/projects/customer-service/scripts';
+import { describeRefusal } from '../refusal';
 
 // The demo's state: the scored control trajectories on the board, the one
 // loaded into the environment below, and whatever the visitor does to it.
@@ -15,6 +17,18 @@ export const OPENING_CONTROL = 'duplicate:wrong-capture';
 export const MAX_TRACE_BYTES = 2_000_000;
 
 const play = (config: Config, preset: Preset): Session => scriptedActions(config, preset).reduce(step, createSession(config));
+
+// a refused setting is named as the form labels it
+const FIELD_LABELS: Record<string, string> = { scenario: 'Case', stock: 'Preferred-finish stock', totalCents: 'Order total (cents)' };
+function refusal(cause: unknown): string {
+  const labelled =
+    cause instanceof ZodError
+      ? new ZodError(cause.issues.map((issue) => ({ ...issue, path: issue.path.map((part) => (typeof part === 'string' ? (FIELD_LABELS[part] ?? part) : part)) })))
+      : cause;
+  return describeRefusal(labelled);
+}
+
+export type ImportResult = { ok: true; actions: number; reward: number } | { ok: false; message: string };
 
 export function useServiceDemo() {
   const controls = useMemo(() => measureControls(), []);
@@ -55,7 +69,7 @@ export function useServiceDemo() {
         replace(createSession(config));
         return null;
       } catch (cause) {
-        const message = cause instanceof Error ? cause.message : 'Invalid episode configuration.';
+        const message = refusal(cause);
         // a refused input is handled and shown; a warning, not an application error
         console.warn('Service environment configuration rejected:', message, config);
         return message;
@@ -76,17 +90,18 @@ export function useServiceDemo() {
       setScriptIndex(index);
     },
     exportJson: () => JSON.stringify(exportTrace(session), null, 2),
-    /** replay an exported trace; returns why it was refused, if it was */
-    async importTrace(file: File): Promise<string | null> {
+    /** replay an exported trace: what it replayed, or why it was refused */
+    async importTrace(file: File): Promise<ImportResult> {
       try {
-        if (file.size > MAX_TRACE_BYTES) throw new Error('Trace exceeds the 2 MB import limit.');
+        if (file.size > MAX_TRACE_BYTES) throw new Error('The trace is larger than the 2 MB import limit.');
+        const replayed = replayTrace(JSON.parse(await file.text()));
         setSelected(null);
-        replace(replayTrace(JSON.parse(await file.text())));
-        return null;
+        replace(replayed);
+        return { ok: true, actions: replayed.events.length, reward: score(replayed).total };
       } catch (cause) {
-        const message = cause instanceof Error ? cause.message : 'Trace import failed.';
+        const message = refusal(cause);
         console.warn('Service environment trace import rejected:', message);
-        return message;
+        return { ok: false, message };
       }
     },
   };

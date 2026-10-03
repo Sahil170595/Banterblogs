@@ -123,9 +123,10 @@ export default function CustomerServicePage() {
           <strong>One coherent outcome.</strong> The evaluator tests each candidate outcome separately and keeps the best one that holds
           on its own: the world in that state, its writes inside it, its evidence read before each write, its report supported. Outcome
           carries {pct(RUBRIC.outcome)} of the reward, prior evidence {pct(RUBRIC.process)} and a supported report{' '}
-          {pct(RUBRIC.communication)}; the report&apos;s share is earned only when the case is resolved and no report contradicted the
-          world. A report the world contradicts costs {RUBRIC.falseReportCost.toFixed(2)}. Then ceilings apply: an incomplete case cannot
-          exceed {signedScore(RUBRIC.incompleteCeiling)}, a write without prior evidence {signedScore(RUBRIC.unverifiedCeiling)}, and
+          {pct(RUBRIC.communication)}; the report&apos;s share is earned only once an acceptable outcome is complete, a partial remedy
+          included, and no report contradicted the world. A report the world contradicts costs {RUBRIC.falseReportCost.toFixed(2)}. Then
+          ceilings apply: an incomplete case cannot exceed {signedScore(RUBRIC.incompleteCeiling)}, or {signedScore(0)} when the run read
+          nothing successfully and changed nothing, a write without prior evidence {signedScore(RUBRIC.unverifiedCeiling)}, and
           effects outside every outcome are capped at {signedScore(RUBRIC.harmCeiling)}. The rubric is versioned as {WEIGHTS_VERSION}.
         </p>
         <p>

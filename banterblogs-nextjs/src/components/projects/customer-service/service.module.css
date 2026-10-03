@@ -743,3 +743,32 @@
     gap: 2rem;
   }
 }
+
+/* what the last action did, beside the controls that cause it */
+.latest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--foreground) / 0.05);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: hsl(var(--foreground));
+}
+
+.showWorld {
+  font-size: 0.8125rem;
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.showWorld:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}

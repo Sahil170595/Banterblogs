@@ -5,20 +5,27 @@ export const WEIGHTS_VERSION = 'service-reward.v2';
 export const MAX_EVENTS = 48;
 export const REPEAT_LIMIT = 3;
 export const DEFAULT_TOTAL_CENTS = 4800;
-export const cents = z.number().int().min(1).max(100000);
+/** the settings' bounds, stated in the form's hints */
+export const STOCK_MAX = 6;
+export const TOTAL_CENTS_MAX = 100000;
+export const cents = z.number().int().min(1).max(TOTAL_CENTS_MAX);
 const id = z.string().trim().min(1).max(80);
 
 export const configSchema = z.object({
   scenario: z.enum(['warehouse', 'transit', 'damage', 'duplicate', 'split']).default('damage'),
-  stock: z.number().int().min(0).max(6).default(2),
-  totalCents: cents.refine(n => n % 2 === 0, 'Use an even number of cents for equal split tender.').default(DEFAULT_TOTAL_CENTS),
-}).strict();
+  stock: z.number().int().min(0).max(STOCK_MAX).default(2),
+  totalCents: cents.default(DEFAULT_TOTAL_CENTS),
+}).strict().superRefine((c, ctx) => {
+  // only the equal split halves the total; Turncraft's own split need only sum to it
+  if (c.scenario === 'split' && c.totalCents % 2 !== 0)
+    ctx.addIssue({ code: 'custom', path: ['totalCents'], message: 'Two equal half-payments need an even number of cents.' });
+});
 export type Config = z.infer<typeof configSchema>;
 
 export const worldSchema = z.object({
   orders: z.array(z.object({ id, owner: id, product: id, status: z.enum(['processing', 'shipped', 'delivered', 'cancelled']), totalCents: cents }).strict()),
   payments: z.array(z.object({ id, orderId: id, capturedCents: cents, processorRef: id }).strict()),
-  inventory: z.array(z.object({ sku: id, name: id, quantity: z.number().int().min(0).max(6) }).strict()),
+  inventory: z.array(z.object({ sku: id, name: id, quantity: z.number().int().min(0).max(STOCK_MAX) }).strict()),
   returns: z.array(id),
   refunds: z.array(z.object({ orderId: id, paymentId: id, amountCents: cents, key: id }).strict()),
   replacements: z.array(z.object({ orderId: id, sku: id }).strict()),

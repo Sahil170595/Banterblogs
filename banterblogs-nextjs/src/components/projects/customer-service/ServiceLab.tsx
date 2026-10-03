@@ -8,7 +8,9 @@ import {
   CLAIMS,
   MAX_EVENTS,
   SCENARIOS,
+  STOCK_MAX,
   TOOL_LABELS,
+  TOTAL_CENTS_MAX,
   type Claim,
   type Config,
   type Event,
@@ -19,6 +21,7 @@ import { score, SCORE_CEILING, SCORE_FLOOR } from '@/lib/projects/customer-servi
 import { PRESETS, type Preset } from '@/lib/projects/customer-service/scripts';
 import { controls, UnderTheHood } from '../controls';
 import { percent } from '../geometry';
+import { revealResult } from '../reveal';
 import { money, signedScore } from './format';
 import type { ServiceDemo } from './useServiceDemo';
 import styles from './service.module.css';
@@ -130,7 +133,35 @@ function draftFrom(session: Session, orderPayments: string[]) {
   };
 }
 
-function Episode({ demo }: { demo: ServiceDemo }) {
+const WHOLE = /^\d+$/;
+
+/**
+ * What the last action did, in a line beside the controls that cause it: on a
+ * phone the world and reward it changed sit far above. One instance speaks to
+ * screen readers; the other is only seen.
+ */
+function Latest({ demo, onShow, live = false }: { demo: ServiceDemo; onShow: () => void; live?: boolean }) {
+  const { session } = demo;
+  const last = session.events.at(-1);
+  const reward = signedScore(score(session).total);
+  const title = SCENARIOS.find((s) => s.id === session.config.scenario)!.title;
+  const text = last
+    ? `#${last.index} ${eventLabel(session, last)}: ${resultGloss(session, last)}. Reward now ${reward}.`
+    : `Fresh episode: ${title}. No actions yet; reward ${reward}.`;
+  return (
+    <p className={styles.latest} {...(live ? { role: 'status', 'aria-label': 'Latest action' } : {})}>
+      <span>{text}</span>
+      <button type="button" className={styles.showWorld} onClick={onShow}>
+        Show the world and reward
+      </button>
+    </p>
+  );
+}
+
+/** the last export or replay, kept by the lab: a replayed trace of another case remounts the form */
+type Notice = { text: string; set: (text: string) => void };
+
+function Episode({ demo, onShow, notice: { text: notice, set: setNotice } }: { demo: ServiceDemo; onShow: () => void; notice: Notice }) {
   const { session } = demo;
   const [draft, setDraft] = useState({
     scenario: session.config.scenario,
@@ -142,26 +173,42 @@ function Episode({ demo }: { demo: ServiceDemo }) {
 
   const start = (event: FormEvent) => {
     event.preventDefault();
+    setNotice('');
+    // a value that is not a whole number never reaches the schema, which would call it NaN
+    if (!WHOLE.test(draft.stock.trim())) return setError(`Preferred-finish stock should be a whole number from 0 to ${STOCK_MAX}.`);
+    if (!WHOLE.test(draft.total.trim()))
+      return setError(`Order total (cents) should be a whole number of cents from 1 to ${TOTAL_CENTS_MAX.toLocaleString('en-US')}.`);
     setError(demo.restart({ scenario: draft.scenario, stock: Number(draft.stock), totalCents: Number(draft.total) }) ?? '');
   };
   const exportJson = () => {
+    const name = `service-environment-${session.config.scenario}.json`;
     try {
       const url = URL.createObjectURL(new Blob([demo.exportJson()], { type: 'application/json' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = `service-environment-${session.config.scenario}.json`;
+      link.download = name;
       document.body.appendChild(link);
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      setError('');
+      setNotice(`Trace exported as ${name}.`);
     } catch (cause) {
       console.error('Service environment export failed:', cause);
+      setNotice('');
       setError('The trace could not be exported.');
     }
   };
   const importJson = async (picked?: File) => {
     if (!picked) return;
-    setError((await demo.importTrace(picked)) ?? '');
+    const result = await demo.importTrace(picked);
+    if (result.ok) {
+      setError('');
+      setNotice(`Trace replayed: ${result.actions} ${result.actions === 1 ? 'action' : 'actions'}, reward ${signedScore(result.reward)}.`);
+    } else {
+      setNotice('');
+      setError(result.message);
+    }
     if (file.current) file.current.value = '';
   };
 
@@ -215,9 +262,18 @@ function Episode({ demo }: { demo: ServiceDemo }) {
           />
         </div>
       </form>
+      <p className={controls.hint}>
+        Limits: stock 0 to {STOCK_MAX}, total 1 to {TOTAL_CENTS_MAX.toLocaleString('en-US')} cents; the two equal half-payments need an even
+        total.
+      </p>
       {error && (
         <p role="alert" className={controls.error}>
           {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className={controls.hint}>
+          {notice}
         </p>
       )}
       <div className={styles.scriptRow}>
@@ -253,11 +309,12 @@ function Episode({ demo }: { demo: ServiceDemo }) {
           {demo.scriptIndex === null ? 'A script starts a fresh episode.' : `${demo.scriptIndex} of ${demo.script.length} scripted actions`}
         </span>
       </div>
+      <Latest demo={demo} onShow={onShow} />
     </div>
   );
 }
 
-function Workbench({ demo }: { demo: ServiceDemo }) {
+function Workbench({ demo, onShow }: { demo: ServiceDemo; onShow: () => void }) {
   const { session } = demo;
   const closed = session.termination !== 'open';
   const orderPayments = session.world.payments.filter((p) => p.orderId === TARGET_ORDER).map((p) => p.id);
@@ -284,7 +341,7 @@ function Workbench({ demo }: { demo: ServiceDemo }) {
       setError('');
       demo.act(JSON.parse(raw));
     } catch (cause) {
-      console.warn('Service environment command JSON rejected:', cause);
+      console.warn('Service environment command JSON rejected:', cause instanceof Error ? cause.message : cause);
       setError('That is not valid JSON. Use double-quoted keys and one complete object.');
     }
   };
@@ -410,6 +467,7 @@ function Workbench({ demo }: { demo: ServiceDemo }) {
         <Square aria-hidden="true" />
         Close the episode
       </button>
+      <Latest demo={demo} onShow={onShow} live />
     </section>
   );
 }
@@ -426,8 +484,8 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
       <h4 id="service-world" className={styles.columnTitle}>
         The world{' '}
         <span>
-          the order records the tools read and change · {session.termination === 'open' ? 'open' : session.termination.replace('_', ' ')} ·{' '}
-          {session.events.length} of {MAX_EVENTS} actions
+          the order records the tools read and change, after the last action ·{' '}
+          {session.termination === 'open' ? 'open' : session.termination.replace('_', ' ')} · {session.events.length} of {MAX_EVENTS} actions
         </span>
       </h4>
       <p className={styles.lifecycleLabel}>Order status</p>
@@ -517,6 +575,12 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
               : `#${shown.index} · ${shown.impact} impact: ${IMPACT_GLOSSES[shown.impact]}`}
           </strong>
           <p>{RAW_MESSAGE_CODES.has(shown.result.code) ? `${resultGloss(session, shown)}.` : shown.result.message}</p>
+          {shown.index !== session.events.length && (
+            <p className={controls.hint}>
+              The world above is as it stands after the last action, #{session.events.length}; this action’s own before and after are in
+              its details.
+            </p>
+          )}
           <details>
             <summary>Input, result and state before and after</summary>
             <pre>
@@ -541,7 +605,7 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
 const COMPONENT_GLOSSES: Record<string, string> = {
   Outcome: 'the world reached an acceptable outcome',
   'Prior evidence': 'share of writes made after the reads they need and a matching customer choice',
-  'Supported report': 'a true report, credited only when the case is resolved and no report contradicted the world',
+  'Supported report': 'a true report, credited once an acceptable outcome is complete, a partial remedy included, and no report contradicted the world',
 };
 
 /** the reward in one sentence: which state the episode ended in and the cap that held it */
@@ -642,6 +706,9 @@ export function ServiceLab({ demo, labRef }: { demo: ServiceDemo; labRef?: RefOb
   const configKey = JSON.stringify(session.config);
   // the workbench restarts from each newly loaded trajectory, so its fields match the trace
   const benchKey = `bench-${configKey}-${demo.selected ?? 'manual'}-${demo.scriptIndex ?? ''}`;
+  const worldRef = useRef<HTMLDivElement>(null);
+  const showWorld = () => revealResult(worldRef.current);
+  const [notice, setNotice] = useState('');
   return (
     <div className={styles.lab} ref={labRef}>
       <div className={styles.brief}>
@@ -656,13 +723,13 @@ export function ServiceLab({ demo, labRef }: { demo: ServiceDemo; labRef?: RefOb
           </span>
         </p>
       </div>
-      <div className={styles.columns}>
+      <div className={styles.columns} ref={worldRef}>
         <WorldState key={`world-${configKey}-${session.events.length}`} demo={demo} />
         <Reward demo={demo} />
       </div>
       <UnderTheHood summary="Run it yourself: new episodes, scripted controls, the agent workbench and trace export">
-        <Episode key={configKey} demo={demo} />
-        <Workbench key={benchKey} demo={demo} />
+        <Episode key={configKey} demo={demo} onShow={showWorld} notice={{ text: notice, set: setNotice }} />
+        <Workbench key={benchKey} demo={demo} onShow={showWorld} />
       </UnderTheHood>
     </div>
   );

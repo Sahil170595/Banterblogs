@@ -151,5 +151,18 @@ export function replayTrace(input: unknown): Session {
     throw new Error('Replay mismatch: the final-state receipt does not match the recorded actions.');
   if (session.termination !== trace.termination)
     throw new Error('Replay mismatch: the termination receipt does not match the recorded actions.');
+  // the event log and the reward are receipts too: both must follow from the actions
+  const expected = exportTrace(session);
+  if (JSON.stringify(expected.events) !== JSON.stringify(trace.events))
+    throw new Error('Replay mismatch: the recorded events do not follow from the recorded actions.');
+  if (JSON.stringify(rewardFigures(expected.reward)) !== JSON.stringify(rewardFigures(trace.reward)))
+    throw new Error('Replay mismatch: the reward receipt does not match the recorded actions.');
   return session;
+}
+
+// the reward's numbers and decisions; its labels are wording a later release may improve
+function rewardFigures(reward: unknown) {
+  const r = (reward ?? {}) as Partial<ReturnType<typeof score>>;
+  const values = (items?: { value: number }[]) => items?.map((item) => item.value);
+  return [r.weightsVersion, r.total, r.base, values(r.components), values(r.penalties), values(r.ceilings), r.selectedBranch, r.completed, r.damage];
 }

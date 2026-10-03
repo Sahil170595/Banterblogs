@@ -152,7 +152,12 @@ export function score(s: Session) {
   if (s.termination === 'no_progress' || s.termination === 'budget') penalties.push({ label: `Episode terminated: ${s.termination.replace('_', ' ')}`, value: NO_PROGRESS_COST });
   const damage = writes.length > 0 && !evaluated.some(b => b.coherentWrites);
   const ceilings: { label: string; value: number }[] = [];
-  if (!completed) ceilings.push({ label: 'Incomplete coherent resolution', value: evidence || writes.length ? INCOMPLETE_CEILING : 0 });
+  if (!completed)
+    ceilings.push(
+      evidence || writes.length
+        ? { label: 'Incomplete coherent resolution', value: INCOMPLETE_CEILING }
+        : { label: 'Incomplete coherent resolution, with nothing read or changed', value: 0 },
+    );
   if (completed && best.credit < 1) ceilings.push({ label: 'Request/partial remedy, not a completed delivery outcome', value: best.credit });
   if (verification.count > verification.verified) ceilings.push({ label: 'Mutation without relevant prior evidence', value: UNVERIFIED_CEILING });
   if (damage) ceilings.push({ label: 'Committed effects outside every coherent branch', value: HARM_CEILING });

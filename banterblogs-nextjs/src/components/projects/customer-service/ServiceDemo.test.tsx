@@ -132,9 +132,11 @@ describe('customer-service demo', () => {
   it('refuses a bad configuration and an oversized or forged trace', async () => {
     render(<ServiceDemo />);
     openHood();
+    // only the two equal half-payments halve the total
+    fireEvent.change(screen.getByRole('combobox', { name: 'Case' }), { target: { value: 'split' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Order total (cents)' }), { target: { value: '4801' } });
     fireEvent.click(screen.getByRole('button', { name: 'New episode' }));
-    expect(screen.getByRole('alert').textContent).toMatch(/even number of cents/);
+    expect(screen.getByRole('alert').textContent).toBe('Order total (cents): Two equal half-payments need an even number of cents.');
 
     // jsdom's File has no text(); a browser's does
     const upload = (body: unknown) => {
@@ -149,6 +151,55 @@ describe('customer-service demo', () => {
 
     upload(trace);
     await waitFor(() => expect(screen.getByLabelText('Total reward').textContent).toBe('1.00'));
+  });
+
+  // live QA: the form refused with raw validation JSON and stated no limits
+  it('states the form’s limits and refuses a bad value in plain words', () => {
+    render(<ServiceDemo />);
+    openHood();
+    expect(screen.getByText(/stock 0 to 6, total 1 to 100,000 cents/)).toBeTruthy();
+    const stock = screen.getByRole('textbox', { name: 'Preferred-finish stock' });
+    fireEvent.change(stock, { target: { value: '9' } });
+    fireEvent.click(screen.getByRole('button', { name: 'New episode' }));
+    expect(screen.getByRole('alert').textContent).toBe('Preferred-finish stock should be at most 6.');
+    fireEvent.change(stock, { target: { value: 'abc' } });
+    fireEvent.click(screen.getByRole('button', { name: 'New episode' }));
+    expect(screen.getByRole('alert').textContent).toBe('Preferred-finish stock should be a whole number from 0 to 6.');
+  });
+
+  // live QA: on a phone the world and reward a click changed sat far above it, with no feedback
+  it('says what each action did beside the controls, and shows the world on request', () => {
+    render(<ServiceDemo />);
+    openHood();
+    fireEvent.click(screen.getByRole('button', { name: 'New episode' }));
+    const latest = () => screen.getByRole('status', { name: 'Latest action' }).textContent;
+    expect(latest()).toMatch(/^Fresh episode: Two full captures\. No actions yet; reward/);
+    fireEvent.click(screen.getByRole('button', { name: 'Run read order' }));
+    expect(latest()).toMatch(/^#1 Read order: Read only, no change\. Reward now /);
+    revealResult.mockClear();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Show the world and reward' })[0]);
+    const revealed = revealResult.mock.calls[0][0] as HTMLElement;
+    expect(revealed.contains(screen.getByLabelText('Total reward'))).toBe(true);
+  });
+
+  it('confirms an export and a replay beside the buttons', async () => {
+    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:trace'), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    render(<ServiceDemo />);
+    openHood();
+    fireEvent.click(screen.getByRole('button', { name: 'Export JSON trace' }));
+    expect(screen.getByText(/^Trace exported as service-environment-duplicate\.json\.$/)).toBeTruthy();
+    const session = scriptedActions(createSession().config, 'verified').reduce(step, createSession());
+    const text = JSON.stringify(exportTrace(session));
+    fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [{ size: text.length, text: async () => text }] } });
+    await waitFor(() => expect(screen.getByText(/^Trace replayed: \d+ actions, reward 1\.00\.$/)).toBeTruthy());
+  });
+
+  // live QA: stepping back through the actions left the world at its final state, unlabelled
+  it('says the world shown is after the last action when an earlier step is picked', () => {
+    render(<ServiceDemo />);
+    fireEvent.click(within(screen.getByRole('list', { name: 'Actions' })).getAllByRole('button')[0]);
+    expect(screen.getByText(/^The world above is as it stands after the last action, #\d+; this action’s own before and after are in its details\.$/)).toBeTruthy();
   });
 
   it('exports the episode as JSON', () => {
