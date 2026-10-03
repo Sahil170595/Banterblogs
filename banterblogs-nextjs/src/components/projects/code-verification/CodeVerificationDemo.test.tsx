@@ -40,7 +40,7 @@ describe('code verification demo', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Full/ }));
     fireEvent.click(screen.getByRole('button', { name: 'General repair' }));
     expect(verdict()).toContain('Resolved on full suite');
-    fireEvent.click(screen.getByRole('radio', { name: 'Stable case-fold deduplication' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Deduplication' }));
     expect(screen.getByRole('region', { name: /Stable case-fold deduplication/ })).toBeTruthy();
     expect((screen.getByLabelText('Task') as HTMLSelectElement).value).toBe('unique');
   });
