@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { fixture } from './fixtures';
 import { backsClaim } from './claims';
 import {
-  actionSchema, configSchema, MAX_EVENTS, REPEAT_LIMIT, toolSchemas, VERSION, WEIGHTS_VERSION, worldSchema,
+  actionSchema, configSchema, consentsTo, MAX_EVENTS, REPEAT_LIMIT, toolSchemas, VERSION, WEIGHTS_VERSION, worldSchema,
   type Action, type Event, type Result, type Session, type ToolName, type World,
 } from './model';
 import { score } from './reward';
@@ -71,11 +71,7 @@ function dispatch(s: Session, action: Extract<Action, { kind: 'tool' }>): { acti
   if (name === 'notify' && stock!.quantity > 0)
     return done(failure('policy_denied', 'This finish is in stock. A stock alert is not a remedy for an available item.'));
 
-  const c = s.choice;
-  const consented = c?.orderId === orderId && (name === 'return' ? ['refund', 'replace'].includes(c.resolution)
-    : c.resolution === name && (name !== 'refund' || (c.paymentId === args.paymentId && c.amountCents === args.amountCents))
-      && (!['replace', 'notify'].includes(name) || c.sku === args.sku));
-  if (!consented) return done(failure('consent_required', 'Record the synthetic customer choice for this exact order, payment/amount or finish before writing.'));
+  if (!consentsTo(s.choice, normalized)) return done(failure('consent_required', 'Record the synthetic customer choice for this exact order, payment/amount or finish before writing.'));
 
   switch (name) {
     case 'cancel': order.status = 'cancelled'; break;

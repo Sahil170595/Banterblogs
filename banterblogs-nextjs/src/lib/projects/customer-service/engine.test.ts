@@ -115,6 +115,60 @@ describe('state-grounded, branch-coherent reward', () => {
     expect(score(step(s, report('cancelled-and-refunded'))).total).toBe(1);
   });
 
+  it.each([
+    [tool('order'), choice('cancel'), tool('cancel'), tool('payments'),
+      choice('refund', { paymentId: 'PAY-A', amountCents: 4800 }), refund],
+    [tool('payments'), tool('order'), choice('refund', { paymentId: 'PAY-A', amountCents: 4800 }), refund,
+      choice('cancel'), tool('cancel')],
+  ])('accepts independent warehouse actions in either safe order %#', (...actions) => {
+    const s = run('warehouse', [...actions, report('cancelled-and-refunded')]);
+    expect(s.events.every(e => e.result.ok)).toBe(true);
+    expect(score(s)).toMatchObject({ total: 1, completed: true, verification: { verified: 2, count: 2 } });
+    expect(score(replayTrace(exportTrace(s)))).toEqual(score(s));
+  });
+
+  it.each([
+    [tool('order'), choice('refund', { paymentId: 'PAY-A', amountCents: 4800 }), tool('return'), tool('payments'), refund],
+    [tool('payments'), tool('order'), choice('refund', { paymentId: 'PAY-A', amountCents: 4800 }), refund, tool('return')],
+  ])('accepts independent damage refund actions in either safe order %#', (...actions) => {
+    expect(score(run('damage', [...actions, report('refunded')]))).toMatchObject({ total: 1, completed: true });
+  });
+
+  it('allows return before inventory evidence but requires evidence before replacement', () => {
+    const s = run('damage', [tool('order'), choice('replace', { sku: 'LAMP-MOSS' }), tool('return'),
+      tool('inventory', {}), replacement, report('replacement-created')]);
+    expect(score(s)).toMatchObject({ total: 1, completed: true });
+  });
+
+  it('does not repair missing prior evidence with later reads or idempotent writes', () => {
+    const s = run('warehouse', [choice('cancel'), tool('cancel'), tool('order'), tool('payments'), tool('cancel'),
+      choice('refund', { paymentId: 'PAY-A', amountCents: 4800 }), refund, report('cancelled-and-refunded')]);
+    expect(s.world.orders[0].status).toBe('cancelled');
+    expect(s.world.refunds).toHaveLength(1);
+    expect(score(s).completed).toBe(false);
+    expect(score(s).total).toBeLessThanOrEqual(0.4);
+  });
+
+  it('cannot use consent recorded after a write or superseded by another choice', () => {
+    const valid = run('warehouse', [tool('order'), tool('payments'), choice('cancel'), tool('cancel'),
+      choice('refund', { paymentId: 'PAY-A', amountCents: 4800 }), refund, report('cancelled-and-refunded')]);
+    const delayed = structuredClone(valid);
+    const cancelChoice = delayed.events.find(e => e.action?.kind === 'choice' && e.action.resolution === 'cancel')!;
+    cancelChoice.index = 100;
+    expect(score(delayed).completed).toBe(false);
+    const superseded = structuredClone(valid);
+    const refundChoice = superseded.events.find(e => e.action?.kind === 'choice' && e.action.resolution === 'refund')!;
+    refundChoice.index = 3.5;
+    expect(score(superseded).completed).toBe(false);
+  });
+
+  it('requires all effects before a report, even when an early report already describes a refund', () => {
+    const s = run('damage', [tool('order'), tool('payments'), choice('refund', { paymentId: 'PAY-A', amountCents: 4800 }),
+      refund, report('refunded'), tool('return')]);
+    expect(score(s).completed).toBe(false);
+    expect(score(step(s, report('refunded')))).toMatchObject({ total: 1, completed: true });
+  });
+
   it('requires duplicate refund on the redundant payment, not just equal money', () => {
     const good = run('duplicate', [tool('order'), tool('payments'), choice('refund', { paymentId: 'PAY-B', amountCents: 4800 }),
       tool('refund', { orderId: 'S-410', paymentId: 'PAY-B', amountCents: 4800 }), report('refunded')]);

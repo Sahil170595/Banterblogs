@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const VERSION = 'service-lab.v1';
-export const WEIGHTS_VERSION = 'service-reward.v1';
+export const WEIGHTS_VERSION = 'service-reward.v2';
 export const MAX_EVENTS = 48;
 export const REPEAT_LIMIT = 3;
 export const DEFAULT_TOTAL_CENTS = 4800;
@@ -63,6 +63,16 @@ export const actionSchema = z.union([
   z.object({ kind: z.literal('finish') }).strict(),
 ]);
 export type Action = z.infer<typeof actionSchema>;
+
+export function consentsTo(choice: Choice | undefined, action: Extract<Action, { kind: 'tool' }>): boolean {
+  const { name, args } = action;
+  if (!choice || choice.orderId !== args.orderId) return false;
+  if (name === 'return') return ['refund', 'replace'].includes(choice.resolution);
+  return choice.resolution === name
+    && (name !== 'refund' || (choice.paymentId === args.paymentId && choice.amountCents === args.amountCents))
+    && (!['replace', 'notify'].includes(name) || choice.sku === args.sku);
+}
+
 export type Result = { ok: boolean; code: string; message: string; data?: unknown };
 export type Event = {
   index: number; input: unknown; action?: Action; result: Result; changed: boolean;
