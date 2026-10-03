@@ -16,6 +16,7 @@
 .page :is(button,input,select,a,summary):focus-visible { outline: 2px solid hsl(var(--status-green)); outline-offset: 3px; }
 .workspace { display: grid; grid-template-columns: 260px minmax(0,1fr); }
 .controls { border-right: 1px solid hsl(var(--border)); padding: 20px; background: hsl(var(--card)); min-width: 0; }
+.tool button.settingsToggle { display: none; }
 .controls fieldset { margin-bottom: 20px; min-width: 0; }
 .controls fieldset:last-child { margin-bottom: 0; }
 .controls legend { font-size: 13px; font-weight: 600; padding-bottom: 10px; }
@@ -94,5 +95,5 @@
 .finding { border-left: 2px solid hsl(var(--status-amber)); padding-left: 20px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 1100px) { .charts { grid-template-columns: 1fr; } .metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .metrics span { min-height: 0; margin-bottom: 4px; } }
-@media (max-width: 760px) { .workspace { grid-template-columns: 1fr; } .controls { border-right: 0; border-bottom: 1px solid hsl(var(--border)); display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; } .controls fieldset:last-child { grid-column: 1 / -1; } .detailsGrid { grid-template-columns: 1fr; } }
-@media (max-width: 480px) { .page { padding: 24px 14px 60px; } .header h1 { font-size: 28px; } .toolbar { gap: 10px; padding: 12px; } .runState { width: 100%; order: 3; } .controls { display: block; padding: 16px; } .results,.detailSection { padding: 16px; } .metrics strong { font-size: 20px; } .modeRow button { padding: 8px; font-size: 12px; } .supportHeaders,.supportRow { grid-template-columns: 58px repeat(3,minmax(0,1fr)); } .supportCell { padding: 7px 3px; } .article { margin-top: 36px; } }
+@media (max-width: 760px) { .workspace { grid-template-columns: 1fr; } .tool button.settingsToggle { display: inline-flex; } .controls { border-right: 0; border-bottom: 1px solid hsl(var(--border)); display: none; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; } .controls.controlsOpen { display: grid; } .controls fieldset:last-child { grid-column: 1 / -1; } .detailsGrid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .page { padding: 24px 14px 60px; } .header h1 { font-size: 28px; } .toolbar { gap: 10px; padding: 12px; } .runState { width: 100%; order: 3; } .controls { padding: 16px; } .controls.controlsOpen { display: block; } .results,.detailSection { padding: 16px; } .metrics strong { font-size: 20px; } .modeRow button { padding: 8px; font-size: 12px; } .supportHeaders,.supportRow { grid-template-columns: 58px repeat(3,minmax(0,1fr)); } .supportCell { padding: 7px 3px; } .article { margin-top: 36px; } }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, Download, Play, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Download, Play, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import {
   ACTIONS, CONTEXTS, DEFAULT_CONFIG, METHODS, RESAMPLES, evaluate, exportEvaluation,
   formatNumber as fmt, type Config, type Evaluation, type Method,
@@ -88,6 +88,7 @@ export default function Evaluator() {
   const [selected, setSelected] = useState(0);
   const [error, setError] = useState('');
   const [exportStatus, setExportStatus] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(result.config);
   const update = <K extends keyof Config>(key: K, value: Config[K]) => setDraft(previous => ({ ...previous, [key]: value }));
   const run = () => {
@@ -114,6 +115,7 @@ export default function Evaluator() {
       <span className={styles.badge}>Synthetic logged data</span>
       <span className={styles.runState} role="status">{error ? 'Invalid configuration' : dirty ? 'Unapplied changes' : `Seed ${result.config.seed} / ${result.config.size} trajectories`}</span>
       <div className={styles.commands}>
+        <button className={styles.settingsToggle} onClick={() => setSettingsOpen(open => !open)} aria-label="Evaluation settings" title="Evaluation settings" aria-expanded={settingsOpen} aria-controls="offline-evaluation-settings"><SlidersHorizontal size={18} /></button>
         <button onClick={run} className={styles.run}><Play size={16} aria-hidden="true" />Evaluate</button>
         <button onClick={reset} aria-label="Reset evaluation" title="Reset evaluation"><RotateCcw size={18} /></button>
         <button onClick={download} aria-label="Export applied evaluation JSON" title="Export applied evaluation JSON"><Download size={18} /></button>
@@ -122,7 +124,7 @@ export default function Evaluator() {
     {error && <p className={styles.warning} role="alert">{error}</p>}
     <span className={styles.srOnly} role="status">{exportStatus}</span>
     <div className={styles.workspace}>
-      <form className={styles.controls} onSubmit={event => { event.preventDefault(); run(); }}>
+      <form id="offline-evaluation-settings" className={`${styles.controls} ${settingsOpen ? styles.controlsOpen : ''}`} onSubmit={event => { event.preventDefault(); run(); }}>
         <fieldset><legend>Logged cohort</legend>
           <label>Logging support<select value={draft.scenario} onChange={event => update('scenario', event.target.value as Config['scenario'])}>
             <option value="balanced">Broad support</option><option value="rare">Rare intensification</option><option value="gap">Zero support at low load</option>
