@@ -75,7 +75,7 @@ describe('deterministic intake-policy authority', () => {
     expect(evaluate(c, { ...DEFAULT_POLICY, todayWeight: 1 }).priority).toBe('P2');
     expect(evaluate({ ...c, backstop: true }, { ...DEFAULT_POLICY, todayWeight: 1 }).priority).toBe('P0');
   });
-  it.each([{ safety: 'maybe' }, { request: 'unknown' }, { careRelated: 'true' }, { fields: {} }, { patientName: 'should not be accepted' }])('rejects invalid or identifying inputs %j', patch => {
+  it.each([{ safety: 'maybe' }, { request: 'unknown' }, { careRelated: 'true' }, { fields: {} }, { patientName: 'identifying data is prohibited' }])('rejects invalid or identifying inputs %j', patch => {
     expect(() => evaluate({ ...DEFAULT_CASE, ...patch })).toThrow();
   });
   it.each([{ todayWeight: NaN }, { todayWeight: -1 }, { fastThreshold: 0 }, { noticeWeight: 1 }, { fastThreshold: 9 }])('rejects invalid policy %j', patch => {
