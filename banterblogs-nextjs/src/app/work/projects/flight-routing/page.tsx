@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/work/projects/flight-routing' },
 };
 const SOURCE = 'https://github.com/Sahil170595/Banterblogs/blob/codex/demo-flight-routing/banterblogs-nextjs/src/lib/projects/flight-routing';
+const SYSTEM_SOURCE = 'https://github.com/Sahil170595/gatebound-rl';
 
 export default function FlightRoutingPage() {
   return <div className={styles.page}>
@@ -20,7 +21,7 @@ export default function FlightRoutingPage() {
       <h1>Flight Routing Lab</h1>
       <p>Adaptive routing with joint disruptions and deadline-first rewards.</p>
     </header>
-    <nav className={styles.nav} aria-label="Project sections"><a href="#demo">Lab</a><a href="#findings">Findings</a><a href="#method">Method</a><a href="#reproduce">Reproduce</a><a href={SOURCE.replace('/blob/', '/tree/')}>Public code</a></nav>
+    <nav className={styles.nav} aria-label="Project sections"><a href="#demo">Lab</a><a href="#findings">Findings</a><a href="#method">Method</a><a href="#reproduce">Reproduce</a><a href={SYSTEM_SOURCE}>Gatebound source</a></nav>
     <section id="demo" aria-label="Flight routing simulation">
       <p className={styles.scope}><strong>Synthetic fixture</strong> / adaptive routing / elapsed UTC minutes. <a href="#limits">Scope</a></p>
       <FlightLab />
@@ -28,6 +29,7 @@ export default function FlightRoutingPage() {
     <article className={styles.article} aria-label="Technical write-up">
       <section id="system">
         <h2>Underlying system: empirical routing and verification</h2>
+        <p><a href={SYSTEM_SOURCE}>Gatebound</a> is the full public Python system: environment, training, planning, source-backed verification and data tooling, with a separate offline synthetic quickstart. Its clean release preserves the implementation without distributing historical datasets. The browser lab below uses its own smaller, independently reproducible fixture.</p>
         <p>This lab exposes one part of a larger Python routing and evaluation system I implemented. That system ingests monthly US flight-performance archives, constructs comparable-flight outcome pools, runs masked Gymnasium environments, plans deadline-aware itineraries, and independently verifies episode records against their configured schedules and donor rows. The browser edition replaces the historical data layer with public synthetic fixtures; it does not replace that engineering work or rerun its archived experiments.</p>
         <h3>From monthly archives to an auditable simulator</h3>
         <p>The ingestion pipeline streams resumable downloads, checks archive integrity and records content hashes. Chunked normalization writes partitioned Parquet while retaining cancellations and diversions even when ordinary arrival fields are missing. Local departures are converted through airport time zones; midnight rollover and ambiguous or nonexistent daylight-saving times are handled explicitly, with exclusions counted rather than silently guessed.</p>
