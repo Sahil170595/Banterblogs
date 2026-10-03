@@ -1,9 +1,16 @@
-import styles from './controls.module.css';
+// The project demos' shared controls. Their rules live in the project shell's
+// sheet (app/reading.css, "demo-" classes), so every demo's controls match
+// and no two demos share a module stylesheet.
 
-// The project demos' shared controls. Class names for buttons, fields and
-// messages come from the same module, so every demo's controls match.
-
-export const controls = styles;
+export const controls = {
+  row: 'demo-row',
+  segmented: 'demo-segmented',
+  button: 'demo-button',
+  iconButton: 'demo-icon-button',
+  field: 'demo-field',
+  error: 'demo-error',
+  hint: 'demo-hint',
+} as const;
 
 export interface Choice<T> {
   value: T;
@@ -30,7 +37,7 @@ export function Segmented<T extends string | number>({
   onChange: (value: T) => void;
 }) {
   return (
-    <fieldset className={styles.segmented}>
+    <fieldset className={controls.segmented}>
       <legend>{legend}</legend>
       <div>
         {options.map((option) => (

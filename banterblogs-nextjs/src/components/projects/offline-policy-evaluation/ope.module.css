@@ -1,6 +1,6 @@
 /* The offline policy evaluation demo (OpeDemo and its parts); buttons,
    fields and the segmented choices are the shared project controls
-   (../controls.module.css). Ember marks the target, plain foreground the
+   (the demo- classes in app/reading.css). Ember marks the target, plain foreground the
    control and the logger; amber thin support, status red none. No text
    under 12px. */
 
