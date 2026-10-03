@@ -283,7 +283,7 @@ export default function WorkPage() {
               key={link.href}
               intent
               href={link.href}
-              variant={index === 0 ? 'primary' : 'secondary'}
+              variant={index === 0 ? 'primary' : link.href === '/work/projects' ? 'ghost' : 'secondary'}
               iconEnd={index === 0 ? <ArrowRight className="h-4 w-4" /> : undefined}
             >
               {link.label}
