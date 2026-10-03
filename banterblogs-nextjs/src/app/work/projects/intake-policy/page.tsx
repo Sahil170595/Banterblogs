@@ -6,6 +6,7 @@ import styles from '@/components/projects/intake-policy/intake.module.css';
 import { CASES } from '@/lib/projects/intake-policy/cases';
 import { evaluate } from '@/lib/projects/intake-policy/engine';
 import { routeLabels } from '@/lib/projects/intake-policy/model';
+import project from './project.json';
 
 export const metadata: Metadata = {
   title: 'Intake Policy Sandbox | Work',
@@ -26,6 +27,7 @@ export default function IntakePolicyPage() {
       <nav className={styles.nav} aria-label="Project sections">
         <a href="#demo">Workbench</a><a href="#underlying-system">Underlying system</a>
         <a href="#findings">Findings</a><a href="#method">Methodology</a><a href="#reproduce">Reproduction</a>
+        <a href={project.sourceUrl}>Source</a>
       </nav>
     </header>
     <IntakeLab />
@@ -85,8 +87,13 @@ export default function IntakePolicyPage() {
           but cannot by themselves prove a customer outcome.</p>
         <p>The inspected tests cover branch-specific outputs, review requirements and restrictions on automatic resource
           holds. I did not rerun the original fixture suite or carry its results into this page. The original supplied inbox,
-          catalog, policy text and identity examples are not distributed here. A sanitized full-source edition can expose
-          more of that architecture later; this page links only to freshly authored public demo code.</p>
+          catalog, policy text and identity examples are not distributed here.</p>
+        <p>The full TypeScript engine and CLI are published as <a href={project.sourceUrl}>Intakegate</a>, including
+          perception, scoring, orchestration, assembly, batch execution, asynchronous call capture, schema validation,
+          and 12 newly authored synthetic cases. The resource adapters and supporting contracts are independently recreated.
+          Its optional model cascade was tested with invented responses, not live provider calls. Action tools remain
+          explicit local stubs: no booking, message delivery, or staff notification is claimed. The browser below is a
+          categorical policy workbench, not a replacement for that complete source pipeline.</p>
       </section>
       <section id="findings">
         <h2>Findings: source-derived rules versus new synthetic results</h2>
