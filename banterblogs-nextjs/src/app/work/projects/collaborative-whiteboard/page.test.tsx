@@ -18,7 +18,7 @@ describe('publication contract', () => {
     expect(project.categories).toEqual(['product', 'systems']);
     expect(project.roles).toContain('founding-engineer');
     expect(project.runtime).toBe('browser-application');
-    expect(project.sourceUrl).toContain('codex/demo-collaborative-whiteboard/banterblogs-nextjs/src/lib/projects/collaborative-whiteboard');
+    expect(project.sourceUrl).toBe('https://github.com/Sahil170595/sceneledger');
     expect(project.title).not.toMatch(/^Banter/);
   });
 });
