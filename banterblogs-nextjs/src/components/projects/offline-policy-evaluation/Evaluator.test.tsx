@@ -42,6 +42,21 @@ describe('evaluation controls', () => {
     expect((screen.getByLabelText('Logging support') as HTMLSelectElement).value).toBe('rare');
     expect((screen.getByLabelText('Seed') as HTMLInputElement).value).toBe('2026');
   });
+  it('labels a known reachable gap separately from zero empirical mass in the seed-38 sample', () => {
+    render(<Evaluator />);
+    fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '38' } });
+    fireEvent.change(screen.getByLabelText('Trajectories'), { target: { value: '8' } });
+    fireEvent.change(screen.getByLabelText('Logging support'), { target: { value: 'gap' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
+    const warning = screen.getByText(/Target values withheld/).textContent;
+    expect(warning).toContain('intervals withheld');
+    expect(warning).toContain('known reachable contexts');
+    expect(warning).toContain('0.0% empirical');
+    expect(warning).toContain('17.1% conditional');
+    const table = screen.getByRole('table', { name: /State-responsive target estimator/ });
+    expect(table.textContent).toContain('Unavailable');
+    expect(table.textContent).not.toContain('2.01');
+  });
   it('does not replace a valid result with invalid configuration', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(<Evaluator />);
