@@ -15,10 +15,10 @@ describe('server-rendered portfolio contract', () => {
     expect(html).toContain(DEMO_SOURCE);
     expect(html.match(/<tbody>[\s\S]*?<\/tbody>/g)?.at(-1)?.match(/<tr>/g)).toHaveLength(5);
   });
-  it('uses exactly the manifest schema and owned source branch', () => {
+  it('uses exactly the manifest schema and full public source repository', () => {
     expect(Object.keys(manifest).sort()).toEqual(['slug', 'title', 'summary', 'categories', 'roles', 'status', 'runtime', 'sourceUrl'].sort());
     expect(manifest.slug).toBe('workflow-observatory');
     expect(manifest.runtime).toBe('browser-application');
-    expect(manifest.sourceUrl).toBe(DEMO_SOURCE);
+    expect(manifest.sourceUrl).toBe('https://github.com/Sahil170595/Parallax');
   });
 });
