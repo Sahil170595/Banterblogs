@@ -1,0 +1,10 @@
+{
+  "slug": "intake-policy",
+  "title": "Intake Policy Sandbox",
+  "summary": "Evaluate synthetic categorical intake cases through fixed safety gates, editable operational scores, guarded routing and traceable unsent drafts.",
+  "categories": ["agents", "evaluation", "product"],
+  "roles": ["applied-ai", "ai-safety", "founding-engineer"],
+  "status": "interactive",
+  "runtime": "browser-simulation",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-intake-policy/banterblogs-nextjs/src/lib/projects/intake-policy"
+}
