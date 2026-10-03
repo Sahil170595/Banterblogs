@@ -252,6 +252,14 @@
   width: 9rem;
 }
 
+/* the run read back under the hood, beside the settings that change it */
+.panelRunLine {
+  border-left: 2px solid hsl(var(--primary) / 0.6);
+  padding-left: 0.75rem;
+  font-size: 0.8125rem;
+  color: hsl(var(--foreground));
+}
+
 /* ── tables ── */
 .tableScroll {
   max-width: 100%;
@@ -422,6 +430,21 @@
   .sweep [data-label]::before,
   .ledger [data-label]::before {
     font-family: var(--font-sans), system-ui, sans-serif;
+  }
+
+  /* a two-line value keeps to the right like the rest */
+  .ledger .cellValue {
+    text-align: right;
+  }
+
+  /* previous, the field and next on one line: the field gives way, not the buttons */
+  .seedRow {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .seedRow label {
+    width: auto;
   }
 }
 

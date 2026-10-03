@@ -132,3 +132,44 @@ describe('send pacing demo', () => {
     expect(warn).toHaveBeenCalled();
   });
 });
+
+const tools = () => screen.getByText('Change the campaign, read every message’s timing, export a replay').closest('details')!;
+
+describe('send pacing demo, after live QA', () => {
+  // abc, -1, 1.5 or 99999999999 sat in the box beside "Seed 7" with no word, then reverted
+  it('says a seed must be a whole number in range, and which seed it kept', () => {
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    const seed = screen.getByLabelText('Seed');
+    fireEvent.change(seed, { target: { value: 'abc' } });
+    expect(screen.getByText(/Seed must be a whole number from 0 to 4,294,967,295/)).toBeTruthy();
+    expect(screen.getByText(/^Seed 7/)).toBeTruthy();
+    fireEvent.blur(seed);
+    expect(seed).toHaveProperty('value', '7');
+    expect(screen.getByText(/kept seed 7/)).toBeTruthy();
+    fireEvent.change(seed, { target: { value: '1.5' } });
+    fireEvent.keyDown(seed, { key: 'Enter' });
+    expect(seed).toHaveProperty('value', '7');
+    fireEvent.change(seed, { target: { value: '9' } });
+    expect(screen.queryByText(/Seed must be a whole number/)).toBeNull();
+  });
+
+  it('answers an import beside its button, in plain words, without the last success under it', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    fireEvent.change(screen.getByLabelText('Replay file'), { target: { files: [file(makeReceipt(SOURCE_REPLAY))] } });
+    await waitFor(() => expect(within(tools()).getByText(/File rerun/)).toBeTruthy());
+    fireEvent.change(screen.getByLabelText('Replay file'), { target: { files: [file([1, 2, 3])] } });
+    await waitFor(() => expect(within(tools()).getByRole('alert').textContent).toBe('File refused: The file should hold an object, not an array.'));
+    expect(within(tools()).queryByText(/File rerun/)).toBeNull();
+  });
+
+  // a change under the hood redrew the chart 1,800 px above, and nothing in view said so
+  it('reads the run back beside the campaign settings', () => {
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    const line = screen.getByTestId('campaign-verdict');
+    expect(line.closest('details')).toBe(tools());
+    expect(line.textContent).toMatch(/12 messages/);
+    fireEvent.change(screen.getByLabelText('Messages'), { target: { value: '24' } });
+    expect(line.textContent).toMatch(/24 messages/);
+  });
+});
