@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { Download, Play, RotateCcw, Upload, StepForward, ChartNoAxesCombined, Table2 } from 'lucide-react';
+import { Download, Play, RotateCcw, Upload, StepForward, ChartNoAxesCombined, SlidersHorizontal, Table2 } from 'lucide-react';
 import { advance, analyze, exportTrace, freshSession, replayTrace } from '@/lib/projects/scheduling-lab/engine';
 import { presetTitles, syntheticEvents } from '@/lib/projects/scheduling-lab/fixtures';
 import { MAX_TRACE_BYTES, type Config, type Preset, type Session } from '@/lib/projects/scheduling-lab/types';
@@ -19,6 +19,7 @@ export default function SchedulingLab() {
   const [view, setView] = useState<'timeline' | 'ledger'>('timeline');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const upload = useRef<HTMLInputElement>(null);
   const result = useMemo(() => analyze(run), [run]);
   const pending = JSON.stringify(run) !== JSON.stringify(draft);
@@ -58,6 +59,7 @@ export default function SchedulingLab() {
       <label>Bounds policy<select aria-label="Bounds policy" value={draft.config.boundsPolicy} onChange={e => configure('boundsPolicy', e.target.value as Config['boundsPolicy'])}><option value="forward">Forward feasible</option><option value="clamp-audit">Bounded clamp audit</option></select></label>
       <div className={styles.commands}>
         <button onClick={recompute}><Play size={16} aria-hidden="true" />Recompute schedule</button>
+        <button className={styles.settingsToggle} aria-label="Schedule settings" title="Schedule settings" aria-expanded={settingsOpen} aria-controls="schedule-settings" onClick={() => setSettingsOpen(open => !open)}><SlidersHorizontal size={18} /></button>
         <button onClick={step} disabled={pending || run.processed >= result.metrics.admitted} aria-label="Step simulation" title="Step simulation"><StepForward size={18} aria-hidden="true" /></button>
         <button onClick={() => reset()} aria-label="Reset schedule" title="Reset schedule"><RotateCcw size={18} aria-hidden="true" /></button>
         <button onClick={download} disabled={pending} aria-label="Export JSON" title="Export JSON"><Download size={18} aria-hidden="true" /></button>
@@ -68,7 +70,7 @@ export default function SchedulingLab() {
     <div className={styles.status} aria-live="polite"><strong className={pending ? styles.amber : styles.green}>{pending ? 'Pending edits' : 'Computed locally'}</strong><span>{pending ? 'Last-run timeline; recomputation required.' : `Seed ${run.config.seed} / ${run.processed} simulated processed / delivery simulated only`}</span></div>
     {error && <p className={styles.error} role="alert">{error}</p>}
     <div className={styles.workspace}>
-      <aside className={styles.controls} aria-label="Scheduling configuration">
+      <aside id="schedule-settings" className={`${styles.controls} ${settingsOpen ? styles.controlsOpen : ''}`} aria-label="Scheduling configuration">
         <h2>Configuration</h2>
         <div className={styles.controlGrid}>
           <label>Seed<input aria-label="Seed" type="number" min={0} max={4294967295} step={1} value={Number.isNaN(draft.config.seed) ? '' : draft.config.seed} onChange={e => configure('seed', e.target.valueAsNumber)} /></label>

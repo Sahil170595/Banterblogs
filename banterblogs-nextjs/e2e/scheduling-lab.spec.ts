@@ -13,6 +13,8 @@ async function exportResult(page: Page) {
 test('scheduling recomputes seeded timing, simulates progress and replays actual inputs', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/work/projects/scheduling-lab');
+  const settings = page.getByRole('button', { name: 'Schedule settings', exact: true });
+  if (await settings.isVisible()) await settings.click();
   const initial = await exportResult(page);
   expect(initial.data.result.metrics.violationCount).toBe(0);
   await page.getByRole('spinbutton', { name: 'Seed', exact: true }).fill('73');
