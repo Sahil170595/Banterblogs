@@ -1,19 +1,31 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent, type RefObject } from 'react';
 import { Check, ChevronRight, Download, Play, ShieldCheck, SkipForward, Square, Upload } from 'lucide-react';
+import { backsClaim } from '@/lib/projects/customer-service/claims';
 import { refunded } from '@/lib/projects/customer-service/engine';
-import { CLAIMS, MAX_EVENTS, SCENARIOS, TOOL_LABELS, type Claim, type Config, type Event, type ToolName } from '@/lib/projects/customer-service/model';
-import { score } from '@/lib/projects/customer-service/reward';
+import {
+  CLAIMS,
+  MAX_EVENTS,
+  SCENARIOS,
+  TOOL_LABELS,
+  type Claim,
+  type Config,
+  type Event,
+  type Session,
+  type ToolName,
+} from '@/lib/projects/customer-service/model';
+import { score, SCORE_CEILING, SCORE_FLOOR } from '@/lib/projects/customer-service/reward';
 import { PRESETS, type Preset } from '@/lib/projects/customer-service/scripts';
-import { controls } from '../controls';
+import { controls, UnderTheHood } from '../controls';
 import { percent } from '../geometry';
 import { money, signedScore } from './format';
 import type { ServiceDemo } from './useServiceDemo';
 import styles from './service.module.css';
 
-// The environment under the board: the case, the agent's workbench, the
-// world it changes, and the reward that world earns.
+// The environment under the board: the case, the world the loaded trajectory
+// changed and the reward that world earns; under the hood, the controls to
+// start a fresh episode and act as the agent by hand.
 
 const CLAIM_LABELS: Record<Claim, string> = {
   'cancelled-and-refunded': 'Cancelled and fully refunded',
@@ -45,19 +57,84 @@ const FOREIGN_PAYMENT = 'PAY-Z';
 const MISSING_PAYMENT = 'PAY-MISSING';
 const STOCK_SLOTS = 6;
 const PERCENT = 100;
+const CAPTURE_ORDINALS = ['first', 'second'];
 
-function eventLabel(event: Event): string {
+/** a result code, glossed; the code itself stays beside it */
+const RESULT_GLOSSES: Record<string, string> = {
+  consent_required: 'Refused: no customer choice matches this write',
+  not_found_or_unavailable: 'Refused: not available to this account',
+  policy_denied: 'Refused by the shop rules',
+  invalid_arguments: 'Refused: arguments the tool does not accept',
+  unknown_tool: 'Refused: no such tool',
+  idempotent_replay: 'Already recorded: no second effect',
+  choice_recorded: 'Customer choice recorded',
+  finished: 'Episode closed',
+};
+const IMPACT_GLOSSES: Record<Event['impact'], string> = {
+  read: 'looks, changes nothing',
+  reversible: 'a change that can be undone',
+  external: 'moves money or goods, or calls the carrier',
+};
+/** results whose message is the parser's own wording, kept under the details */
+const RAW_MESSAGE_CODES = new Set(['invalid_arguments', 'unknown_tool']);
+
+/** a payment id with what it is, so the trace says which capture was refunded */
+function paymentName(session: Session, id: string): string {
+  const own = session.world.payments.filter((p) => p.orderId === TARGET_ORDER).map((p) => p.id);
+  const at = own.indexOf(id);
+  if (at >= 0) return `${id} (${CAPTURE_ORDINALS[at] ?? `#${at + 1}`} capture)`;
+  if (id === FOREIGN_PAYMENT) return `${id} (another account’s capture)`;
+  return `${id} (no such capture)`;
+}
+
+function eventLabel(session: Session, event: Event): string {
   const a = event.action;
   if (!a) return 'Invalid command';
-  if (a.kind === 'tool') return Object.hasOwn(TOOL_LABELS, a.name) ? TOOL_LABELS[a.name as ToolName] : a.name;
-  if (a.kind === 'choice') return `Customer chose: ${RESOLUTION_LABELS[a.resolution]}`;
+  if (a.kind === 'tool') {
+    const name = Object.hasOwn(TOOL_LABELS, a.name) ? TOOL_LABELS[a.name as ToolName] : a.name;
+    const { paymentId, amountCents } = a.args;
+    return a.name === 'refund' && typeof paymentId === 'string' && typeof amountCents === 'number'
+      ? `${name}: ${money(amountCents)} on ${paymentName(session, paymentId)}`
+      : name;
+  }
+  if (a.kind === 'choice') return `Customer chose: ${RESOLUTION_LABELS[a.resolution]}${a.paymentId ? `, ${paymentName(session, a.paymentId)}` : ''}`;
   if (a.kind === 'report') return `Report: ${CLAIM_LABELS[a.claim]}`;
   return 'Close episode';
 }
 
+function resultGloss(session: Session, event: Event): string {
+  const known = RESULT_GLOSSES[event.result.code];
+  if (known) return known;
+  const a = event.action;
+  if (a?.kind === 'report')
+    return backsClaim(event.before, a.claim, a.orderId, session.identity) ? 'The world supports this report' : 'The world contradicts this report';
+  return event.changed ? 'Changed the world' : 'Read only, no change';
+}
+
+/** the form's starting values: what the loaded trajectory last chose and reported, so the form never contradicts the trace */
+function draftFrom(session: Session, orderPayments: string[]) {
+  const choice = session.choice;
+  const lastTool = session.events.flatMap((e) => (e.action?.kind === 'tool' ? [e.action] : [])).at(-1);
+  const lastReport = session.events.flatMap((e) => (e.action?.kind === 'report' ? [e.action] : [])).at(-1);
+  const lastOrder = typeof lastTool?.args.orderId === 'string' ? lastTool.args.orderId : TARGET_ORDER;
+  return {
+    tool: lastTool && Object.hasOwn(TOOL_LABELS, lastTool.name) ? (lastTool.name as ToolName) : 'order',
+    orderId: choice?.orderId ?? lastOrder,
+    paymentId: choice?.paymentId ?? orderPayments[orderPayments.length - 1],
+    amount: String(choice?.amountCents ?? session.config.totalCents),
+    sku: choice?.sku ?? session.world.inventory[0].sku,
+    resolution: (choice?.resolution ?? 'replace') as Resolution,
+    claim: lastReport?.claim ?? 'replacement-created',
+  };
+}
+
 function Episode({ demo }: { demo: ServiceDemo }) {
   const { session } = demo;
-  const [draft, setDraft] = useState({ scenario: session.config.scenario, stock: String(session.config.stock), total: String(session.config.totalCents) });
+  const [draft, setDraft] = useState({
+    scenario: session.config.scenario,
+    stock: String(session.config.stock),
+    total: String(session.config.totalCents),
+  });
   const [error, setError] = useState('');
   const file = useRef<HTMLInputElement>(null);
 
@@ -88,6 +165,7 @@ function Episode({ demo }: { demo: ServiceDemo }) {
 
   return (
     <div className={styles.episode}>
+      <p className={controls.hint}>An episode is one run of the environment from a fresh fixture, until it is closed or stopped.</p>
       <form className={styles.episodeForm} onSubmit={start}>
         <label className={controls.field}>
           Case
@@ -113,11 +191,26 @@ function Episode({ demo }: { demo: ServiceDemo }) {
         <div className={styles.iconGroup}>
           <button type="button" className={controls.iconButton} aria-label="Export JSON trace" title="Export JSON trace" onClick={exportJson}>
             <Download aria-hidden="true" />
+            <span className={controls.iconLabel}>Export JSON trace</span>
           </button>
-          <button type="button" className={controls.iconButton} aria-label="Import and replay a JSON trace" title="Import and replay a JSON trace" onClick={() => file.current?.click()}>
+          <button
+            type="button"
+            className={controls.iconButton}
+            aria-label="Import and replay a JSON trace"
+            title="Import and replay a JSON trace"
+            onClick={() => file.current?.click()}
+          >
             <Upload aria-hidden="true" />
+            <span className={controls.iconLabel}>Import and replay a JSON trace</span>
           </button>
-          <input className={styles.fileInput} ref={file} type="file" accept="application/json,.json" aria-label="Trace file" onChange={(e) => void importJson(e.target.files?.[0])} />
+          <input
+            className={styles.fileInput}
+            ref={file}
+            type="file"
+            accept="application/json,.json"
+            aria-label="Trace file"
+            onChange={(e) => void importJson(e.target.files?.[0])}
+          />
         </div>
       </form>
       {error && (
@@ -136,11 +229,21 @@ function Episode({ demo }: { demo: ServiceDemo }) {
             ))}
           </select>
         </label>
-        <button type="button" className={controls.button} disabled={demo.scriptIndex !== null && demo.scriptIndex >= demo.script.length} onClick={() => demo.advanceScript(false)}>
+        <button
+          type="button"
+          className={controls.button}
+          disabled={demo.scriptIndex !== null && demo.scriptIndex >= demo.script.length}
+          onClick={() => demo.advanceScript(false)}
+        >
           <SkipForward aria-hidden="true" />
           Step
         </button>
-        <button type="button" className={controls.button} disabled={demo.scriptIndex !== null && demo.scriptIndex >= demo.script.length} onClick={() => demo.advanceScript(true)}>
+        <button
+          type="button"
+          className={controls.button}
+          disabled={demo.scriptIndex !== null && demo.scriptIndex >= demo.script.length}
+          onClick={() => demo.advanceScript(true)}
+        >
           <Play aria-hidden="true" />
           Run script
         </button>
@@ -156,13 +259,14 @@ function Workbench({ demo }: { demo: ServiceDemo }) {
   const { session } = demo;
   const closed = session.termination !== 'open';
   const orderPayments = session.world.payments.filter((p) => p.orderId === TARGET_ORDER).map((p) => p.id);
-  const [tool, setTool] = useState<ToolName>('order');
-  const [orderId, setOrderId] = useState(TARGET_ORDER);
-  const [paymentId, setPaymentId] = useState(orderPayments[orderPayments.length - 1]);
-  const [amount, setAmount] = useState(String(session.config.totalCents));
-  const [sku, setSku] = useState(session.world.inventory[0].sku);
-  const [resolution, setResolution] = useState<Resolution>('replace');
-  const [claim, setClaim] = useState<Claim>('replacement-created');
+  const [initial] = useState(() => draftFrom(session, orderPayments));
+  const [tool, setTool] = useState<ToolName>(initial.tool);
+  const [orderId, setOrderId] = useState(initial.orderId);
+  const [paymentId, setPaymentId] = useState(initial.paymentId);
+  const [amount, setAmount] = useState(initial.amount);
+  const [sku, setSku] = useState(initial.sku);
+  const [resolution, setResolution] = useState<Resolution>(initial.resolution);
+  const [claim, setClaim] = useState<Claim>(initial.claim);
   const [raw, setRaw] = useState(`{"kind":"tool","name":"order","args":{"orderId":"${TARGET_ORDER}"}}`);
   const [error, setError] = useState('');
   const amountCents = Number(amount);
@@ -186,7 +290,7 @@ function Workbench({ demo }: { demo: ServiceDemo }) {
   return (
     <section className={styles.column} aria-labelledby="service-workbench">
       <h4 id="service-workbench" className={styles.columnTitle}>
-        Agent workbench
+        Agent workbench <span>Act as the agent: every tool call goes through the same checks as the scripts.</span>
       </h4>
       <div className={styles.fields}>
         <label className={controls.field}>
@@ -207,7 +311,9 @@ function Workbench({ demo }: { demo: ServiceDemo }) {
           Payment
           <select value={paymentId} onChange={(e) => setPaymentId(e.target.value)}>
             {[...orderPayments, FOREIGN_PAYMENT, MISSING_PAYMENT].map((p) => (
-              <option key={p}>{p}</option>
+              <option key={p} value={p}>
+                {paymentName(session, p)}
+              </option>
             ))}
           </select>
         </label>
@@ -316,7 +422,11 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
   return (
     <section className={styles.column} aria-labelledby="service-world">
       <h4 id="service-world" className={styles.columnTitle}>
-        The world <span>{session.termination === 'open' ? 'open' : session.termination.replace('_', ' ')} · {session.events.length} of {MAX_EVENTS} actions</span>
+        The world{' '}
+        <span>
+          the order records the tools read and change · {session.termination === 'open' ? 'open' : session.termination.replace('_', ' ')} ·{' '}
+          {session.events.length} of {MAX_EVENTS} actions
+        </span>
       </h4>
       <ol className={styles.lifecycle} aria-label={`Order ${order.id}: ${order.status}`}>
         {STAGES.map((stage) => (
@@ -351,7 +461,7 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
         return (
           <div key={p.id} className={styles.payment}>
             <div className={styles.paymentHead}>
-              <strong>{p.id}</strong>
+              <strong>{paymentName(session, p.id)}</strong>
               <span>
                 {money(back)} refunded of {money(p.capturedCents)}
               </span>
@@ -386,9 +496,9 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
               <button type="button" aria-pressed={shown?.index === e.index} onClick={() => setPicked(e.index)}>
                 <span className={styles.seq}>{String(e.index).padStart(2, '0')}</span>
                 <span className={styles.traceText}>
-                  <strong>{eventLabel(e)}</strong>
+                  <strong>{eventLabel(session, e)}</strong>
                   <span data-ok={e.result.ok || undefined}>
-                    {e.result.code} · {e.changed ? 'changed the world' : 'no change'}
+                    {resultGloss(session, e)} · <code>{e.result.code}</code>
                   </span>
                 </span>
               </button>
@@ -399,12 +509,23 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
       {shown && (
         <div className={styles.observation} aria-live="polite">
           <strong>
-            #{shown.index} · {shown.impact} impact
+            #{shown.index} · {shown.impact} impact: {IMPACT_GLOSSES[shown.impact]}
           </strong>
-          <p>{shown.result.message}</p>
+          <p>{RAW_MESSAGE_CODES.has(shown.result.code) ? `${resultGloss(session, shown)}.` : shown.result.message}</p>
           <details>
             <summary>Input, result and state before and after</summary>
-            <pre>{JSON.stringify({ input: shown.input, data: shown.result.data, before: shown.before, after: shown.after }, null, 2)}</pre>
+            <pre>
+              {JSON.stringify(
+                {
+                  input: shown.input,
+                  result: { code: shown.result.code, message: shown.result.message, data: shown.result.data },
+                  before: shown.before,
+                  after: shown.after,
+                },
+                null,
+                2,
+              )}
+            </pre>
           </details>
         </div>
       )}
@@ -412,24 +533,53 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
   );
 }
 
+const COMPONENT_GLOSSES: Record<string, string> = {
+  Outcome: 'the world reached an acceptable outcome',
+  'Prior evidence': 'share of writes made after the reads they need and a matching customer choice',
+  'Supported report': 'earned only when the case is resolved and no report contradicted the world',
+};
+
+/** the reward in one sentence: which state the episode ended in and the cap that held it */
+function explain(reward: ReturnType<typeof score>): string {
+  const cap = reward.ceilings.length ? Math.min(...reward.ceilings.map((c) => c.value)) : SCORE_CEILING;
+  if (reward.completed) {
+    const credit = reward.branches.find((b) => b.id === reward.selectedBranch)?.credit ?? SCORE_CEILING;
+    return credit < SCORE_CEILING
+      ? `A partial remedy: the request is made but nothing is delivered, so the outcome counts for ${credit} of ${SCORE_CEILING} and the reward is held at ${signedScore(cap)}.`
+      : 'Resolved: the world reached an acceptable outcome and the report matches it.';
+  }
+  return reward.damage
+    ? `Not resolved: its effects fit none of the acceptable outcomes, so the reward is held at ${signedScore(cap)} or below.`
+    : `Not resolved: no acceptable outcome is complete, so the reward is held at ${signedScore(cap)} or below.`;
+}
+
 function Reward({ demo }: { demo: ServiceDemo }) {
   const reward = score(demo.session);
   const deductions = reward.penalties.reduce((n, p) => n + p.value, 0);
-  const state = reward.completed ? 'A coherent outcome is complete' : reward.damage ? 'Effects outside every coherent outcome' : 'No outcome complete yet';
+  const state = reward.completed
+    ? 'A coherent outcome is complete'
+    : reward.damage
+      ? 'Effects outside every coherent outcome'
+      : 'No outcome complete yet';
   return (
     <section className={styles.column} aria-labelledby="service-reward">
       <h4 id="service-reward" className={styles.columnTitle}>
-        Reward <span>{reward.weightsVersion}</span>
+        Reward{' '}
+        <span>
+          a score from {signedScore(SCORE_FLOOR)} to {signedScore(SCORE_CEILING)} · rubric {reward.weightsVersion}
+        </span>
       </h4>
       <p className={styles.score} data-tone={reward.completed ? (reward.total < 1 ? 'partial' : 'resolved') : 'failed'} aria-live="polite">
         <output aria-label="Total reward">{signedScore(reward.total)}</output>
         <span>{state}</span>
       </p>
+      <p className={styles.explain}>{explain(reward)}</p>
       <dl className={styles.components}>
         {reward.components.map((c) => (
           <div key={c.label}>
             <dt>
               {c.label} <span>× {c.weight.toFixed(1)}</span>
+              {COMPONENT_GLOSSES[c.label] && <small>{COMPONENT_GLOSSES[c.label]}</small>}
             </dt>
             <dd>
               <span className={styles.meter} aria-hidden="true">
@@ -441,7 +591,7 @@ function Reward({ demo }: { demo: ServiceDemo }) {
         ))}
       </dl>
       <p className={controls.hint}>
-        Base {reward.base.toFixed(2)} − deductions {deductions.toFixed(2)}, then the lowest ceiling.
+        Weighted sum {reward.base.toFixed(2)} − deductions {deductions.toFixed(2)}, then the lowest ceiling.
       </p>
       {reward.penalties.map((p) => (
         <p key={p.label} className={styles.adjustment} data-kind="deduction">
@@ -455,7 +605,7 @@ function Reward({ demo }: { demo: ServiceDemo }) {
           <strong>cap {signedScore(c.value)}</strong>
         </p>
       ))}
-      <h5 className={styles.subTitle}>Outcome branches</h5>
+      <h5 className={styles.subTitle}>Outcome branches: the acceptable outcomes for this case</h5>
       <ul className={styles.branches}>
         {reward.branches.map((b) => (
           <li key={b.id} data-complete={b.complete || undefined}>
@@ -463,7 +613,12 @@ function Reward({ demo }: { demo: ServiceDemo }) {
             <span>
               {b.complete
                 ? 'Complete'
-                : [!b.stateSatisfied && 'world not in this state', !b.coherentWrites && 'writes outside it', b.eventCoverage < 1 && `${Math.round(b.eventCoverage * PERCENT)}% of its evidence`, !b.reportSatisfied && 'no supported report']
+                : [
+                    !b.stateSatisfied && 'world not in this state',
+                    !b.coherentWrites && 'writes outside it',
+                    b.eventCoverage < 1 && `${Math.round(b.eventCoverage * PERCENT)}% of its evidence`,
+                    !b.reportSatisfied && 'no supported report',
+                  ]
                     .filter(Boolean)
                     .join(' · ')}
             </span>
@@ -475,12 +630,14 @@ function Reward({ demo }: { demo: ServiceDemo }) {
   );
 }
 
-export function ServiceLab({ demo }: { demo: ServiceDemo }) {
+export function ServiceLab({ demo, labRef }: { demo: ServiceDemo; labRef?: RefObject<HTMLDivElement | null> }) {
   const { session } = demo;
   const scenario = SCENARIOS.find((s) => s.id === session.config.scenario)!;
   const configKey = JSON.stringify(session.config);
+  // the workbench restarts from each newly loaded trajectory, so its fields match the trace
+  const benchKey = `bench-${configKey}-${demo.selected ?? 'manual'}-${demo.scriptIndex ?? ''}`;
   return (
-    <div className={styles.lab}>
+    <div className={styles.lab} ref={labRef}>
       <div className={styles.brief}>
         <div>
           <h3 className={styles.briefTitle}>{scenario.title}</h3>
@@ -489,16 +646,18 @@ export function ServiceLab({ demo }: { demo: ServiceDemo }) {
         <p className={styles.identity}>
           <ShieldCheck aria-hidden="true" />
           <span>
-            Signed in as <strong>{session.identity}</strong>
+            Signed in as <strong>{session.identity}</strong>, the customer the agent acts for; the tools see only this account’s orders.
           </span>
         </p>
       </div>
-      <Episode key={configKey} demo={demo} />
       <div className={styles.columns}>
-        <Workbench key={`bench-${configKey}`} demo={demo} />
         <WorldState key={`world-${configKey}-${session.events.length}`} demo={demo} />
         <Reward demo={demo} />
       </div>
+      <UnderTheHood summary="Run it yourself: new episodes, scripted controls, the agent workbench and trace export">
+        <Episode key={configKey} demo={demo} />
+        <Workbench key={benchKey} demo={demo} />
+      </UnderTheHood>
     </div>
   );
 }

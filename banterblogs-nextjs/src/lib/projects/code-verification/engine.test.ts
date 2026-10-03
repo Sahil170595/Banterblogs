@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TASKS, evaluate, execute, probe, replay, sourceDiff, initialConfig, resetSession, runSession } from './engine';
+import { TASKS, evaluate, execute, implementationSource, probe, replay, initialConfig, resetSession, runSession } from './engine';
 
 describe('curated verifier contract', () => {
   for (const taskId of ['intervals', 'unique'] as const) {
@@ -105,10 +105,9 @@ describe('curated verifier contract', () => {
     const report = evaluate({ ...initialConfig('unique'), mode: 'synthesis', assertions: Array.from({ length: 16 }, (_, i) => ({ id: `large-${i}`, label: 'Bounded large assertion', input, expected: input })) });
     expect(replay(JSON.parse(JSON.stringify(report)))).toEqual(report);
   });
-  it('exposes actual implementation replacement diffs and no empty-patch changes', () => {
-    expect(sourceDiff('intervals', 'fixed')).toContain('+');
-    expect(sourceDiff('intervals', 'fixed')).toContain('<=');
-    expect(sourceDiff('unique', 'fixed')).toContain('toLowerCase');
-    expect(sourceDiff('intervals', 'empty')).toBe('No code change.');
+  it('exposes the actual implementations each patch replaces the buggy one with', () => {
+    expect(implementationSource('intervals', 'fixed')).toContain('<=');
+    expect(implementationSource('intervals', 'fixed')).not.toBe(implementationSource('intervals', 'empty'));
+    expect(implementationSource('unique', 'fixed')).toContain('toLowerCase');
   });
 });

@@ -189,16 +189,6 @@ export function implementationSource(taskId: TaskId, candidateId: CandidateId): 
   return implementation.toString();
 }
 
-// A whole-function replacement, not an applicable repository patch.
-export function sourceDiff(taskId: TaskId, candidateId: CandidateId): string {
-  if (candidateId === 'empty') return 'No code change.';
-  return [
-    '--- buggy function', '+++ selected function',
-    ...implementationSource(taskId, 'empty').split('\n').map(line => `- ${line}`),
-    ...implementationSource(taskId, candidateId).split('\n').map(line => `+ ${line}`),
-  ].join('\n');
-}
-
 // Validate public fixtures on import, including the independent oracle and baseline polarity.
 for (const task of TASKS) {
   const report = evaluate(initialConfig(task.id));

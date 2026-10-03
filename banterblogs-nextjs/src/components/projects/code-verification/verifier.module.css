@@ -1,12 +1,18 @@
 /* The code verification demo (CodeVerificationDemo and its parts); buttons,
    fields and the segmented choices are the shared project controls (demo-
-   classes, app/reading.css). A repaired test is ember, a test that still
-   passes plain, one still broken amber, a regression status red. No text
-   under 12px. */
+   classes, app/reading.css). A repaired test is the accent, a test that
+   still passes plain, one still broken amber, a regression status red; on a
+   phone each mark also carries its word. No text under 12px. */
 
 .demo {
   display: grid;
   gap: 2.5rem;
+}
+
+/* a grid item sizes to its widest content unless told otherwise; the code
+   panel's one-line source would widen the page */
+.demo > * {
+  min-width: 0;
 }
 
 .hero {
@@ -119,9 +125,33 @@
   transition: opacity var(--duration-base) var(--ease-strong-out);
 }
 
-/* the tests the smoke suite skips fade back */
-.matrix[data-scope="smoke"] :is(th, td):not([data-smoke]):not(:first-child):not(:last-child) {
-  opacity: 0.28;
+/* the tests the smoke suite skips: hatched and named, their marks at full
+   contrast, so what a full run would find stays readable */
+.matrix [data-skipped] {
+  background-image: repeating-linear-gradient(135deg, hsl(var(--foreground) / 0.07) 0 2px, transparent 2px 7px);
+}
+
+.matrix thead th small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.verdictHead {
+  white-space: nowrap;
+}
+
+/* a mark and its word, kept together; the word shows where the table becomes cards */
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cellText {
+  display: none;
 }
 
 .cell {
@@ -183,6 +213,36 @@
   border-radius: 2px;
 }
 
+.key li span {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 639px) {
+  .matrixScroll {
+    padding: 0;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  .matrix tbody th button {
+    padding: 0.25rem 0;
+  }
+
+  .matrix td[data-label] {
+    align-items: center;
+  }
+
+  .mark {
+    flex-shrink: 0;
+  }
+
+  .cellText {
+    display: inline;
+    min-width: 6.5rem;
+  }
+}
+
 /* ── the verifier ── */
 .tool {
   border-radius: 0.75rem;
@@ -240,8 +300,10 @@
   outline-offset: 2px;
 }
 
+/* wraps where touch screens show each icon's name beside it */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -284,6 +346,8 @@
 }
 
 .results {
+  /* brought into view when a patch is picked, clear of the sticky site header */
+  scroll-margin-top: 5.5rem;
   display: grid;
   align-content: start;
   gap: 1rem;
@@ -665,6 +729,7 @@
 }
 
 .codePanel {
+  min-width: 0;
   margin-top: 1.25rem;
   border-top: 1px solid hsl(var(--border) / 0.6);
   padding-top: 0.875rem;
@@ -700,6 +765,7 @@
   color: hsl(var(--muted-foreground));
 }
 
+/* bundled source is often one long line: it wraps inside its own box */
 .codePanel pre {
   margin-top: 0.75rem;
   max-height: 24rem;
@@ -710,10 +776,25 @@
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.8125rem;
   line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-.codePanel pre .good {
+.diffLabel {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.codePanel del {
+  background-color: hsl(var(--status-red) / 0.18);
+  color: hsl(var(--status-red));
+}
+
+.codePanel ins {
+  background-color: hsl(var(--primary) / 0.18);
   color: hsl(var(--primary));
+  text-decoration: none;
 }
 
 @media (min-width: 768px) {

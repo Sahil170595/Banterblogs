@@ -1,22 +1,17 @@
 'use client';
 
-import { TASKS, type CandidateId, type Report, type RunConfig, type TaskId, type Transition } from '@/lib/projects/code-verification/engine';
+import { TASKS, type CandidateId, type Report, type RunConfig, type TaskId } from '@/lib/projects/code-verification/engine';
 import { reportsFor } from '@/lib/projects/code-verification/matrix';
 import { controls, Segmented, type Choice } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
+import { GROUP_GLOSSES, GROUP_NAMES, TRANSITION_ARROWS, TRANSITION_NAMES, TRANSITION_ORDER } from './vocabulary';
 import styles from './verifier.module.css';
 
 // The hero: every candidate patch against every test of a task, each cell the
 // test's transition from the buggy baseline to the patched function. The
-// smoke suite keeps only one repair and one preservation test; the verdict
-// column says what that suite would have concluded.
+// smoke suite keeps only one fail-to-pass and one pass-to-pass test; the
+// verdict column says what that suite would have concluded.
 
-const TRANSITION_TEXT: Record<Transition, string> = {
-  'fail-pass': 'repaired',
-  'pass-pass': 'still passes',
-  'fail-fail': 'still broken',
-  'pass-fail': 'regressed',
-};
 // short enough that both fit one row on a phone; the full titles head the matrix
 const TASK_LABELS: Record<TaskId, string> = { intervals: 'Interval union', unique: 'Deduplication' };
 const TASK_CHOICES: Choice<TaskId>[] = TASKS.map((t) => ({ value: t.id, label: TASK_LABELS[t.id] }));
@@ -24,6 +19,7 @@ const SCOPE_CHOICES: Choice<RunConfig['scope']>[] = [
   { value: 'smoke', label: 'Smoke', note: '2 tests' },
   { value: 'full', label: 'Full', note: '6 tests' },
 ];
+const NOT_IN_SMOKE = 'not in smoke suite';
 
 export interface MatrixSelection {
   taskId: TaskId;
@@ -31,58 +27,118 @@ export interface MatrixSelection {
   candidateId: CandidateId;
 }
 
-export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelection; onSelect: (next: MatrixSelection) => void }) {
+export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelection; onSelect: (next: MatrixSelection, inspect?: boolean) => void }) {
   const task = TASKS.find((t) => t.id === selection.taskId)!;
   const rows = reportsFor(task.id);
   const smokeIds = new Set(rows[0].smoke.rows.map((r) => r.id));
   const passing = (scope: RunConfig['scope']) => rows.filter((r) => r[scope].resolved).length;
   const verdictOf = (report: Report) => (report.resolved ? 'Passes' : 'Fails');
+  const verdictLabel = selection.scope === 'smoke' ? 'Smoke verdict' : 'Verdict';
+  const skipped = (id: string) => selection.scope === 'smoke' && !smokeIds.has(id);
 
   return (
     <div className={styles.hero}>
       <div className={controls.row}>
-        <Segmented legend="Task" name="task" options={TASK_CHOICES} value={selection.taskId} onChange={(taskId) => onSelect({ ...selection, taskId })} />
-        <Segmented legend="Suite" name="scope" options={SCOPE_CHOICES} value={selection.scope} onChange={(scope) => onSelect({ ...selection, scope })} />
+        <Segmented
+          legend="Task"
+          name="task"
+          options={TASK_CHOICES}
+          value={selection.taskId}
+          onChange={(taskId) => onSelect({ ...selection, taskId })}
+        />
+        <Segmented
+          legend="Suite"
+          name="scope"
+          options={SCOPE_CHOICES}
+          value={selection.scope}
+          onChange={(scope) => onSelect({ ...selection, scope })}
+        />
       </div>
       <p className={styles.headline}>
         On the two-test smoke suite, {passing('smoke')} of {rows.length} patches pass. On the full suite, {passing('full')}{' '}
         {passing('full') === 1 ? 'does' : 'do'}.
       </p>
+      <p className={controls.lead}>
+        <strong>The task:</strong> {task.requirement} <strong>The bug:</strong> {task.fault}
+      </p>
+      <p className={controls.lead}>
+        Each row is a candidate patch; each column a test, run twice, on the buggy function and on the patched one. A{' '}
+        {GROUP_NAMES.repair.toLowerCase()} test is one the bug fails and the fix must pass; a {GROUP_NAMES.preserve.toLowerCase()} test{' '}
+        {GROUP_GLOSSES.preserve}. Select a patch to inspect its evidence below.{' '}
+        {selection.scope === 'smoke'
+          ? `Try Full: the example-only patch the smoke suite passes then fails.`
+          : `Try Smoke: on its two tests, ${passing('smoke')} of ${rows.length} patches pass.`}
+      </p>
+      <ul className={styles.key} aria-label="Cell key">
+        {TRANSITION_ORDER.map((t) => (
+          <li key={t} data-transition={t}>
+            {TRANSITION_NAMES[t]} <span>{TRANSITION_ARROWS[t]}</span>
+          </li>
+        ))}
+      </ul>
 
       <ProjectFigureTransition slug="code-verification">
         <div className={styles.matrixScroll} role="region" aria-label={`${task.title}: patches against tests`} tabIndex={0}>
-          <table className={styles.matrix} data-scope={selection.scope}>
-            <thead>
-              <tr>
-                <th scope="col">Patch</th>
+          <table className={`${styles.matrix} ${controls.stackTable}`} data-scope={selection.scope} role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">
+                  Patch
+                </th>
+                <th scope="col" role="columnheader" className={styles.verdictHead}>
+                  {verdictLabel}
+                </th>
                 {rows[0].full.rows.map((test) => (
-                  <th key={test.id} scope="col" data-smoke={smokeIds.has(test.id) || undefined} data-group={test.group}>
-                    <span>{test.group === 'repair' ? 'Repair' : 'Keep'}</span>
+                  <th
+                    key={test.id}
+                    scope="col"
+                    role="columnheader"
+                    data-smoke={smokeIds.has(test.id) || undefined}
+                    data-skipped={skipped(test.id) || undefined}
+                    data-group={test.group}
+                  >
+                    <span>{GROUP_NAMES[test.group]}</span>
                     {test.label}
+                    {skipped(test.id) && <small>{NOT_IN_SMOKE}</small>}
                   </th>
                 ))}
-                <th scope="col">{selection.scope === 'smoke' ? 'Smoke verdict' : 'Verdict'}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {rows.map(({ candidate, full, smoke }) => {
                 const report = selection.scope === 'smoke' ? smoke : full;
                 const selected = candidate.id === selection.candidateId;
                 return (
-                  <tr key={candidate.id} data-selected={selected || undefined}>
-                    <th scope="row">
-                      <button type="button" aria-pressed={selected} onClick={() => onSelect({ ...selection, candidateId: candidate.id })}>
+                  <tr key={candidate.id} role="row" data-selected={selected || undefined}>
+                    <th scope="row" role="rowheader">
+                      <button type="button" aria-pressed={selected} onClick={() => onSelect({ ...selection, candidateId: candidate.id }, true)}>
                         {candidate.label}
                       </button>
                     </th>
-                    {full.rows.map((test) => (
-                      <td key={test.id} data-smoke={smokeIds.has(test.id) || undefined}>
-                        <span className={styles.cell} data-transition={test.transition} role="img" aria-label={`${test.label}: ${TRANSITION_TEXT[test.transition]}`} />
-                      </td>
-                    ))}
-                    <td className={styles.verdictCell} data-resolved={report.resolved || undefined}>
+                    <td role="cell" data-label={verdictLabel} className={styles.verdictCell} data-resolved={report.resolved || undefined}>
                       {verdictOf(report)}
                     </td>
+                    {full.rows.map((test) => (
+                      <td
+                        key={test.id}
+                        role="cell"
+                        data-label={`${GROUP_NAMES[test.group]}: ${test.label}${skipped(test.id) ? ` (${NOT_IN_SMOKE})` : ''}`}
+                        data-smoke={smokeIds.has(test.id) || undefined}
+                        data-skipped={skipped(test.id) || undefined}
+                      >
+                        <span className={styles.mark}>
+                          <span
+                            className={styles.cell}
+                            data-transition={test.transition}
+                            role="img"
+                            aria-label={`${test.label}: ${TRANSITION_NAMES[test.transition].toLowerCase()}`}
+                          />
+                          <span className={styles.cellText} aria-hidden="true">
+                            {TRANSITION_NAMES[test.transition]}
+                          </span>
+                        </span>
+                      </td>
+                    ))}
                   </tr>
                 );
               })}
@@ -90,16 +146,11 @@ export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelectio
           </table>
         </div>
       </ProjectFigureTransition>
-      <ul className={styles.key} aria-label="Cell key">
-        <li data-transition="fail-pass">Repaired</li>
-        <li data-transition="pass-pass">Still passes</li>
-        <li data-transition="fail-fail">Still broken</li>
-        <li data-transition="pass-fail">Regressed</li>
-      </ul>
-      <p className={styles.caption}>
-        Each cell runs the test on the buggy function and on the patched one. {selection.scope === 'smoke' ? 'Faded columns are the tests the smoke suite skips. ' : ''}
-        Select a patch to inspect its evidence below.
-      </p>
+      {selection.scope === 'smoke' && (
+        <p className={styles.caption}>
+          Hatched columns are the tests the smoke suite skips: they show what a full run would find, and the smoke verdict ignores them.
+        </p>
+      )}
     </div>
   );
 }

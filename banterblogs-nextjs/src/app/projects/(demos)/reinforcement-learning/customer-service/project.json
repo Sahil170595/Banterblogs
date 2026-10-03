@@ -1,14 +1,15 @@
 {
   "slug": "customer-service",
   "title": "Customer Service Environment",
-  "dek": "An agent environment whose reward comes from what the tools actually changed, not what the agent said, scored one coherent outcome at a time. Rebuilt from my Turncraft environment.",
-  "summary": "Identity-bound tools on synthetic orders, scored by the world they leave behind.",
+  "dek": "Turncraft, a customer-service environment I built in Python, gives an agent nine tools that change order records, and rewards it for what the records end up saying, not for what the agent said. This page rebuilds that scoring in your browser and runs scripted trajectories through it.",
+  "summary": "Rewards a support agent for what its tools changed, not what it said. Two refunds of the same amount: the duplicate capture resolves the case, the first one scores below zero.",
   "collection": "reinforcement-learning",
   "alsoIn": [],
   "order": 3,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/customer-service" },
-    { "label": "Turncraft", "url": "https://github.com/Sahil170595/turncraft-env" }
-  ]
+    { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/customer-service" },
+    { "label": "Turncraft on GitHub", "url": "https://github.com/Sahil170595/turncraft-env" }
+  ],
+  "builtWith": ["Python", "Pydantic", "Anthropic SDK (optional)"]
 }
