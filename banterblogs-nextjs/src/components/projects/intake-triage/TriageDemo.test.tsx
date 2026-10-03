@@ -34,7 +34,7 @@ describe('intake triage demo', () => {
     render(<TriageDemo report={REPORT} />);
     // an option's note names the priority choosing it would give; none here
     expect(within(group('Same-day wording')).getByRole('radio', { name: 'No' })).toBeTruthy();
-    expect(within(group('Action required')).getByRole('radio', { name: /No\s*P2/ })).toBeTruthy();
+    expect(within(group('Action required')).getByRole('radio', { name: 'No, P2' })).toBeTruthy();
     fireEvent.click(within(group('Same-day wording')).getByRole('radio', { name: 'No' }));
     expect(priority()).toBe('P1');
     fireEvent.click(within(group('Action required')).getByRole('radio', { name: /No/ }));

@@ -72,7 +72,14 @@ export function Segmented<T extends string | number>({
       <div>
         {options.map((option) => (
           <label key={option.value} data-checked={option.value === value || undefined}>
-            <input type="radio" name={name} checked={option.value === value} onChange={() => onChange(option.value)} />
+            <input
+              type="radio"
+              name={name}
+              checked={option.value === value}
+              onChange={() => onChange(option.value)}
+              // the label and its note side by side read as one run of text
+              aria-label={option.note ? `${option.label}, ${option.note}` : undefined}
+            />
             {option.label}
             {option.note && <span>{option.note}</span>}
           </label>
