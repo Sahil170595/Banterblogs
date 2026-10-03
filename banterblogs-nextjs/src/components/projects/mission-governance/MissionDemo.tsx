@@ -63,6 +63,22 @@ const NOTCHED: Mission = {
 };
 const ROUTES = { sample: LONG_MISSION, notched: NOTCHED } as const;
 type Route = keyof typeof ROUTES;
+// the notched route ends at its second waypoint, before a fault after it, or
+// after a pause there, could begin: only the pre-flight timing applies
+const WHEN_OPTIONS: { value: Scenario['when']; label: string }[] = [
+  { value: 'validation', label: 'At the pre-flight check' },
+  { value: 'flight', label: `After waypoint ${MID_FLIGHT_AFTER}` },
+  { value: 'resumed', label: 'After a pause and resume' },
+];
+const ROUTE_TIMINGS: Record<Route, Scenario['when'][]> = { sample: ['validation', 'flight', 'resumed'], notched: ['validation'] };
+
+/** what the notched route's flight did with the leg that crosses the notch */
+function notchWords(flight: Flight): string {
+  if (!flight.flown) return 'The check failed first, so the drone never flies the leg across the notch; the marked point is where that leg would leave the fence.';
+  if (flight.state === 'rtl' && flight.progress < NOTCHED.waypoints.length)
+    return `It turned home at waypoint ${flight.progress}, before the leg across the notch; the marked point is where that leg would leave the fence.`;
+  return 'Both waypoints sit inside the fence, so the check passes; the straight leg between them crosses the notch. The marked point is where it leaves.';
+}
 
 function verdict(flight: Flight): string {
   if (!flight.validation.passed) return 'failed';
@@ -112,6 +128,15 @@ export function MissionDemo() {
   };
   const logged = flight.events.filter((e) => e.kind === 'logged');
   const shown = flight.events.filter((e) => e.kind === 'transition');
+  // the guard's repeated log lines fold into one entry, placed at the first of them
+  const entries = [
+    ...shown.map((e) => ({ at: e.at, transition: e })),
+    ...(logged.length > 0 ? [{ at: logged[0].at, transition: null }] : []),
+  ].sort((a, b) => a.at - b.at);
+  const chooseRoute = (next: Route) => {
+    setRoute(next);
+    if (!ROUTE_TIMINGS[next].includes(scenario.when)) setScenario({ ...scenario, when: 'validation' });
+  };
 
   return (
     <div className={styles.demo}>
@@ -204,11 +229,7 @@ export function MissionDemo() {
             legend="When"
             name="mission-when"
             value={scenario.when}
-            options={[
-              { value: 'validation', label: 'At the pre-flight check' },
-              { value: 'flight', label: `After waypoint ${MID_FLIGHT_AFTER}` },
-              { value: 'resumed', label: 'After a pause and resume' },
-            ]}
+            options={WHEN_OPTIONS.filter((option) => ROUTE_TIMINGS[route].includes(option.value))}
             onChange={(when) => setScenario({ ...scenario, when })}
           />
           <Segmented
@@ -219,9 +240,14 @@ export function MissionDemo() {
               { value: 'sample', label: 'Sample route, twice' },
               { value: 'notched', label: 'Notched fence', note: 'this page’s example' },
             ]}
-            onChange={setRoute}
+            onChange={chooseRoute}
           />
         </div>
+        {route === 'notched' && (
+          <p className={controls.hint}>
+            The notched route has {say(NOTCHED.waypoints.length)} waypoints, so a fault can only be present at the pre-flight check.
+          </p>
+        )}
         <div className={styles.workspace}>
           <div ref={mapRef} className={styles.mapPanel}>
             <FlightMap mission={mission} flight={flight} />
@@ -239,14 +265,10 @@ export function MissionDemo() {
               <p className={controls.hint}>
                 The resume route sets the mission back to executing and restarts the vehicle, but the executor&apos;s monitor loop (the part that
                 polls the drone and asks the guard) ended at the pause and nothing starts it again: no more polls, no safety guard, no completion.
+                {scenario.fault !== 'healthy' && ` Here ${MID_FLIGHT_WORDS[scenario.fault]} after the resume, and nothing sees it.`}
               </p>
             )}
-            {route === 'notched' && (
-              <p className={controls.hint}>
-                Both waypoints sit inside the fence, so the check passes; the straight leg between them crosses the notch. The marked point is where
-                it leaves.
-              </p>
-            )}
+            {route === 'notched' && <p className={controls.hint}>{notchWords(flight)}</p>}
           </div>
           <div className={styles.panels}>
             <section aria-label="Pre-flight checks">
@@ -279,21 +301,22 @@ export function MissionDemo() {
               {!flight.flown && shown.length === 0 && (
                 <li data-empty="">No lifecycle events: the mission failed its pre-flight check and never reached approval.</li>
               )}
-              {shown.map((e, i) => (
-                <li key={i} data-state={e.state}>
-                  <span>{(e.at / 1000).toFixed(1)} s</span>
-                  <strong>{e.state}</strong>
-                  <em>
-                    {e.actor} · {e.reason}
-                  </em>
-                </li>
-              ))}
-              {logged.length > 0 && (
-                <li data-logged="">
-                  <span>{(logged[0].at / 1000).toFixed(1)} s</span>
-                  <strong>logged {logged.length}×</strong>
-                  <em>safety_guard · {[...new Set(logged.map((e) => e.reason))].join(', ')}, and nothing else</em>
-                </li>
+              {entries.map(({ at, transition }, i) =>
+                transition ? (
+                  <li key={i} data-state={transition.state}>
+                    <span>{(at / 1000).toFixed(1)} s</span>
+                    <strong>{transition.state}</strong>
+                    <em>
+                      {transition.actor} · {transition.reason}
+                    </em>
+                  </li>
+                ) : (
+                  <li key={i} data-logged="">
+                    <span>{(at / 1000).toFixed(1)} s</span>
+                    <strong>logged {logged.length}×</strong>
+                    <em>safety_guard · {[...new Set(logged.map((e) => e.reason))].join(', ')}, and nothing else</em>
+                  </li>
+                ),
               )}
             </ol>
           </section>
