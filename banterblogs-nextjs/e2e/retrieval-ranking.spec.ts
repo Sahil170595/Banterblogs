@@ -36,7 +36,7 @@ test('retrieval, rejection, export/replay, reset, and responsive layout', async 
   const forged = JSON.parse(exported); forged.result.rows[0].score = 999;
   await page.getByLabel('Replay JSON').fill(JSON.stringify(forged));
   await page.getByRole('button', { name: 'Replay run' }).click();
-  await expect(page.getByRole('alert')).toContainText('recomputed');
+  await expect(page.locator('#demo').getByRole('alert').filter({ hasText: 'recomputed' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Reset experiment' }).click();
   await page.getByRole('tab', { name: 'Attempts' }).click();
