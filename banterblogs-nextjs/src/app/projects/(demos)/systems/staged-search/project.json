@@ -1,0 +1,14 @@
+{
+  "slug": "staged-search",
+  "title": "Staged Document Search",
+  "dek": "The offline pipeline from my StrataSearch system, ported step for step: filter relaxation, two lexical channels fused by rank, and a hard-criterion gate that never pads a short list.",
+  "summary": "What does a search give up to fill its quota? The same query at every relaxation threshold.",
+  "collection": "systems",
+  "alsoIn": [],
+  "order": 1,
+  "evidence": "synthetic-fixture",
+  "links": [
+    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/staged-search" },
+    { "label": "StrataSearch", "url": "https://github.com/Sahil170595/stratasearch/tree/a3c8840e32e941fa418d8d881ff52a7c311781ba" }
+  ]
+}
