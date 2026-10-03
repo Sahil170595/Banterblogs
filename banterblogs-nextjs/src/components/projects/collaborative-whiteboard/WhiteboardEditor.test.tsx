@@ -54,6 +54,29 @@ describe('editable whiteboard controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect((screen.getByLabelText('X position') as HTMLInputElement).value).toBe('90');
   });
+  // re-review: picking an object in the list, or a colour, left focus off the
+  // board, and the keys the instructions name did nothing
+  it('takes the editing keys wherever focus is in the editor, not only on the board', () => {
+    render(<WhiteboardDemo />);
+    const item = screen.getByRole('button', { name: DRAFT });
+    fireEvent.click(item);
+    fireEvent.keyDown(item, { key: 'ArrowRight' });
+    fireEvent.keyUp(item, { key: 'ArrowRight' });
+    expect(screen.getByTestId('log-count').textContent).toBe('1 command');
+    expect((screen.getByLabelText('X position') as HTMLInputElement).value).toBe('91');
+    // the draft is mint; rose is a change
+    const swatch = screen.getByRole('button', { name: 'Rose fill' });
+    fireEvent.click(swatch);
+    expect(screen.getByTestId('log-count').textContent).toBe('2 commands');
+    expect(swatch.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.keyDown(swatch, { key: 'z', ctrlKey: true });
+    expect(screen.getByRole('button', { name: 'Mint fill' }).getAttribute('aria-pressed')).toBe('true');
+    // a field keeps its own keys: Backspace edits the number, not the board
+    fireEvent.keyDown(screen.getByLabelText('X position'), { key: 'Backspace' });
+    expect(screen.getByTestId('object-count').textContent).toBe(OPENING);
+    fireEvent.keyDown(screen.getByRole('button', { name: DRAFT }), { key: 'Delete' });
+    expect(screen.getByTestId('object-count').textContent).not.toBe(OPENING);
+  });
   // review: the instructions were for screen readers only, and keyboard only
   it('shows how to use it, by pointer, touch and keyboard, and says it is this tab alone', () => {
     render(<WhiteboardDemo />);

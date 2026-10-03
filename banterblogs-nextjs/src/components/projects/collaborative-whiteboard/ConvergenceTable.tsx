@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { ApplyMode, Client, Outcome, Schedule } from '@/lib/projects/collaborative-whiteboard/protocol';
-import { BLUE, concurrentOutcomes, ROSE, undoCreation, undoOverNewer, WHITE } from '@/lib/projects/collaborative-whiteboard/scenarios';
+import { BLUE, concurrentOutcomes, NOTE, ROSE, undoCreation, undoOverNewer, WHITE } from '@/lib/projects/collaborative-whiteboard/scenarios';
 import { controls, Segmented } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
 import styles from './whiteboard.module.css';
@@ -48,8 +48,9 @@ export function ConvergenceTable() {
   return (
     <div className={styles.hero}>
       <p className={styles.headline}>
-        Two people recolour the same note at once. The server stores both edits, numbers them in the order it stored them, and sends each one back to
-        both screens as an echo, and each screen can receive the two echoes in either order: {say(rows.length)} ways in all.
+        Two people recolour the same note at once. The server stores both edits one at a time, numbers them in the order it stored them, and sends
+        each one back to both screens as an echo. It sends each echo after releasing its lock on the board, so the two sends can overtake each
+        other and each screen can receive the echoes in either order: {say(rows.length)} possible orderings in all.
       </p>
       <Segmented
         legend="Each client applies the server’s echoes"
@@ -62,10 +63,10 @@ export function ConvergenceTable() {
         onChange={setMode}
       />
       <p className={controls.lead}>
-        Each row is one timing. <strong>Stored first</strong> is whose edit the server saved first, so the database, the saved copy, ends with the
-        other. <strong>A receives</strong> and <strong>B receives</strong> give the order the two echoes, seq 1 and seq 2 by their sequence numbers,
-        reached each screen. <strong>Red</strong> marks a screen showing a colour the database does not have: {splitNow} of {rows.length} rows with
-        the echoes applied {MODE_WORDS[mode]}.
+        Each row is one possible ordering, counted once. <strong>Stored first</strong> is whose edit the server saved first, so the database, the
+        saved copy, ends with the other. <strong>A receives</strong> and <strong>B receives</strong> give the order the two echoes, seq 1 and seq 2
+        by their sequence numbers, reached each screen. <strong>Red</strong> marks a screen showing a colour the database does not have:{' '}
+        {splitNow} of the {rows.length} orderings with the echoes applied {MODE_WORDS[mode]}.
       </p>
       <ProjectFigureTransition slug="collaborative-whiteboard">
         <div className={styles.tableScroll} role="region" aria-label="Every order two concurrent edits can take" tabIndex={0}>
@@ -119,7 +120,7 @@ export function ConvergenceTable() {
         <section className={styles.undoCase} aria-label="Undo over a newer edit">
           <h3>Undo over a newer edit</h3>
           <ol>
-            <li>A recolours the note rose.</li>
+            <li>A recolours the {NAMES[NOTE.fill]} note rose.</li>
             <li>B recolours it blue.</li>
             <li>A presses undo.</li>
           </ol>

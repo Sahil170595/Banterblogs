@@ -38,6 +38,8 @@ const RESET_CONFIRM_MS = 4000;
 const PROPERTY_DECIMALS = 2;
 // fixture ids are readable words; a drawn object's id is a UUID, not a name
 const READABLE_ID = /^[a-z]+(?:-[a-z]+)*$/;
+// fields keep their own keys: arrows step a number, Backspace and Control Z edit text
+const OWN_KEYS = 'input, select, textarea, [contenteditable="true"]';
 const TYPE_NAMES: Record<ShapeType, string> = { rectangle: 'Rectangle', ellipse: 'Ellipse', line: 'Line', text: 'Text' };
 
 /** an object as the list names it: a text by its first line, a shape by its type and readable id */
@@ -194,7 +196,10 @@ export function WhiteboardEditor() {
   function deleteSelected() {
     if (selected && store.dispatch((state) => commit(state, [{ kind: 'delete', shapeId: selected.id }]))) setSelectedId(null);
   }
-  function keyDown(event: KeyboardEvent<HTMLCanvasElement>) {
+  // the editing keys work wherever focus is in the editor: on the board, an
+  // object picked in the list, a colour just chosen
+  function keyDown(event: KeyboardEvent<HTMLElement>) {
+    if ((event.target as Element).closest(OWN_KEYS)) return;
     const modifier = event.ctrlKey || event.metaKey;
     if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); cancelGesture(); store.dispatch(event.shiftKey ? redo : undo); return; }
     if (modifier && event.key.toLowerCase() === 'y') { event.preventDefault(); cancelGesture(); store.dispatch(redo); return; }
@@ -218,7 +223,7 @@ export function WhiteboardEditor() {
     const { shape, original } = active;
     if (original && (shape.x !== original.x || shape.y !== original.y)) update({ x: shape.x, y: shape.y });
   }
-  function keyUp(event: KeyboardEvent<HTMLCanvasElement>) {
+  function keyUp(event: KeyboardEvent<HTMLElement>) {
     if (ARROWS.includes(event.key)) commitNudge();
   }
   function download() {
@@ -262,7 +267,7 @@ export function WhiteboardEditor() {
         its shape moves. On a keyboard, arrow keys nudge the selected object, ten units with Shift, and letting go
         records the nudges as one edit; Delete removes it, Control Z undoes and Control Y redoes.
       </p>
-      <div id="whiteboard-editor" className={styles.demo}>
+      <div id="whiteboard-editor" className={styles.demo} onKeyDown={keyDown} onKeyUp={keyUp} onBlur={commitNudge}>
       <div className={styles.statusBar}>
         <span className={styles.localBadge}>This tab only</span>
         <span role="status">{snapshot.storage === 'saved' ? 'Saved on this device' : snapshot.storage === 'loading' ? 'Opening board' : 'In memory only'}</span>
@@ -291,7 +296,7 @@ export function WhiteboardEditor() {
         <div className={styles.boardColumn}>
           <div className={styles.canvasViewport}>
             <div className={styles.canvasSize} style={{ width: `${zoom * 100}%` }}>
-              <canvas ref={canvasRef} className={styles.canvas} width={BOARD_WIDTH} height={BOARD_HEIGHT} tabIndex={0} aria-label="Editable whiteboard" aria-describedby="whiteboard-keys whiteboard-selection" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={cancelGesture} onLostPointerCapture={cancelGesture} onKeyDown={keyDown} onKeyUp={keyUp} onBlur={commitNudge} style={{ cursor: tool === 'select' ? 'default' : 'crosshair' }}>
+              <canvas ref={canvasRef} className={styles.canvas} width={BOARD_WIDTH} height={BOARD_HEIGHT} tabIndex={0} aria-label="Editable whiteboard" aria-describedby="whiteboard-keys whiteboard-selection" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={cancelGesture} onLostPointerCapture={cancelGesture} style={{ cursor: tool === 'select' ? 'default' : 'crosshair' }}>
                 The editable object list and properties are available below.
               </canvas>
               <p id="whiteboard-selection" className={styles.srOnly} aria-live="polite">

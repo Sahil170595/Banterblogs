@@ -15,8 +15,8 @@ test('the convergence table and its headline are in the server HTML, before any 
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(PAGE);
-  await expect(page.getByText(/each screen can receive the two echoes in either order: eight ways in all/)).toBeVisible();
-  await expect(page.getByText(/Each row is one timing/)).toBeVisible();
+  await expect(page.getByText(/each screen can receive the echoes in either order: eight possible orderings in all/)).toBeVisible();
+  await expect(page.getByText(/Each row is one possible ordering/)).toBeVisible();
   await expect(page.getByRole('region', { name: 'Every order two concurrent edits can take' }).getByText(/not the database/)).toHaveCount(8);
   await context.close();
 });

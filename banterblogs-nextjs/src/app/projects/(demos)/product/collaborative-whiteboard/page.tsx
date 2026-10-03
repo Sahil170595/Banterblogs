@@ -39,15 +39,16 @@ const words = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'e
 const say = (n: number) => words[n] ?? String(n);
 
 const FINDINGS: ProjectFinding[] = [
+  // each ordering is counted once, so these are counts of cases, not frequencies
   {
-    value: `${split} of ${ARRIVAL.length}`,
+    value: `${split} of the ${ARRIVAL.length}`,
     label:
-      'timings of two simultaneous recolours that leave a screen showing a colour the database does not have, when each client applies the server’s echoes as they arrive, as Sceneledger does now.',
+      'possible orderings of two simultaneous recolours leave a screen showing a colour the database does not have, when each client applies the server’s echoes as they arrive, as Sceneledger does now.',
   },
   {
-    value: `${splitBySeq} of ${SEQUENCE.length}`,
+    value: `${splitBySeq} of the ${SEQUENCE.length}`,
     label:
-      'when each client applies the echoes in sequence order, the numbering the server gives each stored edit. The client already records those numbers; it does not order by them.',
+      'orderings leave a mismatch when each client applies the echoes in sequence order, the numbering the server gives each stored edit. The client already records those numbers; it does not order by them.',
   },
   {
     value: `${[over, created].length}`,
@@ -69,8 +70,8 @@ export default function CollaborativeWhiteboardPage() {
       <h2 id="orders">{PLAIN.orders}</h2>
       <p>
         A recolours a note rose while B recolours it blue. The server stores one first and numbers them 1 and 2, so the database ends with whichever
-        it stored second. Each echo then goes out separately, and each client can receive the two in either order: two orders at the server, two at
-        each client, {ARRIVAL.length} in all. Because each client applies the echoes as they arrive, the last one to arrive wins on that screen, and
+        it stored second. Each echo then goes out separately, after the lock is released, and each client can receive the two in either order: two
+        orders at the server, two at each client, {ARRIVAL.length} possible orderings in all. Because each client applies the echoes as they arrive, the last one to arrive wins on that screen, and
         in {say(split)} of the {ARRIVAL.length} someone ends up looking at a colour the database does not have; in {say(bothClients)}, both people do.
       </p>
       <p>

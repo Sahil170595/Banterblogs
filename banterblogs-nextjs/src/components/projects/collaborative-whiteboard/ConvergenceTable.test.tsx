@@ -17,12 +17,23 @@ describe('the convergence table', () => {
   // review: echoes, sequence numbers and the red were explained only below the table
   it('defines its terms and its red before the table', () => {
     const { container } = render(<ConvergenceTable />);
-    const legend = screen.getByText(/Each row is one timing/);
+    const legend = screen.getByText(/Each row is one possible ordering/);
     expect(legend.compareDocumentPosition(table()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(legend.textContent).toMatch(/echo/);
     expect(legend.textContent).toMatch(/seq 1 and seq 2/);
-    expect(legend.textContent).toMatch(/6 of 8 rows/);
+    // a count of orderings, each once, not a frequency
+    expect(legend.textContent).toMatch(/6 of the 8 orderings/);
     expect(container.textContent).toMatch(/sequence numbers?/);
+  });
+
+  // re-review: "either order" drew the obvious objection that one socket delivers in order
+  it('says why the echoes can arrive out of order, before the table', () => {
+    render(<ConvergenceTable />);
+    const headline = screen.getByText(/after releasing its lock on the board, so the two sends can overtake each other/);
+    expect(headline.compareDocumentPosition(table()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(headline.textContent).toMatch(/eight possible orderings in all/);
+    // the undo case names the colour the note starts as before it goes back to it
+    expect(screen.getByText('A recolours the white note rose.')).toBeTruthy();
   });
 
   it('says which way Sceneledger applies echoes today and which is the fix shown here', () => {
@@ -32,7 +43,7 @@ describe('the convergence table', () => {
     expect(within(group).getByText('In sequence order').parentElement?.textContent).toMatch(/the fix shown here/);
     fireEvent.click(within(group).getByText('In sequence order'));
     expect(within(table()).queryAllByText(/not the database/)).toHaveLength(0);
-    expect(screen.getByText(/Each row is one timing/).textContent).toMatch(/0 of 8 rows/);
+    expect(screen.getByText(/Each row is one possible ordering/).textContent).toMatch(/0 of the 8 orderings/);
   });
 
   // a phone stacks each row into a card (reading.css .demo-stack), naming every value
