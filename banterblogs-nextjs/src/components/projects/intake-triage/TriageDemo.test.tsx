@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { analyzeInfluence } from '@/lib/projects/intake-triage/influence';
 import { makeReceipt } from '@/lib/projects/intake-triage/receipt';
 import { NEUTRAL_SIGNALS } from '@/lib/projects/intake-triage/signals';
@@ -12,9 +12,19 @@ vi.mock('react', async (importOriginal) => {
   return { ...actual, ViewTransition: ({ children }: { children: import('react').ReactNode }) => children };
 });
 
+// jsdom lays nothing out and has no scrolling or media queries; loading an
+// example reveals the scorer below (reveal.ts)
+const scrolled = vi.fn();
+beforeEach(() => {
+  vi.stubGlobal('matchMedia', () => ({ matches: true }));
+  Element.prototype.scrollIntoView = scrolled;
+});
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  scrolled.mockReset();
 });
 
 const REPORT = analyzeInfluence();
@@ -25,9 +35,20 @@ const file = (body: unknown) => ({ size: 100, text: async () => JSON.stringify(b
 describe('intake triage demo', () => {
   it('opens on the counted claims and a same-day reschedule the source also scored P1', () => {
     render(<TriageDemo report={REPORT} />);
-    expect(screen.getByText(/urgent wording changes the priority in 0, and once a safety gate has fired, in 10,560 of them, operational signals change it in 0\./)).toBeTruthy();
+    expect(
+      screen.getByText(/Across all 12,672 combinations of them, urgent wording never changes it, and once a safety gate fires, no operational signal does\./),
+    ).toBeTruthy();
     expect(priority()).toBe('P1');
-    expect(screen.getByText(/Intakegate's own scorer gave this message P1, scheduling: the same\./)).toBeTruthy();
+    expect(screen.getByText(/Same as Intakegate's own scorer: P1, scheduling\./)).toBeTruthy();
+  });
+
+  it('defines its terms before the table and leads with the signal that never moves a priority', () => {
+    render(<TriageDemo report={REPORT} />);
+    expect(screen.getByText(/P0 is the most urgent priority, escalated for same-hour review; P3 is the lowest\./)).toBeTruthy();
+    const table = screen.getByRole('region', { name: 'What each signal can change' });
+    expect(within(table).getAllByRole('rowheader')[0].textContent).toContain('Urgent wording');
+    // every count keeps its denominator in view
+    expect(within(table).getAllByRole('columnheader')[1].textContent).toContain('in this many of 12,672 combinations');
   });
 
   it('shows that neither same-day signal alone decides, while the required action does', () => {
@@ -41,9 +62,10 @@ describe('intake triage demo', () => {
     expect(priority()).toBe('P2');
   });
 
-  it('loads an example with its deciding signal marked', () => {
+  it('loads an example with its deciding signal marked, and brings the scorer into view', () => {
     render(<TriageDemo report={REPORT} />);
     fireEvent.click(screen.getByRole('button', { name: /Load the example for Concern is about caregiving: off to on moves P1 to P0/ }));
+    expect(scrolled).toHaveBeenCalled();
     expect(priority()).toBe('P1');
     const caregiving = group('Concern is about caregiving');
     expect(caregiving.closest('[data-focus]')).toBeTruthy();

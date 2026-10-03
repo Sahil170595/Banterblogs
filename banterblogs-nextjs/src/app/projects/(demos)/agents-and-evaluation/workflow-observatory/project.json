@@ -1,14 +1,15 @@
 {
   "slug": "workflow-observatory",
   "title": "Workflow Observatory",
-  "dek": "A browser executor that clicks, types and waits through a scheduling app, and a completion gate that reads the committed record instead of the success notice. Rebuilt from my Parallax agent.",
-  "summary": "When is a reservation made? Six attempts, four kinds of evidence, one committed record.",
+  "dek": "Parallax is a browser agent I built in Python: it plans a task, then clicks and types through websites to carry it out. This page rebuilds its executor on a synthetic booking app and adds a completion gate, a check that calls a task done only when the saved record proves it.",
+  "summary": "When is a booking really made? Of six attempts, the success notice claims three, my earlier agent's check accepts five, and one was saved.",
   "collection": "agents-and-evaluation",
   "alsoIn": [],
   "order": 2,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/workflow-observatory" },
-    { "label": "Parallax", "url": "https://github.com/Sahil170595/Parallax/tree/cfb0bdf8fb5a5dc8c4f82b7b44a93157b06dd44e" }
-  ]
+    { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/workflow-observatory" },
+    { "label": "Parallax on GitHub", "url": "https://github.com/Sahil170595/Parallax/tree/cfb0bdf8fb5a5dc8c4f82b7b44a93157b06dd44e" }
+  ],
+  "builtWith": ["Python", "Playwright", "SQLite"]
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { SCENARIOS, type Scenario } from '@/lib/projects/workflow-observatory/scenarios';
 import { controls } from '../controls';
+import { revealResult } from '../reveal';
 import { EvidenceTable } from './EvidenceTable';
 import { Observatory } from './Observatory';
 import styles from './observatory.module.css';
@@ -40,11 +41,7 @@ export function WorkflowDemo() {
   function pick(scenario: Scenario) {
     setSelected(scenario);
     setPicks((n) => n + 1);
-    const lab = labRef.current;
-    if (lab && lab.getBoundingClientRect().top > window.innerHeight) {
-      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      lab.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
-    }
+    revealResult(labRef.current);
   }
 
   return (
@@ -52,12 +49,12 @@ export function WorkflowDemo() {
       <EvidenceTable selected={selected.id} onSelect={pick} />
       <div className={styles.lab} ref={labRef}>
         <p className={styles.loaded}>
-          <span>Loaded</span> {selected.label}
+          <span>Loaded in the app</span> {selected.label}
         </p>
         {!selected.executor && (
           <p className={controls.hint}>
-            The executor follows its plan and never picks the wrong room. Open the form, enter the title, choose South lab and save it
-            yourself, then read the completion gate.
+            The executor, the program that clicks and types through the app, follows its plan and never picks the wrong room: make this one
+            by hand. Click Reserve slot, type the title, choose South lab and save, then read the completion gate.
           </p>
         )}
         <Observatory key={`${selected.id}:${picks}`} initial={selected.config} autoRun={selected.executor && (picks > 0 || seen)} />

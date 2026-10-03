@@ -79,7 +79,7 @@ export function analyze(input: Session): Analysis {
     vote('Output lexicon', lexical, 'final', lexical ? 'Label contains total, net, or output' : 'No output term in label');
     vote('Input literal', !formula, 'intermediate', formula ? 'Formula' : 'Editable numeric input');
     vote('Pass-through', formula && info.passThrough, 'intermediate', info.passThrough ? 'Single-cell reference computes no new quantity' : 'Not a bare reference');
-    vote('Consumed upstream', cell.dependents.length > 0, 'intermediate', `${cell.dependents.length} downstream consumers`);
+    vote('Consumed downstream', cell.dependents.length > 0, 'intermediate', `${cell.dependents.length} downstream consumers`);
     vote('Emphasized checkpoint', source.emphasis && (lexical || info.aggregation), 'final', source.emphasis ? 'Emphasis with semantic evidence required' : 'No emphasis');
     const positive = cell.votes.filter(v => v.vote === 'final').length;
     const negative = cell.votes.filter(v => v.vote === 'intermediate').length;

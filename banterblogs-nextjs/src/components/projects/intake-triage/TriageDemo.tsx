@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import type { InfluenceReport } from '@/lib/projects/intake-triage/influence';
 import type { Signals } from '@/lib/projects/intake-triage/signals';
+import { revealResult } from '../reveal';
 import { InfluenceTable } from './InfluenceTable';
 import { OPENING_FIXTURE, SignalLab } from './SignalLab';
 import styles from './triage.module.css';
@@ -29,11 +30,7 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
           setSignals(example.signals);
           setFixtureId(null);
           setFocus(signal.id);
-          const lab = labRef.current;
-          if (lab && lab.getBoundingClientRect().top > window.innerHeight) {
-            const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            lab.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
-          }
+          revealResult(labRef.current);
         }}
       />
       <div ref={labRef} className={styles.labAnchor}>

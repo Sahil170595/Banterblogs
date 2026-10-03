@@ -8,7 +8,7 @@ import { alternatives, REFERENCE_SIGNALS } from '@/lib/projects/intake-triage/la
 import { makeReceipt, MAX_RECEIPT_BYTES, replayReceipt } from '@/lib/projects/intake-triage/receipt';
 import { P1_AT, P3_AT, scoreSignals, signed } from '@/lib/projects/intake-triage/score';
 import { CLASSIFICATION_LABELS, type Signals } from '@/lib/projects/intake-triage/signals';
-import { controls, Segmented } from '../controls';
+import { controls, Segmented, UnderTheHood } from '../controls';
 import styles from './triage.module.css';
 
 const GATE_LABELS = {
@@ -33,12 +33,16 @@ function SignalControl({ signal, signals, focused, onChange }: { signal: Priorit
       <label className={controls.field} data-focus={focused || undefined}>
         {signal.label}
         <select value={String(current)} onChange={(event) => onChange(withValue(signals, signal, event.target.value))}>
-          {options.map((o) => (
-            <option key={String(o.value)} value={String(o.value)}>
-              {CLASSIFICATION_LABELS[o.value as keyof typeof CLASSIFICATION_LABELS]}
-              {note(o) ? ` · ${note(o)}` : ''}
-            </option>
-          ))}
+          {options.map((o) => {
+            const own = CLASSIFICATION_LABELS[o.value as keyof typeof CLASSIFICATION_LABELS];
+            const becomes = note(o);
+            return (
+              <option key={String(o.value)} value={String(o.value)}>
+                {own}
+                {becomes && becomes !== own.toLowerCase() ? ` (would become: ${becomes})` : ''}
+              </option>
+            );
+          })}
         </select>
       </label>
     );
@@ -115,7 +119,7 @@ export function SignalLab({
     <div className={styles.lab}>
       <div className={styles.toolbar}>
         <label className={controls.field}>
-          Start from a fixture message
+          Start from one of Intakegate&apos;s example messages
           <select
             value={fixtureId ?? 'custom'}
             onChange={(event) => {
@@ -136,13 +140,6 @@ export function SignalLab({
           </select>
         </label>
         <div className={styles.commands}>
-          <button type="button" className={controls.iconButton} aria-label="Export signals and decision" title="Export signals and decision" onClick={exportReceipt}>
-            <Download aria-hidden="true" />
-          </button>
-          <button type="button" className={controls.iconButton} aria-label="Import a file" title="Import a file" onClick={() => fileRef.current?.click()}>
-            <Upload aria-hidden="true" />
-          </button>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden aria-label="Signals file" onChange={importReceipt} />
           <button
             type="button"
             className={controls.iconButton}
@@ -156,6 +153,7 @@ export function SignalLab({
             }}
           >
             <RotateCcw aria-hidden="true" />
+            <span className={controls.iconLabel}>Reset to the opening message</span>
           </button>
         </div>
       </div>
@@ -170,7 +168,9 @@ export function SignalLab({
 
       <div className={styles.workspace}>
         <form className={styles.signals} aria-label="Signals" onSubmit={(event) => event.preventDefault()}>
-          <p className={controls.hint}>Each option shows what choosing it would change: a priority, or else a classification.</p>
+          <p className={controls.hint}>
+            Next to each choice, a small tag shows the priority, or else the classification, you would get by picking it.
+          </p>
           <fieldset>
             <legend>Safety</legend>
             {SAFETY_IDS.map((id) => (
@@ -184,7 +184,7 @@ export function SignalLab({
             ))}
           </fieldset>
           <details>
-            <summary>Referral references, read only by the classification</summary>
+            <summary>Referral references: they can change the classification, never the priority</summary>
             <fieldset>
               <legend className={styles.srOnly}>Referral references</legend>
               {REFERENCE_SIGNALS.map((signal) => (
@@ -210,8 +210,10 @@ export function SignalLab({
           </div>
           {fixture && (
             <p className={styles.agreement}>
-              Intakegate&apos;s own scorer gave this message {fixture.source.urgency}, {CLASSIFICATION_LABELS[fixture.source.classification].toLowerCase()}
-              {fixture.source.urgency === result.urgency && fixture.source.classification === result.classification ? ': the same.' : '.'}
+              {fixture.source.urgency === result.urgency && fixture.source.classification === result.classification
+                ? "Same as Intakegate's own scorer"
+                : "Intakegate's own scorer gave this message"}
+              : {fixture.source.urgency}, {CLASSIFICATION_LABELS[fixture.source.classification].toLowerCase()}.
             </p>
           )}
           <h3>Operational score</h3>
@@ -232,7 +234,7 @@ export function SignalLab({
                 <tr>
                   <td />
                   <th scope="row">
-                    Score; P1 at {signed(P1_AT)}, P3 at {signed(P3_AT)}
+                    Total: P1 at {signed(P1_AT)} or more, P3 at {signed(P3_AT)} or less
                   </th>
                   <td>{signed(result.score)}</td>
                 </tr>
@@ -247,6 +249,24 @@ export function SignalLab({
           </ol>
         </section>
       </div>
+
+      <UnderTheHood summary="Export or import the signals and the decision">
+        <p className={controls.hint}>
+          A file holds the signals and the decision they produce. Importing rescores the signals, so a file whose decision was edited is
+          refused.
+        </p>
+        <div className={styles.commands}>
+          <button type="button" className={controls.iconButton} aria-label="Export signals and decision" title="Export signals and decision" onClick={exportReceipt}>
+            <Download aria-hidden="true" />
+            <span className={controls.iconLabel}>Export signals and decision</span>
+          </button>
+          <button type="button" className={controls.iconButton} aria-label="Import a file" title="Import a file" onClick={() => fileRef.current?.click()}>
+            <Upload aria-hidden="true" />
+            <span className={controls.iconLabel}>Import a file</span>
+          </button>
+          <input ref={fileRef} type="file" accept="application/json,.json" hidden aria-label="Signals file" onChange={importReceipt} />
+        </div>
+      </UnderTheHood>
     </div>
   );
 }

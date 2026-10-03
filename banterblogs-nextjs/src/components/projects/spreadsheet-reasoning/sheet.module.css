@@ -24,13 +24,6 @@
   text-wrap: balance;
 }
 
-.caption {
-  max-width: 70ch;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: hsl(var(--muted-foreground));
-}
-
 .scoreStrip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -42,6 +35,12 @@
 .scoreStrip dt {
   font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
+}
+
+.scoreStrip dt small {
+  display: block;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground) / 0.8);
 }
 
 .scoreStrip dd {
@@ -458,6 +457,35 @@
   color: hsl(var(--foreground));
 }
 
+.votes li em {
+  display: block;
+  font-style: normal;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.cellSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: hsl(var(--foreground));
+}
+
+.editor {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.editor h4 {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .votes li strong {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.75rem;
@@ -516,6 +544,33 @@
 @media (min-width: 640px) {
   .scoreStrip {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* a phone: the sheets stack in their order, each cell full width with its
+   label whole; the edges go, and Uses / Used by below carry them */
+@media (max-width: 639px) {
+  .graph {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .edges {
+    display: none;
+  }
+
+  .sheetName {
+    height: auto;
+    padding: 0.75rem 0 0.25rem;
+  }
+
+  .node {
+    margin: 0.25rem 0;
+  }
+
+  .nodeName {
+    white-space: normal;
   }
 }
 
