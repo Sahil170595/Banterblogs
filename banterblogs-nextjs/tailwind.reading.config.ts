@@ -8,7 +8,13 @@ import typography from "@tailwindcss/typography";
 // plugin out, so no other page downloads the components. The content globs
 // cover the files that set `prose` classes on the reading pages.
 const config: Config = {
-  content: ["./src/components/reports/**/*.tsx", "./src/app/reports/**/*.tsx", "./src/app/episodes/**/*.tsx"],
+  content: [
+    "./src/components/reports/**/*.tsx",
+    "./src/app/reports/**/*.tsx",
+    "./src/app/episodes/**/*.tsx",
+    "./src/components/projects/**/*.tsx",
+    "./src/app/projects/**/*.tsx",
+  ],
   corePlugins: [],
   plugins: [typography],
 };

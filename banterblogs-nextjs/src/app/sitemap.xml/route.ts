@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { discoverReports } from '@/lib/reports/locator';
 import { TOOLS } from '@/lib/tools';
+import { collectionsWithProjects, projectHref, readProjectCatalog } from '@/lib/projects/catalog';
 
 const BASE = 'https://chimeraforge.vercel.app';
 
@@ -28,9 +29,19 @@ export async function GET() {
       urlEntry(`${BASE}/papers`, now, 'weekly', 0.9),
       urlEntry(`${BASE}/platform`, now, 'weekly', 0.8),
       urlEntry(`${BASE}/work`, now, 'monthly', 0.7),
+      urlEntry(`${BASE}/projects`, now, 'weekly', 0.85),
       urlEntry(`${BASE}/show`, now, 'weekly', 0.7),
       urlEntry(`${BASE}/tools`, now, 'weekly', 0.8),
     ];
+
+    // collections and projects come from the catalog the pages render from
+    const projects = readProjectCatalog();
+    for (const collection of collectionsWithProjects(projects)) {
+      urls.push(urlEntry(`${BASE}/projects/${collection.key}`, now, 'weekly', 0.75));
+    }
+    for (const project of projects) {
+      urls.push(urlEntry(`${BASE}${projectHref(project)}`, now, 'monthly', 0.75));
+    }
 
     // tool pages come from the same module the pages render from
     for (const tool of TOOLS) {

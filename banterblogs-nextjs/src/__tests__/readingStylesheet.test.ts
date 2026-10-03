@@ -21,7 +21,8 @@ const GLOBALS = read('app/globals.css');
 const READING = read('app/reading.css');
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
-const READING_ROUTES = ['app/reports/[id]/page.tsx', 'app/reports/compendium/page.tsx', 'app/episodes/[slug]/page.tsx'];
+// the project pages import it through their shared shell, never one by one
+const READING_ROUTES = ['app/reports/[id]/page.tsx', 'app/reports/compendium/page.tsx', 'app/episodes/[slug]/page.tsx', 'components/projects/ProjectPage.tsx'];
 const READING_IMPORT = /^import ['"]@\/app\/reading\.css['"];?$/m;
 
 function sourceFiles(dir: string): string[] {
@@ -58,7 +59,7 @@ describe('reading stylesheet', () => {
     }
   });
 
-  it('is imported by the three reading routes and nowhere else', () => {
+  it('is imported by the three reading routes and the project page shell, and nowhere else', () => {
     for (const route of READING_ROUTES) expect(read(route), route).toMatch(READING_IMPORT);
     const importers = sourceFiles(SRC)
       .filter((file) => READING_IMPORT.test(fs.readFileSync(file, 'utf8')))

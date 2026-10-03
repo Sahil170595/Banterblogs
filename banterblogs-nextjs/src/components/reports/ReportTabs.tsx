@@ -1,10 +1,11 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceGroup, entranceItem } from '@/components/motion/entrance';
-import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE } from '@/components/motion/prePaint';
+import { ENTRANCE_ATTRIBUTE } from '@/components/motion/prePaint';
+import { TAB_STRIP_FADE_PX, useActiveTabInView, useTabHighlight } from '@/components/ui/tabStrip';
 import { ReportCard } from './ReportCard';
 
 export interface ReportTabEntry {
@@ -39,14 +40,14 @@ export const ENTRANCE_CARDS = 6;
 export const ENTRANCE_CARD_STEPS = 3;
 /** the head's entrance group the tabs join, after the title and the intro */
 export const TABS_ENTRANCE_GROUP = 2;
-/** --tab-strip-fade (globals.css, R4 a11y): a tab scrolled into view clears the edge fade */
-export const TAB_STRIP_FADE_PX = 40;
+export { TAB_STRIP_FADE_PX };
 /** the .tab-strip mask's edge alpha (globals.css): what the fade keeps of a tab at the very edge */
 export const TAB_STRIP_EDGE_FLOOR = 0.3;
 
 type SwitchedBy = 'pointer' | 'keyboard';
 
 const tabId = (key: string) => `report-tab-${key}`;
+const ACTIVE_TAB = '[role="tab"][aria-selected="true"]';
 // the real tabs and their highlighted copies share one box, so the clip lines
 // up with the tab beneath it
 const TAB_BOX = 'relative shrink-0 px-3 pb-3 pt-2 text-sm font-medium';
@@ -134,49 +135,10 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
   const highlightRef = useRef<HTMLDivElement>(null);
   const count = (group: ReportTabGroup) => group.reports.filter((report) => !synthesisSlugs.has(report.slug)).length;
 
-  // Clips the highlighted copy of the row to the active tab (Emil Kowalski's
-  // clip-path technique); globals.css transitions the clip. The first
-  // placement lands without a transition, later ones move. Without motion
-  // nothing is placed and the active tab keeps its own style and underline.
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    const highlight = highlightRef.current;
-    if (!list || !highlight || document.documentElement.getAttribute(MOTION_ATTRIBUTE) !== 'on') return undefined;
-    const place = () => {
-      const tab = list.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
-      if (!tab) return;
-      highlight.style.setProperty('--highlight-left', `${tab.offsetLeft}px`);
-      highlight.style.setProperty('--highlight-right', `${highlight.offsetWidth - tab.offsetLeft - tab.offsetWidth}px`);
-      if (list.hasAttribute('data-highlight')) return;
-      list.setAttribute('data-highlight', 'placed');
-      requestAnimationFrame(() => list.setAttribute('data-highlight', 'live'));
-    };
-    place();
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(place);
-    observer.observe(list);
-    return () => observer.disconnect();
-  }, [activeKey]);
-
-  // The strip scrolls sideways (eleven long labels); the active tab stays
-  // fully in view, clear of the edge fades. Reads first, then one write; the
-  // first placement, and every one without motion, is instant.
-  const placedRef = useRef(false);
-  useEffect(() => {
-    const list = listRef.current;
-    const tab = list?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
-    if (!list || !tab) return;
-    const { scrollLeft, clientWidth, scrollWidth } = list;
-    const start = tab.offsetLeft - TAB_STRIP_FADE_PX;
-    const end = tab.offsetLeft + tab.offsetWidth + TAB_STRIP_FADE_PX;
-    const first = !placedRef.current;
-    placedRef.current = true;
-    if (scrollWidth <= clientWidth) return;
-    const left = start < scrollLeft ? start : end > scrollLeft + clientWidth ? end - clientWidth : scrollLeft;
-    if (left === scrollLeft) return;
-    const smooth = !first && document.documentElement.getAttribute(MOTION_ATTRIBUTE) === 'on';
-    list.scrollTo({ left: Math.max(0, left), behavior: smooth ? 'smooth' : 'auto' });
-  }, [activeKey]);
+  // the clip highlight follows the active tab; the strip scrolls sideways
+  // (eleven long labels) and keeps the active tab in view
+  useTabHighlight(listRef, highlightRef, activeKey, ACTIVE_TAB);
+  useActiveTabInView(listRef, activeKey, ACTIVE_TAB);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // step from the focused tab, which leads the URL while a replace is in flight
@@ -200,7 +162,7 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
           ref={listRef}
           role="tablist"
           aria-label="Report categories"
-          className="tab-strip relative -mx-4 flex gap-1 overflow-x-auto px-4 pt-1 shadow-[inset_0_-1px_0_hsl(var(--border)/0.8)] sm:mx-0 sm:px-0"
+          className="tab-strip tab-strip-rule relative -mx-4 flex gap-1 overflow-x-auto px-4 pt-1 sm:mx-0 sm:px-0"
           onKeyDown={onKeyDown}
         >
           {tabs.map((group) => {
@@ -232,7 +194,7 @@ function TabbedReports({ tabs, activeKey, switched, onSelect, synthesisSlugs, la
             className="pointer-events-none absolute left-0 top-0 flex gap-1 px-4 pt-1 sm:px-0"
           >
             {tabs.map((group) => (
-              <span key={group.key} className={`${TAB_BOX} text-foreground shadow-[inset_0_-2px_0_hsl(var(--primary))]`}>
+              <span key={group.key} className={`${TAB_BOX} tab-active-rule text-foreground`}>
                 {group.label}
                 <span className="ml-1.5 text-xs tabular-nums text-muted-foreground/70">{count(group)}</span>
               </span>
