@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: project.summary,
   alternates: { canonical: `/work/projects/${project.slug}` },
 };
-const SOURCE = project.sourceUrl;
+const SOURCE = 'https://github.com/Sahil170595/Banterblogs/tree/codex/demo-offline-policy-evaluation/banterblogs-nextjs/src/lib/projects/offline-policy-evaluation';
 
 export default function OfflineEvaluationPage() {
   const evaluation = evaluate(DEFAULT_CONFIG);
@@ -31,6 +31,7 @@ export default function OfflineEvaluationPage() {
     <article className={styles.article} aria-label="Technical study">
       <section id="underlying-system">
         <h2>Underlying system: a reproducible model-policy evaluation pipeline</h2>
+        <p><a href={project.sourceUrl} target="_blank" rel="noopener noreferrer">Counterledger OPE <ArrowUpRight className="inline" size={14} aria-hidden="true" /></a> contains the full public Python evaluator: backward FQE, sequential doubly robust estimation, patient-role separation, frozen policy/cache contracts, and fresh synthetic reproduction fixtures. The browser below deliberately implements a smaller importance-sampling experiment. Neither release includes the original records or model-output caches.</p>
         <p>The original engineering work was a Python offline-policy pipeline, not the four-step generator above. Its study contained 3,000 distinct twelve-step trajectories: 25,200 training records, 5,400 validation records with outcomes, and 5,400 outcome-blind test observations. The training role manifest separated 1,260 trajectories for policy development from 840 for evaluation-nuisance fitting. The 450-trajectory validation cohort supplied the final outcome comparison; the separate 450-trajectory test cohort supplied predictions, not another measured policy-value result. These historical scale figures describe the underlying system only.</p>
         <h3>Policy inference, development, and replay</h3>
         <p>I implemented an allow-listed observation boundary with 19 pre-action structured fields. Future outcomes, reward, the current logged action, and subject or site identifiers were excluded from policy inference. The environment exposed only factual logged transitions; there was deliberately no action-taking step that reused someone else&apos;s observed outcome as a counterfactual. This separation was more important than making the interface look like an online reinforcement-learning environment.</p>
