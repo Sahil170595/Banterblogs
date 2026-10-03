@@ -1,0 +1,499 @@
+/* The staged search demo (SearchDemo, LadderTable, SearchLab); buttons,
+   fields and segmented choices are the shared project controls (demo-
+   classes, app/reading.css). A result inside the request is a plain square,
+   one relaxation let through is crossed in status red; dropped filters are
+   struck. No text under 12px. */
+
+.demo {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+}
+
+.headline {
+  max-width: 56rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
+  text-wrap: balance;
+}
+
+.request {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.375rem 0.5rem;
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.request > span:first-child {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.request code,
+.dropped s,
+.droppedLine s {
+  border-radius: 0.375rem;
+  background-color: hsl(var(--foreground) / 0.07);
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: hsl(var(--foreground));
+}
+
+.dropped {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.dropped s,
+.droppedLine s {
+  text-decoration-color: hsl(var(--status-red));
+  text-decoration-thickness: 2px;
+}
+
+.caption {
+  max-width: 70ch;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
+.muted {
+  color: hsl(var(--muted-foreground));
+}
+
+.warn {
+  font-size: 0.8125rem;
+  color: hsl(var(--status-amber));
+}
+
+.count {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── the ladder ── */
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.tableScroll:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.ladder {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.ladder thead th,
+.hits thead th,
+.corpus thead th {
+  padding: 0.5rem 0.5rem 0.75rem;
+  text-align: left;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.ladder tbody tr {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.ladder tbody th {
+  padding: 0.375rem 0.25rem;
+  text-align: left;
+  font-weight: 400;
+}
+
+.ladder tbody th button {
+  display: grid;
+  gap: 0.125rem;
+  width: 100%;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  padding: 0.5rem;
+  text-align: left;
+  font: inherit;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.ladder tbody th button span {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: hsl(var(--primary));
+}
+
+.ladder tbody th button:hover {
+  background-color: hsl(var(--foreground) / 0.05);
+}
+
+.ladder tbody th button[aria-pressed="true"] {
+  background-color: hsl(var(--foreground) / 0.09);
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.2);
+}
+
+.ladder tbody th button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 1px;
+}
+
+.ladder td {
+  padding: 0.5rem;
+  color: hsl(var(--foreground));
+}
+
+.squares {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.squares > span {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.squares i {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 3px;
+  background-color: hsl(var(--foreground) / 0.55);
+}
+
+.squares i[data-broken] {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 2px hsl(var(--status-red));
+  background-image: linear-gradient(
+    45deg,
+    transparent calc(50% - 1px),
+    hsl(var(--status-red)) calc(50% - 1px),
+    hsl(var(--status-red)) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+
+/* ── the lab ── */
+.labAnchor {
+  scroll-margin-top: 5rem;
+}
+
+.lab {
+  display: grid;
+  gap: 1rem;
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+  padding: 1.25rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.labTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.commands {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  align-items: start;
+  gap: 1.5rem;
+}
+
+.form {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.filters {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.filters > legend {
+  margin-bottom: 0.375rem;
+  padding: 0;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.filters > button {
+  justify-self: start;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.results {
+  display: grid;
+  gap: 0.75rem;
+  border-radius: 0.625rem;
+  background-color: hsl(var(--background));
+  box-shadow: inset 0 0 0 1px hsl(var(--border));
+  padding: 1.125rem;
+}
+
+.results h3 {
+  margin-top: 0.25rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.results .tableScroll {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.verdict {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.verdict strong {
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.verdict strong[data-status="shortfall"] {
+  color: hsl(var(--status-amber));
+}
+
+.verdict span {
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.droppedLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.hits {
+  width: 100%;
+  min-width: 30rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.hits tbody tr {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.hits tbody th {
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  text-align: left;
+  font-weight: 400;
+}
+
+.hits tbody th strong {
+  display: block;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.hits tbody th > span {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.hits [data-broken] > span[data-broken],
+.hits span[data-broken] {
+  color: hsl(var(--status-red));
+  text-decoration: line-through;
+}
+
+.outside {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 400;
+  color: hsl(var(--status-red));
+}
+
+.hits td {
+  padding: 0.5rem;
+  color: hsl(var(--foreground));
+}
+
+.criteria {
+  white-space: nowrap;
+}
+
+.criteria svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  vertical-align: middle;
+}
+
+.criteria span {
+  margin-left: 0.375rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.rejected {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
+.attempts {
+  display: grid;
+  gap: 0.375rem;
+  padding-left: 1.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  list-style: decimal;
+  color: hsl(var(--foreground));
+}
+
+.attempts li[data-short] .count {
+  color: hsl(var(--status-amber));
+}
+
+.corpus summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.corpus summary:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.corpus[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+.corpus table {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.corpus tbody tr {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.corpus tbody th {
+  padding: 0.375rem 0.5rem 0.375rem 0;
+  text-align: left;
+  font-weight: 500;
+}
+
+.corpus tbody th span {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.corpus td {
+  padding: 0.375rem 0.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 450px) {
+  .lab {
+    padding: 1rem;
+  }
+
+  .pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filterRow {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .filterRow > label:nth-child(3) {
+    grid-column: 1 / -2;
+    grid-row: 2;
+  }
+}
