@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readProjectCatalog } from '../src/lib/projectCatalog';
+import { collectErrors } from './consoleErrors';
 
 const projects = readProjectCatalog();
 
@@ -21,8 +22,7 @@ test('project collection exposes canonical routes and shareable role filters', a
 
 for (const project of projects) {
   test(`${project.slug}: route, evidence sections, and responsive bounds`, async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (error) => errors.push(error.message));
+    const errors = collectErrors(page);
     const response = await page.goto(`/work/projects/${project.slug}`);
     expect(response?.status()).toBe(200);
     await expect(page.locator('h1')).toHaveCount(1);
