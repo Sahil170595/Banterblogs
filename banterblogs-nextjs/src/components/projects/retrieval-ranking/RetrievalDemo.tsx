@@ -131,9 +131,9 @@ export default function RetrievalDemo() {
         {error && <p role="alert" className={styles.error}>{error}</p>}
         <div className={styles.summary} aria-live="polite">
           <strong className={result.status === 'ready' ? styles.good : styles.warning}>{STATUS[result.status]}</strong>
-          <span>{result.rows.length} shown / {result.acceptedCount} accepted / {result.rejected.length} rejected</span>
+          <span>{result.rows.length} shown / {result.acceptedCount} eligible / {result.rejected.length} rejected</span>
           <span>Body pool {result.bodyIds.length} / target {config.threshold} {result.thresholdMet ? 'met' : 'not met'}</span>
-          {result.truncated > 0 && <span>{result.truncated} accepted documents outside display limit</span>}
+          {result.truncated > 0 && <span>{result.truncated} eligible documents outside display limit</span>}
         </div>
         <div className={styles.finalFilters}><strong>Final filters</strong>{result.finalFilters.length ? result.finalFilters.map((f) => <span key={f.field}>{describeFilter(f)}</span>) : <span>None</span>}</div>
         <div role="tablist" aria-label="Inspection views" className={styles.tabs}>

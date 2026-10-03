@@ -181,16 +181,16 @@ export function runRetrieval(inputCorpus: unknown, inputConfig: unknown): Retrie
       missingRequired: required.filter((t) => !allTokens.has(t)),
     };
   });
-  const accepted = ranked.filter((r) => !r.missingRequired.length);
-  if (config.preferCoverage) accepted.sort((a, b) => b.coverage - a.coverage || b.score - a.score || compareIds(a.id, b.id));
-  const rows = accepted.slice(0, config.limit);
+  const eligible = ranked.filter((r) => !r.missingRequired.length);
+  if (config.preferCoverage) eligible.sort((a, b) => b.coverage - a.coverage || b.score - a.score || compareIds(a.id, b.id));
+  const rows = eligible.slice(0, config.limit);
   const tokens = uniqueTokens(config.query);
   return {
     tokens, attempts, finalFilters, bodyIds, metadataIds, rows,
     rejected: ranked.filter((r) => r.missingRequired.length > 0),
-    acceptedCount: accepted.length, truncated: Math.max(0, accepted.length - rows.length),
+    acceptedCount: eligible.length, truncated: Math.max(0, eligible.length - rows.length),
     thresholdMet: bodyIds.length >= config.threshold,
-    status: !tokens.length ? 'empty-query' : !ranked.length ? 'no-matches' : !accepted.length ? 'all-rejected' : rows.length < config.minimum ? 'shortfall' : 'ready',
+    status: !tokens.length ? 'empty-query' : !ranked.length ? 'no-matches' : !eligible.length ? 'all-rejected' : rows.length < config.minimum ? 'shortfall' : 'ready',
   };
 }
 
