@@ -9,6 +9,7 @@ import { makeReceipt, MAX_RECEIPT_BYTES, replayReceipt } from '@/lib/projects/in
 import { P1_AT, P3_AT, scoreSignals, signed } from '@/lib/projects/intake-triage/score';
 import { CLASSIFICATION_LABELS, type Signals } from '@/lib/projects/intake-triage/signals';
 import { controls, Segmented, UnderTheHood } from '../controls';
+import { describeRefusal } from '../refusal';
 import styles from './triage.module.css';
 
 const GATE_LABELS = {
@@ -16,6 +17,18 @@ const GATE_LABELS = {
   P1_noncaregiving_safety: 'Non-caregiving safety gate',
   operational: 'Operational score',
 } as const;
+// the source's gate names, with what fires each: the caregiving-harm gate also
+// fires on its word list alone, whatever perception reads about caregiving
+const GATE_GLOSS: Partial<Record<keyof typeof GATE_LABELS, string>> = {
+  P0_safeguarding: 'fires on a match in its safety word list, or on a caregiving safety read',
+  P1_noncaregiving_safety: 'fires on an active safety read that is not about caregiving',
+};
+
+/** signals as one string, keys sorted, so two readings of the same signals compare equal */
+const canonical = (value: unknown) =>
+  JSON.stringify(value, (_key, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b))) : v,
+  );
 const SAFETY_IDS = ['safeguarding_hit', 'safety_severity', 'safety_is_caregiving'];
 const EXISTING = 'existing_patient_request';
 /** the lab opens on a same-day reschedule: two signals say same-day, so neither alone decides */
@@ -117,13 +130,17 @@ export function SignalLab({
       if (file.size > MAX_RECEIPT_BYTES) throw new Error(`The file is over ${MAX_RECEIPT_BYTES / 1000} KB.`);
       const text = await file.text();
       if (mine !== revision.current) return;
-      onSignals(replayReceipt(JSON.parse(text)), null);
+      const replayed = replayReceipt(JSON.parse(text));
+      // a file holding one of the example messages is that example, not the visitor's own signals
+      const example = FIXTURES.find((f) => canonical(f.signals) === canonical(replayed));
+      onSignals(replayed, example?.id ?? null);
       setError(null);
       setStatus('File rescored: its decision follows from its signals');
     } catch (cause) {
       if (mine !== revision.current) return;
       console.warn('Intake triage file refused', cause);
-      setError(`File refused: ${cause instanceof Error ? cause.message : 'it could not be read.'}`);
+      setStatus('');
+      setError(`File refused: ${describeRefusal(cause)}`);
     } finally {
       input.value = '';
     }
@@ -171,14 +188,6 @@ export function SignalLab({
           </button>
         </div>
       </div>
-      {error && (
-        <p role="alert" className={controls.error}>
-          {error}
-        </p>
-      )}
-      <p role="status" className={controls.hint}>
-        {status}
-      </p>
 
       <div className={styles.workspace}>
         <form className={styles.signals} aria-label="Signals" onSubmit={(event) => event.preventDefault()}>
@@ -206,6 +215,10 @@ export function SignalLab({
               ))}
             </fieldset>
           </details>
+          {/* on a phone the decision sits above the form; this line keeps it beside the signals as they change */}
+          <p className={styles.live} data-testid="live-decision" aria-hidden="true">
+            <strong data-urgency={result.urgency}>{result.urgency}</strong> {GATE_LABELS[result.gate]} · {CLASSIFICATION_LABELS[result.classification]}
+          </p>
         </form>
 
         <section className={styles.result} aria-label="Scorer decision">
@@ -215,6 +228,7 @@ export function SignalLab({
             </output>
             <div>
               <strong>{GATE_LABELS[result.gate]}</strong>
+              {GATE_GLOSS[result.gate] && <span className={styles.gloss}>{GATE_GLOSS[result.gate]}</span>}
               <span>
                 {CLASSIFICATION_LABELS[result.classification]}
                 {result.classification !== signals.llm.classification && ` (proposed: ${CLASSIFICATION_LABELS[signals.llm.classification].toLowerCase()})`}
@@ -280,6 +294,15 @@ export function SignalLab({
           </button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden aria-label="Signals file" onChange={importReceipt} />
         </div>
+        {/* beside the buttons, so an import is answered where it was made */}
+        {error && (
+          <p role="alert" className={controls.error}>
+            {error}
+          </p>
+        )}
+        <p role="status" className={controls.hint}>
+          {status}
+        </p>
       </UnderTheHood>
     </div>
   );

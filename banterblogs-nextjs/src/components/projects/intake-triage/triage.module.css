@@ -351,6 +351,15 @@
   color: hsl(var(--muted-foreground));
 }
 
+.verdict .gloss {
+  font-size: 0.75rem;
+}
+
+/* the decision beside the signals: needed only where the panel does not sit beside them */
+.live {
+  display: none;
+}
+
 .agreement {
   border-left: 2px solid hsl(var(--primary) / 0.6);
   padding-left: 0.75rem;
@@ -424,6 +433,41 @@
   .result {
     position: static;
     order: -1;
+  }
+
+  /* and a line of it that stays in view while the signals scroll under the
+     thumb; it only reads, so a tap goes through it to the control beneath */
+  .live {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 1;
+    pointer-events: none;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    border-radius: 0.625rem;
+    background-color: hsl(var(--background));
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--border)),
+      0 4px 16px hsl(var(--background) / 0.6);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .live strong {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .live strong[data-urgency="P0"] {
+    color: hsl(var(--status-red));
+  }
+
+  .live strong[data-urgency="P1"] {
+    color: hsl(var(--primary));
   }
 }
 
