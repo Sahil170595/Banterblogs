@@ -5,6 +5,7 @@ import { DEFAULT_CONFIG, formatTime, POLICY_LABELS, type Config } from '@/lib/pr
 import type { Profile, ScenarioId } from '@/lib/projects/flight-routing/fixtures';
 import { TIGHT_DEADLINE } from '@/lib/projects/flight-routing/experiment';
 import { worldSeed, type PolicyWorlds, type World } from '@/lib/projects/flight-routing/worlds';
+import { controls, Segmented, type Choice } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
 import type { Selection } from './useFlightDemo';
 import styles from './demo.module.css';
@@ -22,16 +23,16 @@ const REASON_TEXT: Record<string, string> = {
   max_attempts: 'out of attempts',
 };
 
-const DEADLINES = [
+const DEADLINES: Choice<number>[] = [
   { value: TIGHT_DEADLINE, label: formatTime(TIGHT_DEADLINE), note: 'tight' },
   { value: DEFAULT_CONFIG.deadline, label: formatTime(DEFAULT_CONFIG.deadline), note: 'slack' },
 ];
-const PROFILES: { value: Profile; label: string }[] = [
+const PROFILES: Choice<Profile>[] = [
   { value: 'clear', label: 'Clear' },
   { value: 'balanced', label: 'Mixed' },
   { value: 'storm', label: 'Stress' },
 ];
-const ROUTES: { value: ScenarioId; label: string }[] = [
+const ROUTES: Choice<ScenarioId>[] = [
   { value: 'west-east', label: 'SFO to JFK' },
   { value: 'east-west', label: 'JFK to SFO' },
 ];
@@ -39,29 +40,6 @@ const ROUTES: { value: ScenarioId; label: string }[] = [
 function describe(world: World, index: number): string {
   const what = world.outcome === 'failed' ? REASON_TEXT[world.reason] ?? 'failed' : `${OUTCOME_TEXT[world.outcome]}, landed ${formatTime(world.arrival!)}`;
   return `World ${index + 1}, seed ${world.seed}: ${what}`;
-}
-
-interface Choice<T> {
-  value: T;
-  label: string;
-  note?: string;
-}
-
-function Segmented<T extends string | number>({ legend, name, options, value, onChange }: { legend: string; name: string; options: Choice<T>[]; value: T; onChange: (value: T) => void }) {
-  return (
-    <fieldset className={styles.segmented}>
-      <legend>{legend}</legend>
-      <div>
-        {options.map((option) => (
-          <label key={option.value} data-checked={option.value === value || undefined}>
-            <input type="radio" name={name} checked={option.value === value} onChange={() => onChange(option.value)} />
-            {option.label}
-            {option.note && <span>{option.note}</span>}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
 }
 
 interface WorldGridProps {
@@ -99,7 +77,7 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
         <Segmented legend="Route" name="route" options={ROUTES} value={config.scenario} onChange={(scenario) => configure({ ...config, scenario })} />
       </div>
       {error && (
-        <p role="alert" className={styles.error}>
+        <p role="alert" className={controls.error}>
           {error}
         </p>
       )}

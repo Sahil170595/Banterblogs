@@ -21,6 +21,7 @@ import { worldSeed } from '@/lib/projects/flight-routing/worlds';
 import { RouteFigure } from './RouteFigure';
 import { Timeline } from './Timeline';
 import type { FlightDemo } from './useFlightDemo';
+import { controls } from '../controls';
 import styles from './demo.module.css';
 
 const REASON_TEXT: Record<Reason, string> = {
@@ -70,7 +71,7 @@ function Settings({ config, onApply }: { config: Config; onApply: (config: Confi
       <summary>Scenario settings</summary>
       <form onSubmit={apply} noValidate>
         {FIELDS.map(({ key, label }) => (
-          <label key={key}>
+          <label key={key} className={controls.field}>
             {label}
             <input
               type="text"
@@ -83,15 +84,15 @@ function Settings({ config, onApply }: { config: Config; onApply: (config: Confi
             />
           </label>
         ))}
-        <button type="submit" className={styles.button}>
+        <button type="submit" className={controls.button}>
           Apply to all worlds
         </button>
-        <p id="flight-settings-limits" className={styles.hint}>
+        <p id="flight-settings-limits" className={controls.hint}>
           Deadline {CONFIG_LIMITS.deadline[0]}–{CONFIG_LIMITS.deadline[1]} and no later than the horizon; buffer {CONFIG_LIMITS.buffer[0]}–
           {CONFIG_LIMITS.buffer[1]}; {CONFIG_LIMITS.maxAttempts[0]}–{CONFIG_LIMITS.maxAttempts[1]} attempts.
         </p>
         {error && (
-          <p role="alert" className={styles.error}>
+          <p role="alert" className={controls.error}>
             {error}
           </p>
         )}
@@ -139,19 +140,19 @@ export function ReplayLab({ demo }: { demo: FlightDemo }) {
           </p>
         </div>
         <div className={styles.toolbar}>
-          <button type="button" className={styles.iconButton} aria-label="Previous world" disabled={index === 0} onClick={() => demo.select({ ...selection, index: index - 1 })}>
+          <button type="button" className={controls.iconButton} aria-label="Previous world" disabled={index === 0} onClick={() => demo.select({ ...selection, index: index - 1 })}>
             <ChevronLeft aria-hidden="true" />
           </button>
           <button
             type="button"
-            className={styles.iconButton}
+            className={controls.iconButton}
             aria-label="Next world"
             disabled={index === EXPERIMENT_WORLDS - 1}
             onClick={() => demo.select({ ...selection, index: index + 1 })}
           >
             <ChevronRight aria-hidden="true" />
           </button>
-          <label className={styles.policyPick}>
+          <label className={controls.field}>
             <span>Policy</span>
             <select value={selection.policy} onChange={(event) => demo.select({ ...selection, policy: event.target.value as Policy })}>
               {POLICIES.map((policy) => (
@@ -264,24 +265,24 @@ export function ReplayLab({ demo }: { demo: FlightDemo }) {
           <div className={styles.actions}>
             {!terminal && (
               <>
-                <button type="button" className={styles.button} onClick={demo.stepChosen}>
+                <button type="button" className={controls.button} onClick={demo.stepChosen}>
                   <SkipForward aria-hidden="true" />
                   {flights.length ? `Take ${flights[chosen].id}` : 'End the trip: nothing bookable'}
                 </button>
-                <button type="button" className={styles.button} onClick={demo.finish}>
+                <button type="button" className={controls.button} onClick={demo.finish}>
                   <Play aria-hidden="true" />
                   Let the policy finish
                 </button>
               </>
             )}
-            {terminal && history.length > 1 && <p className={styles.hint}>Rewind to take another flight in this same world.</p>}
-            <button type="button" className={styles.iconButton} aria-label="Rewind one decision" title="Rewind one decision" disabled={history.length < 2} onClick={demo.rewind}>
+            {terminal && history.length > 1 && <p className={controls.hint}>Rewind to take another flight in this same world.</p>}
+            <button type="button" className={controls.iconButton} aria-label="Rewind one decision" title="Rewind one decision" disabled={history.length < 2} onClick={demo.rewind}>
               <Undo2 aria-hidden="true" />
             </button>
-            <button type="button" className={styles.iconButton} aria-label="Restart this world" title="Restart this world" disabled={history.length < 2} onClick={demo.restart}>
+            <button type="button" className={controls.iconButton} aria-label="Restart this world" title="Restart this world" disabled={history.length < 2} onClick={demo.restart}>
               <RotateCcw aria-hidden="true" />
             </button>
-            <button type="button" className={styles.iconButton} aria-label="Export JSON trace" title="Export JSON trace" onClick={exportJson}>
+            <button type="button" className={controls.iconButton} aria-label="Export JSON trace" title="Export JSON trace" onClick={exportJson}>
               <Download aria-hidden="true" />
             </button>
           </div>
