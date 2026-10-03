@@ -12,6 +12,8 @@ describe('published retrieval project contract', () => {
     expect(html).toContain('Turbopuffer');
     expect(html).toContain('pre-scorer');
     expect(html).toContain('not a held-out relevance evaluation');
+    expect(html).toContain('href="https://github.com/Sahil170595/stratasearch"');
+    expect(html).toContain('not exercised against live services');
     expect(html).not.toMatch(/https:\/\/api\.|Authorization|rerankSummary|config_path/);
     expect(html.length).toBeGreaterThan(15000);
   });
@@ -21,6 +23,6 @@ describe('published retrieval project contract', () => {
     expect(project.runtime).toBe('browser-application');
     expect(project.categories).toEqual(['retrieval', 'systems']);
     expect(project.title).not.toMatch(/^Banter/);
-    expect(project.sourceUrl).toContain('codex/demo-retrieval-ranking/banterblogs-nextjs/src/lib/projects/retrieval-ranking');
+    expect(project.sourceUrl).toBe('https://github.com/Sahil170595/stratasearch');
   });
 });

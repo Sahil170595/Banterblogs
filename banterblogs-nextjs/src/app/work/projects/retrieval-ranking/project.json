@@ -6,5 +6,5 @@
   "roles": ["ml-systems", "applied-ai"],
   "status": "interactive",
   "runtime": "browser-application",
-  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-retrieval-ranking/banterblogs-nextjs/src/lib/projects/retrieval-ranking"
+  "sourceUrl": "https://github.com/Sahil170595/stratasearch"
 }
