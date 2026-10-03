@@ -1,6 +1,11 @@
-import { ballotProvenance, ballotRecord, fixtures } from './fixtures';
+import { z } from 'zod';
+import { ballotRecord, fixtures } from './fixtures';
 import { evaluateFormula, parseFormula } from './formula';
 import { cellId, sessionSchema, type Analysis, type Session, type Vote } from './types';
+
+// Covers all 48 bounded cells, including worst-case JSON escaping of input and label fields.
+export const MAX_TRACE_BYTES = 150_000;
+const traceSchema = z.object({ version: z.literal('spreadsheet-reasoning/v1'), session: sessionSchema });
 
 export function freshSession(fixture: Session['fixture'] = 'baseline'): Session {
   return { fixture, workbook: structuredClone(fixtures[fixture].workbook), policy: 'balanced', adjudications: {} };
@@ -120,14 +125,14 @@ export function compareGold(session: Session, result: Analysis) {
   return { tp, fp, fn, tn, precision, recall, f1, review: Object.values(result.cells).filter(c => c.label === 'review').length };
 }
 export function exportTrace(input: Session) {
-  const session = sessionSchema.parse(input), result = analyze(session);
-  return {
-    version: 'spreadsheet-reasoning/v1',
-    engine: 'Deterministic bounded formula evaluator + rule votes; no LLM, no EM fitting, no randomness.',
-    session,
-    result,
-    goldComparison: compareGold(session, result),
-    recordedVotes: recordedVotes(session),
-    voteProvenance: ballotProvenance,
-  };
+  const session = sessionSchema.parse(input);
+  analyze(session);
+  return { version: 'spreadsheet-reasoning/v1' as const, session };
+}
+
+export function replayTrace(input: unknown): Session {
+  // Legacy expanded traces remain readable; derived evidence is never trusted or retained.
+  const { session } = traceSchema.parse(input);
+  analyze(session);
+  return session;
 }

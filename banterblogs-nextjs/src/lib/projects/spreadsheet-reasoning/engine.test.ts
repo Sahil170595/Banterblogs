@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { analyze, compareGold, exportTrace, freshSession, prune, recordedVotes } from './engine';
+import { analyze, compareGold, exportTrace, freshSession, MAX_TRACE_BYTES, prune, recordedVotes, replayTrace } from './engine';
 import { fixtures } from './fixtures';
+import { MAX_CELLS, type Session } from './types';
 
 describe('synthetic spreadsheet reasoning', () => {
   it('evaluates cross-sheet dependencies and ranges, with deduplicated edges', () => {
@@ -89,5 +90,52 @@ describe('synthetic spreadsheet reasoning', () => {
     expect(exportTrace(JSON.parse(JSON.stringify(trace.session)))).toEqual(trace);
     expect(freshSession().workbook).toEqual(fixtures.baseline.workbook);
     expect(freshSession().adjudications).toEqual({});
+  });
+
+  it('round-trips a dense acyclic workbook without exporting expanded evidence', () => {
+    const column = (n: number): string => n <= 26 ? String.fromCharCode(64 + n) : `A${String.fromCharCode(64 + n - 26)}`;
+    const session: Session = {
+      fixture: 'baseline', policy: 'balanced', adjudications: {},
+      workbook: { sheets: [{ name: 'Custom', role: 'output' }], cells: Array.from({ length: MAX_CELLS }, (_, i) => ({
+        sheet: 'Custom', address: `${column(i + 1)}1`, label: 'Item', emphasis: false,
+        input: i ? `=SUM(A1:${column(i)}1)` : '1',
+      })) },
+    };
+    const result = analyze(session);
+    expect(result.edges).toHaveLength(1128);
+    expect(Object.values(result.cells).every(c => c.error === null)).toBe(true);
+    const trace = exportTrace(session);
+    expect(Object.keys(trace).sort()).toEqual(['session', 'version']);
+    const json = JSON.stringify(trace);
+    expect(new TextEncoder().encode(json).byteLength).toBeLessThanOrEqual(MAX_TRACE_BYTES);
+    const replayed = replayTrace(JSON.parse(json));
+    expect(replayed).toEqual(session);
+    expect(analyze(replayed)).toEqual(result);
+  });
+
+  it('keeps maximum-length escaped fields within the replay byte budget', () => {
+    const session = freshSession();
+    session.workbook = {
+      sheets: [{ name: 'Custom', role: 'output' }],
+      cells: Array.from({ length: MAX_CELLS }, (_, i) => ({
+        sheet: 'Custom', address: `A${i + 1}`, label: '\u0000'.repeat(80),
+        input: '\u0000'.repeat(256), emphasis: false,
+      })),
+    };
+    const json = JSON.stringify(exportTrace(session));
+    expect(new TextEncoder().encode(json).byteLength).toBeLessThanOrEqual(MAX_TRACE_BYTES);
+    expect(replayTrace(JSON.parse(json))).toEqual(session);
+  });
+
+  it('validates replay sessions and ignores forged legacy derived evidence', () => {
+    const session = prune(freshSession(), 'Report!B4', 'drop');
+    const trace = { ...exportTrace(session), result: { forged: true }, goldComparison: { f1: 1 } };
+    expect(analyze(replayTrace(trace))).toEqual(analyze(session));
+    for (const invalid of [null, {}, { ...trace, version: 'unsupported' },
+      { ...trace, session: { ...session, policy: 'unknown' } },
+      { ...trace, session: { ...session, adjudications: { 'Missing!A1': 'drop' } } }]) {
+      expect(() => replayTrace(invalid)).toThrow();
+    }
+    expect(() => exportTrace({ ...session, adjudications: { 'Missing!A1': 'drop' } })).toThrow();
   });
 });
