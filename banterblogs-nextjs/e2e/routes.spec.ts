@@ -116,6 +116,36 @@ for (const route of [...ROUTES, MISSING_ROUTE]) {
   });
 }
 
+// The bar's narrowest desktop widths: lg, where the nav first shows, and xl,
+// where the icons return. Every section stays on one line inside the bar and
+// the search keeps room for its placeholder.
+const HEADER_WIDTHS = [1024, 1280] as const;
+const MIN_SEARCH_WIDTH = 160;
+
+for (const width of HEADER_WIDTHS) {
+  test(`the header fits every section at ${width}px`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'the desktop bar');
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/projects', { waitUntil: 'networkidle' });
+    const nav = page.getByRole('navigation', { name: 'Primary' });
+    await expect(nav.getByRole('link', { name: 'Projects' })).toBeVisible();
+    const bar = await nav.evaluate((element) => {
+      const row = element.closest('.container')!;
+      const links = [...element.querySelectorAll('a')].filter((link) => link.offsetParent !== null);
+      return {
+        contentRight: row.getBoundingClientRect().right - parseFloat(getComputedStyle(row).paddingRight),
+        lastRight: Math.max(...links.map((link) => link.getBoundingClientRect().right)),
+        // a section that wraps stands taller than the rest
+        sectionHeights: new Set(links.filter((link) => !link.hasAttribute('aria-label')).map((link) => link.getBoundingClientRect().height)).size,
+        search: row.querySelector('input[type="search"]')?.getBoundingClientRect().width ?? 0,
+      };
+    });
+    expect(bar.lastRight).toBeLessThanOrEqual(bar.contentRight);
+    expect(bar.sectionHeights).toBe(1);
+    expect(bar.search).toBeGreaterThanOrEqual(MIN_SEARCH_WIDTH);
+  });
+}
+
 for (const route of REFLOW_ROUTES) {
   test.describe(`${route} at ${REFLOW_WIDTH}px`, () => {
     test('reflows without a sideways scroll and logs no errors', async ({ page }, testInfo) => {

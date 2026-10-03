@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { href: '/platform', label: 'Platform' },
   { href: '/reports', label: 'Research' },
   { href: '/papers', label: 'Papers' },
+  { href: '/projects', label: 'Projects' },
   { href: '/tools', label: 'Tools' },
   { href: '/show', label: 'Show' },
   { href: '/work', label: 'Work' },
@@ -189,7 +190,9 @@ export function Header() {
                   </IntentLink>
                 );
               })}
-              <div className="ml-2 flex items-center gap-1 border-l border-border/40 pl-2">
+              {/* eight sections leave no room for these beside the search at lg;
+                  the phone menu and the footer carry them too */}
+              <div className="ml-2 hidden items-center gap-1 border-l border-border/40 pl-2 xl:flex">
                 {SOCIAL_LINKS.map(({ href, label, Icon }) => (
                   <Link key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={ICON_BUTTON}>
                     <Icon className="h-4 w-4" />

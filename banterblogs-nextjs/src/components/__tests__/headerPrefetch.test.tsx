@@ -61,7 +61,7 @@ describe('header prefetch', () => {
   it('keeps the sections warm once the page has painted and gone idle, not before', () => {
     const { container } = render(<Header />);
     const links = primary(container);
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/platform', '/reports', '/papers', '/tools', '/show', '/work', '/about']);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/platform', '/reports', '/papers', '/projects', '/tools', '/show', '/work', '/about']);
     expect(links.map((link) => link.dataset.prefetch)).toEqual(links.map(() => 'off'));
 
     runIdle();
@@ -73,7 +73,7 @@ describe('header prefetch', () => {
     fireEvent.click(getByRole('button', { name: 'Toggle navigation' }));
     const rows = [...container.querySelectorAll<HTMLAnchorElement>('#mobile-nav a[href^="/"]')];
 
-    expect(rows).toHaveLength(7);
+    expect(rows).toHaveLength(8);
     expect(rows.map((row) => row.dataset.prefetch)).toEqual(rows.map(() => 'auto'));
   });
 });
