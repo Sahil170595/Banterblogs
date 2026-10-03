@@ -6,11 +6,14 @@
 export const REVEALED_CLASS = 'demo-revealed';
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+/** a result taller than the screen counts as seen when it starts this high */
+const SEEN_TOP_FRACTION = 0.25;
 
 export function revealResult(element: HTMLElement | null): void {
   if (!element) return;
   const box = element.getBoundingClientRect();
-  const visible = box.top >= 0 && box.top < window.innerHeight && box.bottom > 0;
+  // wholly on screen, or starting near the top of it
+  const visible = box.top >= 0 && box.bottom > 0 && (box.bottom <= window.innerHeight || box.top <= window.innerHeight * SEEN_TOP_FRACTION);
   // jsdom, which the unit tests run on, has neither media queries nor scrolling
   if (!visible && typeof element.scrollIntoView === 'function') {
     const still = typeof window.matchMedia === 'function' && window.matchMedia(REDUCED_MOTION).matches;
