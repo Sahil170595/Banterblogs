@@ -5,6 +5,17 @@ import { exportTrace, freshSession } from '@/lib/projects/scheduling-lab/engine'
 
 afterEach(cleanup);
 describe('scheduling lab controls', () => {
+  it('opens and closes settings without discarding a draft', () => {
+    render(<SchedulingLab />);
+    const toggle = screen.getByRole('button', { name: 'Schedule settings' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '74' } });
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByLabelText('Seed')).toHaveProperty('value', '74');
+  });
   it('recomputes an edited seed and resets configuration and virtual progress', () => {
     render(<SchedulingLab />);
     fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '99' } });
