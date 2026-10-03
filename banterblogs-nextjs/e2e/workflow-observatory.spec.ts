@@ -5,6 +5,8 @@ import { collectErrors } from './consoleErrors';
 test('workflow executes real controls and refuses a success toast without a record', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/work/projects/workflow-observatory');
+  const settings = page.getByRole('button', { name: 'Workflow settings', exact: true });
+  if (await settings.isVisible()) await settings.click();
   await page.getByRole('combobox', { name: 'Requested room', exact: true }).selectOption('south');
   await page.getByRole('button', { name: 'Run workflow', exact: true }).click();
   await expect(page.getByRole('status', { name: 'Workflow status', exact: true })).toContainText('Complete');

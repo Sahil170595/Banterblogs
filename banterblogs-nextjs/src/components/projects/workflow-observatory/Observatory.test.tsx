@@ -5,6 +5,17 @@ import { Observatory } from './Observatory';
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('same-origin native DOM execution', () => {
+  it('keeps the workflow configuration when its mobile panel closes', () => {
+    render(<Observatory />);
+    const toggle = screen.getByRole('button', { name: 'Workflow settings' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    fireEvent.change(screen.getByLabelText('Requested room'), { target: { value: 'south' } });
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByLabelText('Requested room')).toHaveProperty('value', 'south');
+  });
   it('steps only the next action and exposes its actual input evidence', async () => {
     render(<Observatory />);
     fireEvent.click(screen.getByRole('button', { name: 'Step' }));
