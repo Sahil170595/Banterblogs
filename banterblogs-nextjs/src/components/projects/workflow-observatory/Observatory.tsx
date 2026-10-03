@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Check, ChevronRight, Download, Pause, Play, RotateCcw, SkipForward, Upload, X } from 'lucide-react';
+import { Check, ChevronRight, Download, Pause, Play, RotateCcw, SkipForward, SlidersHorizontal, Upload, X } from 'lucide-react';
 import { z } from 'zod';
 import {
   DEFAULT_CONFIG, MAX_EVENTS, FIXTURE_VERSION, SCHEMA_VERSION, configSchema, completion,
@@ -25,6 +25,7 @@ export function Observatory() {
   const [trace, setTrace] = useState(() => startTrace());
   const [selected, setSelected] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [replay, setReplay] = useState<Replay | null>(null);
   const [replayFrame, setReplayFrame] = useState(0);
@@ -129,6 +130,7 @@ export function Observatory() {
   return <div className={styles.tool}>
     <div className={styles.toolbar}>
       <div className={styles.commands}>
+        <button className={`${styles.icon} ${styles.settingsToggle}`} aria-label="Workflow settings" title="Workflow settings" aria-expanded={settingsOpen} aria-controls="workflow-settings" onClick={() => setSettingsOpen(open => !open)}><SlidersHorizontal size={18} /></button>
         <button className={styles.primary} disabled={busy || !canExecute} onClick={() => execute('run')}><Play size={16} />Run workflow</button>
         <button className={styles.secondary} disabled={busy || !canExecute} onClick={() => execute('step')}><SkipForward size={16} />Step</button>
         <button className={styles.icon} disabled={!busy} title="Stop execution" aria-label="Stop execution" onClick={() => controllerRef.current?.abort()}><Pause size={18} /></button>
@@ -141,7 +143,7 @@ export function Observatory() {
       </div>
     </div>
     <div className={styles.layout}>
-      <aside className={styles.configuration} aria-label="Workflow configuration">
+      <aside id="workflow-settings" className={`${styles.configuration} ${settingsOpen ? styles.configurationOpen : ''}`} aria-label="Workflow configuration">
         <label>Task title<input value={config.title} maxLength={60} disabled={busy} onChange={event => changeConfig({ title: event.target.value })} /></label>
         <label>Requested room<select value={config.room} disabled={busy} onChange={event => changeConfig({ room: event.target.value as Config['room'] })}><option value="north">North lab</option><option value="south">South lab</option></select></label>
         <label>Injected failure<select value={config.failure} disabled={busy} onChange={event => changeConfig({ failure: event.target.value as Config['failure'] })}>

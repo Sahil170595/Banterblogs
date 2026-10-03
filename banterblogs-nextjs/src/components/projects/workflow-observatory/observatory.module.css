@@ -6,6 +6,7 @@
 .tool :is(button,input,select,summary):focus-visible { outline: 2px solid hsl(var(--status-blue)); outline-offset: 3px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px; border-bottom: 1px solid hsl(var(--border)); }
 .commands { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.commands .settingsToggle { display: none; }
 .primary, .secondary { display: inline-flex; justify-content: center; align-items: center; gap: 7px; padding: 10px 13px; border-radius: 4px; min-height: 42px; font-weight: 500; }
 .primary { background: hsl(var(--foreground)); color: hsl(var(--background)); }.primary:hover { background: hsl(var(--accent)); }
 .secondary { border: 1px solid hsl(var(--border)); }.secondary:hover { background: hsl(var(--secondary)); }
@@ -36,5 +37,5 @@
 .inspector details { margin-top: 18px; font-size: 12px; }.inspector summary { cursor: pointer; color: hsl(var(--muted-foreground)); }.inspector pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 340px; overflow-y: auto; font-size: 11px; margin-top: 12px; }
 .replay { border-top: 1px solid hsl(var(--border)); padding: 20px; }.replay > div:first-child { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }.replay dd { margin: 0; overflow-wrap: anywhere; }.replay > p { font-size: 12px; }
 .fidelity { padding: 14px 20px; border-top: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground)); font-size: 11px; }
-@media(max-width:850px) { .layout { grid-template-columns: minmax(0,1fr); }.configuration { border-right: 0; border-bottom: 1px solid hsl(var(--border)); }.configuration > .pair { max-width: none; }.traceLayout { grid-template-columns: minmax(0,1fr); }.siteBody { min-height: 300px; } }
+@media(max-width:850px) { .layout { grid-template-columns: minmax(0,1fr); }.commands .settingsToggle { display: inline-flex; }.configuration { display: none; border-right: 0; border-bottom: 1px solid hsl(var(--border)); }.configuration.configurationOpen { display: flex; }.configuration > .pair { max-width: none; }.traceLayout { grid-template-columns: minmax(0,1fr); }.siteBody { min-height: 300px; } }
 @media(max-width:450px) { .toolbar { padding: 10px; }.configuration, .experience, .trace, .replay { padding: 15px; }.dialog form { grid-template-columns: minmax(0,1fr); }.conditions ul { grid-template-columns: minmax(0,1fr); }.fixture header { padding: 12px; }.siteBody { padding: 12px; }.fixture .secondary { font-size: 12px; }.fidelity { padding: 12px 15px; } }
