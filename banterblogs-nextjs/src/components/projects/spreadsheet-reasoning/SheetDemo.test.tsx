@@ -10,9 +10,76 @@ vi.mock('react', async (importOriginal) => {
   return { ...actual, ViewTransition: ({ children }: { children: import('react').ReactNode }) => children };
 });
 
+// jsdom has no layout or scrolling; the reveal is asserted by its call
+const { revealResult } = vi.hoisted(() => ({ revealResult: vi.fn() }));
+vi.mock('../reveal', () => ({ revealResult }));
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  revealResult.mockClear();
+});
+
+const fileTools = () => screen.getByRole('button', { name: 'Replay JSON' }).closest('[data-file-tools]') as HTMLElement;
+
+describe('spreadsheet demo, after live QA', () => {
+  // a refusal was a raw validation dump, Recalculate stayed on, and every cell read "pending"
+  it('refuses an empty value beside the editor, keeps Recalculate off, and keeps the last results in view', () => {
+    render(<SheetDemo />);
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect Inputs!B2' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Value or formula' }), { target: { value: '' } });
+    expect(screen.getByRole('button', { name: 'Recalculate' }).hasAttribute('disabled')).toBe(true);
+    const editor = screen.getByRole('heading', { name: 'Edit Inputs!B2' }).parentElement!;
+    expect(within(editor).getByRole('alert').textContent).toBe('Inputs!B2: enter a value or a formula.');
+    expect(document.body.textContent).not.toMatch(/"code"/);
+    const row = (id: string) => screen.getByRole('button', { name: `Inspect ${id}` }).closest('tr')!;
+    expect(within(row('Calc!B4')).getByText('840')).toBeTruthy();
+    expect(within(row('Inputs!B2')).getByText('edited')).toBeTruthy();
+  });
+
+  it('answers a refused replay beside its button, in plain words, and says when a replay landed', async () => {
+    render(<SheetDemo />);
+    fireEvent.click(screen.getByRole('button', { name: 'Export JSON' }).closest('details')!.querySelector('summary')!);
+    fireEvent.change(screen.getByLabelText('JSON replay file'), { target: { files: [{ size: 10, text: async () => '{"trunc' }] } });
+    await waitFor(() => expect(within(fileTools()).getByRole('alert').textContent).toBe('Replay refused: The file is not valid JSON.'));
+    const body = JSON.stringify(exportTrace(freshSession()));
+    fireEvent.change(screen.getByLabelText('JSON replay file'), { target: { files: [{ size: body.length, text: async () => body }] } });
+    await waitFor(() => expect(fileTools().textContent).toMatch(/Replayed/));
+    expect(within(fileTools()).queryByRole('alert')).toBeNull();
+    expect(fileTools().textContent).not.toMatch(/Trace/);
+  });
+
+  it('brings the inspector into view when a cell in the graph is picked', () => {
+    render(<SheetDemo />);
+    fireEvent.click(within(graph()).getByRole('button', { name: /^Calc!B4,/ }));
+    expect(revealResult).toHaveBeenCalledWith(screen.getByRole('region', { name: 'Selected cell evidence' }));
+  });
+
+  // the review control showed Off after a drop made in the inspector, and Off did not undo it
+  it('shows any review the inspector made, and Off clears every one', () => {
+    render(<SheetDemo />);
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect Calc!B4' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Prune-only review' }), { target: { value: 'drop' } });
+    expect(strip('Finals found')).toBe('1 of 2');
+    expect(screen.getByRole('radio', { name: 'Off' })).toHaveProperty('checked', false);
+    expect(screen.getByText(/Reviewed in the inspector: Calc!B4 dropped/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'Off' }));
+    expect(strip('Finals found')).toBe('2 of 2');
+    expect(screen.getByRole('radio', { name: 'Off' })).toHaveProperty('checked', true);
+  });
+
+  // the cycles workbook kept the baseline's headline, its review option and its key
+  it('describes the cycles workbook on its own terms', () => {
+    render(<SheetDemo />);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Workbook' }), { target: { value: 'broken' } });
+    expect(screen.getByText(/^\d+ of \d+ cells cannot be computed/)).toBeTruthy();
+    expect(screen.getByText(/no answer key, so nothing here is scored/)).toBeTruthy();
+    expect(screen.queryByText(/the rules find 2 of 2 final values/)).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Drop Report!B4' })).toBeNull();
+    const key = screen.getByRole('list', { name: 'Graph key' });
+    expect(within(key).queryByText('Wrong against the key')).toBeNull();
+    expect(within(key).getByText(/Invalid/)).toBeTruthy();
+  });
 });
 
 const graph = () => screen.getByRole('region', { name: 'Workbook dependency graph' });

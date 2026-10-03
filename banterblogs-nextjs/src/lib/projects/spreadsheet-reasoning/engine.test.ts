@@ -46,6 +46,11 @@ describe('synthetic spreadsheet reasoning', () => {
     ['=SUM(B3:B2)', /Reversed range/],
     ['=2 trailing', /Unexpected/],
     ['=1e999', /Unexpected|finite/],
+    // live QA: these said only what is supported, or "Unexpected token at character 2"
+    ['=Inputs!B3+', /ends after an operator/],
+    ['=1e308*10', /exponent notation/],
+    ['=AVERAGE(B2:B3)', /AVERAGE.*only SUM/],
+    ['=2 trailing', /operator .* missing/],
   ])('returns explicit cell errors for %s', (input, message) => {
     const session = freshSession();
     session.workbook.cells[10].input = input;

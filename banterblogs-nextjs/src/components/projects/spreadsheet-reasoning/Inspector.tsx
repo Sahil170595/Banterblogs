@@ -30,17 +30,26 @@ const RULE_GLOSS: Record<string, string> = {
   'Emphasized checkpoint': 'emphasized in the sheet, with a total label or a SUM',
 };
 
+/** what the last file action did, said beside the file buttons */
+type FileStatus = { kind: 'notice' | 'error'; text: string } | null;
+
 export function Inspector({ demo }: { demo: SheetDemo }) {
-  const { run, draft, result, pending, selected } = demo;
+  const { run, draft, result, pending, selected, issue, edited, evidenceRef } = demo;
+  // a refused review, answered at the evidence it was made beside
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  // a refused recalculation, answered at the editor
+  const [editError, setEditError] = useState('');
+  const [fileStatus, setFileStatus] = useState<FileStatus>(null);
   const file = useRef<HTMLInputElement>(null);
   const cell = draft.workbook.cells.find((c) => cellId(c) === selected) ?? draft.workbook.cells[0];
   const computed = result.cells[cellId(cell)];
   const ballots = demo.ballots?.[cellId(cell)];
+  const editProblem = issue ?? editError;
 
-  const editCell = (change: Partial<typeof cell>) =>
+  const editCell = (change: Partial<typeof cell>) => {
+    setEditError('');
     demo.edit({ ...draft, workbook: { ...draft.workbook, cells: draft.workbook.cells.map((c) => (cellId(c) === cellId(cell) ? { ...c, ...change } : c)) } });
+  };
   const exportJson = () => {
     try {
       const url = URL.createObjectURL(new Blob([demo.exportJson()], { type: 'application/json' }));
@@ -51,16 +60,22 @@ export function Inspector({ demo }: { demo: SheetDemo }) {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setNotice('Trace exported.');
+      setFileStatus({ kind: 'notice', text: 'Exported the workbook as a JSON file.' });
     } catch (cause) {
       console.error('Spreadsheet export failed:', cause);
-      setError('The trace could not be exported.');
+      setFileStatus({ kind: 'error', text: 'The workbook could not be exported. Try again.' });
     }
+  };
+  const resetTo = (fixture?: Session['fixture']) => {
+    setFileStatus(null);
+    setEditError('');
+    setError('');
+    demo.reset(fixture);
   };
 
   return (
     <div className={styles.lab}>
-      <section className={styles.evidence} aria-label="Selected cell evidence">
+      <section ref={evidenceRef}className={styles.evidence} aria-label="Selected cell evidence">
         <h3 className={styles.evidenceTitle}>{cellId(cell)}</h3>
         <p className={styles.cellSummary}>
           {cell.label}: {pending ? 'pending' : computed?.error ? 'error' : number(computed?.value ?? null)}{' '}
@@ -114,7 +129,7 @@ export function Inspector({ demo }: { demo: SheetDemo }) {
         <div className={styles.toolbar}>
           <label className={controls.field}>
             Workbook
-            <select value={draft.fixture} onChange={(e) => demo.reset(e.target.value as Session['fixture'])}>
+            <select value={draft.fixture} onChange={(e) => resetTo(e.target.value as Session['fixture'])}>
               {Object.entries(fixtures).map(([key, fixture]) => (
                 <option key={key} value={key}>
                   {fixture.title}
@@ -122,40 +137,66 @@ export function Inspector({ demo }: { demo: SheetDemo }) {
               ))}
             </select>
           </label>
-          <button type="button" className={controls.button} onClick={() => setError(demo.recalculate() ?? '')} disabled={!pending}>
+          <button
+            type="button"
+            className={controls.button}
+            onClick={() => setEditError(demo.recalculate() ?? '')}
+            disabled={!pending || !!issue}
+            title={issue ?? undefined}
+          >
             <Play aria-hidden="true" />
             Recalculate
           </button>
-          <div className={styles.icons}>
-            <button type="button" className={controls.iconButton} aria-label="Reset workbook" title="Reset workbook" onClick={() => demo.reset()}>
-              <RotateCcw aria-hidden="true" />
-              <span className={controls.iconLabel}>Reset workbook</span>
-            </button>
-            <button type="button" className={controls.iconButton} aria-label="Export JSON" title="Export JSON" disabled={pending} onClick={exportJson}>
-              <Download aria-hidden="true" />
-              <span className={controls.iconLabel}>Export JSON</span>
-            </button>
-            <button type="button" className={controls.iconButton} aria-label="Replay JSON" title="Replay JSON" onClick={() => file.current?.click()}>
-              <Upload aria-hidden="true" />
-              <span className={controls.iconLabel}>Replay JSON</span>
-            </button>
-            <input
-              ref={file}
-              type="file"
-              accept=".json,application/json"
-              aria-label="JSON replay file"
-              hidden
-              onChange={async (e) => {
-                const picked = e.target.files?.[0];
-                if (picked) setError((await demo.importTrace(picked)) ?? '');
-                if (file.current) file.current.value = '';
-              }}
-            />
+          <div className={styles.fileTools} data-file-tools="">
+            <div className={styles.icons}>
+              <button type="button" className={controls.iconButton} aria-label="Reset workbook" title="Reset workbook" onClick={() => resetTo()}>
+                <RotateCcw aria-hidden="true" />
+                <span className={controls.iconLabel}>Reset workbook</span>
+              </button>
+              <button type="button" className={controls.iconButton} aria-label="Export JSON" title="Export JSON" disabled={pending} onClick={exportJson}>
+                <Download aria-hidden="true" />
+                <span className={controls.iconLabel}>Export JSON</span>
+              </button>
+              <button type="button" className={controls.iconButton} aria-label="Replay JSON" title="Replay JSON" onClick={() => file.current?.click()}>
+                <Upload aria-hidden="true" />
+                <span className={controls.iconLabel}>Replay JSON</span>
+              </button>
+              <input
+                ref={file}
+                type="file"
+                accept=".json,application/json"
+                aria-label="JSON replay file"
+                hidden
+                onChange={async (e) => {
+                  const picked = e.target.files?.[0];
+                  if (picked) {
+                    const refusal = await demo.importTrace(picked);
+                    setEditError('');
+                    setFileStatus(
+                      refusal
+                        ? { kind: 'error', text: `Replay refused: ${refusal}` }
+                        : { kind: 'notice', text: 'Replayed: every value and label was recomputed from the file’s workbook; nothing in it was trusted.' },
+                    );
+                  }
+                  if (file.current) file.current.value = '';
+                }}
+              />
+            </div>
+            {fileStatus?.kind === 'error' && (
+              <p role="alert" className={controls.error}>
+                {fileStatus.text}
+              </p>
+            )}
+            {fileStatus?.kind === 'notice' && (
+              <p className={controls.hint} aria-live="polite">
+                {fileStatus.text}
+              </p>
+            )}
           </div>
         </div>
         <p className={controls.hint} aria-live="polite">
           {pending
-            ? 'Edited: the graph and evidence show the last calculation until you recalculate.'
+            ? 'Edited: the graph, the table and the evidence show the last calculation until you recalculate.'
             : `${run.workbook.cells.length} cells · ${result.edges.length} dependency edges · computed in your browser, no model calls. Edit a cell, then recalculate.`}
         </p>
 
@@ -171,6 +212,7 @@ export function Inspector({ demo }: { demo: SheetDemo }) {
                 </tr>
               </thead>
               <tbody>
+                {/* the last calculation, as the note says; an edited cell is marked until recalculated */}
                 {draft.workbook.cells.map((item) => {
                   const id = cellId(item);
                   const out = result.cells[id];
@@ -182,10 +224,13 @@ export function Inspector({ demo }: { demo: SheetDemo }) {
                         </button>
                       </td>
                       <td>{item.label}</td>
-                      <td className={styles.numeric}>{pending ? '—' : out?.error ? 'error' : number(out?.value ?? null)}</td>
+                      <td className={styles.numeric}>
+                        {out?.error ? 'error' : number(out?.value ?? null)}
+                        {edited.has(id) &&<small className={styles.edited}>edited</small>}
+                      </td>
                       <td>
-                        <span className={styles.chip} data-label={pending ? undefined : out?.label}>
-                          {pending ? 'pending' : out?.label}
+                        <span className={styles.chip} data-label={out?.label}>
+                          {out?.label}
                         </span>
                       </td>
                     </tr>
@@ -227,6 +272,11 @@ export function Inspector({ demo }: { demo: SheetDemo }) {
               </label>
             </div>
             <p className={controls.hint}>A support sheet&apos;s cells are always intermediate: it holds working steps, not results.</p>
+            {editProblem && (
+              <p role="alert" className={controls.error}>
+                {editProblem}
+              </p>
+            )}
             {!pending && computed && (
               <>
                 <label className={controls.field}>
@@ -264,9 +314,6 @@ export function Inspector({ demo }: { demo: SheetDemo }) {
             </div>
           </div>
         </div>
-        <p className={styles.notice} role="status">
-          {notice}
-        </p>
       </UnderTheHood>
     </div>
   );

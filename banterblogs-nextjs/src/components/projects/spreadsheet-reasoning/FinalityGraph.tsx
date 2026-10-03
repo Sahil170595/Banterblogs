@@ -65,22 +65,42 @@ export function FinalityGraph({ demo }: { demo: SheetDemo }) {
     const p = place.get(id)!;
     return { x: p.col * UNIT + CENTER, y: p.row * UNIT + CENTER };
   };
-  const review = run.adjudications[SCRATCH_CELL] === 'drop' ? 'drop' : 'none';
+  // the key's workbook carries the scratch-cell story; the cycles workbook has no key and nothing to review against it
+  const keyed = fixtures[run.fixture].gold !== null;
+  const invalid = Object.values(result.cells).filter((c) => c.label === 'invalid').length;
+  // the switch shows a review made in the inspector too: neither of its options when it is not one of them
+  const reviews = Object.entries(run.adjudications);
+  const review = reviews.length === 0 ? 'none' : reviews.length === 1 && run.adjudications[SCRATCH_CELL] === 'drop' ? 'drop' : null;
 
   return (
     <div className={styles.hero}>
-      <p className={styles.headline}>
-        With balanced votes the rules find {balanced.tp} of {finals} final values and wrongly mark {balanced.fp} scratch cell final. The
-        precision gate, built to be stricter, finds {precision.tp === 0 ? 'none' : precision.tp} and{' '}
-        {precision.fp > 0 ? 'still marks the scratch cell' : 'leaves the scratch cell alone'}.
-      </p>
-      <p className={controls.lead}>
-        A final value is one someone would report; an intermediate is a working step. The answer key marks {list(GOLD)} final (
-        {goldNames.length === 1 ? `both “${goldNames[0]}”` : goldNames.map((n) => `“${n}”`).join(' and ')}); {SCRATCH_CELL}, &ldquo;
-        {named(SCRATCH_CELL)}&rdquo;, is not. {rules} simple rules each vote final, intermediate or abstain on every cell, and the rule
-        policy turns their votes into a label; a cell the policy cannot settle is sent to review, for a person to decide. Lines run from a
-        value to the cells that use it; on a phone the inspector below lists them. Click a cell to see how each rule voted.
-      </p>
+      {keyed ? (
+        <>
+          <p className={styles.headline}>
+            With balanced votes the rules find {balanced.tp} of {finals} final values and wrongly mark {balanced.fp} scratch cell final. The
+            precision gate, built to be stricter, finds {precision.tp === 0 ? 'none' : precision.tp} and{' '}
+            {precision.fp > 0 ? 'still marks the scratch cell' : 'leaves the scratch cell alone'}.
+          </p>
+          <p className={controls.lead}>
+            A final value is one someone would report; an intermediate is a working step. The answer key marks {list(GOLD)} final (
+            {goldNames.length === 1 ? `both “${goldNames[0]}”` : goldNames.map((n) => `“${n}”`).join(' and ')}); {SCRATCH_CELL}, &ldquo;
+            {named(SCRATCH_CELL)}&rdquo;, is not. {rules} simple rules each vote final, intermediate or abstain on every cell, and the rule
+            policy turns their votes into a label; a cell the policy cannot settle is sent to review, for a person to decide. Lines run from a
+            value to the cells that use it; on a phone the inspector below lists them. Click a cell to see how each rule voted.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className={styles.headline}>
+            {invalid} of {run.workbook.cells.length} cells cannot be computed: a cycle or a missing reference blocks them and every cell that
+            depends on them, so they are labelled invalid and the rules do not vote on them.
+          </p>
+          <p className={controls.lead}>
+            This workbook has no answer key, so nothing here is scored. The cells that can be computed are still labelled final, intermediate
+            or review. Click a cell to see what blocks it or how each rule voted.
+          </p>
+        </>
+      )}
       <div className={controls.row}>
         <Segmented
           legend="Rule policy"
@@ -92,21 +112,31 @@ export function FinalityGraph({ demo }: { demo: SheetDemo }) {
             demo.setPolicy(policy);
           }}
         />
-        <Segmented
-          legend="Prune-only review"
-          name="review"
-          options={REVIEW}
-          value={review}
-          onChange={(v) => {
-            setNote('');
-            setError(demo.adjudicate(SCRATCH_CELL, v === 'drop' ? 'drop' : null) ?? '');
-          }}
-        />
+        {keyed && (
+          <Segmented
+            legend="Prune-only review"
+            name="review"
+            options={REVIEW}
+            value={review}
+            onChange={(v) => {
+              setNote('');
+              setError(demo.setReview(v === 'drop' ? { [SCRATCH_CELL]: 'drop' } : {}) ?? '');
+            }}
+          />
+        )}
       </div>
-      <p className={controls.hint}>
-        A prune-only review can remove a final and never add one. The reviewer here can see the answer key, so dropping {SCRATCH_CELL} is
-        not the rules getting better.
-      </p>
+      {keyed && (
+        <p className={controls.hint}>
+          A prune-only review can remove a final and never add one. The reviewer here can see the answer key, so dropping {SCRATCH_CELL} is
+          not the rules getting better.
+        </p>
+      )}
+      {review === null && (
+        <p className={controls.hint}>
+          Reviewed in the inspector: {list(reviews.map(([id, verdict]) => `${id} ${verdict === 'drop' ? 'dropped' : 'kept as final'}`))}. Off
+          clears every review.
+        </p>
+      )}
       {note && (
         <p role="status" className={controls.hint}>
           {note}
@@ -161,7 +191,8 @@ export function FinalityGraph({ demo }: { demo: SheetDemo }) {
         <li data-label="final">Final</li>
         <li data-label="intermediate">Intermediate</li>
         <li data-label="review">Review: {REVIEW_MEANING[run.policy]}</li>
-        <li data-flag="false-final">Wrong against the key</li>
+        {invalid > 0 && <li data-label="invalid">Invalid: cannot be computed</li>}
+        {gold && <li data-flag="false-final">Wrong against the key</li>}
       </ul>
       <ProjectFigureTransition slug="spreadsheet-reasoning">
         <div className={styles.graphScroll} role="region" aria-label="Workbook dependency graph" tabIndex={0}>
@@ -198,7 +229,7 @@ export function FinalityGraph({ demo }: { demo: SheetDemo }) {
                       data-flag={flag}
                       aria-pressed={selected === id}
                       aria-label={`${id}, ${cell.label}: ${computed.error ? 'invalid' : computed.value}, labelled ${computed.label}${flag === 'false-final' ? ', not final in the key' : flag === 'missed' ? ', final in the key' : ''}`}
-                      onClick={() => demo.select(id)}
+                      onClick={() => demo.inspect(id)}
                     >
                       <span className={styles.nodeHead}>
                         <strong>{cell.address}</strong>
