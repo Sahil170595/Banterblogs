@@ -280,7 +280,7 @@ describe('work page résumé currency', () => {
 });
 
 describe('work page layout', () => {
-  it('puts the title across the page, then the call to action first in the rail, the profile links after it, and an index of the five sections', () => {
+  it('puts the title across the page, then the call to action first in the rail, the profile links after it, and an index of the six sections', () => {
     expect(page.querySelector('header h1')).not.toBeNull();
     const rail = page.querySelector('.profile-rail')!;
     const links = [...rail.querySelectorAll('a[href]')].filter((a) => !a.getAttribute('href')!.startsWith('#'));
@@ -292,7 +292,7 @@ describe('work page layout', () => {
       expect(link.getAttribute('target')).toBe('_blank');
     }
     const index = [...rail.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute('href') ?? '');
-    expect(index).toEqual(['#research', '#experience', '#service', '#education', '#skills']);
+    expect(index).toEqual(['#research', '#projects', '#experience', '#service', '#education', '#skills']);
     for (const id of index) expect(page.querySelector(`section${id}`), id).not.toBeNull();
   });
 
@@ -382,7 +382,7 @@ describe('work page layout', () => {
   // re-judge P1-7: "AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF;" has no break
   // opportunity and ran the page to 353px at 320; folded bullets included
   it('lets a long unbroken token in a bullet break anywhere, so it never widens the page', () => {
-    const bullets = [...page.querySelectorAll('li.list-row ul > li')];
+    const bullets = [...page.querySelectorAll(':is(#research, #experience) li.list-row ul > li')];
     expect(bullets.length).toBe([...RESEARCH, ...EXPERIENCE].reduce((n, entry) => n + entry.bullets.length, 0));
     for (const bullet of bullets) expect(bullet.className.split(/\s+/)).toContain('[overflow-wrap:anywhere]');
   });

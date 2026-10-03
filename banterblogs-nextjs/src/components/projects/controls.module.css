@@ -1,0 +1,171 @@
+/* The project demos' shared controls (components/projects/controls.tsx):
+   segmented choices, pill buttons and form fields, on site tokens. No text
+   under 12px. */
+
+/* a demo's row of choices above what they change */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.75rem;
+}
+
+.segmented {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.segmented legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.segmented > div {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-radius: 9999px;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.08);
+  padding: 3px;
+}
+
+.segmented label {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.segmented label:hover {
+  color: hsl(var(--foreground));
+}
+
+.segmented label[data-checked] {
+  background-color: hsl(var(--foreground) / 0.1);
+  color: hsl(var(--foreground));
+}
+
+.segmented label span {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.segmented input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmented label:has(input:focus-visible) {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.button,
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 9999px;
+  background-color: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.button {
+  padding: 0.375rem 1rem;
+}
+
+.iconButton {
+  width: 2.25rem;
+  padding: 0;
+}
+
+.button svg,
+.iconButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.button:hover:not(:disabled),
+.iconButton:hover:not(:disabled) {
+  border-color: hsl(var(--foreground) / 0.3);
+  background-color: hsl(var(--foreground) / 0.05);
+}
+
+.button:disabled,
+.iconButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button:focus-visible,
+.iconButton:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.field :is(input, select) {
+  min-height: 2.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  background-color: hsl(var(--background));
+  padding: 0.375rem 0.625rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+}
+
+.field :is(input, select):focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 1px;
+}
+
+.error {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: hsl(var(--status-red));
+}
+
+.hint {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
