@@ -67,6 +67,11 @@ export default function SpreadsheetReasoningPage() {
     <ProjectPage slug={PROJECT.slug} demo={<SheetDemo />} findings={FINDINGS} sections={sections}>
       <h2 id="question">{PLAIN.question}</h2>
       <p>
+        Formuloom was built for reviewing changes to financial models, such as discounted cash flow, three-statement and M&amp;A workbooks.
+        One update can change thousands of cells on a sheet, and a reviewer needs the outputs that moved, not every working step that moved
+        with them.
+      </p>
+      <p>
         A cell can be numerically right and still the wrong thing to report. A margin subtotal can be a real result for its section and
         also feed a later calculation; a scratch formula can have no consumers at all and mean nothing. So the problem is not evaluating
         formulas, it is recovering the scope in which a value is final. A dependency graph, the map of which cells feed which, is evidence

@@ -68,7 +68,7 @@ export function EvidenceTable({ selected, onSelect }: { selected: string; onSele
         and matches the request. Red marks a check that got it wrong. Click an attempt to run it in the booking app below. Try
         &ldquo;Notice shown, nothing saved&rdquo;: the app says &ldquo;Reservation saved&rdquo; and its list stays empty.
       </p>
-      <ProjectFigureTransition slug="workflow-observatory">
+      <ProjectFigureTransition slug="browser-agent-completion">
         <div className={styles.tableScroll} role="region" aria-label="What each kind of evidence says" tabIndex={0}>
           <table className={`${styles.evidence} ${controls.stackTable}`} role="table">
             <thead role="rowgroup">

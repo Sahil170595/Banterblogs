@@ -55,7 +55,7 @@ const FINDINGS: ProjectFinding[] = [
   },
 ];
 
-export default function WorkflowObservatoryPage() {
+export default function BrowserAgentCompletionPage() {
   return (
     <ProjectPage slug={PROJECT.slug} demo={<WorkflowDemo />} findings={FINDINGS} sections={sections}>
       <h2 id="question">{PLAIN.question}</h2>

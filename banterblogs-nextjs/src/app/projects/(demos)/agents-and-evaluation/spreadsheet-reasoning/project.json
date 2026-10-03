@@ -1,7 +1,7 @@
 {
   "slug": "spreadsheet-reasoning",
   "title": "Spreadsheet Reasoning Inspector",
-  "dek": "Formuloom is a pipeline I built in Python that sorts a spreadsheet's changed cells into final outputs, the values someone would report, and intermediates, the working steps. Rebuilt here on one small workbook: rules vote on each cell over its dependency graph, scored against an answer key.",
+  "dek": "Formuloom is a pipeline I built in Python for reviewing changes to financial models: it sorts a workbook's changed cells into final outputs, the values someone would report, and intermediates, the working steps. Rebuilt here on one small workbook, with rules voting on each cell.",
   "summary": "Rules vote on which spreadsheet values are final: balanced voting marks a scratch cell final, and a stricter gate finds neither real result.",
   "collection": "agents-and-evaluation",
   "alsoIn": [],

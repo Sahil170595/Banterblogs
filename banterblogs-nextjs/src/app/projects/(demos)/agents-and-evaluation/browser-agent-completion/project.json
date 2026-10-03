@@ -1,6 +1,6 @@
 {
-  "slug": "workflow-observatory",
-  "title": "Workflow Observatory",
+  "slug": "browser-agent-completion",
+  "title": "Browser Agent Completion Gate",
   "dek": "Parallax is a browser agent I built in Python: it plans a task, then clicks and types through websites to carry it out. This page rebuilds its executor on a synthetic booking app and adds a completion gate, a check that calls a task done only when the saved record proves it.",
   "summary": "Six attempts at one booking: the success notice claims three, my earlier agent’s check accepts five, and only one saved the booking asked for.",
   "collection": "agents-and-evaluation",

@@ -23,7 +23,7 @@ export const PROJECT_VISUALS: Record<string, ComponentType<ProjectVisualProps>> 
   'customer-service': ServiceVisual,
   'code-verification': VerificationVisual,
   'spreadsheet-reasoning': SheetVisual,
-  'workflow-observatory': WorkflowVisual,
+  'browser-agent-completion': WorkflowVisual,
   'intake-triage': TriageVisual,
   'staged-search': SearchVisual,
   'send-pacing': PacingVisual,

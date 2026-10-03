@@ -28,11 +28,17 @@ const STUB_ROUTE_REDIRECTS = [
 ];
 
 // The scrollable overview that predates the galactic landing; the projects'
-// first home under /work, which Gatebound's README links.
+// first home under /work, which Gatebound's README links; the browser agent
+// page's first name, which Parallax's README links.
 const RETIRED_ROUTE_REDIRECTS = [
   { source: '/home', destination: '/', permanent: true },
   { source: '/work/projects', destination: '/projects', permanent: true },
   { source: '/work/projects/flight-routing', destination: '/projects/reinforcement-learning/flight-routing', permanent: true },
+  {
+    source: '/projects/agents-and-evaluation/workflow-observatory',
+    destination: '/projects/agents-and-evaluation/browser-agent-completion',
+    permanent: true,
+  },
 ];
 
 // The project catalog reads every project.json under this folder at request
