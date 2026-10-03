@@ -1,0 +1,19 @@
+Editable Whiteboard and Operation Log
+
+Copyright 2026 Sahil Kadadekar
+SPDX-License-Identifier: Apache-2.0
+
+The immutable add/update/delete operations, field-level inverse operations,
+shape contract, and rectangle/ellipse/segment hit-testing are adapted from
+the author's Apache-2.0-licensed whiteboard client (2026).
+The original copyright and license are preserved in LICENSE.txt.
+
+Modifications for this browser adaptation:
+- Explicit insertion positions preserve z-order when undoing deletion.
+- Strict runtime validation and atomic command batches.
+- Replayable, versioned JSON history and single-tab browser persistence.
+- Gesture previews, bounded geometry and device-pixel-ratio rendering.
+- Fresh synthetic workflow fixture and a new project-local interface/article.
+
+No original account, board, employer-supplied brief or server fixture is included.
+This adaptation does not include the original network collaboration service.
