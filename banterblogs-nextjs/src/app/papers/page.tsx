@@ -41,6 +41,7 @@ const ACCEPTED: Paper[] = [
     venue: 'NeurIPS 2026 Workshop on Foundation and Large Model Security',
     status: 'Accepted',
     trs: [],
+    arxiv: 'https://arxiv.org/abs/2610.01801',
   },
 ];
 

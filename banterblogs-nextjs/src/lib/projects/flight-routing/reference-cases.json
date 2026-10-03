@@ -1,0 +1,12 @@
+[
+  { "name": "direct-on-time", "config": {}, "steps": [[2, 2]], "expected": { "reason": "arrived", "airport": "JFK", "clock": 480, "reward": 0.95 } },
+  { "name": "direct-late", "config": {}, "steps": [[2, 1]], "expected": { "reason": "arrived", "airport": "JFK", "clock": 660, "reward": 0.13125 } },
+  { "name": "cancelled", "config": {}, "steps": [[2, 0]], "expected": { "reason": "cancelled", "airport": "SFO", "clock": 150, "reward": 0 } },
+  { "name": "unresolved-diversion", "config": {}, "steps": [[3, 1]], "expected": { "reason": "unresolved_diversion", "airport": "SFO", "clock": 650, "reward": 0 } },
+  { "name": "late-inbound", "config": {}, "steps": [[1, 1], [0, 2]], "expected": { "reason": "arrived", "airport": "JFK", "clock": 650, "reward": 0.13229166666666667 } },
+  { "name": "greedy-dead-end", "config": {}, "steps": [[0, 2]], "expected": { "reason": "no_candidates", "airport": "ORD", "clock": 160, "reward": 0 } },
+  { "name": "attempt-limit", "config": { "maxAttempts": 1 }, "steps": [[1, 2]], "expected": { "reason": "max_attempts", "airport": "DEN", "clock": 200, "reward": 0 } },
+  { "name": "horizon", "config": { "horizon": 500, "deadline": 490 }, "steps": [[2, 1]], "expected": { "reason": "horizon", "airport": "SFO", "clock": 500, "reward": 0 } },
+  { "name": "no-candidates", "config": { "buffer": 600 }, "steps": [[0, 2]], "expected": { "reason": "no_candidates", "airport": "SFO", "clock": 0, "reward": 0 } },
+  { "name": "invalid-action", "config": {}, "steps": [[7, 2]], "expected": { "reason": "invalid_action", "airport": "SFO", "clock": 0, "reward": 0 } }
+]

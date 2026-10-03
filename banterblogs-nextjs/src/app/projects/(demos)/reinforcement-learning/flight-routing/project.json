@@ -1,0 +1,14 @@
+{
+  "slug": "flight-routing",
+  "title": "Flight Routing Lab",
+  "dek": "A deadline-aware routing environment with masked actions, joint disruption samples and paired policy evaluation, rebuilt from my Gatebound system to run in the browser.",
+  "summary": "A deadline-first routing environment: four policies over the same 64 seeded worlds.",
+  "collection": "reinforcement-learning",
+  "alsoIn": [],
+  "order": 1,
+  "evidence": "synthetic-fixture",
+  "links": [
+    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/flight-routing" },
+    { "label": "Gatebound", "url": "https://github.com/Sahil170595/gatebound-rl" }
+  ]
+}

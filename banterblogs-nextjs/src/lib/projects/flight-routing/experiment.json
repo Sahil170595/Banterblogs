@@ -1,0 +1,17 @@
+{
+  "version": "flight-routing.experiment.v1",
+  "fixtureVersion": "synthetic-network-v1",
+  "config": { "scenario": "west-east", "seed": 42, "deadline": 540, "horizon": 960, "buffer": 30, "maxAttempts": 4, "profile": "balanced" },
+  "normal": { "count": 64, "seedStart": 42, "rows": [
+    { "policy": "nonstop", "arrived": 62, "onTime": 55, "meanReward": 0.8307617187500008, "reasons": { "arrived": 62, "cancelled": 2 } },
+    { "policy": "greedy", "arrived": 0, "onTime": 0, "meanReward": 0, "reasons": { "no_candidates": 58, "cancelled": 6 } },
+    { "policy": "deadline", "arrived": 62, "onTime": 55, "meanReward": 0.8307617187500008, "reasons": { "arrived": 62, "cancelled": 2 } },
+    { "policy": "random", "arrived": 43, "onTime": 16, "meanReward": 0.2949055989583331, "reasons": { "arrived": 43, "no_candidates": 13, "cancelled": 7, "unresolved_diversion": 1 } }
+  ] },
+  "tight": { "count": 64, "seedStart": 42, "rows": [
+    { "policy": "nonstop", "arrived": 62, "onTime": 0, "meanReward": 0.14326171875000013, "reasons": { "arrived": 62, "cancelled": 2 } },
+    { "policy": "greedy", "arrived": 0, "onTime": 0, "meanReward": 0, "reasons": { "no_candidates": 58, "cancelled": 6 } },
+    { "policy": "deadline", "arrived": 54, "onTime": 40, "meanReward": 0.62333984375, "reasons": { "arrived": 54, "cancelled": 10 } },
+    { "policy": "random", "arrived": 43, "onTime": 5, "meanReward": 0.15740559895833336, "reasons": { "arrived": 43, "no_candidates": 13, "cancelled": 7, "unresolved_diversion": 1 } }
+  ] }
+}

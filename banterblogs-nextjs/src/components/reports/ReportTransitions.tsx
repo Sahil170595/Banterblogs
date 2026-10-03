@@ -13,7 +13,7 @@ export const FIGURE_MORPH_CLASS = 'figure-morph';
 // Forward only: the archive opens at its top, so the card a back navigation
 // would pair with is below the fold; React would name the outgoing figure,
 // find no visible partner, and drop it from the sliding page.
-const FIGURE_MORPH_FORWARD: ViewTransitionClassPerType = {
+export const FIGURE_MORPH_FORWARD: ViewTransitionClassPerType = {
   [NAV_FORWARD]: FIGURE_MORPH_CLASS,
   default: 'none',
 };

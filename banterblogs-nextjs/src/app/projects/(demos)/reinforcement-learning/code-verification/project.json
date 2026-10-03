@@ -1,0 +1,14 @@
+{
+  "slug": "code-verification",
+  "title": "Code Verification Lab",
+  "dek": "A patch verifier that grades a repair by every test's transition from the buggy function to the patched one, so passing the example is never mistaken for fixing the bug. Rebuilt from my Patchglass harness.",
+  "summary": "Four patches, six tests: what a smoke suite passes and a full suite rejects.",
+  "collection": "reinforcement-learning",
+  "alsoIn": [],
+  "order": 4,
+  "evidence": "synthetic-fixture",
+  "links": [
+    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/code-verification" },
+    { "label": "Patchglass", "url": "https://github.com/Sahil170595/patchglass" }
+  ]
+}

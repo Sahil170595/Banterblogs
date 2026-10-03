@@ -158,8 +158,10 @@ describe('where view transitions come from', () => {
 
   // Phase R4: every navigation moves, from one route boundary in the root
   // layout; only the reading path names elements or types its links, the
-  // header names its frame, and the intent link passes types through.
-  it('only the route boundary, the reading path, the header and the intent link', () => {
+  // header names its frame, and the intent link passes types through. The
+  // projects are the archive's twin: their cards open into their pages the
+  // same way.
+  it('only the route boundary, the reading paths, the header and the intent link', () => {
     const users = sourceFiles(SRC)
       .filter((file) => USES_VIEW_TRANSITIONS.test(fs.readFileSync(file, 'utf8')))
       .map((file) => path.relative(SRC, file).split(path.sep).join('/'));
@@ -167,9 +169,10 @@ describe('where view transitions come from', () => {
     // the reports components use them, so an empty list means the scan went blind
     expect(users).toContain('components/reports/ReportTransitions.tsx');
     expect(users).toContain('components/motion/RouteTransition.tsx');
+    expect(users).toContain('components/projects/ProjectTransitions.tsx');
     for (const file of users) {
       expect(file).toMatch(
-        /^(app\/reports\/|components\/reports\/|components\/Header\.tsx$|components\/motion\/(RouteTransition\.tsx|routeTransitionTypes\.ts)$|components\/ui\/IntentLink\.tsx$)/,
+        /^(app\/reports\/|components\/reports\/|components\/projects\/|components\/Header\.tsx$|components\/motion\/(RouteTransition\.tsx|routeTransitionTypes\.ts)$|components\/ui\/IntentLink\.tsx$)/,
       );
     }
   });
