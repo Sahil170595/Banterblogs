@@ -39,7 +39,7 @@ describe('same-origin native DOM execution', () => {
   });
   it('freezes the terminal fixture until reset so the trace still describes its state', async () => {
     render(<Observatory />);
-    fireEvent.change(screen.getByLabelText('Save latency (ms)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '100' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
     await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Complete'));
     const reopen = screen.getByRole('button', { name: 'Reserve slot' });
@@ -74,7 +74,7 @@ describe('same-origin native DOM execution', () => {
   });
   it('exports observed evidence and imports reconstruction without fabricating a new live result', async () => {
     render(<Observatory />);
-    fireEvent.change(screen.getByLabelText('Save latency (ms)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '100' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
     await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Complete'));
     let captured: Blob | null = null;
@@ -101,7 +101,7 @@ describe('same-origin native DOM execution', () => {
   });
   it('actually opens, fills, selects and commits the rendered fixture', async () => {
     render(<Observatory />);
-    fireEvent.change(screen.getByLabelText('Save latency (ms)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText('Requested room'), { target: { value: 'south' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
     expect(await screen.findByRole('dialog', { name: 'Reservation' })).toBeTruthy();
@@ -113,7 +113,7 @@ describe('same-origin native DOM execution', () => {
   });
   it('fails a misleading toast because no actual committed row exists', async () => {
     render(<Observatory />);
-    fireEvent.change(screen.getByLabelText('Save latency (ms)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText('Injected failure'), { target: { value: 'false-toast' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
     await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Failed'));
@@ -127,7 +127,7 @@ describe('same-origin native DOM execution', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
     await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Failed'));
     fireEvent.change(screen.getByLabelText('Selector policy'), { target: { value: 'fallback' } });
-    fireEvent.change(screen.getByLabelText('Save latency (ms)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '100' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
     await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Complete'));
     expect(screen.getByRole('row', { name: /Spectral scan/ })).toBeTruthy();

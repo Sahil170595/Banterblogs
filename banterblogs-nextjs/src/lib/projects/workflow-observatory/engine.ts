@@ -5,8 +5,6 @@ export const SCHEMA_VERSION = 1;
 export const POLL_MS = 20;
 export const FIXED_WAIT_MS = 200;
 export const MAX_EVENTS = 64;
-export const DEMO_SOURCE = 'https://github.com/Sahil170595/Banterblogs/tree/codex/demo-workflow-observatory/banterblogs-nextjs/src/lib/projects/workflow-observatory';
-export const ORIGINAL_SOURCE = 'https://github.com/Sahil170595/Parallax/tree/cfb0bdf8fb5a5dc8c4f82b7b44a93157b06dd44e';
 
 const roomSchema = z.enum(['north', 'south']);
 export const configSchema = z.object({
@@ -49,7 +47,8 @@ export function transition(state: SiteState, raw: unknown, rawConfig: unknown): 
   switch (event.type) {
     case 'open':
       if (state.dialogOpen || state.phase === 'saving') throw new Error('The reservation dialog is already active.');
-      return { ...initialSite(), phase: 'editing', dialogOpen: true };
+      // a fresh form; a reservation already committed stays committed
+      return { ...initialSite(), phase: 'editing', dialogOpen: true, record: state.record };
     case 'fill':
       if (!editable) throw new Error('Open the dialog before filling the title.');
       return { ...state, phase: 'editing', title: event.value, toast: 'none' };
