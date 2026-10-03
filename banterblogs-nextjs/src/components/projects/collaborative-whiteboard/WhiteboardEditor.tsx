@@ -134,7 +134,8 @@ export function WhiteboardEditor() {
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const [zoom, setZoom] = useState(1);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [propertyError, setPropertyError] = useState<string | null>(null);
+  // a refusal belongs to the object it was about; another selection does not show it
+  const [propertyError, setPropertyError] = useState<{ shapeId: string; message: string } | null>(null);
   // bumps after a refused edit, so the fields show the object as it is again
   const [propertiesVersion, setPropertiesVersion] = useState(0);
   const gestureRef = useRef<Gesture | null>(null);
@@ -161,9 +162,6 @@ export function WhiteboardEditor() {
     observer.observe(canvas);
     return () => observer.disconnect();
   }, [viewShapes, selectedId, store, zoom]);
-
-  // a new selection starts without the last one's refusal
-  useEffect(() => setPropertyError(null), [selectedId]);
 
   function setActiveGesture(next: Gesture | null) { gestureRef.current = next; setGesture(next); }
   // focus without scrolling: a board partly below the fold must not move under a press
@@ -253,7 +251,7 @@ export function WhiteboardEditor() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The edit was refused.';
       console.warn('[collaborative-whiteboard] property edit refused', message);
-      setPropertyError(message);
+      setPropertyError({ shapeId: selected.id, message });
       setPropertiesVersion((version) => version + 1);
       return;
     }
@@ -399,7 +397,7 @@ export function WhiteboardEditor() {
           <h4>Objects</h4>
           <ul className={styles.objectList}>{board.shapes.map((shape, index) => <li key={shape.id}><button type="button" aria-label={`Select ${shapeName(shape)}`} aria-pressed={selectedId === shape.id} onClick={() => { cancelGesture(); setSelectedId(shape.id); setTool('select'); }}><span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><span>{shapeName(shape)}</span></button></li>)}</ul>
           <h4>Properties</h4>
-          {selected ? <Properties key={`${selected.id}:${board.log.length}:${propertiesVersion}`} shape={selected} error={propertyError} onApply={applyProperties} /> : <p className={styles.empty}>No object selected</p>}
+          {selected ? <Properties key={`${selected.id}:${board.log.length}:${propertiesVersion}`} shape={selected} error={propertyError?.shapeId === selected.id ? propertyError.message : null} onApply={applyProperties} /> : <p className={styles.empty}>No object selected</p>}
         </aside>
       </div>
       </div>
