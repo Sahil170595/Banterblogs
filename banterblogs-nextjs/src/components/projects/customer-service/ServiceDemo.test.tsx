@@ -12,7 +12,8 @@ vi.mock('react', async (importOriginal) => {
 });
 // jsdom has no layout or scrolling; the reveal is asserted by its call
 const { revealResult } = vi.hoisted(() => ({ revealResult: vi.fn() }));
-vi.mock('../reveal', () => ({ revealResult }));
+// a reveal waiting for its element to render reveals it at once here
+vi.mock('../reveal', () => ({ revealResult, revealWhenRendered: (get: () => HTMLElement | null) => revealResult(get()) }));
 
 afterEach(() => {
   cleanup();

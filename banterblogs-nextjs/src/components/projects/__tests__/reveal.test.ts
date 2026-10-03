@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { REVEALED_CLASS, revealResult } from '../reveal';
+import { REVEALED_CLASS, revealResult, revealWhenRendered } from '../reveal';
 
 // A click in a demo's table changes a result further down; revealResult
 // scrolls to it only when the visitor could not already see it.
@@ -50,6 +50,21 @@ describe('revealResult', () => {
       revealResult(element);
       expect(element.scrollIntoView).toHaveBeenCalled();
     }
+  });
+
+  // a reveal queued for the next frame could run before React had rendered
+  // the message, find nothing, and leave it off screen
+  it('waits frame by frame for an element still to render, then reveals it', () => {
+    const frames: Array<() => void> = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: () => void) => frames.push(cb));
+    let element: HTMLElement | null = null;
+    revealWhenRendered(() => element);
+    frames.shift()!();
+    frames.shift()!();
+    element = result(900, 1100);
+    frames.shift()!();
+    expect(element.scrollIntoView).toHaveBeenCalled();
+    expect(frames).toHaveLength(0);
   });
 
   // live QA: a result just under the top edge sat behind the sticky header and counted as seen

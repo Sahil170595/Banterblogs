@@ -36,3 +36,19 @@ export function revealResult(element: HTMLElement | null): void {
   element.classList.add(REVEALED_CLASS);
   element.addEventListener('animationend', () => element.classList.remove(REVEALED_CLASS), { once: true });
 }
+
+/** how many frames a reveal waits for its element to render before giving up */
+const RENDER_FRAMES = 10;
+
+/**
+ * Reveal an element the state change just made, once React has rendered it:
+ * from the next frame, and on each frame after until it exists. A reveal
+ * queued for one frame alone could run before the render and find nothing.
+ */
+export function revealWhenRendered(get: () => HTMLElement | null, frames = RENDER_FRAMES): void {
+  requestAnimationFrame(() => {
+    const element = get();
+    if (element) revealResult(element);
+    else if (frames > 1) revealWhenRendered(get, frames - 1);
+  });
+}

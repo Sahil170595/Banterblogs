@@ -114,12 +114,14 @@ test('a fixed wait that ends with the save landed agrees with the gate', async (
 
 // live QA #20: a refused file answered far above the button that loaded it
 test('a refused trace is answered beside the import button, in plain words', async ({ page }) => {
+  // no opening run (none under reduced motion): its steps would move the page
+  // under the answer while the test reads it
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(PAGE);
   await page.getByText('Settings, the action plan and the step-by-step trace').click();
-  const chooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Import trace', exact: true }).click();
-  await (await chooser).setFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{"schemaVersion": 1,') });
-  const refusal = page.getByRole('region', { name: 'Observed action trace', exact: true }).getByRole('alert');
+  const trace = page.getByRole('region', { name: 'Observed action trace', exact: true });
+  await trace.locator('input[type="file"]').setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{"schemaVersion": 1,') });
+  const refusal = trace.getByRole('alert');
   await expect(refusal).toHaveText('Not loaded: The file is not valid JSON.');
   await expect(refusal).toBeInViewport();
 });

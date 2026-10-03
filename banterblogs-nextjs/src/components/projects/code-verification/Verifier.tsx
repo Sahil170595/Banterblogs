@@ -10,7 +10,7 @@ import {
 import { controls } from '../controls';
 import { span } from '../geometry';
 import { describeRefusal } from '../refusal';
-import { revealResult } from '../reveal';
+import { revealResult, revealWhenRendered } from '../reveal';
 import { changedStretch } from './diff';
 import { OPENING_SELECTION, type MatrixSelection } from './SuiteMatrix';
 import { GROUP_NAMES, TRANSITION_NAMES } from './vocabulary';
@@ -241,7 +241,7 @@ export function Verifier({ selection, onSelectionChange, resultsRef }: {
       draftsFor(next.config.taskId);
       share(selectionOf(next.config));
       setFileNotice('Replayed: the verdict is recomputed from the file’s configuration, not read from it.');
-      requestAnimationFrame(() => revealResult(resultsRef?.current ?? null));
+      revealWhenRendered(() => resultsRef?.current ?? null);
     } catch (cause) { refuse(cause, 'file', 'Replay refused: '); }
     event.target.value = '';
   }

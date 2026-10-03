@@ -11,7 +11,7 @@ import {
 import { createFixturePort } from '@/lib/projects/workflow-observatory/dom';
 import { controls, UnderTheHood } from '../controls';
 import { describeRefusal } from '../refusal';
-import { revealResult } from '../reveal';
+import { revealResult, revealWhenRendered } from '../reveal';
 import styles from './observatory.module.css';
 
 const MAX_IMPORT_BYTES = 500_000;
@@ -231,12 +231,12 @@ export function Observatory({ initial = DEFAULT_CONFIG, autoRun = false, byHand 
       setReplay(loaded); setReplayFrame(0);
       setImportNote({ kind: 'loaded', text: `Loaded: the replay below rebuilds its ${loaded.frames.length - 1} events.` });
       // the replay renders under the trace, often below the fold
-      requestAnimationFrame(() => revealResult(replayRef.current));
+      revealWhenRendered(() => replayRef.current);
     } catch (cause) {
       if (revision !== importRevision.current) return;
       console.warn('Workflow replay rejected', cause);
       setImportNote({ kind: 'refused', text: `Not loaded: ${describeRefusal(cause)}` });
-      requestAnimationFrame(() => revealResult(importNoteRef.current));
+      revealWhenRendered(() => importNoteRef.current);
     } finally { if (revision === importRevision.current) input.value = ''; }
   }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { revealResult } from '../reveal';
+import { revealWhenRendered } from '../reveal';
 import { OPENING_SELECTION, SuiteMatrix, type MatrixSelection } from './SuiteMatrix';
 import { Verifier } from './Verifier';
 import styles from './verifier.module.css';
@@ -22,7 +22,7 @@ export function CodeVerificationDemo() {
         onSelect={(next, inspect) => {
           setSelection(next);
           // a picked patch's verdict and evidence open below the matrix, off screen on a phone
-          if (inspect) requestAnimationFrame(() => revealResult(results.current));
+          if (inspect) revealWhenRendered(() => results.current);
         }}
       />
       <Verifier selection={selection} onSelectionChange={setSelection} resultsRef={results} />
