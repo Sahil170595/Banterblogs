@@ -13,6 +13,7 @@ import {
   ROUTE_CLASS,
   ROUTE_FROM_ATTRIBUTE,
   ROUTE_TO_ATTRIBUTE,
+  pageKey,
   routeKind,
 } from '../routeTransitionTypes';
 
@@ -93,6 +94,26 @@ describe('route transition boundary', () => {
     view.rerender(page());
 
     expect(mounts).toHaveLength(1);
+  });
+
+  it('treats the projects hub and its collection tabs as one page, and a project as its own', () => {
+    pathname.current = '/projects';
+    const view = render(page());
+    for (const tab of ['/projects/reinforcement-learning', '/projects/systems', '/projects']) {
+      pathname.current = tab;
+      view.rerender(page());
+    }
+    expect(mounts).toHaveLength(1);
+
+    pathname.current = '/projects/reinforcement-learning/flight-routing';
+    view.rerender(page());
+    expect(mounts).toHaveLength(2);
+    expect(['/projects', '/projects/systems', '/projects/systems/scheduler', '/reports'].map(pageKey)).toEqual([
+      '/projects',
+      '/projects',
+      '/projects/systems/scheduler',
+      '/reports',
+    ]);
   });
 
   it('marks nothing on the first render: a full page load is not a navigation', () => {

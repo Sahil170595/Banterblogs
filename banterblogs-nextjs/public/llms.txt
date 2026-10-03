@@ -176,6 +176,18 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 - PyTorch PR #199075 (merged 2026-10-02) — Dynamo: trace Python random float draws at the precision runtime passes them, fixing wrong CPU Inductor results (fixes #198187)
 - Triton PR #10822 (closed unmerged 2026-07-13; maintainers fixed the issue separately) — proposed a shared-memory gather fallback when no warp-local layout exists
 
+## Projects
+
+Interactive builds, each running live on its own page, filed in collections (the research archive's twin): https://chimeraforge.vercel.app/projects
+
+- Reinforcement learning: https://chimeraforge.vercel.app/projects/reinforcement-learning
+  - Flight Routing Lab — a deadline-aware routing environment (masked actions, joint disruption samples, deadline-first terminal reward) with four policies over the same 64 seeded worlds; a browser rebuild of the Gatebound Python system (https://github.com/Sahil170595/gatebound-rl). Synthetic fixture. https://chimeraforge.vercel.app/projects/reinforcement-learning/flight-routing
+  - Offline Policy Evaluation Lab — importance-sampling evaluation (raw, capped and self-normalized IS, paired bootstrap intervals, effective sample size, support audit) that checks whether a policy's estimated gain on logged data survives a constant control, a reward change and missing support; a browser rebuild of the Counterledger Python evaluator (https://github.com/Sahil170595/counterledger-ope). Synthetic fixture. https://chimeraforge.vercel.app/projects/reinforcement-learning/offline-policy-evaluation
+  - Customer Service Environment — an agent environment with identity-bound tools on synthetic orders, scored by the world the tools leave behind (one coherent outcome, evidence before writes, consent scope, supported reports); scripted control trajectories show the same refund scoring 1.00 or -0.40 by which record it hit. A browser rebuild of the Turncraft Python environment (https://github.com/Sahil170595/turncraft-env). Synthetic fixture. https://chimeraforge.vercel.app/projects/reinforcement-learning/customer-service
+  - Code Verification Lab — a patch verifier that grades a repair by each test's transition from the buggy function to the patched one (repaired, preserved, still broken, regressed) under a conjunctive gate; four patches by six tests show a two-test smoke suite passing three patches that the full suite rejects. A browser rebuild of the Patchglass isolated-container harness (https://github.com/Sahil170595/patchglass). Synthetic fixture. https://chimeraforge.vercel.app/projects/reinforcement-learning/code-verification
+- Agents and evaluation: https://chimeraforge.vercel.app/projects/agents-and-evaluation
+  - Spreadsheet Reasoning Inspector — decides which workbook values are final from a dependency graph and seven abstaining rule votes, scored against an authored key; the precision gate scores 0% precision on the fixture while a prune-only review takes balanced votes to F1 100%. A browser rebuild of the Formuloom Python pipeline (https://github.com/Sahil170595/formuloom). Synthetic fixture. https://chimeraforge.vercel.app/projects/agents-and-evaluation/spreadsheet-reasoning
+
 ## Links
 
 - Site: https://chimeraforge.vercel.app
@@ -185,6 +197,7 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 - GitHub (this site's source): https://github.com/Sahil170595/Banterblogs
 - GitHub (Chimeraforge tools): https://github.com/Sahil170595/Chimeraforge
 - Research Archive: https://chimeraforge.vercel.app/reports
+- Projects: https://chimeraforge.vercel.app/projects
 - Papers: https://chimeraforge.vercel.app/papers
 - Platform Architecture: https://chimeraforge.vercel.app/platform
 - Work / CV: https://chimeraforge.vercel.app/work

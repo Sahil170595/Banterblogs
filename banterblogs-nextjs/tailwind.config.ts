@@ -135,6 +135,7 @@ const config: Config = {
           green: "hsl(var(--status-green))",
           amber: "hsl(var(--status-amber))",
           blue: "hsl(var(--status-blue))",
+          red: "hsl(var(--status-red))",
         },
         chart: {
           "1": "hsl(var(--chart-1))",

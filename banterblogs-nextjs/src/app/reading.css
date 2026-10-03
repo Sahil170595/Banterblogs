@@ -1,7 +1,8 @@
 @config "../../tailwind.reading.config.ts";
 
 /* The reading routes' stylesheet (/reports/[id], /reports/compendium,
- * /episodes/[slug]; each page imports it). The typography components, the
+ * /episodes/[slug], /projects/<collection>/<project>; each page imports it,
+ * a project page through ProjectPage). The typography components, the
  * markdown tables and the report page's own rules used to ride in
  * globals.css, render-blocking on every page; here only a reading page
  * downloads them. Its Tailwind config emits the typography plugin's .prose
@@ -677,3 +678,254 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end report page */
+
+/* project page (components/projects/ProjectPage.tsx): the report page's head,
+   type, contents and pager at the container's width, so the live demo has
+   room; the write-up keeps the reading measure, its rail at the far edge. */
+.project-frame {
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+.project-demo {
+  margin-top: 2.5rem;
+}
+
+.project-meta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: hsl(var(--foreground));
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: hsl(var(--foreground) / 0.35);
+  transition: text-decoration-color var(--duration-fast) var(--ease-standard);
+}
+
+.project-meta-link:hover {
+  text-decoration-color: hsl(var(--primary));
+}
+
+/* the findings in the archive's number cards */
+.project-findings {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 3rem;
+}
+
+.project-finding {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card) / 0.7);
+  padding: 1.25rem;
+}
+
+.project-finding-value {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+
+.project-finding p {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (min-width: 640px) {
+  .project-findings {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .project-layout {
+    justify-content: space-between;
+  }
+}
+
+/* The demos' shared controls (components/projects/controls.tsx): segmented
+   choices, pill buttons, fields and messages. Part of the project shell
+   here, not a module: every demo uses them, and a module shared by two
+   demos became a fourth render-blocking sheet on each project page. */
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.75rem;
+}
+
+.demo-segmented {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.demo-segmented legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+/* half a one-row group's height: a pill on one row, a rounded block if it wraps */
+.demo-segmented > div {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-radius: 1.25rem;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.08);
+  padding: 3px;
+}
+
+.demo-segmented label {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.demo-segmented label:hover {
+  color: hsl(var(--foreground));
+}
+
+.demo-segmented label[data-checked] {
+  background-color: hsl(var(--foreground) / 0.1);
+  color: hsl(var(--foreground));
+}
+
+.demo-segmented label span {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.demo-segmented input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.demo-segmented label:has(input:focus-visible) {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.demo-button,
+.demo-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 9999px;
+  background-color: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.demo-button {
+  padding: 0.375rem 1rem;
+}
+
+.demo-icon-button {
+  width: 2.25rem;
+  padding: 0;
+}
+
+.demo-button svg,
+.demo-icon-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.demo-button:hover:not(:disabled),
+.demo-icon-button:hover:not(:disabled) {
+  border-color: hsl(var(--foreground) / 0.3);
+  background-color: hsl(var(--foreground) / 0.05);
+}
+
+.demo-button:disabled,
+.demo-icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.demo-button:focus-visible,
+.demo-icon-button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.demo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* a select sizes to its longest option unless told otherwise, which held a
+   phone layout wider than the screen */
+.demo-field :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  background-color: hsl(var(--background));
+  padding: 0.375rem 0.625rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+}
+
+.demo-field :is(input, select):focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 1px;
+}
+
+.demo-error {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: hsl(var(--status-red));
+}
+
+.demo-hint {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+/* end project page */

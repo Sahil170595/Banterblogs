@@ -1,0 +1,673 @@
+/* The flight routing demo (FlightRoutingDemo and its parts); buttons,
+   fields and the segmented choices are the shared project controls
+   (the demo- classes in app/reading.css). Site tokens only: ember marks an on-time world
+   and the next choice, plain foreground a late one, a hairline an empty
+   slot, status red a failure. No text under 12px. */
+
+.demo {
+  display: grid;
+  gap: 2.5rem;
+}
+
+/* ── the paired worlds ── */
+.hero {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.panel {
+  min-width: 0;
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+  padding: 0.875rem;
+  transition: box-shadow var(--duration-base) var(--ease-strong-out);
+}
+
+.panel[data-active] {
+  box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.5);
+}
+
+.panelLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.panelScore {
+  margin-top: 0.375rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.panelScore strong {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 1.75rem;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: hsl(var(--foreground));
+}
+
+.panelScore span {
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.panelRest {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+}
+
+.grid {
+  margin-top: 0.875rem;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 2px;
+  padding: 0;
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.24);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--ease-strong-out),
+    box-shadow var(--duration-base) var(--ease-strong-out);
+}
+
+.cell[data-outcome="on-time"] {
+  background-color: hsl(var(--primary));
+  box-shadow: none;
+}
+
+.cell[data-outcome="late"] {
+  background-color: hsl(var(--foreground) / 0.3);
+  box-shadow: none;
+}
+
+/* the same world in every panel, under the pointer or focus */
+.cell[data-paired] {
+  outline: 1px solid hsl(var(--foreground) / 0.75);
+  outline-offset: 1px;
+}
+
+.cell[aria-pressed="true"] {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 2px;
+}
+
+.cell:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.legendRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
+.legendRow p {
+  max-width: 62ch;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.legend li::before {
+  content: "";
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.3);
+}
+
+.legend li[data-outcome="on-time"]::before {
+  background-color: hsl(var(--primary));
+  box-shadow: none;
+}
+
+.legend li[data-outcome="late"]::before {
+  background-color: hsl(var(--foreground) / 0.3);
+  box-shadow: none;
+}
+
+/* ── the replay ── */
+.replay {
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card) / 0.5);
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+  padding: 1.125rem;
+}
+
+.replayHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.replayTitle {
+  font-size: 1.25rem;
+  line-height: 1.375;
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
+}
+
+.replayTitle span {
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.replayMeta {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+}
+
+.toolbar,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.status {
+  margin-top: 1.125rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  border-block: 1px solid hsl(var(--border) / 0.6);
+  padding-block: 0.875rem;
+}
+
+.status dt {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.status dd {
+  margin-top: 0.125rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+
+.status dd[data-outcome="on-time"] {
+  color: hsl(var(--primary));
+}
+
+.status dd[data-outcome="failed"] {
+  color: hsl(var(--status-red));
+}
+
+.replayBody {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.figures,
+.decision {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.decision h4 {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+/* route network */
+.routeCanvas {
+  position: relative;
+}
+
+.routeCanvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.edge {
+  fill: none;
+  stroke: hsl(var(--foreground) / 0.18);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+  vector-effect: non-scaling-stroke;
+  transition: stroke var(--duration-base) var(--ease-strong-out);
+}
+
+.edge[data-kind="legal"] {
+  stroke: hsl(var(--foreground) / 0.55);
+}
+
+.edge[data-kind="chosen"] {
+  stroke: hsl(var(--primary));
+  stroke-width: 2.5;
+}
+
+.edge[data-kind="flown"] {
+  stroke: hsl(var(--foreground));
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+}
+
+.edge[data-kind="failed"] {
+  stroke: hsl(var(--status-red));
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+}
+
+.dot {
+  fill: hsl(var(--foreground));
+}
+
+.node[data-destination] .dot {
+  fill: hsl(var(--primary));
+}
+
+.ring {
+  fill: none;
+  stroke: hsl(var(--foreground));
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.edgeLabel,
+.airportLabel {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* a chip over the line it names */
+.edgeLabel {
+  border-radius: 0.25rem;
+  background-color: hsl(var(--background));
+  padding: 0.125rem 0.25rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  color: hsl(var(--muted-foreground));
+}
+
+.edgeLabel[data-kind="chosen"] {
+  color: hsl(var(--primary));
+}
+
+.edgeLabel[data-kind="flown"] {
+  color: hsl(var(--foreground));
+}
+
+.edgeLabel[data-kind="failed"] {
+  color: hsl(var(--status-red));
+}
+
+.airportLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.edgeKey {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.edgeKey span[data-kind] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.edgeKey span[data-kind]::before {
+  content: "";
+  width: 1rem;
+  height: 0;
+  border-top: 2px solid hsl(var(--foreground));
+}
+
+.edgeKey span[data-kind="failed"]::before {
+  border-top-color: hsl(var(--status-red));
+}
+
+.edgeKey span[data-kind="chosen"]::before {
+  border-top-color: hsl(var(--primary));
+}
+
+.edgeKey span[data-kind="legal"]::before {
+  border-top: 2px dashed hsl(var(--foreground) / 0.55);
+}
+
+/* timeline */
+.timeline {
+  min-width: 0;
+}
+
+.lanes {
+  position: relative;
+  margin-left: 2rem;
+}
+
+.deadlineRule,
+.clockRule {
+  position: absolute;
+  inset-block: 0;
+  z-index: 1;
+  width: 0;
+  pointer-events: none;
+}
+
+.deadlineRule {
+  left: var(--deadline);
+  border-left: 1px dashed hsl(var(--primary));
+}
+
+.clockRule {
+  left: var(--clock);
+  border-left: 1px solid hsl(var(--foreground) / 0.7);
+}
+
+.lane {
+  position: relative;
+  height: 1.5rem;
+}
+
+.laneLabel {
+  position: absolute;
+  left: -2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.track {
+  position: relative;
+  height: 100%;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.scheduled,
+.actual {
+  position: absolute;
+  border-radius: 1px;
+}
+
+.scheduled {
+  top: 0.375rem;
+  height: 3px;
+  background-color: hsl(var(--foreground) / 0.2);
+}
+
+.scheduled[data-legal] {
+  background-color: hsl(var(--foreground) / 0.55);
+}
+
+.actual {
+  top: 0.625rem;
+  height: 6px;
+  background-color: hsl(var(--foreground));
+}
+
+.actual[data-failed] {
+  background-color: hsl(var(--status-red));
+}
+
+.cancelled {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+  color: hsl(var(--status-red));
+}
+
+.axis {
+  margin-top: 0.5rem;
+  margin-left: 2rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+}
+
+.deadlineKey {
+  color: hsl(var(--primary));
+}
+
+/* decision */
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tableScroll:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.tableScroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.tableScroll th {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+}
+
+.tableScroll td {
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+  padding: 0.5rem;
+  color: hsl(var(--foreground));
+  white-space: nowrap;
+}
+
+.tableScroll tr[data-chosen] td {
+  background-color: hsl(var(--primary) / 0.08);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.radio input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: hsl(var(--primary));
+}
+
+.trace {
+  display: grid;
+}
+
+.trace li {
+  display: grid;
+  gap: 0.125rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  padding-block: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.trace strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.trace span {
+  color: hsl(var(--muted-foreground));
+}
+
+.rewards {
+  display: grid;
+}
+
+.rewards > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  padding-block: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.rewards > div:last-child {
+  font-weight: 600;
+}
+
+.rewards dt {
+  color: hsl(var(--muted-foreground));
+}
+
+.rewards dd {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+
+.rewards dd span {
+  color: hsl(var(--muted-foreground));
+}
+
+/* settings */
+.settings {
+  margin-top: 1.25rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  padding-top: 0.875rem;
+}
+
+.settings summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+}
+
+.settings summary:hover {
+  color: hsl(var(--foreground));
+}
+
+.settings form {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.75rem 1rem;
+}
+
+/* the limits and any error run the form's full width */
+.settings form > p {
+  grid-column: 1 / -1;
+}
+
+.notice {
+  min-height: 1.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (min-width: 640px) {
+  .status {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .settings form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .replay {
+    padding: 1.5rem;
+  }
+
+  .panel {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .panels {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .replayBody {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  .settings form {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell,
+  .panel,
+  .edge {
+    transition: none;
+  }
+}

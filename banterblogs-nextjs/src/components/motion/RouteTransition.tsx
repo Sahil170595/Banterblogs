@@ -12,6 +12,7 @@ import {
   ROUTE_CLASS,
   ROUTE_FROM_ATTRIBUTE,
   ROUTE_TO_ATTRIBUTE,
+  pageKey,
   routeKind,
 } from './routeTransitionTypes';
 
@@ -33,8 +34,8 @@ const ARRIVING: ViewTransitionClassPerType = {
  * footer) sits in a <ViewTransition> keyed by the path, so a route change
  * removes one and places another: React names the old page and the new one,
  * and globals.css moves them. React never animates the unnamed rest of the
- * document, and a same-page change (an archive tab's ?phase=, a hash) keeps
- * the key, so it starts no transition.
+ * document, and a same-page change (an archive tab's ?phase=, a projects
+ * collection tab, a hash) keeps the key, so it starts no transition.
  *
  * It also marks <html> with the kind of page the navigation left and
  * reached. A layout effect runs inside the transition's update, before the
@@ -53,7 +54,7 @@ export function RouteTransition({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <ViewTransition key={pathname} enter={ARRIVING} exit={LEAVING} default="none">
+    <ViewTransition key={pageKey(pathname)} enter={ARRIVING} exit={LEAVING} default="none">
       {children}
     </ViewTransition>
   );
