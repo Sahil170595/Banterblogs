@@ -1,10 +1,55 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Observatory } from './Observatory';
+import { DEFAULT_CONFIG, FIXTURE_VERSION, SCHEMA_VERSION } from '@/lib/projects/workflow-observatory/engine';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('same-origin native DOM execution', () => {
+  it('does not restore a pending trace import after reset', async () => {
+    render(<Observatory />);
+    let finish!: (text: string) => void;
+    const text = new Promise<string>(resolve => { finish = resolve; });
+    fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [{ size: 10, text: () => text }] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset observatory' }));
+    await act(async () => { finish(JSON.stringify({ schemaVersion: SCHEMA_VERSION, fixtureVersion: FIXTURE_VERSION, config: DEFAULT_CONFIG, events: [] })); });
+    expect(screen.queryByLabelText('Recomputed event replay')).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+  it('ignores a pending rejection after a configuration change', async () => {
+    render(<Observatory />);
+    let finish!: (text: string) => void;
+    const text = new Promise<string>(resolve => { finish = resolve; });
+    fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [{ size: 10, text: () => text }] } });
+    fireEvent.change(screen.getByLabelText('Requested room'), { target: { value: 'south' } });
+    await act(async () => { finish('invalid JSON'); });
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+  it('does not let an older import replace the newest replay', async () => {
+    render(<Observatory />);
+    let finish!: (text: string) => void;
+    const text = new Promise<string>(resolve => { finish = resolve; });
+    const report = (room: string) => JSON.stringify({ schemaVersion: SCHEMA_VERSION, fixtureVersion: FIXTURE_VERSION, config: { ...DEFAULT_CONFIG, room }, events: [] });
+    fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [{ size: 10, text: () => text }] } });
+    fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [{ size: 10, text: async () => report('south') }] } });
+    await waitFor(() => expect(screen.getByLabelText('Recomputed event replay')).toBeTruthy());
+    await act(async () => { finish(report('north')); });
+    fireEvent.click(screen.getByRole('button', { name: 'Load configuration for a fresh run' }));
+    expect(screen.getByLabelText('Requested room')).toHaveProperty('value', 'south');
+  });
+  it('freezes the terminal fixture until reset so the trace still describes its state', async () => {
+    render(<Observatory />);
+    fireEvent.change(screen.getByLabelText('Save latency (ms)'), { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Complete'));
+    const reopen = screen.getByRole('button', { name: 'Reserve slot' });
+    expect(reopen.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(reopen);
+    expect(screen.getByRole('row', { name: /Spectral scan/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Export trace' }).hasAttribute('disabled')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Reset observatory' }));
+    expect(screen.getByRole('button', { name: 'Reserve slot' }).hasAttribute('disabled')).toBe(false);
+  });
   it('keeps the workflow configuration when its mobile panel closes', () => {
     render(<Observatory />);
     const toggle = screen.getByRole('button', { name: 'Workflow settings' });

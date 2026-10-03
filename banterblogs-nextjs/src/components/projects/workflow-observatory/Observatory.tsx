@@ -36,9 +36,11 @@ export function Observatory() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
   const generationRef = useRef(0);
+  const importRevision = useRef(0);
 
   useEffect(() => () => {
     generationRef.current++;
+    importRevision.current++;
     controllerRef.current?.abort();
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
@@ -53,6 +55,7 @@ export function Observatory() {
     if (stateRef.current.phase === 'saving') send({ type: 'cancel' });
   }
   function resetTo(next: Config = { ...DEFAULT_CONFIG }) {
+    importRevision.current++;
     controllerRef.current?.abort();
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     generationRef.current++;
@@ -61,15 +64,20 @@ export function Observatory() {
     setBusy(false); setError(null); setReplay(null); setReplayFrame(0);
   }
   function changeConfig(change: Partial<Config>) {
+    importRevision.current++;
     try { resetTo(configSchema.parse({ ...config, ...change })); }
     catch (cause) { setError(message(cause)); }
   }
   function manual(event: DomainEvent) {
+    if (!['ready', 'running'].includes(trace.status)) return;
+    importRevision.current++;
     try { send(event); }
     catch (cause) { setError(message(cause)); }
   }
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (!['ready', 'running'].includes(trace.status)) return;
+    importRevision.current++;
     try {
       send({ type: 'submit' });
       const generation = generationRef.current;
@@ -83,6 +91,7 @@ export function Observatory() {
   }
   async function execute(mode: 'step' | 'run') {
     if (!rootRef.current || busy) return;
+    importRevision.current++;
     const controller = new AbortController();
     controllerRef.current = controller;
     const generation = generationRef.current;
@@ -112,13 +121,19 @@ export function Observatory() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url);
   }
   async function importTrace(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
+    const revision = ++importRevision.current;
     try {
       if (file.size > MAX_IMPORT_BYTES) throw new Error('Trace must be under 500 KB.');
-      setReplay(replayExport(JSON.parse(await file.text()))); setReplayFrame(0); setError(null);
-    } catch (cause) { setError(`Replay rejected: ${message(cause)}`); }
-    event.target.value = '';
+      const text = await file.text();
+      if (revision !== importRevision.current) return;
+      setReplay(replayExport(JSON.parse(text))); setReplayFrame(0); setError(null);
+    } catch (cause) {
+      if (revision !== importRevision.current) return;
+      console.error('Workflow replay rejected', cause); setError(`Replay rejected: ${message(cause)}`);
+    } finally { if (revision === importRevision.current) input.value = ''; }
   }
 
   const plan = planFor(config);
@@ -164,18 +179,18 @@ export function Observatory() {
         <div className={styles.summary} role="status" aria-label="Workflow status" aria-live="polite"><strong className={trace.status === 'complete' ? styles.good : trace.status === 'failed' ? styles.warn : ''}>{busy ? 'Executing' : STATUS_LABELS[trace.status]}</strong><span>{trace.entries.length}/{plan.length} actions observed</span></div>
         {error && <p role="alert" className={styles.error}>{error}</p>}
         <div className={styles.fixture} ref={rootRef} data-phase={site.phase} data-title={site.title} data-room={site.room} aria-label="Synthetic scheduling site">
-          <header><div><span className={styles.eyebrow}>SYNTHETIC SITE · SAME ORIGIN</span><h3>Lab reservations</h3></div><button className={styles.secondary} disabled={site.dialogOpen || site.phase === 'saving'} onClick={() => manual({ type: 'open' })}>{config.failure === 'label-drift' ? 'New reservation' : 'Reserve slot'}</button></header>
+          <header><div><span className={styles.eyebrow}>SYNTHETIC SITE · SAME ORIGIN</span><h3>Lab reservations</h3></div><button className={styles.secondary} disabled={!canExecute || site.dialogOpen || site.phase === 'saving'} onClick={() => manual({ type: 'open' })}>{config.failure === 'label-drift' ? 'New reservation' : 'Reserve slot'}</button></header>
           <div className={styles.siteBody}>
             {site.toast !== 'none' && <p role="status" aria-label="Fixture notice" data-toast={site.toast} className={site.toast === 'success' ? styles.good : styles.warn}>{site.toast === 'success' ? 'Reservation saved' : 'Reservation could not be saved'}</p>}
             <table><thead><tr><th scope="col">Reservation</th><th scope="col">Room</th><th scope="col">State</th></tr></thead><tbody>
               {site.record ? <tr data-record-id={site.record.id} data-room={site.record.room}><td data-field="title">{site.record.title}</td><td>{ROOM_LABELS[site.record.room]}</td><td className={styles.good}>Committed</td></tr> : <tr><td colSpan={3} className={styles.empty}>No reservations</td></tr>}
             </tbody></table>
             {site.dialogOpen && <div className={styles.dialog} role="dialog" aria-label="Reservation" aria-modal="false">
-              <div className={styles.dialogHeading}><h3>New reservation</h3><button className={styles.icon} aria-label="Cancel reservation" title="Cancel reservation" onClick={() => { cancelPending(); manual({ type: 'cancel' }); }}><X size={17} /></button></div>
+              <div className={styles.dialogHeading}><h3>New reservation</h3><button className={styles.icon} disabled={!canExecute} aria-label="Cancel reservation" title="Cancel reservation" onClick={() => { cancelPending(); manual({ type: 'cancel' }); }}><X size={17} /></button></div>
               <form onSubmit={submit}>
-                <label>Reservation title<input name="title" aria-label="Reservation title" required minLength={3} maxLength={60} pattern=".{3,60}" value={site.title} disabled={site.phase === 'saving'} onInput={event => manual({ type: 'fill', value: event.currentTarget.value })} onChange={() => {}} /></label>
-                <label>Room<select name="room" aria-label="Room" value={site.room} disabled={site.phase === 'saving'} onChange={event => manual({ type: 'select', value: event.target.value as Config['room'] })}><option value="north">North lab</option><option value="south">South lab</option></select></label>
-                <button className={styles.primary} type="submit" disabled={site.phase === 'saving'}>Save reservation</button>
+                <label>Reservation title<input name="title" aria-label="Reservation title" required minLength={3} maxLength={60} pattern=".{3,60}" value={site.title} disabled={!canExecute || site.phase === 'saving'} onInput={event => manual({ type: 'fill', value: event.currentTarget.value })} onChange={() => {}} /></label>
+                <label>Room<select name="room" aria-label="Room" value={site.room} disabled={!canExecute || site.phase === 'saving'} onChange={event => manual({ type: 'select', value: event.target.value as Config['room'] })}><option value="north">North lab</option><option value="south">South lab</option></select></label>
+                <button className={styles.primary} type="submit" disabled={!canExecute || site.phase === 'saving'}>Save reservation</button>
                 {site.phase === 'saving' && <span role="status">Saving reservation…</span>}
               </form>
             </div>}
