@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
-import { cache } from "react";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
@@ -490,7 +489,22 @@ const AUTO_TAG_HINTS: Array<[string, string]> = [
   ["performance", "performance"],
 ];
 
-export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
+// The archive is fixed for the life of a process (the episode pipeline is
+// archived), and static generation renders ~270 pages that each need all of
+// it; React's cache() memoizes within one render only. A failed read is not
+// kept, so the next caller retries.
+let archive: Promise<Episode[]> | null = null;
+
+/** Every episode, parsed and rendered once per process. */
+export function getAllEpisodes(): Promise<Episode[]> {
+  archive ??= readAllEpisodes().catch((error: unknown) => {
+    archive = null;
+    throw error;
+  });
+  return archive;
+}
+
+async function readAllEpisodes(): Promise<Episode[]> {
   const episodes: Episode[] = [];
 
   const banterpacksDir = path.join(postsDirectory, "banterpacks");
@@ -532,7 +546,7 @@ export const getAllEpisodes = cache(async (): Promise<Episode[]> => {
   assignStableEpisodeIds(episodes);
 
   return episodes.sort((a, b) => a.id - b.id || a.slug.localeCompare(b.slug));
-});
+}
 
 async function processEpisodeFile(
   fileContents: string,
