@@ -890,11 +890,17 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
   font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
 }
 
+/* a select sizes to its longest option unless told otherwise, which held a
+   phone layout wider than the screen */
 .demo-field :is(input, select) {
+  width: 100%;
+  min-width: 0;
   min-height: 2.25rem;
   border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;

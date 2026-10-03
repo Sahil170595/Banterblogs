@@ -56,7 +56,8 @@ export function useServiceDemo() {
         return null;
       } catch (cause) {
         const message = cause instanceof Error ? cause.message : 'Invalid episode configuration.';
-        console.error('Service environment configuration rejected:', message, config);
+        // a refused input is handled and shown; a warning, not an application error
+        console.warn('Service environment configuration rejected:', message, config);
         return message;
       }
     },
@@ -84,7 +85,7 @@ export function useServiceDemo() {
         return null;
       } catch (cause) {
         const message = cause instanceof Error ? cause.message : 'Trace import failed.';
-        console.error('Service environment trace import rejected:', message);
+        console.warn('Service environment trace import rejected:', message);
         return message;
       }
     },
