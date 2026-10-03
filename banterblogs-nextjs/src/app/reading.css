@@ -1153,11 +1153,15 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
     font-weight: 600;
   }
 
+  /* every column's name in one register, whatever its cell's own face */
   .demo-stack tbody [data-label]::before {
     content: attr(data-label);
     flex-shrink: 0;
     max-width: 50%;
     text-align: left;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    letter-spacing: normal;
+    text-transform: none;
     font-size: 0.75rem;
     font-weight: 400;
     color: hsl(var(--muted-foreground));
