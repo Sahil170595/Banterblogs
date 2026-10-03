@@ -18,6 +18,7 @@ const PROJECT_PAGES = [
   '/projects/systems/staged-search',
   '/projects/systems/send-pacing',
   '/projects/systems/mission-governance',
+  '/projects/product/collaborative-whiteboard',
 ] as const;
 
 const ROUTES = [
