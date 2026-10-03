@@ -7,7 +7,7 @@ import { TIGHT_DEADLINE } from '@/lib/projects/flight-routing/experiment';
 import { worldSeed, type PolicyWorlds, type World } from '@/lib/projects/flight-routing/worlds';
 import { controls, Segmented, type Choice } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
-import { deadlineNote, gridHeadline, PROFILE_LABEL, profileNote, POLICY_TEXT } from './copy';
+import { deadlineNote, gridHeadline, MIRROR_NOTE, mirrorsOutbound, PROFILE_LABEL, profileNote, POLICY_TEXT } from './copy';
 import type { Selection } from './useFlightDemo';
 import styles from './demo.module.css';
 
@@ -95,7 +95,10 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
         />
         <Segmented legend="Route" name="route" options={ROUTES} value={config.scenario} onChange={(scenario) => configure({ ...config, scenario })} />
       </div>
-      <p className={controls.hint}>{profileNote(config.profile, config)}</p>
+      <p className={controls.hint}>
+        {profileNote(config.profile, config)}
+        {config.scenario === 'east-west' && mirrorsOutbound() && ` ${MIRROR_NOTE}`}
+      </p>
       {error && (
         <p role="alert" className={controls.error}>
           {error}

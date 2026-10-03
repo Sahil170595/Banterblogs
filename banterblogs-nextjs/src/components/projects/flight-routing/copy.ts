@@ -28,7 +28,7 @@ export const PROFILE_LABEL: Record<Profile, string> = { clear: 'Clear', balanced
 const MINUTES_PER_HOUR = 60;
 
 /** the earliest nonstop: origin straight to destination, not a connection's second leg */
-function firstNonstop(config: Pick<Config, 'scenario'>) {
+export function firstNonstop(config: Pick<Config, 'scenario'>) {
   const { flights, origin, destination } = getScenario(config.scenario);
   return flights.filter((f) => f.origin === origin && f.dest === destination).sort((a, b) => a.arrive - b.arrive)[0];
 }
@@ -46,12 +46,29 @@ function duration(minutes: number): string {
   return `${minutes} min`;
 }
 
-/** where a deadline sits against the nonstop's landing, e.g. "5 min before the nonstop lands" */
+/**
+ * where a deadline sits against the first nonstop's landing, e.g. "5 min
+ * before the first nonstop, F3, lands"; the network has a later nonstop too
+ */
 export function deadlineNote(deadline: number, config: Pick<Config, 'scenario'>): string {
+  const nonstop = `the first nonstop, ${firstNonstop(config).id},`;
   const gap = deadline - nonstopLanding(config);
-  if (gap === 0) return 'as the nonstop lands';
-  return gap < 0 ? `${duration(-gap)} before the nonstop lands` : `${duration(gap)} after the nonstop lands`;
+  if (gap === 0) return `as ${nonstop} lands`;
+  return gap < 0 ? `${duration(-gap)} before ${nonstop} lands` : `${duration(gap)} after ${nonstop} lands`;
 }
+
+/** the return network is the outbound one reversed: same flights, times and outcome keys, ends swapped */
+export function mirrorsOutbound(): boolean {
+  const out = getScenario('west-east');
+  const back = getScenario('east-west');
+  const swap = (airport: string) => (airport === out.origin ? back.origin : airport === out.destination ? back.destination : airport);
+  return out.flights.every((f, i) => {
+    const r = back.flights[i];
+    return r.id === f.id && r.depart === f.depart && r.arrive === f.arrive && r.origin === swap(f.origin) && r.dest === swap(f.dest);
+  });
+}
+
+export const MIRROR_NOTE = 'The return network mirrors the outbound one, flight for flight, so every number matches.';
 
 const times = (count: number, of: number) => `${count} ${count === 1 ? 'time' : 'times'} in ${of}`;
 

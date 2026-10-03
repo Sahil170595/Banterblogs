@@ -52,13 +52,24 @@ describe('flight routing demo', () => {
 
   it('explains the deadline and the disruptions in terms of the fixture', () => {
     renderDemo();
-    expect(deadlineNote(TIGHT_CONFIG.deadline, TIGHT_CONFIG)).toBe('5 min before the nonstop lands');
-    expect(deadlineNote(540, TIGHT_CONFIG)).toBe('an hour after the nonstop lands');
+    // the network has two nonstops; a deadline is measured against the earlier, F3
+    expect(deadlineNote(TIGHT_CONFIG.deadline, TIGHT_CONFIG)).toBe('5 min before the first nonstop, F3, lands');
+    expect(deadlineNote(540, TIGHT_CONFIG)).toBe('an hour after the first nonstop, F3, lands');
     expect(profileNote('clear', TIGHT_CONFIG)).toBe('Clear: every flight runs to time.');
     expect(profileNote('balanced', TIGHT_CONFIG)).toBe('Mixed: each flight is cancelled 1 time in 10 and delayed or diverted 1 time in 10.');
     expect(screen.getByText(profileNote('balanced', TIGHT_CONFIG))).toBeTruthy();
     fireEvent.click(screen.getByRole('radio', { name: /Stress/ }));
     expect(screen.getByText(profileNote('storm', TIGHT_CONFIG))).toBeTruthy();
+  });
+
+  // re-review: the return route changed only the labels, which looked broken
+  it('says the return route mirrors the outbound one, and its numbers match', () => {
+    renderDemo();
+    const before = screen.getByText(gridHeadline(initialWorlds)).textContent;
+    expect(screen.queryByText(/mirrors the outbound one/)).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: 'JFK to SFO' }));
+    expect(screen.getByText(/The return network mirrors the outbound one, flight for flight, so every number matches\./)).toBeTruthy();
+    expect(screen.getByText(/^Deadline lookahead is on time/).textContent).toBe(before);
   });
 
   it('replays the world a square stands for, under that panel’s policy, and brings the replay into view', () => {

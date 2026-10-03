@@ -1,4 +1,4 @@
-import { deadlineNote } from '@/components/projects/flight-routing/copy';
+import { deadlineNote, firstNonstop } from '@/components/projects/flight-routing/copy';
 import { FlightRoutingDemo } from '@/components/projects/flight-routing/FlightRoutingDemo';
 import { ForEngineers, ProjectPage, projectSections, type ProjectFinding } from '@/components/projects/ProjectPage';
 import {
@@ -56,11 +56,14 @@ const [, tightViaDenver, tightNonstop] = actionValues(createEpisode(TIGHT_CONFIG
 const pct = (chance: number) => `${Math.round(chance * 100)}%`;
 const PAIRED_POLICIES: Policy[] = ['nonstop', 'deadline', 'greedy', 'random'];
 const TIGHT_NOTE = deadlineNote(TIGHT_CONFIG.deadline, TIGHT_CONFIG);
+// the network has two nonstops; the deadlines are set against the earlier
+const NONSTOP = firstNonstop(TIGHT_CONFIG);
 
 const FINDINGS: ProjectFinding[] = [
+  // two policies side by side on the same worlds, not a before and after
   {
-    value: `${tight.nonstop.onTime} → ${tight.deadline.onTime}`,
-    label: `worlds out of ${EXPERIMENT_WORLDS} on time with the deadline ${TIGHT_NOTE}: Nonstop first, which books the nonstop, makes ${tight.nonstop.onTime}; Deadline lookahead, which plans every leg ahead, makes ${tight.deadline.onTime}.`,
+    value: `${tight.nonstop.onTime} vs ${tight.deadline.onTime}`,
+    label: `worlds out of ${EXPERIMENT_WORLDS} on time with the deadline ${TIGHT_NOTE}: Nonstop first, which books that nonstop, makes ${tight.nonstop.onTime}; Deadline lookahead, which plans every leg ahead, makes ${tight.deadline.onTime}.`,
   },
   {
     value: `−${tight.nonstop.arrived - tight.deadline.arrived}`,
@@ -69,7 +72,7 @@ const FINDINGS: ProjectFinding[] = [
   {
     value: `${tight.greedy.reasons.no_candidates ?? 0} of ${EXPERIMENT_WORLDS}`,
     label:
-      'worlds where Greedy next arrival, which takes the soonest landing, strands the passenger in Chicago, a dead end. A mean reward alone would hide why it fails.',
+      'worlds where Greedy next arrival, which takes the soonest landing, strands the passenger in Chicago, a dead end built into this network on purpose. An average score alone would hide why the rule fails; the run records how every trip ends.',
   },
 ];
 
@@ -91,8 +94,9 @@ export default function FlightRoutingPage() {
       <h2 id="result">{PLAIN.result}</h2>
       <p>
         Four policies, each a rule for which flight to book next, run over the same {EXPERIMENT_WORLDS} seeded worlds: simulated days whose delays and
-        cancellations are fixed by a seed, so every policy meets the same ones. With a {formatTime(DEFAULT_CONFIG.deadline)} deadline, Deadline
-        lookahead books the same nonstop as Nonstop first and the two match world for world: {slack.deadline.onTime} of {EXPERIMENT_WORLDS} on time,{' '}
+        cancellations are fixed by a seed, so every policy meets the same ones. The network has two nonstops to JFK; the deadlines here are set
+        against the first, {NONSTOP.id}, which lands at {formatTime(NONSTOP.arrive)}. With a {formatTime(DEFAULT_CONFIG.deadline)} deadline,
+        Deadline lookahead books that nonstop as Nonstop first does, and the two match world for world: {slack.deadline.onTime} of {EXPERIMENT_WORLDS} on time,{' '}
         {slack.deadline.arrived} arrived. Move the deadline to {formatTime(TIGHT_CONFIG.deadline)}, {TIGHT_NOTE}, and Nonstop first is on time in{' '}
         {tight.nonstop.onTime} worlds while lookahead switches to the connection through Denver and is on time in {tight.deadline.onTime}. It pays for
         them: {tight.deadline.arrived} arrivals instead of {tight.nonstop.arrived}, because two flights can each be disrupted.
@@ -130,7 +134,7 @@ export default function FlightRoutingPage() {
       <p>
         Greedy next arrival never reaches JFK. It takes the earliest landing, F1 to Chicago, where this network has no onward flight:{' '}
         {tight.greedy.reasons.no_candidates} worlds strand there and {tight.greedy.reasons.cancelled} are cancelled first. That is a counterexample to
-        the rule, not evidence about real connections, and it is why the recorded run keeps every way a trip can end rather than a mean reward.
+        the rule, not evidence about real connections, and it is why the recorded run keeps every way a trip can end rather than only a mean reward, the average score.
       </p>
 
       <h2 id="original">{PLAIN.original}</h2>
@@ -157,11 +161,12 @@ export default function FlightRoutingPage() {
         <p>The reward is terminal, paid once when the trip ends:</p>
         <pre>
           <code>
-            {`R = ${REWARD_WEIGHTS.deadline.toFixed(2)} × on time\n  + ${REWARD_WEIGHTS.arrival.toFixed(2)} × arrived\n  + ${REWARD_WEIGHTS.earliness.toFixed(2)} × arrived × (horizon − arrival) / horizon`}
+            {/* the last term wraps, so a phone shows all of it without scrolling */}
+            {`R = ${REWARD_WEIGHTS.deadline.toFixed(2)} × on time\n  + ${REWARD_WEIGHTS.arrival.toFixed(2)} × arrived\n  + ${REWARD_WEIGHTS.earliness.toFixed(2)} × arrived\n    × (horizon − arrival) / horizon`}
           </code>
         </pre>
         <p>
-          The horizon, {formatTime(DEFAULT_CONFIG.horizon)}, is where the simulated day ends. The nonstop landing on schedule at{' '}
+          The horizon, {formatTime(DEFAULT_CONFIG.horizon)}, is where the simulated day ends. The first nonstop, {NONSTOP.id}, landing on schedule at{' '}
           {formatTime(onTimeNonstop.clock)} earns {onTimeNonstop.reward}; the same flight landing at {formatTime(lateNonstop.clock)}, past the{' '}
           {formatTime(DEFAULT_CONFIG.deadline)} deadline, earns {lateNonstop.reward}; a cancellation earns nothing.
         </p>
@@ -169,7 +174,7 @@ export default function FlightRoutingPage() {
         <h3 id="planner">{ENGINEERS.planner}</h3>
         <p>
           Lookahead plans on the model, never on the sampled outcome. For each bookable flight it runs through the ten joint outcomes in that
-          flight&apos;s pool and recurses to the end of the trip. Under the mixed profile the nonstop&apos;s modelled chance of arriving by{' '}
+          flight&apos;s pool and recurses to the end of the trip. Under the mixed profile the first nonstop&apos;s modelled chance of arriving by{' '}
           {formatTime(DEFAULT_CONFIG.deadline)} is {pct(slackNonstop)}, and by {formatTime(TIGHT_CONFIG.deadline)} {pct(tightNonstop)}; the Denver
           connection&apos;s are {pct(slackViaDenver)} and {pct(tightViaDenver)}. These are probabilities under this fixture, not forecasts. More
           lookahead is not a general win; it is a different trade, and the reward decides when the trade is worth taking.

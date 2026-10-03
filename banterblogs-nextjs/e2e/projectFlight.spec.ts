@@ -85,6 +85,15 @@ test('on a phone, every bookable flight shows its chance of making the deadline 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+// re-review: the formula's last term scrolled out of a phone's view, so the visible formula was wrong
+test('on a phone the reward formula shows whole, with no sideways scroll inside it', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE);
+  const formula = page.locator('pre', { hasText: '/ horizon' });
+  await formula.scrollIntoViewIfNeeded();
+  expect(await formula.evaluate((pre) => pre.scrollWidth <= pre.clientWidth)).toBe(true);
+});
+
 test('the first URL under /work redirects here', async ({ page }) => {
   const response = await page.goto('/work/projects/flight-routing');
   expect(new URL(page.url()).pathname).toBe(PAGE);
