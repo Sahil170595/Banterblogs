@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Check, Download, Play, RotateCcw, ShieldCheck, Upload } from 'lucide-react';
+import { Check, Download, Play, RotateCcw, ShieldCheck, SlidersHorizontal, Upload } from 'lucide-react';
 import { evaluate, exportRun, replayRun, type Evaluation } from '@/lib/projects/intake-policy/engine';
 import { CASES } from '@/lib/projects/intake-policy/cases';
 import { DEFAULT_CASE, DEFAULT_POLICY, fieldLabels, programLabels, requestLabels, requestOptions, routeLabels,
@@ -27,6 +27,7 @@ export default function IntakeLab() {
   const [preset, setPreset] = useState('ready');
   const [error, setError] = useState('');
   const [exportStatus, setExportStatus] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const revision = useRef(0);
   const dirty = JSON.stringify(draft) !== JSON.stringify(result.features) || JSON.stringify(policy) !== JSON.stringify(result.policy);
@@ -68,6 +69,7 @@ export default function IntakeLab() {
       }}>{preset === 'custom' && <option value="custom">Custom categorical case</option>}{CASES.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
       <span role="status" className={dirty ? styles.unapplied : styles.applied}>{dirty ? 'Unapplied changes' : 'Applied snapshot / synthetic only'}</span>
       <div className={styles.commands}>
+        <button className={`${styles.iconButton} ${styles.settingsToggle}`} aria-label="Case settings" title="Case settings" aria-expanded={settingsOpen} aria-controls="intake-case-settings" onClick={() => setSettingsOpen(open => !open)}><SlidersHorizontal size={17} /></button>
         <button onClick={run} className={styles.run}><Play size={16} aria-hidden />Evaluate</button>
         <button className={styles.iconButton} aria-label="Reset case and policy" title="Reset case and policy" onClick={reset}><RotateCcw size={17} /></button>
         <button className={styles.iconButton} aria-label="Export applied result" title="Export applied result" onClick={download}><Download size={17} /></button>
@@ -78,7 +80,7 @@ export default function IntakeLab() {
     {error && <p className={styles.error} role="alert">{error}</p>}
     <span className={styles.srOnly} role="status">{exportStatus}</span>
     <div className={styles.workspace}>
-      <form className={styles.controls} onSubmit={e => { e.preventDefault(); run(); }}>
+      <form id="intake-case-settings" className={`${styles.controls} ${settingsOpen ? styles.controlsOpen : ''}`} onSubmit={e => { e.preventDefault(); run(); }}>
         <h2>Case signals</h2>
         <label>Request category<select value={draft.request} onChange={e => update('request', e.target.value as CaseFeatures['request'])}>{requestOptions.map(r => <option key={r} value={r}>{requestLabels[r]}</option>)}</select></label>
         <label>Deadline signal<select value={draft.deadline} onChange={e => update('deadline', e.target.value as CaseFeatures['deadline'])}><option value="none">No deadline</option><option value="today">Today</option><option value="soon">Time element, not today</option></select></label>
