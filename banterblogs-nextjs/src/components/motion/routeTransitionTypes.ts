@@ -21,3 +21,16 @@ export type RouteKind = typeof LANDING_ROUTE | typeof INTERIOR_ROUTE;
 export function routeKind(pathname: string): RouteKind {
   return pathname === LANDING_PATH ? LANDING_ROUTE : INTERIOR_ROUTE;
 }
+
+const PROJECTS_HUB = '/projects';
+// the hub and one collection tab below it: /projects, /projects/<collection>
+const PROJECTS_TAB = /^\/projects(?:\/[^/]+)?\/?$/;
+
+/**
+ * The page a path belongs to, for the route transition's key. A collection
+ * tab is a link with its own URL, but the hub around it stays put, as an
+ * archive tab's ?phase= does, so switching tabs starts no page transition.
+ */
+export function pageKey(pathname: string): string {
+  return PROJECTS_TAB.test(pathname) ? PROJECTS_HUB : pathname;
+}

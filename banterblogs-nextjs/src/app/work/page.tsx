@@ -10,11 +10,13 @@ import { PROFILE_ITEMS_AFTER, ProfileLayout } from '@/components/ui/ProfileLayou
 import { Section } from '@/components/ui/Section';
 import { TimelineFigure } from '@/components/ui/TimelineFigure';
 import { cn } from '@/lib/cn';
+import { collectionsWithProjects, projectHref, projectsIn, readProjectCatalog } from '@/lib/projects/catalog';
 import { monthOf } from '@/lib/timeline';
 import {
   CAREER_TIMELINE,
   EDUCATION,
   EXPERIENCE,
+  SERVICE,
   HERO_HEADLINE,
   HERO_SUMMARY,
   NEXT_LINKS,
@@ -50,10 +52,14 @@ export const metadata: Metadata = {
 
 const SECTIONS = [
   { id: 'research', label: 'Research & Open Source' },
+  { id: 'projects', label: 'Projects' },
   { id: 'experience', label: 'Experience' },
+  { id: 'service', label: 'Service' },
   { id: 'education', label: 'Education' },
   { id: 'skills', label: 'Technical Skills' },
 ];
+const PROJECT_CATALOG = readProjectCatalog();
+const PROJECT_COLLECTIONS = collectionsWithProjects(PROJECT_CATALOG);
 const LINK_ICONS: Record<string, LucideIcon> = { GitHub: Github, LinkedIn: Linkedin, ORCID: ExternalLink };
 // the research rows that join the first-load entrance, after the rail
 const ENTRANCE_ROWS = 2;
@@ -242,10 +248,65 @@ export default function WorkPage() {
           </ul>
         </Section>
 
+        <Section id="projects" title="Projects" description="Interactive builds, each running live on its own page.">
+          <ul>
+            {PROJECT_COLLECTIONS.map((collection) => (
+              <Reveal
+                as="li"
+                key={collection.key}
+                className="list-row grid gap-x-8 gap-y-3 py-6 md:grid-cols-[9.5rem_minmax(0,1fr)]"
+              >
+                <p className="pt-1 text-label-13">
+                  <IntentLink href={`/projects/${collection.key}`} className="text-muted-foreground transition-colors duration-fast ease-standard hover:text-foreground">
+                    {collection.label}
+                  </IntentLink>
+                </p>
+                <ul className="grid min-w-0 gap-5">
+                  {projectsIn(PROJECT_CATALOG, collection.key).map((project) => (
+                    <li key={project.slug}>
+                      <h3 className="text-heading-20">
+                        <IntentLink href={projectHref(project)} className="text-foreground transition-colors duration-fast ease-standard hover:text-primary">
+                          {project.title}
+                        </IntentLink>
+                      </h3>
+                      <p className="mt-1 text-copy-16 text-prose">{project.summary}</p>
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            ))}
+          </ul>
+          <IntentLink
+            href="/projects"
+            className="mt-4 inline-flex min-h-7 items-center gap-1.5 text-copy-14 text-muted-foreground transition-colors duration-fast ease-standard hover:text-foreground"
+          >
+            All projects
+            <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+          </IntentLink>
+        </Section>
+
         <Section id="experience" title="Experience">
           <ul>
             {EXPERIENCE.map((job) => (
               <RoleRow key={`${job.company}-${job.dates}`} job={job} />
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="service" title="Service">
+          <ul>
+            {SERVICE.map((service) => (
+              <Reveal
+                as="li"
+                key={service.role}
+                className="list-row grid gap-x-8 gap-y-2 py-6 md:grid-cols-[9.5rem_minmax(0,1fr)]"
+              >
+                <p className="pt-1 text-label-13 text-muted-foreground">{service.dates}</p>
+                <div className="min-w-0">
+                  <h3 className="text-heading-20 text-foreground">{service.role}</h3>
+                  <p className="mt-2 text-copy-16 text-prose">{service.detail}</p>
+                </div>
+              </Reveal>
             ))}
           </ul>
         </Section>

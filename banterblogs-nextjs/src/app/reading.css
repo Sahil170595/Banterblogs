@@ -1,7 +1,8 @@
 @config "../../tailwind.reading.config.ts";
 
 /* The reading routes' stylesheet (/reports/[id], /reports/compendium,
- * /episodes/[slug]; each page imports it). The typography components, the
+ * /episodes/[slug], /projects/<collection>/<project>; each page imports it,
+ * a project page through ProjectPage). The typography components, the
  * markdown tables and the report page's own rules used to ride in
  * globals.css, render-blocking on every page; here only a reading page
  * downloads them. Its Tailwind config emits the typography plugin's .prose
@@ -677,3 +678,76 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   }
 }
 /* end report page */
+
+/* project page (components/projects/ProjectPage.tsx): the report page's head,
+   type, contents and pager at the container's width, so the live demo has
+   room; the write-up keeps the reading measure, its rail at the far edge. */
+.project-frame {
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+.project-demo {
+  margin-top: 2.5rem;
+}
+
+.project-meta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: hsl(var(--foreground));
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: hsl(var(--foreground) / 0.35);
+  transition: text-decoration-color var(--duration-fast) var(--ease-standard);
+}
+
+.project-meta-link:hover {
+  text-decoration-color: hsl(var(--primary));
+}
+
+/* the findings in the archive's number cards */
+.project-findings {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 3rem;
+}
+
+.project-finding {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card) / 0.7);
+  padding: 1.25rem;
+}
+
+.project-finding-value {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+
+.project-finding p {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (min-width: 640px) {
+  .project-findings {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .project-layout {
+    justify-content: space-between;
+  }
+}
+/* end project page */
