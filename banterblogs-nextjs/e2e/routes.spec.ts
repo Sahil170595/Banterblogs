@@ -18,6 +18,10 @@ const ROUTES = [
   '/tools/chimeraforge',
   '/show',
   '/episodes',
+  '/projects',
+  '/projects/reinforcement-learning/flight-routing',
+  '/projects/reinforcement-learning/offline-policy-evaluation',
+  '/projects/reinforcement-learning/customer-service',
 ] as const;
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const HTTP_OK = 200;
@@ -42,10 +46,19 @@ const REFLOW_ROUTES = [
 // with next/font's faces merged into it. Turbopack stops merging them once
 // the global sheet grows past its CSS merge size (R5: 4 KB of new rules put
 // both on every page, +300 ms FCP in local Lighthouse mobile). The reading
-// routes add their own sheet.
+// routes add their own sheet; a project page adds its demo's sheet too,
+// split out by graph CSS chunking (next.config.ts) so no report downloads it.
 const READING_ROUTES = new Set<string>(['/reports/technical-report-138']);
+const PROJECT_ROUTES = new Set<string>([
+  '/projects/reinforcement-learning/flight-routing',
+  '/projects/reinforcement-learning/offline-policy-evaluation',
+  '/projects/reinforcement-learning/customer-service',
+]);
 const GLOBAL_SHEETS = 1;
 const READING_SHEETS = 2;
+const PROJECT_SHEETS = 3;
+const expectedSheets = (route: string) =>
+  PROJECT_ROUTES.has(route) ? PROJECT_SHEETS : READING_ROUTES.has(route) ? READING_SHEETS : GLOBAL_SHEETS;
 
 const SCREENSHOTS_ON = process.env.VISUAL_SCREENSHOTS === 'on';
 // share of pixels a fold may differ by before the screenshot fails
@@ -74,11 +87,11 @@ for (const route of [...ROUTES, MISSING_ROUTE]) {
       expect(errors).toEqual([]);
     });
 
-    test('blocks its first paint on one stylesheet, two on a reading route', async ({ page }, testInfo) => {
+    test('blocks its first paint on one stylesheet, two on a reading route, three on a project', async ({ page }, testInfo) => {
       test.skip(testInfo.project.name !== 'desktop', 'the sheets do not depend on the viewport');
       await page.goto(route, { waitUntil: 'domcontentloaded' });
       const sheets = await page.evaluate(() => new Set([...document.querySelectorAll('link[rel="stylesheet"]')].map((link) => link.getAttribute('href'))).size);
-      expect(sheets).toBe(READING_ROUTES.has(route) ? READING_SHEETS : GLOBAL_SHEETS);
+      expect(sheets).toBe(expectedSheets(route));
     });
 
     test('matches its fold', { tag: '@screenshot' }, async ({ page }) => {

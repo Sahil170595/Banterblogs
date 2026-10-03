@@ -63,7 +63,7 @@ const MAIN_COUNTS: Record<Pattern, number> = {
 const CEILINGS: Record<Pattern, number> = {
   arbitraryFontSize: 7,
   arbitraryTracking: 20,
-  arbitraryShadow: 7,
+  arbitraryShadow: 5,
   largeRadius: 2,
   paletteHue: 0,
   transitionAll: 0,

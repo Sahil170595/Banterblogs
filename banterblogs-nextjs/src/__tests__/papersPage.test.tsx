@@ -27,7 +27,8 @@ const OWNER_PROSE = [
   'Experience, education, and the engineering that surrounds the research.',
   'The constitutional AI ecosystem these findings are built into.',
 ];
-const ARXIV = ['https://arxiv.org/abs/2605.27763', 'https://arxiv.org/abs/2606.25097', 'https://arxiv.org/abs/2606.10154'];
+// the three cards' preprints, then the FLMSec paper's (announced 2026-10-01)
+const ARXIV = ['https://arxiv.org/abs/2605.27763', 'https://arxiv.org/abs/2606.25097', 'https://arxiv.org/abs/2606.10154', 'https://arxiv.org/abs/2610.01801'];
 const DEMO = 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier';
 // every evidence link on main, in order
 const EVIDENCE = [138, 144, 125, 134, 142, 134, 135, 136, 137, 123, 127, 133, 112, 114, 115, 145, 164, 130, 132, 126, 147, 140, 139];
@@ -192,6 +193,7 @@ describe('papers', () => {
     expect(`${text(badge)} · ${text(badge.nextElementSibling!)}`).toBe(`Accepted · Target: ${FLMSEC_VENUE}`);
     expect(badge.className).toContain('text-status-green');
     expect(text(row!)).toContain('safe-minus-unsafe directions reach ROC-AUC 0.588–0.793');
+    expect(row!.querySelector('h3 a.row-link')?.getAttribute('href')).toBe('https://arxiv.org/abs/2610.01801');
   });
 
   it('counts the three papers revising after the workshop decisions, never by title', () => {
@@ -242,6 +244,7 @@ describe('papers', () => {
     expect(markup).not.toMatch(/signal-(panel|pill|divider)/);
     const bordered = [...page.querySelectorAll('*')].filter((el) => [...el.classList].some((c) => BORDER_WIDTH.test(c)));
     expect(bordered.every((el) => el.classList.contains('pressable'))).toBe(true);
-    expect(bordered.length).toBeLessThanOrEqual(4);
+    // the hairline buttons: one per arXiv preprint, and the demo
+    expect(bordered.length).toBeLessThanOrEqual(ARXIV.length + 1);
   });
 });

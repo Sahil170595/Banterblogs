@@ -98,7 +98,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving (TR138; working title "Batch Inference Safety Under Non-Determinism") — accepted 2026-05-22 and presented at the ICML 2026 Workshop on Hypothesis Testing. arXiv: https://arxiv.org/abs/2605.27763 (cs.LG). This is a workshop paper, not the ICML 2026 main conference.
 
 ### Accepted — NeurIPS 2026 Workshop on Foundation and Large Model Security
-- A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings — the first paper on Chimera's own thesis, from Banterpacks. In tested prompt-controlled settings, raw safe centroids discriminate weakly or inversely; safe-minus-unsafe directions reach ROC-AUC 0.588–0.793. This is a workshop paper, not the main conference.
+- A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings — the first paper on Chimera's own thesis, from Banterpacks. In tested prompt-controlled settings, raw safe centroids discriminate weakly or inversely; safe-minus-unsafe directions reach ROC-AUC 0.588–0.793. arXiv: https://arxiv.org/abs/2610.01801 (cs.LG). This is a workshop paper, not the main conference.
 
 ### Public preprints
 - Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion (TR144) — arXiv:2606.25097. Examines output differences and refusal behavior under temperature-zero speculative decoding.
@@ -108,7 +108,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - One submission — title and venue withheld during double-blind review.
 
 ### Reviewing
-- Nine paper reviews for three ML workshops and two conference ethics reviews (2026).
+- NeurIPS 2026 reviewer: 10 workshop reviews (FLMSec 2, JUDGe 3, RTCA 5) and 2 ethics reviews (main conference, Evaluations & Datasets track); all 12 completed.
 - Reviewer for Advances in Artificial Intelligence and Machine Learning (AAIML; ISSN 2582-9793), a Scopus- and Web of Science-indexed journal.
 - Hackathon judge: Build for the Border (May 2026) and AI Healthcare Hack NYC (Jul 2026).
 
@@ -172,7 +172,18 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 - Ollama PR #16669 (merged 2026-06-22) — fix inverted iGPU/dGPU Vulkan classification on Windows hybrid graphics (two enumeration bugs in the Go discovery path)
 - vLLM PR #45207 (merged 2026-07-07) — pad Mamba page size instead of scaling block_size in unify_kv_cache_spec_page_size (hybrid attention/Mamba KV layout fix)
 - Triton PR #10819 (merged 2026-07-08) — tl.flip compile-time crash on documented default dim=None
+- PyTorch PR #190555 (merged 2026-09-29) — Inductor: split cross-device extern kernels out of CUDA-graph partitions, which were capturing CPU storage and failing memory-pool checks
+- PyTorch PR #199075 (merged 2026-10-02) — Dynamo: trace Python random float draws at the precision runtime passes them, fixing wrong CPU Inductor results (fixes #198187)
 - Triton PR #10822 (closed unmerged 2026-07-13; maintainers fixed the issue separately) — proposed a shared-memory gather fallback when no warp-local layout exists
+
+## Projects
+
+Interactive builds, each running live on its own page, filed in collections (the research archive's twin): https://chimeraforge.vercel.app/projects
+
+- Reinforcement learning: https://chimeraforge.vercel.app/projects/reinforcement-learning
+  - Flight Routing Lab — a deadline-aware routing environment (masked actions, joint disruption samples, deadline-first terminal reward) with four policies over the same 64 seeded worlds; a browser rebuild of the Gatebound Python system (https://github.com/Sahil170595/gatebound-rl). Synthetic fixture. https://chimeraforge.vercel.app/projects/reinforcement-learning/flight-routing
+  - Offline Policy Evaluation Lab — importance-sampling evaluation (raw, capped and self-normalized IS, paired bootstrap intervals, effective sample size, support audit) that checks whether a policy's estimated gain on logged data survives a constant control, a reward change and missing support; a browser rebuild of the Counterledger Python evaluator (https://github.com/Sahil170595/counterledger-ope). Synthetic fixture. https://chimeraforge.vercel.app/projects/reinforcement-learning/offline-policy-evaluation
+  - Customer Service Environment — an agent environment with identity-bound tools on synthetic orders, scored by the world the tools leave behind (one coherent outcome, evidence before writes, consent scope, supported reports); scripted control trajectories show the same refund scoring 1.00 or -0.40 by which record it hit. A browser rebuild of the Turncraft Python environment (https://github.com/Sahil170595/turncraft-env). Synthetic fixture. https://chimeraforge.vercel.app/projects/reinforcement-learning/customer-service
 
 ## Links
 
@@ -183,6 +194,7 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 - GitHub (this site's source): https://github.com/Sahil170595/Banterblogs
 - GitHub (Chimeraforge tools): https://github.com/Sahil170595/Chimeraforge
 - Research Archive: https://chimeraforge.vercel.app/reports
+- Projects: https://chimeraforge.vercel.app/projects
 - Papers: https://chimeraforge.vercel.app/papers
 - Platform Architecture: https://chimeraforge.vercel.app/platform
 - Work / CV: https://chimeraforge.vercel.app/work

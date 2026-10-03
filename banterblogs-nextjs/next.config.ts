@@ -27,8 +27,17 @@ const STUB_ROUTE_REDIRECTS = [
   { source: '/technology', destination: '/platform', permanent: true },
 ];
 
-// The scrollable overview that predates the galactic landing.
-const RETIRED_ROUTE_REDIRECTS = [{ source: '/home', destination: '/', permanent: true }];
+// The scrollable overview that predates the galactic landing; the projects'
+// first home under /work, which Gatebound's README links.
+const RETIRED_ROUTE_REDIRECTS = [
+  { source: '/home', destination: '/', permanent: true },
+  { source: '/work/projects', destination: '/projects', permanent: true },
+  { source: '/work/projects/flight-routing', destination: '/projects/reinforcement-learning/flight-routing', permanent: true },
+];
+
+// The project catalog reads every project.json under this folder at request
+// time in the sitemap route; the files ship with the function.
+const PROJECT_FILES = ['./src/app/projects/(demos)/*/*/project.json', './src/app/projects/(demos)/*/*/page.tsx'];
 
 // The landing poster and loop files carry a content hash in their names
 // (scripts/render-scene-poster.mjs, render-scene-video.mjs), so a new render
@@ -36,7 +45,15 @@ const RETIRED_ROUTE_REDIRECTS = [{ source: '/home', destination: '/', permanent:
 const IMMUTABLE_CACHE = 'public, max-age=31536000, immutable';
 const LANDING_ART_DIRS = ['poster', 'video'];
 
+// Unimported CSS, in bytes, worth one extra stylesheet request (Turbopack's
+// default is 20000, which kept a 15 KB demo stylesheet merged into the
+// reading chunk shared by every report).
+const CSS_REQUEST_COST_BYTES = 4000;
+
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    '/sitemap.xml': PROJECT_FILES,
+  },
   experimental: {
     optimizePackageImports: ['lucide-react'],
     // inlineCss stays off (measured in R4): it sends the global sheet twice
@@ -44,6 +61,11 @@ const nextConfig: NextConfig = {
     // every page, uncached), slowed a warm navigation (88 -> 109 ms), and
     // scored no better in local Lighthouse mobile (medians 84/92/91/90 against
     // 92/93/92/91 on /papers, /platform, /episodes and TR138).
+    // The default CSS chunking merged a project demo's stylesheet into the
+    // reading chunk every report page loads; graph chunking prices that
+    // trade, and this cost splits a demo's own CSS out once it outweighs a
+    // request, so a page downloads only the CSS it imports.
+    cssChunking: { type: 'graph', requestCost: CSS_REQUEST_COST_BYTES },
   },
   async redirects() {
     return [...CONCLUSIVE_REDIRECTS, ...STUB_ROUTE_REDIRECTS, ...RETIRED_ROUTE_REDIRECTS];
