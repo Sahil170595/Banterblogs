@@ -31,7 +31,7 @@ export const COMBINED_PYPI_DOWNLOADS = `${Math.floor(
   [CHIMERAFORGE_TOOL, QUANTFIT_TOOL].reduce((sum, tool) => sum + downloadFloor(tool.downloads ?? ''), 0) / THOUSAND,
 )}K+`;
 
-export const HERO_SUMMARY = `Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake-simulation latency from about 40s in early benchmarks to 100–450 ms per response. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints, five merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
+export const HERO_SUMMARY = `Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped Beacon to 5 enterprise pilots, cutting conversation LLM costs 30–80%. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints, six merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
 
 export interface ResearchItem {
   label: string;
@@ -165,10 +165,10 @@ export const RESEARCH: ResearchItem[] = [
     ],
   },
   {
-    label: 'PyTorch PR #199075 — approved',
+    label: 'PyTorch PR #199075 — merged',
     href: 'https://github.com/pytorch/pytorch/pull/199075',
     bullets: [
-      "Approved PyTorch PR #199075 (guilhermeleobas-approved; Dynamo): Python random float draws were traced as float32 while Inductor's CPU kernels received float64 buffers, so x * rng.random() returned values around -9e34; the graph input now uses the same full-precision conversion as runtime, with an Inductor regression test (fixes #198187).",
+      "Merged PyTorch PR #199075 (guilhermeleobas-approved, 0055968; Dynamo): Python random float draws were traced as float32 while Inductor's CPU kernels received float64 buffers, so x * rng.random() returned values around -9e34; the graph input now uses the same full-precision conversion as runtime, with an Inductor regression test (fixes #198187).",
     ],
     evidence: [{ label: 'Fixes PyTorch #198187', href: 'https://github.com/pytorch/pytorch/issues/198187' }],
   },
@@ -223,9 +223,13 @@ export const EXPERIENCE: Experience[] = [
     location: 'New York, USA',
     dates: 'Dec 2025 – Mar 2026',
     bullets: [
-      'Built a multi-agent security training platform in 90 days across web, Slack, Teams, SMS/RCS, WhatsApp, Telegram, voice, and email; shipped to 5 enterprise pilots: a top-10 global asset manager, a Fortune-100 cloud platform, and 3 mid-market firms (200–1000 employees). A shared JIT agent personalized remediation from vectorized phishing, vishing, smishing, and deepfake failure history.',
-      'Built phishing simulation on self-hosted Llama-3-70B with domain-specific LoRA/QLoRA + DeepSpeed over a 1M+ email corpus grounded in NIST guidance, vendor impersonation, and typosquat logins; engineered a Go orchestration pipeline automating adversarial credential-harvest page generation and session-cookie capture; owned LangGraph/LangSmith-traced scoring, adversarial-attempt logs, Azure tenancy/auth, country-code-aware routing, STT/TTS fallback, and SCORM/Vanta reporting aligned to SOC 2, NIST, ISO 27001, and GDPR.',
-      'Reduced deepfake-simulation per-response latency from about 40s in early benchmarks to 100–450 ms (about 450 ms on cold starts) with a multi-agent WebRTC pipeline spanning synchronized video rendering, voice generation, human-like scheduling, and retry-aware delivery.',
+      "Built Beacon, GhostEye's multi-agent JIT security training, in 90 days across web, Slack/Teams, SMS/RCS, WhatsApp, Telegram, voice, and email; 5 enterprise pilots (a top-10 global asset manager, a Fortune-100 cloud platform, Eight Sleep, Fella Health, ZeroPath). The asset manager pilot cut phishing click rate 58% and tripled reporting within one quarter; a shared JIT agent personalized remediation from vectorized phishing/vishing/smishing/deepfake failure histories.",
+      'Fine-tuned self-hosted Llama-3-70B for phishing simulation (domain adaptation) via LoRA/QLoRA + DeepSpeed on 1M+ NIST-grounded emails (vendor impersonation, typosquat logins). Built Go orchestration for credential-harvest pages/session-cookie capture, traced scoring/adversarial logs, Azure tenant auth, country-code routing, STT/TTS fallback, and SCORM/Vanta reporting aligned to SOC 2/NIST/ISO 27001/GDPR.',
+      // v8 adds a speedup multiplier here that the 2026-09-21 CV withdrew
+      // (publicClaims.test.ts WITHDRAWN); the qualified latency stays
+      'Cut deepfake phishing simulation streaming response latency from about 40s in early benchmarks to 100–450 ms by rebuilding the pipeline as a multi-agent WebRTC system spanning synchronized video rendering, voice generation, human-like scheduling, and retry-aware delivery.',
+      'Built analytics/evals for Vapi voice, self-hosted SMS simulation, and the training pipeline (TTFT, tokens/query, tokens/sec; in-house LangGraph evals, Kafka/ClickHouse scheduling and logging); cut per-turn latency from 5–7s to 0.5–1.5s with barge-in, streaming, caching, and summarization; caching and summarization cut conversation LLM costs 30–80%, with larger savings on longer conversations.',
+      'Built C-suite OSINT knowledge graphs for enterprise clients incl. Fortune-100 (Firecrawl into Amazon Neptune, TinkerPop/Gremlin; 5K+ nodes per graph); fixed Neptune overload by restructuring around cross-executive overlap and per-executive connectivity; cut amortized render from ~360 to ~60 ms per node (83% lower) via caching and engagement-ranked level-of-detail loading.',
     ],
   },
   {

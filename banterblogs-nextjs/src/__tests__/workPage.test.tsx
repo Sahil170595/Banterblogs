@@ -140,8 +140,10 @@ const RETIRED_CLAIMS = [
   // the workshop decisions landed 2026-09-30: one accepted, four rejected
   '5 under double-blind review',
   '5 workshop submissions',
-  // résumé v8: five merged upstream fixes; PhD v4: twelve reviews, not nine
+  // six merged upstream fixes since #199075 landed (2026-10-02); PhD v4:
+  // twelve reviews, not nine
   'four upstream contributions',
+  'five merged upstream fixes',
   'nine paper reviews',
   '22 Hugging Face',
   // the owner confirmed a cumulative score
@@ -161,7 +163,7 @@ describe('work page résumé currency', () => {
     const all = text(page);
     for (const fact of [
       '2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints',
-      'five merged upstream fixes',
+      'six merged upstream fixes',
       '23 Hugging Face models',
       'Hugging Face — 23 model releases',
       'from about 40s in early benchmarks to 100–450 ms',
@@ -183,8 +185,7 @@ describe('work page résumé currency', () => {
     expect(lanes).toContain('New York University');
   });
 
-  // résumé v8 lists five merged fixes; #199075 is approved and not yet landed,
-  // so it says approved until it is
+  // résumé v8 lists five merged fixes; #199075 landed on 2026-10-02 (0055968)
   it('lists every upstream fix with its true state', () => {
     const entries = Object.fromEntries(RESEARCH.map((item) => [item.label, item.href]));
     for (const [label, href] of [
@@ -193,11 +194,32 @@ describe('work page résumé currency', () => {
       ['PyTorch PR #190555 — merged', 'https://github.com/pytorch/pytorch/pull/190555'],
       ['Ollama PR #16669 — merged', 'https://github.com/ollama/ollama/pull/16669'],
       ['Triton PR #10819 — merged', 'https://github.com/triton-lang/triton/pull/10819'],
-      ['PyTorch PR #199075 — approved', 'https://github.com/pytorch/pytorch/pull/199075'],
+      ['PyTorch PR #199075 — merged', 'https://github.com/pytorch/pytorch/pull/199075'],
     ]) {
       expect(entries[label], label).toBe(href);
     }
-    expect(RESEARCH.filter((item) => / — merged$/.test(item.label))).toHaveLength(5);
+    expect(RESEARCH.filter((item) => / — merged$/.test(item.label))).toHaveLength(6);
+  });
+
+  // résumé v8 (2026-10-02). Its latency bullet adds "(80–400×)", which the
+  // 2026-09-21 CV withdrew (the 40s was an early benchmark, not a like-for-like
+  // endpoint), so the site keeps the qualified wording and no multiplier.
+  it('carries the GhostEye role as résumé v8 states it, without the withdrawn multiplier', () => {
+    const ghosteye = EXPERIENCE.find((job) => job.company === 'GhostEye Inc. (YC S25)')!;
+    expect(ghosteye.bullets).toHaveLength(5);
+    const all = ghosteye.bullets.join(' ');
+    for (const fact of [
+      'Built Beacon',
+      '5 enterprise pilots (a top-10 global asset manager, a Fortune-100 cloud platform, Eight Sleep, Fella Health, ZeroPath)',
+      'cut phishing click rate 58% and tripled reporting within one quarter',
+      'from about 40s in early benchmarks to 100–450 ms',
+      'conversation LLM costs 30–80%',
+      '~360 to ~60 ms per node (83% lower)',
+    ]) {
+      expect(all, fact).toContain(fact);
+    }
+    expect(all).not.toMatch(/80–400|80-400/);
+    expect(HERO_SUMMARY).toContain('at GhostEye (YC S25), shipped Beacon to 5 enterprise pilots, cutting conversation LLM costs 30–80%');
   });
 
   // PhD v4: NeurIPS 2026 workshops FLMSec (2), JUDGe (3), RTCA (5); ethics

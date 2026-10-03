@@ -173,7 +173,7 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 - vLLM PR #45207 (merged 2026-07-07) — pad Mamba page size instead of scaling block_size in unify_kv_cache_spec_page_size (hybrid attention/Mamba KV layout fix)
 - Triton PR #10819 (merged 2026-07-08) — tl.flip compile-time crash on documented default dim=None
 - PyTorch PR #190555 (merged 2026-09-29) — Inductor: split cross-device extern kernels out of CUDA-graph partitions, which were capturing CPU storage and failing memory-pool checks
-- PyTorch PR #199075 (approved, not yet merged) — Dynamo: trace Python random float draws at the precision runtime passes them, fixing wrong CPU Inductor results (fixes #198187)
+- PyTorch PR #199075 (merged 2026-10-02) — Dynamo: trace Python random float draws at the precision runtime passes them, fixing wrong CPU Inductor results (fixes #198187)
 - Triton PR #10822 (closed unmerged 2026-07-13; maintainers fixed the issue separately) — proposed a shared-memory gather fallback when no warp-local layout exists
 
 ## Links
