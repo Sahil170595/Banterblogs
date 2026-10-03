@@ -162,6 +162,26 @@ describe('header navigation state', () => {
     expect(current).toEqual(['/reports']);
   });
 
+  it('lists Projects after Papers in both menus and marks it current on a project page', () => {
+    pathname.current = '/projects/systems/send-pacing';
+    const { getAllByRole, getByRole, container } = render(<Header />);
+    fireEvent.click(getByRole('button', { name: 'Toggle navigation' }));
+    for (const nav of getAllByRole('navigation', { name: 'Primary' })) {
+      const hrefs = [...nav.querySelectorAll('a')].map((link) => link.getAttribute('href'));
+      expect(hrefs.indexOf('/projects')).toBe(hrefs.indexOf('/papers') + 1);
+    }
+    const current = [...container.querySelectorAll('a[aria-current="page"]')].map((link) => link.getAttribute('href'));
+    expect(current).toEqual(['/projects', '/projects']);
+  });
+
+  // eight sections leave no room for the icons beside the search at lg; they
+  // return at xl and stay in the phone menu and the footer
+  it('shows the GitHub and LinkedIn icons in the bar from xl only', () => {
+    const { getByRole } = render(<Header />);
+    const icons = getByRole('link', { name: 'GitHub' }).parentElement!;
+    expect(icons.className.split(/\s+/)).toEqual(expect.arrayContaining(['hidden', 'xl:flex']));
+  });
+
   it('returns focus to the menu toggle when Escape closes the mobile menu', () => {
     const { getByRole, container } = render(<Header />);
     const toggle = getByRole('button', { name: 'Toggle navigation' });
