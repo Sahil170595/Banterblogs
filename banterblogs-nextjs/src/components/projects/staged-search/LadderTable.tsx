@@ -3,37 +3,53 @@
 import { useMemo } from 'react';
 import { ladder, type Rung } from '@/lib/projects/staged-search/ladder';
 import { DEFAULT_SETTINGS, type Query, type Settings } from '@/lib/projects/staged-search/schema';
+import { controls } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
 import { formatFilter, thresholdRange } from './format';
 import styles from './search.module.css';
 
-// The hero: the lab's query at every relaxation threshold, grouped where the
+// The hero: the lab's query at every candidate threshold, grouped where the
 // outcome is the same. Each result is a square, plain when it fits every
 // filter the query asked for, crossed when relaxation let it through.
 
 const holds = (rung: Rung, threshold: number) => rung.from <= threshold && (rung.to === null || threshold <= rung.to);
 const words = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const say = (n: number) => words[n] ?? String(n);
-const reports = (status: 'ready' | 'shortfall') => (status === 'ready' ? 'ready' : 'a shortfall');
+const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
+const reports = (status: 'ready' | 'shortfall') => (status === 'ready' ? '“ready”' : 'a shortfall');
+const range = (rung: Rung) => (rung.to === rung.from ? `${rung.from}` : `${rung.from} to ${rung.to}`);
 
-function Headline({ rungs, query }: { rungs: Rung[]; query: Query }) {
+export const LADDER_COLUMNS = {
+  threshold: 'Threshold',
+  dropped: 'Filters dropped',
+  results: 'Results returned',
+  within: 'Match the request',
+} as const;
+
+function Headline({ rungs, query, limit }: { rungs: Rung[]; query: Query; limit: number }) {
   const atDefault = rungs.find((r) => holds(r, DEFAULT_SETTINGS.relax_threshold));
   const first = rungs[0];
-  if (!atDefault?.report) return <p className={styles.headline}>At the source&apos;s threshold this search finds too few candidates to run.</p>;
+  if (!atDefault?.report) return <p className={styles.headline}>At its default setting this search finds too few candidates to run.</p>;
   const { report, broken } = atDefault;
   const all = report.dropped.length === query.filters.length && query.filters.length > 0;
   const breaking = broken.filter((b) => b.length).length;
-  const dropped = all ? 'every filter it was given' : report.dropped.length ? `${say(report.dropped.length)} of its ${say(query.filters.length)} filters` : 'none of its filters';
+  const dropped = all
+    ? 'drops every filter'
+    : report.dropped.length
+      ? `drops ${say(report.dropped.length)} of its filters`
+      : 'drops none of its filters';
+  const strict = first !== atDefault && first.report && first.report.dropped.length === 0 ? first.report : null;
+  const allMatch = strict !== null && first.broken.every((b) => !b.length);
   return (
     <p className={styles.headline}>
-      At the source&apos;s threshold of {DEFAULT_SETTINGS.relax_threshold}, this search drops {dropped} and reports {reports(report.status)} with{' '}
-      {report.selected.length} result{report.selected.length === 1 ? '' : 's'}, {say(breaking)} of which break{breaking === 1 ? 's' : ''} the request.
-      {first !== atDefault && first.report && first.report.dropped.length === 0 && (
+      Asked for {plural(limit, 'note')} matching {plural(query.filters.length, 'filter')}, the search drops filters while it has fewer than{' '}
+      {DEFAULT_SETTINGS.relax_threshold} candidates, its default threshold. Here it {dropped}, reports {reports(report.status)} and returns{' '}
+      {plural(report.selected.length, 'note')}, {say(breaking)} of which {breaking === 1 ? 'does' : 'do'} not match the request.
+      {strict && (
         <>
           {' '}
-          At {first.to === first.from ? `threshold ${first.from}` : `thresholds ${first.from} to ${first.to}`} it drops nothing and reports{' '}
-          {reports(first.report.status)}: {first.report.selected.length} result{first.report.selected.length === 1 ? '' : 's'}
-          {first.broken.every((b) => !b.length) ? ', all within the request.' : '.'}
+          At a threshold of {range(first)} it drops nothing and reports {reports(strict.status)}: {plural(strict.selected.length, 'note')}
+          {allMatch ? `, ${strict.selected.length === 2 ? 'both' : 'all'} matching.` : '.'}
         </>
       )}
     </p>
@@ -44,41 +60,59 @@ export function LadderTable({ query, settings, onPick }: { query: Query; setting
   const rungs = useMemo(() => ladder(query, settings), [query, settings]);
   return (
     <div className={styles.hero}>
-      <Headline rungs={rungs} query={query} />
+      <Headline rungs={rungs} query={query} limit={settings.limit} />
+      <p className={controls.lead}>
+        StrataSearch relaxes a query that comes back thin: when its first search finds fewer candidates than a threshold, it drops a filter and
+        searches again. Each row runs the same request at a different threshold. Pick a row to see its results underneath: try the default, then{' '}
+        {rungs[0] ? thresholdRange(rungs[0].from, rungs[0].to) : 'the lowest'}.
+      </p>
       <p className={styles.request}>
         <span>The request</span>
         {query.filters.map((f, i) => (
           <code key={i}>{formatFilter(f)}</code>
         ))}
         {query.filters.length === 0 && <em>no filters</em>}
-        <span>
-          · {settings.limit} result{settings.limit === 1 ? '' : 's'}
+        <span>· {plural(settings.limit, 'result')}</span>
+      </p>
+      <p className={styles.legend}>
+        <span className={styles.squares}>
+          <span aria-hidden="true">
+            <i />
+          </span>
+          matches every filter asked for
+        </span>
+        <span className={styles.squares}>
+          <span aria-hidden="true">
+            <i data-broken="" />
+          </span>
+          fails one, let in by a dropped filter
         </span>
       </p>
       <ProjectFigureTransition slug="staged-search">
         <div className={styles.tableScroll} role="region" aria-label="The same search at every relaxation threshold" tabIndex={0}>
-          <table className={styles.ladder}>
-            <thead>
-              <tr>
-                <th scope="col">Threshold</th>
-                <th scope="col">Filters dropped</th>
-                <th scope="col">Results</th>
-                <th scope="col">Within the request</th>
+          <table className={`${styles.ladder} ${controls.stackTable}`} role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                {Object.values(LADDER_COLUMNS).map((name) => (
+                  <th key={name} scope="col" role="columnheader">
+                    {name}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {rungs.map((rung) => {
                 const current = holds(rung, settings.relax_threshold);
                 const fits = rung.broken.filter((b) => !b.length).length;
                 return (
-                  <tr key={rung.from} data-selected={current || undefined}>
-                    <th scope="row">
+                  <tr key={rung.from} role="row" data-selected={current || undefined}>
+                    <th scope="row" role="rowheader">
                       <button type="button" aria-pressed={current} onClick={() => onPick(rung.from)}>
                         {thresholdRange(rung.from, rung.to)}
-                        {holds(rung, DEFAULT_SETTINGS.relax_threshold) && <span>source default</span>}
+                        {holds(rung, DEFAULT_SETTINGS.relax_threshold) && <span>default</span>}
                       </button>
                     </th>
-                    <td>
+                    <td role="cell" data-label={LADDER_COLUMNS.dropped}>
                       {rung.report ? (
                         rung.report.dropped.length ? (
                           <span className={styles.dropped}>
@@ -93,7 +127,7 @@ export function LadderTable({ query, settings, onPick }: { query: Query; setting
                         <span className={styles.muted}>—</span>
                       )}
                     </td>
-                    <td>
+                    <td role="cell" data-label={LADDER_COLUMNS.results}>
                       {rung.report ? (
                         <span className={styles.squares} aria-label={`${rung.report.selected.length} of ${settings.limit}, ${rung.report.status}`}>
                           <span aria-hidden="true">
@@ -107,7 +141,9 @@ export function LadderTable({ query, settings, onPick }: { query: Query; setting
                         <span className={styles.warn}>{rung.error}</span>
                       )}
                     </td>
-                    <td className={styles.count}>{rung.report ? `${fits} of ${rung.report.selected.length}` : '—'}</td>
+                    <td role="cell" data-label={LADDER_COLUMNS.within} className={styles.count}>
+                      {rung.report ? `${fits} of ${rung.report.selected.length}` : '—'}
+                    </td>
                   </tr>
                 );
               })}
@@ -116,8 +152,8 @@ export function LadderTable({ query, settings, onPick }: { query: Query; setting
         </div>
       </ProjectFigureTransition>
       <p className={styles.caption}>
-        A crossed square is a result that fails a filter the query asked for. Relaxation drops year first, then kind or title, then topic
-        or tags, then collection, until the body channel has as many candidates as the threshold. Pick a row to run it below.
+        Filters go in a fixed order, year first, then kind or title, then topic or tags, then collection, until the first search finds as many
+        candidates as wanted.
       </p>
     </div>
   );

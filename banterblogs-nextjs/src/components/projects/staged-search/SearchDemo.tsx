@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { EXAMPLE_QUERY } from '@/lib/projects/staged-search/example';
 import { DEFAULT_SETTINGS, type Query, type Settings } from '@/lib/projects/staged-search/schema';
+import { revealResult } from '../reveal';
 import { fromQuery, toQuery, type Draft } from './draft';
 import { LadderTable } from './LadderTable';
 import { SearchLab } from './SearchLab';
@@ -10,15 +11,15 @@ import styles from './search.module.css';
 
 /**
  * The staged search page's live demo: the query at every relaxation
- * threshold, then the pipeline itself on the source's example. Both read the
- * same query, so editing it below redraws the ladder above.
+ * threshold, then the results of the picked one. Both read the same query, so
+ * editing it under the hood redraws the ladder above.
  */
 export function SearchDemo() {
   const [draft, setDraft] = useState<Draft>(() => fromQuery(EXAMPLE_QUERY));
   const [query, setQuery] = useState<Query>(EXAMPLE_QUERY);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const labRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLElement>(null);
 
   function editDraft(next: Draft) {
     setDraft(next);
@@ -41,14 +42,10 @@ export function SearchDemo() {
         settings={settings}
         onPick={(threshold) => {
           setSettings({ ...settings, relax_threshold: threshold });
-          const lab = labRef.current;
-          if (lab && lab.getBoundingClientRect().top > window.innerHeight) {
-            const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            lab.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
-          }
+          revealResult(resultsRef.current);
         }}
       />
-      <div ref={labRef} className={styles.labAnchor}>
+      <div className={styles.labAnchor}>
         <SearchLab
           draft={draft}
           query={query}
@@ -57,6 +54,7 @@ export function SearchDemo() {
           onDraft={editDraft}
           onSettings={setSettings}
           onLoad={load}
+          resultsRef={resultsRef}
         />
       </div>
     </div>

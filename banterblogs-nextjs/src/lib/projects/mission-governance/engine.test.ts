@@ -1,70 +1,58 @@
 import { describe, expect, it } from 'vitest';
-import { LONG_MISSION, SAMPLE_MISSION } from './contract';
-import { canTransition, fly, legsLeavingFence, TRANSITIONS, type Fault, type State } from './engine';
-import SOURCE_RUNS from './source-runs.json';
-
-// ProjectWyvern itself, run in Python at the linked commit on its own sample
-// mission: its ValidationService, then its MissionExecutor with its
-// SafetyGuard and MockVehicleAdapter, driven straight to staging as its own
-// tests do. Recorded per fault, present at validation or starting after the
-// second poll of a six-waypoint flight.
-
-interface AtValidation {
-  fault: Fault;
-  count: number;
-  timeoutSeconds: number;
-  checks: [string, string, string | null][];
-  state: State;
-  progress: number;
-  reason: string;
-}
-interface InFlight {
-  fault: Fault;
-  count: number;
-  afterPolls: number;
-  state: State;
-  progress: number;
-  reason: string;
-}
-interface Resumed extends InFlight {
-  timeline: [string, string, string][];
-}
-const RUNS = SOURCE_RUNS as unknown as { atValidation: AtValidation[]; inFlight: InFlight[]; resumed: Resumed };
+import { SAMPLE_MISSION } from './contract';
+import { canTransition, fly, legsLeavingFence, TRANSITIONS, type State } from './engine';
+import {
+  afterStaging,
+  flyAtValidation,
+  flyInFlight,
+  flyResumed,
+  isStalled,
+  matchesAtValidation,
+  matchesInFlight,
+  matchesResumed,
+  reproducedRuns,
+  RUNS,
+} from './runs';
 
 describe('the ported lifecycle against the source in Python', () => {
   for (const run of RUNS.atValidation) {
-    const stall = run.timeoutSeconds === 1;
-    const label = `${run.fault} at validation, ${run.count} waypoints${stall ? ', stalled, 1 s timeout' : ''}`;
+    const label = `${run.fault} at validation, ${run.count} waypoints${isStalled(run) ? ', stalled, 1 s timeout' : ''}`;
     it(`matches ${label}`, () => {
-      const mission = {
-        ...SAMPLE_MISSION,
-        waypoints: SAMPLE_MISSION.waypoints.slice(0, run.count),
-        constraints: { ...SAMPLE_MISSION.constraints, mission_timeout_s: run.timeoutSeconds },
-      };
-      const flight = fly(mission, { fault: run.fault, when: 'validation', afterPolls: 0, stall }, true);
+      const flight = flyAtValidation(run);
       expect(flight.validation.checks.map((c) => [c.name, c.status])).toEqual(run.checks.map(([name, status]) => [name, status]));
       // the stale reason carries a wall-clock age in the source; the rest are exact
-      for (const [i, [, , reason]] of run.checks.entries()) if (!reason?.startsWith('telemetry_age_')) expect(flight.validation.checks[i].reason).toBe(reason);
+      for (const [i, [, , reason]] of run.checks.entries())
+        if (!reason?.startsWith('telemetry_age_')) expect(flight.validation.checks[i].reason).toBe(reason);
       expect([flight.state, flight.progress, flight.reason]).toEqual([run.state, run.progress, run.reason]);
+      expect(matchesAtValidation(run)).toBe(true);
     });
   }
 
   for (const run of RUNS.inFlight) {
     it(`matches ${run.fault} starting after poll ${run.afterPolls} of ${run.count}`, () => {
-      const flight = fly(LONG_MISSION, { fault: run.fault, when: 'flight', afterPolls: run.afterPolls, stall: false });
+      const flight = flyInFlight(run);
       expect(flight.validation.passed).toBe(true);
       expect([flight.state, flight.progress, flight.reason]).toEqual([run.state, run.progress, run.reason]);
+      expect(matchesInFlight(run)).toBe(true);
     });
   }
 
   it('matches a pause and resume after which the battery fails: still executing, nothing watching', () => {
     const run = RUNS.resumed;
-    const flight = fly(LONG_MISSION, { fault: run.fault, when: 'resumed', afterPolls: run.afterPolls, stall: false });
+    const flight = flyResumed(run);
     expect([flight.state, flight.progress, flight.reason]).toEqual([run.state, run.progress, run.reason]);
     expect(flight.unwatched).toBe(true);
     // the source's timeline after staging, transition for transition
-    const after = flight.events.filter((e) => e.kind === 'transition').slice(4);
-    expect(after.map((e) => [e.state, e.actor, e.reason])).toEqual(run.timeline.slice(1));
+    expect(afterStaging(flight).map((e) => [e.state, e.actor, e.reason])).toEqual(run.timeline.slice(1));
+    expect(matchesResumed(run)).toBe(true);
+  });
+
+  it('counts every recorded run reproduced, and tells a mismatch from a match', () => {
+    const { matched, total } = reproducedRuns();
+    expect(total).toBe(RUNS.atValidation.length + RUNS.inFlight.length + 1);
+    expect(matched).toBe(total);
+    const [first] = RUNS.inFlight;
+    expect(matchesInFlight({ ...first, progress: first.progress + 1 })).toBe(false);
   });
 
   it('carries the state graph, every legal and forbidden pair', () => {
