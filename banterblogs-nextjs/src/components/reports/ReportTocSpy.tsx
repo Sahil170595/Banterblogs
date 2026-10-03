@@ -64,6 +64,10 @@ export function ReportTocSpy({ ids, children }: { ids: string[]; children: React
     const inView: Intersecting = new Set();
     let endInView = false;
     let active: string | null = null;
+    // a followed contents link stays current until the reader moves the page:
+    // a jump to a short section, or one near the end, leaves a later block in
+    // the band, and the reader asked for this one
+    let pinned: string | null = null;
     let frame = 0;
     let placing = 0;
 
@@ -78,7 +82,7 @@ export function ReportTocSpy({ ids, children }: { ids: string[]; children: React
 
     const apply = () => {
       frame = 0;
-      const id = sectionBeingRead();
+      const id = pinned ?? sectionBeingRead();
       if (id === active) return;
       // reads, all before any write
       if (nav !== null && getComputedStyle(nav).display === 'none') return;
@@ -130,7 +134,25 @@ export function ReportTocSpy({ ids, children }: { ids: string[]; children: React
     });
     if (end) tail.observe(end);
 
+    const follow = (event: MouseEvent) => {
+      const id = (event.target as Element).closest('a[href^="#"]')?.getAttribute('href')?.slice(1);
+      if (!id || !links.has(id)) return;
+      pinned = id;
+      schedule();
+    };
+    // the reader's own hand on the page, not the scroll a followed link makes
+    const release = () => {
+      if (pinned === null) return;
+      pinned = null;
+      schedule();
+    };
+    const READER_INPUT = ['wheel', 'touchstart', 'keydown'] as const;
+    track.addEventListener('click', follow);
+    for (const type of READER_INPUT) window.addEventListener(type, release, { passive: true });
+
     return () => {
+      track.removeEventListener('click', follow);
+      for (const type of READER_INPUT) window.removeEventListener(type, release);
       band.disconnect();
       view.disconnect();
       tail.disconnect();

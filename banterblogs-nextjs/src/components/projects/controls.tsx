@@ -2,8 +2,16 @@
 // sheet (app/reading.css, "demo-" classes), so every demo's controls match
 // and no two demos share a module stylesheet.
 
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
+
+// Escape closes the panel the key was pressed in and returns focus to its summary
+function closeOnEscape(event: KeyboardEvent<HTMLDetailsElement>) {
+  const details = event.currentTarget;
+  if (event.key !== 'Escape' || !details.open || event.defaultPrevented) return;
+  details.open = false;
+  details.querySelector('summary')?.focus();
+}
 
 export const controls = {
   row: 'demo-row',
@@ -32,7 +40,7 @@ export const controls = {
  */
 export function UnderTheHood({ summary = 'Under the hood', children }: { summary?: string; children: ReactNode }) {
   return (
-    <details className="demo-under-hood">
+    <details className="demo-under-hood" onKeyDown={closeOnEscape}>
       <summary>
         <ChevronRight aria-hidden="true" />
         {summary}

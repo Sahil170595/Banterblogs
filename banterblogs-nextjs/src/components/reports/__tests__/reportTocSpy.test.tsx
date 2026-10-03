@@ -246,6 +246,24 @@ describe('report contents scroll-spy', () => {
     expect(container.querySelector('.report-toc-marker')?.hasAttribute(MARKER_PLACED_ATTRIBUTE)).toBe(false);
   });
 
+  // live QA: a followed link to a short section, or one near the end, lit the
+  // section after it, because the jump left a later block in the band
+  it('keeps a followed contents link current until the reader moves the page themselves', () => {
+    const { container, paragraphOf } = mountPage();
+    act(() => {
+      container.querySelector<HTMLAnchorElement>('a[href="#intro"]')!.click();
+    });
+    cross(band, [entry(paragraphOf('methods'), true)]);
+    flushFrames();
+    expect(current(container)).toEqual([['#intro', CURRENT_VALUE]]);
+
+    act(() => {
+      window.dispatchEvent(new Event('wheel'));
+    });
+    flushFrames();
+    expect(current(container)).toEqual([['#methods', CURRENT_VALUE]]);
+  });
+
   it('never listens to scroll, and lets go of every observer and its frame on unmount', () => {
     const listen = vi.spyOn(window, 'addEventListener');
     const { unmount, heading } = mountPage();
