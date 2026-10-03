@@ -3,18 +3,22 @@
 import { useMemo, useState } from 'react';
 import type { ApplyMode, Client, Outcome, Schedule } from '@/lib/projects/collaborative-whiteboard/protocol';
 import { BLUE, concurrentOutcomes, ROSE, undoCreation, undoOverNewer, WHITE } from '@/lib/projects/collaborative-whiteboard/scenarios';
-import { Segmented } from '../controls';
+import { controls, Segmented } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
 import styles from './whiteboard.module.css';
 
 // The hero: two people recolour one note at once, A to rose and B to blue.
 // The server persists and numbers the two edits in one order and broadcasts
 // each outside its lock, so each client can receive them in either order.
-// Every combination, and what each client ends up showing.
+// Every combination, and what each client ends up showing. On a phone each
+// row stacks into a card (controls.stackTable), so the outcome columns are
+// never scrolled out of sight.
 
 const NAMES: Record<string, string> = { [WHITE]: 'white', [ROSE]: 'rose', [BLUE]: 'blue' };
 const words = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
 const say = (n: number) => words[n] ?? String(n);
+const COLUMNS = ['Stored first', 'A receives', 'B receives', 'Database', 'A shows', 'B shows'] as const;
+const MODE_WORDS: Record<ApplyMode, string> = { arrival: 'as they arrive', sequence: 'in sequence order' };
 
 function Chip({ fill, diverged }: { fill: string; diverged?: boolean }) {
   return (
@@ -35,57 +39,70 @@ export function ConvergenceTable() {
   const bySeq = useMemo(() => concurrentOutcomes('sequence'), []);
   const split = asArrived.filter((r) => r.outcome.diverged.length > 0).length;
   const splitBySeq = bySeq.filter((r) => r.outcome.diverged.length > 0).length;
+  const splitNow = mode === 'arrival' ? split : splitBySeq;
   const over = undoOverNewer();
   const created = undoCreation();
   const fillOf = (o: Outcome, who: 'database' | Client) => (who === 'database' ? o.database : o.scenes[who])[0]?.fill ?? '';
+  const cell = (column: (typeof COLUMNS)[number]) => ({ role: 'cell', 'data-label': column });
 
   return (
     <div className={styles.hero}>
       <p className={styles.headline}>
-        Two people recolour the same note at once. Of the {say(rows.length)} ways their edits can be stored and delivered,{' '}
-        {say(split)} leave someone looking at a colour the database does not have, because each client applies the server&apos;s echoes
-        as they arrive. Applied in sequence order, {splitBySeq === 0 ? 'all eight agree' : `${say(splitBySeq)} still disagree`}.
+        Two people recolour the same note at once. The server stores both edits, numbers them in the order it stored them, and sends each one back to
+        both screens as an echo, and each screen can receive the two echoes in either order: {say(rows.length)} ways in all.
       </p>
       <Segmented
-        legend="Each client applies the echoes"
+        legend="Each client applies the server’s echoes"
         name="convergence-mode"
         value={mode}
         options={[
-          { value: 'arrival', label: 'As they arrive', note: 'sceneledger' },
-          { value: 'sequence', label: 'In sequence order' },
+          { value: 'arrival', label: 'As they arrive', note: 'what Sceneledger does now' },
+          { value: 'sequence', label: 'In sequence order', note: 'the fix shown here' },
         ]}
         onChange={setMode}
       />
+      <p className={controls.lead}>
+        Each row is one timing. <strong>Stored first</strong> is whose edit the server saved first, so the database, the saved copy, ends with the
+        other. <strong>A receives</strong> and <strong>B receives</strong> give the order the two echoes, seq 1 and seq 2 by their sequence numbers,
+        reached each screen. <strong>Red</strong> marks a screen showing a colour the database does not have: {splitNow} of {rows.length} rows with
+        the echoes applied {MODE_WORDS[mode]}.
+      </p>
       <ProjectFigureTransition slug="collaborative-whiteboard">
         <div className={styles.tableScroll} role="region" aria-label="Every order two concurrent edits can take" tabIndex={0}>
-          <table className={styles.schedules}>
-            <thead>
-              <tr>
-                <th scope="col">Stored first</th>
-                <th scope="col">A receives</th>
-                <th scope="col">B receives</th>
-                <th scope="col">Database</th>
-                <th scope="col">A shows</th>
-                <th scope="col">B shows</th>
+          <table className={`${styles.schedules} ${controls.stackTable}`} role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                {COLUMNS.map((column) => (
+                  <th key={column} scope="col" role="columnheader">
+                    {column}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {rows.map(({ schedule, outcome }, i) => (
-                <tr key={i} data-split={outcome.diverged.length > 0 || undefined}>
-                  <td className={styles.order}>{schedule.serverOrder[0] === 'A' ? 'A’s rose' : 'B’s blue'}</td>
-                  <td className={styles.order}>
-                    <span>seq</span> {arrival(schedule, 'A')}
+                <tr key={i} role="row" data-split={outcome.diverged.length > 0 || undefined}>
+                  <th scope="row" role="rowheader" data-label="Stored first" className={styles.order}>
+                    {schedule.serverOrder[0] === 'A' ? 'A’s rose' : 'B’s blue'}
+                  </th>
+                  {/* one span per value, so a stacked card sets it against its label */}
+                  <td {...cell('A receives')} className={styles.order}>
+                    <span>
+                      <span className={styles.seq}>seq</span> {arrival(schedule, 'A')}
+                    </span>
                   </td>
-                  <td className={styles.order}>
-                    <span>seq</span> {arrival(schedule, 'B')}
+                  <td {...cell('B receives')} className={styles.order}>
+                    <span>
+                      <span className={styles.seq}>seq</span> {arrival(schedule, 'B')}
+                    </span>
                   </td>
-                  <td>
+                  <td {...cell('Database')}>
                     <Chip fill={fillOf(outcome, 'database')} />
                   </td>
-                  <td>
+                  <td {...cell('A shows')}>
                     <Chip fill={fillOf(outcome, 'A')} diverged={outcome.diverged.includes('A')} />
                   </td>
-                  <td>
+                  <td {...cell('B shows')}>
                     <Chip fill={fillOf(outcome, 'B')} diverged={outcome.diverged.includes('B')} />
                   </td>
                 </tr>
@@ -95,8 +112,8 @@ export function ConvergenceTable() {
         </div>
       </ProjectFigureTransition>
       <p className={styles.caption}>
-        Sequence numbers count the edits in the order the server stored them. Ordering fixes these eight; it is not all a shared board
-        needs, and the two cases below go wrong even when every message arrives in order.
+        Applying the echoes in sequence order fixes these eight, but not everything a shared board needs: in the two undo cases below, someone still
+        loses an edit even when every message arrives in order.
       </p>
       <div className={styles.undoCases}>
         <section className={styles.undoCase} aria-label="Undo over a newer edit">
@@ -106,9 +123,7 @@ export function ConvergenceTable() {
             <li>B recolours it blue.</li>
             <li>A presses undo.</li>
           </ol>
-          <p>
-            The note goes back to {NAMES[over.database[0].fill]}: A&apos;s undo restores the colour it replaced, and B&apos;s blue is gone.
-          </p>
+          <p>The note goes back to {NAMES[over.database[0].fill]}: A&apos;s undo restores the colour it replaced, and B&apos;s blue is gone.</p>
         </section>
         <section className={styles.undoCase} aria-label="Undo of a shape someone moved">
           <h3>Undo of a shape someone moved</h3>

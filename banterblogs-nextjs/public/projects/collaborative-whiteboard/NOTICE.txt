@@ -13,6 +13,7 @@ Modifications for this browser adaptation:
 - Strict runtime validation and atomic command batches.
 - Replayable, versioned JSON history and single-tab browser persistence.
 - Gesture previews, bounded geometry and device-pixel-ratio rendering.
+- Pointer input in whole board units.
 - Fresh synthetic workflow fixture and a new project-local interface/article.
 
 No original account, board or server fixture is included.
