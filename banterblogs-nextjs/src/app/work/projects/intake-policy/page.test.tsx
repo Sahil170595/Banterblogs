@@ -21,12 +21,14 @@ describe('server-rendered technical study', () => {
     });
     expect(document.getElementById('underlying-system')?.textContent).toContain('local wrappers and stubs');
     expect(document.getElementById('method')?.textContent).toContain('independently authored');
+    expect(document.querySelector('a[href="https://github.com/Sahil170595/intakegate"]')).toBeTruthy();
+    expect(document.getElementById('underlying-system')?.textContent).toContain('full TypeScript engine and CLI');
     expect(document.querySelector('article')?.textContent?.length).toBeGreaterThan(10_000);
   });
-  it('has the exact public manifest contract and a demo-code source URL', () => {
+  it('has the exact public manifest contract and a full-source URL', () => {
     expect(Object.keys(manifest).sort()).toEqual(['slug', 'title', 'summary', 'categories', 'roles', 'status', 'runtime', 'sourceUrl'].sort());
     expect(manifest.slug).toBe('intake-policy');
     expect(manifest.runtime).toBe('browser-simulation');
-    expect(manifest.sourceUrl).toContain('Banterblogs/tree/codex/demo-intake-policy');
+    expect(manifest.sourceUrl).toBe('https://github.com/Sahil170595/intakegate');
   });
 });
