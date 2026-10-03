@@ -1,13 +1,14 @@
 import type { CSSProperties } from 'react';
 import { candidates, formatTime, type Episode } from '@/lib/projects/flight-routing/engine';
 import { getScenario } from '@/lib/projects/flight-routing/fixtures';
+import { along, span } from '../geometry';
 import styles from './demo.module.css';
 
 // Every flight on one clock from 00:00 to the horizon: its schedule as a thin
 // bar, what actually happened as a thick one, with the deadline and the
 // passenger's clock as rules across all lanes.
 
-const pct = (minutes: number, horizon: number) => `${Math.min(100, Math.max(0, (minutes / horizon) * 100))}%`;
+const pct = (minutes: number, horizon: number) => along(minutes, 0, horizon);
 
 export function Timeline({ state }: { state: Episode }) {
   const { horizon, deadline } = state.config;
@@ -27,14 +28,14 @@ export function Timeline({ state }: { state: Episode }) {
                 <span
                   className={styles.scheduled}
                   data-legal={legal.has(flight.id) || undefined}
-                  style={{ left: pct(flight.depart, horizon), width: `calc(${pct(flight.arrive, horizon)} - ${pct(flight.depart, horizon)})` }}
+                  style={span(flight.depart, flight.arrive, 0, horizon)}
                   title={`${flight.origin} to ${flight.dest}, scheduled ${formatTime(flight.depart)}–${formatTime(flight.arrive)}`}
                 />
                 {leg && leg.departure !== null && leg.arrival !== null && (
                   <span
                     className={styles.actual}
                     data-failed={failed || undefined}
-                    style={{ left: pct(leg.departure, horizon), width: `calc(${pct(leg.arrival, horizon)} - ${pct(leg.departure, horizon)})` }}
+                    style={span(leg.departure, leg.arrival, 0, horizon)}
                     title={`Flew ${formatTime(leg.departure)}–${formatTime(leg.arrival)}`}
                   />
                 )}
