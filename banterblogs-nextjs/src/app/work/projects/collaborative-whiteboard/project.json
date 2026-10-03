@@ -1,0 +1,10 @@
+{
+  "slug": "collaborative-whiteboard",
+  "title": "Editable Whiteboard and Operation Log",
+  "summary": "Edit a synthetic canvas with shape-aware hit-testing, inverse-operation history, and a replayable local JSON trace.",
+  "categories": ["product", "systems"],
+  "roles": ["founding-engineer"],
+  "status": "interactive",
+  "runtime": "browser-application",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-collaborative-whiteboard/banterblogs-nextjs/src/lib/projects/collaborative-whiteboard"
+}
