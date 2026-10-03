@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Play, RotateCcw, Upload, StepForward, ChartNoAxesCombined, SlidersHorizontal, Table2 } from 'lucide-react';
 import { advance, analyze, exportTrace, freshSession, replayTrace } from '@/lib/projects/scheduling-lab/engine';
 import { presetTitles, syntheticEvents } from '@/lib/projects/scheduling-lab/fixtures';
@@ -21,22 +21,27 @@ export default function SchedulingLab() {
   const [notice, setNotice] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const upload = useRef<HTMLInputElement>(null);
+  const revision = useRef(0);
+  useEffect(() => () => { revision.current++; }, []);
   const result = useMemo(() => analyze(run), [run]);
   const pending = JSON.stringify(run) !== JSON.stringify(draft);
   const event = result.events.find(e => e.id === selected)!;
   const selectedDraft = draft.events.find(e => e.id === selected)!;
   const violations = result.violations.filter(v => v.eventId === selected);
 
-  function edit(next: Session) { setDraft({ ...next, processed: 0 }); setError(''); setNotice(''); }
+  function edit(next: Session) { revision.current++; setDraft({ ...next, processed: 0 }); setError(''); setNotice(''); }
   function configure<K extends keyof Config>(key: K, value: Config[K]) { edit({ ...draft, config: { ...draft.config, [key]: value } }); }
   function reset(key: Preset = preset === 'replay' ? 'baseline' : preset) {
+    revision.current++;
     const next = freshSession(key); setDraft(next); setRun(next); setPreset(key); setSelected('E01'); setError(''); setNotice('');
   }
   function recompute() {
+    revision.current++;
     try { analyze(draft); setRun(structuredClone(draft)); setError(''); setNotice('Schedule recomputed locally.'); }
     catch (failure) { console.error('Scheduling configuration rejected', failure); setError(failure instanceof Error ? failure.message : 'Invalid scheduling configuration.'); }
   }
   function step() {
+    revision.current++;
     const next = advance(run), advanced = analyze(next);
     setRun(next); setDraft(next); setSelected(advanced.simulation.processedIds.at(-1) ?? selected); setNotice('Virtual clock advanced; nothing was delivered.');
   }
@@ -46,12 +51,17 @@ export default function SchedulingLab() {
   }
   async function replay(file: File | undefined) {
     if (!file) return;
+    const request = ++revision.current;
     try {
       if (file.size > MAX_TRACE_BYTES) throw new Error('Trace exceeds the 250 KB limit.');
-      const next = replayTrace(await file.text());
+      const text = await file.text();
+      if (request !== revision.current) return;
+      const next = replayTrace(text);
       setRun(next); setDraft(next); setPreset('replay'); setSelected(next.events[0].id); setError(''); setNotice('Replayed session; schedule recomputed.');
-    } catch (failure) { console.error('Scheduling replay rejected', failure); setError(`Replay rejected: ${failure instanceof Error ? failure.message : 'Invalid trace.'}`); }
-    finally { if (upload.current) upload.current.value = ''; }
+    } catch (failure) {
+      if (request !== revision.current) return;
+      console.error('Scheduling replay rejected', failure); setError(`Replay rejected: ${failure instanceof Error ? failure.message : 'Invalid trace.'}`);
+    } finally { if (request === revision.current && upload.current) upload.current.value = ''; }
   }
   return <section id="demo" className={styles.tool} aria-label="Seeded scheduling simulator">
     <div className={styles.toolbar}>

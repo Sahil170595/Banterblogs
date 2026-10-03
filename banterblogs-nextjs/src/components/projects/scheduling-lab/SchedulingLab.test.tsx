@@ -1,10 +1,42 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import SchedulingLab from './SchedulingLab';
 import { exportTrace, freshSession } from '@/lib/projects/scheduling-lab/engine';
 
 afterEach(cleanup);
 describe('scheduling lab controls', () => {
+  it('does not restore a pending upload after reset', async () => {
+    render(<SchedulingLab />);
+    let finish!: (text: string) => void;
+    const text = new Promise<string>(resolve => { finish = resolve; });
+    fireEvent.change(screen.getByLabelText('JSON replay file'), { target: { files: [{ size: 10, text: () => text }] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset schedule' }));
+    const session = freshSession('after-hours'); session.config.seed = 999;
+    await act(async () => { finish(JSON.stringify(exportTrace(session))); });
+    expect(screen.getByLabelText('Seed')).toHaveProperty('value', '41');
+    expect(screen.queryByText('Replayed session; schedule recomputed.')).toBeNull();
+  });
+  it('ignores a stale upload rejection after editing the current configuration', async () => {
+    render(<SchedulingLab />);
+    let finish!: (text: string) => void;
+    const text = new Promise<string>(resolve => { finish = resolve; });
+    fireEvent.change(screen.getByLabelText('JSON replay file'), { target: { files: [{ size: 10, text: () => text }] } });
+    fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '74' } });
+    await act(async () => { finish('invalid JSON'); });
+    expect(screen.getByLabelText('Seed')).toHaveProperty('value', '74');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+  it('lets the newest upload win when file reads finish out of order', async () => {
+    render(<SchedulingLab />);
+    let finish!: (text: string) => void;
+    const text = new Promise<string>(resolve => { finish = resolve; });
+    fireEvent.change(screen.getByLabelText('JSON replay file'), { target: { files: [{ size: 10, text: () => text }] } });
+    const newest = freshSession(); newest.config.seed = 88;
+    fireEvent.change(screen.getByLabelText('JSON replay file'), { target: { files: [{ size: 10, text: async () => JSON.stringify(exportTrace(newest)) }] } });
+    await waitFor(() => expect(screen.getByLabelText('Seed')).toHaveProperty('value', '88'));
+    await act(async () => { finish(JSON.stringify(exportTrace(freshSession()))); });
+    expect(screen.getByLabelText('Seed')).toHaveProperty('value', '88');
+  });
   it('opens and closes settings without discarding a draft', () => {
     render(<SchedulingLab />);
     const toggle = screen.getByRole('button', { name: 'Schedule settings' });
