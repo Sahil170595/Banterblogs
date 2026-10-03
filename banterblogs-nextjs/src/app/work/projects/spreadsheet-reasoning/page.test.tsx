@@ -16,7 +16,7 @@ describe('server-rendered spreadsheet project', () => {
   });
   it('uses the exact public manifest interface and an owned source branch', () => {
     expect(Object.keys(manifest).sort()).toEqual(['slug', 'title', 'summary', 'categories', 'roles', 'status', 'runtime', 'sourceUrl'].sort());
-    expect(manifest.sourceUrl).toContain('/tree/codex/demo-spreadsheet-reasoning/');
+    expect(manifest.sourceUrl).toBe('https://github.com/Sahil170595/formuloom');
     expect(manifest.runtime).toBe('browser-evaluation');
   });
 });
