@@ -2,13 +2,12 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { Download, Play, RotateCcw, Upload, GitFork, Table2 } from 'lucide-react';
-import { analyze, compareGold, exportTrace, freshSession, prune, recordedVotes } from '@/lib/projects/spreadsheet-reasoning/engine';
+import { analyze, compareGold, exportTrace, freshSession, MAX_TRACE_BYTES, prune, recordedVotes, replayTrace } from '@/lib/projects/spreadsheet-reasoning/engine';
 import { ballotProvenance, fixtures } from '@/lib/projects/spreadsheet-reasoning/fixtures';
-import { cellId, sessionSchema, type Session, type Vote } from '@/lib/projects/spreadsheet-reasoning/types';
+import { cellId, type Session, type Vote } from '@/lib/projects/spreadsheet-reasoning/types';
 import DependencyGraph from './DependencyGraph';
 import styles from './inspector.module.css';
 
-const MAX_TRACE_BYTES = 100_000;
 const number = (value: number | null) => value === null ? 'Unavailable' : value.toLocaleString('en-US', { maximumFractionDigits: 2 });
 const percentage = (value: number | null) => value === null ? 'Undefined' : `${(100 * value).toFixed(1)}%`;
 const voteMajority = (votes: Vote[]) => {
@@ -54,7 +53,7 @@ export default function Inspector() {
     setDraft(next); setRun(next); setNotice('Adjudication applied.');
   }
   function download() {
-    const blob = new Blob([JSON.stringify(exportTrace(run), null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportTrace(run))], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url; link.download = 'spreadsheet-reasoning-v1.json'; link.click();
@@ -64,11 +63,8 @@ export default function Inspector() {
   async function replay(upload: File | undefined) {
     if (!upload) return;
     try {
-      if (upload.size > MAX_TRACE_BYTES) throw new Error('Trace exceeds the 100 KB limit.');
-      const trace: unknown = JSON.parse(await upload.text());
-      if (!trace || typeof trace !== 'object' || !('version' in trace) || trace.version !== 'spreadsheet-reasoning/v1' || !('session' in trace)) throw new Error('Use a spreadsheet-reasoning/v1 export.');
-      const next = sessionSchema.parse(trace.session);
-      analyze(next);
+      if (upload.size > MAX_TRACE_BYTES) throw new Error(`Trace exceeds the ${MAX_TRACE_BYTES / 1000} KB limit.`);
+      const next = replayTrace(JSON.parse(await upload.text()));
       setRun(next); setDraft(next); setSelected(cellId(next.workbook.cells[0])); setError(''); setNotice('Session replayed; results recomputed, not trusted from the file.');
     } catch (failure) {
       console.error('Spreadsheet replay rejected', failure);
