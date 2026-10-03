@@ -37,16 +37,18 @@ describe('flight routing demo', () => {
     expect(screen.getByText(/Seed 42 · Nonstop first/)).toBeTruthy();
   });
 
+  // by label and text, not role: a role query computes the name of every one
+  // of the grid's 256 squares, which ran this test past its timeout under load
   it('rewinds a decision, takes another flight and lets the policy finish', () => {
     renderDemo();
-    fireEvent.click(screen.getByRole('button', { name: 'Restart this world' }));
+    fireEvent.click(screen.getByLabelText('Restart this world'));
     expect(status()).toBe('In progress');
-    fireEvent.click(screen.getByRole('radio', { name: 'Choose F1 to ORD' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Take F1' }));
+    fireEvent.click(screen.getByLabelText('Choose F1 to ORD'));
+    fireEvent.click(screen.getByText('Take F1'));
     expect(status()).toBe('No onward flight');
-    fireEvent.click(screen.getByRole('button', { name: 'Rewind one decision' }));
+    fireEvent.click(screen.getByLabelText('Rewind one decision'));
     expect(status()).toBe('In progress');
-    fireEvent.click(screen.getByRole('button', { name: 'Let the policy finish' }));
+    fireEvent.click(screen.getByText('Let the policy finish'));
     expect(status()).toBe('Arrived on time');
   });
 
@@ -59,12 +61,12 @@ describe('flight routing demo', () => {
 
   it('refuses settings that break the scenario and keeps the grid it had', () => {
     renderDemo();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Deadline (minutes)' }), { target: { value: '1000' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply to all worlds' }));
+    fireEvent.change(screen.getByLabelText('Deadline (minutes)'), { target: { value: '1000' } });
+    fireEvent.click(screen.getByText('Apply to all worlds'));
     expect(screen.getByRole('alert').textContent).toContain('Deadline must not exceed');
     expect(panel(/^Deadline lookahead: 40 of 64/)).toBeTruthy();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Flight attempts' }), { target: { value: 'two' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply to all worlds' }));
+    fireEvent.change(screen.getByLabelText('Flight attempts'), { target: { value: 'two' } });
+    fireEvent.click(screen.getByText('Apply to all worlds'));
     expect(screen.getByRole('alert').textContent).toBe('Flight attempts must be a whole number.');
   });
 

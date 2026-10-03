@@ -14,6 +14,7 @@ const PROJECT_PAGES = [
   '/projects/reinforcement-learning/code-verification',
   '/projects/agents-and-evaluation/spreadsheet-reasoning',
   '/projects/agents-and-evaluation/workflow-observatory',
+  '/projects/agents-and-evaluation/intake-triage',
 ] as const;
 
 const ROUTES = [
