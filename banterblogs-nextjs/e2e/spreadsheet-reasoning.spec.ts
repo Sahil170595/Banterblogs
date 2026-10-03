@@ -30,7 +30,7 @@ test('spreadsheet edits recompute dependencies and replay the applied workbook',
   await page.getByRole('combobox', { name: 'Synthetic workbook', exact: true }).selectOption('broken');
   await expect(page.getByRole('cell', { name: 'Error', exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Inspect Calc!B2', exact: true }).click();
-  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'Cycle detected:' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   expect(errors).toEqual([]);
 });
