@@ -16,6 +16,7 @@ const PROJECT_PAGES = [
   '/projects/agents-and-evaluation/workflow-observatory',
   '/projects/agents-and-evaluation/intake-triage',
   '/projects/systems/staged-search',
+  '/projects/systems/send-pacing',
 ] as const;
 
 const ROUTES = [

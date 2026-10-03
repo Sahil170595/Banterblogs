@@ -4,6 +4,7 @@ import { ServiceVisual } from './customer-service/ServiceVisual';
 import { FlightRoutingVisual } from './flight-routing/FlightRoutingVisual';
 import { TriageVisual } from './intake-triage/TriageVisual';
 import { OpeVisual } from './offline-policy-evaluation/OpeVisual';
+import { PacingVisual } from './send-pacing/PacingVisual';
 import { SheetVisual } from './spreadsheet-reasoning/SheetVisual';
 import { SearchVisual } from './staged-search/SearchVisual';
 import { WorkflowVisual } from './workflow-observatory/WorkflowVisual';
@@ -23,4 +24,5 @@ export const PROJECT_VISUALS: Record<string, ComponentType<ProjectVisualProps>> 
   'workflow-observatory': WorkflowVisual,
   'intake-triage': TriageVisual,
   'staged-search': SearchVisual,
+  'send-pacing': PacingVisual,
 };
