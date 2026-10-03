@@ -51,4 +51,12 @@ describe('revealResult', () => {
       expect(element.scrollIntoView).toHaveBeenCalled();
     }
   });
+
+  // live QA: a result just under the top edge sat behind the sticky header and counted as seen
+  it('treats a result under the sticky header as hidden, and scrolls it to just below the header', () => {
+    const element = result(40, 300);
+    revealResult(element);
+    expect(element.scrollIntoView).toHaveBeenCalled();
+    expect(element.style.scrollMarginTop).toBe('88px');
+  });
 });

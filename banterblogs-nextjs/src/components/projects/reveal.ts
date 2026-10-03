@@ -8,15 +8,26 @@ export const REVEALED_CLASS = 'demo-revealed';
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 /** a result taller than the screen counts as seen when it starts this high */
 const SEEN_TOP_FRACTION = 0.25;
+// the sticky header covers the top of the screen; a result must clear it, with a little air
+const HEADER_FALLBACK_PX = 72;
+const HEADER_GAP_PX = 16;
+
+function headerClearance(): number {
+  const height = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--site-header-height'));
+  return (Number.isFinite(height) ? height : HEADER_FALLBACK_PX) + HEADER_GAP_PX;
+}
 
 export function revealResult(element: HTMLElement | null): void {
   if (!element) return;
   const box = element.getBoundingClientRect();
-  // wholly on screen, or starting near the top of it
-  const visible = box.top >= 0 && box.bottom > 0 && (box.bottom <= window.innerHeight || box.top <= window.innerHeight * SEEN_TOP_FRACTION);
+  const clearance = headerClearance();
+  // wholly on screen below the header, or starting near the top of it
+  const visible = box.top >= clearance && box.bottom > 0 && (box.bottom <= window.innerHeight || box.top <= window.innerHeight * SEEN_TOP_FRACTION);
   // jsdom, which the unit tests run on, has neither media queries nor scrolling
   if (!visible && typeof element.scrollIntoView === 'function') {
     const still = typeof window.matchMedia === 'function' && window.matchMedia(REDUCED_MOTION).matches;
+    // the scroll stops this far below the top, clear of the header
+    element.style.scrollMarginTop = `${clearance}px`;
     element.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
   }
   // restart the mark when the same result is revealed twice in a row
