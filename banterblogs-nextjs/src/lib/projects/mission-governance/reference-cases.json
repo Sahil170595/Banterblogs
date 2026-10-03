@@ -1,0 +1,26 @@
+{
+  "referenceCommit": "67dcee21214de567d00f7fe5879ce46a423b08bc",
+  "scope": "Synthetic inputs; Python validation/executor and browser-derived fixed cases. No aircraft acceptance.",
+  "execution": [
+    { "case": "healthy", "fault": "healthy", "count": 4, "state": "completed", "progress": 4, "reason": "mission.completed" },
+    { "case": "battery", "fault": "battery", "count": 4, "state": "rtl", "progress": 1, "reason": "degraded.battery_low" },
+    { "case": "link", "fault": "link", "count": 4, "state": "rtl", "progress": 1, "reason": "degraded.link_quality" },
+    { "case": "estimator", "fault": "estimator", "count": 4, "state": "rtl", "progress": 1, "reason": "degraded.estimator" },
+    { "case": "stale", "fault": "stale", "count": 4, "state": "completed", "progress": 4, "reason": "mission.completed" },
+    { "case": "missing", "fault": "missing", "count": 4, "state": "completed", "progress": 4, "reason": "mission.completed" },
+    { "case": "completion-first", "fault": "battery", "count": 1, "state": "completed", "progress": 1, "reason": "mission.completed" }
+  ],
+  "validation": [
+    { "case": "healthy", "fault": "healthy", "passed": true, "failed": [], "warnings": [] },
+    { "case": "missing", "fault": "missing", "passed": true, "failed": [], "warnings": ["battery_threshold", "telemetry_freshness"] },
+    { "case": "battery", "fault": "battery", "passed": false, "failed": ["battery_threshold"], "warnings": [] },
+    { "case": "stale", "fault": "stale", "passed": false, "failed": ["telemetry_freshness"], "warnings": [] }
+  ],
+  "graph": {
+    "draft": ["validated"], "validated": ["awaiting_approval", "rejected"], "awaiting_approval": ["approved", "rejected"],
+    "approved": ["staging", "expired"], "staging": ["executing", "failed"],
+    "executing": ["paused", "rtl", "aborted", "completed", "failed", "manual_handover"],
+    "paused": ["resuming", "rtl", "aborted", "manual_handover"], "resuming": ["executing"], "rtl": ["completed", "failed"],
+    "manual_handover": ["paused"], "aborted": [], "completed": [], "failed": [], "rejected": [], "expired": []
+  }
+}
