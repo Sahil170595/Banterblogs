@@ -15,9 +15,15 @@ import styles from './sheet.module.css';
 // fixture's key. On a phone the sheets stack and the edge layer goes.
 
 const POLICIES: Choice<Session['policy']>[] = [
-  { value: 'balanced', label: 'Balanced votes', note: 'majority wins' },
+  { value: 'balanced', label: 'Balanced votes', note: 'more final than intermediate' },
   { value: 'precision', label: 'Precision gate', note: 'no negative votes' },
 ];
+// what "sent to review" means under each policy: a tie, or under the gate a
+// final held back by a single vote against
+const REVIEW_MEANING: Record<Session['policy'], string> = {
+  balanced: 'final and intermediate votes tied',
+  precision: 'votes tied, or a final with any vote against',
+};
 /** the scratch formula both policies call final: a dependency sink with nothing else behind it */
 export const SCRATCH_CELL = 'Report!B4';
 const REVIEW: Choice<'none' | 'drop'>[] = [
@@ -71,9 +77,9 @@ export function FinalityGraph({ demo }: { demo: SheetDemo }) {
       <p className={controls.lead}>
         A final value is one someone would report; an intermediate is a working step. The answer key marks {list(GOLD)} final (
         {goldNames.length === 1 ? `both “${goldNames[0]}”` : goldNames.map((n) => `“${n}”`).join(' and ')}); {SCRATCH_CELL}, &ldquo;
-        {named(SCRATCH_CELL)}&rdquo;, is not. {rules} simple rules each vote on every cell, and the rule policy turns their votes into a
-        label; a cell where they tie is sent to review, for a person to decide. Lines run from a value to the cells that use it. Click a
-        cell to see how each rule voted.
+        {named(SCRATCH_CELL)}&rdquo;, is not. {rules} simple rules each vote final, intermediate or abstain on every cell, and the rule
+        policy turns their votes into a label; a cell the policy cannot settle is sent to review, for a person to decide. Lines run from a
+        value to the cells that use it; on a phone the inspector below lists them. Click a cell to see how each rule voted.
       </p>
       <div className={controls.row}>
         <Segmented
@@ -129,7 +135,7 @@ export function FinalityGraph({ demo }: { demo: SheetDemo }) {
           </div>
           <div>
             <dt>
-              Sent to review<small>the rules tied</small>
+              Sent to review<small>{REVIEW_MEANING[run.policy]}</small>
             </dt>
             <dd>{demo.score.review}</dd>
           </div>
@@ -154,7 +160,7 @@ export function FinalityGraph({ demo }: { demo: SheetDemo }) {
       <ul className={styles.key} aria-label="Graph key">
         <li data-label="final">Final</li>
         <li data-label="intermediate">Intermediate</li>
-        <li data-label="review">Review: the rules tied</li>
+        <li data-label="review">Review: {REVIEW_MEANING[run.policy]}</li>
         <li data-flag="false-final">Wrong against the key</li>
       </ul>
       <ProjectFigureTransition slug="spreadsheet-reasoning">

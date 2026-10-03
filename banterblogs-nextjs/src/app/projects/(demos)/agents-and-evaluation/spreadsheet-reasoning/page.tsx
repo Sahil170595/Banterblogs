@@ -71,7 +71,8 @@ export default function SpreadsheetReasoningPage() {
       <h2 id="results">{PLAIN.results}</h2>
       <p>
         The workbook here is {cells} cells across an inputs sheet and two output sheets, with {finals} values final in its answer key.
-        Balanced votes, where the majority of the rules wins, find both and mark one extra: the scratch estimate <code>{SCRATCH}</code>,
+        Balanced votes, which call a cell final when more rules vote final than intermediate (abstentions do not count), find both and
+        mark one extra: the scratch estimate <code>{SCRATCH}</code>,
         final only because nothing uses it. Precision, the share of marked finals that are right, is {pct(balanced.score.precision)};
         recall, the share of real finals found, {pct(balanced.score.recall)}.
       </p>
@@ -115,8 +116,9 @@ export default function SpreadsheetReasoningPage() {
         <p>
           <strong>Abstaining rules.</strong> {rules} labelling functions vote final, intermediate or abstain: {ruleNames.join(', ')}. For the
           checkpoint the evidence is {checkpoint.votes.filter((v) => v.vote === 'final').length} final votes against{' '}
-          {checkpoint.votes.filter((v) => v.vote === 'intermediate').length}. Balanced votes take a strict majority and send a tie to
-          review; the precision gate adds the no-negative-vote rule; a support sheet routes its cells to intermediate.
+          {checkpoint.votes.filter((v) => v.vote === 'intermediate').length}. Balanced votes need more final than intermediate votes,
+          abstentions ignored, and send a tie to review; the precision gate also sends to review any final with a vote against; a support
+          sheet routes its cells to intermediate.
         </p>
         <p>
           <strong>Prune-only review.</strong> A reviewer can keep or drop a proposed final and nothing else, so review can never introduce a
