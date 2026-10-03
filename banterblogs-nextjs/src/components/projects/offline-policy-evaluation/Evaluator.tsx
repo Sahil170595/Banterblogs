@@ -43,7 +43,7 @@ function ComparisonPlot({ result, method }: { result: Evaluation; method: Method
 
 function SupportMatrix({ result }: { result: Evaluation }) {
   return <figure>
-    <figcaption className={styles.heading}>Action support <span>known logger vs target</span></figcaption>
+    <figcaption className={styles.heading}>Action support <span>known reachable contexts / logger vs target</span></figcaption>
     <div className={styles.supportHeaders}><span>Context</span>{ACTIONS.map(a => <span key={a}>{a}</span>)}</div>
     {result.support.map(row => <div key={row.name} className={styles.supportRow}>
       <strong>{row.name}</strong>
@@ -149,16 +149,16 @@ export default function Evaluator() {
       <div className={styles.results}>
         <div className={styles.metrics}>
           <div><span>Terminal raw ESS</span><strong>{fmt(last.rawEss, 1)}<small> / {result.config.size}</small></strong></div>
-          <div><span>Low-support target mass</span><strong>{percent(target.lowSupportMass)}</strong></div>
+          <div><span>Empirical low-support mass</span><strong>{percent(target.lowSupportMass)}</strong></div>
           <div><span>Weights above cap</span><strong>{percent(target.clippedFraction)}</strong></div>
           <div><span>Largest terminal share</span><strong>{percent(last.maxShare)}</strong></div>
         </div>
-        {target.unsupportedMass > 0 && <p className={styles.warning} role="status"><AlertTriangle size={18} aria-hidden="true" /><span>Target values withheld: {percent(target.unsupportedMass)} average target mass is on zero-support actions in observed contexts. Clipping cannot repair missing support.</span></p>}
+        {target.supportCheck.gaps.length > 0 && <p className={styles.warning} role="status"><AlertTriangle size={18} aria-hidden="true" /><span>Target values withheld: intervals withheld too. Zero logging probability with positive target probability in known reachable contexts ({target.supportCheck.gaps.map(g => `${CONTEXTS[g.context]} / ${ACTIONS[g.action]}: ${percent(g.targetProbability)} conditional target probability`).join('; ')}). {percent(target.unsupportedMass)} empirical zero-support target mass across observed contributing contexts. A zero empirical mean does not establish population positivity. Clipping cannot repair a structural gap.</span></p>}
         <div className={styles.modeRow} role="group" aria-label="Estimator view">
           {METHODS.map(({ key, label }) => <button key={key} aria-pressed={method === key} title={label} onClick={() => setMethod(key)}>{key === 'pdis' ? 'Raw IS' : key === 'clipped' ? 'Capped IS' : 'Normalized IS'}</button>)}
         </div>
         <ComparisonPlot result={result} method={method} />
-        <p className={styles.annotation}>95% pointwise percentile intervals / {RESAMPLES} paired trajectory resamples. Not adjusted for interactive policy selection.</p>
+        <p className={styles.annotation}>95% pointwise percentile intervals / {RESAMPLES} paired trajectory resamples, only where structurally identified. Empirical coverage is distinct from known generator reachability. Not adjusted for interactive policy selection.</p>
         <div className={styles.charts}><SupportMatrix result={result} /><EssPlot result={result} /></div>
       </div>
     </div>

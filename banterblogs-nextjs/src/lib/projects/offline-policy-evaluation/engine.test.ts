@@ -44,6 +44,68 @@ describe('offline evaluation', () => {
     expect(result.normalized).toBeNull();
     expect(result.logged).toBe(1);
   });
+  it('withholds population estimates and intervals when seed 38 omits a known reachable support gap', () => {
+    const result = evaluate({ ...DEFAULT_CONFIG, seed: 38, size: 8, scenario: 'gap' });
+    expect(result.cohort.flatMap(e => e.steps).some(s => s.context === 0)).toBe(false);
+    for (const candidate of result.comparisons.slice(0, 2)) {
+      expect(candidate.result.unsupportedMass).toBe(0);
+      expect(candidate.result.lowSupportMass).toBe(0);
+      expect(candidate.result.pdis).toBeNull();
+      expect(candidate.result.supportCheck.scope).toBe('known-generator-reachability');
+      expect(candidate.result.supportCheck.contexts).toEqual([0, 1, 2]);
+      expect(candidate.result.supportCheck.gaps).toHaveLength(1);
+      expect(candidate.result.supportCheck.gaps[0].context).toBe(0);
+      expect(candidate.result.supportCheck.gaps[0].action).toBe(2);
+      expect(candidate.result.supportCheck.gaps[0].targetProbability).toBeGreaterThan(0);
+      for (const method of ['pdis', 'clipped', 'normalized'] as const) {
+        expect(candidate.result[method]).toBeNull();
+        expect(candidate.intervals[method]).toBeNull();
+        expect(candidate.differences[method]).toBeNull();
+      }
+    }
+    expect(result.comparisons[0].result.supportCheck.gaps[0].targetProbability).toBeCloseTo(0.170625);
+    expect(result.comparisons[0].result.logged).toBeCloseTo(-1.0362771705883553);
+    expect(result.comparisons[2].result.supportCheck.gaps).toEqual([]);
+    expect(result.comparisons[2].result.pdis).toBeCloseTo(result.comparisons[2].result.logged);
+    expect(result.comparisons[2].differences.pdis).toEqual([0, 0]);
+    expect(result.sensitivity.every(s => s.result.pdis === null && s.result.normalized === null)).toBe(true);
+    const receipt = JSON.parse(exportEvaluation(result));
+    expect(receipt.comparisons[0].result.supportCheck).toEqual(result.comparisons[0].result.supportCheck);
+    expect(receipt.comparisons[0].result.unsupportedMass).toBe(0);
+  });
+  it.each(['balanced', 'rare', 'gap'] as const)('checks every initially reachable context under %s, independently of sampled coverage', scenario => {
+    const result = evaluate({ ...DEFAULT_CONFIG, seed: 38, size: 8, scenario });
+    expect(result.support[0].counts).toEqual([0, 0, 0]);
+    expect(result.comparisons[0].result.supportCheck.contexts).toEqual([0, 1, 2]);
+    if (scenario === 'gap') expect(result.comparisons[0].result.pdis).toBeNull();
+    else {
+      expect(result.comparisons[0].result.supportCheck.gaps).toEqual([]);
+      expect(result.comparisons[0].result.pdis).not.toBeNull();
+    }
+  });
+  it('checks known first-decision reachability even when future rewards have zero discount', () => {
+    const result = evaluate({ ...DEFAULT_CONFIG, seed: 38, size: 8, scenario: 'gap', gamma: 0 });
+    expect(result.comparisons[0].result.unsupportedMass).toBe(0);
+    expect(result.comparisons[0].result.pdis).toBeNull();
+    expect(result.comparisons[0].intervals.pdis).toBeNull();
+  });
+  it('does not mistake an absent sampled context for a violation when the target avoids zero-support actions', () => {
+    const result = evaluate({ ...DEFAULT_CONFIG, seed: 38, size: 8, scenario: 'gap', intensity: 0, responsiveness: 0, anchor: 0 });
+    expect(result.comparisons[0].result.supportCheck.gaps).toEqual([]);
+    expect(result.comparisons[0].result.pdis).not.toBeNull();
+    const standalone = estimate(balanced, config);
+    expect(standalone.supportCheck.scope).toBe('observed-contexts-only');
+    expect(standalone.supportCheck.contexts).toEqual([1]);
+  });
+  it('checks each candidate policy rather than applying the responsive target gate to every comparison', () => {
+    const result = evaluate({ ...DEFAULT_CONFIG, seed: 38, size: 8, scenario: 'gap', intensity: 0.2, responsiveness: 0.4, anchor: 0 });
+    expect(result.comparisons[0].result.supportCheck.gaps).toEqual([]);
+    expect(result.comparisons[0].result.pdis).not.toBeNull();
+    expect(result.comparisons[1].result.supportCheck.gaps[0].targetProbability).toBeCloseTo(0.13);
+    expect(result.comparisons[1].result.pdis).toBeNull();
+    expect(result.comparisons[1].intervals.pdis).toBeNull();
+    expect(result.comparisons[2].result.supportCheck.gaps).toEqual([]);
+  });
   it('returns no normalized estimate when all target trajectory weights vanish', () => {
     const zero = estimate([{ id: 'z', steps: [{ context: 1, action: 0, behavior: [0.5, 0.25, 0.25], gain: 1, harm: 0 }] }], { ...config, intensity: 1 });
     expect(zero.pdis).toBe(0);

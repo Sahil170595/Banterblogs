@@ -98,9 +98,15 @@ export function generateCohort(input: unknown): Episode[] {
 }
 
 type Trace = { id: string; rewards: number[]; rawWeights: number[]; cappedWeights: number[] };
+type SupportCheck = {
+  scope: 'observed-contexts-only' | 'known-generator-reachability';
+  contexts: number[];
+  gaps: { context: number; action: number; targetProbability: number }[];
+};
 export type Estimate = {
   pdis: number | null; clipped: number | null; normalized: number | null; logged: number;
   unsupportedMass: number; lowSupportMass: number; clippedFraction: number;
+  supportCheck: SupportCheck;
   bounds: [number, number]; traces: Trace[];
   horizons: { rawEss: number; cappedEss: number; maxRawWeight: number; maxShare: number }[];
 };
@@ -149,6 +155,8 @@ export function estimate(input: unknown, controls: unknown): Estimate {
   if (new Set(cohort.map(e => e.id)).size !== cohort.length) throw new Error('Trajectory IDs must be unique.');
   if (cohort.some(e => e.steps.length !== horizon)) throw new Error('Every trajectory must have the same complete horizon.');
   let unsupportedMass = 0, lowSupportMass = 0, clippedCount = 0;
+  const observedContexts = new Set<number>();
+  const observedGaps = new Map<string, SupportCheck['gaps'][number]>();
   const traces = cohort.map(episode => {
     let cumulative = 1;
     const trace: Trace = { id: episode.id, rewards: [], rawWeights: [], cappedWeights: [] };
@@ -156,7 +164,9 @@ export function estimate(input: unknown, controls: unknown): Estimate {
       const target = targetPolicy(step.context, step.behavior, config);
       target.forEach((p, a) => {
         if (config.gamma ** t > 0) {
+          observedContexts.add(step.context);
           if (step.behavior[a] === 0) unsupportedMass += p;
+          if (step.behavior[a] === 0 && p > 0) observedGaps.set(`${step.context}:${a}`, { context: step.context, action: a, targetProbability: p });
           if (step.behavior[a] < LOW_SUPPORT) lowSupportMass += p;
         }
       });
@@ -181,6 +191,11 @@ export function estimate(input: unknown, controls: unknown): Estimate {
     normalized: blocked ? null : values.normalized,
     unsupportedMass: unsupportedMass / (cohort.length * contributingHorizons),
     lowSupportMass: lowSupportMass / (cohort.length * contributingHorizons),
+    supportCheck: {
+      scope: 'observed-contexts-only',
+      contexts: [...observedContexts].sort((a, b) => a - b),
+      gaps: [...observedGaps.values()].sort((a, b) => a.context - b.context || a.action - b.action),
+    },
     clippedFraction: clippedCount / (cohort.length * horizon),
     bounds: [(-config.gainWeight - config.harmWeight) * discountSum, 2 * config.gainWeight * discountSum],
     traces,
@@ -191,6 +206,27 @@ export function estimate(input: unknown, controls: unknown): Estimate {
       const scaledSum = max === 0 ? 0 : raw.reduce((a, b) => a + b / max, 0);
       return { rawEss: ess(raw), cappedEss: ess(capped), maxRawWeight: max, maxShare: scaledSum === 0 ? 0 : 1 / scaledSum };
     }),
+  };
+}
+
+function estimateGeneratedCohort(cohort: Episode[], config: Config): Estimate {
+  const result = estimate(cohort, config);
+  // Every context has positive initial probability, including when gamma is zero.
+  const contexts = CONTEXTS.map((_, context) => context);
+  const gaps: SupportCheck['gaps'] = [];
+  for (const context of contexts) {
+    const behavior = loggingPolicy(context, config.scenario);
+    targetPolicy(context, behavior, config).forEach((p, action) => {
+      if (behavior[action] === 0 && p > 0) gaps.push({ context, action, targetProbability: p });
+    });
+  }
+  const blocked = gaps.length > 0 || result.unsupportedMass > 0;
+  return {
+    ...result,
+    supportCheck: { scope: 'known-generator-reachability', contexts, gaps },
+    pdis: blocked ? null : result.pdis,
+    clipped: blocked ? null : result.clipped,
+    normalized: blocked ? null : result.normalized,
   };
 }
 
@@ -233,14 +269,14 @@ export function evaluate(input: unknown) {
     { name: 'Logging policy identity', controls: { ...config, anchor: 1 } },
   ];
   const comparisons = candidates.map(({ name, controls }) => {
-    const result = estimate(cohort, controls);
+    const result = estimateGeneratedCohort(cohort, controls);
     return { name, controls, result, ...bootstrap(result, controls, draws) };
   });
   const sensitivity = [
     { name: 'Current reward', controls: config },
     { name: 'Gain ablated', controls: { ...config, gainWeight: 0 } },
     { name: 'Harm emphasized', controls: { ...config, harmWeight: 3 } },
-  ].map(({ name, controls }) => ({ name, result: estimate(cohort, controls) }));
+  ].map(({ name, controls }) => ({ name, result: estimateGeneratedCohort(cohort, controls) }));
   const support = CONTEXTS.map((name, context) => {
     const behavior = loggingPolicy(context, config.scenario);
     const target = targetPolicy(context, behavior, config);
