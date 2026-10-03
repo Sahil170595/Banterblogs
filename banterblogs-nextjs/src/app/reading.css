@@ -768,6 +768,13 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   color: hsl(var(--muted-foreground));
 }
 
+/* a project's commands and formulas wrap rather than hide their tail in a box
+   a keyboard cannot scroll */
+.project-frame .report-prose :is(pre, pre code) {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .project-pager-all {
   display: block;
   margin-top: 1rem;
