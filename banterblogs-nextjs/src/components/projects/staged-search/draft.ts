@@ -1,5 +1,31 @@
+import type { ZodIssue } from 'zod';
 import { EXAMPLE_QUERY } from '@/lib/projects/staged-search/example';
 import { OPS_FOR, querySchema, type Field, type Op, type Query } from '@/lib/projects/staged-search/schema';
+
+// the source's bounds on a year, which a year filter's value must meet
+const FIRST_YEAR = 2000;
+const LAST_YEAR = 2100;
+const FIELD_LABELS: Record<string, string> = {
+  description: 'Description',
+  hard_criteria: 'Hard criteria',
+  soft_criteria: 'Soft criteria',
+  filters: 'Filters',
+};
+
+/** a query the source refuses, in the form's own words: "Filter 1 should be a year from 2000 to 2100" */
+function describeIssue(issue: ZodIssue, draft: Draft): string {
+  const [head, index] = issue.path;
+  if (head === 'filters' && typeof index === 'number') {
+    const filter = `Filter ${index + 1}`;
+    if (draft.filters[index]?.field === 'year') return `${filter} should be a year from ${FIRST_YEAR} to ${LAST_YEAR}`;
+    if (issue.code === 'custom') return `${filter}: ${issue.message}`;
+    return `${filter} needs a value`;
+  }
+  const label = FIELD_LABELS[String(head)] ?? 'The query';
+  if (issue.code === 'too_small') return `${label} cannot be empty`;
+  if (issue.code === 'too_big') return `${label} is too long`;
+  return `${label}: ${issue.message}`;
+}
 
 // The query form's state: text as typed, read into a query only when it is
 // one the source would accept.
@@ -45,8 +71,7 @@ export function toQuery(draft: Draft): { query: Query; error: null } | { query: 
     filters,
   });
   if (parsed.success) return { query: parsed.data, error: null };
-  const issue = parsed.error.issues[0];
-  return { query: null, error: `${issue.path.join(' ') || 'Query'}: ${issue.message}` };
+  return { query: null, error: describeIssue(parsed.error.issues[0], draft) };
 }
 
 /** keep the operator when the new field takes it, else take the field's first */

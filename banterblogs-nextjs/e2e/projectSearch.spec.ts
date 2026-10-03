@@ -54,6 +54,23 @@ test('a ladder row runs below; an edit redraws the ladder; an export replays', a
   expect(errors).toEqual([]);
 });
 
+// live QA: on a phone an edit changed results above and scores below, and nothing in view
+test('on a phone an edit to the query shows its verdict beside the form', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE);
+  await page.getByText('Edit the query, see the scores, export a run', { exact: true }).click();
+  const hard = page.getByLabel('Hard criteria', { exact: true });
+  await hard.scrollIntoViewIfNeeded();
+  await hard.fill('');
+  await expect(page.getByTestId('query-verdict')).toBeInViewport();
+  // the field select keeps its word whole, beside the operator
+  // a label's text includes its options, so name the select by role
+  const field = page.getByRole('combobox', { name: 'Filter 1 field', exact: true });
+  await field.selectOption('collection');
+  expect(await field.evaluate((select) => select.scrollWidth <= select.clientWidth + 1)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+});
+
 // a phone shows every ladder row and result as a card: the column that
 // carries the finding is on screen, not scrolled out of a wide table
 test('on a phone the finding columns sit inside the screen', async ({ page }) => {

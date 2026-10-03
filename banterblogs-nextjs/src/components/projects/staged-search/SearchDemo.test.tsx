@@ -101,3 +101,86 @@ describe('staged search demo', () => {
     expect(warn).toHaveBeenCalled();
   });
 });
+
+const headline = () => screen.getByText(/^Asked for/).textContent!;
+const tools = () => screen.getByText('Edit the query, see the scores, export a run').closest('details')!;
+const scores = () => screen.getByRole('region', { name: 'Scores' });
+
+describe('staged search demo, after live QA', () => {
+  // "returns 1 note, none of which do not match", "matching 0 filters … drops none of its filters"
+  it('words its headline for one result and for no filters', () => {
+    render(<SearchDemo />);
+    fireEvent.change(screen.getByLabelText('Results wanted'), { target: { value: '1' } });
+    expect(headline()).not.toMatch(/none of which|1 note, all matching|1 notes/);
+    fireEvent.change(screen.getByLabelText('Results wanted'), { target: { value: '4' } });
+    for (const n of [3, 2, 1]) fireEvent.click(screen.getByRole('button', { name: `Remove filter ${n}` }));
+    expect(headline()).toMatch(/with no filters/);
+    expect(headline()).not.toMatch(/drops none of its filters|0 filters|none of which/);
+  });
+
+  // one row, "1 to 50", a lead offering it as a second row, and a blank scores panel
+  it('handles a query no note matches', () => {
+    render(<SearchDemo />);
+    fireEvent.change(screen.getByLabelText('Description, the keyword query'), { target: { value: 'zzzz nothing matches' } });
+    expect(within(ladder()).getAllByRole('row')).toHaveLength(2);
+    expect(within(ladder()).getByRole('button', { name: /^1 or more/ })).toBeTruthy();
+    expect(screen.getByText(/Pick a row to see its results underneath/).textContent).not.toMatch(/then/);
+    expect(scores().textContent).toMatch(/No notes to score/);
+  });
+
+  it('says what the score is in body-only mode', () => {
+    render(<SearchDemo />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Body only' }));
+    expect(scores().textContent).toMatch(/body search’s own/);
+    expect(scores().textContent).not.toMatch(/reciprocal rank fusion/);
+  });
+
+  // a topic filter flagged results outside the request with nothing struck
+  it('strikes the value that breaks the request, even in a field the results do not show', () => {
+    render(<SearchDemo />);
+    for (const n of [3, 2]) fireEvent.click(screen.getByRole('button', { name: `Remove filter ${n}` }));
+    fireEvent.change(screen.getByLabelText('Filter 1 field'), { target: { value: 'topic' } });
+    fireEvent.change(screen.getByLabelText('Filter 1 value'), { target: { value: 'storage' } });
+    const outside = within(results()).getAllByText('no, outside the request');
+    expect(outside.length).toBeGreaterThan(0);
+    for (const flag of outside) expect(flag.closest('tr')!.querySelector('[data-broken="true"]')?.textContent).toMatch(/topic/);
+  });
+
+  it('says why filters dropped, and that the threshold sets how far', () => {
+    render(<SearchDemo />);
+    expect(within(results()).getByText(/because the first search found fewer than 6 candidates/)).toBeTruthy();
+    expect(screen.getByText(/until the first search finds at least as many candidates as the threshold/)).toBeTruthy();
+  });
+
+  // "(filters 0 value: Invalid input)", "String must contain at least 1 character(s)"
+  it('says what is wrong with a query in the form’s own words', () => {
+    render(<SearchDemo />);
+    fireEvent.change(screen.getByLabelText('Filter 1 value'), { target: { value: 'abc' } });
+    expect(screen.getByText(/Filter 1 should be a year from 2000 to 2100/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Filter 1 value'), { target: { value: '2025.5' } });
+    expect(screen.getByText(/Filter 1 should be a year from 2000 to 2100/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Description, the keyword query'), { target: { value: '   ' } });
+    expect(screen.getByText(/Description cannot be empty/)).toBeTruthy();
+  });
+
+  // on a phone an edit changed results above and scores below, and nothing in view
+  it('shows the run’s verdict beside the query form', () => {
+    render(<SearchDemo />);
+    const line = screen.getByTestId('query-verdict');
+    expect(line.closest('form')).toBeTruthy();
+    expect(line.textContent).toMatch(/^Ready/);
+    fireEvent.change(screen.getByLabelText('Relaxation threshold'), { target: { value: '1' } });
+    expect(line.textContent).toMatch(/^Shortfall/);
+  });
+
+  it('answers an import beside its button, refuses settings the menus cannot show, and clears the last success', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<SearchDemo />);
+    fireEvent.change(screen.getByLabelText('Run file'), { target: { files: [file(makeReceipt(EXAMPLE_QUERY, DEFAULT_SETTINGS))] } });
+    await waitFor(() => expect(within(tools()).getByText(/File rerun/)).toBeTruthy());
+    const beyond = makeReceipt(EXAMPLE_QUERY, { ...DEFAULT_SETTINGS, relax_threshold: 13 });
+    fireEvent.change(screen.getByLabelText('Run file'), { target: { files: [file(beyond)] } });
+    await waitFor(() => expect(within(tools()).getByRole('alert').textContent).toMatch(/^File refused: settings › relax_threshold should be at most 12/));
+    expect(within(tools()).queryByText(/File rerun/)).toBeNull();
+  });
+});

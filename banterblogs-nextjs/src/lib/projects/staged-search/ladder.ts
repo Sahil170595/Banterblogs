@@ -5,7 +5,8 @@ import type { Query, Settings } from './schema';
 // The same query at every relaxation threshold, grouped where the outcome is
 // the same: what was dropped, what came back, and how much of what came back
 // breaks the request. Once every filter is dropped a higher threshold changes
-// nothing, so the last group is open-ended.
+// nothing, so the last group is open-ended; so is a group that runs to the
+// ladder's own top threshold, past the example's eighteen notes.
 
 export const LADDER_LIMIT = 50;
 
@@ -44,6 +45,6 @@ export function ladder(query: Query, settings: Settings): Rung[] {
     if (rung.report && rung.report.dropped.length === query.filters.length) break;
   }
   const last = rungs.at(-1);
-  if (last?.report && last.report.dropped.length === query.filters.length) last.to = null;
+  if (last && ((last.report && last.report.dropped.length === query.filters.length) || last.to === LADDER_LIMIT)) last.to = null;
   return rungs;
 }
