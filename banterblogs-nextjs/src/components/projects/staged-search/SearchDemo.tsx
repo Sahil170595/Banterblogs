@@ -1,24 +1,31 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { EXAMPLE_QUERY } from '@/lib/projects/staged-search/example';
+import { ladder } from '@/lib/projects/staged-search/ladder';
 import { DEFAULT_SETTINGS, type Query, type Settings } from '@/lib/projects/staged-search/schema';
+import { revealResult } from '../reveal';
 import { fromQuery, toQuery, type Draft } from './draft';
-import { LadderTable } from './LadderTable';
+import { atThresholds } from './format';
+import { holds, LadderTable } from './LadderTable';
 import { SearchLab } from './SearchLab';
 import styles from './search.module.css';
 
 /**
  * The staged search page's live demo: the query at every relaxation
- * threshold, then the pipeline itself on the source's example. Both read the
- * same query, so editing it below redraws the ladder above.
+ * threshold, then the results of the picked one. Both read the same query, so
+ * editing it under the hood redraws the ladder above.
  */
 export function SearchDemo() {
   const [draft, setDraft] = useState<Draft>(() => fromQuery(EXAMPLE_QUERY));
   const [query, setQuery] = useState<Query>(EXAMPLE_QUERY);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const labRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLElement>(null);
+  const rungs = useMemo(() => ladder(query, settings), [query, settings]);
+  // a picked row stands for every threshold it covers, and the results say so
+  const rung = rungs.find((r) => holds(r, settings.relax_threshold));
+  const thresholds = rung ? atThresholds(rung.from, rung.to) : atThresholds(settings.relax_threshold, settings.relax_threshold);
 
   function editDraft(next: Draft) {
     setDraft(next);
@@ -37,26 +44,25 @@ export function SearchDemo() {
   return (
     <div className={styles.demo}>
       <LadderTable
+        rungs={rungs}
         query={query}
         settings={settings}
         onPick={(threshold) => {
           setSettings({ ...settings, relax_threshold: threshold });
-          const lab = labRef.current;
-          if (lab && lab.getBoundingClientRect().top > window.innerHeight) {
-            const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            lab.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
-          }
+          revealResult(resultsRef.current);
         }}
       />
-      <div ref={labRef} className={styles.labAnchor}>
+      <div className={styles.labAnchor}>
         <SearchLab
           draft={draft}
           query={query}
           draftError={draftError}
           settings={settings}
+          thresholds={thresholds}
           onDraft={editDraft}
           onSettings={setSettings}
           onLoad={load}
+          resultsRef={resultsRef}
         />
       </div>
     </div>

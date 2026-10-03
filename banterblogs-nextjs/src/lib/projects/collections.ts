@@ -6,25 +6,26 @@ export const COLLECTIONS = [
     key: 'reinforcement-learning',
     label: 'Reinforcement learning',
     title: 'Reinforcement Learning Projects',
-    description: 'Environments with legal-action masks, terminal rewards and paired policy evaluation, each running live on its page.',
+    description:
+      'Environments where a program chooses one move at a time and is scored on how the task ends, and the tests that compare one strategy with another on identical cases.',
   },
   {
     key: 'agents-and-evaluation',
     label: 'Agents & evaluation',
     title: 'Agent and Evaluation Projects',
-    description: 'Agent harnesses and the evaluations that check them: tool use, workflows and policy gates.',
+    description: 'Software that acts on its own, using tools and filling in forms, and the checks that decide whether it really did the job.',
   },
   {
     key: 'systems',
     label: 'Systems',
     title: 'Systems Projects',
-    description: 'Retrieval, scheduling and governance engines, with their failure cases left in view.',
+    description: 'Search, scheduling and rule-enforcement engines, rebuilt in the browser and audited, with what each audit found left in view.',
   },
   {
     key: 'product',
     label: 'Product',
     title: 'Product Projects',
-    description: 'Applications built end to end, from interaction model to state handling.',
+    description: 'Applications built end to end, from what people do on screen to how the data stays consistent behind it.',
   },
 ] as const;
 

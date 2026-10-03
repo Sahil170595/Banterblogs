@@ -1,14 +1,15 @@
 {
   "slug": "send-pacing",
   "title": "Send Pacing Scheduler",
-  "dek": "The scheduler from my tempoledger system, which paces outbound text messages like a person typing, ported with NumPy's own generator. Its audit catches the schedule breaking the timing it imitates.",
-  "summary": "Does a schedule built to look typed respect its own typing time? Every seed says no.",
+  "dek": "tempoledger, a scheduler I built for simulated phishing texts in security-awareness training, paces each message the way a person would send it: never sooner than it could have been typed. This page rebuilds it in your browser and runs its own audit, which catches the schedule breaking that rule.",
+  "summary": "In all 1,000 runs of its own example, the scheduler sends its last two messages before a person could have typed them.",
   "collection": "systems",
   "alsoIn": [],
   "order": 2,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/send-pacing" },
-    { "label": "tempoledger", "url": "https://github.com/Sahil170595/tempoledger/tree/8bd2c0f9b1c64c18a6c72ed42bf19c8950e4ae01" }
-  ]
+    { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/send-pacing" },
+    { "label": "tempoledger on GitHub", "url": "https://github.com/Sahil170595/tempoledger/tree/8bd2c0f9b1c64c18a6c72ed42bf19c8950e4ae01" }
+  ],
+  "builtWith": ["Python", "NumPy", "Pydantic", "FastAPI", "PostgreSQL", "Celery", "OpenTelemetry"]
 }

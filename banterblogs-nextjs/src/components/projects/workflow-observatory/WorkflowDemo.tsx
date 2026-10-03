@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { SCENARIOS, type Scenario } from '@/lib/projects/workflow-observatory/scenarios';
 import { controls } from '../controls';
+import { revealResult } from '../reveal';
 import { EvidenceTable } from './EvidenceTable';
 import { Observatory } from './Observatory';
 import styles from './observatory.module.css';
@@ -40,11 +41,7 @@ export function WorkflowDemo() {
   function pick(scenario: Scenario) {
     setSelected(scenario);
     setPicks((n) => n + 1);
-    const lab = labRef.current;
-    if (lab && lab.getBoundingClientRect().top > window.innerHeight) {
-      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      lab.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
-    }
+    revealResult(labRef.current);
   }
 
   return (
@@ -52,15 +49,21 @@ export function WorkflowDemo() {
       <EvidenceTable selected={selected.id} onSelect={pick} />
       <div className={styles.lab} ref={labRef}>
         <p className={styles.loaded}>
-          <span>Loaded</span> {selected.label}
+          <span>Loaded in the app</span> {selected.label}
         </p>
         {!selected.executor && (
-          <p className={controls.hint}>
-            The executor follows its plan and never picks the wrong room. Open the form, enter the title, choose South lab and save it
-            yourself, then read the completion gate.
+          <p className={controls.lead}>
+            <strong>Make this one by hand.</strong> The executor, the program that clicks and types through the app, follows its plan and never
+            picks the wrong room. Click Reserve slot, type &ldquo;{selected.config.title}&rdquo;, choose South lab and save; the status line
+            then gives the completion gate&apos;s verdict.
           </p>
         )}
-        <Observatory key={`${selected.id}:${picks}`} initial={selected.config} autoRun={selected.executor && (picks > 0 || seen)} />
+        <Observatory
+          key={`${selected.id}:${picks}`}
+          initial={selected.config}
+          autoRun={selected.executor && (picks > 0 || seen)}
+          byHand={!selected.executor}
+        />
       </div>
     </div>
   );

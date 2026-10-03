@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import type { InfluenceReport } from '@/lib/projects/intake-triage/influence';
 import type { Signals } from '@/lib/projects/intake-triage/signals';
+import { revealResult } from '../reveal';
 import { InfluenceTable } from './InfluenceTable';
 import { OPENING_FIXTURE, SignalLab } from './SignalLab';
 import styles from './triage.module.css';
@@ -17,6 +18,8 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
   const [signals, setSignals] = useState<Signals>(OPENING_FIXTURE.signals);
   const [fixtureId, setFixtureId] = useState<string | null>(OPENING_FIXTURE.id);
   const [focus, setFocus] = useState<string | null>(null);
+  // where signals the visitor did not pick from the examples came from: a table row, or their own changes
+  const [origin, setOrigin] = useState<string | null>(null);
   const labRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -29,21 +32,20 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
           setSignals(example.signals);
           setFixtureId(null);
           setFocus(signal.id);
-          const lab = labRef.current;
-          if (lab && lab.getBoundingClientRect().top > window.innerHeight) {
-            const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            lab.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
-          }
+          setOrigin(`From the table: ${signal.label}`);
+          revealResult(labRef.current);
         }}
       />
       <div ref={labRef} className={styles.labAnchor}>
         <SignalLab
           signals={signals}
           fixtureId={fixtureId}
+          origin={origin}
           focus={focus}
           onSignals={(next, id) => {
             setSignals(next);
             setFixtureId(id);
+            setOrigin(null);
             if (id !== null) setFocus(null);
           }}
         />

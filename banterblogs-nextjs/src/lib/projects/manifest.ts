@@ -6,10 +6,15 @@ import { COLLECTION_KEYS } from './collections';
 
 /** what the numbers on a project's page come from, shown in its meta row */
 export const PROJECT_EVIDENCE = {
-  'synthetic-fixture': 'Synthetic fixture',
+  'synthetic-fixture': 'Sample data',
   'recorded-run': 'Recorded run',
   application: 'Live application',
 } as const;
+
+/** room to say what the system is and what it is for, in plain words */
+const DEK_MAX = 300;
+const STACK_ITEMS_MAX = 8;
+const STACK_ITEM_MAX = 32;
 
 // A GitHub link names the repo, or a path on main or at a pinned commit; a
 // feature branch link breaks the day the branch is deleted.
@@ -32,8 +37,8 @@ export const ProjectManifestSchema = z
   .object({
     slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
     title: z.string().min(1).max(60),
-    /** the contribution in one sentence: the page's dek and its meta description */
-    dek: z.string().min(1).max(220),
+    /** what the system is and what it is for, in plain words: the page's dek and its meta description */
+    dek: z.string().min(1).max(DEK_MAX),
     /** the card's two lines */
     summary: z.string().min(1).max(180),
     /** the canonical collection; the project's folder sits under it */
@@ -45,6 +50,8 @@ export const ProjectManifestSchema = z
     evidence: z.enum(Object.keys(PROJECT_EVIDENCE) as [keyof typeof PROJECT_EVIDENCE, ...(keyof typeof PROJECT_EVIDENCE)[]]),
     /** source first; the original system, a paper or a package after it */
     links: z.array(link).min(1).max(3),
+    /** what the original system is built with, as its own write-up names it */
+    builtWith: z.array(z.string().min(1).max(STACK_ITEM_MAX)).max(STACK_ITEMS_MAX).optional(),
   })
   .strict()
   .refine((m) => !m.alsoIn.includes(m.collection), { message: 'A project is not cross-listed into its own collection', path: ['alsoIn'] });

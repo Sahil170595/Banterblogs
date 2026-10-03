@@ -2,16 +2,18 @@
 
 import { useState, type KeyboardEvent } from 'react';
 import { DEFAULT_CONFIG, formatTime, POLICY_LABELS, type Config } from '@/lib/projects/flight-routing/engine';
-import type { Profile, ScenarioId } from '@/lib/projects/flight-routing/fixtures';
+import { getScenario, type Profile, type ScenarioId } from '@/lib/projects/flight-routing/fixtures';
 import { TIGHT_DEADLINE } from '@/lib/projects/flight-routing/experiment';
 import { worldSeed, type PolicyWorlds, type World } from '@/lib/projects/flight-routing/worlds';
 import { controls, Segmented, type Choice } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
+import { deadlineNote, gridHeadline, MIRROR_NOTE, mirrorsOutbound, PROFILE_LABEL, profileNote, POLICY_TEXT } from './copy';
 import type { Selection } from './useFlightDemo';
 import styles from './demo.module.css';
 
-// The hero: every policy over the same seeded worlds, one square a world, in
-// the same place in every panel. Selecting a square replays that world below.
+// The hero: every policy over the same seeded worlds, one square a
+// world, in the same place in every panel. Selecting a square replays that
+// world below.
 
 const COLUMNS = 8;
 const OUTCOME_TEXT = { 'on-time': 'on time', late: 'late', failed: 'failed' } as const;
@@ -23,22 +25,15 @@ const REASON_TEXT: Record<string, string> = {
   max_attempts: 'out of attempts',
 };
 
-const DEADLINES: Choice<number>[] = [
-  { value: TIGHT_DEADLINE, label: formatTime(TIGHT_DEADLINE), note: 'tight' },
-  { value: DEFAULT_CONFIG.deadline, label: formatTime(DEFAULT_CONFIG.deadline), note: 'slack' },
-];
-const PROFILES: Choice<Profile>[] = [
-  { value: 'clear', label: 'Clear' },
-  { value: 'balanced', label: 'Mixed' },
-  { value: 'storm', label: 'Stress' },
-];
+const PROFILES: Profile[] = ['clear', 'balanced', 'storm'];
 const ROUTES: Choice<ScenarioId>[] = [
   { value: 'west-east', label: 'SFO to JFK' },
   { value: 'east-west', label: 'JFK to SFO' },
 ];
 
 function describe(world: World, index: number): string {
-  const what = world.outcome === 'failed' ? REASON_TEXT[world.reason] ?? 'failed' : `${OUTCOME_TEXT[world.outcome]}, landed ${formatTime(world.arrival!)}`;
+  const what =
+    world.outcome === 'failed' ? (REASON_TEXT[world.reason] ?? 'failed') : `${OUTCOME_TEXT[world.outcome]}, landed ${formatTime(world.arrival!)}`;
   return `World ${index + 1}, seed ${world.seed}: ${what}`;
 }
 
@@ -56,6 +51,13 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
   const [error, setError] = useState('');
   const configure = (next: Config) => setError(onConfigure(next) ?? '');
   const count = worlds[0].worlds.length;
+  const { origin, destination } = getScenario(config.scenario);
+  const deadlines: Choice<number>[] = [TIGHT_DEADLINE, DEFAULT_CONFIG.deadline].map((value) => ({
+    value,
+    label: formatTime(value),
+    note: deadlineNote(value, config),
+  }));
+  const profiles: Choice<Profile>[] = PROFILES.map((value) => ({ value, label: PROFILE_LABEL[value] }));
 
   // arrow keys move through a panel's 8x8 grid; Enter and Space select
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -71,16 +73,52 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
 
   return (
     <div className={styles.hero}>
+      <p className={controls.lead}>
+        A passenger has to get from {origin} to {destination} before a deadline, and any flight can be delayed or cancelled. Each panel runs one
+        policy, a rule for which flight to book next, over the same {count} worlds: simulated days whose delays and cancellations are fixed by a seed,
+        so every policy meets the same ones. Try the other deadline and see whether lookahead still beats the nonstop.
+      </p>
       <div className={controls.row}>
-        <Segmented legend="Deadline" name="deadline" options={DEADLINES} value={config.deadline} onChange={(deadline) => configure({ ...config, deadline })} />
-        <Segmented legend="Disruptions" name="profile" options={PROFILES} value={config.profile} onChange={(profile) => configure({ ...config, profile })} />
+        <Segmented
+          legend="Deadline"
+          name="deadline"
+          options={deadlines}
+          value={config.deadline}
+          onChange={(deadline) => configure({ ...config, deadline })}
+        />
+        <Segmented
+          legend="Disruptions"
+          name="profile"
+          options={profiles}
+          value={config.profile}
+          onChange={(profile) => configure({ ...config, profile })}
+        />
         <Segmented legend="Route" name="route" options={ROUTES} value={config.scenario} onChange={(scenario) => configure({ ...config, scenario })} />
       </div>
+      <p className={controls.hint}>
+        {profileNote(config.profile, config)}
+        {config.scenario === 'east-west' && mirrorsOutbound() && ` ${MIRROR_NOTE}`}
+      </p>
       {error && (
         <p role="alert" className={controls.error}>
           {error}
         </p>
       )}
+
+      <p className={styles.headline} aria-live="polite">
+        {gridHeadline(worlds)}
+      </p>
+      <div className={styles.legendRow}>
+        <ul className={styles.legend} aria-label="Square key">
+          <li data-outcome="on-time">On time</li>
+          <li data-outcome="late">Late</li>
+          <li data-outcome="failed">Never arrived</li>
+        </ul>
+        <p>
+          Each square is one world (seeds {worldSeed(config, 0)}–{worldSeed(config, count - 1)}), in the same place in all four panels, so any
+          difference between panels is the policy&apos;s alone. Click a square to replay that world below.
+        </p>
+      </div>
 
       <ProjectFigureTransition slug="flight-routing">
         <div className={styles.panels} onPointerLeave={() => setPaired(null)}>
@@ -89,12 +127,13 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
             return (
               <div key={row.policy} className={styles.panel} data-active={active || undefined}>
                 <h3 className={styles.panelLabel}>{POLICY_LABELS[row.policy]}</h3>
+                <p className={styles.panelWhat}>{POLICY_TEXT[row.policy]}</p>
                 <p className={styles.panelScore}>
                   <strong>{row.onTime}</strong>
                   <span>/{count} on time</span>
                 </p>
                 <p className={styles.panelRest}>
-                  {row.late} late · {row.failed} failed
+                  {row.late} late · {row.failed} never arrived
                 </p>
                 <div
                   role="group"
@@ -129,18 +168,6 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
           })}
         </div>
       </ProjectFigureTransition>
-
-      <div className={styles.legendRow}>
-        <ul className={styles.legend} aria-label="Square key">
-          <li data-outcome="on-time">On time</li>
-          <li data-outcome="late">Late</li>
-          <li data-outcome="failed">Never arrived</li>
-        </ul>
-        <p>
-          Seeds {worldSeed(config, 0)}–{worldSeed(config, count - 1)}. A world sits in the same square in every panel, so a
-          difference between panels is the policy&apos;s alone. Select one to replay it.
-        </p>
-      </div>
     </div>
   );
 }

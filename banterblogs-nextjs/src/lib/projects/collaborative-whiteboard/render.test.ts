@@ -18,11 +18,12 @@ function drawingSurface() {
 describe('scene drawing without fabricated state', () => {
   it('draws model coordinates, ellipses and line endpoints on the scaled surface', () => {
     const { canvas, context } = drawingSurface();
-    renderBoard(canvas, INITIAL_SHAPES, null);
+    const line = { id: 'edge', type: 'line' as const, x: 300, y: 230, width: 70, height: 0, fill: '#ffffff', stroke: '#25343c', strokeWidth: 3 };
+    renderBoard(canvas, [...INITIAL_SHAPES, line], null);
     expect(context.fillRect).toHaveBeenCalledWith(90, 170, 200, 120);
     expect(context.ellipse).toHaveBeenCalledWith(480, 230, 100, 60, 0, 0, Math.PI * 2);
     expect(context.lineTo).toHaveBeenCalledWith(370, 230);
-    expect(context.fillText).toHaveBeenCalledWith('Draft', 129, 212);
+    expect(context.fillText).toHaveBeenCalledWith('Draft', 94, 306);
     expect(context.setTransform).toHaveBeenCalledWith(canvas.width / 960, 0, 0, canvas.height / 600, 0, 0);
   });
   it('paints the selected shape last to agree with hit-testing', () => {
@@ -36,7 +37,7 @@ describe('scene drawing without fabricated state', () => {
   });
   it('clips and wraps text rather than drawing beyond its object bounds', () => {
     const { canvas, context } = drawingSurface();
-    const shape = { ...INITIAL_SHAPES[5], width: 36, height: 80, text: 'ABCDE' };
+    const shape = { ...INITIAL_SHAPES.find((s) => s.id === 'draft-caption')!, width: 36, height: 80, text: 'ABCDE' };
     renderBoard(canvas, [shape], null);
     expect(context.rect).toHaveBeenCalledWith(shape.x, shape.y, 36, 80);
     expect(context.clip).toHaveBeenCalled();

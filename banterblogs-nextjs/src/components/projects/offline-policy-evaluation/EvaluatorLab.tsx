@@ -2,22 +2,39 @@
 
 import { useState, type FormEvent } from 'react';
 import { Download, RotateCcw } from 'lucide-react';
-import { ACTIONS, CONTEXTS, exportEvaluation, LOW_SUPPORT, METHODS, type Config, type Evaluation, type Interval } from '@/lib/projects/offline-policy-evaluation/engine';
+import {
+  ACTIONS,
+  CONTEXTS,
+  exportEvaluation,
+  LOW_SUPPORT,
+  METHODS,
+  type Config,
+  type Evaluation,
+  type Interval,
+} from '@/lib/projects/offline-policy-evaluation/engine';
 import { signed } from '@/lib/projects/offline-policy-evaluation/verdict';
-import { controls } from '../controls';
+import { controls, UnderTheHood } from '../controls';
 import type { OpeDemo } from './useOpeDemo';
 import styles from './ope.module.css';
 
-// Under the hero: every setting the evaluation takes, and the diagnostics a
-// reader needs before trusting its estimate: who the logger supports, how
-// many trajectories the weights really use, and one trajectory's ledger.
+// Under the hero: one plain line on how much data the estimate leans on,
+// then, under the hood, every setting the evaluation takes and the
+// diagnostics a reader needs before trusting its estimate: who the logger
+// supports, how many trajectories the weights really use, the estimators
+// side by side and one trajectory's ledger.
 
 const PERCENT = 100;
 const percent = (share: number) => `${(share * PERCENT).toFixed(1)}%`;
 const range = (interval: Interval) => (interval ? `${signed(interval[0])} to ${signed(interval[1])}` : 'none');
 const CAPS = [0.5, 1, 2, 5, 10, 25, 100];
 
-type Slider = { key: keyof Pick<Config, 'intensity' | 'responsiveness' | 'anchor' | 'gainWeight' | 'harmWeight' | 'gamma'>; label: string; min: number; max: number; step: number };
+type Slider = {
+  key: keyof Pick<Config, 'intensity' | 'responsiveness' | 'anchor' | 'gainWeight' | 'harmWeight' | 'gamma'>;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+};
 const SLIDERS: { legend: string; fields: Slider[] }[] = [
   {
     legend: 'Target policy',
@@ -37,18 +54,23 @@ const SLIDERS: { legend: string; fields: Slider[] }[] = [
   },
 ];
 
+const AUDIT_COLUMNS = ['Return', '95% interval', 'Versus logger', 'Paired interval'] as const;
+const LEDGER_COLUMNS = ['Step', 'Load', 'Logged action', 'Reward', 'Weight', 'Capped'] as const;
+
 function Settings({ config, onApply, onReset }: { config: Config; onApply: (config: Config) => string | null; onReset: () => void }) {
   const [draft, setDraft] = useState(config);
   const [counts, setCounts] = useState({ seed: String(config.seed), size: String(config.size) });
   const [error, setError] = useState('');
-  const dirty = JSON.stringify({ ...draft, seed: counts.seed, size: counts.size }) !== JSON.stringify({ ...config, seed: String(config.seed), size: String(config.size) });
+  const dirty =
+    JSON.stringify({ ...draft, seed: counts.seed, size: counts.size }) !==
+    JSON.stringify({ ...config, seed: String(config.seed), size: String(config.size) });
 
   const apply = (event: FormEvent) => {
     event.preventDefault();
     const seed = Number(counts.seed);
     const size = Number(counts.size);
     if (!Number.isInteger(seed) || !Number.isInteger(size) || !counts.seed.trim() || !counts.size.trim()) {
-      console.error('Offline evaluation settings rejected: seed and trajectories must be whole numbers', counts);
+      console.warn('Offline evaluation settings rejected: seed and trajectories must be whole numbers', counts);
       setError('Seed and trajectories must be whole numbers.');
       return;
     }
@@ -56,7 +78,7 @@ function Settings({ config, onApply, onReset }: { config: Config; onApply: (conf
   };
 
   return (
-    <form className={styles.settings} onSubmit={apply} noValidate>
+    <form className={styles.settings} onSubmit={apply} noValidate aria-label="Evaluation settings">
       {SLIDERS.map((group) => (
         <fieldset key={group.legend}>
           <legend>{group.legend}</legend>
@@ -84,11 +106,23 @@ function Settings({ config, onApply, onReset }: { config: Config; onApply: (conf
         <div className={styles.pair}>
           <label className={controls.field}>
             Seed
-            <input type="text" inputMode="numeric" name="seed" value={counts.seed} onChange={(event) => setCounts({ ...counts, seed: event.target.value })} />
+            <input
+              type="text"
+              inputMode="numeric"
+              name="seed"
+              value={counts.seed}
+              onChange={(event) => setCounts({ ...counts, seed: event.target.value })}
+            />
           </label>
           <label className={controls.field}>
             Trajectories
-            <input type="text" inputMode="numeric" name="size" value={counts.size} onChange={(event) => setCounts({ ...counts, size: event.target.value })} />
+            <input
+              type="text"
+              inputMode="numeric"
+              name="size"
+              value={counts.size}
+              onChange={(event) => setCounts({ ...counts, size: event.target.value })}
+            />
           </label>
         </div>
         <label className={controls.field}>
@@ -108,6 +142,7 @@ function Settings({ config, onApply, onReset }: { config: Config; onApply: (conf
         </button>
         <button type="button" className={controls.iconButton} aria-label="Reset evaluation" title="Reset evaluation" onClick={onReset}>
           <RotateCcw aria-hidden="true" />
+          <span className={controls.iconLabel}>Reset evaluation</span>
         </button>
         {dirty && <p className={controls.hint}>Changes apply when you evaluate.</p>}
         {error && (
@@ -124,35 +159,41 @@ function SupportMatrix({ evaluation }: { evaluation: Evaluation }) {
   return (
     <figure className={styles.panel}>
       <figcaption className={styles.panelTitle}>
-        Who the logger supports <span>logger and target probability by load</span>
+        Who the logger supports <span>how often the logger and the target choose each action, by load</span>
       </figcaption>
       <div className={styles.tableScroll} role="region" aria-label="Action support" tabIndex={0}>
-        <table className={styles.supportTable}>
-          <thead>
-            <tr>
-              <th scope="col">Load</th>
+        <table className={`${styles.supportTable} ${controls.stackTable}`} role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">
+                Load
+              </th>
               {ACTIONS.map((action) => (
-                <th key={action} scope="col">
+                <th key={action} scope="col" role="columnheader">
                   {action}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             {evaluation.support.map((row) => (
-              <tr key={row.name}>
-                <th scope="row">{row.name}</th>
+              <tr key={row.name} role="row">
+                <th scope="row" role="rowheader">
+                  {row.name}
+                </th>
                 {ACTIONS.map((action, a) => {
                   const gap = row.behavior[a] === 0 && row.target[a] > 0;
                   const thin = !gap && row.behavior[a] < LOW_SUPPORT && row.target[a] > 0;
                   return (
-                    <td key={action} data-support={gap ? 'none' : thin ? 'thin' : undefined}>
-                      <span className={styles.bar} style={{ width: percent(row.behavior[a]) }} data-kind="logger" />
-                      <span className={styles.bar} style={{ width: percent(row.target[a]) }} data-kind="target" />
-                      <span className={styles.barText}>
-                        {percent(row.behavior[a])} → {percent(row.target[a])}
+                    <td key={action} role="cell" data-label={action} data-support={gap ? 'none' : thin ? 'thin' : undefined}>
+                      <span className={styles.supportCell}>
+                        <span className={styles.bar} style={{ width: percent(row.behavior[a]) }} data-kind="logger" />
+                        <span className={styles.bar} style={{ width: percent(row.target[a]) }} data-kind="target" />
+                        <span className={styles.barText}>
+                          {percent(row.behavior[a])} → {percent(row.target[a])}
+                        </span>
+                        <span className={styles.barCount}>{row.counts[a]} logged</span>
                       </span>
-                      <span className={styles.barCount}>{row.counts[a]} logged</span>
                     </td>
                   );
                 })}
@@ -164,8 +205,8 @@ function SupportMatrix({ evaluation }: { evaluation: Evaluation }) {
       <p className={styles.key}>
         <span data-kind="logger">Logger</span>
         <span data-kind="target">Target</span>
-        <span data-support="thin">Logger under {LOW_SUPPORT * PERCENT}%</span>
-        <span data-support="none">Logger never acts there</span>
+        <span data-support="thin">Logger under {LOW_SUPPORT * PERCENT}%: thin support</span>
+        <span data-support="none">Logger never acts there: no support</span>
       </p>
     </figure>
   );
@@ -177,7 +218,7 @@ function EssBars({ evaluation }: { evaluation: Evaluation }) {
   return (
     <figure className={styles.panel}>
       <figcaption className={styles.panelTitle}>
-        Trajectories the weights really use <span>effective sample size by step, of {size}</span>
+        Trajectories the weights really use <span>effective sample size (ESS) by step, of {size}</span>
       </figcaption>
       <ol className={styles.ess}>
         {horizons.map((h, t) => (
@@ -210,26 +251,38 @@ function Audit({ evaluation }: { evaluation: Evaluation }) {
         The target under each estimator <span>paired against the logger on the same resamples</span>
       </h4>
       <div className={styles.tableScroll} role="region" aria-label="Estimator audit" tabIndex={0}>
-        <table className={styles.audit}>
-          <thead>
-            <tr>
-              <th scope="col">Estimator</th>
-              <th scope="col">Return</th>
-              <th scope="col">95% interval</th>
-              <th scope="col">Versus logger</th>
-              <th scope="col">Paired interval</th>
+        <table className={`${styles.audit} ${controls.stackTable}`} role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">
+                Estimator
+              </th>
+              {AUDIT_COLUMNS.map((column) => (
+                <th key={column} scope="col" role="columnheader">
+                  {column}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             {METHODS.map(({ key, label }) => {
               const value = target.result[key];
+              const cells = [
+                value === null ? 'Withheld' : signed(value),
+                range(target.intervals[key]),
+                value === null ? 'Withheld' : signed(value - target.result.logged),
+                range(target.differences[key]),
+              ];
               return (
-                <tr key={key}>
-                  <th scope="row">{label}</th>
-                  <td>{value === null ? 'Withheld' : signed(value)}</td>
-                  <td>{range(target.intervals[key])}</td>
-                  <td>{value === null ? 'Withheld' : signed(value - target.result.logged)}</td>
-                  <td>{range(target.differences[key])}</td>
+                <tr key={key} role="row">
+                  <th scope="row" role="rowheader">
+                    {label}
+                  </th>
+                  {cells.map((cell, i) => (
+                    <td key={AUDIT_COLUMNS[i]} role="cell" data-label={AUDIT_COLUMNS[i]}>
+                      {cell}
+                    </td>
+                  ))}
                 </tr>
               );
             })}
@@ -263,28 +316,36 @@ function Ledger({ evaluation }: { evaluation: Evaluation }) {
         </label>
       </div>
       <div className={styles.tableScroll} role="region" aria-label={`Ledger for trajectory ${index + 1}`} tabIndex={0}>
-        <table className={`${styles.audit} ${styles.ledger}`}>
-          <thead>
-            <tr>
-              <th scope="col">Step</th>
-              <th scope="col">Load</th>
-              <th scope="col">Logged action</th>
-              <th scope="col">Reward</th>
-              <th scope="col">Weight</th>
-              <th scope="col">Capped</th>
+        <table className={`${styles.audit} ${styles.ledger} ${controls.stackTable}`} role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              {LEDGER_COLUMNS.map((column) => (
+                <th key={column} scope="col" role="columnheader">
+                  {column}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody>
-            {episode.steps.map((step, t) => (
-              <tr key={t}>
-                <td>{t + 1}</td>
-                <td>{CONTEXTS[step.context]}</td>
-                <td>{ACTIONS[step.action]}</td>
-                <td>{signed(trace.rewards[t])}</td>
-                <td>{trace.rawWeights[t].toFixed(2)}</td>
-                <td>{trace.cappedWeights[t].toFixed(2)}</td>
-              </tr>
-            ))}
+          <tbody role="rowgroup">
+            {episode.steps.map((step, t) => {
+              const cells = [
+                String(t + 1),
+                CONTEXTS[step.context],
+                ACTIONS[step.action],
+                signed(trace.rewards[t]),
+                trace.rawWeights[t].toFixed(2),
+                trace.cappedWeights[t].toFixed(2),
+              ];
+              return (
+                <tr key={t} role="row">
+                  {cells.map((cell, i) => (
+                    <td key={LEDGER_COLUMNS[i]} role="cell" data-label={LEDGER_COLUMNS[i]}>
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -317,53 +378,60 @@ export function EvaluatorLab({ demo }: { demo: OpeDemo }) {
 
   return (
     <div className={styles.lab}>
-      <div className={styles.labHead}>
-        <div>
-          <h3 className={styles.labTitle}>The evaluation underneath</h3>
-          <p className={styles.labMeta}>
-            Seed {evaluation.config.seed} · {evaluation.config.size} trajectories · {evaluation.horizon} decisions each
-          </p>
+      {/* a withheld estimate leans on nothing */}
+      {target[demo.method] !== null && (
+        <p className={styles.leans}>
+          In effect, the estimate leans on {last.rawEss.toFixed(0)} of the {evaluation.config.size} logged trajectories (its effective sample size).
+        </p>
+      )}
+      <UnderTheHood summary="Under the hood: support, effective sample size, estimators, one trajectory's ledger, settings and export">
+        <div className={styles.labHead}>
+          <div>
+            <h3 className={styles.labTitle}>The evaluation underneath</h3>
+            <p className={styles.labMeta}>
+              Seed {evaluation.config.seed} · {evaluation.config.size} trajectories · {evaluation.horizon} decisions each
+            </p>
+          </div>
+          <button type="button" className={controls.button} onClick={exportJson}>
+            <Download aria-hidden="true" />
+            Export evaluation JSON
+          </button>
         </div>
-        <button type="button" className={controls.iconButton} aria-label="Export evaluation JSON" title="Export evaluation JSON" onClick={exportJson}>
-          <Download aria-hidden="true" />
-        </button>
-      </div>
 
-      <dl className={styles.metrics}>
-        <div>
-          <dt>Final-step ESS</dt>
-          <dd>
-            {last.rawEss.toFixed(0)} <span>/ {evaluation.config.size}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Target mass on thin support</dt>
-          <dd>{percent(target.lowSupportMass)}</dd>
-        </div>
-        <div>
-          <dt>Weights above the cap</dt>
-          <dd>{percent(target.clippedFraction)}</dd>
-        </div>
-        <div>
-          <dt>Largest final-step share</dt>
-          <dd>{percent(last.maxShare)}</dd>
-        </div>
-      </dl>
+        <dl className={styles.metrics}>
+          <div>
+            <dt>Final-step effective sample size (ESS)</dt>
+            <dd>
+              {last.rawEss.toFixed(0)} <span>/ {evaluation.config.size}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Target mass on thin support</dt>
+            <dd>{percent(target.lowSupportMass)}</dd>
+          </div>
+          <div>
+            <dt>Weights above the cap</dt>
+            <dd>{percent(target.clippedFraction)}</dd>
+          </div>
+          <div>
+            <dt>Largest final-step share</dt>
+            <dd>{percent(last.maxShare)}</dd>
+          </div>
+        </dl>
 
-      <div className={styles.diagnostics}>
-        <SupportMatrix evaluation={evaluation} />
-        <EssBars evaluation={evaluation} />
-        <Audit evaluation={evaluation} />
-        <Ledger evaluation={evaluation} />
-      </div>
+        <div className={styles.diagnostics}>
+          <SupportMatrix evaluation={evaluation} />
+          <EssBars evaluation={evaluation} />
+          <Audit evaluation={evaluation} />
+          <Ledger evaluation={evaluation} />
+        </div>
 
-      <details className={styles.settingsBox}>
-        <summary>All settings</summary>
+        <h4 className={styles.settingsTitle}>Settings</h4>
         <Settings key={JSON.stringify(evaluation.config)} config={evaluation.config} onApply={demo.configure} onReset={demo.reset} />
-      </details>
-      <p className={styles.notice} role="status">
-        {notice}
-      </p>
+        <p className={styles.notice} role="status">
+          {notice}
+        </p>
+      </UnderTheHood>
     </div>
   );
 }

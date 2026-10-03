@@ -688,7 +688,98 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
 }
 
 .project-demo {
+  margin-top: 3rem;
+}
+
+/* "What I found" and "Try it": the page's two blocks before the write-up,
+   named in the mono label register so a skimming visitor can tell them apart */
+.project-block-title {
+  margin-bottom: 1rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.project-findings-block {
   margin-top: 2.5rem;
+}
+
+/* A project's meta row wraps, at any width, and a dot that opens a line
+   reads as a stray bullet. Each item carries its dot in the gap to its left;
+   the row is drawn one gap further left and that strip clipped, so a dot is
+   seen only between two items on the same line. */
+.project-frame .report-meta {
+  column-gap: 0;
+  margin-left: -1rem;
+  clip-path: inset(-0.5rem -0.5rem -0.5rem 1rem);
+}
+
+.project-frame .report-meta li {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.project-frame .report-meta li::before {
+  content: "\00B7";
+  position: absolute;
+  left: 0.375rem;
+  margin: 0;
+  color: hsl(var(--muted-foreground) / 0.6);
+}
+
+.project-meta-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: hsl(var(--foreground));
+}
+
+.project-meta-check svg {
+  color: hsl(var(--status-green));
+}
+
+.project-stack {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: hsl(var(--foreground) / 0.85);
+}
+
+.project-stack span {
+  color: hsl(var(--muted-foreground));
+}
+
+/* the write-up's engineering part, set apart so a visitor reading for the
+   story knows where it ends */
+.project-engineers {
+  margin-top: 4rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  padding-top: 2.5rem;
+}
+
+.report-prose .project-engineers > h2 {
+  margin-top: 0;
+}
+
+.report-prose .project-engineers-lede {
+  color: hsl(var(--muted-foreground));
+}
+
+.project-pager-all {
+  display: block;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.project-pager-all:hover {
+  color: hsl(var(--primary));
 }
 
 .project-meta-link {
@@ -711,7 +802,6 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
 .project-findings {
   display: grid;
   gap: 0.75rem;
-  margin-top: 3rem;
 }
 
 .project-finding {
@@ -927,5 +1017,181 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
   font-size: 0.75rem;
   line-height: 1.5;
   color: hsl(var(--muted-foreground));
+}
+
+.demo-lead {
+  max-width: 48rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: hsl(var(--foreground) / 0.85);
+}
+
+/* an icon button's name: for screen readers only where a pointer can hover
+   for the tooltip, beside the icon on touch screens, which cannot */
+.demo-icon-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (hover: none) {
+  .demo-icon-button:has(.demo-icon-label) {
+    width: auto;
+    padding: 0 0.875rem;
+  }
+
+  .demo-icon-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+/* settings, traces and raw records, closed until an engineer opens them */
+.demo-under-hood {
+  margin-top: 1.5rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  padding-top: 1rem;
+}
+
+.demo-under-hood > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  list-style: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.demo-under-hood > summary::-webkit-details-marker {
+  display: none;
+}
+
+.demo-under-hood > summary:hover,
+.demo-under-hood[open] > summary {
+  color: hsl(var(--foreground));
+}
+
+.demo-under-hood > summary:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.demo-under-hood > summary svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.demo-under-hood[open] > summary svg {
+  transform: rotate(90deg);
+}
+
+.demo-under-hood > div {
+  margin-top: 1rem;
+}
+
+/* a result a click further up just changed (components/projects/reveal.ts) */
+@keyframes demo-revealed {
+  from {
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.7);
+  }
+  to {
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0);
+  }
+}
+
+.demo-revealed {
+  animation: demo-revealed var(--duration-reveal) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-revealed {
+    animation: none;
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.7);
+  }
+}
+
+/* a results table on a phone: one card per row, each value under its
+   column's name, so the column that carries the finding is never scrolled
+   out of sight. The table's explicit roles keep it a table to assistive
+   technology after the display change. */
+@media (max-width: 639px) {
+  .demo-stack,
+  .demo-stack tbody,
+  .demo-stack tr,
+  .demo-stack th,
+  .demo-stack td {
+    display: block;
+    width: auto;
+    min-width: 0;
+  }
+
+  .demo-stack {
+    min-width: 0 !important;
+  }
+
+  .demo-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .demo-stack tbody tr {
+    border-radius: 0.75rem;
+    background-color: hsl(var(--card) / 0.7);
+    padding: 0.75rem 1rem;
+  }
+
+  .demo-stack tbody tr + tr {
+    margin-top: 0.5rem;
+  }
+
+  .demo-stack tbody :is(th, td) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 0;
+    padding: 0.25rem 0;
+    text-align: right;
+  }
+
+  .demo-stack tbody th {
+    justify-content: flex-start;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  /* every column's name in one register, whatever its cell's own face; the
+     empty alternative keeps it out of the cell's accessible name, which the
+     column header already gives (the first line is for browsers without it) */
+  .demo-stack tbody [data-label]::before {
+    content: attr(data-label);
+    content: attr(data-label) / '';
+    /* shrinkable: a long column name wraps rather than widening the card */
+    flex: 0 1 auto;
+    max-width: 50%;
+    text-align: left;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    letter-spacing: normal;
+    text-transform: none;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: hsl(var(--muted-foreground));
+  }
 }
 /* end project page */

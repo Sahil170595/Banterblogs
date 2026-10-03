@@ -41,6 +41,14 @@
   color: hsl(var(--muted-foreground));
 }
 
+/* what the strategy does, in a line under its name */
+.panelWhat {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  color: hsl(var(--foreground) / 0.75);
+}
+
 .panelScore {
   margin-top: 0.375rem;
   display: flex;
@@ -115,6 +123,17 @@
 .cell:focus-visible {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
+}
+
+/* the panels' finding, for whatever the controls are set to */
+.headline {
+  max-width: 60rem;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  color: hsl(var(--foreground));
 }
 
 .legendRow {
@@ -389,6 +408,17 @@
   min-width: 0;
 }
 
+.timelineTitle {
+  margin-bottom: 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
+.cityKey {
+  flex-basis: 100%;
+}
+
 .lanes {
   position: relative;
   margin-left: 2rem;
@@ -590,26 +620,8 @@
   color: hsl(var(--muted-foreground));
 }
 
-/* settings */
-.settings {
-  margin-top: 1.25rem;
-  border-top: 1px solid hsl(var(--border) / 0.6);
-  padding-top: 0.875rem;
-}
-
-.settings summary {
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
-}
-
-.settings summary:hover {
-  color: hsl(var(--foreground));
-}
-
-.settings form {
-  margin-top: 1rem;
+/* settings and export, under the hood */
+.settingsForm {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
@@ -617,8 +629,26 @@
 }
 
 /* the limits and any error run the form's full width */
-.settings form > p {
+.settingsForm > p {
   grid-column: 1 / -1;
+}
+
+/* a minutes field read back as a clock */
+.clockReading {
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground) / 0.75);
+}
+
+.exportRow {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.exportRow .notice {
+  margin-top: 0;
 }
 
 .notice {
@@ -633,7 +663,7 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .settings form {
+  .settingsForm {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -654,12 +684,17 @@
     gap: 1rem;
   }
 
+  /* two lines each, so the four scores line up */
+  .panelWhat {
+    min-height: 2.5rem;
+  }
+
   .replayBody {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     gap: 2.5rem;
   }
 
-  .settings form {
+  .settingsForm {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }

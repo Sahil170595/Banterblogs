@@ -122,10 +122,22 @@
 }
 
 .gridline,
-.loggerRule {
+.loggerRule,
+.zeroRule {
   position: absolute;
   inset-block: -0.625rem;
   width: 0;
+}
+
+/* the difference row is read against zero, not against the logger */
+.zeroRule {
+  left: var(--zero);
+  border-left: 1px solid hsl(var(--foreground) / 0.55);
+}
+
+.forestRow[data-row="difference"] {
+  margin-top: 0.5rem;
+  border-top: 1px solid hsl(var(--foreground) / 0.2);
 }
 
 .gridline {
@@ -209,7 +221,7 @@
 }
 
 .caption {
-  margin-top: 0.75rem;
+  margin-bottom: 1rem;
   max-width: 70ch;
   font-size: 0.8125rem;
   line-height: 1.5;
@@ -351,6 +363,13 @@
   background-color: hsl(var(--status-red) / 0.12);
 }
 
+/* a cell's bars and numbers; on a phone it fills the space beside the action's name */
+.supportCell {
+  display: block;
+  flex: 1;
+  min-width: 6rem;
+}
+
 .bar {
   display: block;
   height: 4px;
@@ -480,20 +499,12 @@
 }
 
 /* settings */
-.settingsBox {
+.settingsTitle {
   margin-top: 1.5rem;
   border-top: 1px solid hsl(var(--border) / 0.6);
   padding-top: 0.875rem;
-}
-
-.settingsBox summary {
-  cursor: pointer;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
-}
-
-.settingsBox summary:hover {
+  font-weight: 600;
   color: hsl(var(--foreground));
 }
 
@@ -501,6 +512,13 @@
   margin-top: 1rem;
   display: grid;
   gap: 1.25rem;
+}
+
+/* the one line a first-time reader needs from the diagnostics */
+.leans {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: hsl(var(--foreground) / 0.85);
 }
 
 .settings fieldset {

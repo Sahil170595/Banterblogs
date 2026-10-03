@@ -2,15 +2,45 @@
 // sheet (app/reading.css, "demo-" classes), so every demo's controls match
 // and no two demos share a module stylesheet.
 
+import type { ReactNode } from 'react';
+import { ChevronRight } from 'lucide-react';
+
 export const controls = {
   row: 'demo-row',
   segmented: 'demo-segmented',
   button: 'demo-button',
   iconButton: 'demo-icon-button',
+  /** an icon button's name, shown beside the icon on touch screens, which have no tooltip */
+  iconLabel: 'demo-icon-label',
   field: 'demo-field',
   error: 'demo-error',
   hint: 'demo-hint',
+  /** a short line before an exhibit: what to look at, what to click */
+  lead: 'demo-lead',
+  /**
+   * a results table that becomes one card per row on a phone. Give the table
+   * explicit roles (table, rowgroup, row, columnheader, rowheader, cell),
+   * which survive the display change, and every cell a data-label naming its
+   * column.
+   */
+  stackTable: 'demo-stack',
 } as const;
+
+/**
+ * The parts of a demo an engineer wants and a first-time visitor does not:
+ * settings, traces, raw records, import and export. Closed until opened.
+ */
+export function UnderTheHood({ summary = 'Under the hood', children }: { summary?: string; children: ReactNode }) {
+  return (
+    <details className="demo-under-hood">
+      <summary>
+        <ChevronRight aria-hidden="true" />
+        {summary}
+      </summary>
+      <div>{children}</div>
+    </details>
+  );
+}
 
 export interface Choice<T> {
   value: T;
@@ -42,7 +72,14 @@ export function Segmented<T extends string | number>({
       <div>
         {options.map((option) => (
           <label key={option.value} data-checked={option.value === value || undefined}>
-            <input type="radio" name={name} checked={option.value === value} onChange={() => onChange(option.value)} />
+            <input
+              type="radio"
+              name={name}
+              checked={option.value === value}
+              onChange={() => onChange(option.value)}
+              // the label and its note side by side read as one run of text
+              aria-label={option.note ? `${option.label}, ${option.note}` : undefined}
+            />
             {option.label}
             {option.note && <span>{option.note}</span>}
           </label>

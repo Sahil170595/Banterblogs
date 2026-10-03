@@ -23,5 +23,6 @@ export default async function CollectionPage({ params }: { params: Promise<{ col
   const collection = getCollection(key);
   const projects = projectsIn(readProjectCatalog(), key);
   if (projects.length === 0) notFound();
-  return <CollectionGrid label={collection.label} description={collection.description} projects={projects} collection={key} />;
+  // the head above the tabs titles and describes the collection (HubHead)
+  return <CollectionGrid label={collection.label} projects={projects} collection={key} />;
 }

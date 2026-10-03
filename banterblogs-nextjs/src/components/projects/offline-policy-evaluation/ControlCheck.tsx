@@ -1,34 +1,54 @@
 'use client';
 
 import { useState, type CSSProperties } from 'react';
-import { DEFAULT_CONFIG, type Config, type Evaluation, type Interval, type Method } from '@/lib/projects/offline-policy-evaluation/engine';
+import {
+  CONTEXTS,
+  DEFAULT_CONFIG,
+  HORIZON,
+  type Config,
+  type Evaluation,
+  type Interval,
+  type Method,
+} from '@/lib/projects/offline-policy-evaluation/engine';
 import { signed, verdict } from '@/lib/projects/offline-policy-evaluation/verdict';
 import { controls, Segmented, type Choice } from '../controls';
 import { along, span } from '../geometry';
 import { ProjectFigureTransition } from '../ProjectTransitions';
+import { SUPPORT_LABEL, supportNote } from './copy';
 import styles from './ope.module.css';
 
-// The hero: the target, a control that ignores the state, and the logger on
-// one axis, each with its 95% bootstrap interval, under a reward, a logging
-// support and an estimator the visitor picks. The verdict above it is
-// computed from the paired interval, never written.
+// The hero: the target, a control that ignores the state and the logger on
+// one axis, each with its 95% bootstrap interval, then the paired difference
+// the verdict reads, against zero; under a reward, a logging support and an
+// estimator the visitor picks. The verdict is computed from that paired
+// interval, never written.
 
+/** the doubled harm penalty the third reward preset applies */
+const HARM_MULTIPLIER = 2;
 type RewardKey = 'default' | 'no-gain' | 'harm';
 const REWARDS: (Choice<RewardKey> & { weights: Pick<Config, 'gainWeight' | 'harmWeight'> })[] = [
-  { value: 'default', label: 'Gain − harm', weights: { gainWeight: DEFAULT_CONFIG.gainWeight, harmWeight: DEFAULT_CONFIG.harmWeight } },
+  {
+    value: 'default',
+    label: `Gain − ${DEFAULT_CONFIG.harmWeight} × harm`,
+    weights: { gainWeight: DEFAULT_CONFIG.gainWeight, harmWeight: DEFAULT_CONFIG.harmWeight },
+  },
   { value: 'no-gain', label: 'Gain dropped', weights: { gainWeight: 0, harmWeight: DEFAULT_CONFIG.harmWeight } },
-  { value: 'harm', label: 'Harm ×2', weights: { gainWeight: DEFAULT_CONFIG.gainWeight, harmWeight: 2 * DEFAULT_CONFIG.harmWeight } },
+  {
+    value: 'harm',
+    label: `Harm ×${HARM_MULTIPLIER}`,
+    note: `penalty ${HARM_MULTIPLIER * DEFAULT_CONFIG.harmWeight}`,
+    weights: { gainWeight: DEFAULT_CONFIG.gainWeight, harmWeight: HARM_MULTIPLIER * DEFAULT_CONFIG.harmWeight },
+  },
 ];
-const SUPPORT: Choice<Config['scenario']>[] = [
-  { value: 'balanced', label: 'Broad' },
-  { value: 'rare', label: 'Rare' },
-  { value: 'gap', label: 'None at low load' },
-];
+const SUPPORT: Choice<Config['scenario']>[] = (['balanced', 'rare', 'gap'] as const).map((value) => ({ value, label: SUPPORT_LABEL[value] }));
 const ESTIMATORS: Choice<Method>[] = [
   { value: 'pdis', label: 'Raw IS' },
   { value: 'clipped', label: 'Capped IS' },
-  { value: 'normalized', label: 'Self-normalized' },
+  // it divides by the capped weights' sum (engine.ts aggregate)
+  { value: 'normalized', label: 'Capped self-normalized IS' },
 ];
+// a support preset is a different logging policy, not more data from the same one
+const LOGGER_MOVES = 'Changing this changes the past decisions themselves, so the logger’s own return moves too.';
 
 /** the axis runs this share past the outermost mark on each side */
 const AXIS_PAD = 0.08;
@@ -50,7 +70,7 @@ function axis(values: number[]) {
 }
 
 interface Row {
-  key: string;
+  key: 'target' | 'constant' | 'logger' | 'difference';
   name: string;
   note: string;
   value: number | null;
@@ -70,10 +90,36 @@ export function ControlCheck({
 }) {
   const { config } = evaluation;
   const [target, constant, logger] = evaluation.comparisons;
+  const targetValue = target.result[method];
   const rows: Row[] = [
-    { key: 'target', name: 'State-responsive target', note: 'acts more as load rises', value: target.result[method], interval: target.intervals[method] },
-    { key: 'constant', name: 'Constant control', note: 'same rate, ignores the state', value: constant.result[method], interval: constant.intervals[method] },
-    { key: 'logger', name: 'Logging policy', note: 'what actually happened', value: target.result.logged, interval: logger.intervals[method] },
+    {
+      key: 'target',
+      name: 'State-responsive target',
+      note: 'the new policy: acts more as load rises',
+      value: targetValue,
+      interval: target.intervals[method],
+    },
+    {
+      key: 'constant',
+      name: 'Constant control',
+      note: 'same rate as the target, ignores the load',
+      value: constant.result[method],
+      interval: constant.intervals[method],
+    },
+    {
+      key: 'logger',
+      name: 'Logging policy',
+      note: 'the past decisions: what actually happened',
+      value: target.result.logged,
+      interval: logger.intervals[method],
+    },
+    {
+      key: 'difference',
+      name: 'Target − logger',
+      note: 'the paired difference the verdict reads',
+      value: targetValue === null ? null : targetValue - target.result.logged,
+      interval: target.differences[method],
+    },
   ];
   const marks = rows.flatMap((r) => [r.value, ...(r.interval ?? [])]).filter((v): v is number => v !== null);
   const scale = axis([...marks, 0]);
@@ -83,6 +129,13 @@ export function ControlCheck({
 
   return (
     <div className={styles.hero}>
+      <p className={controls.lead}>
+        Offline evaluation scores a new policy, the target, a rule for when to act, on records of decisions someone else made: the logging policy,
+        or logger.
+        Nothing is tried for real; each logged decision is reweighted by how likely the new policy was to make it. Here each made-up trajectory passes
+        through {HORIZON} decisions; at each, a load level ({CONTEXTS.map((c) => c.split(' ')[0].toLowerCase()).join(', ')}) is observed and one
+        action is taken. Try &ldquo;Gain dropped&rdquo; or &ldquo;None at low load&rdquo; and watch the verdict change.
+      </p>
       <div className={controls.row}>
         <Segmented
           legend="Reward"
@@ -91,9 +144,24 @@ export function ControlCheck({
           value={rewardKey(config)}
           onChange={(key) => configure({ ...config, ...REWARDS.find((r) => r.value === key)!.weights })}
         />
-        <Segmented legend="Logged support for intensify" name="support" options={SUPPORT} value={config.scenario} onChange={(scenario) => configure({ ...config, scenario })} />
-        <Segmented legend="Estimator" name="estimator" options={ESTIMATORS} value={method} onChange={onMethod} />
+        <Segmented
+          legend="How often the logger chose Intensify"
+          name="support"
+          options={SUPPORT}
+          value={config.scenario}
+          onChange={(scenario) => configure({ ...config, scenario })}
+        />
+        <Segmented
+          legend="Estimator: importance sampling (IS), how the rewards are reweighted"
+          name="estimator"
+          options={ESTIMATORS}
+          value={method}
+          onChange={onMethod}
+        />
       </div>
+      <p className={controls.hint}>
+        {supportNote(config.scenario)} {LOGGER_MOVES}
+      </p>
       {error && (
         <p role="alert" className={controls.error}>
           {error}
@@ -107,7 +175,13 @@ export function ControlCheck({
 
       <ProjectFigureTransition slug="offline-policy-evaluation">
         <figure className={styles.forest} aria-label="Estimated discounted return per trajectory, with 95% bootstrap intervals">
-          <div className={styles.forestRows} style={{ '--logger': scale.at(target.result.logged) } as CSSProperties}>
+          <p className={styles.caption}>
+            Average discounted return per logged trajectory, higher is better, over {config.size} trajectories of {HORIZON} decisions each, with 95%
+            intervals from {evaluation.resamples} paired bootstrap resamples. The dashed line marks the logger. The last row is the paired difference
+            the verdict reads: each resample scores both policies on the same trajectories, so its interval is tighter than the two rows above it
+            suggest.
+          </p>
+          <div className={styles.forestRows} style={{ '--logger': scale.at(target.result.logged), '--zero': scale.at(0) } as CSSProperties}>
             {rows.map((row) => (
               <div key={row.key} className={styles.forestRow} data-row={row.key}>
                 <div className={styles.forestLabel}>
@@ -126,16 +200,20 @@ export function ControlCheck({
                 </div>
                 <div className={styles.track}>
                   {scale.ticks.map((tick) => (
-                    <span key={tick} aria-hidden="true" className={styles.gridline} data-zero={tick === 0 || undefined} style={{ left: scale.at(tick) }} />
+                    <span
+                      key={tick}
+                      aria-hidden="true"
+                      className={styles.gridline}
+                      data-zero={tick === 0 || undefined}
+                      style={{ left: scale.at(tick) }}
+                    />
                   ))}
-                  <span aria-hidden="true" className={styles.loggerRule} />
+                  <span aria-hidden="true" className={row.key === 'difference' ? styles.zeroRule : styles.loggerRule} />
                   {row.value === null ? (
                     <span className={styles.withheld}>No logged evidence for part of this policy</span>
                   ) : (
                     <>
-                      {row.interval && (
-                        <span className={styles.interval} style={scale.span(row.interval[0], row.interval[1])} />
-                      )}
+                      {row.interval && <span className={styles.interval} style={scale.span(row.interval[0], row.interval[1])} />}
                       <span className={styles.point} style={{ left: scale.at(row.value) }} />
                     </>
                   )}
@@ -152,10 +230,6 @@ export function ControlCheck({
               </div>
             </div>
           </div>
-          <figcaption className={styles.caption}>
-            Discounted return per trajectory over {config.size} logged four-step trajectories, with 95% intervals from {evaluation.resamples}{' '}
-            paired bootstrap draws. The dashed rule is the logger.
-          </figcaption>
         </figure>
       </ProjectFigureTransition>
     </div>

@@ -29,6 +29,21 @@ export function constantShare(evaluation: Evaluation, method: Method): number | 
   return gain > 0 ? (constantValue - constant.result.logged) / gain : null;
 }
 
+/** the part of the target's value that reading the state adds, with its paired interval */
+function stateDetail(evaluation: Evaluation, method: Method, shown: string): string | null {
+  const [target, constant] = evaluation.comparisons;
+  const interval = evaluation.stateDifferences[method];
+  const targetValue = target.result[method];
+  const constantValue = constant.result[method];
+  if (!interval || targetValue === null || constantValue === null) return null;
+  const range = `${signed(interval[0])} to ${signed(interval[1])}`;
+  const crosses = interval[0] <= 0 && interval[1] >= 0;
+  return (
+    `The part that depends on reading the state, target − control, is ${signed(targetValue - constantValue)} (paired 95% interval ${range})` +
+    `${crosses ? ', which crosses zero' : ''}. The ${shown} is a ratio of the two point estimates, taken before rounding.`
+  );
+}
+
 export function verdict(evaluation: Evaluation, method: Method): Verdict {
   const [target] = evaluation.comparisons;
   const value = target.result[method];
@@ -45,17 +60,30 @@ export function verdict(evaluation: Evaluation, method: Method): Verdict {
   const gain = value - target.result.logged;
   if (!interval) return { tone: 'none', headline: `Point estimate ${signed(value)}; no paired interval for this estimator.`, detail: null };
   const range = `${signed(interval[0])} to ${signed(interval[1])}`;
+  // the interval is always target − logger, whichever way the headline states the gap
   if (interval[0] > 0) {
     const share = constantShare(evaluation, method);
-    const reading = share !== null && share >= MOSTLY ? 'so most of it is a shift in how often to act, not when' : 'so the state dependence carries most of it';
+    const claim = `the target beats the logger by ${signed(gain)} (paired 95% interval for target − logger: ${range})`;
+    if (share === null) return { tone: 'gain', headline: `${claim.replace(/^t/, 'T')}.`, detail: null };
+    const reading = share >= MOSTLY ? 'most of it is a shift in how often to act, not when' : 'the state dependence carries most of it';
+    const shown = percent(Math.max(0, share));
+    // the control's share sits in the headline: on its own the gain read as the conclusion
     return {
       tone: 'gain',
-      headline: `The target beats the logger by ${signed(gain)} (paired 95% interval ${interval[0].toFixed(2)} to ${interval[1].toFixed(2)}).`,
-      detail: share === null ? null : `A control that never reads the state gets ${percent(Math.max(0, share))} of that gain, ${reading}.`,
+      headline: `On its face ${claim}, but a control that never reads the state (the load) gets ${shown} of that gain: ${reading}.`,
+      detail: stateDetail(evaluation, method, shown),
     };
   }
   if (interval[1] < 0) {
-    return { tone: 'loss', headline: `The logger beats the target by ${signed(-gain)} (paired 95% interval ${range}).`, detail: null };
+    return {
+      tone: 'loss',
+      headline: `The logger beats the target by ${signed(-gain)} (paired 95% interval for target − logger: ${range}).`,
+      detail: null,
+    };
   }
-  return { tone: 'none', headline: `No measurable difference from the logger: the paired 95% interval runs from ${range}.`, detail: null };
+  return {
+    tone: 'none',
+    headline: `No measurable difference from the logger: the paired 95% interval for target − logger runs from ${range}.`,
+    detail: null,
+  };
 }

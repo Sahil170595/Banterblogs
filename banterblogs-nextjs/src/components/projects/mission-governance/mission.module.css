@@ -1,7 +1,8 @@
 /* The mission demo (MissionDemo, FlightMap); segmented choices and hints are
    the shared project controls (demo- classes, app/reading.css). A flight
    that finished its route while the guard could not see the vehicle is
-   status red; a return to launch is ember. No text under 12px. */
+   status red; a return to launch, the guard working, is status green; a
+   flight stopped at the check is amber. No text under 12px. */
 
 .demo {
   display: grid;
@@ -23,11 +24,55 @@
   text-wrap: balance;
 }
 
-.caption {
+/* a grid item is never narrower than its content by default; a stacked
+   table's labels would hold the page wider than a phone */
+.demo > *,
+.hero > *,
+.lab > *,
+.workspace > * {
+  min-width: 0;
+}
+
+.caveat {
   max-width: 70ch;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: hsl(var(--foreground) / 0.8);
+}
+
+/* what each outcome's colour means, before the table that uses them */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
   font-size: 0.8125rem;
-  line-height: 1.5;
   color: hsl(var(--muted-foreground));
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend span::before {
+  content: '';
+  width: 0.625rem;
+  height: 0.625rem;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.legend [data-key='home']::before {
+  background-color: hsl(var(--status-green));
+}
+
+.legend [data-key='stopped']::before {
+  background-color: hsl(var(--status-amber));
+}
+
+.legend [data-key='blind']::before {
+  background-color: hsl(var(--status-red));
 }
 
 /* ── the fault matrix ── */
@@ -109,14 +154,18 @@
 }
 
 .matrix td[data-home] button strong {
-  color: hsl(var(--primary));
+  color: hsl(var(--status-green));
+}
+
+.matrix td[data-stopped] button strong {
+  color: hsl(var(--status-amber));
 }
 
 .matrix td button:hover {
   background-color: hsl(var(--foreground) / 0.05);
 }
 
-.matrix td button[aria-pressed="true"] {
+.matrix td button[aria-pressed='true'] {
   background-color: hsl(var(--foreground) / 0.09);
   box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.2);
 }
@@ -152,6 +201,8 @@
 .mapPanel {
   display: grid;
   gap: 0.75rem;
+  /* clear of the sticky header when a picked cell reveals it */
+  scroll-margin-top: 5.5rem;
 }
 
 .map {
@@ -195,7 +246,7 @@
 
 .rtl {
   fill: none;
-  stroke: hsl(var(--primary));
+  stroke: hsl(var(--status-green));
   stroke-width: 2.5;
 }
 
@@ -205,13 +256,98 @@
 
 .mapFigure {
   display: grid;
-  gap: 0.375rem;
+  gap: 0.5rem;
   margin: 0;
 }
 
-.mapNote {
+.mapFrame {
+  position: relative;
+}
+
+/* waypoint numbers as text over the drawing, so they keep 12px at any width */
+.waypointLabel {
+  position: absolute;
+  /* clear of the turn-for-home ring around the point */
+  --label-x: 0.875rem;
+  --label-y: -140%;
+  transform: translate(var(--label-x), var(--label-y));
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: hsl(var(--foreground) / 0.8);
+}
+
+.waypointLabel[data-x='left'] {
+  --label-x: calc(-100% - 0.875rem);
+}
+
+.waypointLabel[data-y='below'] {
+  --label-y: 40%;
+}
+
+.mapCaption {
+  display: grid;
+  gap: 0.375rem;
   font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
+}
+
+.mapCaption strong {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.mapLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+}
+
+.mapLegend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.keyFlown,
+.keyPlanned,
+.keyFence,
+.keyRtl,
+.keyExit {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.keyFlown,
+.keyPlanned {
+  width: 1.25rem;
+  border-top: 2px solid hsl(var(--foreground));
+}
+
+.keyPlanned {
+  border-top: 1.5px dashed hsl(var(--foreground) / 0.4);
+}
+
+.keyFence {
+  width: 0.875rem;
+  height: 0.625rem;
+  border: 1.5px dashed hsl(var(--foreground) / 0.45);
+}
+
+.keyRtl {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid hsl(var(--status-green));
+  border-radius: 9999px;
+}
+
+.keyExit {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--status-red));
 }
 
 .result {
@@ -226,15 +362,15 @@
   color: hsl(var(--foreground));
 }
 
-.result[data-state="rtl"] strong {
-  color: hsl(var(--primary));
+.result[data-state='rtl'] strong {
+  color: hsl(var(--status-green));
 }
 
-.result[data-state="stopped"] strong {
+.result[data-state='stopped'] strong {
   color: hsl(var(--status-amber));
 }
 
-.result[data-state="unwatched"] strong {
+.result[data-state='unwatched'] strong {
   color: hsl(var(--status-red));
 }
 
@@ -249,7 +385,8 @@
   gap: 1.25rem;
 }
 
-.panels h3 {
+.panels h3,
+.logTitle {
   margin-bottom: 0.5rem;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.75rem;
@@ -291,11 +428,11 @@
   overflow-wrap: anywhere;
 }
 
-.checks li[data-status="failed"] {
+.checks li[data-status='failed'] {
   color: hsl(var(--status-red));
 }
 
-.checks li[data-status="warning"] {
+.checks li[data-status='warning'] {
   color: hsl(var(--status-amber));
 }
 
@@ -318,8 +455,8 @@
   font-weight: 500;
 }
 
-.events li[data-state="rtl"] strong {
-  color: hsl(var(--primary));
+.events li[data-state='rtl'] strong {
+  color: hsl(var(--status-green));
 }
 
 .events li[data-logged] strong {
@@ -329,6 +466,34 @@
 @media (max-width: 850px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* on a phone the matrix's rows are cards (demo-stack), so its frame steps back */
+@media (max-width: 639px) {
+  .hero .tableScroll {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  /* the column's name over its outcome, which is too long to sit beside it */
+  .hero .matrix tbody td {
+    display: grid;
+    gap: 0.25rem;
+    text-align: left;
+  }
+
+  .hero .matrix tbody td::before {
+    max-width: none;
+  }
+
+  .hero .matrix tbody th {
+    width: auto;
+  }
+
+  .matrix td button {
+    padding: 0.375rem 0.5rem;
   }
 }
 

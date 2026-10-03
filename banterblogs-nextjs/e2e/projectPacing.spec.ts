@@ -2,31 +2,42 @@ import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { collectErrors } from './consoleErrors';
 
-// The send pacing page end to end: the sweep and the flagged sends are in the
-// server HTML, seeds step, a sweep row loads, and an export replays.
+// The send pacing page end to end: the run's finding and the flagged sends
+// are in the server HTML, seeds step, a sweep row charts its setup, and an
+// export replays.
 
 const PAGE = '/projects/systems/send-pacing';
+const UNDER_THE_HOOD = 'Change the campaign, read every message’s timing, export a replay';
 
-test('the sweep finding and the flagged sends are in the server HTML, before any script runs', async ({ browser }) => {
+test('the run’s finding and the flagged sends are in the server HTML, before any script runs', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(PAGE);
-  await expect(page.getByText(/Across 1,000 seeds of the source's own replay, twelve messages over two hours, every schedule sends its last two messages/)).toBeVisible();
+  await expect(
+    page.getByText(
+      'In this run of 12 messages, two go out before they could have been typed, and three land on the campaign’s final instant, 11:00.',
+    ),
+  ).toBeVisible();
+  await page.getByText(UNDER_THE_HOOD, { exact: true }).click();
   await expect(page.getByRole('region', { name: 'Message ledger' }).getByText('sent before it could be typed')).toHaveCount(2);
+  // the 16:00 setup's zero at the campaign end, with where its pile went
+  await expect(page.getByText(/^0\.0, but [\d.]+ a run pile at 17:00, when business hours close$/)).toBeVisible();
+  await expect(page.getByText('Status: documented, not fixed.')).toBeAttached();
   await context.close();
 });
 
-test('seeds step, a sweep row loads, an export replays', async ({ page }) => {
+test('seeds step, a sweep row charts its setup, an export replays', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(PAGE);
   const seed = page.getByLabel('Seed', { exact: true });
   await expect(seed).toHaveValue('7');
   await page.getByRole('button', { name: 'Next seed', exact: true }).click();
   await expect(seed).toHaveValue('8');
+  await page.getByText(UNDER_THE_HOOD, { exact: true }).click();
   await expect(page.getByRole('region', { name: 'Message ledger' }).getByText('sent before it could be typed')).toHaveCount(2);
 
   await page.getByRole('button', { name: '12 over 2 hours from 16:00', exact: true }).click();
-  await expect(page.getByText(/16:00 to 18:00 UTC/)).toBeVisible();
+  await expect(page.getByText(/16:00 to 18:00 UTC/)).toBeInViewport();
 
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export the replay', exact: true }).click();
@@ -41,4 +52,17 @@ test('seeds step, a sweep row loads, an export replays', async ({ page }) => {
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
+});
+
+// a phone shows each setup as a card: the counts that carry the finding are
+// on screen, not scrolled out of a wide table
+test('on a phone the sweep’s findings sit inside the screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE);
+  const cells = page.locator('[data-label="Runs with a message sent before it was typed"]');
+  await expect(cells.first()).toBeVisible();
+  for (const box of await cells.evaluateAll((all) => all.map((cell) => cell.getBoundingClientRect().toJSON()))) {
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(390);
+  }
 });

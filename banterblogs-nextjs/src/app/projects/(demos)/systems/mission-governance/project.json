@@ -1,14 +1,15 @@
 {
   "slug": "mission-governance",
   "title": "Drone Mission Governance",
-  "dek": "The mission lifecycle from my ProjectWyvern autonomy plane, ported and checked against it running in Python: pre-flight checks, a safety guard and an executor, and the faults they let a flight continue through.",
-  "summary": "Which telemetry faults bring a drone home, and which does the executor fly through?",
+  "dek": "ProjectWyvern, the autonomy plane I built to sit between the people who approve drone missions and the drone's own flight controller. It checks a mission before take-off, then flies it while a safety guard watches telemetry. This page rebuilds that logic and tests which faults end a flight.",
+  "summary": "With no telemetry at all the drone flies all 6 waypoints, and the mission’s lost-link instruction is never read; stale data mid-flight is only logged.",
   "collection": "systems",
   "alsoIn": [],
   "order": 3,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/mission-governance" },
-    { "label": "ProjectWyvern", "url": "https://github.com/Sahil170595/ProjectWyvern/tree/67dcee21214de567d00f7fe5879ce46a423b08bc" }
-  ]
+    { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/mission-governance" },
+    { "label": "ProjectWyvern on GitHub", "url": "https://github.com/Sahil170595/ProjectWyvern/tree/67dcee21214de567d00f7fe5879ce46a423b08bc" }
+  ],
+  "builtWith": ["Python", "FastAPI"]
 }

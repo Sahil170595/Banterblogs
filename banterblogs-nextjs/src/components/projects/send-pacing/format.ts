@@ -15,6 +15,12 @@ export function clockPrecise(us: number): string {
   return `${clock(us)}.${two(hundredths)}`;
 }
 
+const UNDER_TEN = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+/** a count in prose: spelled out under ten, digits from ten */
+export const spell = (n: number) => UNDER_TEN[n] ?? String(n);
+/** the same, opening a sentence */
+export const Spell = (n: number) => spell(n).replace(/^./, (c) => c.toUpperCase());
+
 export const signedSeconds = (s: number) => `${s > 0 ? '+' : s < 0 ? '−' : ''}${Math.abs(s).toFixed(1)} s`;
 
 export const VIOLATION_LABELS: Record<ViolationCode, string> = {

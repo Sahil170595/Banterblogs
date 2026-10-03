@@ -1,14 +1,15 @@
 {
   "slug": "intake-triage",
   "title": "Intake Triage Scorer",
-  "dek": "The priority scorer from my Intakegate pipeline, ported rule for rule: two safety gates ahead of an additive operational score, tested over every combination of the signals it reads.",
-  "summary": "Which signals can move an intake's priority? Every combination scored; shouting moves none.",
+  "dek": "Intakegate is a triage pipeline I built for messages to a children's therapy service: it proposes how soon a person should review each one, from P0, same-hour review, to P3, the lowest. This page runs its scorer, rule for rule: two safety gates, then a points total, over every combination it reads.",
+  "summary": "All 12,672 signal combinations scored: shouting “URGENT” never moves a message’s priority, and once a safety gate fires, nothing else does.",
   "collection": "agents-and-evaluation",
   "alsoIn": [],
   "order": 3,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/intake-triage" },
-    { "label": "Intakegate", "url": "https://github.com/Sahil170595/intakegate/tree/750480a6ed3f7e8744bec79650687a7ec3df3878" }
-  ]
+    { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/intake-triage" },
+    { "label": "Intakegate on GitHub", "url": "https://github.com/Sahil170595/intakegate/tree/750480a6ed3f7e8744bec79650687a7ec3df3878" }
+  ],
+  "builtWith": ["TypeScript", "Node.js"]
 }

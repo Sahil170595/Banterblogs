@@ -73,6 +73,12 @@ describe('project manifest', () => {
     expect(withLink('https://pypi.org/project/chimeraforge/')).toBe(true);
   });
 
+  it('names the original system’s stack in a short list, when it has one', () => {
+    expect(ProjectManifestSchema.safeParse({ ...manifest, builtWith: ['Python', 'FastAPI', 'PostgreSQL'] }).success).toBe(true);
+    expect(ProjectManifestSchema.safeParse({ ...manifest, builtWith: Array.from({ length: 9 }, (_, i) => `Tool ${i}`) }).success).toBe(false);
+    expect(ProjectManifestSchema.safeParse({ ...manifest, builtWith: [''] }).success).toBe(false);
+  });
+
   it('never cross-lists a project into its own collection', () => {
     expect(ProjectManifestSchema.safeParse({ ...manifest, alsoIn: ['reinforcement-learning'] }).success).toBe(false);
     expect(ProjectManifestSchema.safeParse({ ...manifest, alsoIn: ['systems'] }).success).toBe(true);
@@ -135,15 +141,17 @@ describe('project catalog', () => {
     expect(projectHref(catalog[0])).toBe('/projects/reinforcement-learning/flight-routing');
   });
 
-  it('pages through a project’s own collection only', () => {
+  // the last project of a collection used to be a dead end
+  it('pages through the whole catalog, across collections', () => {
     const root = tempRoot();
     register(root, { slug: 'a', order: 1 });
     register(root, { slug: 'b', order: 2 });
     register(root, { slug: 'c', collection: 'systems', order: 1 });
     const catalog = readProjectCatalog(root);
-    const [a, b] = catalog;
+    const [a, b, c] = catalog;
     expect(neighbours(catalog, a)).toEqual({ previous: null, next: b });
-    expect(neighbours(catalog, b)).toEqual({ previous: a, next: null });
+    expect(neighbours(catalog, b)).toEqual({ previous: a, next: c });
+    expect(neighbours(catalog, c)).toEqual({ previous: b, next: null });
   });
 });
 
@@ -159,5 +167,4 @@ describe('the site catalog', () => {
   it('keeps slugs unique across collections', () => {
     const slugs = catalog.map((p) => p.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
-  });
-});
+  });});

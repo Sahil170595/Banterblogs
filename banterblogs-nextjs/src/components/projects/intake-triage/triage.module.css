@@ -74,6 +74,16 @@
   color: hsl(var(--muted-foreground));
 }
 
+.influence thead th small {
+  display: block;
+  margin-top: 0.125rem;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .influence tbody tr {
   border-top: 1px solid hsl(var(--border) / 0.5);
 }
@@ -206,8 +216,10 @@
   max-width: 30rem;
 }
 
+/* wraps: on touch screens the buttons carry their names and outgrow a phone's row */
 .commands {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 

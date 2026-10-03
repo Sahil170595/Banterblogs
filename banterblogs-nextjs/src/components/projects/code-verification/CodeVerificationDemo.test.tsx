@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { evaluate, initialConfig } from '@/lib/projects/code-verification/engine';
+import { evaluate, implementationSource, initialConfig } from '@/lib/projects/code-verification/engine';
 import { CodeVerificationDemo } from './CodeVerificationDemo';
+import { changedStretch } from './diff';
 import { Verifier } from './Verifier';
 
 // ViewTransition ships in the React canary Next bundles; the npm React these
@@ -11,10 +12,14 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   return { ...actual, ViewTransition: ({ children }: { children: import('react').ReactNode }) => children };
 });
+// jsdom has no layout or scrolling; the reveal is asserted by its call
+const { revealResult } = vi.hoisted(() => ({ revealResult: vi.fn() }));
+vi.mock('../reveal', () => ({ revealResult }));
 
 afterEach(cleanup);
 
 const verdict = () => screen.getByRole('status').textContent ?? '';
+const matrix = () => screen.getByRole('table');
 
 describe('code verification demo', () => {
   it('opens where the smoke suite misleads: the example-only patch, passing two tests', () => {
@@ -22,6 +27,54 @@ describe('code verification demo', () => {
     expect(screen.getByText(/On the two-test smoke suite, 3 of 4 patches pass\. On the full suite, 1 does\./)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Example-only repair', pressed: true })).toBeTruthy();
     expect(verdict()).toContain('Suite satisfied');
+  });
+
+  it('states the task and the bug before the matrix, and names each test by the transition it requires', () => {
+    render(<CodeVerificationDemo />);
+    // the verifier below repeats them beside its controls; the matrix's lead says them first
+    const [lead] = screen.getAllByText(/Merge overlapping or touching closed intervals/);
+    expect(lead.textContent).toMatch(/The bug:.*The baseline treats equality at an endpoint as a gap/);
+    expect(lead.compareDocumentPosition(matrix()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const headers = within(matrix())
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent);
+    // both verdicts follow the patch's name, so a phone card leads with them
+    expect(headers.slice(0, 3)).toEqual(['Patch', 'Smoke verdict', 'Full verdict']);
+    expect(headers.filter((h) => h?.startsWith('Fail-to-pass'))).toHaveLength(3);
+    expect(headers.filter((h) => h?.startsWith('Pass-to-pass'))).toHaveLength(3);
+  });
+
+  // re-review: the board opened on Smoke beside "Passes" for both bad patches,
+  // so the finding needed a click
+  it('shows the smoke and full verdicts side by side, whichever suite is picked', () => {
+    render(<CodeVerificationDemo />);
+    const verdicts = (patch: string) => {
+      const row = screen.getByRole('button', { name: patch }).closest('tr')!;
+      const cell = (label: string) => row.querySelector(`[data-label="${label}"]`)?.textContent;
+      return [cell('Smoke verdict'), cell('Full verdict')];
+    };
+    expect(verdicts('Example-only repair')).toEqual(['Passes', 'Fails']);
+    expect(verdicts('Repair + ordering regression')).toEqual(['Passes', 'Fails']);
+    expect(verdicts('General repair')).toEqual(['Passes', 'Passes']);
+    fireEvent.click(screen.getByRole('radio', { name: /Full/ }));
+    expect(verdicts('Example-only repair')).toEqual(['Passes', 'Fails']);
+  });
+
+  it('tags the tests the smoke suite skips instead of fading them, and labels every cell for the phone cards', () => {
+    render(<CodeVerificationDemo />);
+    expect(within(matrix()).getAllByText('not in smoke suite')).toHaveLength(4);
+    for (const cell of within(matrix()).getAllByRole('cell')) expect(cell.getAttribute('data-label')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: /Full/ }));
+    expect(within(matrix()).queryByText('not in smoke suite')).toBeNull();
+  });
+
+  it('brings the verifier into view when a patch is picked, not when the task or suite changes', async () => {
+    render(<CodeVerificationDemo />);
+    revealResult.mockClear();
+    fireEvent.click(screen.getByRole('radio', { name: /Full/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'General repair' }));
+    await waitFor(() => expect(revealResult).toHaveBeenCalledOnce());
+    expect((revealResult.mock.calls[0][0] as HTMLElement).contains(screen.getByRole('status'))).toBe(true);
   });
 
   it('shows the full suite rejecting the example-only patch, and the evidence for it', () => {
@@ -49,6 +102,32 @@ describe('code verification demo', () => {
 describe('verifier', () => {
   const opened = { ...initialConfig('intervals'), candidateId: 'fixed' as const };
 
+  it('uses the matrix’s names for the transitions and the test groups', () => {
+    render(<Verifier initial={opened} />);
+    const transitions = screen.getByRole('figure', { name: 'Baseline-to-after test transitions' });
+    for (const name of ['Repaired', 'Still passes', 'Still broken', 'Regressed']) expect(within(transitions).getByText(name)).toBeTruthy();
+    expect(screen.getAllByText('Fail-to-pass test')).toHaveLength(3);
+    expect(screen.getAllByText('Pass-to-pass test')).toHaveLength(3);
+  });
+
+  // re-review: the diff was one minified line that widened the whole page
+  it('marks only the characters a patch changes, inside its own wrapping block', async () => {
+    const before = implementationSource('intervals', 'empty');
+    const after = implementationSource('intervals', 'fixed');
+    const stretch = changedStretch(before, after);
+    expect(stretch.prefix + stretch.removed + stretch.suffix).toBe(before);
+    expect(stretch.prefix + stretch.added + stretch.suffix).toBe(after);
+    expect(stretch.added.length).toBeLessThan(after.length);
+    expect(changedStretch('abc', 'abc')).toEqual({ prefix: 'abc', removed: '', added: '', suffix: '' });
+    expect(changedStretch('a<b', 'a<=b')).toEqual({ prefix: 'a<', removed: '', added: '=', suffix: 'b' });
+
+    render(<Verifier initial={opened} />);
+    fireEvent.click(screen.getByText(/Implementation & replacement diff/));
+    const panel = screen.getByText(/Implementation & replacement diff/).closest('details')!;
+    await waitFor(() => expect(panel.querySelector('ins')?.textContent).toBe(stretch.added));
+    expect(panel.querySelector('del')?.textContent).toBe(stretch.removed);
+  });
+
   it('does not serialize bundler-dependent function text into the initial HTML', () => {
     expect(renderToStaticMarkup(<Verifier initial={opened} />)).not.toContain('function interval');
   });
@@ -65,7 +144,11 @@ describe('verifier', () => {
   it('accepts a maximum-sized export from the bounded assertion editor', async () => {
     render(<Verifier initial={opened} />);
     const input = Array.from({ length: 64 }, (_, i) => `${i}-${'a'.repeat(124)}`);
-    const report = evaluate({ ...initialConfig('unique'), mode: 'synthesis', assertions: Array.from({ length: 16 }, (_, i) => ({ id: `large-${i}`, label: 'Bounded assertion', input, expected: input })) });
+    const report = evaluate({
+      ...initialConfig('unique'),
+      mode: 'synthesis',
+      assertions: Array.from({ length: 16 }, (_, i) => ({ id: `large-${i}`, label: 'Bounded assertion', input, expected: input })),
+    });
     const body = JSON.stringify(report, null, 2);
     expect(body.length).toBeGreaterThan(100_000);
     fireEvent.change(screen.getByLabelText('Import report file'), { target: { files: [{ size: body.length, text: async () => body }] } });

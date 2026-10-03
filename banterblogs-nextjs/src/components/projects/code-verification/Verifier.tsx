@@ -1,25 +1,38 @@
 'use client';
 
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type RefObject } from 'react';
 import { ArrowRight, Check, Code2, Download, FileDiff, FlaskConical, Play, Plus, RotateCcw, Trash2, Upload, X } from 'lucide-react';
 import { z } from 'zod';
 import {
   CANDIDATES, TASKS, MAX_ASSERTIONS, evaluate, getTask, implementationSource,
-  parseJson, replay, resetSession, runSession, sourceDiff,
+  parseJson, replay, resetSession, runSession,
   type Assertion, type CandidateId, type ResultRow, type RunConfig, type TaskId, type Value,
 } from '@/lib/projects/code-verification/engine';
 import { controls } from '../controls';
 import { span } from '../geometry';
+import { changedStretch } from './diff';
+import { GROUP_NAMES, TRANSITION_NAMES } from './vocabulary';
 import styles from './verifier.module.css';
 
 // Upper bound comfortably contains all 16 maximum-sized assertion observations.
 const MAX_IMPORT_BYTES = 2_000_000;
 const TRANSITIONS = [
-  { key: 'fail-pass', label: 'Fail → Pass', field: 'repaired', name: 'Repair', className: styles.good },
-  { key: 'pass-pass', label: 'Pass → Pass', field: 'preserved', name: 'Preserved', className: styles.blue },
-  { key: 'fail-fail', label: 'Fail → Fail', field: 'stillBroken', name: 'Still broken', className: styles.warn },
-  { key: 'pass-fail', label: 'Pass → Fail', field: 'regressed', name: 'Regression', className: styles.bad },
+  { key: 'fail-pass', label: 'Fail → Pass', field: 'repaired', name: TRANSITION_NAMES['fail-pass'], className: styles.good },
+  { key: 'pass-pass', label: 'Pass → Pass', field: 'preserved', name: TRANSITION_NAMES['pass-pass'], className: styles.blue },
+  { key: 'fail-fail', label: 'Fail → Fail', field: 'stillBroken', name: TRANSITION_NAMES['fail-fail'], className: styles.warn },
+  { key: 'pass-fail', label: 'Pass → Fail', field: 'regressed', name: TRANSITION_NAMES['pass-fail'], className: styles.bad },
 ] as const;
+
+function SourceDiff({ taskId, candidateId }: { taskId: TaskId; candidateId: CandidateId }) {
+  if (candidateId === 'empty') return <pre><code>No code change.</code></pre>;
+  const stretch = changedStretch(implementationSource(taskId, 'empty'), implementationSource(taskId, candidateId));
+  return <>
+    <p className={styles.diffLabel}>Buggy function, removed characters struck through</p>
+    <pre><code>{stretch.prefix}<del>{stretch.removed}</del>{stretch.suffix}</code></pre>
+    <p className={styles.diffLabel}>Selected function, added characters marked</p>
+    <pre><code>{stretch.prefix}<ins>{stretch.added}</ins>{stretch.suffix}</code></pre>
+  </>;
+}
 
 function errorText(error: unknown): string {
   if (error instanceof z.ZodError) return error.issues.map(issue => `${issue.path.join('.') || 'Input'}: ${issue.message}`).join(' ');
@@ -73,7 +86,7 @@ function DomainFigure({ row, taskId }: { row: ResultRow; taskId: TaskId }) {
 /** the verifier opened on a selection from the matrix, already run */
 const opened = (initial: RunConfig) => runSession({ config: initial, report: null });
 
-export function Verifier({ initial }: { initial: RunConfig }) {
+export function Verifier({ initial, resultsRef }: { initial: RunConfig; resultsRef?: RefObject<HTMLDivElement | null> }) {
   const [session, setSession] = useState(() => opened(initial));
   // the first failing row, else the first: the evidence worth reading first
   const firstFailing = (rows: ResultRow[] = []) => Math.max(0, rows.findIndex((r) => !r.after.passed));
@@ -86,6 +99,8 @@ export function Verifier({ initial }: { initial: RunConfig }) {
   const importRef = useRef<HTMLInputElement>(null);
   const { config, report } = session;
   const task = getTask(config.taskId);
+  const repairCount = task.tests.filter(test => test.group === 'repair').length;
+  const preserveCount = task.tests.filter(test => test.group === 'preserve').length;
   const selectedRow = report?.rows[selectedIndex];
   const candidate = CANDIDATES.find(item => item.id === config.candidateId)!;
   const activeCandidate = config.mode === 'synthesis' ? 'fixed' : config.candidateId;
@@ -171,10 +186,10 @@ export function Verifier({ initial }: { initial: RunConfig }) {
         <button type="button" aria-pressed={config.mode === 'synthesis'} onClick={() => changeMode('synthesis')}><FlaskConical size={16} />Test synthesis</button>
       </div>
       <div className={styles.actions}>
-        <button className={controls.iconButton} onClick={() => importRef.current?.click()} aria-label="Replay JSON report" title="Replay JSON report"><Upload size={18} /></button>
+        <button className={controls.iconButton} onClick={() => importRef.current?.click()} aria-label="Replay JSON report" title="Replay JSON report"><Upload size={18} /><span className={controls.iconLabel}>Replay JSON report</span></button>
         <input ref={importRef} type="file" accept="application/json,.json" hidden aria-label="Import report file" onChange={importReport} />
-        <button className={controls.iconButton} onClick={exportReport} disabled={!report} aria-label="Export JSON report" title="Export JSON report"><Download size={18} /></button>
-        <button className={controls.iconButton} onClick={reset} aria-label="Reset verifier" title="Reset verifier"><RotateCcw size={18} /></button>
+        <button className={controls.iconButton} onClick={exportReport} disabled={!report} aria-label="Export JSON report" title="Export JSON report"><Download size={18} /><span className={controls.iconLabel}>Export JSON report</span></button>
+        <button className={controls.iconButton} onClick={reset} aria-label="Reset verifier" title="Reset verifier"><RotateCcw size={18} /><span className={controls.iconLabel}>Reset verifier</span></button>
       </div>
     </div>
     <div className={styles.workspace}>
@@ -195,15 +210,17 @@ export function Verifier({ initial }: { initial: RunConfig }) {
           <p className={styles.muted}>{candidate.description}</p>
           <label className={controls.field}>Verification suite
             <select value={config.scope} onChange={event => updateConfig({ scope: event.target.value as RunConfig['scope'] })}>
-              <option value="full">Full · 3 repair + 3 preserve</option>
-              <option value="smoke">Smoke · 1 repair + 1 preserve</option>
+              <option value="full">Full · {repairCount} {GROUP_NAMES.repair.toLowerCase()} + {preserveCount} {GROUP_NAMES.preserve.toLowerCase()}</option>
+              <option value="smoke">Smoke · 1 {GROUP_NAMES.repair.toLowerCase()} + 1 {GROUP_NAMES.preserve.toLowerCase()}</option>
             </select>
           </label>
         </> : <>
-          <div className={styles.synthesisHeader}><h3>Candidate assertions</h3><button className={controls.iconButton} aria-label="Clear assertions" title="Clear assertions" onClick={() => updateConfig({ assertions: [] })}><Trash2 size={16} /></button></div>
+          <p className={styles.muted}>Test synthesis: write the tests yourself. A useful test fails on the buggy function and passes on the fixed one; an already-passing test reproduces nothing, and a wrong expectation is rejected because it fails on the fix too.</p>
+          <div className={styles.synthesisHeader}><h3>Candidate assertions</h3><button className={controls.iconButton} aria-label="Clear assertions" title="Clear assertions" onClick={() => updateConfig({ assertions: [] })}><Trash2 size={16} /><span className={controls.iconLabel}>Clear assertions</span></button></div>
           <ul className={styles.assertions}>
-            {config.assertions.map(assertion => <li key={assertion.id}><span>{assertion.label}</span><button className={controls.iconButton} aria-label={`Remove ${assertion.label}`} title={`Remove ${assertion.label}`} onClick={() => updateConfig({ assertions: config.assertions.filter(item => item.id !== assertion.id) })}><X size={14} /></button></li>)}
+            {config.assertions.map(assertion => <li key={assertion.id}><span>{assertion.label}</span><button className={controls.iconButton} aria-label={`Remove ${assertion.label}`} title={`Remove ${assertion.label}`} onClick={() => updateConfig({ assertions: config.assertions.filter(item => item.id !== assertion.id) })}><X size={14} /><span className={controls.iconLabel}>{`Remove ${assertion.label}`}</span></button></li>)}
           </ul>
+          <p className={styles.muted}>Add a preset: a reproducer that fails before the fix and passes after, a test that already passes, or a broken assertion with a wrong expected value.</p>
           <div className={styles.presets}>
             <button disabled={config.assertions.length >= MAX_ASSERTIONS} onClick={() => addAssertion(task.tests[0].input, task.tests[0].expected, 'Bug reproducer')}><Plus size={14} />Reproducer</button>
             <button disabled={config.assertions.length >= MAX_ASSERTIONS} onClick={() => addAssertion(task.tests[3].input, task.tests[3].expected, 'Already passing')}><Plus size={14} />Already passing</button>
@@ -213,7 +230,7 @@ export function Verifier({ initial }: { initial: RunConfig }) {
         <button className={controls.button} onClick={run}><Play size={16} />{config.mode === 'repair' ? 'Run verification' : 'Run synthesis'}</button>
         <p className={styles.runtime}>Browser evaluation · deterministic, synthetic fixtures.<br />{config.mode === 'synthesis' ? 'Assertions run on baseline and general repair.' : 'Curated functions only; no arbitrary code execution.'}</p>
       </div>
-      <div className={styles.results}>
+      <div className={styles.results} ref={resultsRef}>
         <div className={styles.verdict} role="status" aria-live="polite">
           <span className={report ? report.resolved ? styles.good : styles.warn : styles.muted}>
             {report ? report.resolved ? <Check size={20} /> : <X size={20} /> : <FlaskConical size={20} />}
@@ -234,7 +251,7 @@ export function Verifier({ initial }: { initial: RunConfig }) {
         </div> : <div className={styles.testList} aria-label="Per-test results">
           <div className={styles.testHeader}><span>Assertion</span><span>Buggy</span><span>{config.mode === 'synthesis' ? 'Fixed' : 'After'}</span></div>
           {report.rows.map((row, index) => <button key={row.id} onClick={() => setSelectedIndex(index)} aria-label={`Inspect ${row.label}`} aria-pressed={selectedIndex === index}>
-            <span><b>{row.label}</b><small>{row.group === 'authored' ? 'Authored' : row.group === 'repair' ? 'Fail-to-pass requirement' : 'Pass-to-pass requirement'}</small></span>
+            <span><b>{row.label}</b><small>{GROUP_NAMES[row.group]} test</small></span>
             <span className={row.baseline.passed ? styles.good : styles.warn}>{row.baseline.passed ? 'PASS' : 'FAIL'}</span>
             <span className={row.after.passed ? styles.good : styles.bad}>{row.after.passed ? 'PASS' : 'FAIL'}</span>
           </button>)}
@@ -262,9 +279,10 @@ export function Verifier({ initial }: { initial: RunConfig }) {
         <button aria-pressed={codeView === 'diff'} onClick={() => setCodeView('diff')}><FileDiff size={16} />Diff</button>
         <button aria-pressed={codeView === 'code'} onClick={() => setCodeView('code')}><Code2 size={16} />Code</button>
       </div><span className={styles.muted}>{config.mode === 'synthesis' ? 'Fixed oracle' : candidate.label}</span></div>
-      <p className={styles.codeNote}>Actual runtime JavaScript; bundling may optimize formatting. Diff replaces the whole function, not a repository patch.</p>
-      {inspectorOpen && <pre><code>{(codeView === 'diff' ? sourceDiff(config.taskId, activeCandidate) : implementationSource(config.taskId, activeCandidate)).split('\n').map((line, index) =>
-        <span className={codeView === 'diff' ? line.startsWith('+ ') ? styles.good : line.startsWith('- ') ? styles.warn : undefined : undefined} key={index}>{line}{'\n'}</span>)}</code></pre>}
+      <p className={styles.codeNote}>Actual runtime JavaScript; bundling may compress it onto one line. The diff compares the whole buggy function with the selected one, not a repository patch, and marks the characters that change.</p>
+      {inspectorOpen && (codeView === 'diff'
+        ? <SourceDiff taskId={config.taskId} candidateId={activeCandidate} />
+        : <pre><code>{implementationSource(config.taskId, activeCandidate)}</code></pre>)}
     </details>
   </div>;
 }

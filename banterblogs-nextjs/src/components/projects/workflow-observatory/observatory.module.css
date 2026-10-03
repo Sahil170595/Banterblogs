@@ -24,13 +24,6 @@
   text-wrap: balance;
 }
 
-.caption {
-  max-width: 70ch;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: hsl(var(--muted-foreground));
-}
-
 /* ── the evidence table ── */
 .tableScroll {
   max-width: 100%;
@@ -69,8 +62,17 @@
   border-top: 1px solid hsl(var(--border) / 0.5);
 }
 
+.evidence thead th small {
+  display: block;
+  margin-top: 0.125rem;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .evidence tbody th {
-  width: 36%;
   padding: 0.25rem 0;
   text-align: left;
   font-weight: 400;
@@ -129,16 +131,34 @@
   color: hsl(var(--status-red));
 }
 
-/* the record is what the other two columns are read against */
-.evidence td[data-truth] {
-  border-left: 1px solid hsl(var(--border));
-  padding-left: 1rem;
+.wrongTag {
+  margin-left: 0.25rem;
+  border-radius: 0.25rem;
+  background-color: hsl(var(--status-red) / 0.14);
+  padding: 0 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
-.evidence thead th:last-child {
-  border-left: 1px solid hsl(var(--border));
-  padding-left: 1rem;
+.evidence thead th[data-truth] {
   color: hsl(var(--foreground));
+}
+
+/* what was saved is what the three checks are read against: ruled off from
+   them on a wide screen, the first value of each card on a phone */
+@media (min-width: 640px) {
+  .evidence tbody th {
+    width: 30%;
+  }
+
+  .evidence [data-truth] {
+    border-right: 1px solid hsl(var(--border));
+    padding-right: 1rem;
+  }
+
+  .evidence [data-truth] + * {
+    padding-left: 1rem;
+  }
 }
 
 .says {
@@ -225,27 +245,15 @@
   gap: 0.5rem;
 }
 
-.commands .settingsToggle {
-  display: none;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: 18rem minmax(0, 1fr);
+/* settings, plan, trace and replay: closed under the hood below the app */
+.hood {
+  padding: 0 1.25rem 1.25rem;
 }
 
 .configuration {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-  border-right: 1px solid hsl(var(--border));
-  padding: 1.25rem;
-}
-
-.pair {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.625rem;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.875rem 1rem;
 }
 
 .range {
@@ -326,16 +334,14 @@
 .summary {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
   min-height: 2rem;
-  margin-bottom: 1.25rem;
 }
 
 .summary strong {
-  font-size: 1.1875rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .summary span {
@@ -409,6 +415,12 @@
 
 .fixture th:nth-child(3) {
   width: 25%;
+}
+
+/* the record's state reads whole; it wrapped mid-word on a phone */
+.state {
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .empty {
@@ -523,8 +535,17 @@
 }
 
 .trace {
+  margin-top: 1.25rem;
   border-top: 1px solid hsl(var(--border));
-  padding: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.traceHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .trace > p {
@@ -652,8 +673,19 @@
   color: hsl(var(--muted-foreground));
 }
 
-.metric meter {
-  width: 100%;
+/* a neutral bar: the page changing is not the task succeeding */
+.bar {
+  display: block;
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background-color: hsl(var(--foreground) / 0.1);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background-color: hsl(var(--muted-foreground));
 }
 
 .metric span {
@@ -681,8 +713,9 @@
 }
 
 .replay {
+  margin-top: 1.25rem;
   border-top: 1px solid hsl(var(--border));
-  padding: 1.25rem;
+  padding-top: 1.25rem;
 }
 
 .replay > div:first-child {
@@ -704,31 +737,12 @@
 }
 
 .fidelity {
-  border-top: 1px solid hsl(var(--border));
-  padding: 0.875rem 1.25rem;
+  margin-top: 1.25rem;
   font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
 }
 
 @media (max-width: 850px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .commands .settingsToggle {
-    display: inline-flex;
-  }
-
-  .configuration {
-    display: none;
-    border-right: 0;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-
-  .configuration.configurationOpen {
-    display: flex;
-  }
-
   .traceLayout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -743,11 +757,12 @@
     padding: 0.625rem;
   }
 
-  .configuration,
-  .experience,
-  .trace,
-  .replay {
+  .experience {
     padding: 1rem;
+  }
+
+  .hood {
+    padding: 0 1rem 1rem;
   }
 
   .dialog form,
@@ -760,7 +775,4 @@
     padding: 0.75rem;
   }
 
-  .fidelity {
-    padding: 0.75rem 1rem;
-  }
 }

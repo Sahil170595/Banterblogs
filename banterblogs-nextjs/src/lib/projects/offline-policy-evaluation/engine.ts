@@ -237,8 +237,9 @@ function percentile(values: number[], p: number) {
   return sorted[low] + (sorted[high] - sorted[low]) * (position - low);
 }
 
-function bootstrap(result: Estimate, config: Config, draws: number[][]) {
-  const samples = draws.map(indices => aggregate(result.traces, config, indices));
+type Sample = ReturnType<typeof aggregate>;
+
+function bootstrap(result: Estimate, samples: Sample[]) {
   const intervals = {} as Record<Method, Interval>;
   const differences = {} as Record<Method, Interval>;
   const unavailableDraws = {} as Record<Method, number>;
@@ -258,6 +259,19 @@ function bootstrap(result: Estimate, config: Config, draws: number[][]) {
   return { intervals, differences, unavailableDraws };
 }
 
+// One policy against another on the same draws: a paired contrast, withheld
+// like the intervals above when either side has no estimate in some draw.
+function pairedDifference(a: Estimate, aSamples: Sample[], b: Estimate, bSamples: Sample[]) {
+  const differences = {} as Record<Method, Interval>;
+  for (const { key } of METHODS) {
+    const missing = a[key] === null || b[key] === null || aSamples.some(s => s[key] === null) || bSamples.some(s => s[key] === null);
+    if (missing) { differences[key] = null; continue; }
+    const gaps = aSamples.map((s, i) => (s[key] as number) - (bSamples[i][key] as number));
+    differences[key] = [percentile(gaps, 0.025), percentile(gaps, 0.975)];
+  }
+  return differences;
+}
+
 export function evaluate(input: unknown) {
   const config = validateConfig(input);
   const cohort = generateCohort(config);
@@ -268,10 +282,14 @@ export function evaluate(input: unknown) {
     { name: 'Constant target control', controls: { ...config, responsiveness: 0 } },
     { name: 'Logging policy identity', controls: { ...config, anchor: 1 } },
   ];
-  const comparisons = candidates.map(({ name, controls }) => {
+  const estimates = candidates.map(({ name, controls }) => {
     const result = estimateGeneratedCohort(cohort, controls);
-    return { name, controls, result, ...bootstrap(result, controls, draws) };
+    return { name, controls, result, samples: draws.map(indices => aggregate(result.traces, controls, indices)) };
   });
+  const comparisons = estimates.map(({ name, controls, result, samples }) => ({ name, controls, result, ...bootstrap(result, samples) }));
+  const [targetRun, controlRun] = estimates;
+  // target − constant control: the part of the target's value that depends on reading the state
+  const stateDifferences = pairedDifference(targetRun.result, targetRun.samples, controlRun.result, controlRun.samples);
   const sensitivity = [
     { name: 'Current reward', controls: config },
     { name: 'Gain ablated', controls: { ...config, gainWeight: 0 } },
@@ -283,7 +301,7 @@ export function evaluate(input: unknown) {
     const counts = ACTIONS.map((_, action) => cohort.reduce((n, e) => n + e.steps.filter(s => s.context === context && s.action === action).length, 0));
     return { name, context, behavior, target, counts };
   });
-  return { schema: 'offline-policy-evaluation/v1' as const, config, horizon: HORIZON, resamples: RESAMPLES, cohort, comparisons, sensitivity, support };
+  return { schema: 'offline-policy-evaluation/v1' as const, config, horizon: HORIZON, resamples: RESAMPLES, cohort, comparisons, stateDifferences, sensitivity, support };
 }
 export type Evaluation = ReturnType<typeof evaluate>;
 export function exportEvaluation(result: Evaluation) { return JSON.stringify(result, null, 2); }

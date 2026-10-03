@@ -20,7 +20,7 @@ const plan = (config: Config): Event[] => [{ type: 'open' }, { type: 'fill', val
 const fixedWait: Config = { ...DEFAULT_CONFIG, waitPolicy: 'fixed' };
 
 export const SCENARIOS: Scenario[] = [
-  { id: 'normal', label: 'Saves normally', note: 'nothing', config: DEFAULT_CONFIG, events: [...plan(DEFAULT_CONFIG), { type: 'settle' }], executor: true },
+  { id: 'normal', label: 'Saves normally', note: 'no failure added', config: DEFAULT_CONFIG, events: [...plan(DEFAULT_CONFIG), { type: 'settle' }], executor: true },
   {
     id: 'no-record',
     label: 'Notice shown, nothing saved',
@@ -108,6 +108,9 @@ export function judge(scenario: Scenario) {
     notice: state.toast === 'success',
     parallax: parallaxAccepts(scenario),
     gate: completion(observeModel(state), config).complete,
+    /** a committed record with the requested title and room */
     record: state.record !== null && state.record.title === config.title.trim() && state.record.room === config.room,
+    /** whatever record was committed, asked for or not */
+    saved: state.record,
   };
 }

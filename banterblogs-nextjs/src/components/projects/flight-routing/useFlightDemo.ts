@@ -64,7 +64,7 @@ export function useFlightDemo(initialWorlds: PolicyWorlds[]) {
         return null;
       } catch (cause) {
         const message = cause instanceof Error ? cause.message : 'This scenario could not be applied.';
-        console.error('Flight routing scenario rejected:', message, next);
+        console.warn('Flight routing scenario rejected:', message, next);
         return message;
       }
     },

@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeReceipt } from '@/lib/projects/send-pacing/receipt';
 import { SOURCE_REPLAY } from '@/lib/projects/send-pacing/scheduler';
 import type { SweepRow } from '@/lib/projects/send-pacing/sweep';
@@ -12,15 +12,44 @@ vi.mock('react', async (importOriginal) => {
   return { ...actual, ViewTransition: ({ children }: { children: import('react').ReactNode }) => children };
 });
 
+// jsdom lays nothing out and has no scrollIntoView or matchMedia; a picked
+// setup reveals the chart through both (components/projects/reveal.ts)
+const scrollIntoView = vi.fn();
+beforeEach(() => {
+  Element.prototype.scrollIntoView = scrollIntoView;
+  window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+});
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  scrollIntoView.mockClear();
 });
 
 // a small stand-in sweep; the real one is computed on the server and tested in lib
 const SWEEP: SweepRow[] = [
-  { label: 'the source replay: 12 over 2 hours from 09:00', replay: { count: 12, durationHours: 2, startHour: 9 }, beforePreparation: 10, lastTwoLate: 10, burst: 1, afterHours: 0, atEnd: 3 },
-  { label: '12 over 2 hours from 16:00', replay: { count: 12, durationHours: 2, startHour: 16 }, beforePreparation: 10, lastTwoLate: 10, burst: 9, afterHours: 0, atEnd: 0 },
+  {
+    label: 'the source replay: 12 over 2 hours from 09:00',
+    replay: { count: 12, durationHours: 2, startHour: 9 },
+    beforePreparation: 10,
+    lastTwoLate: 10,
+    burst: 1,
+    afterHours: 0,
+    atEnd: 3,
+    atClose: 0,
+    closeHour: null,
+  },
+  {
+    label: '12 over 2 hours from 16:00',
+    replay: { count: 12, durationHours: 2, startHour: 16 },
+    beforePreparation: 10,
+    lastTwoLate: 10,
+    burst: 9,
+    afterHours: 0,
+    atEnd: 0,
+    atClose: 6.5,
+    closeHour: 17,
+  },
 ];
 const ledger = () => screen.getByRole('region', { name: 'Message ledger' });
 const file = (body: unknown) => ({ size: 100, text: async () => JSON.stringify(body) });
@@ -28,17 +57,61 @@ const file = (body: unknown) => ({ size: 100, text: async () => JSON.stringify(b
 describe('send pacing demo', () => {
   it('opens on seed 7 of the source replay with its last two sends flagged', () => {
     render(<PacingDemo sweep={SWEEP} seeds={10} />);
-    expect(screen.getByText(/Across 10 seeds of the source's own replay, twelve messages over two hours, every schedule sends its last two messages before they could have been typed, and 1 also breaks the burst limit\./)).toBeTruthy();
+    expect(
+      screen.getByText(
+        'In this run of 12 messages, two go out before they could have been typed, and three land on the campaign’s final instant, 11:00.',
+      ),
+    ).toBeTruthy();
     expect(within(ledger()).getAllByText('sent before it could be typed')).toHaveLength(2);
     expect(screen.getByText(/two sent before they were typed · three at the campaign's final instant/)).toBeTruthy();
+    expect(
+      screen.getByText(/Three messages go at the same instant, 11:00, the campaign’s end: anything scheduled past it is clamped back to it\./),
+    ).toBeTruthy();
+    expect(screen.getByText('planned slot, hidden under the tick when sent on schedule')).toBeTruthy();
   });
 
-  it('steps seeds and loads a sweep row', () => {
+  it('titles the sweep and names every value’s column, so a phone can stack each row as a card', () => {
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    expect(screen.getByRole('heading', { name: 'What 10 random runs find for each setup' })).toBeTruthy();
+    for (const region of [screen.getByRole('region', { name: 'What 10 seeds find' }), ledger()]) {
+      for (const cell of within(region).getAllByRole('cell')) expect(cell.getAttribute('data-label')).toBeTruthy();
+    }
+    expect(
+      within(ledger())
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Message', 'Typing starts', 'Typing time', 'Typed by', 'Planned', 'Sent', 'Margin', 'Audit']);
+  });
+
+  it('steps seeds, and a sweep row charts its setup above', () => {
     render(<PacingDemo sweep={SWEEP} seeds={10} />);
     fireEvent.click(screen.getByRole('button', { name: 'Next seed' }));
     expect(screen.getByLabelText('Seed')).toHaveProperty('value', '8');
     fireEvent.click(screen.getByRole('button', { name: '12 over 2 hours from 16:00' }));
     expect(screen.getByText(/16:00 to 18:00 UTC/)).toBeTruthy();
+    expect(scrollIntoView).toHaveBeenCalled();
+    // the close of business is drawn, and the pile at it said in words
+    expect(screen.getByText('business hours end, 17:00')).toBeTruthy();
+    expect(screen.getByText(/at the same instant, 17:00, when business hours close/)).toBeTruthy();
+  });
+
+  // its 0.0 at the campaign's end is no all-clear: the pile moved to 17:00
+  it('says where the 16:00 setup’s pile goes, beside its zero at the campaign end', () => {
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    const row = screen.getByRole('button', { name: '12 over 2 hours from 16:00' }).closest('tr')!;
+    expect(row.querySelector('[data-label="Messages at the final instant, average per run"]')!.textContent).toBe(
+      '0.0, but 6.5 a run pile at 17:00, when business hours close',
+    );
+  });
+
+  it('spells counts under ten and gives larger ones as digits, in one style', () => {
+    render(<PacingDemo sweep={SWEEP} seeds={10} />);
+    fireEvent.click(screen.getByRole('button', { name: '12 over 2 hours from 16:00' }));
+    // seed 10 of this setup sends six before they are typed
+    fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '10' } });
+    const line = screen.getByText(/^Seed 10/).closest('p')!.textContent!;
+    expect(line).toMatch(/six sent before they were typed/);
+    expect(line).not.toMatch(/ [0-9] (sent before|at the)/);
   });
 
   it('keeps the run while the seed field is cleared', () => {

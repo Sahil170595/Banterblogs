@@ -1,14 +1,15 @@
 {
   "slug": "collaborative-whiteboard",
   "title": "Collaborative Whiteboard",
-  "dek": "The editor and collaboration model of my Sceneledger whiteboard: canvas editing with inverse-operation history, and the server's ordering, checked over every way two concurrent edits can arrive.",
-  "summary": "Two people recolour one note at once. Whose colour does each screen end up showing?",
+  "dek": "Sceneledger, a shared online whiteboard I built: a React drawing app, a FastAPI server with accounts and live WebSocket sessions, and a PostgreSQL database. This page runs its drawing editor and every order in which two people's simultaneous edits can reach each screen.",
+  "summary": "Two people recolour one note at once: in 6 of the 8 possible orderings a screen shows a colour the database lacks; numbered order fixes all 8.",
   "collection": "product",
   "alsoIn": [],
   "order": 1,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/collaborative-whiteboard" },
-    { "label": "Sceneledger", "url": "https://github.com/Sahil170595/sceneledger/tree/a0ab66e6d6101bcb768d44802289b33b6bb69456" }
-  ]
+    { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/collaborative-whiteboard" },
+    { "label": "Sceneledger on GitHub", "url": "https://github.com/Sahil170595/sceneledger/tree/a0ab66e6d6101bcb768d44802289b33b6bb69456" }
+  ],
+  "builtWith": ["React", "TypeScript", "Python", "FastAPI", "WebSockets", "PostgreSQL", "Docker Compose"]
 }

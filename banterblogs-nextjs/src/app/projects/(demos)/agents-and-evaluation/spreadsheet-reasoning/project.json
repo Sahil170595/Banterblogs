@@ -1,14 +1,15 @@
 {
   "slug": "spreadsheet-reasoning",
   "title": "Spreadsheet Reasoning Inspector",
-  "dek": "A workbook evaluator that decides which values are final, from a dependency graph and abstaining rule votes, and shows where the rules disagree with the key. Rebuilt from my Formuloom pipeline.",
-  "summary": "Which spreadsheet values are final? Rule votes over a dependency graph, checked against a key.",
+  "dek": "Formuloom is a pipeline I built in Python that sorts a spreadsheet's changed cells into final outputs, the values someone would report, and intermediates, the working steps. Rebuilt here on one small workbook: rules vote on each cell over its dependency graph, scored against an answer key.",
+  "summary": "Rules vote on which spreadsheet values are final: balanced voting marks a scratch cell final, and a stricter gate finds neither real result.",
   "collection": "agents-and-evaluation",
   "alsoIn": [],
   "order": 1,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/spreadsheet-reasoning" },
-    { "label": "Formuloom", "url": "https://github.com/Sahil170595/formuloom" }
-  ]
+    { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/spreadsheet-reasoning" },
+    { "label": "Formuloom on GitHub", "url": "https://github.com/Sahil170595/formuloom" }
+  ],
+  "builtWith": ["Python"]
 }
