@@ -176,6 +176,8 @@ describe('customer-service demo', () => {
     expect(latest()).toMatch(/^Fresh episode: Two full captures\. No actions yet; reward/);
     fireEvent.click(screen.getByRole('button', { name: 'Run read order' }));
     expect(latest()).toMatch(/^#1 Read order: Read only, no change\. Reward now /);
+    // the line sits right under the tool button, not at the foot of the workbench
+    expect(screen.getByRole('button', { name: 'Run read order' }).nextElementSibling).toBe(screen.getByRole('status', { name: 'Latest action' }));
     revealResult.mockClear();
     fireEvent.click(screen.getAllByRole('button', { name: 'Show the world and reward' })[0]);
     const revealed = revealResult.mock.calls[0][0] as HTMLElement;

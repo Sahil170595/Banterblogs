@@ -395,6 +395,8 @@ function Workbench({ demo, onShow }: { demo: ServiceDemo; onShow: () => void }) 
         <ChevronRight aria-hidden="true" />
         Run {TOOL_LABELS[tool].toLowerCase()}
       </button>
+      {/* right under the tool call, so its result is beside the button that made it */}
+      <Latest demo={demo} onShow={onShow} live />
 
       <div className={styles.band}>
         <label className={controls.field}>
@@ -467,7 +469,6 @@ function Workbench({ demo, onShow }: { demo: ServiceDemo; onShow: () => void }) 
         <Square aria-hidden="true" />
         Close the episode
       </button>
-      <Latest demo={demo} onShow={onShow} live />
     </section>
   );
 }
