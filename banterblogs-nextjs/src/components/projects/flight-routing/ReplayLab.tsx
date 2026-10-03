@@ -4,24 +4,26 @@ import { useState, type FormEvent, type Ref } from 'react';
 import { ChevronLeft, ChevronRight, Download, Play, RotateCcw, SkipForward, Undo2 } from 'lucide-react';
 import {
   actionValues,
+  candidates,
+  chooseAction,
   comparePolicies,
   CONFIG_LIMITS,
   exportTrace,
   formatTime,
-  POLICIES,
   POLICY_LABELS,
   REWARD_WEIGHTS,
   type Config,
+  type Episode,
   type Policy,
   type Reason,
 } from '@/lib/projects/flight-routing/engine';
 import { getScenario, outcomePool } from '@/lib/projects/flight-routing/fixtures';
 import { EXPERIMENT_WORLDS } from '@/lib/projects/flight-routing/experiment';
-import { worldSeed } from '@/lib/projects/flight-routing/worlds';
-import { clockOf, rewardNote } from './copy';
+import { DISPLAY_POLICIES, worldSeed } from '@/lib/projects/flight-routing/worlds';
+import { clockOf, PROFILE_LABEL, rewardNote } from './copy';
 import { RouteFigure } from './RouteFigure';
 import { Timeline } from './Timeline';
-import type { FlightDemo } from './useFlightDemo';
+import { MAX_FIRST_SEED, type FlightDemo } from './useFlightDemo';
 import { controls, UnderTheHood } from '../controls';
 import styles from './demo.module.css';
 
@@ -49,29 +51,37 @@ const FIELDS: { key: Field; label: string; name: string; clock?: boolean }[] = [
   { key: 'maxAttempts', label: 'Flight attempts', name: 'Flight attempts' },
 ];
 
-const draftOf = (config: Config) => Object.fromEntries(FIELDS.map(({ key }) => [key, String(config[key])])) as Record<Field, string>;
-
+/**
+ * The world settings. The visitor's unapplied edits lie over the current
+ * configuration, so a change to the scenario above keeps them, and the form
+ * says they are not applied yet.
+ */
 function Settings({ config, onApply }: { config: Config; onApply: (config: Config) => string | null }) {
-  const [draft, setDraft] = useState(() => draftOf(config));
+  const [edits, setEdits] = useState<Partial<Record<Field, string>>>({});
   const [error, setError] = useState('');
+  const value = (key: Field) => edits[key] ?? String(config[key]);
+  const pending = FIELDS.some(({ key }) => edits[key] !== undefined && edits[key] !== String(config[key]));
   const apply = (event: FormEvent) => {
     event.preventDefault();
     const next = { ...config };
     for (const { key, name } of FIELDS) {
-      const value = Number(draft[key]);
-      if (!draft[key].trim() || !Number.isInteger(value)) {
-        console.warn('Flight routing settings rejected:', `${name} is not a whole number`, draft);
-        setError(`${name} must be a whole number.`);
+      const raw = value(key).trim();
+      const number = Number(raw);
+      if (!raw || !Number.isInteger(number)) {
+        console.warn('Flight routing settings rejected:', `${name} is not a whole number`, edits);
+        setError(`${name} should be a whole number.`);
         return;
       }
-      next[key] = value;
+      next[key] = number;
     }
-    setError(onApply(next) ?? '');
+    const refused = onApply(next);
+    setError(refused ?? '');
+    if (!refused) setEdits({});
   };
   return (
     <form onSubmit={apply} noValidate className={styles.settingsForm} aria-label="World settings">
       {FIELDS.map(({ key, label, clock }) => {
-        const reading = clock ? clockOf(draft[key]) : null;
+        const reading = clock ? clockOf(value(key)) : null;
         return (
           <label key={key} className={controls.field}>
             {label}
@@ -80,11 +90,14 @@ function Settings({ config, onApply }: { config: Config; onApply: (config: Confi
               inputMode="numeric"
               pattern="[0-9]*"
               name={key}
-              value={draft[key]}
+              value={value(key)}
               aria-describedby="flight-settings-limits"
-              onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
+              onChange={(event) => setEdits({ ...edits, [key]: event.target.value })}
             />
-            {reading && <span className={styles.clockReading}>= {reading}</span>}
+            {/* every field keeps the reading's line, so the inputs share one baseline */}
+            <span className={styles.clockReading} aria-hidden={!reading || undefined}>
+              {reading ? `= ${reading}` : ''}
+            </span>
           </label>
         );
       })}
@@ -92,9 +105,11 @@ function Settings({ config, onApply }: { config: Config; onApply: (config: Confi
         Apply to all worlds
       </button>
       <p id="flight-settings-limits" className={controls.hint}>
-        Deadline {CONFIG_LIMITS.deadline[0]}–{CONFIG_LIMITS.deadline[1]} and no later than the horizon; buffer {CONFIG_LIMITS.buffer[0]}–
-        {CONFIG_LIMITS.buffer[1]}; {CONFIG_LIMITS.maxAttempts[0]}–{CONFIG_LIMITS.maxAttempts[1]} attempts.
+        First world seed {CONFIG_LIMITS.seed[0]}–{MAX_FIRST_SEED.toLocaleString('en-US')}; deadline {CONFIG_LIMITS.deadline[0]}–
+        {CONFIG_LIMITS.deadline[1]} and no later than the horizon; buffer {CONFIG_LIMITS.buffer[0]}–{CONFIG_LIMITS.buffer[1]};{' '}
+        {CONFIG_LIMITS.maxAttempts[0]}–{CONFIG_LIMITS.maxAttempts[1]} attempts.
       </p>
+      {pending && <p className={controls.hint}>Not applied yet: press Apply to all worlds to use these values.</p>}
       {error && (
         <p role="alert" className={controls.error}>
           {error}
@@ -104,10 +119,24 @@ function Settings({ config, onApply }: { config: Config; onApply: (config: Confi
   );
 }
 
+const slug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+/** each decision in a replay, and whether the policy or the visitor made it */
+function decisions(history: Episode[], policy: Policy) {
+  return history.slice(1).map((after, i) => {
+    const before = history[i];
+    const options = candidates(before);
+    const taken = after.legs.length > before.legs.length ? after.legs[after.legs.length - 1].flight.id : null;
+    const policyPick = options.length ? options[chooseAction(before, policy)].id : null;
+    return { flight: taken, by: taken === policyPick ? 'policy' : 'your choice' };
+  });
+}
+
 export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLElement> }) {
   const { config, selection, history, state, flights, chosen } = demo;
-  const [notice, setNotice] = useState('');
-  const destination = getScenario(state.config.scenario).destination;
+  // a notice belongs to the replay it was about; the next change of replay retires it
+  const [notice, setNotice] = useState<{ text: string; history: Episode[] } | null>(null);
+  const { origin, destination } = getScenario(state.config.scenario);
   const terminal = state.reason !== 'in_progress';
   const outcome = !terminal ? 'running' : state.reason !== 'arrived' ? 'failed' : state.reward.deadline > 0 ? 'on-time' : 'late';
   const values = terminal ? [] : actionValues(state);
@@ -115,19 +144,24 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
 
   const exportJson = () => {
     try {
-      const blob = new Blob([exportTrace(state, comparePolicies(config, EXPERIMENT_WORLDS))], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+      const policy = POLICY_LABELS[selection.policy];
+      const labels = { route: `${origin} to ${destination}`, disruptions: PROFILE_LABEL[config.profile], deadline: formatTime(config.deadline) };
+      const steps = decisions(history, selection.policy);
+      const yours = steps.some((d) => d.by === 'your choice');
+      const trace = JSON.parse(exportTrace(state, comparePolicies(config, EXPERIMENT_WORLDS)));
+      const body = JSON.stringify({ ...trace, replay: { policy, labels, decisions: steps } }, null, 2);
+      const url = URL.createObjectURL(new Blob([body], { type: 'application/json' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = `flight-routing-seed-${state.config.seed}.json`;
+      link.download = `flight-routing-${slug(labels.route)}-${slug(labels.disruptions)}-seed-${state.config.seed}-${slug(policy)}${yours ? '-with-your-choices' : ''}.json`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setNotice('Trace exported.');
+      setNotice({ text: 'Trace exported.', history });
     } catch (cause) {
       console.error('Flight routing trace export failed:', cause);
-      setNotice('The trace could not be exported.');
+      setNotice({ text: 'The trace could not be exported.', history });
     }
   };
 
@@ -135,7 +169,8 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
     <section ref={ref} className={styles.replay} aria-label={`Replay: world ${index + 1} of ${EXPERIMENT_WORLDS}`}>
       <div className={styles.replayHead}>
         <div>
-          <h3 className={styles.replayTitle}>
+          {/* a square chosen from the keyboard hands focus here (FlightRoutingDemo) */}
+          <h3 className={styles.replayTitle} tabIndex={-1}>
             World {index + 1} <span>of {EXPERIMENT_WORLDS}</span>
           </h3>
           <p className={styles.replayMeta}>
@@ -167,7 +202,7 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
           <label className={controls.field}>
             <span>Policy</span>
             <select value={selection.policy} onChange={(event) => demo.select({ ...selection, policy: event.target.value as Policy })}>
-              {POLICIES.map((policy) => (
+              {DISPLAY_POLICIES.map((policy) => (
                 <option key={policy} value={policy}>
                   {POLICY_LABELS[policy]}
                 </option>
@@ -239,62 +274,70 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
           ) : (
             <section aria-labelledby="flight-choices">
               <h4 id="flight-choices">Bookable now</h4>
-              <div className={styles.tableScroll} role="region" aria-label="Bookable flights" tabIndex={0}>
-                <table className={controls.stackTable} role="table">
-                  <thead role="rowgroup">
-                    <tr role="row">
-                      <th scope="col" role="columnheader">
-                        Flight
-                      </th>
-                      <th scope="col" role="columnheader">
-                        Departs
-                      </th>
-                      <th scope="col" role="columnheader">
-                        Arrives
-                      </th>
-                      <th scope="col" role="columnheader">
-                        Cancels
-                      </th>
-                      <th scope="col" role="columnheader">
-                        Chance of making the deadline
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody role="rowgroup">
-                    {flights.map((flight, i) => {
-                      const pool = outcomePool(flight, state.config.profile);
-                      return (
-                        <tr key={flight.id} role="row" data-chosen={i === chosen || undefined}>
-                          <td role="cell" data-label="Flight">
-                            <label className={styles.radio}>
-                              <input
-                                type="radio"
-                                name="flight"
-                                checked={i === chosen}
-                                onChange={() => demo.choose(flight.id)}
-                                aria-label={`Choose ${flight.id} to ${flight.dest}`}
-                              />
-                              {flight.id} → {flight.dest}
-                            </label>
-                          </td>
-                          <td role="cell" data-label="Departs">
-                            {formatTime(flight.depart)}
-                          </td>
-                          <td role="cell" data-label="Arrives">
-                            {formatTime(flight.arrive)}
-                          </td>
-                          <td role="cell" data-label="Cancels">
-                            {Math.round((pool.filter((o) => o.cancelled).length / pool.length) * PERCENT)}%
-                          </td>
-                          <td role="cell" data-label="Chance of making the deadline">
-                            {Math.round(values[i] * PERCENT)}%
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              {flights.length === 0 ? (
+                <p className={controls.hint}>
+                  No flight can be booked from {state.airport}: none leaves after the {state.config.buffer}-minute connection buffer and before
+                  the horizon.
+                </p>
+              ) : (
+                <div className={styles.tableScroll} role="region" aria-label="Bookable flights" tabIndex={0}>
+                  <table className={controls.stackTable} role="table">
+                    <thead role="rowgroup">
+                      <tr role="row">
+                        <th scope="col" role="columnheader">
+                          Flight
+                        </th>
+                        <th scope="col" role="columnheader">
+                          Departs
+                        </th>
+                        <th scope="col" role="columnheader">
+                          Arrives
+                        </th>
+                        <th scope="col" role="columnheader">
+                          Cancels
+                        </th>
+                        <th scope="col" role="columnheader">
+                          Chance of making the deadline
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody role="rowgroup">
+                      {flights.map((flight, i) => {
+                        const pool = outcomePool(flight, state.config.profile);
+                        return (
+                          // the whole row chooses the flight; its radio is the keyboard's way in
+                          <tr key={flight.id} role="row" data-chosen={i === chosen || undefined} onClick={() => demo.choose(flight.id)}>
+                            <td role="cell" data-label="Flight">
+                              <label className={styles.radio}>
+                                <input
+                                  type="radio"
+                                  name="flight"
+                                  checked={i === chosen}
+                                  onChange={() => demo.choose(flight.id)}
+                                  aria-label={`Choose ${flight.id} to ${flight.dest}`}
+                                />
+                                {flight.id} → {flight.dest}
+                              </label>
+                            </td>
+                            <td role="cell" data-label="Departs">
+                              {formatTime(flight.depart)}
+                            </td>
+                            <td role="cell" data-label="Arrives">
+                              {formatTime(flight.arrive)}
+                            </td>
+                            <td role="cell" data-label="Cancels">
+                              {Math.round((pool.filter((o) => o.cancelled).length / pool.length) * PERCENT)}%
+                            </td>
+                            <td role="cell" data-label="Chance of making the deadline">
+                              {Math.round(values[i] * PERCENT)}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           )}
 
@@ -365,14 +408,14 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
       </div>
 
       <UnderTheHood summary="Under the hood: world settings and export">
-        <Settings key={JSON.stringify(config)} config={config} onApply={demo.configure} />
+        <Settings config={config} onApply={demo.configure} />
         <div className={styles.exportRow}>
           <button type="button" className={controls.button} onClick={exportJson}>
             <Download aria-hidden="true" />
             Export JSON trace
           </button>
-          <p className={styles.notice} role="status">
-            {notice}
+          <p className={styles.notice} role="status" aria-label="Export">
+            {notice?.history === history ? notice.text : ''}
           </p>
         </div>
       </UnderTheHood>

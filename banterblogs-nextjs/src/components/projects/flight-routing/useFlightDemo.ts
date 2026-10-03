@@ -1,9 +1,46 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { candidates, chooseAction, createEpisode, step, validateConfig, type Config, type Episode, type Policy } from '@/lib/projects/flight-routing/engine';
-import { TIGHT_CONFIG } from '@/lib/projects/flight-routing/experiment';
+import { ZodError } from 'zod';
+import {
+  candidates,
+  chooseAction,
+  CONFIG_LIMITS,
+  CONFIG_SCHEMA,
+  createEpisode,
+  step,
+  type Config,
+  type Episode,
+  type Policy,
+} from '@/lib/projects/flight-routing/engine';
+import { EXPERIMENT_WORLDS, TIGHT_CONFIG } from '@/lib/projects/flight-routing/experiment';
 import { evaluateWorlds, worldSeed, type PolicyWorlds } from '@/lib/projects/flight-routing/worlds';
+import { describeRefusal } from '../refusal';
+
+/** the highest first seed whose 64 worlds' seeds all stay in the engine's range */
+export const MAX_FIRST_SEED = CONFIG_LIMITS.seed[1] - (EXPERIMENT_WORLDS - 1);
+// a refused setting is named as the form labels it
+const FIELD_NAMES: Record<string, string> = {
+  seed: 'First world seed',
+  deadline: 'Deadline',
+  horizon: 'Horizon',
+  buffer: 'Connection buffer',
+  maxAttempts: 'Flight attempts',
+};
+
+/** the configuration, or why the form's values cannot make one */
+function checkConfig(next: Config): { config: Config } | { message: string } {
+  const result = CONFIG_SCHEMA.safeParse(next);
+  if (!result.success) {
+    const named = new ZodError(
+      result.error.issues.map((issue) => ({ ...issue, path: issue.path.map((part) => (typeof part === 'string' ? (FIELD_NAMES[part] ?? part) : part)) })),
+    );
+    return { message: describeRefusal(named) };
+  }
+  if (result.data.seed > MAX_FIRST_SEED)
+    return { message: `First world seed should be at most ${MAX_FIRST_SEED.toLocaleString('en-US')}, so all ${EXPERIMENT_WORLDS} worlds’ seeds stay in range.` };
+  return { config: result.data };
+}
 
 // The demo's state: the configuration every world shares, the policies'
 // outcomes over those worlds, and the one world being replayed below them.
@@ -57,16 +94,14 @@ export function useFlightDemo(initialWorlds: PolicyWorlds[]) {
     },
     /** change what every world shares; the grid recomputes and the replay restarts. Returns why it was refused, if it was. */
     configure(next: Config): string | null {
-      try {
-        const valid = validateConfig(next);
-        setConfig(valid);
-        replay(valid, selection);
-        return null;
-      } catch (cause) {
-        const message = cause instanceof Error ? cause.message : 'This scenario could not be applied.';
-        console.warn('Flight routing scenario rejected:', message, next);
-        return message;
+      const checked = checkConfig(next);
+      if ('message' in checked) {
+        console.warn('Flight routing scenario rejected:', checked.message, next);
+        return checked.message;
       }
+      setConfig(checked.config);
+      replay(checked.config, selection);
+      return null;
     },
     choose(flightId: string) {
       setChoice(flightId);

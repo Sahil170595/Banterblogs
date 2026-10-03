@@ -24,7 +24,8 @@ export const CONFIG_LIMITS = {
   seed: [0, MAX_SEED], horizon: [60, DAY_MINUTES], deadline: [1, DAY_MINUTES], buffer: [0, DAY_MINUTES], maxAttempts: [1, 6],
 } as const;
 const bounded = ([min, max]: readonly [number, number]) => z.number().int().min(min).max(max);
-const CONFIG_SCHEMA = z.object({
+/** the configuration's schema, for a caller that reports its issues field by field */
+export const CONFIG_SCHEMA = z.object({
   scenario: z.enum(['west-east', 'east-west']),
   profile: z.enum(['clear', 'balanced', 'storm']),
   seed: bounded(CONFIG_LIMITS.seed),
@@ -137,15 +138,24 @@ export function actionValues(state: Episode): number[] {
   const cache = new Map<string, number>();
   return candidates(state).map(f => expectedDeadline(state, f, cache));
 }
+/**
+ * The lookahead's pick, as Gatebound's DeadlinePlannerPolicy.act makes it: the
+ * highest chance of making the deadline, then the earliest scheduled arrival,
+ * then the lowest index.
+ */
+export function bestAction(values: number[], flights: Pick<Flight, 'arrive'>[]): number {
+  let best = 0;
+  for (let i = 1; i < values.length; i++) {
+    if (values[i] > values[best] || (values[i] === values[best] && flights[i].arrive < flights[best].arrive)) best = i;
+  }
+  return best;
+}
 export function chooseAction(state: Episode, policy: Policy): number {
   if (!POLICIES.includes(policy)) throw new Error('Choose a listed policy.');
   const flights = candidates(state);
   if (!flights.length) return 0;
   if (policy === 'random') return Math.floor(rank(state.config.seed, `action:${state.legs.length}`) * flights.length);
-  if (policy === 'deadline') {
-    const values = actionValues(state);
-    return values.indexOf(Math.max(...values));
-  }
+  if (policy === 'deadline') return bestAction(actionValues(state), flights);
   if (policy === 'nonstop') {
     const direct = flights.filter(f => f.dest === getScenario(state.config.scenario).destination).sort((a,b) => a.arrive - b.arrive);
     return direct.length ? flights.indexOf(direct[0]) : 0;
