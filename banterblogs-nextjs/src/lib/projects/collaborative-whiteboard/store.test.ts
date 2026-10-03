@@ -41,6 +41,21 @@ describe('single-tab persistence boundary', () => {
     unsubscribe();
     vi.restoreAllMocks();
   });
+  it('keeps an unreadable saved copy through later edits, until a reset replaces it', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const storage = { getItem: () => '{bad json', setItem: vi.fn() };
+    const store = createSessionStore(() => storage);
+    const unsubscribe = store.subscribe(() => {});
+    expect(store.dispatch(clearBoard)).toBe(true);
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(store.getSnapshot().storage).toBe('memory-only');
+    expect(store.getSnapshot().error).toMatch(/kept as it was/);
+    store.dispatch(() => createBoard(INITIAL_SHAPES), { replaceStored: true });
+    expect(storage.setItem).toHaveBeenCalledTimes(1);
+    expect(store.getSnapshot().storage).toBe('saved');
+    unsubscribe();
+    vi.restoreAllMocks();
+  });
   it('retains an edit in memory and exposes storage failure', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     const storage = { getItem: () => null, setItem: () => { throw new Error('quota'); } };

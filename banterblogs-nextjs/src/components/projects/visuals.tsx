@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { VerificationVisual } from './code-verification/VerificationVisual';
+import { WhiteboardVisual } from './collaborative-whiteboard/WhiteboardVisual';
 import { ServiceVisual } from './customer-service/ServiceVisual';
 import { FlightRoutingVisual } from './flight-routing/FlightRoutingVisual';
 import { TriageVisual } from './intake-triage/TriageVisual';
@@ -27,4 +28,5 @@ export const PROJECT_VISUALS: Record<string, ComponentType<ProjectVisualProps>> 
   'staged-search': SearchVisual,
   'send-pacing': PacingVisual,
   'mission-governance': MissionVisual,
+  'collaborative-whiteboard': WhiteboardVisual,
 };

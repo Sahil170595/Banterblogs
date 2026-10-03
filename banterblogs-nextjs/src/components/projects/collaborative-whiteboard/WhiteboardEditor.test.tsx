@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import WhiteboardDemo from './WhiteboardDemo';
+import { WhiteboardEditor as WhiteboardDemo } from './WhiteboardEditor';
 
 vi.mock('@/lib/projects/collaborative-whiteboard/render', () => ({ renderBoard: vi.fn() }));
 
@@ -26,10 +26,33 @@ describe('editable whiteboard controls', () => {
     expect(screen.getByTestId('object-count').textContent).toBe('10 objects');
     fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
     expect(screen.getByTestId('object-count').textContent).toBe('0 objects');
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    // the first press only arms the reset; the second replaces the board
     fireEvent.click(screen.getByRole('button', { name: 'Reset board' }));
+    expect(screen.getByTestId('object-count').textContent).toBe('0 objects');
+    fireEvent.click(screen.getByRole('button', { name: /Confirm reset/ }));
     expect(screen.getByTestId('object-count').textContent).toBe('10 objects');
     expect(screen.getByTestId('log-count').textContent).toBe('0 commands');
+  });
+  it('records a run of arrow-key nudges as one edit when the key is let go', () => {
+    render(<WhiteboardDemo />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select rectangle draft' }));
+    const canvas = screen.getByLabelText('Editable whiteboard');
+    for (let i = 0; i < 5; i++) fireEvent.keyDown(canvas, { key: 'ArrowRight' });
+    fireEvent.keyDown(canvas, { key: 'ArrowDown', shiftKey: true });
+    expect(screen.getByTestId('log-count').textContent).toBe('0 commands');
+    expect(screen.getByText(/selected at 95, 180/)).toBeTruthy();
+    fireEvent.keyUp(canvas, { key: 'ArrowDown' });
+    expect(screen.getByTestId('log-count').textContent).toBe('1 command');
+    expect((screen.getByLabelText('X position') as HTMLInputElement).value).toBe('95');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect((screen.getByLabelText('X position') as HTMLInputElement).value).toBe('90');
+  });
+  it('describes the keyboard and the selection to assistive technology', () => {
+    render(<WhiteboardDemo />);
+    const canvas = screen.getByLabelText('Editable whiteboard');
+    expect(canvas.getAttribute('aria-describedby')).toBe('whiteboard-keys whiteboard-selection');
+    expect(document.getElementById('whiteboard-keys')?.textContent).toMatch(/arrow keys move it/);
+    expect(document.getElementById('whiteboard-selection')?.textContent).toBe('No object selected');
   });
   it('draws a rectangle with a pointer gesture and records one command', () => {
     render(<WhiteboardDemo />);

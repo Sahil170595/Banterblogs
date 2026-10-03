@@ -8,7 +8,8 @@ const TEXT_LINE_HEIGHT = 1.3;
 const TEXT_INSET = 4;
 const PAPER = '#f8fafb';
 const GRID_COLOR = '#e5e9ec';
-const SELECTION_COLOR = '#147c68';
+// the site's ember (--primary, hsl 16 95% 53%), for the selection
+const SELECTION_COLOR = '#f95215';
 
 function drawShape(ctx: CanvasRenderingContext2D, shape: Shape) {
   ctx.save();
