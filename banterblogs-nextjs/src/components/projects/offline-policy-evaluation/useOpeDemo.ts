@@ -25,7 +25,7 @@ export function useOpeDemo() {
         return null;
       } catch (cause) {
         const message = cause instanceof Error ? cause.message : 'This configuration could not be evaluated.';
-        console.error('Offline evaluation rejected configuration:', message, next);
+        console.warn('Offline evaluation rejected configuration:', message, next);
         return message;
       }
     },

@@ -45,17 +45,27 @@ export function verdict(evaluation: Evaluation, method: Method): Verdict {
   const gain = value - target.result.logged;
   if (!interval) return { tone: 'none', headline: `Point estimate ${signed(value)}; no paired interval for this estimator.`, detail: null };
   const range = `${signed(interval[0])} to ${signed(interval[1])}`;
+  // the interval is always target − logger, whichever way the headline states the gap
   if (interval[0] > 0) {
     const share = constantShare(evaluation, method);
-    const reading = share !== null && share >= MOSTLY ? 'so most of it is a shift in how often to act, not when' : 'so the state dependence carries most of it';
+    const reading =
+      share !== null && share >= MOSTLY ? 'so most of it is a shift in how often to act, not when' : 'so the state dependence carries most of it';
     return {
       tone: 'gain',
-      headline: `The target beats the logger by ${signed(gain)} (paired 95% interval ${interval[0].toFixed(2)} to ${interval[1].toFixed(2)}).`,
-      detail: share === null ? null : `A control that never reads the state gets ${percent(Math.max(0, share))} of that gain, ${reading}.`,
+      headline: `The target beats the logger by ${signed(gain)} (paired 95% interval for target − logger: ${range}).`,
+      detail: share === null ? null : `A control that never reads the state (the load) gets ${percent(Math.max(0, share))} of that gain, ${reading}.`,
     };
   }
   if (interval[1] < 0) {
-    return { tone: 'loss', headline: `The logger beats the target by ${signed(-gain)} (paired 95% interval ${range}).`, detail: null };
+    return {
+      tone: 'loss',
+      headline: `The logger beats the target by ${signed(-gain)} (paired 95% interval for target − logger: ${range}).`,
+      detail: null,
+    };
   }
-  return { tone: 'none', headline: `No measurable difference from the logger: the paired 95% interval runs from ${range}.`, detail: null };
+  return {
+    tone: 'none',
+    headline: `No measurable difference from the logger: the paired 95% interval for target − logger runs from ${range}.`,
+    detail: null,
+  };
 }

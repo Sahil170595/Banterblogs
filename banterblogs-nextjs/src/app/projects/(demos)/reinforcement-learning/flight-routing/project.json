@@ -1,14 +1,18 @@
 {
   "slug": "flight-routing",
   "title": "Flight Routing Lab",
-  "dek": "A deadline-aware routing environment with masked actions, joint disruption samples and paired policy evaluation, rebuilt from my Gatebound system to run in the browser.",
-  "summary": "A deadline-first routing environment: four policies over the same 64 seeded worlds.",
+  "dek": "Gatebound is a reinforcement-learning system I built in Python for getting a passenger to a destination before a deadline when flights can be delayed or cancelled. This page rebuilds its simulator in your browser and runs four booking policies over the same 64 simulated worlds.",
+  "summary": "A flight-booking simulator: four policies race a deadline to JFK. Planning ahead wins on-time arrivals and costs arrivals overall.",
   "collection": "reinforcement-learning",
   "alsoIn": [],
   "order": 1,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/flight-routing" },
-    { "label": "Gatebound", "url": "https://github.com/Sahil170595/gatebound-rl" }
-  ]
+    {
+      "label": "Code for this page",
+      "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/flight-routing"
+    },
+    { "label": "Gatebound on GitHub", "url": "https://github.com/Sahil170595/gatebound-rl" }
+  ],
+  "builtWith": ["Python", "Gymnasium", "Parquet"]
 }

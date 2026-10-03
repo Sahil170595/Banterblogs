@@ -8,7 +8,13 @@ import { collectErrors } from './consoleErrors';
 
 const PAGE = '/projects/reinforcement-learning/offline-policy-evaluation';
 
+async function openUnderTheHood(page: Page) {
+  const hood = page.locator('details', { hasText: 'Under the hood' });
+  if (!(await hood.evaluate((details) => (details as HTMLDetailsElement).open))) await hood.locator('summary').click();
+}
+
 async function exported(page: Page) {
+  await openUnderTheHood(page);
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export evaluation JSON', exact: true }).click();
   const file = await (await pending).path();
@@ -42,9 +48,23 @@ test('presets move the verdict, a support gap withholds the target, export repla
   expect(withheld.comparisons[0].result.normalized).toBeNull();
   expect(withheld.config.scenario).toBe('gap');
 
-  await page.getByText('All settings', { exact: true }).click();
   await page.getByRole('button', { name: 'Reset evaluation', exact: true }).click();
   expect(await exported(page)).toEqual(first);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
+});
+
+test('on a phone, the support table shows every load’s Intensify cell without a sideways scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE);
+  await openUnderTheHood(page);
+  const intensify = page.getByRole('region', { name: 'Action support' }).locator('td[data-label="Intensify"]');
+  await expect(intensify).toHaveCount(3);
+  for (const cell of await intensify.all()) {
+    await cell.scrollIntoViewIfNeeded();
+    const box = (await cell.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

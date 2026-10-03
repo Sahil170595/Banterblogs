@@ -22,6 +22,8 @@ const NODE_RADIUS = 6;
 const RING_RADIUS = 14;
 const NAME_OFFSET = 22;
 const AIRPORT_CODES = AIRPORTS.map((n) => n.code);
+// the codes stay on the drawing, where a city name would crowd the edges; the key names them
+const CITIES: Record<Airport, string> = { SFO: 'San Francisco', DEN: 'Denver', ORD: 'Chicago', JFK: 'New York' };
 
 const at = (x: number, y: number) => ({ left: along(x, 0, VIEW.width), top: along(y, 0, VIEW.height) });
 
@@ -74,7 +76,8 @@ export function RouteFigure({ state, chosenId }: { state: Episode; chosenId?: st
         <span data-kind="failed">Failed</span>
         <span data-kind="chosen">Next choice</span>
         <span data-kind="legal">Bookable</span>
-        <span>Ring: the passenger</span>
+        <span>Ring: where the passenger is</span>
+        <span className={styles.cityKey}>{AIRPORT_CODES.map((code) => `${code} ${CITIES[code]}`).join(' · ')}</span>
       </figcaption>
     </figure>
   );

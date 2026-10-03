@@ -15,6 +15,10 @@ export function Timeline({ state }: { state: Episode }) {
   const legal = new Set(candidates(state).map((f) => f.id));
   return (
     <figure className={styles.timeline} aria-label={`Flight timeline, 00:00 to ${formatTime(horizon)}`}>
+      <p className={styles.timelineTitle}>
+        Flight schedule: thin bars are the timetable, thick bars what actually flew. The dashed line is the deadline, the solid one the
+        passenger&apos;s clock.
+      </p>
       <div className={styles.lanes} style={{ '--deadline': pct(deadline, horizon), '--clock': pct(state.clock, horizon) } as CSSProperties}>
         <span className={styles.deadlineRule} title={`Deadline ${formatTime(deadline)}`} />
         <span className={styles.clockRule} title={`Passenger clock ${formatTime(state.clock)}`} />

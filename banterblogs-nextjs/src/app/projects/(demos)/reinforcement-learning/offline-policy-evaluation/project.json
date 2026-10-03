@@ -1,14 +1,18 @@
 {
   "slug": "offline-policy-evaluation",
   "title": "Offline Policy Evaluation Lab",
-  "dek": "An importance-sampling evaluator that tests whether a policy's estimated gain on logged data survives a constant control, a reward change and a support audit, rebuilt from my Counterledger pipeline.",
-  "summary": "Estimates a new policy from logged decisions, then tests whether its gain survives the controls.",
+  "dek": "Counterledger is an offline policy evaluator I built in Python: it estimates how a new decision policy would have done from records of past decisions, without trying it for real. This page rebuilds its importance-sampling core in your browser and tests whether an apparent gain survives three checks.",
+  "summary": "Scores a new decision policy on records of past decisions, then tests whether its apparent win survives a control, a reward change and a support audit.",
   "collection": "reinforcement-learning",
   "alsoIn": [],
   "order": 2,
   "evidence": "synthetic-fixture",
   "links": [
-    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/offline-policy-evaluation" },
-    { "label": "Counterledger", "url": "https://github.com/Sahil170595/counterledger-ope" }
-  ]
+    {
+      "label": "Code for this page",
+      "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/offline-policy-evaluation"
+    },
+    { "label": "Counterledger on GitHub", "url": "https://github.com/Sahil170595/counterledger-ope" }
+  ],
+  "builtWith": ["Python", "NumPy", "pandas", "scikit-learn", "SciPy"]
 }
