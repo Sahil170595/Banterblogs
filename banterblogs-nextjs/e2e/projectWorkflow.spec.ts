@@ -8,8 +8,16 @@ import { collectErrors } from './consoleErrors';
 // an exported run replays. On a phone the table stacks into one card per
 // attempt, so the committed record is never scrolled out of sight.
 
-const PAGE = '/projects/agents-and-evaluation/workflow-observatory';
+const PAGE = '/projects/agents-and-evaluation/browser-agent-completion';
 const PHONE = { width: 390, height: 844 };
+
+// the page's first URL, which Parallax's README and old links point at
+test('the old Workflow Observatory URL redirects here', async ({ page }) => {
+  const response = await page.goto('/projects/agents-and-evaluation/workflow-observatory');
+  expect(new URL(page.url()).pathname).toBe(PAGE);
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole('heading', { level: 1, name: 'Browser Agent Completion Gate' })).toBeVisible();
+});
 
 const status = (page: Page) => page.getByRole('status', { name: 'Workflow status', exact: true });
 const attempt = (page: Page, label: string) => page.getByRole('button', { name: new RegExp(`^${label}`) });

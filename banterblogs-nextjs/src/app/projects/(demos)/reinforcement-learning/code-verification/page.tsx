@@ -78,6 +78,11 @@ export default function CodeVerificationPage() {
         badge hides both.
       </p>
       <p>
+        In an RL environment that matters twice over, because the grade is the reward an agent learns from. A reward that checks only the
+        bug&apos;s own example pays an agent for memorizing that example, so the environment has to grade every test, on both versions of
+        the code.
+      </p>
+      <p>
         So the verifier grades a patch by transitions: how each test&apos;s result changes. Every test runs twice, on the buggy function
         and on the patched one, against the same independently written expected value. A failure that now passes is a repair, a pass that
         still passes is preserved behavior, a failure that still fails is still broken, and a pass that now fails is a regression. The
