@@ -140,6 +140,11 @@ const RETIRED_CLAIMS = [
   // the workshop decisions landed 2026-09-30: one accepted, four rejected
   '5 under double-blind review',
   '5 workshop submissions',
+  // six merged upstream fixes since #199075 landed (2026-10-02); PhD v4:
+  // twelve reviews, not nine
+  'four upstream contributions',
+  'five merged upstream fixes',
+  'nine paper reviews',
   '22 Hugging Face',
   // the owner confirmed a cumulative score
   'SGPA',
@@ -158,7 +163,7 @@ describe('work page résumé currency', () => {
     const all = text(page);
     for (const fact of [
       '2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints',
-      'four upstream contributions',
+      'six merged upstream fixes',
       '23 Hugging Face models',
       'Hugging Face — 23 model releases',
       'from about 40s in early benchmarks to 100–450 ms',
@@ -180,6 +185,86 @@ describe('work page résumé currency', () => {
     expect(lanes).toContain('New York University');
   });
 
+  // résumé v8 lists five merged fixes; #199075 landed on 2026-10-02 (0055968)
+  it('lists every upstream fix with its true state', () => {
+    const entries = Object.fromEntries(RESEARCH.map((item) => [item.label, item.href]));
+    for (const [label, href] of [
+      ['vLLM PR #45207 — merged', 'https://github.com/vllm-project/vllm/pull/45207'],
+      ['PyTorch PR #175562 — merged', 'https://github.com/pytorch/pytorch/pull/175562'],
+      ['PyTorch PR #190555 — merged', 'https://github.com/pytorch/pytorch/pull/190555'],
+      ['Ollama PR #16669 — merged', 'https://github.com/ollama/ollama/pull/16669'],
+      ['Triton PR #10819 — merged', 'https://github.com/triton-lang/triton/pull/10819'],
+      ['PyTorch PR #199075 — merged', 'https://github.com/pytorch/pytorch/pull/199075'],
+    ]) {
+      expect(entries[label], label).toBe(href);
+    }
+    expect(RESEARCH.filter((item) => / — merged$/.test(item.label))).toHaveLength(6);
+  });
+
+  // résumé v8 (2026-10-02). Its latency bullet adds "(80–400×)", which the
+  // 2026-09-21 CV withdrew (the 40s was an early benchmark, not a like-for-like
+  // endpoint), so the site keeps the qualified wording and no multiplier.
+  it('carries the GhostEye role as résumé v8 states it, without the withdrawn multiplier', () => {
+    const ghosteye = EXPERIENCE.find((job) => job.company === 'GhostEye Inc. (YC S25)')!;
+    expect(ghosteye.bullets).toHaveLength(5);
+    const all = ghosteye.bullets.join(' ');
+    for (const fact of [
+      'Built Beacon',
+      '5 enterprise pilots (a top-10 global asset manager, a Fortune-100 cloud platform, Eight Sleep, Fella Health, ZeroPath)',
+      'cut phishing click rate 58% and tripled reporting within one quarter',
+      'from about 40s in early benchmarks to 100–450 ms',
+      'conversation LLM costs 30–80%',
+      '~360 to ~60 ms per node (83% lower)',
+    ]) {
+      expect(all, fact).toContain(fact);
+    }
+    expect(all).not.toMatch(/80–400|80-400/);
+    expect(HERO_SUMMARY).toContain('at GhostEye (YC S25), shipped Beacon to 5 enterprise pilots, cutting conversation LLM costs 30–80%');
+  });
+
+  // PhD v4: NeurIPS 2026 workshops FLMSec (2), JUDGe (3), RTCA (5); ethics
+  // main (1) and E&D (1); one journal review. Service had been one bullet
+  // inside the research entry.
+  it('gives reviewing its own section: the conference, the journal and the hackathons', () => {
+    const section = page.querySelector('section#service')!;
+    expect([...section.querySelectorAll('h3')].map(text)).toEqual(['NeurIPS 2026 reviewer', 'Journal reviewer', 'Hackathon judge']);
+    for (const fact of [
+      'Workshops: FLMSec (2), JUDGe (3), RTCA (5).',
+      'Ethics: main conference (1), Evaluations & Datasets track (1).',
+      'All 12 reviews completed.',
+      'Advances in Artificial Intelligence and Machine Learning (AAIML; ISSN 2582-9793)',
+      'Build for the Border (May 2026) and AI Healthcare Hack NYC (Jul 2026).',
+    ]) {
+      expect(text(section), fact).toContain(fact);
+    }
+    expect(RESEARCH.flatMap((item) => item.bullets).filter((bullet) => bullet.startsWith('Service:'))).toEqual([]);
+  });
+
+  // résumé v8 (2026-10-01): five Attunica bullets, not nine. Its finding that
+  // the serving role bypassed row-level security stays on the résumé: on a
+  // public page it reads as a disclosed hole in a PHI system.
+  it('carries the Attunica role as résumé v8 states it, without the row-level-security finding', () => {
+    const attunica = EXPERIENCE.find((job) => job.company === 'Attunica, LLC')!;
+    expect(attunica.bullets).toHaveLength(5);
+    const all = attunica.bullets.join(' ');
+    for (const fact of [
+      'shipped to 2 pilots (NYU Silver MSW program; a 120-therapist clinic)',
+      'three-sample median judging',
+      '40-fixture judge-validity benchmark',
+      'held-out weighted kappa 0.66 vs 0.05 null',
+      'fail-safe restricted-role FORCE-RLS rollout',
+    ]) {
+      expect(all, fact).toContain(fact);
+    }
+    expect(all).not.toMatch(/bypass/i);
+    expect(HERO_SUMMARY).toContain("Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic");
+  });
+
+  it('cites both workshop papers on arXiv', () => {
+    const evidence = RESEARCH.flatMap((item) => item.evidence ?? []).map((link) => link.href);
+    for (const arxiv of ['https://arxiv.org/abs/2605.27763', 'https://arxiv.org/abs/2610.01801']) expect(evidence, arxiv).toContain(arxiv);
+  });
+
   it('links the two companies to their sites, in a new tab', () => {
     for (const [company, href] of [
       ['GhostEye Inc. (YC S25)', 'https://ghosteye.ai'],
@@ -195,7 +280,7 @@ describe('work page résumé currency', () => {
 });
 
 describe('work page layout', () => {
-  it('puts the title across the page, then the call to action first in the rail, the profile links after it, and an index of the four sections', () => {
+  it('puts the title across the page, then the call to action first in the rail, the profile links after it, and an index of the five sections', () => {
     expect(page.querySelector('header h1')).not.toBeNull();
     const rail = page.querySelector('.profile-rail')!;
     const links = [...rail.querySelectorAll('a[href]')].filter((a) => !a.getAttribute('href')!.startsWith('#'));
@@ -207,7 +292,7 @@ describe('work page layout', () => {
       expect(link.getAttribute('target')).toBe('_blank');
     }
     const index = [...rail.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute('href') ?? '');
-    expect(index).toEqual(['#research', '#experience', '#education', '#skills']);
+    expect(index).toEqual(['#research', '#experience', '#service', '#education', '#skills']);
     for (const id of index) expect(page.querySelector(`section${id}`), id).not.toBeNull();
   });
 

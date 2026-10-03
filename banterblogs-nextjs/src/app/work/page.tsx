@@ -15,6 +15,7 @@ import {
   CAREER_TIMELINE,
   EDUCATION,
   EXPERIENCE,
+  SERVICE,
   HERO_HEADLINE,
   HERO_SUMMARY,
   NEXT_LINKS,
@@ -51,6 +52,7 @@ export const metadata: Metadata = {
 const SECTIONS = [
   { id: 'research', label: 'Research & Open Source' },
   { id: 'experience', label: 'Experience' },
+  { id: 'service', label: 'Service' },
   { id: 'education', label: 'Education' },
   { id: 'skills', label: 'Technical Skills' },
 ];
@@ -246,6 +248,24 @@ export default function WorkPage() {
           <ul>
             {EXPERIENCE.map((job) => (
               <RoleRow key={`${job.company}-${job.dates}`} job={job} />
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="service" title="Service">
+          <ul>
+            {SERVICE.map((service) => (
+              <Reveal
+                as="li"
+                key={service.role}
+                className="list-row grid gap-x-8 gap-y-2 py-6 md:grid-cols-[9.5rem_minmax(0,1fr)]"
+              >
+                <p className="pt-1 text-label-13 text-muted-foreground">{service.dates}</p>
+                <div className="min-w-0">
+                  <h3 className="text-heading-20 text-foreground">{service.role}</h3>
+                  <p className="mt-2 text-copy-16 text-prose">{service.detail}</p>
+                </div>
+              </Reveal>
             ))}
           </ul>
         </Section>

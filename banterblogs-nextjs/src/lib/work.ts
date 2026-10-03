@@ -31,7 +31,7 @@ export const COMBINED_PYPI_DOWNLOADS = `${Math.floor(
   [CHIMERAFORGE_TOOL, QUANTFIT_TOOL].reduce((sum, tool) => sum + downloadFloor(tool.downloads ?? ''), 0) / THOUSAND,
 )}K+`;
 
-export const HERO_SUMMARY = `Architected Attunica's multimodal psychotherapy platform and AWS ECS/Bedrock cutover; at GhostEye (YC S25), shipped security agents to 5 enterprise pilots and cut deepfake-simulation latency from about 40s in early benchmarks to 100–450 ms per response. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints, four upstream contributions, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
+export const HERO_SUMMARY = `Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped Beacon to 5 enterprise pilots, cutting conversation LLM costs 30–80%. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints, six merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
 
 export interface ResearchItem {
   label: string;
@@ -61,7 +61,6 @@ export const RESEARCH: ResearchItem[] = [
     bullets: [
       'Built the Banterhearts execution substrate: shared multi-backend evaluation and serving harnesses (Transformers, Ollama, ONNX, vLLM, SGLang, TGI), per-sample JSONL provenance, seed/config/git manifests, checkpointed OpenAI/Anthropic batch judges, disagreement-aware triangulation, fail-closed analyzers, and frozen-byte paper packages under dependency-locked CI.',
       'Led the independent program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Presented at the ICML 2026 Workshop on Hypothesis Testing; accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security (safety-embedding directions, the first paper on Chimera’s own thesis); 1 more paper under double-blind review; two studies public on arXiv, on quantization safety and temperature-zero speculative decoding. Every paper is first-author.',
-      'Service: nine paper reviews for three ML workshops, two conference ethics reviews, and one review for Advances in Artificial Intelligence and Machine Learning (AAIML), a Scopus-indexed journal; hackathon judge for Build for the Border (May 2026) and AI Healthcare Hack NYC (Jul 2026).',
       'Tested three serving-performance assumptions: an M/D/1 model with linear parallel-service scaling underestimated queue wait by up to 20.4×; Ollama NUM_PARALLEL changes showed no significant effect in 30 contrasts; direct PyTorch lost more per-agent throughput than Ollama as concurrency rose from one to eight (86.4% versus 82.1%). A separate N=8 comparison found up to 2.25× vLLM throughput over Ollama.',
       'Isolated deployment effects with a 78,183-row, four-stack ablation; separate safety experiments found chat-template divergence could exceed numerical-precision effects. Designed controls for backend, template, and concurrency identity so changes in the serving environment were not misattributed to model weights; deployment rules include Q4_K_M and compile-prefill-only on Linux.',
       'The TAIS preprint examines output differences and refusal behavior under temperature-zero speculative decoding.',
@@ -71,6 +70,10 @@ export const RESEARCH: ResearchItem[] = [
     ],
     evidence: [
       { label: 'arXiv:2605.27763 — ICML 2026 workshop paper, presented', href: 'https://arxiv.org/abs/2605.27763' },
+      {
+        label: 'arXiv:2610.01801 — accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security',
+        href: 'https://arxiv.org/abs/2610.01801',
+      },
       { label: 'arXiv:2606.10154', href: 'https://arxiv.org/abs/2606.10154' },
       { label: 'arXiv:2606.25097 — TAIS preprint', href: 'https://arxiv.org/abs/2606.25097' },
     ],
@@ -155,6 +158,21 @@ export const RESEARCH: ResearchItem[] = [
     ],
   },
   {
+    label: 'PyTorch PR #190555 — merged',
+    href: 'https://github.com/pytorch/pytorch/pull/190555',
+    bullets: [
+      'Merged PyTorch PR #190555 (jansel-approved, 0b96f88; Inductor): split cross-device extern kernels out of CUDA-graph partitions, which were capturing CPU storage and failing memory-pool checks; same-device kernels stay graph-eligible, with regressions for custom ops, multi-output ops, index_put, and SDPA dropout.',
+    ],
+  },
+  {
+    label: 'PyTorch PR #199075 — merged',
+    href: 'https://github.com/pytorch/pytorch/pull/199075',
+    bullets: [
+      "Merged PyTorch PR #199075 (guilhermeleobas-approved, 0055968; Dynamo): Python random float draws were traced as float32 while Inductor's CPU kernels received float64 buffers, so x * rng.random() returned values around -9e34; the graph input now uses the same full-precision conversion as runtime, with an Inductor regression test (fixes #198187).",
+    ],
+    evidence: [{ label: 'Fixes PyTorch #198187', href: 'https://github.com/pytorch/pytorch/issues/198187' }],
+  },
+  {
     label: 'Ollama PR #16669 — merged',
     href: 'https://github.com/ollama/ollama/pull/16669',
     bullets: [
@@ -205,9 +223,13 @@ export const EXPERIENCE: Experience[] = [
     location: 'New York, USA',
     dates: 'Dec 2025 – Mar 2026',
     bullets: [
-      'Built a multi-agent security training platform in 90 days across web, Slack, Teams, SMS/RCS, WhatsApp, Telegram, voice, and email; shipped to 5 enterprise pilots: a top-10 global asset manager, a Fortune-100 cloud platform, and 3 mid-market firms (200–1000 employees). A shared JIT agent personalized remediation from vectorized phishing, vishing, smishing, and deepfake failure history.',
-      'Built phishing simulation on self-hosted Llama-3-70B with domain-specific LoRA/QLoRA + DeepSpeed over a 1M+ email corpus grounded in NIST guidance, vendor impersonation, and typosquat logins; engineered a Go orchestration pipeline automating adversarial credential-harvest page generation and session-cookie capture; owned LangGraph/LangSmith-traced scoring, adversarial-attempt logs, Azure tenancy/auth, country-code-aware routing, STT/TTS fallback, and SCORM/Vanta reporting aligned to SOC 2, NIST, ISO 27001, and GDPR.',
-      'Reduced deepfake-simulation per-response latency from about 40s in early benchmarks to 100–450 ms (about 450 ms on cold starts) with a multi-agent WebRTC pipeline spanning synchronized video rendering, voice generation, human-like scheduling, and retry-aware delivery.',
+      "Built Beacon, GhostEye's multi-agent JIT security training, in 90 days across web, Slack/Teams, SMS/RCS, WhatsApp, Telegram, voice, and email; 5 enterprise pilots (a top-10 global asset manager, a Fortune-100 cloud platform, Eight Sleep, Fella Health, ZeroPath). The asset manager pilot cut phishing click rate 58% and tripled reporting within one quarter; a shared JIT agent personalized remediation from vectorized phishing/vishing/smishing/deepfake failure histories.",
+      'Fine-tuned self-hosted Llama-3-70B for phishing simulation (domain adaptation) via LoRA/QLoRA + DeepSpeed on 1M+ NIST-grounded emails (vendor impersonation, typosquat logins). Built Go orchestration for credential-harvest pages/session-cookie capture, traced scoring/adversarial logs, Azure tenant auth, country-code routing, STT/TTS fallback, and SCORM/Vanta reporting aligned to SOC 2/NIST/ISO 27001/GDPR.',
+      // v8 adds a speedup multiplier here that the 2026-09-21 CV withdrew
+      // (publicClaims.test.ts WITHDRAWN); the qualified latency stays
+      'Cut deepfake phishing simulation streaming response latency from about 40s in early benchmarks to 100–450 ms by rebuilding the pipeline as a multi-agent WebRTC system spanning synchronized video rendering, voice generation, human-like scheduling, and retry-aware delivery.',
+      'Built analytics/evals for Vapi voice, self-hosted SMS simulation, and the training pipeline (TTFT, tokens/query, tokens/sec; in-house LangGraph evals, Kafka/ClickHouse scheduling and logging); cut per-turn latency from 5–7s to 0.5–1.5s with barge-in, streaming, caching, and summarization; caching and summarization cut conversation LLM costs 30–80%, with larger savings on longer conversations.',
+      'Built C-suite OSINT knowledge graphs for enterprise clients incl. Fortune-100 (Firecrawl into Amazon Neptune, TinkerPop/Gremlin; 5K+ nodes per graph); fixed Neptune overload by restructuring around cross-executive overlap and per-executive connectivity; cut amortized render from ~360 to ~60 ms per node (83% lower) via caching and engagement-ranked level-of-detail loading.',
     ],
   },
   {
@@ -217,15 +239,13 @@ export const EXPERIENCE: Experience[] = [
     location: 'New York, USA',
     dates: 'Oct 2025 – Present',
     bullets: [
-      "Architected and solo-built Attunica's multimodal psychotherapy-training and evaluation platform: real-time LiveKit + Gemini + Anam sessions, durable transcripts/debriefs, and academic workflows; now lead a PM + 2 engineers; NYU Silver MSW pilot; HIPAA BAAs with Anthropic + AWS.",
+      "Architected and solo-built Attunica's multimodal psychotherapy-training and evaluation platform: real-time LiveKit + Gemini + Anam sessions, durable transcripts/debriefs, and academic workflows (instructor assessments, verified recording playback); now lead a PM + 2 engineers; shipped to 2 pilots (NYU Silver MSW program; a 120-therapist clinic); HIPAA BAAs with Anthropic + AWS.",
       'Built a consent-gated, clinician-graded LLM-persona environment for measuring simulated humanity and attachment without patient data: persona text is character data, never instructions; tenant RBAC and signed BFF capabilities fence roles; immutable eval IDs, revocable consent, private versioned media, and two-channel Deepgram bind evidence to provider identity.',
-      'Made evaluation state auditable: content-addressed records pin prompt/provider/model/schema revisions; distinguish no evidence from scored zero; gate scoring on clinical validation; persist lifecycle/budget state; and separate pre-call failure from ambiguous provider outcomes to prevent billable replay.',
-      'Built a therapist-evidence judge, locally exercised on synthetic Bedrock fixtures: typed turn citations reject wrong-speaker evidence; ordinal aggregation and a configuration-pinned test–retest harness surface disagreement for instructor review. Evidence aliases reduced input from about 32K to 15–16K tokens on a four-minute session.',
-      'Led the AWS-funded production cutover with Avahi to ECS, Aurora PostgreSQL 18, and Bedrock; retired Fly/Neon/Vercel; enforced IAM-scoped credentials, typed runtime contracts, zero SDK retries, bounded timeouts, no cross-provider fallback/replay, and exact-SHA, scope-bounded infrastructure releases with content-free canary receipts.',
-      'Shipped tenant-scoped source-document ingestion for module generation, verified session recording playback, and human-only instructor assessments with autosave, immutable submission, and explicit release of criterion-anchored feedback to students; implemented asynchronous highlight derivation and FFmpeg input seeking, cutting a constrained 60-second clip-processing benchmark 32.8% (118.5s → 79.6s).',
-      'Executed a 141-row production-readiness matrix through 40 dependency-ordered PRs under exact-base validation, lane ownership, and append-only admission (a PR cannot weaken its approving checks); qualified the source candidate with 6K+ tests, PostgreSQL 18 migration rehearsals, commit-bound artifacts, and content-free Bedrock/Deepgram evidence.',
-      'Lead the Article 31 documentation product (v0.5.1 on AWS ECS): release-only deploys and gated in-VPC migrations; domain-restricted SSO, patient-scoped RBAC/RLS/audits, browser-only PII-scrubbed PDF extraction, on-device Whisper, and clinician-reviewed Claude notes/treatment plans with end-to-end authorship.',
-      "Led versioned clinical-document writes with atomic content/revision/audit updates: a clinician's intervening edit cannot be overwritten by a returning AI draft, and restores append a new revision; verified persistence and edit races on real PostgreSQL with application-authorization and forced-RLS test modes.",
+      'Rebuilt session scoring as three-sample median judging over alias-verified therapist evidence (wrong-speaker citations fail closed; input 32k → 15–18k tokens); a 40-fixture judge-validity benchmark with held-out scenarios and bias probes showed debiasing moved leniency from +0.81 to within 0.13 anchors of zero (held-out weighted kappa 0.66 vs 0.05 null; model-written key) and that sample disagreement alone misses large errors; eval records distinguish no evidence from scored zero; persisted provider-attempt state separates pre-call failures from ambiguous outcomes, preventing replay of billable side effects.',
+      'Led the AWS-funded production cutover with Avahi to ECS, Aurora PostgreSQL 18, and Bedrock (retired Fly/Neon/Vercel) through a 141-row production-readiness matrix in which a PR cannot weaken the checks that approve it; qualified the release candidate with PostgreSQL 18 migration rehearsals and commit-bound artifacts under IAM-scoped credentials, zero SDK retries, bounded timeouts, and no cross-provider fallback or replay.',
+      // v8 also names the row-level-security gap this rollout closed; that
+      // stays on the résumé, off a public page about a PHI system
+      'Lead the Article 31 documentation product on AWS ECS (clinician-reviewed Claude notes/treatment plans): release-only deploys with drained, snapshotted in-VPC migrations; PHI-blind admins and psychotherapy-note authorship enforced end to end; a fail-safe restricted-role FORCE-RLS rollout; versioned clinical writes with append-only audit; on-device Whisper.',
     ],
   },
   {
@@ -287,6 +307,27 @@ export const CAREER_TIMELINE = {
   caption: `${EXPERIENCE.length} roles since ${FIRST_START}; the ${STILL_RUNNING} still running reach the present.`,
   lanes: CHRONOLOGICAL.map((job) => ({ label: job.company, detail: job.role, dates: job.dates })),
 };
+
+// PhD2027_v4's service list; all reviews completed
+export const SERVICE = [
+  {
+    role: 'NeurIPS 2026 reviewer',
+    detail:
+      'Workshops: FLMSec (2), JUDGe (3), RTCA (5). Ethics: main conference (1), Evaluations & Datasets track (1). All 12 reviews completed.',
+    dates: '2026',
+  },
+  {
+    role: 'Journal reviewer',
+    detail:
+      'Advances in Artificial Intelligence and Machine Learning (AAIML; ISSN 2582-9793), a Scopus- and Web of Science-indexed journal. One review completed.',
+    dates: '2026',
+  },
+  {
+    role: 'Hackathon judge',
+    detail: 'Build for the Border (May 2026) and AI Healthcare Hack NYC (Jul 2026).',
+    dates: '2026',
+  },
+];
 
 export const EDUCATION = [
   {
