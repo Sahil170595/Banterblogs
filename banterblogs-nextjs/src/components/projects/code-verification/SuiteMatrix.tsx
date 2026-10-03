@@ -17,7 +17,9 @@ const TRANSITION_TEXT: Record<Transition, string> = {
   'fail-fail': 'still broken',
   'pass-fail': 'regressed',
 };
-const TASK_CHOICES: Choice<TaskId>[] = TASKS.map((t) => ({ value: t.id, label: t.title }));
+// short enough that both fit one row on a phone; the full titles head the matrix
+const TASK_LABELS: Record<TaskId, string> = { intervals: 'Interval union', unique: 'Deduplication' };
+const TASK_CHOICES: Choice<TaskId>[] = TASKS.map((t) => ({ value: t.id, label: TASK_LABELS[t.id] }));
 const SCOPE_CHOICES: Choice<RunConfig['scope']>[] = [
   { value: 'smoke', label: 'Smoke', note: '2 tests' },
   { value: 'full', label: 'Full', note: '6 tests' },
