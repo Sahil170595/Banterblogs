@@ -1,0 +1,10 @@
+{
+  "slug": "mission-governance",
+  "title": "Mission Governance Lab",
+  "summary": "Edit a synthetic mission, enforce lifecycle approvals, inject source-derived faults, and verify a SHA-256 replay bundle.",
+  "categories": ["embodied", "systems", "evaluation"],
+  "roles": ["embodied-ai", "ml-systems", "ai-safety"],
+  "status": "interactive",
+  "runtime": "browser-simulation",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-mission-governance/banterblogs-nextjs/src/lib/projects/mission-governance"
+}
