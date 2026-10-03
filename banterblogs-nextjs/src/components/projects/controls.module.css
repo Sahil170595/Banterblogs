@@ -2,6 +2,13 @@
    segmented choices, pill buttons and form fields, on site tokens. No text
    under 12px. */
 
+/* a demo's row of choices above what they change */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.75rem;
+}
+
 .segmented {
   min-width: 0;
   margin: 0;

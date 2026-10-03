@@ -12,7 +12,10 @@ export interface Choice<T> {
   note?: string;
 }
 
-/** A one-of-few choice as a row of pills: native radios, so arrow keys move between them. */
+/**
+ * A one-of-few choice as a row of pills: native radios, so arrow keys move
+ * between them. A null value checks none, for a state set some other way.
+ */
 export function Segmented<T extends string | number>({
   legend,
   name,
@@ -23,7 +26,7 @@ export function Segmented<T extends string | number>({
   legend: string;
   name: string;
   options: Choice<T>[];
-  value: T;
+  value: T | null;
   onChange: (value: T) => void;
 }) {
   return (
