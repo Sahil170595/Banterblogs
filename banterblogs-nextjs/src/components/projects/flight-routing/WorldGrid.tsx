@@ -71,7 +71,7 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
 
   return (
     <div className={styles.hero}>
-      <div className={styles.controls}>
+      <div className={controls.row}>
         <Segmented legend="Deadline" name="deadline" options={DEADLINES} value={config.deadline} onChange={(deadline) => configure({ ...config, deadline })} />
         <Segmented legend="Disruptions" name="profile" options={PROFILES} value={config.profile} onChange={(profile) => configure({ ...config, profile })} />
         <Segmented legend="Route" name="route" options={ROUTES} value={config.scenario} onChange={(scenario) => configure({ ...config, scenario })} />
