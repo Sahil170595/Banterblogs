@@ -1,0 +1,10 @@
+{
+  "slug": "customer-service",
+  "title": "Customer Service Environment",
+  "summary": "Operate identity-bound service tools on synthetic orders and inspect state-grounded, branch-coherent rewards.",
+  "categories": ["agents", "reinforcement-learning", "evaluation"],
+  "roles": ["research-engineer", "applied-ai", "ai-safety"],
+  "status": "interactive",
+  "runtime": "browser-simulation",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-customer-service/banterblogs-nextjs/src/lib/projects/customer-service"
+}
