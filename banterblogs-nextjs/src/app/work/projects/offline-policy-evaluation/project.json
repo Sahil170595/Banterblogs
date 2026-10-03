@@ -6,5 +6,5 @@
   "roles": ["research-engineer", "applied-ai", "ai-safety"],
   "status": "interactive",
   "runtime": "browser-evaluation",
-  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-offline-policy-evaluation/banterblogs-nextjs/src/lib/projects/offline-policy-evaluation"
+  "sourceUrl": "https://github.com/Sahil170595/counterledger-ope"
 }
