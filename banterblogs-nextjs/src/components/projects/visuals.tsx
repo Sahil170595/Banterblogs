@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { ServiceVisual } from './customer-service/ServiceVisual';
 import { FlightRoutingVisual } from './flight-routing/FlightRoutingVisual';
 import { OpeVisual } from './offline-policy-evaluation/OpeVisual';
 
@@ -11,4 +12,5 @@ export interface ProjectVisualProps {
 export const PROJECT_VISUALS: Record<string, ComponentType<ProjectVisualProps>> = {
   'flight-routing': FlightRoutingVisual,
   'offline-policy-evaluation': OpeVisual,
+  'customer-service': ServiceVisual,
 };

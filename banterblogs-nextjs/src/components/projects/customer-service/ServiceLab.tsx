@@ -1,230 +1,504 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { Check, ChevronRight, Download, Play, RotateCcw, ShieldCheck, SkipForward, Square, Upload } from 'lucide-react';
-import { createSession, exportTrace, refunded, replayTrace, score, step } from '@/lib/projects/customer-service/engine';
+import { useRef, useState, type FormEvent } from 'react';
+import { Check, ChevronRight, Download, Play, ShieldCheck, SkipForward, Square, Upload } from 'lucide-react';
+import { refunded } from '@/lib/projects/customer-service/engine';
 import { CLAIMS, MAX_EVENTS, SCENARIOS, TOOL_LABELS, type Claim, type Config, type Event, type ToolName } from '@/lib/projects/customer-service/model';
-import { PRESETS, scriptedActions, type Preset } from '@/lib/projects/customer-service/scripts';
+import { score } from '@/lib/projects/customer-service/reward';
+import { PRESETS, type Preset } from '@/lib/projects/customer-service/scripts';
+import { controls } from '../controls';
+import { percent } from '../geometry';
+import { money, signedScore } from './format';
+import type { ServiceDemo } from './useServiceDemo';
 import styles from './service.module.css';
 
-const money = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
-const MAX_TRACE_BYTES = 2_000_000;
-const claimLabels: Record<Claim, string> = {
-  'cancelled-and-refunded': 'Cancelled and fully refunded', cancelled: 'Order cancelled',
-  'intercept-requested': 'Intercept requested (not confirmed)', refunded: 'Refund issued',
-  'replacement-created': 'Replacement created', 'notification-registered': 'Stock alert registered',
-  'split-tender': 'Legitimate split tender verified', unavailable: 'Order unavailable to this account', 'no-action': 'No remedy applied',
+// The environment under the board: the case, the agent's workbench, the
+// world it changes, and the reward that world earns.
+
+const CLAIM_LABELS: Record<Claim, string> = {
+  'cancelled-and-refunded': 'Cancelled and fully refunded',
+  cancelled: 'Order cancelled',
+  'intercept-requested': 'Intercept requested (not confirmed)',
+  refunded: 'Refund issued',
+  'replacement-created': 'Replacement created',
+  'notification-registered': 'Stock alert registered',
+  'split-tender': 'Legitimate split tender verified',
+  unavailable: 'Order unavailable to this account',
+  'no-action': 'No remedy applied',
 };
-const resolutions = ['cancel', 'intercept', 'refund', 'replace', 'notify'] as const;
-const resolutionLabels = { cancel: 'Cancel shipment', intercept: 'Request carrier intercept', refund: 'Refund selected payment', replace: 'Replace in selected finish', notify: 'Wait for stock alert' };
+const RESOLUTIONS = ['cancel', 'intercept', 'refund', 'replace', 'notify'] as const;
+type Resolution = (typeof RESOLUTIONS)[number];
+const RESOLUTION_LABELS: Record<Resolution, string> = {
+  cancel: 'Cancel shipment',
+  intercept: 'Request carrier intercept',
+  refund: 'Refund the selected payment',
+  replace: 'Replace in the selected finish',
+  notify: 'Wait for a stock alert',
+};
+const STAGES = [
+  { status: 'processing', label: 'Warehouse' },
+  { status: 'shipped', label: 'In transit' },
+  { status: 'delivered', label: 'Delivered' },
+] as const;
+const TARGET_ORDER = 'S-410';
+const FOREIGN_PAYMENT = 'PAY-Z';
+const MISSING_PAYMENT = 'PAY-MISSING';
+const STOCK_SLOTS = 6;
+const PERCENT = 100;
 
 function eventLabel(event: Event): string {
   const a = event.action;
   if (!a) return 'Invalid command';
   if (a.kind === 'tool') return Object.hasOwn(TOOL_LABELS, a.name) ? TOOL_LABELS[a.name as ToolName] : a.name;
-  if (a.kind === 'choice') return `Scripted customer choice: ${resolutionLabels[a.resolution]}`;
-  if (a.kind === 'report') return `Report: ${claimLabels[a.claim]}`;
+  if (a.kind === 'choice') return `Customer chose: ${RESOLUTION_LABELS[a.resolution]}`;
+  if (a.kind === 'report') return `Report: ${CLAIM_LABELS[a.claim]}`;
   return 'Close episode';
 }
 
-export default function ServiceLab() {
-  const [session, setSession] = useState(() => createSession());
-  const [draft, setDraft] = useState<Config>(session.config);
-  const [toolName, setToolName] = useState<ToolName>('order');
-  const [orderId, setOrderId] = useState('S-410');
-  const [paymentId, setPaymentId] = useState('PAY-A');
-  const [amountCents, setAmountCents] = useState(session.config.totalCents);
-  const [sku, setSku] = useState('LAMP-MOSS');
-  const [resolution, setResolution] = useState<typeof resolutions[number]>('replace');
-  const [claim, setClaim] = useState<Claim>('replacement-created');
-  const [raw, setRaw] = useState('{"kind":"tool","name":"order","args":{"orderId":"S-410"}}');
-  const [preset, setPreset] = useState<Preset>('verified');
-  const [scriptIndex, setScriptIndex] = useState(0);
-  const [scriptActive, setScriptActive] = useState(false);
+function Episode({ demo }: { demo: ServiceDemo }) {
+  const { session } = demo;
+  const [draft, setDraft] = useState({ scenario: session.config.scenario, stock: String(session.config.stock), total: String(session.config.totalCents) });
   const [error, setError] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
-  const reward = score(session);
-  const scenario = SCENARIOS.find(s => s.id === session.config.scenario)!;
-  const script = scriptedActions(session.config, preset);
-  const closed = session.termination !== 'open';
-  const target = session.world.orders.find(o => o.id === 'S-410')!;
-  const payments = session.world.payments.filter(p => p.orderId === target.id);
-  const chosenEvent = session.events.find(e => e.index === selectedEvent) ?? session.events.at(-1);
+  const file = useRef<HTMLInputElement>(null);
 
-  function act(input: unknown) {
-    setError('');
-    setScriptActive(false);
-    setSession(s => step(s, input));
-    setSelectedEvent(null);
-  }
-
-  function reset(config: unknown = session.config) {
+  const start = (event: FormEvent) => {
+    event.preventDefault();
+    setError(demo.restart({ scenario: draft.scenario, stock: Number(draft.stock), totalCents: Number(draft.total) }) ?? '');
+  };
+  const exportJson = () => {
     try {
-      const next = createSession(config);
-      setSession(next); setDraft(next.config); setAmountCents(next.config.totalCents);
-      setOrderId('S-410'); setPaymentId(next.config.scenario === 'duplicate' ? 'PAY-B' : 'PAY-A');
-      setToolName('order'); setSku('LAMP-MOSS');
-      setScriptIndex(0); setScriptActive(false); setSelectedEvent(null); setError('');
-    } catch (err) {
-      console.error('Service lab configuration rejected', err);
-      setError(err instanceof Error ? err.message : 'Invalid episode configuration.');
+      const url = URL.createObjectURL(new Blob([demo.exportJson()], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `service-environment-${session.config.scenario}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (cause) {
+      console.error('Service environment export failed:', cause);
+      setError('The trace could not be exported.');
     }
-  }
+  };
+  const importJson = async (picked?: File) => {
+    if (!picked) return;
+    setError((await demo.importTrace(picked)) ?? '');
+    if (file.current) file.current.value = '';
+  };
 
-  function scripted(runAll: boolean) {
-    let next = scriptActive ? session : createSession(session.config);
-    let index = scriptActive ? scriptIndex : 0;
-    do { next = step(next, script[index++]); }
-    while (runAll && index < script.length && next.termination === 'open');
-    setSession(next); setScriptIndex(index); setScriptActive(true); setSelectedEvent(null); setError('');
-  }
+  return (
+    <div className={styles.episode}>
+      <form className={styles.episodeForm} onSubmit={start}>
+        <label className={controls.field}>
+          Case
+          <select value={draft.scenario} onChange={(e) => setDraft({ ...draft, scenario: e.target.value as Config['scenario'] })}>
+            {SCENARIOS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={controls.field}>
+          Preferred-finish stock
+          <input type="text" inputMode="numeric" value={draft.stock} onChange={(e) => setDraft({ ...draft, stock: e.target.value })} />
+        </label>
+        <label className={controls.field}>
+          Order total (cents)
+          <input type="text" inputMode="numeric" value={draft.total} onChange={(e) => setDraft({ ...draft, total: e.target.value })} />
+        </label>
+        <button type="submit" className={controls.button}>
+          New episode
+        </button>
+        <div className={styles.iconGroup}>
+          <button type="button" className={controls.iconButton} aria-label="Export JSON trace" title="Export JSON trace" onClick={exportJson}>
+            <Download aria-hidden="true" />
+          </button>
+          <button type="button" className={controls.iconButton} aria-label="Import and replay a JSON trace" title="Import and replay a JSON trace" onClick={() => file.current?.click()}>
+            <Upload aria-hidden="true" />
+          </button>
+          <input className={styles.fileInput} ref={file} type="file" accept="application/json,.json" aria-label="Trace file" onChange={(e) => void importJson(e.target.files?.[0])} />
+        </div>
+      </form>
+      {error && (
+        <p role="alert" className={controls.error}>
+          {error}
+        </p>
+      )}
+      <div className={styles.scriptRow}>
+        <label className={controls.field}>
+          Scripted control
+          <select value={demo.preset} onChange={(e) => demo.choosePreset(e.target.value as Preset)}>
+            {PRESETS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className={controls.button} disabled={demo.scriptIndex !== null && demo.scriptIndex >= demo.script.length} onClick={() => demo.advanceScript(false)}>
+          <SkipForward aria-hidden="true" />
+          Step
+        </button>
+        <button type="button" className={controls.button} disabled={demo.scriptIndex !== null && demo.scriptIndex >= demo.script.length} onClick={() => demo.advanceScript(true)}>
+          <Play aria-hidden="true" />
+          Run script
+        </button>
+        <span className={controls.hint}>
+          {demo.scriptIndex === null ? 'A script starts a fresh episode.' : `${demo.scriptIndex} of ${demo.script.length} scripted actions`}
+        </span>
+      </div>
+    </div>
+  );
+}
 
-  function executeTool() {
-    const args: Record<string, unknown> = toolName === 'inventory' ? {} : { orderId };
-    if (toolName === 'refund') Object.assign(args, { paymentId, amountCents });
-    if (toolName === 'replace' || toolName === 'notify') args.sku = sku;
-    act({ kind: 'tool', name: toolName, args });
-  }
+function Workbench({ demo }: { demo: ServiceDemo }) {
+  const { session } = demo;
+  const closed = session.termination !== 'open';
+  const orderPayments = session.world.payments.filter((p) => p.orderId === TARGET_ORDER).map((p) => p.id);
+  const [tool, setTool] = useState<ToolName>('order');
+  const [orderId, setOrderId] = useState(TARGET_ORDER);
+  const [paymentId, setPaymentId] = useState(orderPayments[orderPayments.length - 1]);
+  const [amount, setAmount] = useState(String(session.config.totalCents));
+  const [sku, setSku] = useState(session.world.inventory[0].sku);
+  const [resolution, setResolution] = useState<Resolution>('replace');
+  const [claim, setClaim] = useState<Claim>('replacement-created');
+  const [raw, setRaw] = useState(`{"kind":"tool","name":"order","args":{"orderId":"${TARGET_ORDER}"}}`);
+  const [error, setError] = useState('');
+  const amountCents = Number(amount);
 
-  function exportJSON() {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(exportTrace(session), null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a'); a.href = url; a.download = `service-lab-${session.config.scenario}.json`; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function importJSON(file?: File) {
-    if (!file) return;
+  const runTool = () => {
+    const args: Record<string, unknown> = tool === 'inventory' ? {} : { orderId };
+    if (tool === 'refund') Object.assign(args, { paymentId, amountCents });
+    if (tool === 'replace' || tool === 'notify') args.sku = sku;
+    demo.act({ kind: 'tool', name: tool, args });
+  };
+  const runRaw = () => {
     try {
-      if (file.size > MAX_TRACE_BYTES) throw new Error('Trace exceeds the 2 MB import limit.');
-      const next = replayTrace(JSON.parse(await file.text()));
-      setSession(next); setDraft(next.config); setAmountCents(next.config.totalCents);
-      setScriptActive(false); setScriptIndex(0); setSelectedEvent(null); setError('');
-    } catch (err) {
-      console.error('Service lab trace import rejected', err);
-      setError(err instanceof Error ? err.message : 'Trace import failed.');
-    } finally { if (fileInput.current) fileInput.current.value = ''; }
-  }
+      setError('');
+      demo.act(JSON.parse(raw));
+    } catch (cause) {
+      console.error('Service environment command JSON rejected:', cause);
+      setError('That is not valid JSON. Use double-quoted keys and one complete object.');
+    }
+  };
 
-  return <section id="demo" className={styles.lab} aria-label="Guarded customer-service environment">
-    <form className={styles.configuration} onSubmit={e => { e.preventDefault(); reset(draft); }}>
-      <label>Case<select value={draft.scenario} onChange={e => setDraft({ ...draft, scenario: e.target.value as Config['scenario'] })}>
-        {SCENARIOS.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
-      </select></label>
-      <label>Preferred stock<input type="number" min="0" max="6" step="1" value={Number.isFinite(draft.stock) ? draft.stock : ''} onChange={e => setDraft({ ...draft, stock: e.target.value === '' ? NaN : Number(e.target.value) })} required /></label>
-      <label>Order total (cents)<input type="number" min="2" max="100000" step="2" value={Number.isFinite(draft.totalCents) ? draft.totalCents : ''} onChange={e => setDraft({ ...draft, totalCents: e.target.value === '' ? NaN : Number(e.target.value) })} required /></label>
-      <button type="submit"><RotateCcw size={16} aria-hidden />New episode</button>
-      <div className={styles.iconGroup}>
-        <button type="button" className={styles.iconButton} title="Reset current episode" aria-label="Reset current episode" onClick={() => reset()}><RotateCcw size={18} /></button>
-        <button type="button" className={styles.iconButton} title="Export versioned JSON trace" aria-label="Export versioned JSON trace" onClick={exportJSON}><Download size={18} /></button>
-        <button type="button" className={styles.iconButton} title="Import and replay JSON trace" aria-label="Import and replay JSON trace" onClick={() => fileInput.current?.click()}><Upload size={18} /></button>
-        <input className={styles.fileInput} ref={fileInput} type="file" accept="application/json,.json" aria-label="Trace file" onChange={e => void importJSON(e.target.files?.[0])} />
+  return (
+    <section className={styles.column} aria-labelledby="service-workbench">
+      <h4 id="service-workbench" className={styles.columnTitle}>
+        Agent workbench
+      </h4>
+      <div className={styles.fields}>
+        <label className={controls.field}>
+          Tool
+          <select value={tool} onChange={(e) => setTool(e.target.value as ToolName)}>
+            {Object.entries(TOOL_LABELS).map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={controls.field}>
+          Order
+          <input value={orderId} maxLength={80} onChange={(e) => setOrderId(e.target.value)} />
+        </label>
+        <label className={controls.field}>
+          Payment
+          <select value={paymentId} onChange={(e) => setPaymentId(e.target.value)}>
+            {[...orderPayments, FOREIGN_PAYMENT, MISSING_PAYMENT].map((p) => (
+              <option key={p}>{p}</option>
+            ))}
+          </select>
+        </label>
+        <label className={controls.field}>
+          Refund (cents)
+          <input type="text" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        </label>
+        <label className={`${controls.field} ${styles.wide}`}>
+          Replacement finish
+          <select value={sku} onChange={(e) => setSku(e.target.value)}>
+            {session.world.inventory.map((p) => (
+              <option key={p.sku} value={p.sku}>
+                {p.name} · {p.sku}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-    </form>
-    {error && <div role="alert" className={styles.error}>{error}</div>}
-    <div className={styles.caseBrief}>
-      <div><span className={styles.eyebrow}>Synthetic customer brief / {target.id}</span><h2>{scenario.title}</h2><p>{scenario.request}</p></div>
-      <div className={styles.identity}><ShieldCheck size={20} aria-hidden /><span>Session identity<strong>{session.identity}</strong><small>Human-operated browser adaptation. No live model.</small></span></div>
-    </div>
-    <div className={styles.scriptBar}>
-      <label>Scripted control<select value={preset} onChange={e => { setPreset(e.target.value as Preset); setScriptActive(false); setScriptIndex(0); }}>
-        {PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-      </select></label>
-      <button onClick={() => scripted(false)} disabled={scriptActive && (scriptIndex >= script.length || closed)}><SkipForward size={16} aria-hidden />Step</button>
-      <button onClick={() => scripted(true)} disabled={scriptActive && (scriptIndex >= script.length || closed)}><Play size={16} aria-hidden />Run script</button>
-      <span className={styles.scriptStatus}>{scriptActive ? `${scriptIndex} / ${script.length} scripted actions` : 'Script starts a fresh episode'}</span>
-    </div>
-    <div className={styles.workspace}>
-      <div className={styles.controls}>
-        <h3>Agent workbench</h3>
-        <label>Tool<select value={toolName} onChange={e => setToolName(e.target.value as ToolName)}>{Object.entries(TOOL_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
-        <label>Order ID<input value={orderId} maxLength={80} onChange={e => setOrderId(e.target.value)} /></label>
-        <div className={styles.parameterGrid}>
-          <label>Payment<select value={paymentId} onChange={e => setPaymentId(e.target.value)}>{payments.map(p => <option key={p.id}>{p.id}</option>)}<option>PAY-Z</option><option>PAY-MISSING</option></select></label>
-          <label>Refund (cents)<input type="number" min="1" max="100000" step="1" value={Number.isFinite(amountCents) ? amountCents : ''} onChange={e => setAmountCents(e.target.value === '' ? NaN : Number(e.target.value))} /></label>
-        </div>
-        <label>Replacement finish<select value={sku} onChange={e => setSku(e.target.value)}>{session.world.inventory.map(p => <option key={p.sku} value={p.sku}>{p.name} / {p.sku}</option>)}</select></label>
-        <button className={styles.primaryButton} onClick={executeTool} disabled={closed}><ChevronRight size={17} aria-hidden />Execute tool</button>
-        <div className={styles.controlBand}>
-          <h4>Scripted customer choice</h4>
-          <label>Resolution<select value={resolution} onChange={e => setResolution(e.target.value as typeof resolution)}>{resolutions.map(r => <option key={r} value={r}>{resolutionLabels[r]}</option>)}</select></label>
-          <button disabled={closed} onClick={() => act({ kind: 'choice', resolution, orderId,
-            ...(resolution === 'refund' ? { paymentId, amountCents } : {}),
-            ...(['replace', 'notify'].includes(resolution) ? { sku } : {}) })}><Check size={16} aria-hidden />Record choice</button>
-          <p className={styles.currentChoice}>{session.choice ? `${resolutionLabels[session.choice.resolution]} / ${session.choice.orderId}${session.choice.paymentId ? ` / ${session.choice.paymentId} / ${money(session.choice.amountCents!)}` : ''}${session.choice.sku ? ` / ${session.choice.sku}` : ''}` : 'No current authorization'}</p>
-        </div>
-        <div className={styles.controlBand}>
-          <h4>Structured agent report</h4>
-          <label>Reported outcome<select value={claim} onChange={e => setClaim(e.target.value as Claim)}>{CLAIMS.map(c => <option key={c} value={c}>{claimLabels[c]}</option>)}</select></label>
-          <button disabled={closed} onClick={() => act({ kind: 'report', claim, orderId })}><Check size={16} aria-hidden />Record report</button>
-        </div>
-        <details className={styles.raw}><summary>Raw command</summary>
-          <label>JSON payload<textarea value={raw} onChange={e => setRaw(e.target.value)} maxLength={4000} rows={5} spellCheck={false} /></label>
-          <button disabled={closed} onClick={() => { try { act(JSON.parse(raw)); } catch (err) { console.error('Service lab command JSON rejected', err); setError('Invalid JSON. Use double-quoted keys and a complete object.'); } }}>Execute JSON</button>
-        </details>
-        <button disabled={closed} onClick={() => act({ kind: 'finish' })}><Square size={14} aria-hidden />Close episode</button>
+      <button type="button" className={controls.button} disabled={closed} onClick={runTool}>
+        <ChevronRight aria-hidden="true" />
+        Run {TOOL_LABELS[tool].toLowerCase()}
+      </button>
+
+      <div className={styles.band}>
+        <label className={controls.field}>
+          Customer choice (scripted)
+          <select value={resolution} onChange={(e) => setResolution(e.target.value as Resolution)}>
+            {RESOLUTIONS.map((r) => (
+              <option key={r} value={r}>
+                {RESOLUTION_LABELS[r]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          className={controls.button}
+          disabled={closed}
+          onClick={() =>
+            demo.act({
+              kind: 'choice',
+              resolution,
+              orderId,
+              ...(resolution === 'refund' ? { paymentId, amountCents } : {}),
+              ...(resolution === 'replace' || resolution === 'notify' ? { sku } : {}),
+            })
+          }
+        >
+          <Check aria-hidden="true" />
+          Record choice
+        </button>
+        <p className={controls.hint}>
+          {session.choice
+            ? `Authorized: ${RESOLUTION_LABELS[session.choice.resolution]} · ${session.choice.orderId}${session.choice.paymentId ? ` · ${session.choice.paymentId} · ${money(session.choice.amountCents!)}` : ''}${session.choice.sku ? ` · ${session.choice.sku}` : ''}`
+            : 'Nothing authorized yet: every write needs a matching choice.'}
+        </p>
       </div>
 
-      <div className={styles.stateColumn}>
-        <div className={styles.sectionHeading}><h3>World state</h3><span>{session.termination.replace('_', ' ')} / {session.events.length} of {MAX_EVENTS}</span></div>
-        <div className={styles.lifecycle} aria-label={`Order lifecycle: ${target.status}`}>
-          {(['processing', 'shipped', 'delivered'] as const).map((status, i) => <div key={status} className={target.status === status ? styles.activeStage : ''}>
-            <span>{i + 1}</span><strong>{status === 'processing' ? 'Warehouse' : status === 'shipped' ? 'In transit' : 'Delivered'}</strong>
-          </div>)}
+      <div className={styles.band}>
+        <label className={controls.field}>
+          Agent report
+          <select value={claim} onChange={(e) => setClaim(e.target.value as Claim)}>
+            {CLAIMS.map((c) => (
+              <option key={c} value={c}>
+                {CLAIM_LABELS[c]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className={controls.button} disabled={closed} onClick={() => demo.act({ kind: 'report', claim, orderId })}>
+          <Check aria-hidden="true" />
+          Record report
+        </button>
+      </div>
+
+      <details className={styles.raw}>
+        <summary>Raw command</summary>
+        <label className={controls.field}>
+          JSON payload
+          <textarea value={raw} onChange={(e) => setRaw(e.target.value)} maxLength={4000} rows={4} spellCheck={false} />
+        </label>
+        <button type="button" className={controls.button} disabled={closed} onClick={runRaw}>
+          Run JSON
+        </button>
+        {error && (
+          <p role="alert" className={controls.error}>
+            {error}
+          </p>
+        )}
+      </details>
+      <button type="button" className={controls.button} disabled={closed} onClick={() => demo.act({ kind: 'finish' })}>
+        <Square aria-hidden="true" />
+        Close the episode
+      </button>
+    </section>
+  );
+}
+
+function WorldState({ demo }: { demo: ServiceDemo }) {
+  const { session } = demo;
+  const order = session.world.orders.find((o) => o.id === TARGET_ORDER)!;
+  const payments = session.world.payments.filter((p) => p.orderId === TARGET_ORDER);
+  const [picked, setPicked] = useState<number | null>(null);
+  const shown = session.events.find((e) => e.index === picked) ?? session.events[session.events.length - 1];
+
+  return (
+    <section className={styles.column} aria-labelledby="service-world">
+      <h4 id="service-world" className={styles.columnTitle}>
+        The world <span>{session.termination === 'open' ? 'open' : session.termination.replace('_', ' ')} · {session.events.length} of {MAX_EVENTS} actions</span>
+      </h4>
+      <ol className={styles.lifecycle} aria-label={`Order ${order.id}: ${order.status}`}>
+        {STAGES.map((stage) => (
+          <li key={stage.status} data-current={order.status === stage.status || undefined}>
+            {stage.label}
+          </li>
+        ))}
+        {order.status === 'cancelled' && <li data-current="">Cancelled</li>}
+      </ol>
+      <dl className={styles.facts}>
+        <div>
+          <dt>Return</dt>
+          <dd>{session.world.returns.includes(order.id) ? 'Authorized' : 'None'}</dd>
         </div>
-        <dl className={styles.stateFacts}>
-          <div><dt>Order status</dt><dd>{target.status}</dd></div>
-          <div><dt>Carrier request</dt><dd>{session.world.intercepts.includes(target.id) ? 'Requested, unconfirmed' : 'None'}</dd></div>
-          <div><dt>Return</dt><dd>{session.world.returns.includes(target.id) ? 'Authorized' : 'None'}</dd></div>
-          <div><dt>Replacement</dt><dd>{session.world.replacements[0]?.sku ?? 'None'}</dd></div>
-          <div><dt>Stock alert</dt><dd>{session.world.notifications[0]?.sku ?? 'None'}</dd></div>
-        </dl>
-        <h4>Captured-funds ledger</h4>
-        <div className={styles.legend}><span className={styles.retainedKey} />Retained<span className={styles.refundedKey} />Refunded</div>
-        {payments.map(p => {
-          const amount = refunded(session.world, p.id);
-          return <div key={p.id} className={styles.paymentRow}>
-            <div><strong>{p.id}</strong><span>{money(p.capturedCents)} captured</span></div>
-            <div className={styles.moneyBar} role="img" aria-label={`${p.id}: ${money(p.capturedCents - amount)} retained, ${money(amount)} refunded`}>
-              <span style={{ width: `${100 * (p.capturedCents - amount) / p.capturedCents}%` }} /><span style={{ width: `${100 * amount / p.capturedCents}%` }} />
+        <div>
+          <dt>Replacement</dt>
+          <dd>{session.world.replacements[0]?.sku ?? 'None'}</dd>
+        </div>
+        <div>
+          <dt>Carrier intercept</dt>
+          <dd>{session.world.intercepts.includes(order.id) ? 'Requested, unconfirmed' : 'None'}</dd>
+        </div>
+        <div>
+          <dt>Stock alert</dt>
+          <dd>{session.world.notifications[0]?.sku ?? 'None'}</dd>
+        </div>
+      </dl>
+
+      <h5 className={styles.subTitle}>Captured funds</h5>
+      {payments.map((p) => {
+        const back = refunded(session.world, p.id);
+        return (
+          <div key={p.id} className={styles.payment}>
+            <div className={styles.paymentHead}>
+              <strong>{p.id}</strong>
+              <span>
+                {money(back)} refunded of {money(p.capturedCents)}
+              </span>
             </div>
-            <small>{money(amount)} refunded / {money(p.capturedCents - amount)} remaining</small>
-          </div>;
-        })}
-        <h4>Replacement inventory</h4>
-        {session.world.inventory.map(p => <div key={p.sku} className={styles.inventoryRow}>
-          <span>{p.name}</span><div className={styles.stockUnits} role="img" aria-label={`${p.quantity} units available`}>
-            {Array.from({ length: 6 }, (_, i) => <i key={i} className={i < p.quantity ? styles.stockFilled : ''} />)}
-          </div><strong>{p.quantity}</strong>
-        </div>)}
-        <div className={styles.traceHeading}><h3>Action trace</h3><span>Before / after per action</span></div>
-        <div className={styles.trace} aria-label="Episode actions">
-          {session.events.length === 0 && <p className={styles.empty}>No tool observations or effects yet.</p>}
-          {session.events.map(e => <button key={e.index} className={`${styles.traceRow} ${chosenEvent?.index === e.index ? styles.selected : ''}`} aria-pressed={chosenEvent?.index === e.index} onClick={() => setSelectedEvent(e.index)}>
-            <span className={styles.sequence}>{String(e.index).padStart(2, '0')}</span><span><strong>{eventLabel(e)}</strong><small className={!e.result.ok ? styles.denied : ''}>{e.result.code} / {e.changed ? 'state changed' : 'no state change'}</small></span><ChevronRight size={14} aria-hidden />
-          </button>)}
-        </div>
-        {chosenEvent && <div className={styles.observation} aria-live="polite">
-          <strong>#{chosenEvent.index} / {chosenEvent.impact} impact</strong><p>{chosenEvent.result.message}</p>
-          {chosenEvent.result.data !== undefined && <pre>{JSON.stringify(chosenEvent.result.data, null, 2)}</pre>}
-          <details><summary>Input and state evidence</summary><pre>{JSON.stringify({ input: chosenEvent.input, before: chosenEvent.before, after: chosenEvent.after }, null, 2)}</pre></details>
-        </div>}
-      </div>
+            <span className={styles.ledgerBar} role="img" aria-label={`${p.id}: ${money(p.capturedCents - back)} kept, ${money(back)} refunded`}>
+              <span style={{ width: percent(back / p.capturedCents) }} />
+            </span>
+          </div>
+        );
+      })}
 
-      <aside className={styles.reward} aria-label="Reward breakdown">
-        <div className={styles.sectionHeading}><h3>Reward</h3><span>v1 / local rubric</span></div>
-        <div className={`${styles.score} ${reward.total < 0 ? styles.negative : ''}`} aria-live="polite"><output aria-label="Total reward">{reward.total.toFixed(2)}</output><span>{reward.completed ? 'Coherent branch completed' : reward.damage ? 'Off-goal effects committed' : 'Resolution incomplete'}</span></div>
-        <div className={styles.components}>{reward.components.map(c => <div key={c.label}><span>{c.label}<small>weight {c.weight.toFixed(1)}</small></span><meter min="0" max="1" value={c.value} aria-label={c.label} /><strong>{c.value.toFixed(2)}</strong></div>)}</div>
-        <p className={styles.equation}>Base {reward.base.toFixed(2)} - penalties {reward.penalties.reduce((n, p) => n + p.value, 0).toFixed(2)}; then apply ceilings.</p>
-        {reward.penalties.map(p => <div className={styles.deduction} key={p.label}><span>{p.label}</span><strong>-{p.value.toFixed(2)}</strong></div>)}
-        {reward.ceilings.map(c => <div className={styles.ceiling} key={c.label}><span>{c.label}</span><strong>cap {c.value.toFixed(2)}</strong></div>)}
-        <h4>Candidate outcome branches</h4>
-        {reward.branches.map(b => <div key={b.id} className={styles.branch}>
-          <strong>{b.label}</strong><span className={b.complete ? styles.good : ''}>{b.complete ? 'Complete' : 'Not complete'}</span>
-          <dl><div><dt>State gate</dt><dd>{b.stateSatisfied ? 'pass' : 'fail'}</dd></div><div><dt>Ordered evidence</dt><dd>{Math.round(b.eventCoverage * 100)}%</dd></div><div><dt>Writes coherent</dt><dd>{b.coherentWrites ? 'yes' : 'no'}</dd></div><div><dt>Supported report</dt><dd>{b.reportSatisfied ? 'yes' : 'no'}</dd></div></dl>
-        </div>)}
-        <p className={styles.rubricNote}>Maximum one branch. Credit is never added across alternative remedies. Structured reports are assertions, not natural-language evaluation.</p>
-      </aside>
+      <h5 className={styles.subTitle}>Replacement stock</h5>
+      {session.world.inventory.map((p) => (
+        <div key={p.sku} className={styles.stock}>
+          <span>{p.name}</span>
+          <span className={styles.units} role="img" aria-label={`${p.quantity} in stock`}>
+            {Array.from({ length: STOCK_SLOTS }, (_, i) => (
+              <i key={i} data-filled={i < p.quantity || undefined} />
+            ))}
+          </span>
+          <strong>{p.quantity}</strong>
+        </div>
+      ))}
+
+      <h5 className={styles.subTitle}>Actions</h5>
+      {session.events.length === 0 ? (
+        <p className={controls.hint}>No actions yet.</p>
+      ) : (
+        <ol className={styles.trace} aria-label="Actions">
+          {session.events.map((e) => (
+            <li key={e.index}>
+              <button type="button" aria-pressed={shown?.index === e.index} onClick={() => setPicked(e.index)}>
+                <span className={styles.seq}>{String(e.index).padStart(2, '0')}</span>
+                <span className={styles.traceText}>
+                  <strong>{eventLabel(e)}</strong>
+                  <span data-ok={e.result.ok || undefined}>
+                    {e.result.code} · {e.changed ? 'changed the world' : 'no change'}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+      {shown && (
+        <div className={styles.observation} aria-live="polite">
+          <strong>
+            #{shown.index} · {shown.impact} impact
+          </strong>
+          <p>{shown.result.message}</p>
+          <details>
+            <summary>Input, result and state before and after</summary>
+            <pre>{JSON.stringify({ input: shown.input, data: shown.result.data, before: shown.before, after: shown.after }, null, 2)}</pre>
+          </details>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Reward({ demo }: { demo: ServiceDemo }) {
+  const reward = score(demo.session);
+  const deductions = reward.penalties.reduce((n, p) => n + p.value, 0);
+  const state = reward.completed ? 'A coherent outcome is complete' : reward.damage ? 'Effects outside every coherent outcome' : 'No outcome complete yet';
+  return (
+    <section className={styles.column} aria-labelledby="service-reward">
+      <h4 id="service-reward" className={styles.columnTitle}>
+        Reward <span>{reward.weightsVersion}</span>
+      </h4>
+      <p className={styles.score} data-tone={reward.completed ? (reward.total < 1 ? 'partial' : 'resolved') : 'failed'} aria-live="polite">
+        <output aria-label="Total reward">{signedScore(reward.total)}</output>
+        <span>{state}</span>
+      </p>
+      <dl className={styles.components}>
+        {reward.components.map((c) => (
+          <div key={c.label}>
+            <dt>
+              {c.label} <span>× {c.weight.toFixed(1)}</span>
+            </dt>
+            <dd>
+              <span className={styles.meter} aria-hidden="true">
+                <span style={{ width: percent(c.value) }} />
+              </span>
+              {Math.round(c.value * PERCENT)}%
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className={controls.hint}>
+        Base {reward.base.toFixed(2)} − deductions {deductions.toFixed(2)}, then the lowest ceiling.
+      </p>
+      {reward.penalties.map((p) => (
+        <p key={p.label} className={styles.adjustment} data-kind="deduction">
+          <span>{p.label}</span>
+          <strong>−{p.value.toFixed(2)}</strong>
+        </p>
+      ))}
+      {reward.ceilings.map((c) => (
+        <p key={c.label} className={styles.adjustment} data-kind="ceiling">
+          <span>{c.label}</span>
+          <strong>cap {signedScore(c.value)}</strong>
+        </p>
+      ))}
+      <h5 className={styles.subTitle}>Outcome branches</h5>
+      <ul className={styles.branches}>
+        {reward.branches.map((b) => (
+          <li key={b.id} data-complete={b.complete || undefined}>
+            <strong>{b.label}</strong>
+            <span>
+              {b.complete
+                ? 'Complete'
+                : [!b.stateSatisfied && 'world not in this state', !b.coherentWrites && 'writes outside it', b.eventCoverage < 1 && `${Math.round(b.eventCoverage * PERCENT)}% of its evidence`, !b.reportSatisfied && 'no supported report']
+                    .filter(Boolean)
+                    .join(' · ')}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className={controls.hint}>One branch at most; credit is never added across alternative remedies.</p>
+    </section>
+  );
+}
+
+export function ServiceLab({ demo }: { demo: ServiceDemo }) {
+  const { session } = demo;
+  const scenario = SCENARIOS.find((s) => s.id === session.config.scenario)!;
+  const configKey = JSON.stringify(session.config);
+  return (
+    <div className={styles.lab}>
+      <div className={styles.brief}>
+        <div>
+          <h3 className={styles.briefTitle}>{scenario.title}</h3>
+          <p className={styles.briefText}>{scenario.request}</p>
+        </div>
+        <p className={styles.identity}>
+          <ShieldCheck aria-hidden="true" />
+          <span>
+            Signed in as <strong>{session.identity}</strong>
+          </span>
+        </p>
+      </div>
+      <Episode key={configKey} demo={demo} />
+      <div className={styles.columns}>
+        <Workbench key={`bench-${configKey}`} demo={demo} />
+        <WorldState key={`world-${configKey}-${session.events.length}`} demo={demo} />
+        <Reward demo={demo} />
+      </div>
     </div>
-  </section>;
+  );
 }

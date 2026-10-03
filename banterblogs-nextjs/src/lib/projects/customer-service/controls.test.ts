@@ -5,13 +5,22 @@ import { SCENARIOS } from './model';
 import { PRESETS, scriptedActions } from './scripts';
 
 describe('fresh synthetic control measurements', () => {
-  it('pins the public server-rendered table to current computations', () => {
-    expect(measureControls().map(m => [m.label, m.score])).toEqual([
-      ['Damaged desk lamp', 1], ['Stop a warehouse order', 1], ['Parcel already moving', 0.7],
-      ['Two full captures', 1], ['Two legitimate payments', 1], ['No preferred stock: alert', 0.6],
-      ['Claim without effect', -0.3], ['Refund + replacement conflict', -0.4],
-      ['First capture refunded', -0.4], ['Oversized refund, then success claim', -0.38],
+  it('pins the board to current computations, case by case', () => {
+    expect(measureControls().map(m => [m.id, m.score])).toEqual([
+      ['damage:verified', 1], ['damage:verified:no-stock', 0.6], ['damage:claim-only', -0.3], ['damage:double-remedy', -0.4],
+      ['warehouse:verified', 1], ['transit:verified', 0.7],
+      ['duplicate:verified', 1], ['duplicate:wrong-capture', -0.4], ['duplicate:over-refund', -0.38],
+      ['split:verified', 1],
     ]);
+  });
+
+  it('moves the same money in the right and the wrong duplicate refund, and only one is resolved', () => {
+    const byId = Object.fromEntries(measureControls().map(m => [m.id, m]));
+    const [right, wrong] = [byId['duplicate:verified'], byId['duplicate:wrong-capture']];
+    expect(right.refundedCents).toBe(wrong.refundedCents);
+    expect(right.completed).toBe(true);
+    expect(wrong.completed).toBe(false);
+    expect(wrong.damage).toBe(true);
   });
 
   it('sweeps all five verified paths over stock and order totals', () => {

@@ -21,6 +21,7 @@ const ROUTES = [
   '/projects',
   '/projects/reinforcement-learning/flight-routing',
   '/projects/reinforcement-learning/offline-policy-evaluation',
+  '/projects/reinforcement-learning/customer-service',
 ] as const;
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const HTTP_OK = 200;
@@ -51,6 +52,7 @@ const READING_ROUTES = new Set<string>(['/reports/technical-report-138']);
 const PROJECT_ROUTES = new Set<string>([
   '/projects/reinforcement-learning/flight-routing',
   '/projects/reinforcement-learning/offline-policy-evaluation',
+  '/projects/reinforcement-learning/customer-service',
 ]);
 const GLOBAL_SHEETS = 1;
 const READING_SHEETS = 2;

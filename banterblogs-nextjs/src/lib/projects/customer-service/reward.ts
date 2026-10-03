@@ -13,6 +13,17 @@ const UNVERIFIED_CEILING = 0.4;
 const HARM_CEILING = -0.4;
 const NO_PROGRESS_COST = 0.05;
 
+/** the rubric's weights and ceilings, as the page's write-up states them */
+export const RUBRIC = {
+  outcome: OUTCOME_WEIGHT,
+  process: PROCESS_WEIGHT,
+  communication: COMMUNICATION_WEIGHT,
+  falseReportCost: FALSE_REPORT_COST,
+  incompleteCeiling: INCOMPLETE_CEILING,
+  unverifiedCeiling: UNVERIFIED_CEILING,
+  harmCeiling: HARM_CEILING,
+} as const;
+
 type Requirement = { name: string; args: Record<string, unknown> };
 type Branch = { id: string; label: string; credit: number; state: boolean; requirements: Requirement[]; claim: Claim };
 export type BranchResult = {
