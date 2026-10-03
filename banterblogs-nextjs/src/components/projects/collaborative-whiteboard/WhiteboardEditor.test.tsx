@@ -21,7 +21,7 @@ beforeEach(() => {
       pointerId: number;
       pointerType: string;
       isPrimary: boolean;
-      constructor(type: string, init: MouseEventInit & { pointerId?: number; pointerType?: string; isPrimary?: boolean } = {}) {
+      constructor(type: string, init: ConstructorParameters<typeof MouseEvent>[1] & { pointerId?: number; pointerType?: string; isPrimary?: boolean } = {}) {
         super(type, init);
         this.pointerId = init.pointerId ?? 1;
         this.pointerType = init.pointerType ?? 'mouse';
