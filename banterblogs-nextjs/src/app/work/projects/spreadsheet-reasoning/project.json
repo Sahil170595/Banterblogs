@@ -1,0 +1,10 @@
+{
+  "slug": "spreadsheet-reasoning",
+  "title": "Spreadsheet Reasoning Inspector",
+  "summary": "Evaluate synthetic spreadsheet formulas, inspect dependency and rule disagreements, and adjudicate proposed final values.",
+  "categories": ["evaluation", "systems", "product"],
+  "roles": ["research-engineer", "applied-ai"],
+  "status": "interactive",
+  "runtime": "browser-evaluation",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-spreadsheet-reasoning/banterblogs-nextjs/src/lib/projects/spreadsheet-reasoning"
+}
