@@ -1,5 +1,6 @@
 import { AIRPORTS, getScenario, type Airport } from '@/lib/projects/flight-routing/fixtures';
 import { candidates, type Episode } from '@/lib/projects/flight-routing/engine';
+import { along } from '../geometry';
 import styles from './demo.module.css';
 
 // The network as a schematic: airports placed for legibility, not distance.
@@ -22,7 +23,7 @@ const RING_RADIUS = 14;
 const NAME_OFFSET = 22;
 const AIRPORT_CODES = AIRPORTS.map((n) => n.code);
 
-const at = (x: number, y: number) => ({ left: `${(x / VIEW.width) * 100}%`, top: `${(y / VIEW.height) * 100}%` });
+const at = (x: number, y: number) => ({ left: along(x, 0, VIEW.width), top: along(y, 0, VIEW.height) });
 
 export function RouteFigure({ state, chosenId }: { state: Episode; chosenId?: string }) {
   const scenario = getScenario(state.config.scenario);
