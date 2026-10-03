@@ -35,6 +35,8 @@ const NON_REVEAL_OBSERVERS: Record<string, string> = {
     'pauses the landing loop while it is offscreen; nothing is revealed and nothing moves',
   [path.join('components', 'MobileOptimization.tsx')]:
     'retires the phone prev/next pill once the in-page pager or the footer is reached; content never hides or moves',
+  [path.join('components', 'projects', 'workflow-observatory', 'WorkflowDemo.tsx')]:
+    'starts the opening workflow run once the app is in view; the app is visible and in place before and after',
 };
 const REPORT_TOC_SPY = path.join(SRC, 'components', 'reports', 'ReportTocSpy.tsx');
 
