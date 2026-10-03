@@ -16,6 +16,6 @@ describe('server-rendered scheduling article', () => {
   it('uses the exact public project contract', () => {
     expect(Object.keys(manifest).sort()).toEqual(['slug', 'title', 'summary', 'categories', 'roles', 'status', 'runtime', 'sourceUrl'].sort());
     expect(manifest.runtime).toBe('browser-simulation');
-    expect(manifest.sourceUrl).toContain('codex/demo-scheduling-lab');
+    expect(manifest.sourceUrl).toBe('https://github.com/Sahil170595/tempoledger');
   });
 });
