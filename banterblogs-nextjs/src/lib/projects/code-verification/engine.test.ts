@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CANDIDATE_SOURCES } from './candidates';
 import { TASKS, evaluate, execute, implementationSource, probe, replay, initialConfig, resetSession, runSession } from './engine';
 
 describe('curated verifier contract', () => {
@@ -109,5 +110,34 @@ describe('curated verifier contract', () => {
     expect(implementationSource('intervals', 'fixed')).toContain('<=');
     expect(implementationSource('intervals', 'fixed')).not.toBe(implementationSource('intervals', 'empty'));
     expect(implementationSource('unique', 'fixed')).toContain('toLowerCase');
+  });
+  // live QA: the diff showed the bundler's minified output; the page shows each
+  // patch as written, and the written text must behave as the running function does
+  it('shows each patch as written, and that text behaves exactly as the function the page runs', () => {
+    const extra = {
+      intervals: [[[5, 7], [1, 2], [2, 5], [9, 9]], [[0, 0]], [[3, 4], [1, 3]], [[-3, -1], [-1, 4], [10, 12]]],
+      unique: [['B', ' b ', 'a', 'A', 'é', 'É', ''], ['x'], ['  Zeta', 'zeta  ', 'ALPHA', 'alpha']],
+    } as const;
+    for (const task of TASKS) {
+      for (const candidateId of ['empty', 'fixed', 'overfit', 'regression'] as const) {
+        const source = implementationSource(task.id, candidateId);
+        // the authored text, not Function.toString, which a production bundle minifies
+        expect(source).toBe(CANDIDATE_SOURCES[task.id][candidateId]);
+        expect(source, `${task.id}/${candidateId}`).toContain('\n');
+        expect(source).not.toMatch(/function\s*\(\s*e\s*\)/);
+        const written = new Function(`return (${source});`)() as (input: unknown) => unknown;
+        for (const input of [...task.tests.map((t) => t.input), ...extra[task.id]]) {
+          expect(written(structuredClone(input)), `${task.id}/${candidateId} on ${JSON.stringify(input)}`).toEqual(execute(task.id, candidateId, input));
+        }
+      }
+    }
+  });
+  // live QA: a synthesis suite's refusal read like a patch's ("Not resolved … still fails or regresses")
+  it('explains why an authored test suite is rejected, in a test author’s terms', () => {
+    const task = TASKS[0];
+    const passing = { id: 'passing', label: 'Already passing', input: task.tests[3].input, expected: task.tests[3].expected };
+    const wrong = { id: 'wrong', label: 'Wrong expectation', input: task.tests[0].input, expected: [] };
+    expect(evaluate({ ...initialConfig(), mode: 'synthesis', assertions: [passing] }).reason).toMatch(/No assertion reproduces the bug/);
+    expect(evaluate({ ...initialConfig(), mode: 'synthesis', assertions: [wrong] }).reason).toMatch(/fails on the fixed code too/);
   });
 });

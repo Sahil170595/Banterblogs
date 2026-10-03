@@ -49,6 +49,17 @@ test('the full suite rejects the example-only patch; a report replays from its c
   expect(errors).toEqual([]);
 });
 
+// live QA: the form under the matrix kept its own selection, so the two disagreed
+test('the form and the matrix controls are one selection', async ({ page }) => {
+  await page.goto(PAGE);
+  // the label wraps the select, so its name carries the chosen option too
+  const suite = page.getByRole('combobox', { name: /^Verification suite/ });
+  await suite.selectOption('full');
+  await expect(page.getByRole('radio', { name: /^Full/ })).toBeChecked();
+  await page.getByRole('radio', { name: /^Smoke/ }).check();
+  await expect(suite).toHaveValue('smoke');
+});
+
 // re-review: opening the diff widened the page to 1799px on desktop and 1691px on a phone
 for (const width of [1440, 390]) {
   test(`the diff stays inside the page at ${width}px`, async ({ page }) => {
