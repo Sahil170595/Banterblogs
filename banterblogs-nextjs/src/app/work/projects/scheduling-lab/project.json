@@ -1,0 +1,10 @@
+{
+  "slug": "scheduling-lab",
+  "title": "Workload Scheduling Lab",
+  "summary": "Recompute seeded event schedules and inspect preparation, clustering, business-hour and campaign-bound conflicts.",
+  "categories": ["systems", "evaluation", "product"],
+  "roles": ["applied-ai", "founding-engineer"],
+  "status": "interactive",
+  "runtime": "browser-simulation",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-scheduling-lab/banterblogs-nextjs/src/lib/projects/scheduling-lab"
+}
