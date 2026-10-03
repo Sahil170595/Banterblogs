@@ -3,6 +3,7 @@ import { VerificationVisual } from './code-verification/VerificationVisual';
 import { ServiceVisual } from './customer-service/ServiceVisual';
 import { FlightRoutingVisual } from './flight-routing/FlightRoutingVisual';
 import { TriageVisual } from './intake-triage/TriageVisual';
+import { MissionVisual } from './mission-governance/MissionVisual';
 import { OpeVisual } from './offline-policy-evaluation/OpeVisual';
 import { PacingVisual } from './send-pacing/PacingVisual';
 import { SheetVisual } from './spreadsheet-reasoning/SheetVisual';
@@ -25,4 +26,5 @@ export const PROJECT_VISUALS: Record<string, ComponentType<ProjectVisualProps>> 
   'intake-triage': TriageVisual,
   'staged-search': SearchVisual,
   'send-pacing': PacingVisual,
+  'mission-governance': MissionVisual,
 };

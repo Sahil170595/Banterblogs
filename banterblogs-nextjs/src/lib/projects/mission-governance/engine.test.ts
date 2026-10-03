@@ -1,93 +1,120 @@
 import { describe, expect, it } from 'vitest';
-import { applyCommand, canTransition, createSession, pointInside, replay, safetyViolation, validateMission, TRANSITIONS } from './engine';
-import { DEFAULT_MISSION } from './fixtures';
+import { LONG_MISSION, SAMPLE_MISSION } from './contract';
+import { canTransition, fly, legsLeavingFence, TRANSITIONS, type Fault, type State } from './engine';
+import SOURCE_RUNS from './source-runs.json';
 
-const ready = () => ['validate', 'approve', 'start'].reduce((s, type) => applyCommand(s, { type } as Parameters<typeof applyCommand>[1]), createSession(DEFAULT_MISSION));
-describe('mission governance source-derived boundaries', () => {
-  it('blocks execution before validation and approval', () => {
-    expect(() => applyCommand(createSession(DEFAULT_MISSION), { type: 'start' })).toThrow(/draft/);
-    const validated = applyCommand(createSession(DEFAULT_MISSION), { type: 'validate' });
-    expect(validated.state).toBe('awaiting_approval');
-    expect(validated.events.filter(e => e.kind === 'transition').map(e => e.next)).toEqual(['validated', 'awaiting_approval']);
-    expect(() => applyCommand(validated, { type: 'start' })).toThrow(/awaiting_approval/);
-    expect(ready().events.filter(e => e.kind === 'transition').map(e => e.next)).toEqual(['validated','awaiting_approval','approved','staging','executing']);
+// ProjectWyvern itself, run in Python at the linked commit on its own sample
+// mission: its ValidationService, then its MissionExecutor with its
+// SafetyGuard and MockVehicleAdapter, driven straight to staging as its own
+// tests do. Recorded per fault, present at validation or starting after the
+// second poll of a six-waypoint flight.
+
+interface AtValidation {
+  fault: Fault;
+  count: number;
+  timeoutSeconds: number;
+  checks: [string, string, string | null][];
+  state: State;
+  progress: number;
+  reason: string;
+}
+interface InFlight {
+  fault: Fault;
+  count: number;
+  afterPolls: number;
+  state: State;
+  progress: number;
+  reason: string;
+}
+interface Resumed extends InFlight {
+  timeline: [string, string, string][];
+}
+const RUNS = SOURCE_RUNS as unknown as { atValidation: AtValidation[]; inFlight: InFlight[]; resumed: Resumed };
+
+describe('the ported lifecycle against the source in Python', () => {
+  for (const run of RUNS.atValidation) {
+    const stall = run.timeoutSeconds === 1;
+    const label = `${run.fault} at validation, ${run.count} waypoints${stall ? ', stalled, 1 s timeout' : ''}`;
+    it(`matches ${label}`, () => {
+      const mission = {
+        ...SAMPLE_MISSION,
+        waypoints: SAMPLE_MISSION.waypoints.slice(0, run.count),
+        constraints: { ...SAMPLE_MISSION.constraints, mission_timeout_s: run.timeoutSeconds },
+      };
+      const flight = fly(mission, { fault: run.fault, when: 'validation', afterPolls: 0, stall }, true);
+      expect(flight.validation.checks.map((c) => [c.name, c.status])).toEqual(run.checks.map(([name, status]) => [name, status]));
+      // the stale reason carries a wall-clock age in the source; the rest are exact
+      for (const [i, [, , reason]] of run.checks.entries()) if (!reason?.startsWith('telemetry_age_')) expect(flight.validation.checks[i].reason).toBe(reason);
+      expect([flight.state, flight.progress, flight.reason]).toEqual([run.state, run.progress, run.reason]);
+    });
+  }
+
+  for (const run of RUNS.inFlight) {
+    it(`matches ${run.fault} starting after poll ${run.afterPolls} of ${run.count}`, () => {
+      const flight = fly(LONG_MISSION, { fault: run.fault, when: 'flight', afterPolls: run.afterPolls, stall: false });
+      expect(flight.validation.passed).toBe(true);
+      expect([flight.state, flight.progress, flight.reason]).toEqual([run.state, run.progress, run.reason]);
+    });
+  }
+
+  it('matches a pause and resume after which the battery fails: still executing, nothing watching', () => {
+    const run = RUNS.resumed;
+    const flight = fly(LONG_MISSION, { fault: run.fault, when: 'resumed', afterPolls: run.afterPolls, stall: false });
+    expect([flight.state, flight.progress, flight.reason]).toEqual([run.state, run.progress, run.reason]);
+    expect(flight.unwatched).toBe(true);
+    // the source's timeline after staging, transition for transition
+    const after = flight.events.filter((e) => e.kind === 'transition').slice(4);
+    expect(after.map((e) => [e.state, e.actor, e.reason])).toEqual(run.timeline.slice(1));
   });
-  it('rejects approval and freezes terminal commands', () => {
-    const rejected = applyCommand(applyCommand(createSession(DEFAULT_MISSION), { type: 'validate' }), { type: 'reject' });
-    expect(rejected.state).toBe('rejected');
-    expect(() => applyCommand(rejected, { type: 'approve' })).toThrow();
-    expect(TRANSITIONS.rejected).toEqual([]);
-    expect(canTransition('draft', 'executing')).toBe(false);
-    expect(canTransition('paused', 'completed')).toBe(false);
+
+  it('carries the state graph, every legal and forbidden pair', () => {
+    const states = Object.keys(TRANSITIONS) as State[];
+    expect(states).toHaveLength(15);
+    expect(canTransition('executing', 'rtl')).toBe(true);
+    expect(canTransition('completed', 'executing')).toBe(false);
+    expect(states.filter((s) => TRANSITIONS[s].length === 0).sort()).toEqual(['aborted', 'completed', 'expired', 'failed', 'rejected']);
   });
-  it('retains ray-casting edge asymmetry and waypoint-only geometry', () => {
-    const p = DEFAULT_MISSION.geofence;
-    expect(pointInside(50, 50, p)).toBe(true);
-    expect(pointInside(0, 50, p)).toBe(true);
-    expect(pointInside(100, 50, p)).toBe(false);
-    expect(pointInside(101, 50, p)).toBe(false);
+});
+
+describe('what the lifecycle leaves open', () => {
+  it('flies every waypoint with no telemetry at all, after passing validation with two warnings', () => {
+    const flight = fly(SAMPLE_MISSION, { fault: 'missing', when: 'validation', afterPolls: 0, stall: false });
+    expect(flight.validation.passed).toBe(true);
+    expect(flight.validation.checks.filter((c) => c.status === 'warning').map((c) => c.name)).toEqual(['battery_threshold', 'telemetry_freshness']);
+    expect([flight.state, flight.progress]).toEqual(['completed', 3]);
+    expect(flight.logged).toEqual(['blocked.no_telemetry']);
+    // the mission said what to do on link loss
+    expect(SAMPLE_MISSION.constraints.link_loss_policy).toBe('rtl');
   });
-  it('collects validation failures without treating warnings as failures', () => {
-    const mission = { ...DEFAULT_MISSION, airspaceRef: '', waypoints: [{ seq: 1, x: 150, y: 20, altitude: 60 }] };
-    const checks = validateMission(mission, { ...createSession(DEFAULT_MISSION).health, battery: 10, ageMs: 1501 });
-    expect(checks.filter(c => c.status === 'failed').map(c => c.name)).toEqual(['geofence_containment','altitude_limit','battery_threshold','telemetry_freshness']);
-    expect(checks.find(c => c.name === 'airspace_authorization')?.status).toBe('warning');
-    const none = applyCommand(applyCommand(createSession(DEFAULT_MISSION), { type: 'fault', fault: 'missing' }), { type: 'validate' });
-    expect(none.state).toBe('awaiting_approval');
-    expect(none.checks.filter(c => c.status === 'warning')).toHaveLength(2);
+
+  it('stops a failed validation before approval unless driven past it', () => {
+    const flight = fly(SAMPLE_MISSION, { fault: 'stale', when: 'validation', afterPolls: 0, stall: false });
+    expect(flight.flown).toBe(false);
+    expect(flight.state).toBe('draft');
   });
-  it('accepts exact altitude, battery, link and freshness thresholds', () => {
-    const s = createSession(DEFAULT_MISSION);
-    s.health = { ...s.health, battery: 30, link: .3, ageMs: 1500 };
-    expect(validateMission(s.mission, s.health).every(c => c.status !== 'failed')).toBe(true);
-    expect(safetyViolation(s)).toBeNull();
-  });
-  it.each([['battery','degraded.battery_low'],['link','degraded.link_quality'],['estimator','degraded.estimator'],['timeout','timeout.mission']])('returns on actionable %s fault', (fault, reason) => {
-    const s = applyCommand(applyCommand(ready(), { type: 'fault', fault: fault as 'battery' }), { type: 'step' });
-    expect(s.state).toBe('rtl');
-    expect(s.progress).toBe(1);
-    expect(s.events.at(-1)?.reason).toBe(reason);
-    expect(s.adapter.inAir).toBe(false);
-    expect(s.position).toEqual(DEFAULT_MISSION.waypoints[0]);
-  });
-  it.each(['stale','missing'] as const)('reports %s telemetry without silently hardening the executor', fault => {
-    const s = applyCommand(applyCommand(ready(), { type: 'fault', fault }), { type: 'step' });
-    expect(s.state).toBe('executing');
-    expect(s.events.at(-1)?.reason).toMatch(/^blocked\./);
-  });
-  it('checks completion before safety, including a last-poll fault', () => {
-    let s = ready();
-    for (let i=0;i<3;i++) s=applyCommand(s,{ type: 'step' });
-    s=applyCommand(applyCommand(s,{ type:'fault', fault:'battery' }),{ type:'step' });
-    expect(s.state).toBe('completed');
-    expect(s.progress).toBe(4);
-    expect(s.events.at(-1)?.reason).toBe('mission.completed');
-  });
-  it('pauses progress, resumes through the intermediate state and preserves idempotent pause', () => {
-    const paused = applyCommand(ready(), { type: 'pause' });
-    expect(applyCommand(paused, { type: 'pause' }).events).toEqual(paused.events);
-    expect(() => applyCommand(paused, { type: 'step' })).toThrow(/paused/);
-    const resumed = applyCommand(paused, { type: 'resume' });
-    expect(resumed.events.slice(-2).map(e => e.next)).toEqual(['resuming','executing']);
-    expect(applyCommand(resumed, { type: 'step' }).progress).toBe(1);
-  });
-  it('does not invent RTL completion or a trip back to home', () => {
-    const s=applyCommand(applyCommand(ready(),{ type:'step' }),{ type:'return' });
-    expect(s.state).toBe('rtl');
-    expect(s.adapter).toMatchObject({ inAir:false,armed:false,mode:'rtl' });
-    expect(s.position.x).toBe(DEFAULT_MISSION.waypoints[0].x);
-    expect(() => applyCommand(s,{ type:'step' })).toThrow(/rtl/);
-  });
-  it('preserves staging failure order and exact deterministic replay', () => {
-    let s=applyCommand(applyCommand(createSession(DEFAULT_MISSION),{ type:'validate' }),{ type:'approve' });
-    s=applyCommand(applyCommand(s,{ type:'fault',fault:'upload' }),{ type:'start' });
-    expect(s.state).toBe('failed');
-    expect(s.events.at(-1)?.reason).toBe('staging.upload_failed');
-    expect(replay(s.mission,s.journal)).toEqual(s);
-    expect(createSession(DEFAULT_MISSION).journal).toEqual([]);
-    expect(replay(ready().mission,ready().journal)).toEqual(ready());
-  });
-  it.each([null, { ...DEFAULT_MISSION, maxAltitude: NaN }, { ...DEFAULT_MISSION, waypoints: [] }, { ...DEFAULT_MISSION, geofence: [[0,0],[1,1]] }, { ...DEFAULT_MISSION, minBattery: 101 }, { ...DEFAULT_MISSION, approvalRef: 'real-reference' }])('rejects malformed or non-synthetic input', bad => {
-    expect(() => createSession(bad)).toThrow();
+
+  it('finds a leg that leaves a concave fence between two waypoints inside it', () => {
+    const notched = {
+      ...SAMPLE_MISSION,
+      // a U: the notch between lon -71.102 and -71.098 is outside, above lat 42.295
+      geofence: [
+        [-71.11, 42.29],
+        [-71.09, 42.29],
+        [-71.09, 42.31],
+        [-71.098, 42.31],
+        [-71.098, 42.295],
+        [-71.102, 42.295],
+        [-71.102, 42.31],
+        [-71.11, 42.31],
+      ] as [number, number][],
+      waypoints: [
+        { seq: 1, lat: 42.305, lon: -71.106, alt_m: 22 },
+        { seq: 2, lat: 42.305, lon: -71.094, alt_m: 22 },
+      ],
+    };
+    const flight = fly(notched, { fault: 'healthy', when: 'validation', afterPolls: 0, stall: false });
+    expect(flight.validation.checks[0]).toMatchObject({ name: 'geofence_containment', status: 'passed' });
+    expect(legsLeavingFence(notched)).toHaveLength(1);
+    expect(legsLeavingFence(SAMPLE_MISSION)).toHaveLength(0);
   });
 });
