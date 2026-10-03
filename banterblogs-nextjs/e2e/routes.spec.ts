@@ -20,6 +20,7 @@ const ROUTES = [
   '/episodes',
   '/projects',
   '/projects/reinforcement-learning/flight-routing',
+  '/projects/reinforcement-learning/offline-policy-evaluation',
 ] as const;
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const HTTP_OK = 200;
@@ -47,7 +48,10 @@ const REFLOW_ROUTES = [
 // routes add their own sheet; a project page adds its demo's sheet too,
 // split out by graph CSS chunking (next.config.ts) so no report downloads it.
 const READING_ROUTES = new Set<string>(['/reports/technical-report-138']);
-const PROJECT_ROUTES = new Set<string>(['/projects/reinforcement-learning/flight-routing']);
+const PROJECT_ROUTES = new Set<string>([
+  '/projects/reinforcement-learning/flight-routing',
+  '/projects/reinforcement-learning/offline-policy-evaluation',
+]);
 const GLOBAL_SHEETS = 1;
 const READING_SHEETS = 2;
 const PROJECT_SHEETS = 3;

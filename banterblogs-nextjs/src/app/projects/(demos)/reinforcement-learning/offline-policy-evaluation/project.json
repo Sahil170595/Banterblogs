@@ -1,0 +1,14 @@
+{
+  "slug": "offline-policy-evaluation",
+  "title": "Offline Policy Evaluation Lab",
+  "dek": "An importance-sampling evaluator that tests whether a policy's estimated gain on logged data survives a constant control, a reward change and a support audit, rebuilt from my Counterledger pipeline.",
+  "summary": "Estimates a new policy from logged decisions, then tests whether its gain survives the controls.",
+  "collection": "reinforcement-learning",
+  "alsoIn": [],
+  "order": 2,
+  "evidence": "synthetic-fixture",
+  "links": [
+    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/offline-policy-evaluation" },
+    { "label": "Counterledger", "url": "https://github.com/Sahil170595/counterledger-ope" }
+  ]
+}
