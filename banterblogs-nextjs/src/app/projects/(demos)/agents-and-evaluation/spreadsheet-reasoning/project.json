@@ -1,0 +1,14 @@
+{
+  "slug": "spreadsheet-reasoning",
+  "title": "Spreadsheet Reasoning Inspector",
+  "dek": "A workbook evaluator that decides which values are final, from a dependency graph and abstaining rule votes, and shows where the rules disagree with the key. Rebuilt from my Formuloom pipeline.",
+  "summary": "Which spreadsheet values are final? Rule votes over a dependency graph, checked against a key.",
+  "collection": "agents-and-evaluation",
+  "alsoIn": [],
+  "order": 1,
+  "evidence": "synthetic-fixture",
+  "links": [
+    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/spreadsheet-reasoning" },
+    { "label": "Formuloom", "url": "https://github.com/Sahil170595/formuloom" }
+  ]
+}

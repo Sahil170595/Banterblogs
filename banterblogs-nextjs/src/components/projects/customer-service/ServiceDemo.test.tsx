@@ -66,11 +66,19 @@ describe('customer-service demo', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New episode' }));
     expect(screen.getByRole('alert').textContent).toMatch(/even number of cents/);
 
+    // jsdom's File has no text(); a browser's does
+    const upload = (body: unknown) => {
+      const text = JSON.stringify(body);
+      fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [{ size: text.length, text: async () => text }] } });
+    };
+    // the verified damaged-lamp remedy leaves one replacement; a receipt without it is forged
     const session = scriptedActions(createSession().config, 'verified').reduce(step, createSession());
-    const forged = { ...exportTrace(session), final: { ...exportTrace(session).final, refunds: [] } };
-    const file = new File([JSON.stringify(forged)], 'forged.json', { type: 'application/json' });
-    fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [file] } });
-    await waitFor(() => expect(screen.getAllByRole('alert').length).toBeGreaterThan(0));
+    const trace = exportTrace(session);
+    upload({ ...trace, final: { ...trace.final, replacements: [] } });
+    await waitFor(() => expect(screen.getAllByRole('alert').some((a) => /Replay mismatch/.test(a.textContent ?? ''))).toBe(true));
+
+    upload(trace);
+    await waitFor(() => expect(screen.getByLabelText('Total reward').textContent).toBe('1.00'));
   });
 
   it('exports the episode as JSON', () => {

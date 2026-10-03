@@ -3,6 +3,7 @@ import { VerificationVisual } from './code-verification/VerificationVisual';
 import { ServiceVisual } from './customer-service/ServiceVisual';
 import { FlightRoutingVisual } from './flight-routing/FlightRoutingVisual';
 import { OpeVisual } from './offline-policy-evaluation/OpeVisual';
+import { SheetVisual } from './spreadsheet-reasoning/SheetVisual';
 
 export interface ProjectVisualProps {
   /** the accent squares or strokes in ember */
@@ -15,4 +16,5 @@ export const PROJECT_VISUALS: Record<string, ComponentType<ProjectVisualProps>> 
   'offline-policy-evaluation': OpeVisual,
   'customer-service': ServiceVisual,
   'code-verification': VerificationVisual,
+  'spreadsheet-reasoning': SheetVisual,
 };
