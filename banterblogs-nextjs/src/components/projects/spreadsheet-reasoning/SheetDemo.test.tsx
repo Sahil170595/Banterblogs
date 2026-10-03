@@ -19,6 +19,15 @@ const graph = () => screen.getByRole('region', { name: 'Workbook dependency grap
 const strip = (term: string) => within(screen.getByText(term).closest('div')!).getByRole('definition').textContent;
 
 describe('spreadsheet demo', () => {
+  // under the gate a 3-to-1 final goes to review too: that is no tie
+  it('says what sends a cell to review under each policy', () => {
+    render(<SheetDemo />);
+    expect(screen.getByText('Review: final and intermediate votes tied')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'Precision gate, no negative votes' }));
+    expect(screen.getByText('Review: votes tied, or a final with any vote against')).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Balanced votes, more final than intermediate' })).toBeTruthy();
+  });
+
   it('opens on the scratch cell the balanced rules wrongly call final', () => {
     render(<SheetDemo />);
     expect(
