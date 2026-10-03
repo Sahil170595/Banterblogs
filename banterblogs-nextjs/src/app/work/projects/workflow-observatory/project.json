@@ -1,0 +1,10 @@
+{
+  "slug": "workflow-observatory",
+  "title": "Workflow Observatory",
+  "summary": "Execute a controlled scheduling workflow through native controls, inspect observed state transitions, and challenge completion with configurable failures.",
+  "categories": ["agents", "evaluation", "systems"],
+  "roles": ["applied-ai", "research-engineer", "founding-engineer"],
+  "status": "interactive",
+  "runtime": "browser-application",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-workflow-observatory/banterblogs-nextjs/src/lib/projects/workflow-observatory"
+}
