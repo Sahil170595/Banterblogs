@@ -1,5 +1,5 @@
 import { backsClaim } from './claims';
-import { WEIGHTS_VERSION, type Claim, type Event, type Session } from './model';
+import { consentsTo, WEIGHTS_VERSION, type Claim, type Event, type Session } from './model';
 
 const OUTCOME_WEIGHT = 0.7;
 const PROCESS_WEIGHT = 0.2;
@@ -72,22 +72,29 @@ function branches(s: Session): Branch[] {
 }
 
 function coverage(events: Event[], requirements: Requirement[]): number {
-  let cursor = 0;
-  for (const e of events) if (cursor < requirements.length && matches(e, requirements[cursor])) cursor++;
-  return requirements.length ? cursor / requirements.length : 0;
+  const covered = requirements.filter(req => events.some(e => matches(e, req)
+    && (READS.has(req.name) || verifiedWrite(e, events))));
+  return requirements.length ? covered.length / requirements.length : 0;
+}
+
+function verifiedWrite(e: Event, events: Event[]): boolean {
+  const a = e.action;
+  if (a?.kind !== 'tool' || !e.result.ok || !e.changed) return false;
+  const preceding = events.filter(p => p.index < e.index && p.result.ok);
+  const hasRead = (name: string) => preceding.some(p => p.action?.kind === 'tool' && p.action.name === name
+    && (name === 'inventory' || p.action.args.orderId === a.args.orderId));
+  const choice = preceding.filter(p => p.action?.kind === 'choice').sort((a, b) => a.index - b.index).at(-1)?.action;
+  const hasReturn = preceding.some(p => p.changed && p.action?.kind === 'tool'
+    && p.action.name === 'return' && p.action.args.orderId === a.args.orderId);
+  return hasRead('order') && (a.name !== 'refund' || hasRead('payments'))
+    && (!['replace', 'notify'].includes(a.name) || hasRead('inventory'))
+    && (a.name !== 'replace' || hasReturn)
+    && consentsTo(choice?.kind === 'choice' ? choice : undefined, a);
 }
 
 function verifiedWrites(s: Session): { verified: number; count: number } {
   const writes = s.events.filter(e => e.changed);
-  const verified = writes.filter(e => {
-    const a = e.action;
-    if (a?.kind !== 'tool') return false;
-    const preceding = s.events.filter(p => p.index < e.index);
-    const hasRead = (name: string) => preceding.some(p => p.action?.kind === 'tool' && p.action.name === name
-      && p.result.ok && (name === 'inventory' || p.action.args.orderId === a.args.orderId));
-    return hasRead('order') && (a.name !== 'refund' || hasRead('payments'))
-      && (!['replace', 'notify'].includes(a.name) || hasRead('inventory'));
-  }).length;
+  const verified = writes.filter(e => verifiedWrite(e, s.events)).length;
   return { verified, count: writes.length };
 }
 
