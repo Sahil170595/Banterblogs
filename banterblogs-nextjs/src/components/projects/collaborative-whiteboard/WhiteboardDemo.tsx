@@ -131,8 +131,8 @@ export default function WhiteboardDemo() {
     const { shape } = progress(active, point(event));
     setActiveGesture(null);
     event.currentTarget.releasePointerCapture(event.pointerId);
-    const accepted = store.dispatch((state) => commit(state, active.kind === 'draw' ? [{ kind: 'add', shape }] : [{ kind: 'update', shapeId: shape.id, props: { x: shape.x, y: shape.y, width: shape.width, height: shape.height } }]));
-    if (accepted) { setSelectedId(shape.id); setTool('select'); }
+    const committed = store.dispatch((state) => commit(state, active.kind === 'draw' ? [{ kind: 'add', shape }] : [{ kind: 'update', shapeId: shape.id, props: { x: shape.x, y: shape.y, width: shape.width, height: shape.height } }]));
+    if (committed) { setSelectedId(shape.id); setTool('select'); }
   }
   function cancelGesture() { setActiveGesture(null); }
   function update(props: ShapePatch) {
