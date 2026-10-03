@@ -29,27 +29,20 @@ export default function ProjectsHubLayout({ children }: { children: ReactNode })
     <div className="container pb-24 pt-6 md:pt-10">
       <div>
         <HubHead
-          collections={collections.map(({ key, title, description }) => ({ key, title, description }))}
+          collections={collections.map(({ key, title, description }) => ({ key, title, description, count: projectsIn(catalog, key).length }))}
+          total={catalog.length}
           titleProps={entrance(HUB_ENTRANCE_GROUP.title, 'text-heading-48')}
           introProps={entrance(HUB_ENTRANCE_GROUP.intro, 'mt-3 max-w-4xl text-copy-16 text-muted-foreground md:mt-4 md:text-copy-17')}
+          countsProps={entrance(HUB_ENTRANCE_GROUP.tabs, 'mt-3 flex flex-wrap gap-x-5 gap-y-1 text-label-13 text-muted-foreground')}
           intro={
             <>
               Working demos of systems I built: environments that score decision-making programs, checks on software agents and
-              automated decisions, search, scheduling and rule engines, and a shared whiteboard. Each one runs in your browser on
-              made-up sample data and says where its numbers come from. Built by <span className="text-foreground">Sahil Kadadekar</span>.
+              automated decisions, search, scheduling and rule engines, and a shared whiteboard. Each runs in your browser on made-up
+              sample data and says where its numbers come from. Most end the same way: something that looks like success until a
+              stricter check reads what actually happened. Built by <span className="text-foreground">Sahil Kadadekar</span>.
             </>
           }
         />
-        <ul aria-label="The projects in numbers" {...entrance(HUB_ENTRANCE_GROUP.tabs, 'mt-3 flex flex-wrap gap-x-5 gap-y-1 text-label-13 text-muted-foreground')}>
-          <li>
-            <span className="font-semibold tabular-nums text-foreground">{catalog.length}</span> {catalog.length === 1 ? 'project' : 'projects'}
-          </li>
-          <li>
-            <span className="font-semibold tabular-nums text-foreground">{collections.length}</span>{' '}
-            {collections.length === 1 ? 'collection' : 'collections'}
-          </li>
-          <li>Runs in your browser</li>
-        </ul>
       </div>
 
       <section aria-labelledby="projects-heading" className="mt-6 md:mt-8">

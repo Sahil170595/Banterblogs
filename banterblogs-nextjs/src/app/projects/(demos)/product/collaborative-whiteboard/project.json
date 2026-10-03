@@ -2,7 +2,7 @@
   "slug": "collaborative-whiteboard",
   "title": "Collaborative Whiteboard",
   "dek": "Sceneledger, a shared online whiteboard I built: a React drawing app, a FastAPI server with accounts and live WebSocket sessions, and a PostgreSQL database. This page runs its drawing editor and every order in which two people's simultaneous edits can reach each screen.",
-  "summary": "Sceneledger's editor, and every order two simultaneous recolours can reach each screen: applied as they arrive, screens can disagree; in sequence order, all agree.",
+  "summary": "Two people recolour one note at once: in 6 of the 8 possible orderings a screen shows a colour the database lacks; numbered order fixes all 8.",
   "collection": "product",
   "alsoIn": [],
   "order": 1,

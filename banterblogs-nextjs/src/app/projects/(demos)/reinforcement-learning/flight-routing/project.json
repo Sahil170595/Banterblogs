@@ -2,7 +2,7 @@
   "slug": "flight-routing",
   "title": "Flight Routing Lab",
   "dek": "Gatebound is a reinforcement-learning system I built in Python for getting a passenger to a destination before a deadline when flights can be delayed or cancelled. This page rebuilds its simulator in your browser and runs four booking policies over the same 64 simulated worlds.",
-  "summary": "A flight-booking simulator: four policies race a deadline to JFK. Planning ahead wins on-time arrivals and costs arrivals overall.",
+  "summary": "With a tight deadline, planning ahead gets 40 of 64 simulated trips to JFK there on time where booking the nonstop gets 0, but 8 fewer arrive at all.",
   "collection": "reinforcement-learning",
   "alsoIn": [],
   "order": 1,

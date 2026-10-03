@@ -2,7 +2,7 @@
   "slug": "mission-governance",
   "title": "Drone Mission Governance",
   "dek": "ProjectWyvern, the autonomy plane I built to sit between the people who approve drone missions and the drone's own flight controller. It checks a mission before take-off, then flies it while a safety guard watches telemetry. This page rebuilds that logic and tests which faults end a flight.",
-  "summary": "Drone mission software, rebuilt and checked against the original: some telemetry faults bring the drone home, but losing telemetry is only logged and the flight goes on.",
+  "summary": "With no telemetry at all the drone flies all 6 waypoints, and the mission’s lost-link instruction is never read; stale data mid-flight is only logged.",
   "collection": "systems",
   "alsoIn": [],
   "order": 3,

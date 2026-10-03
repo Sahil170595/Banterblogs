@@ -2,7 +2,7 @@
   "slug": "code-verification",
   "title": "Code Verification Lab",
   "dek": "Patchglass, a container-based harness I built in Python, grades a code repair by running every test on the buggy code and on the patched code, so passing the bug's own example is never mistaken for fixing it. This page rebuilds that grading in your browser on two small tasks.",
-  "summary": "Grades a bug fix by every test's result before and after the patch. A two-test smoke suite passes patches the full suite rejects, one of which only memorizes the example.",
+  "summary": "Four candidate bug fixes: a two-test smoke suite passes three, the full six-test suite passes one. Passing the bug’s own example is not a fix.",
   "collection": "reinforcement-learning",
   "alsoIn": [],
   "order": 4,

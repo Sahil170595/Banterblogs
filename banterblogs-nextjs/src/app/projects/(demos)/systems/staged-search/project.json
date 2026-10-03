@@ -2,7 +2,7 @@
   "slug": "staged-search",
   "title": "Staged Document Search",
   "dek": "StrataSearch, a document search pipeline I built: when a filtered search finds too few matches, it drops a filter and searches again. This page rebuilds its offline search in your browser and measures what dropping filters costs.",
-  "summary": "A search that drops filters when results run thin. At its default setting it drops every filter, still reports ready, and returns notes outside the request.",
+  "summary": "When a filtered search finds too few notes it drops filters: at its default it drops all three, says “ready”, and 2 of its 4 notes break the request.",
   "collection": "systems",
   "alsoIn": [],
   "order": 1,

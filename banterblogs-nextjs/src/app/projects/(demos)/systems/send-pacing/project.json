@@ -2,7 +2,7 @@
   "slug": "send-pacing",
   "title": "Send Pacing Scheduler",
   "dek": "tempoledger, a scheduler I built for simulated text-message campaigns, paces each message the way a person would send it: never sooner than it could have been typed. This page rebuilds it in your browser and runs its own audit, which catches the schedule breaking that rule.",
-  "summary": "A scheduler that paces texts like a person typing them, rebuilt and audited: its own audit catches the last messages going out before they could have been typed.",
+  "summary": "In all 1,000 runs of its own example, the scheduler sends its last two messages before a person could have typed them.",
   "collection": "systems",
   "alsoIn": [],
   "order": 2,
