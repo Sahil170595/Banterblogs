@@ -21,6 +21,7 @@
 .commands { display: flex; gap: 8px; margin-left: auto; }
 .run { background: hsl(var(--status-blue)); color: hsl(var(--background)); gap: 7px; height: 36px; padding: 0 14px; font-weight: 600; font-size: 13px; }
 .iconButton { height: 36px; width: 36px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); }
+.commands .settingsToggle { display: none; }
 .fileInput { display: none; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .workspace { display: grid; grid-template-columns: 270px minmax(0, 1fr); }
@@ -101,6 +102,9 @@
   .contributions > div { grid-template-columns: minmax(0,1fr) 60px 28px; }
 }
 @media (max-width: 640px) {
+  .commands .settingsToggle { display: inline-flex; }
+  .controls { display: none; }
+  .controls.controlsOpen { display: flex; }
   .page { padding: 24px 16px 60px; }
   .toolbar { padding: 14px; gap: 12px; }
   .toolbar > label { width: 100%; }

@@ -6,6 +6,16 @@ import { evaluate, exportRun } from '@/lib/projects/intake-policy/engine';
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('intake workbench applied state', () => {
+  it('toggles case settings without changing the applied priority', () => {
+    render(<IntakeLab />);
+    const toggle = screen.getByRole('button', { name: 'Case settings' });
+    const initial = screen.getByLabelText('Applied priority').textContent;
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(toggle);
+    expect(screen.getByLabelText('Applied priority').textContent).toBe(initial);
+  });
   it('keeps an edited case separate from results and exports the applied snapshot', async () => {
     let captured: Blob | undefined;
     vi.stubGlobal('URL', { createObjectURL: vi.fn((blob: Blob) => { captured = blob; return 'blob:receipt'; }), revokeObjectURL: vi.fn() });
