@@ -1,0 +1,10 @@
+{
+  "slug": "retrieval-ranking",
+  "title": "Retrieval Ranking Workbench",
+  "summary": "Search a synthetic document corpus with two lexical channels, inspect filter relaxation and reciprocal rank fusion, and export verifiable runs.",
+  "categories": ["retrieval", "systems"],
+  "roles": ["ml-systems", "applied-ai"],
+  "status": "interactive",
+  "runtime": "browser-application",
+  "sourceUrl": "https://github.com/Sahil170595/stratasearch"
+}
