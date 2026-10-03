@@ -10,17 +10,15 @@ const ENTRANCE_CARDS = 3;
 
 interface CollectionGridProps {
   label: string;
-  description?: string;
   projects: ProjectManifest[];
   /** the collection being shown; a project filed elsewhere names its own on the card */
   collection?: string;
 }
 
 /** A collection's cards, in the archive grid's columns and rhythm. */
-export function CollectionGrid({ label, description, projects, collection }: CollectionGridProps) {
+export function CollectionGrid({ label, projects, collection }: CollectionGridProps) {
   return (
     <CollectionPanel label={label}>
-      {description && <p className="mb-10 max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>}
       <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3">
         {projects.map((project, index) => (
           <Reveal

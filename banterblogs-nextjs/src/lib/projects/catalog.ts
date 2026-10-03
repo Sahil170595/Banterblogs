@@ -59,11 +59,10 @@ export function collectionsWithProjects(catalog: ProjectManifest[]): Collection[
   return COLLECTIONS.filter((c) => projectsIn(catalog, c.key).length > 0);
 }
 
-/** The projects before and after this one in its own collection. */
+/** The projects before and after this one in the catalog, across collections. */
 export function neighbours(catalog: ProjectManifest[], project: ProjectManifest) {
-  const own = catalog.filter((p) => p.collection === project.collection);
-  const index = own.findIndex((p) => p.slug === project.slug);
-  return { previous: own[index - 1] ?? null, next: own[index + 1] ?? null };
+  const index = catalog.findIndex((p) => p.slug === project.slug);
+  return { previous: catalog[index - 1] ?? null, next: catalog[index + 1] ?? null };
 }
 
 export function findProject(catalog: ProjectManifest[], slug: string): ProjectManifest {

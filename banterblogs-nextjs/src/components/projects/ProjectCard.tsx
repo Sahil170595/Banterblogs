@@ -27,7 +27,7 @@ export function ProjectCard({ project, showCollection = false }: ProjectCardProp
           <div className="card-visual aspect-video">{Visual && <Visual accent />}</div>
         </ProjectFigureTransition>
         <h3 className="mt-4 text-heading-20 text-foreground">{project.title}</h3>
-        <p className="mt-2 line-clamp-2 text-copy-16 text-muted-foreground">{project.summary}</p>
+        <p className="mt-2 line-clamp-3 text-copy-16 text-muted-foreground">{project.summary}</p>
         <div data-card-meta="" className="mt-3 flex items-center gap-2 text-label-13 text-muted-foreground/80">
           {showCollection && <span>{getCollection(project.collection).label} ·</span>}
           <span>{PROJECT_EVIDENCE[project.evidence]}</span>

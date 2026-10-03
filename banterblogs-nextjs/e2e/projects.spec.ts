@@ -17,6 +17,8 @@ test('a collection tab changes the URL and the grid, not the page', async ({ pag
   await expect(page).toHaveURL(/\/projects\/reinforcement-learning$/);
   await expect(tabs.getByRole('link', { name: /^Reinforcement learning/ })).toHaveAttribute('aria-current', 'page');
   expect(await page.locator('h1').evaluate((h1) => (h1 as HTMLElement & { __kept?: boolean }).__kept)).toBe(true);
+  // the kept heading now names the collection
+  await expect(page.locator('h1')).toHaveText('Reinforcement Learning Projects');
   await expect(page.getByRole('region', { name: 'Reinforcement learning' })).toBeVisible();
 
   await page.getByRole('link', { name: /Flight Routing Lab/ }).click();
