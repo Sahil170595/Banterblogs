@@ -42,18 +42,23 @@ const finals = balanced.score.tp + balanced.score.fn;
 const checkpoint = balanced.result.cells[CHECKPOINT];
 const pct = (x: number | null) => (x === null ? 'undefined' : `${Math.round(x * 100)}%`);
 
+// Formuloom's structural router on its development corpus, as recorded in the original evaluation run
+const FORMULOOM_RUN = { precision: '0.970', recall: '0.920', f1: '0.945', sheets: 24 };
+// said once, on the card where these figures first appear; later mentions point back to it
+const PROVENANCE = 'results from the original evaluation run; the public repo is a cleaned release without those run artifacts';
+
 const FINDINGS: ProjectFinding[] = [
   {
-    value: pct(precision.score.precision),
-    label: 'precision for the precision gate, the policy built to be precise: it sends both real finals to review and still keeps the scratch cell final.',
+    value: `${FORMULOOM_RUN.precision} / ${FORMULOOM_RUN.recall}`,
+    label: `precision and recall of Formuloom itself on its ${FORMULOOM_RUN.sheets}-sheet development corpus: of the cells it marked final, 97% were, and it found 92% of the real ones. These are ${PROVENANCE}. The two cards beside it are this rebuild's counterexamples.`,
   },
   {
     value: `${balanced.score.fp}`,
-    label: 'false final under balanced votes: a scratch formula no other cell uses, final only because it is a dependency sink, a cell nothing depends on.',
+    label: `false final in this rebuild's workbook under balanced votes, Formuloom's own majority rule: a scratch formula no other cell uses, final only because it is a dependency sink, a cell nothing depends on.`,
   },
   {
-    value: pct(reviewed.score.f1),
-    label: 'F1, precision and recall in one score, once a prune-only review drops that cell. The reviewer can see the key and can only remove a final, so this is not the rules improving.',
+    value: pct(precision.score.precision),
+    label: `precision of the precision gate, a stricter policy this page adds, on the same workbook: it sends both real finals to review and still keeps the scratch cell final.`,
   },
 ];
 
@@ -77,7 +82,8 @@ export default function SpreadsheetReasoningPage() {
         recall, the share of real finals found, {pct(balanced.score.recall)}.
       </p>
       <p>
-        The precision gate requires a final to have no negative vote. That sounds stricter, and on this workbook it is worse: the margin
+        Balanced votes are Formuloom&apos;s own rule. The precision gate is not: Formuloom has no such vote rule, and this page adds it as a
+        stricter alternative. It requires a final to have no negative vote. That sounds stricter, and on this workbook it is worse: the margin
         checkpoint <code>{CHECKPOINT}</code> is used by a later cell, which draws one negative vote, so the gate sends it to review along
         with the report total, while the scratch cell, with no negative vote at all, stays final. Precision {pct(precision.score.precision)}.
         Rules that agree are not calibrated, and a gate named for a metric does not deliver it.
@@ -95,8 +101,8 @@ export default function SpreadsheetReasoningPage() {
           Formuloom
         </a>
         , the workbook classification pipeline I built in Python: given two versions of a workbook, it sorts the changed cells into final
-        outputs and intermediates. On its development corpus of 24 sheets it recorded precision 0.970 and recall 0.920. Those figures are
-        results from the original evaluation run; the public repo is a cleaned release without those run artifacts.
+        outputs and intermediates. On its development corpus of {FORMULOOM_RUN.sheets} sheets it recorded precision{' '}
+        {FORMULOOM_RUN.precision} and recall {FORMULOOM_RUN.recall}, the original run&apos;s figures in the first card above.
       </p>
 
       <h2 id="limits">{PLAIN.limits}</h2>
@@ -121,6 +127,13 @@ export default function SpreadsheetReasoningPage() {
           sheet routes its cells to intermediate.
         </p>
         <p>
+          <strong>Which policy is Formuloom&apos;s.</strong> Balanced votes follow Formuloom&apos;s <code>majority_vote_label</code>{' '}
+          (labelmodel.py), which marks a cell final when its final votes outnumber its intermediate votes; Formuloom labels a tie
+          intermediate, where this page sends it to review. The precision gate has no counterpart in its code: Formuloom&apos;s V11
+          precision guards (cli.py) work on whole sheets, dropping every proposed final on a large granular or dense source sheet, not on
+          one cell&apos;s votes.
+        </p>
+        <p>
           <strong>Prune-only review.</strong> A reviewer can keep or drop a proposed final and nothing else, so review can never introduce a
           final the rules did not propose or rescue one they missed. The illustrative ballots under the hood are authored, not model output,
           and disappear as soon as the workbook changes.
@@ -133,10 +146,10 @@ export default function SpreadsheetReasoningPage() {
           and a structural router over precision- and recall-oriented variants, with a prune-only judge as the second pass.
         </p>
         <p>
-          Its development evaluation, five task bundles and 24 sheets, recorded precision 0.970, recall 0.920 and micro F1 0.945 for the
-          structural router (1,543 true positives, 47 false positives, 134 false negatives), with a sheet-clustered bootstrap F1 interval of
-          0.876 to 0.982 over 1,000 resamples. Those figures are results from the original evaluation run; the public repo is a cleaned
-          release without those run artifacts. They describe that development corpus, not new workbooks.
+          Its development evaluation, five task bundles and {FORMULOOM_RUN.sheets} sheets, recorded precision {FORMULOOM_RUN.precision},
+          recall {FORMULOOM_RUN.recall} and micro F1 {FORMULOOM_RUN.f1} for the structural router (1,543 true positives, 47 false
+          positives, 134 false negatives), with a sheet-clustered bootstrap F1 interval of 0.876 to 0.982 over 1,000 resamples. Like the
+          card above, these come from the original run, and they describe that development corpus, not new workbooks.
         </p>
         <p>
           The lesson this page keeps: repeated votes suppress unstable decisions, but consensus can reinforce a wrong convention for what

@@ -1,7 +1,7 @@
 {
   "slug": "customer-service",
   "title": "Customer Service Environment",
-  "dek": "Turncraft, a customer-service environment I built in Python, gives an agent nine tools that change order records, and rewards it for what the records end up saying, not for what the agent said. This page rebuilds that scoring in your browser and runs scripted trajectories through it.",
+  "dek": "Turncraft, a customer-service environment I built in Python, gives an AI support agent nine tools that change order records and rewards it for what the records end up saying, not what it said. This page rebuilds that scoring in your browser and runs scripted trajectories through it.",
   "summary": "Two scripted runs refund the same $48.00 on a double-charged order: refunding the duplicate charge scores 1.00, refunding the real one scores −0.40.",
   "collection": "reinforcement-learning",
   "alsoIn": [],

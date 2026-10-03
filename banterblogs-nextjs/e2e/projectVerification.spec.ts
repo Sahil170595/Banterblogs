@@ -60,11 +60,12 @@ for (const width of [1440, 390]) {
   });
 }
 
-test('on a phone, each patch is a card that leads with its verdict, all on screen', async ({ page }) => {
+test('on a phone, each patch is a card that leads with its two verdicts, all on screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(PAGE);
+  // a smoke and a full verdict for each of the four patches
   const verdicts = page.getByRole('cell').filter({ hasText: /^(Passes|Fails)$/ });
-  await expect(verdicts).toHaveCount(4);
+  await expect(verdicts).toHaveCount(8);
   for (const verdict of await verdicts.all()) {
     const box = (await verdict.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);

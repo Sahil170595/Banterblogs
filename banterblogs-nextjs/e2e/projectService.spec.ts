@@ -36,6 +36,9 @@ test('on a phone, every score is on screen and a picked row brings its replay in
   await page.getByRole('button', { name: /^Return and replace: reward 1\.00/ }).click();
   await expect(page.getByLabel('Total reward')).toHaveText('1.00');
   await expect(page.getByRole('heading', { name: 'Damaged desk lamp', exact: true })).toBeInViewport();
+  // every action shows whole: no inner box cuts a row off
+  const actions = page.getByRole('list', { name: 'Actions' });
+  expect(await actions.evaluate((list) => list.scrollHeight <= list.clientHeight)).toBe(true);
   // a phone widens its layout viewport to fit overflowing content, so the width itself is the check
   await page.getByText(/^Run it yourself/).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);

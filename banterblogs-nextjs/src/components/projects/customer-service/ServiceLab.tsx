@@ -75,6 +75,8 @@ const IMPACT_GLOSSES: Record<Event['impact'], string> = {
   reversible: 'a change that can be undone',
   external: 'moves money or goods, or calls the carrier',
 };
+/** the actions that are not tool calls, which touch no order record */
+const NON_TOOL_KINDS: Record<string, string> = { choice: 'customer choice', report: 'report', finish: 'close' };
 /** results whose message is the parser's own wording, kept under the details */
 const RAW_MESSAGE_CODES = new Set(['invalid_arguments', 'unknown_tool']);
 
@@ -106,8 +108,8 @@ function resultGloss(session: Session, event: Event): string {
   const known = RESULT_GLOSSES[event.result.code];
   if (known) return known;
   const a = event.action;
-  if (a?.kind === 'report')
-    return backsClaim(event.before, a.claim, a.orderId, session.identity) ? 'The world supports this report' : 'The world contradicts this report';
+  // true or false of the world when made; whether it earns report credit is the reward's call
+  if (a?.kind === 'report') return backsClaim(event.before, a.claim, a.orderId, session.identity) ? 'True when made' : 'Contradicted by the world';
   return event.changed ? 'Changed the world' : 'Read only, no change';
 }
 
@@ -428,6 +430,7 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
           {session.events.length} of {MAX_EVENTS} actions
         </span>
       </h4>
+      <p className={styles.lifecycleLabel}>Order status</p>
       <ol className={styles.lifecycle} aria-label={`Order ${order.id}: ${order.status}`}>
         {STAGES.map((stage) => (
           <li key={stage.status} data-current={order.status === stage.status || undefined}>
@@ -509,7 +512,9 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
       {shown && (
         <div className={styles.observation} aria-live="polite">
           <strong>
-            #{shown.index} · {shown.impact} impact: {IMPACT_GLOSSES[shown.impact]}
+            {shown.action && shown.action.kind !== 'tool'
+              ? `#${shown.index} · ${NON_TOOL_KINDS[shown.action.kind]}: changes no order record`
+              : `#${shown.index} · ${shown.impact} impact: ${IMPACT_GLOSSES[shown.impact]}`}
           </strong>
           <p>{RAW_MESSAGE_CODES.has(shown.result.code) ? `${resultGloss(session, shown)}.` : shown.result.message}</p>
           <details>
@@ -536,7 +541,7 @@ function WorldState({ demo }: { demo: ServiceDemo }) {
 const COMPONENT_GLOSSES: Record<string, string> = {
   Outcome: 'the world reached an acceptable outcome',
   'Prior evidence': 'share of writes made after the reads they need and a matching customer choice',
-  'Supported report': 'earned only when the case is resolved and no report contradicted the world',
+  'Supported report': 'a true report, credited only when the case is resolved and no report contradicted the world',
 };
 
 /** the reward in one sentence: which state the episode ended in and the cap that held it */
@@ -616,8 +621,9 @@ function Reward({ demo }: { demo: ServiceDemo }) {
                 : [
                     !b.stateSatisfied && 'world not in this state',
                     !b.coherentWrites && 'writes outside it',
-                    b.eventCoverage < 1 && `${Math.round(b.eventCoverage * PERCENT)}% of its evidence`,
-                    !b.reportSatisfied && 'no supported report',
+                    b.eventCoverage < 1 && `${Math.round(b.eventCoverage * PERCENT)}% of its required steps done`,
+                    // a report counts toward an outcome only once that outcome's steps are all done
+                    !b.reportSatisfied && 'report not credited: this outcome was never reached',
                   ]
                     .filter(Boolean)
                     .join(' · ')}

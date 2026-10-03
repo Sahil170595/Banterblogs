@@ -50,20 +50,21 @@ const SAVED_RUNS: { run: string; repair: Tally; preserve: Tally | null; verdict:
 const tally = (t: Tally | null) => (t ? `${t.passed}/${t.of}` : 'none declared');
 const unsuccessful = SAVED_RUNS[2];
 const kept = unsuccessful.preserve!;
+// said once, where the saved-run numbers first appear; later mentions point back to it
 const PROVENANCE = 'results from the original evaluation run; the public repo is a cleaned release without those run artifacts';
 
 const FINDINGS: ProjectFinding[] = [
   {
     value: `${overfit.repaired}/${repairTests}`,
-    label: `fail-to-pass tests (ones the bug fails and the fix must pass) repaired by the example-only patch. It recognizes the one demonstrated input, and the two-test smoke suite still passes it.`,
+    label: `fail-to-pass tests (ones the bug fails and the fix must pass) repaired by the example-only patch. It recognizes the one demonstrated input, and the smoke suite, a quick two-test check, still passes it.`,
   },
   {
     value: `${regression.regressed}`,
-    label: `pass-to-pass ${plural(regression.regressed, 'test', 'tests')} broken by the ordering patch while it repairs all ${regression.repaired} fail-to-pass tests. The gate is a conjunction, so repairs cannot cancel a regression.`,
+    label: `pass-to-pass ${plural(regression.regressed, 'test', 'tests')} broken by the ordering patch while it repairs all ${regression.repaired} fail-to-pass tests. A patch passes only if every test passes (a conjunction, not an average), so repairs cannot cancel a regression.`,
   },
   {
     value: tally(unsuccessful.repair),
-    label: `failing tests fixed by a model patch in Patchglass's own run, though it applied cleanly and kept ${tally(kept)} existing tests passing. These are ${PROVENANCE}.`,
+    label: `failing tests fixed by a patch written by an AI model in Patchglass's own run, though it applied cleanly and kept ${tally(kept)} existing tests passing. These are ${PROVENANCE}.`,
   },
 ];
 
@@ -94,8 +95,8 @@ export default function CodeVerificationPage() {
         The example-only patch adds a special case for the demonstrated input. It repairs {overfit.repaired} of {repairTests} fail-to-pass
         tests and leaves {overfit.stillBroken} still broken, which the smoke suite never runs. The ordering patch repairs all{' '}
         {regression.repaired} and reverses the output order, breaking {regression.regressed} pass-to-pass{' '}
-        {plural(regression.regressed, 'test', 'tests')}. Repair evidence cannot cancel a regression: the gate is a conjunction, not an
-        average.
+        {plural(regression.regressed, 'test', 'tests')}. Repair evidence cannot cancel a regression: a patch passes only if every test
+        passes, a conjunction, not an average.
       </p>
 
       <h2 id="origin">{PLAIN.origin}</h2>
@@ -105,9 +106,9 @@ export default function CodeVerificationPage() {
           Patchglass
         </a>
         , the container-based repair and test-synthesis harness I built in Python. It packages a repository at a commit, gives a solver a
-        restricted workspace, and grades the patch in a fresh container. In its saved runs, a model&apos;s patch applied cleanly and broke
-        none of {kept.of} existing tests, yet fixed {unsuccessful.repair.passed} of the {unsuccessful.repair.of} failing ones: a patch
-        that applies and breaks nothing can still fix nothing. Those figures are {PROVENANCE}.
+        restricted workspace, and grades the patch in a fresh container. In its saved runs, a patch written by an AI model applied cleanly
+        and broke none of {kept.of} existing tests, yet fixed {unsuccessful.repair.passed} of the {unsuccessful.repair.of} failing ones:
+        a patch that applies and breaks nothing can still fix nothing. These come from the same original run as the findings above.
       </p>
 
       <h2 id="limits">{PLAIN.limits}</h2>
@@ -171,8 +172,9 @@ export default function CodeVerificationPage() {
           </table>
         </div>
         <p>
-          Both model patches applied cleanly. One repaired all four failures; the other repaired none and preserved every existing test,
-          which is the point of this page at repository scale. Those figures are {PROVENANCE}.
+          Both model patches, written by AI models through Patchglass&apos;s model solvers, applied cleanly. One repaired all four
+          failures; the other repaired none and preserved every existing test, which is the point of this page at repository scale. The
+          table is from the original run described above.
         </p>
 
         <h3 id="scope">{ENGINEERS.scope}</h3>

@@ -9,8 +9,9 @@ import styles from './verifier.module.css';
 
 // The hero: every candidate patch against every test of a task, each cell the
 // test's transition from the buggy baseline to the patched function. The
-// smoke suite keeps only one fail-to-pass and one pass-to-pass test; the
-// verdict column says what that suite would have concluded.
+// smoke suite keeps only one fail-to-pass and one pass-to-pass test; the two
+// verdict columns say what each suite concludes, side by side, so the
+// contrast needs no click.
 
 // short enough that both fit one row on a phone; the full titles head the matrix
 const TASK_LABELS: Record<TaskId, string> = { intervals: 'Interval union', unique: 'Deduplication' };
@@ -20,6 +21,10 @@ const SCOPE_CHOICES: Choice<RunConfig['scope']>[] = [
   { value: 'full', label: 'Full', note: '6 tests' },
 ];
 const NOT_IN_SMOKE = 'not in smoke suite';
+const VERDICT_COLUMNS: { scope: RunConfig['scope']; label: string }[] = [
+  { scope: 'smoke', label: 'Smoke verdict' },
+  { scope: 'full', label: 'Full verdict' },
+];
 
 export interface MatrixSelection {
   taskId: TaskId;
@@ -33,7 +38,6 @@ export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelectio
   const smokeIds = new Set(rows[0].smoke.rows.map((r) => r.id));
   const passing = (scope: RunConfig['scope']) => rows.filter((r) => r[scope].resolved).length;
   const verdictOf = (report: Report) => (report.resolved ? 'Passes' : 'Fails');
-  const verdictLabel = selection.scope === 'smoke' ? 'Smoke verdict' : 'Verdict';
   const skipped = (id: string) => selection.scope === 'smoke' && !smokeIds.has(id);
 
   return (
@@ -64,10 +68,9 @@ export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelectio
       <p className={controls.lead}>
         Each row is a candidate patch; each column a test, run twice, on the buggy function and on the patched one. A{' '}
         {GROUP_NAMES.repair.toLowerCase()} test is one the bug fails and the fix must pass; a {GROUP_NAMES.preserve.toLowerCase()} test{' '}
-        {GROUP_GLOSSES.preserve}. Select a patch to inspect its evidence below.{' '}
-        {selection.scope === 'smoke'
-          ? `Try Full: the example-only patch the smoke suite passes then fails.`
-          : `Try Smoke: on its two tests, ${passing('smoke')} of ${rows.length} patches pass.`}
+        {GROUP_GLOSSES.preserve}. The smoke suite is a quick check that runs one test of each kind; the full suite runs all six. Compare the two
+        verdict columns: the smoke suite passes patches the full suite fails. Select a patch to inspect its evidence below, and switch the suite to
+        see which tests each one runs.
       </p>
       <ul className={styles.key} aria-label="Cell key">
         {TRANSITION_ORDER.map((t) => (
@@ -85,9 +88,11 @@ export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelectio
                 <th scope="col" role="columnheader">
                   Patch
                 </th>
-                <th scope="col" role="columnheader" className={styles.verdictHead}>
-                  {verdictLabel}
-                </th>
+                {VERDICT_COLUMNS.map((column) => (
+                  <th key={column.scope} scope="col" role="columnheader" className={styles.verdictHead}>
+                    {column.label}
+                  </th>
+                ))}
                 {rows[0].full.rows.map((test) => (
                   <th
                     key={test.id}
@@ -106,7 +111,7 @@ export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelectio
             </thead>
             <tbody role="rowgroup">
               {rows.map(({ candidate, full, smoke }) => {
-                const report = selection.scope === 'smoke' ? smoke : full;
+                const reports = { smoke, full };
                 const selected = candidate.id === selection.candidateId;
                 return (
                   <tr key={candidate.id} role="row" data-selected={selected || undefined}>
@@ -115,9 +120,17 @@ export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelectio
                         {candidate.label}
                       </button>
                     </th>
-                    <td role="cell" data-label={verdictLabel} className={styles.verdictCell} data-resolved={report.resolved || undefined}>
-                      {verdictOf(report)}
-                    </td>
+                    {VERDICT_COLUMNS.map((column) => (
+                      <td
+                        key={column.scope}
+                        role="cell"
+                        data-label={column.label}
+                        className={styles.verdictCell}
+                        data-resolved={reports[column.scope].resolved || undefined}
+                      >
+                        {verdictOf(reports[column.scope])}
+                      </td>
+                    ))}
                     {full.rows.map((test) => (
                       <td
                         key={test.id}

@@ -38,10 +38,26 @@ describe('code verification demo', () => {
     const headers = within(matrix())
       .getAllByRole('columnheader')
       .map((h) => h.textContent);
-    // the verdict follows the patch's name, so a phone card leads with it
-    expect(headers.slice(0, 2)).toEqual(['Patch', 'Smoke verdict']);
+    // both verdicts follow the patch's name, so a phone card leads with them
+    expect(headers.slice(0, 3)).toEqual(['Patch', 'Smoke verdict', 'Full verdict']);
     expect(headers.filter((h) => h?.startsWith('Fail-to-pass'))).toHaveLength(3);
     expect(headers.filter((h) => h?.startsWith('Pass-to-pass'))).toHaveLength(3);
+  });
+
+  // re-review: the board opened on Smoke beside "Passes" for both bad patches,
+  // so the finding needed a click
+  it('shows the smoke and full verdicts side by side, whichever suite is picked', () => {
+    render(<CodeVerificationDemo />);
+    const verdicts = (patch: string) => {
+      const row = screen.getByRole('button', { name: patch }).closest('tr')!;
+      const cell = (label: string) => row.querySelector(`[data-label="${label}"]`)?.textContent;
+      return [cell('Smoke verdict'), cell('Full verdict')];
+    };
+    expect(verdicts('Example-only repair')).toEqual(['Passes', 'Fails']);
+    expect(verdicts('Repair + ordering regression')).toEqual(['Passes', 'Fails']);
+    expect(verdicts('General repair')).toEqual(['Passes', 'Passes']);
+    fireEvent.click(screen.getByRole('radio', { name: /Full/ }));
+    expect(verdicts('Example-only repair')).toEqual(['Passes', 'Fails']);
   });
 
   it('tags the tests the smoke suite skips instead of fading them, and labels every cell for the phone cards', () => {

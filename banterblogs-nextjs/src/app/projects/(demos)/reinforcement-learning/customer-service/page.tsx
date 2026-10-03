@@ -43,8 +43,8 @@ const pct = (weight: number) => `${Math.round(weight * 100)}%`;
 
 const FINDINGS: ProjectFinding[] = [
   {
-    value: money(right.refundedCents),
-    label: `refunded by each of two scripted trajectories on an order charged twice. Refunding the second capture (completed charge) earns a reward of ${signedScore(right.score)}; refunding the first, legitimate one earns ${signedScore(wrong.score)}.`,
+    value: `${signedScore(right.score)} vs ${signedScore(wrong.score)}`,
+    label: `reward for the same ${money(right.refundedCents)} refund on an order charged twice: refunding the second capture (a capture is a completed charge), the duplicate, earns ${signedScore(right.score)}; refunding the first, legitimate one earns ${signedScore(wrong.score)}. Rewards run from ${signedScore(SCORE_FLOOR)} to ${signedScore(SCORE_CEILING)}.`,
   },
   {
     value: signedScore(both.score),
@@ -93,7 +93,8 @@ export default function CustomerServicePage() {
         <a href={TURNCRAFT.url} target="_blank" rel="noopener noreferrer">
           Turncraft
         </a>
-        , the customer-service environment I built in Python. Its offline sweep runs eight cases, each against a fresh world, with control
+        , the customer-service environment I built in Python, where a language model plays the support agent and a second model plays
+        the customer. Its offline sweep runs eight cases, each against a fresh world, with control
         trajectories of four kinds: oracle (the correct remedy), null (doing nothing), near-miss and forbidden, plus case-specific
         alternates, 34 in all. All eight case gates pass: every oracle scores above its near-miss and null controls, and every forbidden
         control below null. Those are checks that the reward separates good from bad behaviour, not a measure of any model&apos;s

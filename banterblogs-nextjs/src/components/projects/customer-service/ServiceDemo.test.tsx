@@ -38,6 +38,29 @@ describe('customer-service demo', () => {
     expect(within(screen.getByRole('list', { name: 'Actions' })).getByText('Issue refund: $48.00 on PAY-A (first capture)')).toBeTruthy();
   });
 
+  // re-review: the trace said "The world supports this report" beside a 0%
+  // supported report and a branch tagged "no supported report"
+  it('keeps a true report apart from report credit, and says what the evidence share counts', () => {
+    render(<ServiceDemo />);
+    expect(screen.queryByText(/supports this report/)).toBeNull();
+    const actions = screen.getByRole('list', { name: 'Actions' });
+    expect(within(actions).getByText(/True when made/)).toBeTruthy();
+    const branch = screen.getByText('Refund redundant capture').parentElement!;
+    expect(branch.textContent).toMatch(/report not credited: this outcome was never reached/);
+    expect(branch.textContent).toMatch(/\d+% of its required steps done/);
+    // a report is not a read: its panel says what kind of action it is
+    fireEvent.click(within(actions).getByRole('button', { name: /Report: Refund issued/ }));
+    expect(screen.getByText(/^#5 · report: changes no order record$/)).toBeTruthy();
+    expect(screen.queryByText(/#5 · read impact/)).toBeNull();
+  });
+
+  it('labels the order status strip as a status, not a row of tabs', () => {
+    render(<ServiceDemo />);
+    const strip = screen.getByRole('list', { name: /^Order S-410:/ });
+    expect(strip.previousElementSibling?.textContent).toBe('Order status');
+    expect(within(strip).queryAllByRole('button')).toHaveLength(0);
+  });
+
   it('counts actions and effects in words that agree with the number', () => {
     render(<ServiceDemo />);
     expect(row(/^Report a refund, issue none: reward −0\.30, not resolved, 1 action, 0 effects/)).toBeTruthy();
