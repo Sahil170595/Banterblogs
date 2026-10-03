@@ -59,7 +59,7 @@ redo:  update(shapeId, { x: 300, y: 220 })`}</code></pre>
             <li>Browser storage is a convenience, not durable database storage. Private browsing, quotas or clearing site data can remove it. Storage failures leave edits in memory and surface an export warning.</li>
             <li>Tabs do not synchronize. Two tabs share the same storage key and the last saved trace wins; use one tab or keep independent JSON exports.</li>
             <li>Text is edited as a whole object. It wraps and clips within its bounds; this is not collaborative character editing, an auto-layout diagram engine or rich text.</li>
-            <li>A session is bounded to 200 objects, 1,000 commands and a 1 MB formatted trace. Reaching a trace limit rejects further edits with an export-and-reset message instead of silently truncating evidence. Accepted exports fit the import limit.</li>
+            <li>A session is bounded to 200 objects, 1,000 commands and a 1 MB formatted trace. Reaching a trace limit rejects further edits with an export-and-reset message instead of silently truncating evidence. Valid exports fit the import limit.</li>
             <li>JSON export preserves scene and history. Image/PDF export, groups, connectors, infinite panning and cross-device persistence are outside this adaptation.</li>
           </ul>
         </section>
