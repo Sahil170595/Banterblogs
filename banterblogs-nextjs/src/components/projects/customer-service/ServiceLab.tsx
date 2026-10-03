@@ -178,7 +178,7 @@ function Workbench({ demo }: { demo: ServiceDemo }) {
       setError('');
       demo.act(JSON.parse(raw));
     } catch (cause) {
-      console.error('Service environment command JSON rejected:', cause);
+      console.warn('Service environment command JSON rejected:', cause);
       setError('That is not valid JSON. Use double-quoted keys and one complete object.');
     }
   };
