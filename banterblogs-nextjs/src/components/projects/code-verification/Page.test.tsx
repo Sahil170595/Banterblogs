@@ -20,12 +20,12 @@ describe('public route contract', () => {
     expect(tables?.[1].match(/<tr>/g)).toHaveLength(8);
     expect(html).not.toContain('function interval');
   });
-  it('uses the exact manifest keys and owned published branch source path', () => {
+  it('links the full public repository separately from browser engine sources', () => {
     expect(Object.keys(manifest).sort()).toEqual(['slug', 'title', 'summary', 'categories', 'roles', 'status', 'runtime', 'sourceUrl'].sort());
     expect(manifest.slug).toBe('code-verification');
     expect(manifest.status).toBe('interactive');
     expect(manifest.runtime).toBe('browser-evaluation');
-    expect(manifest.sourceUrl).toBe(SOURCE_URL);
-    expect(manifest.sourceUrl).toContain('/tree/codex/demo-code-verification/banterblogs-nextjs/src/lib/projects/code-verification');
+    expect(manifest.sourceUrl).toBe('https://github.com/Sahil170595/patchglass');
+    expect(SOURCE_URL).toContain('/tree/codex/demo-code-verification/banterblogs-nextjs/src/lib/projects/code-verification');
   });
 });
