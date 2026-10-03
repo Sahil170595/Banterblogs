@@ -56,13 +56,22 @@ const FIELDS: { key: Field; label: string; name: string; clock?: boolean }[] = [
  * configuration, so a change to the scenario above keeps them, and the form
  * says they are not applied yet.
  */
-function Settings({ config, onApply }: { config: Config; onApply: (config: Config) => string | null }) {
+interface SettingsProps {
+  config: Config;
+  /** every press of Apply, before the values are checked */
+  onAttempt: () => void;
+  /** returns why the configuration was refused, if it was */
+  onApply: (config: Config) => string | null;
+}
+
+function Settings({ config, onAttempt, onApply }: SettingsProps) {
   const [edits, setEdits] = useState<Partial<Record<Field, string>>>({});
   const [error, setError] = useState('');
   const value = (key: Field) => edits[key] ?? String(config[key]);
   const pending = FIELDS.some(({ key }) => edits[key] !== undefined && edits[key] !== String(config[key]));
   const apply = (event: FormEvent) => {
     event.preventDefault();
+    onAttempt();
     const next = { ...config };
     for (const { key, name } of FIELDS) {
       const raw = value(key).trim();
@@ -346,7 +355,7 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
               <>
                 <button type="button" className={controls.button} onClick={demo.stepChosen}>
                   <SkipForward aria-hidden="true" />
-                  {flights.length ? `Take ${flights[chosen].id}` : 'End the trip: nothing bookable'}
+                  {flights.length ? `Take ${flights[chosen].id}` : 'End the trip'}
                 </button>
                 <button type="button" className={controls.button} onClick={demo.finish}>
                   <Play aria-hidden="true" />
@@ -355,28 +364,31 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
               </>
             )}
             {terminal && history.length > 1 && <p className={controls.hint}>Rewind to take another flight in this same world.</p>}
-            <button
-              type="button"
-              className={controls.iconButton}
-              aria-label="Rewind one decision"
-              title="Rewind one decision"
-              disabled={history.length < 2}
-              onClick={demo.rewind}
-            >
-              <Undo2 aria-hidden="true" />
-              <span className={controls.iconLabel}>Rewind one decision</span>
-            </button>
-            <button
-              type="button"
-              className={controls.iconButton}
-              aria-label="Restart this world"
-              title="Restart this world"
-              disabled={history.length < 2}
-              onClick={demo.restart}
-            >
-              <RotateCcw aria-hidden="true" />
-              <span className={controls.iconLabel}>Restart this world</span>
-            </button>
+            {/* rewind and restart wrap as a pair, never one alone */}
+            <span className={styles.historyButtons}>
+              <button
+                type="button"
+                className={controls.iconButton}
+                aria-label="Rewind one decision"
+                title="Rewind one decision"
+                disabled={history.length < 2}
+                onClick={demo.rewind}
+              >
+                <Undo2 aria-hidden="true" />
+                <span className={controls.iconLabel}>Rewind one decision</span>
+              </button>
+              <button
+                type="button"
+                className={controls.iconButton}
+                aria-label="Restart this world"
+                title="Restart this world"
+                disabled={history.length < 2}
+                onClick={demo.restart}
+              >
+                <RotateCcw aria-hidden="true" />
+                <span className={controls.iconLabel}>Restart this world</span>
+              </button>
+            </span>
           </div>
 
           <dl className={styles.rewards} role="group" aria-label="Reward">
@@ -408,7 +420,8 @@ export function ReplayLab({ demo, ref }: { demo: FlightDemo; ref?: Ref<HTMLEleme
       </div>
 
       <UnderTheHood summary="Under the hood: world settings and export">
-        <Settings config={config} onApply={demo.configure} />
+        {/* an export's notice is stale once the settings are tried again */}
+        <Settings config={config} onAttempt={() => setNotice(null)} onApply={demo.configure} />
         <div className={styles.exportRow}>
           <button type="button" className={controls.button} onClick={exportJson}>
             <Download aria-hidden="true" />

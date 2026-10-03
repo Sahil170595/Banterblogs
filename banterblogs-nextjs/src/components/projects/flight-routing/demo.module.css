@@ -232,6 +232,14 @@
   gap: 0.5rem;
 }
 
+/* the pair moves to a new line together; only on a narrow phone do the two split */
+.historyButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 .status {
   margin-top: 1.125rem;
   display: grid;

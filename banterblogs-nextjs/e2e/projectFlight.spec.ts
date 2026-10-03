@@ -105,6 +105,41 @@ test('the exported file is named for the trip, and records who made each decisio
   await expect(page.getByRole('status', { name: 'Export' })).toHaveText('Trace exported.');
 });
 
+// live QA: with nothing bookable, the table was a bare header and Restart wrapped onto a line of its own
+test('with nothing bookable, the replay says why and its buttons keep one row', async ({ page, isMobile }) => {
+  await page.goto(PAGE);
+  await page.locator('details', { hasText: 'Under the hood' }).locator('summary').click();
+  await page.getByLabel('Connection buffer (minutes)').fill('1440');
+  await page.getByRole('button', { name: 'Apply to all worlds', exact: true }).click();
+  await page.getByRole('button', { name: 'Restart this world', exact: true }).click();
+  await expect(page.getByText(/^No flight can be booked from SFO/)).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Bookable flights' })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // a phone is too narrow for four labelled buttons, and stacks them
+  if (isMobile) return;
+  // the row aligns its buttons at the bottom
+  const bottoms = await Promise.all(
+    ['End the trip', 'Let the policy finish', 'Rewind one decision', 'Restart this world'].map(async (name) => {
+      const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+      return Math.round(box.y + box.height);
+    }),
+  );
+  expect(new Set(bottoms).size).toBe(1);
+});
+
+// live QA: on desktop the two clock fields sat 22 px above the other three
+test('the settings inputs share one line on a wide screen', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'a phone stacks the settings in two columns');
+  await page.goto(PAGE);
+  await page.locator('details', { hasText: 'Under the hood' }).locator('summary').click();
+  const tops = await page
+    .getByRole('form', { name: 'World settings' })
+    .locator('input')
+    .evaluateAll((inputs) => inputs.map((input) => Math.round(input.getBoundingClientRect().top)));
+  expect(tops).toHaveLength(5);
+  expect(new Set(tops).size).toBe(1);
+});
+
 test('on a phone, a world square is big enough to tap', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(PAGE);

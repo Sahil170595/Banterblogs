@@ -231,6 +231,8 @@ describe('flight routing demo', () => {
     fireEvent.click(screen.getByLabelText('Restart this world'));
     expect(screen.queryByRole('region', { name: 'Bookable flights' })).toBeNull();
     expect(screen.getByText(/^No flight can be booked from SFO/)).toBeTruthy();
+    // the reason is above, so the button stays short enough to share its row
+    expect(screen.getByRole('button', { name: 'End the trip' })).toBeTruthy();
   });
 
   it('exports the trip with the policy, any choice of yours, and the screen’s labels', async () => {
@@ -278,5 +280,11 @@ describe('flight routing demo', () => {
     expect(click).toHaveBeenCalledOnce();
     expect(revoke).toHaveBeenCalledOnce();
     expect(screen.getByRole('status', { name: 'Export' }).textContent).toBe('Trace exported.');
+    // live QA: the export line sat on under a later settings refusal
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    fireEvent.change(screen.getByLabelText('Flight attempts'), { target: { value: '9' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply to all worlds' }));
+    expect(screen.getByRole('alert').textContent).toBe('Flight attempts should be at most 6.');
+    expect(screen.getByRole('status', { name: 'Export' }).textContent).toBe('');
   });
 });
