@@ -37,6 +37,9 @@ const IMMUTABLE_CACHE = 'public, max-age=31536000, immutable';
 const LANDING_ART_DIRS = ['poster', 'video'];
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    '/sitemap.xml': ['./src/app/work/projects/*/project.json', './src/app/work/projects/*/page.tsx'],
+  },
   experimental: {
     optimizePackageImports: ['lucide-react'],
     // inlineCss stays off (measured in R4): it sends the global sheet twice
