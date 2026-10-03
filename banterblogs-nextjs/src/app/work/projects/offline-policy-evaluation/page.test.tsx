@@ -20,10 +20,10 @@ describe('public server-rendered route', () => {
     expect(underlying).toContain('not a robust winner');
     expect(underlying).toContain('omits local language-model inference');
   });
-  it('has the exact discovery schema and source confined to the published branch', () => {
+  it('has the exact discovery schema and full public evaluator source', () => {
     expect(Object.keys(project).sort()).toEqual(['slug', 'title', 'summary', 'categories', 'roles', 'status', 'runtime', 'sourceUrl'].sort());
     expect(project.runtime).toBe('browser-evaluation');
     expect(project.slug).toBe('offline-policy-evaluation');
-    expect(project.sourceUrl).toBe('https://github.com/Sahil170595/Banterblogs/tree/codex/demo-offline-policy-evaluation/banterblogs-nextjs/src/lib/projects/offline-policy-evaluation');
+    expect(project.sourceUrl).toBe('https://github.com/Sahil170595/counterledger-ope');
   });
 });
