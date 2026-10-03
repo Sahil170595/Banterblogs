@@ -1,0 +1,10 @@
+{
+  "slug": "code-verification",
+  "title": "Code Verification Lab",
+  "summary": "Run curated repairs and authored assertions against buggy and fixed functions, exposing overfitting and regressions through actual test transitions.",
+  "categories": ["evaluation", "systems", "agents"],
+  "roles": ["research-engineer", "ml-systems", "applied-ai"],
+  "status": "interactive",
+  "runtime": "browser-evaluation",
+  "sourceUrl": "https://github.com/Sahil170595/Banterblogs/tree/codex/demo-code-verification/banterblogs-nextjs/src/lib/projects/code-verification"
+}
