@@ -20,10 +20,12 @@ const plot = () => screen.getByRole('figure', { name: /Estimated discounted retu
 const openUnderTheHood = () => fireEvent.click(screen.getByText(/^Under the hood/));
 
 describe('offline policy evaluation demo', () => {
-  it('opens on the claim and the control that undercuts it', () => {
+  it('opens on the claim and the control that undercuts it, in one line', () => {
     render(<OpeDemo />);
-    expect(verdict()).toMatch(/^The target beats the logger by 0\.27/);
-    expect(verdict()).toMatch(/A control that never reads the state \(the load\) gets 65% of that gain/);
+    const headline = screen.getAllByRole('status')[0].querySelector('p')!.textContent!;
+    expect(headline).toMatch(/^On its face the target beats the logger by 0\.27/);
+    expect(headline).toMatch(/but a control that never reads the state \(the load\) gets 65% of that gain/);
+    expect(verdict()).toMatch(/target − control, is 0\.10 \(paired 95% interval 0\.03 to 0\.17\)/);
     const rows = within(plot()).getAllByText(/^(State-responsive target|Constant control|Logging policy|Target − logger)$/);
     expect(rows.map((r) => r.textContent)).toEqual(['State-responsive target', 'Constant control', 'Logging policy', 'Target − logger']);
   });
@@ -31,6 +33,7 @@ describe('offline policy evaluation demo', () => {
   it('defines its terms before the first control, and says what each row is', () => {
     render(<OpeDemo />);
     const lead = screen.getByText(/^Offline evaluation scores a new policy/);
+    expect(lead.textContent).toMatch(/a new policy, the target,/);
     expect(lead.textContent).toMatch(/the logging policy, or logger/);
     expect(lead.textContent).toMatch(/passes through 4 decisions/);
     expect(lead.compareDocumentPosition(screen.getAllByRole('radio')[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -51,11 +54,19 @@ describe('offline policy evaluation demo', () => {
     render(<OpeDemo />);
     expect(screen.getByRole('radio', { name: 'Gain − 1.5 × harm' })).toHaveProperty('checked', true);
     expect(screen.getByRole('radio', { name: /^Harm ×2/ }).closest('label')!.textContent).toMatch(/penalty 3$/);
-    expect(screen.getByText('Rare: the logger chose Intensify 2% of the time at low load, 10% at moderate load and 18% at high load.')).toBeTruthy();
+    expect(screen.getByText(/^Rare: the logger chose Intensify 2% of the time at low load, 10% at moderate load and 18% at high load\./)).toBeTruthy();
     fireEvent.click(screen.getByRole('radio', { name: 'None at low load' }));
     expect(
-      screen.getByText('None at low load: the logger chose Intensify 0% of the time at low load, 10% at moderate load and 18% at high load.'),
+      screen.getByText(/^None at low load: the logger chose Intensify 0% of the time at low load, 10% at moderate load and 18% at high load\./),
     ).toBeTruthy();
+    // re-review: Broad read as more coverage alone; it changes the logged decisions, so the logger's own return moves
+    expect(screen.getByText(/changes the past decisions themselves, so the logger’s own return moves too/)).toBeTruthy();
+  });
+
+  it('spells out IS and names each estimator for what it computes', () => {
+    render(<OpeDemo />);
+    expect(screen.getByRole('group', { name: /importance sampling \(IS\)/ })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Capped self-normalized IS' })).toBeTruthy();
   });
 
   it('loses the gain when the reward drops its gain term', () => {
@@ -72,13 +83,15 @@ describe('offline policy evaluation demo', () => {
     expect(within(plot()).getAllByText('Withheld')).toHaveLength(3);
     // the logger itself needs no unlogged action, so it is still estimated
     expect(within(plot()).getByText(/^−0\.37$/)).toBeTruthy();
+    // with no estimate there is no data the estimate leans on
+    expect(screen.queryByText(/the estimate leans on/)).toBeNull();
   });
 
   it('switches estimators without re-running the evaluation', () => {
     render(<OpeDemo />);
     fireEvent.click(screen.getByRole('radio', { name: 'Raw IS' }));
     expect(screen.getByRole('radio', { name: 'Raw IS' })).toHaveProperty('checked', true);
-    expect(verdict()).toMatch(/^The target beats the logger by 0\.30/);
+    expect(verdict()).toMatch(/^On its face the target beats the logger by 0\.30/);
   });
 
   it('says in one line how much data the estimate leans on, and keeps the diagnostics under the hood', () => {

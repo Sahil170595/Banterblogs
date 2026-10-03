@@ -137,6 +137,20 @@ describe('offline evaluation', () => {
     expect(a.comparisons[2].differences.pdis).toEqual([0, 0]);
     expect(generateCohort({ ...DEFAULT_CONFIG, gainWeight: 0, intensity: 1, anchor: 0 })).toEqual(a.cohort);
   });
+  // the constant control's share is a ratio of point estimates; this is the
+  // uncertainty on the part of the gain that depends on reading the state
+  it('pairs the target against the constant control on the same bootstrap draws', () => {
+    const a = evaluate(DEFAULT_CONFIG);
+    const [target, constant] = a.comparisons;
+    for (const method of ['pdis', 'clipped', 'normalized'] as const) {
+      const interval = a.stateDifferences[method]!;
+      const point = target.result[method]! - constant.result[method]!;
+      expect(interval[0]).toBeLessThanOrEqual(point);
+      expect(interval[1]).toBeGreaterThanOrEqual(point);
+    }
+    // a target with no logged evidence has no state difference either
+    expect(evaluate({ ...DEFAULT_CONFIG, scenario: 'gap' }).stateDifferences.normalized).toBeNull();
+  });
   it('withholds intervals rather than dropping bootstrap draws with zero denominators', () => {
     const results = Array.from({ length: 20 }, (_, seed) => evaluate({ ...DEFAULT_CONFIG, size: 8, seed, anchor: 0, intensity: 1, responsiveness: 0, scenario: 'balanced' }));
     const fragile = results.find(r => r.comparisons[0].result.normalized !== null && r.comparisons[0].unavailableDraws.normalized > 0);

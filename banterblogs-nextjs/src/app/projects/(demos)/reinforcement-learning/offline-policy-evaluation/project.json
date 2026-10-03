@@ -1,7 +1,7 @@
 {
   "slug": "offline-policy-evaluation",
   "title": "Offline Policy Evaluation Lab",
-  "dek": "Counterledger is an offline policy evaluator I built in Python: it estimates how a new decision policy would have done from records of past decisions, without trying it for real. This page rebuilds its importance-sampling core in your browser and tests whether an apparent gain survives three checks.",
+  "dek": "Counterledger is an offline policy evaluator I built in Python: it estimates how a new decision policy (the target) would have done from records of past decisions (the logger), without trying it for real. This page rebuilds its importance-sampling core and puts an apparent gain through four checks.",
   "summary": "A new decision policy looks 0.27 better on records of past decisions, but a control that ignores the situation gets 65% of that, and a changed reward erases it.",
   "collection": "reinforcement-learning",
   "alsoIn": [],

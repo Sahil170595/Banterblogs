@@ -9,12 +9,22 @@ import { constantShare, verdict } from './verdict';
 describe('evaluation verdict', () => {
   const base = evaluate(DEFAULT_CONFIG);
 
-  it('reports a gain only when the paired interval clears zero, with the constant control’s share', () => {
+  // re-review: a bold "the target beats the logger" read as the page's
+  // conclusion; the control that takes most of the gain carries equal weight
+  it('reports a gain only when the paired interval clears zero, with the constant control’s share in the same line', () => {
     const v = verdict(base, 'normalized');
     expect(v.tone).toBe('gain');
-    expect(v.headline).toBe('The target beats the logger by 0.27 (paired 95% interval for target − logger: 0.12 to 0.40).');
+    expect(v.headline).toBe(
+      'On its face the target beats the logger by 0.27 (paired 95% interval for target − logger: 0.12 to 0.40), but a control that never reads the state (the load) gets 65% of that gain: most of it is a shift in how often to act, not when.',
+    );
     expect(constantShare(base, 'normalized')).toBeCloseTo(0.65, 2);
-    expect(v.detail).toMatch(/^A control that never reads the state \(the load\) gets 65% of that gain/);
+  });
+
+  it('gives the part of the gain that depends on the state its own paired interval, and says the share is a ratio of point estimates', () => {
+    const v = verdict(base, 'normalized');
+    expect(v.detail).toBe(
+      'The part that depends on reading the state, target − control, is 0.10 (paired 95% interval 0.03 to 0.17). The 65% is a ratio of the two point estimates, taken before rounding.',
+    );
   });
 
   it('says there is no measurable difference when the interval crosses zero', () => {

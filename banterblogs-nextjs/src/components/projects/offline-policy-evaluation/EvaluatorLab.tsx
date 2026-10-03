@@ -378,9 +378,12 @@ export function EvaluatorLab({ demo }: { demo: OpeDemo }) {
 
   return (
     <div className={styles.lab}>
-      <p className={styles.leans}>
-        In effect, the estimate leans on {last.rawEss.toFixed(0)} of the {evaluation.config.size} logged trajectories (its effective sample size).
-      </p>
+      {/* a withheld estimate leans on nothing */}
+      {target[demo.method] !== null && (
+        <p className={styles.leans}>
+          In effect, the estimate leans on {last.rawEss.toFixed(0)} of the {evaluation.config.size} logged trajectories (its effective sample size).
+        </p>
+      )}
       <UnderTheHood summary="Under the hood: support, effective sample size, estimators, one trajectory's ledger, settings and export">
         <div className={styles.labHead}>
           <div>

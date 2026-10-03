@@ -28,8 +28,9 @@ test('the claim and its control are in the server HTML, before any script runs',
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(PAGE);
-  await expect(verdict(page)).toContainText('The target beats the logger by 0.27');
+  await expect(verdict(page)).toContainText('On its face the target beats the logger by 0.27');
   await expect(verdict(page)).toContainText('gets 65% of that gain');
+  await expect(verdict(page)).toContainText('target − control, is 0.10 (paired 95% interval 0.03 to 0.17)');
   await context.close();
 });
 

@@ -44,8 +44,11 @@ const SUPPORT: Choice<Config['scenario']>[] = (['balanced', 'rare', 'gap'] as co
 const ESTIMATORS: Choice<Method>[] = [
   { value: 'pdis', label: 'Raw IS' },
   { value: 'clipped', label: 'Capped IS' },
-  { value: 'normalized', label: 'Self-normalized' },
+  // it divides by the capped weights' sum (engine.ts aggregate)
+  { value: 'normalized', label: 'Capped self-normalized IS' },
 ];
+// a support preset is a different logging policy, not more data from the same one
+const LOGGER_MOVES = 'Changing this changes the past decisions themselves, so the logger’s own return moves too.';
 
 /** the axis runs this share past the outermost mark on each side */
 const AXIS_PAD = 0.08;
@@ -127,7 +130,8 @@ export function ControlCheck({
   return (
     <div className={styles.hero}>
       <p className={controls.lead}>
-        Offline evaluation scores a new policy, a rule for when to act, on records of decisions someone else made: the logging policy, or logger.
+        Offline evaluation scores a new policy, the target, a rule for when to act, on records of decisions someone else made: the logging policy,
+        or logger.
         Nothing is tried for real; each logged decision is reweighted by how likely the new policy was to make it. Here each made-up trajectory passes
         through {HORIZON} decisions; at each, a load level ({CONTEXTS.map((c) => c.split(' ')[0].toLowerCase()).join(', ')}) is observed and one
         action is taken. Try &ldquo;Gain dropped&rdquo; or &ldquo;None at low load&rdquo; and watch the verdict change.
@@ -147,9 +151,17 @@ export function ControlCheck({
           value={config.scenario}
           onChange={(scenario) => configure({ ...config, scenario })}
         />
-        <Segmented legend="Estimator (how the rewards are reweighted)" name="estimator" options={ESTIMATORS} value={method} onChange={onMethod} />
+        <Segmented
+          legend="Estimator: importance sampling (IS), how the rewards are reweighted"
+          name="estimator"
+          options={ESTIMATORS}
+          value={method}
+          onChange={onMethod}
+        />
       </div>
-      <p className={controls.hint}>{supportNote(config.scenario)}</p>
+      <p className={controls.hint}>
+        {supportNote(config.scenario)} {LOGGER_MOVES}
+      </p>
       {error && (
         <p role="alert" className={controls.error}>
           {error}

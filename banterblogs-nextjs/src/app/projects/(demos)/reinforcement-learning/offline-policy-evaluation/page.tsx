@@ -38,25 +38,31 @@ const logged = target.result.logged;
 const paired = target.differences.normalized!;
 const share = constantShare(base, 'normalized')!;
 const noGainTarget = noGain.comparisons[0];
-const broadPaired = broad.comparisons[0].differences.normalized!;
+const broadTarget = broad.comparisons[0];
+const broadPaired = broadTarget.differences.normalized!;
 const gapDetail = gap.comparisons[0].result.supportCheck.gaps[0];
 const finalEss = target.result.horizons[target.result.horizons.length - 1].rawEss;
+const stateGap = value - constant.result.normalized!;
+const stateInterval = base.stateDifferences.normalized!;
 const pct = (share: number) => `${Math.round(share * PERCENT)}%`;
 const interval = (range: [number, number]) => `${signed(range[0])} to ${signed(range[1])}`;
+// the share as the rounded figures on the page would give it, which differs from the unrounded ratio
+const shown = (x: number) => Number(x.toFixed(2));
+const roundedShare = (shown(constant.result.normalized!) - shown(logged)) / shown(value - logged);
 
 const FINDINGS: ProjectFinding[] = [
   {
     value: pct(share),
-    label:
-      'of the new policy’s apparent gain over the logged decisions also goes to a constant control that acts at the same rate but ignores the state. Most of the gain is how often to act, not when. Default settings.',
+    label: `of the new policy’s (the target’s) apparent gain over the past decisions (the logger) also goes to a constant control that acts at the same rate but ignores the state. Most of the gain is how often to act, not when; the part that depends on the state is ${signed(stateGap)}, paired 95% interval ${interval(stateInterval)}. Default settings.`,
   },
   {
     value: interval(noGainTarget.differences.normalized!),
-    label: 'the paired 95% interval for target − logger once the reward stops paying for gain: it crosses zero, and the improvement is gone.',
+    label:
+      'the paired 95% interval for the new policy minus the past decisions once the reward stops paying for gain: it crosses zero, and the improvement is gone.',
   },
   {
     value: `${finalEss.toFixed(0)} of ${DEFAULT_CONFIG.size}`,
-    label: `logged trajectories the estimate effectively uses at the last step (its effective sample size): ${pct(finalEss / DEFAULT_CONFIG.size)} of the data. Default settings.`,
+    label: `logged trajectories, each one case’s run of ${HORIZON} decisions, that the estimate effectively uses at the last step (its effective sample size): ${pct(finalEss / DEFAULT_CONFIG.size)} of the data. Default settings.`,
   },
 ];
 
@@ -65,13 +71,14 @@ export default function OfflinePolicyEvaluationPage() {
     <ProjectPage slug={PROJECT.slug} demo={<OpeDemo />} findings={FINDINGS} sections={sections}>
       <h2 id="question">{PLAIN.question}</h2>
       <p>
-        Offline evaluation scores a new policy, a rule for when to act, on decisions someone else made: the logging policy, or logger. Reweight each
+        Offline evaluation scores a new policy, the target, a rule for when to act, on decisions someone else made: the logging policy, or logger.
+        Reweight each
         logged trajectory, one case&apos;s run of {HORIZON} decisions, by how much more or less likely the new policy was to take the logged actions,
         average the rewards, and a number comes out. That reweighting is importance sampling. The number comes out even when the logs barely cover
         what the new policy does and even when the reward pays for the wrong thing.
       </p>
       <p>
-        So the number has to survive four questions before it means better. Is the gain larger than its uncertainty? Does a policy that ignores the
+        So the number has to survive four checks before it means better. Is the gain larger than its uncertainty? Does a policy that ignores the
         state, here the load level, get the same gain? Does the ranking hold under a different reward? Is there logged evidence at all for what the
         new policy wants to do?
       </p>
@@ -84,9 +91,17 @@ export default function OfflinePolicyEvaluationPage() {
       </p>
       <p>
         The constant control intervenes at the same average rate but ignores load. It scores {signed(constant.result.normalized!)}, {pct(share)} of
-        the target&apos;s gain. Most of the apparent improvement is a shift in how often to act, not in when. Drop the gain term from the reward and
-        the target falls to {signed(noGainTarget.result.normalized!)} against {signed(noGainTarget.result.logged)}, an interval that crosses zero.
-        Give the logger broad support for intensifying and the logger wins outright: {interval(broadPaired)}.
+        the target&apos;s gain. Most of the apparent improvement is a shift in how often to act, not in when. That {pct(share)} is a ratio of two
+        point estimates, taken before rounding (from the rounded figures here it would read {pct(roundedShare)}), so it carries no interval of its
+        own. The part of the target&apos;s value that depends on reading the state, target minus control on the same resamples, is{' '}
+        {signed(stateGap)}, paired 95% interval {interval(stateInterval)}: real on this data, and small.
+      </p>
+      <p>
+        Drop the gain term from the reward and the target falls to {signed(noGainTarget.result.normalized!)} against{' '}
+        {signed(noGainTarget.result.logged)}, an interval that crosses zero. Give the logger broad support for intensifying and two things change,
+        because that setting changes the past decisions themselves: the logger becomes a different, stronger policy, its return rising from{' '}
+        {signed(logged)} to {signed(broadTarget.result.logged)}, and the target, blended {pct(DEFAULT_CONFIG.anchor)} toward the logger, moves from{' '}
+        {signed(value)} to {signed(broadTarget.result.normalized!)}. Against that logger the target loses outright: {interval(broadPaired)}.
       </p>
       <p>
         Every one of those is the same estimator on the same kind of data. The demo&apos;s controls switch between them, and the verdict above the
@@ -106,8 +121,8 @@ export default function OfflinePolicyEvaluationPage() {
 
       <h2 id="limits">{PLAIN.limits}</h2>
       <p>
-        Made-up load states and abstract actions ({ACTIONS.join(', ')}), with logging probabilities known by construction. No clinical or causal claim
-        is made.
+        Made-up load states and abstract actions ({ACTIONS.join(', ')}), with logging probabilities known by construction. Nothing here is evidence
+        about any real decision or its effects.
       </p>
 
       <ForEngineers lede="The estimators and their formulas, the support check that refuses to estimate, Counterledger's method, what this rebuild leaves out, and how to reproduce the run.">
