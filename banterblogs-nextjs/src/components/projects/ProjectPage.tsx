@@ -1,3 +1,6 @@
+// the reading routes' two sheets, imported together everywhere so the
+// bundler keeps them one chunk (e2e/routes.spec.ts counts the sheets)
+import 'highlight.js/styles/github-dark.css';
 import '@/app/reading.css';
 import type { ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';

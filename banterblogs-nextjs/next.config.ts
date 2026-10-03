@@ -45,6 +45,11 @@ const PROJECT_FILES = ['./src/app/projects/(demos)/*/*/project.json', './src/app
 const IMMUTABLE_CACHE = 'public, max-age=31536000, immutable';
 const LANDING_ART_DIRS = ['poster', 'video'];
 
+// Unimported CSS, in bytes, worth one extra stylesheet request (Turbopack's
+// default is 20000, which kept a 15 KB demo stylesheet merged into the
+// reading chunk shared by every report).
+const CSS_REQUEST_COST_BYTES = 4000;
+
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/sitemap.xml': PROJECT_FILES,
@@ -56,6 +61,11 @@ const nextConfig: NextConfig = {
     // every page, uncached), slowed a warm navigation (88 -> 109 ms), and
     // scored no better in local Lighthouse mobile (medians 84/92/91/90 against
     // 92/93/92/91 on /papers, /platform, /episodes and TR138).
+    // The default CSS chunking merged a project demo's stylesheet into the
+    // reading chunk every report page loads; graph chunking prices that
+    // trade, and this cost splits a demo's own CSS out once it outweighs a
+    // request, so a page downloads only the CSS it imports.
+    cssChunking: { type: 'graph', requestCost: CSS_REQUEST_COST_BYTES },
   },
   async redirects() {
     return [...CONCLUSIVE_REDIRECTS, ...STUB_ROUTE_REDIRECTS, ...RETIRED_ROUTE_REDIRECTS];
