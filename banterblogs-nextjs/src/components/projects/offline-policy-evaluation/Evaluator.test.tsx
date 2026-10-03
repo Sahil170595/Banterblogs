@@ -6,6 +6,16 @@ import { DEFAULT_CONFIG } from '@/lib/projects/offline-policy-evaluation/engine'
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('evaluation controls', () => {
+  it('renders SVG coordinates at stable presentation precision for hydration', () => {
+    const { container } = render(<Evaluator />);
+    const attributes = ['x1', 'x2', 'cx', 'y', 'height'];
+    for (const element of container.querySelectorAll('svg line, svg circle, svg rect')) {
+      for (const attribute of attributes) {
+        const value = element.getAttribute(attribute);
+        if (value !== null) expect(value).toMatch(/^-?\d+(?:\.\d{1,3})?$/);
+      }
+    }
+  });
   it('applies policy changes, refuses structural gaps, and resets the exact baseline', () => {
     render(<Evaluator />);
     const initial = screen.getByRole('table', { name: /State-responsive target estimator/ }).textContent;

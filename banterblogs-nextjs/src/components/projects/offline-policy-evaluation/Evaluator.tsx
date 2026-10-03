@@ -10,6 +10,8 @@ import styles from './evaluator.module.css';
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 const intervalText = (interval: [number, number] | null) => interval ? `[${fmt(interval[0])}, ${fmt(interval[1])}]` : 'No interval';
+// SVG needs stable presentation precision across server and browser math engines.
+const pixel = (value: number) => value.toFixed(3);
 
 function ComparisonPlot({ result, method }: { result: Evaluation; method: Method }) {
   const candidates = result.comparisons;
@@ -17,7 +19,7 @@ function ComparisonPlot({ result, method }: { result: Evaluation; method: Method
   const points = candidates.flatMap(c => [c.result[method], ...(c.intervals[method] ?? [])]).filter((v): v is number => v !== null);
   const low = Math.min(0, baseline, ...points) - 0.2;
   const high = Math.max(0, baseline, ...points) + 0.2;
-  const x = (value: number) => 15 + (value - low) / (high - low) * 470;
+  const x = (value: number) => pixel(15 + (value - low) / (high - low) * 470);
   return <figure className={styles.comparison}>
     <figcaption className={styles.heading}>Policy comparison <span>discounted return / trajectory</span></figcaption>
     {candidates.map((candidate, i) => {
@@ -64,8 +66,8 @@ function EssPlot({ result }: { result: Evaluation }) {
     <svg className={styles.essChart} viewBox="0 0 560 200" role="img" aria-label={`Effective sample size by horizon: ${horizons.map((h, i) => `step ${i + 1}, raw ${fmt(h.rawEss)}, capped ${fmt(h.cappedEss)}`).join('; ')}`}>
       {[0, 0.5, 1].map(f => <g key={f}><line x1="40" x2="550" y1={160 - f * 130} y2={160 - f * 130} className={styles.gridLine} /><text x="32" y={165 - f * 130} textAnchor="end" fill="currentColor" fontSize="12">{Math.round(count * f)}</text></g>)}
       {horizons.map((h, t) => <g key={t}>
-        <rect x={65 + t * 125} y={160 - h.rawEss / count * 130} width="32" height={h.rawEss / count * 130} fill="hsl(var(--status-amber))" />
-        <rect x={101 + t * 125} y={160 - h.cappedEss / count * 130} width="32" height={h.cappedEss / count * 130} fill="hsl(var(--status-green))" />
+        <rect x={65 + t * 125} y={pixel(160 - h.rawEss / count * 130)} width="32" height={pixel(h.rawEss / count * 130)} fill="hsl(var(--status-amber))" />
+        <rect x={101 + t * 125} y={pixel(160 - h.cappedEss / count * 130)} width="32" height={pixel(h.cappedEss / count * 130)} fill="hsl(var(--status-green))" />
         <text x={99 + t * 125} y="184" textAnchor="middle" fill="currentColor" fontSize="13">Step {t + 1}</text>
       </g>)}
     </svg>
