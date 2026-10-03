@@ -342,6 +342,13 @@
   gap: 0.5rem;
 }
 
+/* nine quarter-hour labels do not fit a phone; every other one does */
+@media (max-width: 600px) {
+  .axis span:nth-child(even) {
+    display: none;
+  }
+}
+
 @media (max-width: 450px) {
   .settings {
     grid-template-columns: repeat(2, minmax(0, 1fr));
