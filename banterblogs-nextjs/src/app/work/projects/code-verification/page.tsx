@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Verifier } from '@/components/projects/code-verification/Verifier';
 import { CANDIDATES, TASKS, SOURCE_URL, evaluate, initialConfig } from '@/lib/projects/code-verification/engine';
 import styles from './page.module.css';
+import project from './project.json';
 
 export const metadata: Metadata = {
   title: 'Code Verification Lab',
@@ -48,6 +49,7 @@ export default function CodeVerificationPage() {
 
       <section id="underlying-system">
         <h2>Underlying system: isolated repository verification</h2>
+        <p><a href={project.sourceUrl}>Patchglass</a> is the full public Python harness, including the CLI, Docker runners, repair and test-synthesis grading, parsers, and fresh synthetic task bundles. The browser verifier illustrates its grading boundaries without executing containers or live models. The source release includes offline regression evidence; fresh Docker and provider qualification remain separate.</p>
         <p>The original implementation is a Python command-line system for packaging repository repair tasks, running patch-producing solvers, grading changes in isolated environments, and retaining inspectable evidence. It is substantially broader than the two browser tasks above. Its implemented paths include imported repository tasks, built and prebuilt environments, command and model-backed solvers, multi-language test parsing, test-synthesis grading, batch execution, and queryable run history.</p>
         <h3>The implemented end-to-end pipeline</h3>
         <ol>
