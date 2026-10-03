@@ -34,8 +34,12 @@ test('a cell flies; a resumed mission is unwatched; the notched fence passes', a
   await page.getByRole('group', { name: 'When' }).getByText('After a pause and resume').click();
   await expect(page.getByText(/executing at waypoint 2, unwatched/).first()).toBeVisible();
 
-  // the option names itself as this page's own example
+  // the option names itself as this page's own example; its two waypoints leave
+  // only the pre-flight timing, and the estimator fault turns it home first
   await page.getByRole('radio', { name: 'Notched fence, this page’s example' }).check();
+  await expect(page.getByRole('group', { name: 'When' }).getByRole('radio')).toHaveCount(1);
+  await expect(page.getByText(/before the leg across the notch/)).toBeVisible();
+  await page.getByRole('group', { name: 'Fault' }).getByText('Healthy telemetry').click();
   await expect(page.getByText(/the straight leg between them crosses the notch/)).toBeVisible();
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
