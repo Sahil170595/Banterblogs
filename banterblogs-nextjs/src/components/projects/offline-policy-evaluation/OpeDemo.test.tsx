@@ -105,13 +105,70 @@ describe('offline policy evaluation demo', () => {
     expect([...cells].map((c) => c.getAttribute('data-label')).slice(0, 3)).toEqual(['Hold', 'Adjust', 'Intensify']);
   });
 
+  // live QA: Chrome named none of the six sliders; the <output> inside each label took the label
+  it('names every slider by its label', () => {
+    render(<OpeDemo />);
+    openUnderTheHood();
+    const names = ['Intervention probability', 'Load responsiveness', 'Blend toward the logger', 'Gain coefficient', 'Harm penalty', 'Discount'];
+    for (const name of names) expect(screen.getByRole('slider', { name })).toBeTruthy();
+  });
+
+  // live QA: "size: Number must be greater than or equal to 8", and no limits on screen
+  it('refuses settings in the form’s own words, and states the limits', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(<OpeDemo />);
+    openUnderTheHood();
+    expect(screen.getByText(/^Seed 0–4,294,967,295; trajectories 8–320\./)).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Trajectories' }), { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
+    expect(screen.getByRole('alert').textContent).toBe('Trajectories should be at least 8.');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Trajectories' }), { target: { value: '160' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Seed' }), { target: { value: '5000000000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
+    expect(screen.getByRole('alert').textContent).toBe('Seed should be at most 4294967295.');
+    expect(warn).toHaveBeenCalled();
+  });
+
+  // live QA: moving a slider and then a preset above threw the slider's value away
+  it('keeps an unapplied setting through a preset, and says it is not applied', () => {
+    render(<OpeDemo />);
+    openUnderTheHood();
+    fireEvent.change(screen.getByRole('slider', { name: 'Intervention probability' }), { target: { value: '0.9' } });
+    expect(screen.getByText(/^Not applied yet/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'Broad' }));
+    expect((screen.getByRole('slider', { name: 'Intervention probability' }) as HTMLInputElement).value).toBe('0.9');
+    expect(screen.getByText(/^Not applied yet/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
+    expect(screen.queryByText(/^Not applied yet/)).toBeNull();
+    expect((screen.getByRole('slider', { name: 'Intervention probability' }) as HTMLInputElement).value).toBe('0.9');
+  });
+
+  // live QA: Reset evaluation brought back the trajectory chosen before it
+  it('resets the ledger to the first trajectory', () => {
+    render(<OpeDemo />);
+    openUnderTheHood();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Trajectory' }), { target: { value: '149' } });
+    expect(screen.getByRole('region', { name: 'Ledger for trajectory 150' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset evaluation' }));
+    expect(screen.getByRole('region', { name: 'Ledger for trajectory 1' })).toBeTruthy();
+  });
+
+  // live QA: the radio said "Raw IS" and the table "Raw per-decision IS"
+  it('names each estimator the same in the table as on its radio', () => {
+    render(<OpeDemo />);
+    const radios = within(screen.getByRole('group', { name: /importance sampling \(IS\)/ })).getAllByRole('radio');
+    const names = radios.map((radio) => radio.closest('label')!.textContent);
+    const rows = within(screen.getByRole('region', { name: 'Estimator audit' })).getAllByRole('rowheader');
+    expect(rows.map((row) => row.textContent)).toEqual(names);
+  });
+
   it('applies full settings only on Evaluate, refuses bad input, and resets', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     render(<OpeDemo />);
     openUnderTheHood();
     fireEvent.change(screen.getByRole('textbox', { name: 'Seed' }), { target: { value: 'abc' } });
     fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
-    expect(screen.getByRole('alert').textContent).toBe('Seed and trajectories must be whole numbers.');
+    expect(screen.getByRole('alert').textContent).toBe('Seed should be a whole number.');
     expect(warn).toHaveBeenCalled();
     fireEvent.change(screen.getByRole('textbox', { name: 'Seed' }), { target: { value: '42' } });
     fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
@@ -131,5 +188,17 @@ describe('offline policy evaluation demo', () => {
     expect(create).toHaveBeenCalledOnce();
     expect(click).toHaveBeenCalledOnce();
     expect(revoke).toHaveBeenCalledOnce();
+    // live QA: the export line stayed on under later changes and a later refusal
+    const notice = () => screen.getByRole('status', { name: 'Export' }).textContent;
+    expect(notice()).toBe('Evaluation exported.');
+    fireEvent.click(screen.getByRole('radio', { name: 'Gain dropped' }));
+    expect(notice()).toBe('');
+    fireEvent.click(screen.getByRole('button', { name: 'Export evaluation JSON' }));
+    expect(notice()).toBe('Evaluation exported.');
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Trajectories' }), { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
+    expect(screen.getByRole('alert')).toBeTruthy();
+    expect(notice()).toBe('');
   });
 });

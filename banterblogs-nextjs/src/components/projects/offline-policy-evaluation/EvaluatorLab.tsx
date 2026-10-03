@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { Download, RotateCcw } from 'lucide-react';
 import {
   ACTIONS,
+  CONFIG_LIMITS,
   CONTEXTS,
   exportEvaluation,
   LOW_SUPPORT,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/projects/offline-policy-evaluation/engine';
 import { signed } from '@/lib/projects/offline-policy-evaluation/verdict';
 import { controls, UnderTheHood } from '../controls';
+import { FIELD_LABELS } from './copy';
 import type { OpeDemo } from './useOpeDemo';
 import styles from './ope.module.css';
 
@@ -28,53 +30,84 @@ const percent = (share: number) => `${(share * PERCENT).toFixed(1)}%`;
 const range = (interval: Interval) => (interval ? `${signed(interval[0])} to ${signed(interval[1])}` : 'none');
 const CAPS = [0.5, 1, 2, 5, 10, 25, 100];
 
-type Slider = {
-  key: keyof Pick<Config, 'intensity' | 'responsiveness' | 'anchor' | 'gainWeight' | 'harmWeight' | 'gamma'>;
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-};
+type SliderKey = keyof Pick<Config, 'intensity' | 'responsiveness' | 'anchor' | 'gainWeight' | 'harmWeight' | 'gamma'>;
+type Slider = { key: SliderKey; min: number; max: number; step: number };
 const SLIDERS: { legend: string; fields: Slider[] }[] = [
   {
     legend: 'Target policy',
     fields: [
-      { key: 'intensity', label: 'Intervention probability', min: 0, max: 1, step: 0.05 },
-      { key: 'responsiveness', label: 'Load responsiveness', min: -0.4, max: 0.4, step: 0.05 },
-      { key: 'anchor', label: 'Blend toward the logger', min: 0, max: 1, step: 0.05 },
+      { key: 'intensity', min: 0, max: 1, step: 0.05 },
+      { key: 'responsiveness', min: -0.4, max: 0.4, step: 0.05 },
+      { key: 'anchor', min: 0, max: 1, step: 0.05 },
     ],
   },
   {
     legend: 'Reward and discount',
     fields: [
-      { key: 'gainWeight', label: 'Gain coefficient', min: 0, max: 2, step: 0.1 },
-      { key: 'harmWeight', label: 'Harm penalty', min: 0, max: 3, step: 0.1 },
-      { key: 'gamma', label: 'Discount', min: 0, max: 1, step: 0.05 },
+      { key: 'gainWeight', min: 0, max: 2, step: 0.1 },
+      { key: 'harmWeight', min: 0, max: 3, step: 0.1 },
+      { key: 'gamma', min: 0, max: 1, step: 0.05 },
     ],
   },
 ];
+type Count = 'seed' | 'size';
+const COUNTS: Count[] = ['seed', 'size'];
 
 const AUDIT_COLUMNS = ['Return', '95% interval', 'Versus logger', 'Paired interval'] as const;
 const LEDGER_COLUMNS = ['Step', 'Load', 'Logged action', 'Reward', 'Weight', 'Capped'] as const;
+const limit = (value: number) => value.toLocaleString('en-US');
 
-function Settings({ config, onApply, onReset }: { config: Config; onApply: (config: Config) => string | null; onReset: () => void }) {
-  const [draft, setDraft] = useState(config);
-  const [counts, setCounts] = useState({ seed: String(config.seed), size: String(config.size) });
-  const [error, setError] = useState('');
+/**
+ * Every setting the evaluation takes. The visitor's unapplied edits lie over
+ * the applied configuration, so a preset chosen above keeps them, and the
+ * form says they are not applied yet.
+ */
+interface SettingsProps {
+  config: Config;
+  /** every press of Evaluate, before the values are checked */
+  onAttempt: () => void;
+  /** returns why the configuration was refused, if it was */
+  onApply: (config: Config) => string | null;
+  onReset: () => void;
+}
+
+function Settings({ config, onAttempt, onApply, onReset }: SettingsProps) {
+  const ids = useId();
+  const [edits, setEdits] = useState<Partial<Pick<Config, SliderKey | 'cap'>>>({});
+  const [counts, setCounts] = useState<Partial<Record<Count, string>>>({});
+  // a refusal is about the configuration it was made against
+  const [error, setError] = useState<{ text: string; config: Config } | null>(null);
+  const draft = { ...config, ...edits };
+  const count = (key: Count) => counts[key] ?? String(config[key]);
   const dirty =
-    JSON.stringify({ ...draft, seed: counts.seed, size: counts.size }) !==
-    JSON.stringify({ ...config, seed: String(config.seed), size: String(config.size) });
+    (Object.keys(edits) as (keyof typeof edits)[]).some((key) => edits[key] !== config[key]) ||
+    COUNTS.some((key) => count(key) !== String(config[key]));
 
   const apply = (event: FormEvent) => {
     event.preventDefault();
-    const seed = Number(counts.seed);
-    const size = Number(counts.size);
-    if (!Number.isInteger(seed) || !Number.isInteger(size) || !counts.seed.trim() || !counts.size.trim()) {
-      console.warn('Offline evaluation settings rejected: seed and trajectories must be whole numbers', counts);
-      setError('Seed and trajectories must be whole numbers.');
-      return;
+    onAttempt();
+    const next = { ...draft };
+    for (const key of COUNTS) {
+      const raw = count(key).trim();
+      if (!raw || !Number.isInteger(Number(raw))) {
+        console.warn('Offline evaluation settings rejected:', `${FIELD_LABELS[key]} is not a whole number`, counts);
+        setError({ text: `${FIELD_LABELS[key]} should be a whole number.`, config });
+        return;
+      }
+      next[key] = Number(raw);
     }
-    setError(onApply({ ...draft, seed, size }) ?? '');
+    const refused = onApply(next);
+    setError(refused ? { text: refused, config } : null);
+    if (!refused) {
+      setEdits({});
+      setCounts({});
+    }
+  };
+  const reset = () => {
+    setEdits({});
+    setCounts({});
+    setError(null);
+    onReset();
   };
 
   return (
@@ -82,52 +115,53 @@ function Settings({ config, onApply, onReset }: { config: Config; onApply: (conf
       {SLIDERS.map((group) => (
         <fieldset key={group.legend}>
           <legend>{group.legend}</legend>
-          {group.fields.map((field) => (
-            <label key={field.key} className={styles.slider}>
-              <span>
-                {field.label}
-                <output>{draft[field.key].toFixed(2)}</output>
-              </span>
-              <input
-                type="range"
-                name={field.key}
-                min={field.min}
-                max={field.max}
-                step={field.step}
-                value={draft[field.key]}
-                onChange={(event) => setDraft({ ...draft, [field.key]: Number(event.target.value) })}
-              />
-            </label>
-          ))}
+          {group.fields.map((field) => {
+            const id = `${ids}-${field.key}`;
+            // the reading sits outside the label: an <output> inside one would take the label from the slider
+            return (
+              <div key={field.key} className={styles.slider}>
+                <span>
+                  <label htmlFor={id}>{FIELD_LABELS[field.key]}</label>
+                  <output htmlFor={id}>{draft[field.key].toFixed(2)}</output>
+                </span>
+                <input
+                  id={id}
+                  type="range"
+                  name={field.key}
+                  min={field.min}
+                  max={field.max}
+                  step={field.step}
+                  value={draft[field.key]}
+                  onChange={(event) => setEdits({ ...edits, [field.key]: Number(event.target.value) })}
+                />
+              </div>
+            );
+          })}
         </fieldset>
       ))}
       <fieldset>
         <legend>Logged cohort and estimator</legend>
         <div className={styles.pair}>
-          <label className={controls.field}>
-            Seed
-            <input
-              type="text"
-              inputMode="numeric"
-              name="seed"
-              value={counts.seed}
-              onChange={(event) => setCounts({ ...counts, seed: event.target.value })}
-            />
-          </label>
-          <label className={controls.field}>
-            Trajectories
-            <input
-              type="text"
-              inputMode="numeric"
-              name="size"
-              value={counts.size}
-              onChange={(event) => setCounts({ ...counts, size: event.target.value })}
-            />
-          </label>
+          {COUNTS.map((key) => (
+            <label key={key} className={controls.field}>
+              {FIELD_LABELS[key]}
+              <input
+                type="text"
+                inputMode="numeric"
+                name={key}
+                value={count(key)}
+                aria-describedby={`${ids}-limits`}
+                onChange={(event) => setCounts({ ...counts, [key]: event.target.value })}
+              />
+            </label>
+          ))}
         </div>
+        <p id={`${ids}-limits`} className={controls.hint}>
+          Seed {limit(CONFIG_LIMITS.seed[0])}–{limit(CONFIG_LIMITS.seed[1])}; trajectories {CONFIG_LIMITS.size[0]}–{CONFIG_LIMITS.size[1]}.
+        </p>
         <label className={controls.field}>
-          Cumulative weight cap
-          <select name="cap" value={draft.cap} onChange={(event) => setDraft({ ...draft, cap: Number(event.target.value) })}>
+          {FIELD_LABELS.cap}
+          <select name="cap" value={draft.cap} onChange={(event) => setEdits({ ...edits, cap: Number(event.target.value) })}>
             {CAPS.map((cap) => (
               <option key={cap} value={cap}>
                 {cap}
@@ -140,14 +174,14 @@ function Settings({ config, onApply, onReset }: { config: Config; onApply: (conf
         <button type="submit" className={controls.button} disabled={!dirty}>
           Evaluate
         </button>
-        <button type="button" className={controls.iconButton} aria-label="Reset evaluation" title="Reset evaluation" onClick={onReset}>
+        <button type="button" className={controls.iconButton} aria-label="Reset evaluation" title="Reset evaluation" onClick={reset}>
           <RotateCcw aria-hidden="true" />
           <span className={controls.iconLabel}>Reset evaluation</span>
         </button>
-        {dirty && <p className={controls.hint}>Changes apply when you evaluate.</p>}
-        {error && (
+        {dirty && <p className={controls.hint}>Not applied yet: press Evaluate to use these values.</p>}
+        {error?.config === config && (
           <p role="alert" className={controls.error}>
-            {error}
+            {error.text}
           </p>
         )}
       </div>
@@ -293,9 +327,7 @@ function Audit({ evaluation }: { evaluation: Evaluation }) {
   );
 }
 
-function Ledger({ evaluation }: { evaluation: Evaluation }) {
-  const [selected, setSelected] = useState(0);
-  const index = Math.min(selected, evaluation.cohort.length - 1);
+function Ledger({ evaluation, index, onSelect }: { evaluation: Evaluation; index: number; onSelect: (index: number) => void }) {
   const episode = evaluation.cohort[index];
   const trace = evaluation.comparisons[0].result.traces[index];
   return (
@@ -306,7 +338,7 @@ function Ledger({ evaluation }: { evaluation: Evaluation }) {
         </h4>
         <label className={controls.field}>
           Trajectory
-          <select value={index} onChange={(event) => setSelected(Number(event.target.value))}>
+          <select value={index} onChange={(event) => onSelect(Number(event.target.value))}>
             {evaluation.cohort.map((e, i) => (
               <option key={e.id} value={i}>
                 {i + 1}
@@ -357,7 +389,8 @@ export function EvaluatorLab({ demo }: { demo: OpeDemo }) {
   const { evaluation } = demo;
   const target = evaluation.comparisons[0].result;
   const last = target.horizons[target.horizons.length - 1];
-  const [notice, setNotice] = useState('');
+  // a notice belongs to the evaluation it was about; the next change of evaluation retires it
+  const [notice, setNotice] = useState<{ text: string; evaluation: Evaluation } | null>(null);
 
   const exportJson = () => {
     try {
@@ -369,10 +402,10 @@ export function EvaluatorLab({ demo }: { demo: OpeDemo }) {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setNotice('Evaluation exported.');
+      setNotice({ text: 'Evaluation exported.', evaluation });
     } catch (cause) {
       console.error('Offline evaluation export failed:', cause);
-      setNotice('The evaluation could not be exported.');
+      setNotice({ text: 'The evaluation could not be exported.', evaluation });
     }
   };
 
@@ -423,13 +456,14 @@ export function EvaluatorLab({ demo }: { demo: OpeDemo }) {
           <SupportMatrix evaluation={evaluation} />
           <EssBars evaluation={evaluation} />
           <Audit evaluation={evaluation} />
-          <Ledger evaluation={evaluation} />
+          <Ledger evaluation={evaluation} index={demo.trajectory} onSelect={demo.setTrajectory} />
         </div>
 
         <h4 className={styles.settingsTitle}>Settings</h4>
-        <Settings key={JSON.stringify(evaluation.config)} config={evaluation.config} onApply={demo.configure} onReset={demo.reset} />
-        <p className={styles.notice} role="status">
-          {notice}
+        {/* an export's notice is stale once the settings are tried again */}
+        <Settings config={evaluation.config} onAttempt={() => setNotice(null)} onApply={demo.configure} onReset={demo.reset} />
+        <p className={styles.notice} role="status" aria-label="Export">
+          {notice?.evaluation === evaluation ? notice.text : ''}
         </p>
       </UnderTheHood>
     </div>

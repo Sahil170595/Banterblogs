@@ -55,6 +55,41 @@ test('presets move the verdict, a support gap withholds the target, export repla
   expect(errors).toEqual([]);
 });
 
+// live QA: Chrome's accessibility tree named none of the six sliders
+test('every settings slider has its label as its name', async ({ page }) => {
+  await page.goto(PAGE);
+  await openUnderTheHood(page);
+  const names = ['Intervention probability', 'Load responsiveness', 'Blend toward the logger', 'Gain coefficient', 'Harm penalty', 'Discount'];
+  for (const name of names) await expect(page.getByRole('slider', { name, exact: true })).toBeVisible();
+});
+
+// live QA: the outermost axis labels sat off their gridlines, the rules poked out of their tracks, and the ESS tracks differed in length
+test('on a phone, the charts line up: labels under gridlines, rules inside tracks, equal ESS tracks', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE);
+  const forest = page.getByRole('figure', { name: /Estimated discounted return/ });
+  const row = forest.locator('[data-row="target"]');
+  const lines = await row.locator('[data-tick]').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().left));
+  const labels = await forest
+    .locator('[aria-hidden="true"] [data-tick]')
+    .evaluateAll((els) => els.map((el) => el.getBoundingClientRect()).map((box) => box.left + box.width / 2));
+  expect(labels).toHaveLength(lines.length);
+  labels.forEach((x, i) => expect(Math.abs(x - lines[i])).toBeLessThanOrEqual(1));
+  const [rule, track] = await row
+    .locator('[data-rule="logger"]')
+    .evaluate((el) => [el.getBoundingClientRect(), el.parentElement!.getBoundingClientRect()].map((box) => ({ top: box.top, bottom: box.bottom })));
+  expect(rule.top).toBeGreaterThanOrEqual(track.top);
+  expect(rule.bottom).toBeLessThanOrEqual(track.bottom);
+
+  await openUnderTheHood(page);
+  const widths = await page
+    .locator('figure', { hasText: 'Trajectories the weights really use' })
+    .locator('li > span:nth-child(2)')
+    .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)));
+  expect(widths.length).toBeGreaterThan(1);
+  expect(new Set(widths).size).toBe(1);
+});
+
 test('on a phone, the support table shows every load’s Intensify cell without a sideways scroll', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(PAGE);

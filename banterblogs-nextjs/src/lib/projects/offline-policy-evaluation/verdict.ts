@@ -15,8 +15,11 @@ export interface Verdict {
 const MOSTLY = 0.5;
 const PERCENT = 100;
 
-/** a signed estimate with a true minus sign, two places */
-export const signed = (value: number) => (value < 0 ? `−${Math.abs(value).toFixed(2)}` : value.toFixed(2));
+/** a signed estimate with a true minus sign, two places; a value that rounds to zero has no sign */
+export function signed(value: number): string {
+  const digits = Math.abs(value).toFixed(2);
+  return value < 0 && Number(digits) !== 0 ? `−${digits}` : digits;
+}
 const percent = (share: number) => `${Math.round(share * PERCENT)}%`;
 
 /** the constant control's gain over the logger as a share of the target's; null when the target has no gain */

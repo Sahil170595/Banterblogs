@@ -5,6 +5,7 @@ import {
   CONTEXTS,
   DEFAULT_CONFIG,
   HORIZON,
+  METHODS,
   type Config,
   type Evaluation,
   type Interval,
@@ -41,12 +42,8 @@ const REWARDS: (Choice<RewardKey> & { weights: Pick<Config, 'gainWeight' | 'harm
   },
 ];
 const SUPPORT: Choice<Config['scenario']>[] = (['balanced', 'rare', 'gap'] as const).map((value) => ({ value, label: SUPPORT_LABEL[value] }));
-const ESTIMATORS: Choice<Method>[] = [
-  { value: 'pdis', label: 'Raw IS' },
-  { value: 'clipped', label: 'Capped IS' },
-  // it divides by the capped weights' sum (engine.ts aggregate)
-  { value: 'normalized', label: 'Capped self-normalized IS' },
-];
+// named as the audit table names them; self-normalized divides by the capped weights' sum (engine.ts aggregate)
+const ESTIMATORS: Choice<Method>[] = METHODS.map(({ key, label }) => ({ value: key, label }));
 // a support preset is a different logging policy, not more data from the same one
 const LOGGER_MOVES = 'Changing this changes the past decisions themselves, so the logger’s own return moves too.';
 
@@ -204,11 +201,16 @@ export function ControlCheck({
                       key={tick}
                       aria-hidden="true"
                       className={styles.gridline}
+                      data-tick={tick}
                       data-zero={tick === 0 || undefined}
                       style={{ left: scale.at(tick) }}
                     />
                   ))}
-                  <span aria-hidden="true" className={row.key === 'difference' ? styles.zeroRule : styles.loggerRule} />
+                  <span
+                    aria-hidden="true"
+                    className={row.key === 'difference' ? styles.zeroRule : styles.loggerRule}
+                    data-rule={row.key === 'difference' ? 'zero' : 'logger'}
+                  />
                   {row.value === null ? (
                     <span className={styles.withheld}>No logged evidence for part of this policy</span>
                   ) : (
@@ -222,8 +224,8 @@ export function ControlCheck({
             ))}
             <div className={styles.forestAxisRow} aria-hidden="true">
               <div className={styles.forestAxis}>
-                {scale.ticks.map((tick, i) => (
-                  <span key={tick} data-edge={i === 0 ? 'start' : i === scale.ticks.length - 1 ? 'end' : undefined} style={{ left: scale.at(tick) }}>
+                {scale.ticks.map((tick) => (
+                  <span key={tick} data-tick={tick} style={{ left: scale.at(tick) }}>
                     {signed(tick)}
                   </span>
                 ))}
