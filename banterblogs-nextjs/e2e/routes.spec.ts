@@ -18,6 +18,8 @@ const ROUTES = [
   '/tools/chimeraforge',
   '/show',
   '/episodes',
+  '/projects',
+  '/projects/reinforcement-learning/flight-routing',
 ] as const;
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const HTTP_OK = 200;
@@ -43,7 +45,7 @@ const REFLOW_ROUTES = [
 // the global sheet grows past its CSS merge size (R5: 4 KB of new rules put
 // both on every page, +300 ms FCP in local Lighthouse mobile). The reading
 // routes add their own sheet.
-const READING_ROUTES = new Set<string>(['/reports/technical-report-138']);
+const READING_ROUTES = new Set<string>(['/reports/technical-report-138', '/projects/reinforcement-learning/flight-routing']);
 const GLOBAL_SHEETS = 1;
 const READING_SHEETS = 2;
 

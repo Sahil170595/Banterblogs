@@ -14,15 +14,24 @@ export interface Episode { config: Config; airport: Airport; clock: number; reas
 export interface ComparisonRow { policy: Policy; arrived: number; onTime: number; meanReward: number; reasons: Partial<Record<Reason, number>>; }
 export interface Comparison { count: number; seedStart: number; rows: ComparisonRow[]; }
 const ZERO_REWARD: Reward = { deadline: 0, arrival: 0, earliness: 0, total: 0 };
+// deadline_first_v1: any on-time arrival outscores any late one
+export const REWARD_WEIGHTS = { deadline: 0.8, arrival: 0.1, earliness: 0.1 } as const;
 const MAX_SEED = 2147483647;
+const MAX_WORLDS = 256;
+const DAY_MINUTES = 1440;
+/** the bounds a configuration is validated against, shared with the lab's inputs */
+export const CONFIG_LIMITS = {
+  seed: [0, MAX_SEED], horizon: [60, DAY_MINUTES], deadline: [1, DAY_MINUTES], buffer: [0, DAY_MINUTES], maxAttempts: [1, 6],
+} as const;
+const bounded = ([min, max]: readonly [number, number]) => z.number().int().min(min).max(max);
 const CONFIG_SCHEMA = z.object({
   scenario: z.enum(['west-east', 'east-west']),
   profile: z.enum(['clear', 'balanced', 'storm']),
-  seed: z.number().int().min(0).max(MAX_SEED),
-  horizon: z.number().int().min(60).max(1440),
-  deadline: z.number().int().min(1).max(1440),
-  buffer: z.number().int().min(0).max(1440),
-  maxAttempts: z.number().int().min(1).max(6),
+  seed: bounded(CONFIG_LIMITS.seed),
+  horizon: bounded(CONFIG_LIMITS.horizon),
+  deadline: bounded(CONFIG_LIMITS.deadline),
+  buffer: bounded(CONFIG_LIMITS.buffer),
+  maxAttempts: bounded(CONFIG_LIMITS.maxAttempts),
 }).strict().refine(config => config.deadline <= config.horizon, { message: 'Deadline must not exceed the simulation horizon.' });
 
 export function validateConfig(input: unknown): Config {
@@ -61,9 +70,9 @@ function finish(state: Episode, reason: Reason): Episode {
   const arrived = reason === 'arrived';
   const reward: Reward = { ...ZERO_REWARD };
   if (arrived) {
-    reward.deadline = state.clock <= state.config.deadline ? 0.8 : 0;
-    reward.arrival = 0.1;
-    reward.earliness = 0.1 * Math.max(0, Math.min(1, (state.config.horizon - state.clock) / state.config.horizon));
+    reward.deadline = state.clock <= state.config.deadline ? REWARD_WEIGHTS.deadline : 0;
+    reward.arrival = REWARD_WEIGHTS.arrival;
+    reward.earliness = REWARD_WEIGHTS.earliness * Math.max(0, Math.min(1, (state.config.horizon - state.clock) / state.config.horizon));
     reward.total = reward.deadline + reward.arrival + reward.earliness;
   }
   return { ...state, reason, reward };
@@ -150,7 +159,7 @@ export function runPolicy(config: Config, policy: Policy): Episode {
 }
 export function comparePolicies(config: Config, count: number): Comparison {
   validateConfig(config);
-  if (!Number.isInteger(count) || count < 1 || count > 256 || config.seed + count - 1 > MAX_SEED) throw new Error('Use 1-256 worlds and a seed range within 0-2147483647.');
+  if (!Number.isInteger(count) || count < 1 || count > MAX_WORLDS || config.seed + count - 1 > MAX_SEED) throw new Error(`Use 1-${MAX_WORLDS} worlds and a seed range within 0-${MAX_SEED}.`);
   return { count, seedStart: config.seed, rows: POLICIES.map(policy => {
     const row: ComparisonRow = { policy, arrived: 0, onTime: 0, meanReward: 0, reasons: {} };
     for (let i = 0; i < count; i++) {

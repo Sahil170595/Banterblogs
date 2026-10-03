@@ -27,8 +27,17 @@ const STUB_ROUTE_REDIRECTS = [
   { source: '/technology', destination: '/platform', permanent: true },
 ];
 
-// The scrollable overview that predates the galactic landing.
-const RETIRED_ROUTE_REDIRECTS = [{ source: '/home', destination: '/', permanent: true }];
+// The scrollable overview that predates the galactic landing; the projects'
+// first home under /work, which Gatebound's README links.
+const RETIRED_ROUTE_REDIRECTS = [
+  { source: '/home', destination: '/', permanent: true },
+  { source: '/work/projects', destination: '/projects', permanent: true },
+  { source: '/work/projects/flight-routing', destination: '/projects/reinforcement-learning/flight-routing', permanent: true },
+];
+
+// The project catalog reads every project.json under this folder at request
+// time in the sitemap route; the files ship with the function.
+const PROJECT_FILES = ['./src/app/projects/(demos)/*/*/project.json', './src/app/projects/(demos)/*/*/page.tsx'];
 
 // The landing poster and loop files carry a content hash in their names
 // (scripts/render-scene-poster.mjs, render-scene-video.mjs), so a new render
@@ -38,7 +47,7 @@ const LANDING_ART_DIRS = ['poster', 'video'];
 
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
-    '/sitemap.xml': ['./src/app/work/projects/*/project.json', './src/app/work/projects/*/page.tsx'],
+    '/sitemap.xml': PROJECT_FILES,
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],

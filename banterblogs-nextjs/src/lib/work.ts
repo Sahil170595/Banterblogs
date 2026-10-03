@@ -392,7 +392,6 @@ export const PROFILE_LINKS: WorkLink[] = [
 /** where the page leads next */
 export const NEXT_LINKS: WorkLink[] = [
   { label: 'Papers', href: '/papers' },
-  { label: 'Projects', href: '/work/projects' },
   { label: 'Research Archive', href: '/reports' },
   { label: 'Platform', href: '/platform' },
   { label: 'About', href: '/about' },
