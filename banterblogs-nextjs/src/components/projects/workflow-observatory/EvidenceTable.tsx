@@ -51,7 +51,8 @@ function Says({ yes, truth, label }: { yes: boolean; truth: boolean; label: stri
   );
 }
 
-export function EvidenceTable({ selected, onSelect }: { selected: string; onSelect: (scenario: Scenario) => void }) {
+/** `selected` is the attempt loaded in the app, or null for a visitor's own settings */
+export function EvidenceTable({ selected, onSelect }: { selected: string | null; onSelect: (scenario: Scenario) => void }) {
   const actual = VERDICTS.filter((v) => v.record).length;
   const gateAgrees = VERDICTS.every((v) => v.gate === v.record);
   const othersErr = VERDICTS.some((v) => v.notice !== v.record) && VERDICTS.some((v) => v.parallax !== v.record);

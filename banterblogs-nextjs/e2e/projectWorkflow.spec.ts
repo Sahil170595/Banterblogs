@@ -81,7 +81,7 @@ test('picked attempts run on the real controls; the wrong room is made by hand; 
 
   await attempt(page, 'Saved to the wrong room').click();
   await expect(page.getByText(/never picks the wrong room/)).toBeVisible();
-  await expect(status(page)).toContainText('Ready');
+  await expect(status(page)).toContainText('Make it by hand');
   await page.getByRole('button', { name: 'Reserve slot', exact: true }).click();
   await page.getByRole('textbox', { name: 'Reservation title', exact: true }).fill('Spectral scan');
   await page.getByRole('combobox', { name: 'Room', exact: true }).selectOption('south');
@@ -91,6 +91,52 @@ test('picked attempts run on the real controls; the wrong room is made by hand; 
   const gate = page.getByRole('region', { name: 'Completion gate', exact: true });
   await expect(gate.getByText('Room matches the requested task')).toHaveAttribute('data-met', 'false');
 
+  await expect(status(page)).toContainText('Not done: the record is in the wrong room');
+
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
+});
+
+// live QA #18: a fixed wait as long as the save read a page one render behind
+// the app, and said "Not done" over a gate showing all six conditions met
+test('a fixed wait that ends with the save landed agrees with the gate', async ({ page }) => {
+  await page.goto(PAGE);
+  await page.getByText('Settings, the action plan and the step-by-step trace').click();
+  // a label wrapping a control carries the control's own text in its name
+  await page.getByRole('combobox', { name: /^Wait policy/ }).selectOption('fixed');
+  await page.getByRole('slider', { name: /^Save latency/ }).fill('200');
+  await page.getByRole('button', { name: 'Run workflow', exact: true }).click();
+  // the save lands at 200 ms after the submit, the wait ends 200 ms after the step that follows it
+  await expect(status(page)).toContainText('Done: the record is committed');
+  const gate = page.getByRole('region', { name: 'Completion gate', exact: true });
+  await expect(gate.locator('[data-met="false"]')).toHaveCount(0);
+});
+
+// live QA #20: a refused file answered far above the button that loaded it
+test('a refused trace is answered beside the import button, in plain words', async ({ page }) => {
+  await page.goto(PAGE);
+  await page.getByText('Settings, the action plan and the step-by-step trace').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Import trace', exact: true }).click();
+  await (await chooser).setFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{"schemaVersion": 1,') });
+  const refusal = page.getByRole('region', { name: 'Observed action trace', exact: true }).getByRole('alert');
+  await expect(refusal).toHaveText('Not loaded: The file is not valid JSON.');
+  await expect(refusal).toBeInViewport();
+});
+
+// live QA #22: on a phone the verdict of a save by hand sat under the sticky header
+test('on a phone the verdict of a save by hand comes up clear of the header', async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  await page.goto(PAGE);
+  await attempt(page, 'Saved to the wrong room').click();
+  await page.getByRole('button', { name: 'Reserve slot', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Reservation title', exact: true }).fill('Spectral scan');
+  await page.getByRole('combobox', { name: 'Room', exact: true }).selectOption('south');
+  await page.getByRole('button', { name: 'Save reservation', exact: true }).click();
+  await expect(status(page)).toContainText('Not done: the record is in the wrong room');
+  await expect(async () => {
+    const top = (await status(page).boundingBox())!.y;
+    const header = (await page.locator('header').first().boundingBox())!;
+    expect(top).toBeGreaterThanOrEqual(header.y + header.height);
+  }).toPass();
 });

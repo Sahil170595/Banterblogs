@@ -137,6 +137,85 @@ describe('same-origin native DOM execution', () => {
     await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Done'));
     expect(screen.getByRole('row', { name: /Spectral scan/ })).toBeTruthy();
   });
+  // live QA #18: a 200 ms fixed wait on a 200 ms save said "Not done" while the
+  // gate showed all six conditions met; the executor read a page one render behind
+  it('shows a landed save on the page the executor reads at once, not a render later', () => {
+    vi.useFakeTimers();
+    const { container } = render(<Observatory />);
+    fireEvent.click(screen.getByRole('button', { name: 'Reserve slot' }));
+    fireEvent.input(screen.getByLabelText('Reservation title'), { target: { value: 'Spectral scan' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save reservation' }));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    // the save's own timer, outside any test flush: what the next timer to run would read
+    vi.advanceTimersByTime(DEFAULT_CONFIG.latencyMs);
+    expect(container.querySelector('[data-phase]')?.getAttribute('data-phase')).toBe('saved');
+    expect(container.querySelector('[data-record-id]')).toBeTruthy();
+  });
+  it('says why a fixed wait failed, never a bare "Not done"', async () => {
+    render(<Observatory />);
+    fireEvent.change(screen.getByLabelText('Wait policy'), { target: { value: 'fixed' } });
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '600' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Not done:'), { timeout: 3000 });
+  });
+  // live QA #21: a stopped or failed verification counted as a step taken
+  it('counts only the steps that completed', async () => {
+    render(<Observatory />);
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Injected failure'), { target: { value: 'false-toast' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run workflow' }));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Not done'));
+    expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('4 of 5 steps taken');
+  });
+  // live QA #20: a refused file said "Unexpected token…" far above the button pressed
+  it('answers an import beside the import button, in plain words', async () => {
+    render(<Observatory />);
+    fireEvent.change(screen.getByLabelText('Trace file'), { target: { files: [{ size: 12, text: async () => 'not json at all' }] } });
+    const trace = screen.getByRole('region', { name: 'Observed action trace' });
+    await waitFor(() => expect(trace.querySelector('[role="alert"]')?.textContent).toBe('Not loaded: The file is not valid JSON.'));
+    fireEvent.change(screen.getByLabelText('Trace file'), {
+      target: { files: [{ size: 10, text: async () => JSON.stringify({ schemaVersion: SCHEMA_VERSION, fixtureVersion: FIXTURE_VERSION, config: DEFAULT_CONFIG, events: [] }) }] },
+    });
+    await waitFor(() => expect(trace.querySelector('[role="status"]')?.textContent).toMatch(/Loaded: the replay below rebuilds/));
+    expect(trace.querySelector('[role="alert"]')).toBeNull();
+  });
+  // live QA #27: the replay sat under this tab's own trace with nothing to tell them apart
+  it('labels the replay as the imported file, apart from this tab’s run', async () => {
+    render(<Observatory />);
+    fireEvent.change(screen.getByLabelText('Trace file'), {
+      target: { files: [{ size: 10, text: async () => JSON.stringify({ schemaVersion: SCHEMA_VERSION, fixtureVersion: FIXTURE_VERSION, config: DEFAULT_CONFIG, events: [] }) }] },
+    });
+    const replay = await screen.findByRole('region', { name: 'Recomputed event replay' });
+    expect(replay.textContent).toMatch(/the imported file, not this tab’s run/);
+  });
+  // live QA #23 and #25
+  it('focuses the title when a person opens the form, closes it on Escape, and keeps Run off meanwhile', () => {
+    render(<Observatory />);
+    fireEvent.click(screen.getByRole('button', { name: 'Reserve slot' }));
+    expect(document.activeElement).toBe(screen.getByLabelText('Reservation title'));
+    expect(screen.getByRole('button', { name: 'Run workflow' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Step' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.keyDown(screen.getByLabelText('Reservation title'), { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+  // live QA #28: a second booking by hand replaced the first without a word
+  it('says when a save by hand replaces the earlier reservation', async () => {
+    render(<Observatory />);
+    fireEvent.change(screen.getByLabelText('Save latency'), { target: { value: '100' } });
+    for (const room of ['south', 'north']) {
+      fireEvent.click(screen.getByRole('button', { name: 'Reserve slot' }));
+      fireEvent.input(screen.getByLabelText('Reservation title'), { target: { value: 'Spectral scan' } });
+      fireEvent.change(screen.getByLabelText('Room'), { target: { value: room } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save reservation' }));
+      await waitFor(() => expect(screen.queryByText('Saving reservation…')).toBeNull());
+    }
+    expect(screen.getByText(/holds one reservation: this save replaced the earlier one/)).toBeTruthy();
+  });
+  // live QA #24: a by-hand attempt read "Ready to run" with Run switched off
+  it('tells a by-hand attempt to be made by hand', () => {
+    render(<Observatory byHand />);
+    expect(screen.getByRole('status', { name: 'Workflow status' }).textContent).toContain('Make it by hand');
+  });
   it('resets a genuinely pending save and clears its late timer', async () => {
     vi.useFakeTimers();
     render(<Observatory />);
