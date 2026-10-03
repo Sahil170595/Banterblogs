@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import ServiceLab from '@/components/projects/customer-service/ServiceLab';
 import styles from '@/components/projects/customer-service/service.module.css';
 import { measureControls } from '@/lib/projects/customer-service/measurements';
+import project from './project.json';
 
 const source = 'https://github.com/Sahil170595/Banterblogs/tree/codex/demo-customer-service/banterblogs-nextjs/src/lib/projects/customer-service';
 export const metadata: Metadata = {
@@ -20,7 +21,7 @@ export default function CustomerServicePage() {
       <span className={styles.eyebrow}>Agents / state-grounded evaluation</span>
       <h1>Customer Service Environment</h1>
       <p>Identity-bound tools, synthetic orders, and rewards grounded in what actually changed. A reduced browser adaptation operated by you, with optional scripted controls. No live LLM, payment processor, or carrier connection.</p>
-      <nav className={styles.nav} aria-label="Project sections"><a href="#demo">Environment</a><a href="#underlying-system">Underlying system</a><a href="#findings">Findings</a><a href="#method">Method</a><a href="#reproduce">Reproduce</a><a href={source} target="_blank" rel="noreferrer">Public source <ExternalLink size={12} className="inline" aria-hidden /></a></nav>
+      <nav className={styles.nav} aria-label="Project sections"><a href="#demo">Environment</a><a href="#underlying-system">Underlying system</a><a href="#findings">Findings</a><a href="#method">Method</a><a href="#reproduce">Reproduce</a><a href={project.sourceUrl} target="_blank" rel="noreferrer">Public source <ExternalLink size={12} className="inline" aria-hidden /></a></nav>
     </header>
     <ServiceLab />
     <article className={styles.article}>
@@ -34,6 +35,7 @@ export default function CustomerServicePage() {
       <section id="underlying-system" aria-labelledby="underlying-title">
         <span className={styles.eyebrow}>Underlying system / source-reviewed engineering</span>
         <h2 id="underlying-title">A complete episode pipeline, not just a scoring widget</h2>
+        <p><a href={project.sourceUrl}>Turncraft</a> publishes the full Python environment, two-role dialogue runner, nine guarded tools, evaluator, CLI, and trajectory viewer with newly authored synthetic cases. Its offline scripts execute the real tool and reward paths; live model execution is optional and separately qualified. The browser edition is a reduced, human-operated adaptation, not a running instance of that Python service.</p>
         <p>The underlying Python service environment is substantially broader than this browser edition. Its implemented pipeline combines an assistant role, a generated-customer role, a tool-call parser, an episode runner, an episode-local database, policy predicates, a transactional registry, and a trajectory-based evaluator. It also includes a command-line runner and an HTML trace viewer. The source registry declares nine service tools and six evaluation tasks, each with competent, empty, near-miss, and forbidden control trajectories: 24 declared controls. These are source-backed implementation counts, not throughput measurements or evidence of policy training.</p>
         <ol>
           <li><strong>Initialize an isolated world.</strong> Typed records cover users, products, stock, orders, items, payments, shipments, returns, refunds, intercepts, and notifications. Reset deep-copies a fixture. Referential-integrity checks, deterministic state digests, snapshots, and semantic diffs make later mutations inspectable.</li>
