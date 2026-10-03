@@ -12,6 +12,7 @@ const PROJECT_PAGES = [
   '/projects/reinforcement-learning/offline-policy-evaluation',
   '/projects/reinforcement-learning/customer-service',
   '/projects/reinforcement-learning/code-verification',
+  '/projects/agents-and-evaluation/spreadsheet-reasoning',
 ] as const;
 
 const ROUTES = [
