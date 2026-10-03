@@ -43,7 +43,7 @@ const Spelled = (n: number) => spelled(n).replace(/^./, (c) => c.toUpperCase());
 const FINDINGS: ProjectFinding[] = [
   {
     value: `${parallaxYes} of ${attempts}`,
-    label: `attempts pass Parallax's completion check, the rule my earlier agent uses, which accepts any valid form after a typing step. ${Spelled(saved)} was actually saved.`,
+    label: `attempts pass Parallax's completion check, the rule my earlier agent uses, which accepts any valid form after a typing step. ${Spelled(saved)} saved the booking that was asked for.`,
   },
   {
     value: `${noticeYes} of ${attempts}`,

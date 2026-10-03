@@ -108,6 +108,9 @@ export function judge(scenario: Scenario) {
     notice: state.toast === 'success',
     parallax: parallaxAccepts(scenario),
     gate: completion(observeModel(state), config).complete,
+    /** a committed record with the requested title and room */
     record: state.record !== null && state.record.title === config.title.trim() && state.record.room === config.room,
+    /** whatever record was committed, asked for or not */
+    saved: state.record,
   };
 }

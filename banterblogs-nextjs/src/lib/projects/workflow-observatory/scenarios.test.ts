@@ -56,6 +56,14 @@ describe('evidence scenarios', () => {
     for (const v of verdicts) expect(v.gate, v.id).toBe(v.record);
   });
 
+  // the wrong-room attempt commits a record, just not the one asked for
+  it('tell a booking saved as asked from any committed record', () => {
+    const verdicts = Object.fromEntries(SCENARIOS.map((s) => [s.id, judge(s)]));
+    expect(verdicts['wrong-room']).toMatchObject({ record: false, saved: { title: 'Spectral scan', room: 'south' } });
+    expect(verdicts['no-record'].saved).toBeNull();
+    expect(verdicts.normal).toMatchObject({ record: true, saved: { room: 'north' } });
+  });
+
   it("accept every attempt that typed a title under Parallax's interactive check", () => {
     const verdicts = SCENARIOS.map((s) => ({ id: s.id, ...judge(s) }));
     expect(verdicts.filter((v) => v.parallax).map((v) => v.id)).toEqual(['normal', 'no-record', 'wrong-room', 'rejected', 'checked-early']);

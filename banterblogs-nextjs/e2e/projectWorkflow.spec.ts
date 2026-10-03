@@ -18,7 +18,7 @@ test('the evidence table and its headline are in the server HTML, before any scr
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(PAGE);
-  await expect(page.getByText(/6 attempts to book North lab for “Spectral scan”, and only one actually saved\. Only the completion gate gets every attempt right\./)).toBeVisible();
+  await expect(page.getByText(/6 attempts to book North lab for “Spectral scan”, and only one saved the booking that was asked for\. Only the completion gate gets every attempt right\./)).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Success notice: done, wrong' })).toHaveCount(2);
   await context.close();
 });
@@ -31,10 +31,10 @@ test('the opening attempt runs once the app is in view', async ({ page }) => {
   await expect(page.getByRole('row', { name: /Spectral scan North lab Committed/ })).toBeVisible();
 });
 
-test('on a phone every attempt shows its committed record without a sideways scroll', async ({ page }) => {
+test('on a phone every attempt shows what it saved without a sideways scroll', async ({ page }) => {
   await page.setViewportSize(PHONE);
   await page.goto(PAGE);
-  const records = page.getByRole('region', { name: 'What each kind of evidence says' }).getByRole('cell', { name: /Committed record: (exists|none)/ });
+  const records = page.getByRole('region', { name: 'What each kind of evidence says' }).getByRole('cell', { name: /Saved as asked: (yes|none|.*wrong)/ });
   await expect(records).toHaveCount(6);
   for (const cell of await records.all()) {
     const box = (await cell.boundingBox())!;

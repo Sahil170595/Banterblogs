@@ -37,7 +37,7 @@ describe('workflow demo', () => {
     render(<WorkflowDemo />);
     expect(
       screen.getByText(
-        /6 attempts to book North lab for “Spectral scan”, and only one actually saved\. Only the completion gate gets every attempt right\./,
+        /6 attempts to book North lab for “Spectral scan”, and only one saved the booking that was asked for\. Only the completion gate gets every attempt right\./,
       ),
     ).toBeTruthy();
     // the record column, the truth the checks are read against, comes first
@@ -47,7 +47,7 @@ describe('workflow demo', () => {
         .map((h) => h.textContent),
     ).toEqual([
       'Attempt',
-      'Committed recordwhat was actually saved',
+      'Saved as askeda committed record with the requested title and room',
       'Success notice"Reservation saved" shown',
       "Parallax's checkmy earlier agent",
       "Completion gatethis rebuild's check",
@@ -75,10 +75,25 @@ describe('workflow demo', () => {
 
   it('loads the wrong room for a person to make, without running the executor', async () => {
     render(<WorkflowDemo />);
+    // what it commits is in the table: a record, in the wrong room
+    expect(within(evidence()).getByLabelText('Saved as asked: South lab, wrong room')).toBeTruthy();
     fireEvent.click(attempt('Saved to the wrong room'));
     expect(screen.getByText(/never picks the wrong room/)).toBeTruthy();
+    // the executor would book the requested room, so it cannot run this one
+    expect(screen.getByRole('button', { name: 'Run workflow' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Step' }).hasAttribute('disabled')).toBe(true);
     await new Promise((resolve) => setTimeout(resolve, PAST_AUTO_RUN_MS));
     expect(status().textContent).toContain('Ready');
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('judges a booking made by hand with the completion gate', async () => {
+    render(<WorkflowDemo />);
+    fireEvent.click(attempt('Saved to the wrong room'));
+    fireEvent.click(screen.getByRole('button', { name: 'Reserve slot' }));
+    fireEvent.input(screen.getByLabelText('Reservation title'), { target: { value: 'Spectral scan' } });
+    fireEvent.change(screen.getByLabelText('Room'), { target: { value: 'south' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save reservation' }));
+    await waitFor(() => expect(status().textContent).toContain('Not done: the record is in the wrong room'), RUN_TIMEOUT);
   });
 });

@@ -52,12 +52,18 @@ export function WorkflowDemo() {
           <span>Loaded in the app</span> {selected.label}
         </p>
         {!selected.executor && (
-          <p className={controls.hint}>
-            The executor, the program that clicks and types through the app, follows its plan and never picks the wrong room: make this one
-            by hand. Click Reserve slot, type the title, choose South lab and save, then read the completion gate.
+          <p className={controls.lead}>
+            <strong>Make this one by hand.</strong> The executor, the program that clicks and types through the app, follows its plan and never
+            picks the wrong room. Click Reserve slot, type &ldquo;{selected.config.title}&rdquo;, choose South lab and save; the status line
+            then gives the completion gate&apos;s verdict.
           </p>
         )}
-        <Observatory key={`${selected.id}:${picks}`} initial={selected.config} autoRun={selected.executor && (picks > 0 || seen)} />
+        <Observatory
+          key={`${selected.id}:${picks}`}
+          initial={selected.config}
+          autoRun={selected.executor && (picks > 0 || seen)}
+          byHand={!selected.executor}
+        />
       </div>
     </div>
   );

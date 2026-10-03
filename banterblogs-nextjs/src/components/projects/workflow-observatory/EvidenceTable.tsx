@@ -7,7 +7,7 @@ import { controls } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
 import styles from './observatory.module.css';
 
-// The hero: six attempts at the same booking, what was actually saved, and
+// The hero: six attempts at the same booking, what each one committed, and
 // what three checks say about each. The "Reservation saved" message is what a
 // click-and-look agent trusts, Parallax's check is the original system's
 // rule, and the new completion check reads the outcome's conditions.
@@ -16,7 +16,15 @@ const VERDICTS = SCENARIOS.map((scenario) => ({ scenario, ...judge(scenario) }))
 const ROOM_LABELS = { north: 'North lab', south: 'South lab' };
 
 // each column's term, and the few plain words that define it in the header
-const SAVED = { term: 'Committed record', gloss: 'what was actually saved' };
+const SAVED = { term: 'Saved as asked', gloss: 'a committed record with the requested title and room' };
+
+/** what an attempt committed, against what was asked for */
+function savedAs({ record, saved }: (typeof VERDICTS)[number]): string {
+  if (record) return 'yes';
+  if (!saved) return 'none';
+  if (saved.room !== DEFAULT_CONFIG.room) return `${ROOM_LABELS[saved.room]}, wrong room`;
+  return 'wrong title';
+}
 const NOTICE = { term: 'Success notice', gloss: '"Reservation saved" shown' };
 const PARALLAX = { term: "Parallax's check", gloss: 'my earlier agent' };
 const GATE = { term: 'Completion gate', gloss: "this rebuild's check" };
@@ -51,12 +59,12 @@ export function EvidenceTable({ selected, onSelect }: { selected: string; onSele
     <div className={styles.hero}>
       <p className={styles.headline}>
         {VERDICTS.length} attempts to book {ROOM_LABELS[DEFAULT_CONFIG.room]} for &ldquo;{DEFAULT_CONFIG.title}&rdquo;, and{' '}
-        {actual === 1 ? 'only one' : actual} actually saved.{' '}
+        {actual === 1 ? 'only one' : actual} saved the booking that was asked for.{' '}
         {gateAgrees ? `${othersErr ? 'Only the' : 'The'} completion gate gets every attempt right.` : 'Even the completion gate gets some wrong.'}
       </p>
       <p className={controls.lead}>
-        Each row is one attempt. The committed record column says what was actually saved; the three columns after it are ways of deciding
-        the booking worked. The completion gate is this rebuild&apos;s check: it calls a booking done only when a committed record exists
+        Each row is one attempt. The saved-as-asked column says whether a record with the requested title and room was committed; the three
+        columns after it are ways of deciding the booking worked. The completion gate is this rebuild&apos;s check: it calls a booking done only when a committed record exists
         and matches the request. Red marks a check that got it wrong. Click an attempt to run it in the booking app below. Try
         &ldquo;Notice shown, nothing saved&rdquo;: the app says &ldquo;Reservation saved&rdquo; and its list stays empty.
       </p>
@@ -75,7 +83,10 @@ export function EvidenceTable({ selected, onSelect }: { selected: string; onSele
               </tr>
             </thead>
             <tbody role="rowgroup">
-              {VERDICTS.map(({ scenario, notice, parallax, gate, record }) => (
+              {VERDICTS.map((verdict) => {
+                const { scenario, notice, parallax, gate, record } = verdict;
+                const committed = savedAs(verdict);
+                return (
                 <tr role="row" key={scenario.id} data-selected={selected === scenario.id || undefined}>
                   <th role="rowheader" scope="row">
                     <button type="button" aria-pressed={selected === scenario.id} onClick={() => onSelect(scenario)}>
@@ -84,16 +95,17 @@ export function EvidenceTable({ selected, onSelect }: { selected: string; onSele
                     </button>
                   </th>
                   <td role="cell" data-label={SAVED.term} data-yes={record || undefined} data-truth="">
-                    <span className={styles.says} aria-label={`${SAVED.term}: ${record ? 'exists' : 'none'}`}>
+                    <span className={styles.says} aria-label={`${SAVED.term}: ${committed}`}>
                       {record ? <Check aria-hidden="true" /> : <Minus aria-hidden="true" />}
-                      {record ? 'exists' : 'none'}
+                      {committed}
                     </span>
                   </td>
                   <Says yes={notice} truth={record} label={NOTICE.term} />
                   <Says yes={parallax} truth={record} label={PARALLAX.term} />
                   <Says yes={gate} truth={record} label={GATE.term} />
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

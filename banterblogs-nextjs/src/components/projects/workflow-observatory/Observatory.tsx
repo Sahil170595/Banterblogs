@@ -35,7 +35,11 @@ function message(cause: unknown) {
   return cause instanceof z.ZodError ? cause.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(' ') : cause instanceof Error ? cause.message : 'Workflow operation failed.';
 }
 
-export function Observatory({ initial = DEFAULT_CONFIG, autoRun = false }: { initial?: Config; autoRun?: boolean }) {
+/**
+ * byHand: an attempt the executor cannot make (it books the requested room),
+ * so Run and Step stay off and a person drives the app.
+ */
+export function Observatory({ initial = DEFAULT_CONFIG, autoRun = false, byHand = false }: { initial?: Config; autoRun?: boolean; byHand?: boolean }) {
   const [config, setConfig] = useState<Config>({ ...initial });
   const [site, setSite] = useState(initialSite);
   const [trace, setTrace] = useState(() => startTrace(initial));
@@ -165,15 +169,21 @@ export function Observatory({ initial = DEFAULT_CONFIG, autoRun = false }: { ini
   const largestDuration = Math.max(1, ...trace.entries.map(item => item.elapsedMs));
   const frame = replay?.frames[replayFrame];
   const missing = conditions.find(condition => !condition.met);
+  const done = `Done: the record is committed and all ${conditions.length} conditions hold`;
+  const notDone = missing ? `Not done: ${MISSING[missing.label] ?? missing.label}` : STATUS_LABELS.failed;
+  // a save a person made by hand, with no executor step taken, is judged by the same gate
+  const settledByHand = trace.entries.length === 0 && (site.phase === 'saved' || site.phase === 'rejected');
   const statusText = busy ? 'Running'
-    : trace.status === 'complete' ? `Done: the record is committed and all ${conditions.length} conditions hold`
-    : trace.status === 'failed' && missing ? `Not done: ${MISSING[missing.label] ?? missing.label}`
+    : trace.status === 'complete' ? done
+    : trace.status === 'failed' ? notDone
+    : settledByHand ? (missing ? notDone : done)
     : STATUS_LABELS[trace.status];
+  const executorOff = byHand ? 'The executor books the requested room; make this attempt by hand' : undefined;
   return <div className={styles.tool}>
     <div className={styles.toolbar}>
       <div className={styles.commands}>
-        <button className={controls.button} disabled={busy || !canExecute} onClick={() => execute('run')}><Play size={16} />Run workflow</button>
-        <button className={controls.button} disabled={busy || !canExecute} onClick={() => execute('step')}><SkipForward size={16} />Step</button>
+        <button className={controls.button} disabled={busy || !canExecute || byHand} title={executorOff} onClick={() => execute('run')}><Play size={16} />Run workflow</button>
+        <button className={controls.button} disabled={busy || !canExecute || byHand} title={executorOff} onClick={() => execute('step')}><SkipForward size={16} />Step</button>
         <button className={controls.iconButton} disabled={!busy} title="Stop" aria-label="Stop" onClick={() => controllerRef.current?.abort()}><Pause size={18} /><span className={controls.iconLabel}>Stop</span></button>
         <button className={controls.iconButton} title="Reset" aria-label="Reset" onClick={() => resetTo()}><RotateCcw size={18} /><span className={controls.iconLabel}>Reset</span></button>
       </div>
