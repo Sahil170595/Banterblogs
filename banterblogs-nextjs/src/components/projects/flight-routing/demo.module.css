@@ -15,9 +15,10 @@
   gap: 1.25rem;
 }
 
+/* one panel a row on a phone, so a square is big enough to tap */
 .panels {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
 }
 
@@ -204,6 +205,13 @@
   color: hsl(var(--foreground));
 }
 
+/* focus lands here when a square is chosen from the keyboard */
+.replayTitle:focus-visible {
+  border-radius: 0.25rem;
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 0.25rem;
+}
+
 .replayTitle span {
   font-weight: 400;
   color: hsl(var(--muted-foreground));
@@ -222,6 +230,14 @@
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 0.5rem;
+}
+
+/* the pair moves to a new line together; only on a narrow phone do the two split */
+.historyButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .status {
@@ -288,15 +304,16 @@
 
 .edge {
   fill: none;
-  stroke: hsl(var(--foreground) / 0.18);
+  stroke: hsl(var(--foreground) / 0.14);
   stroke-width: 1.5;
-  stroke-dasharray: 4 5;
   vector-effect: non-scaling-stroke;
   transition: stroke var(--duration-base) var(--ease-strong-out);
 }
 
+/* dashed: bookable from where the passenger is now, and nothing else */
 .edge[data-kind="legal"] {
   stroke: hsl(var(--foreground) / 0.55);
+  stroke-dasharray: 4 5;
 }
 
 .edge[data-kind="chosen"] {
@@ -310,10 +327,12 @@
   stroke-dasharray: none;
 }
 
+/* dotted as well as red, so a failure does not rest on colour alone */
 .edge[data-kind="failed"] {
   stroke: hsl(var(--status-red));
   stroke-width: 2.5;
-  stroke-dasharray: none;
+  stroke-dasharray: 1 5;
+  stroke-linecap: round;
 }
 
 .dot {
@@ -392,7 +411,7 @@
 }
 
 .edgeKey span[data-kind="failed"]::before {
-  border-top-color: hsl(var(--status-red));
+  border-top: 2px dotted hsl(var(--status-red));
 }
 
 .edgeKey span[data-kind="chosen"]::before {
@@ -550,6 +569,15 @@
   white-space: nowrap;
 }
 
+/* a bookable row is chosen anywhere along it */
+.tableScroll tbody tr {
+  cursor: pointer;
+}
+
+.tableScroll tbody tr:hover td {
+  background-color: hsl(var(--foreground) / 0.04);
+}
+
 .tableScroll tr[data-chosen] td {
   background-color: hsl(var(--primary) / 0.08);
 }
@@ -621,10 +649,11 @@
 }
 
 /* settings and export, under the hood */
+/* every field ends in a reading line, empty or not, so the inputs align at the top */
 .settingsForm {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: end;
+  align-items: start;
   gap: 0.75rem 1rem;
 }
 
@@ -635,6 +664,7 @@
 
 /* a minutes field read back as a clock */
 .clockReading {
+  min-height: 1.25rem;
   font-variant-numeric: tabular-nums;
   color: hsl(var(--foreground) / 0.75);
 }
@@ -659,6 +689,10 @@
 }
 
 @media (min-width: 640px) {
+  .panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .status {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }

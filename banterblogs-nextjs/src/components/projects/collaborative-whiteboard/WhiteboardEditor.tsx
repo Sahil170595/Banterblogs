@@ -41,6 +41,17 @@ const READABLE_ID = /^[a-z]+(?:-[a-z]+)*$/;
 // fields keep their own keys: arrows step a number, Backspace and Control Z edit text
 const OWN_KEYS = 'input, select, textarea, [contenteditable="true"]';
 const TYPE_NAMES: Record<ShapeType, string> = { rectangle: 'Rectangle', ellipse: 'Ellipse', line: 'Line', text: 'Text' };
+// a line draws in ink and text in its own colour: only these take a fill swatch
+const FILLED: ReadonlySet<Tool> = new Set<Tool>(['rectangle', 'ellipse']);
+const GEOMETRY = ['x', 'y', 'width', 'height'] as const;
+const NUMBER_FIELDS = [...GEOMETRY, 'strokeWidth'] as const;
+
+/** the geometry fields a drag or a nudge changed, and nothing else */
+function changedGeometry(before: Shape, after: Shape): ShapePatch {
+  const patch: ShapePatch = {};
+  for (const key of GEOMETRY) if (after[key] !== before[key]) patch[key] = after[key];
+  return patch;
+}
 
 /** an object as the list names it: a text by its first line, a shape by its type and readable id */
 function shapeName(shape: Shape): string {
@@ -79,17 +90,24 @@ function IconButton({ label, children, onClick, disabled = false, pressed }: {
   );
 }
 
-function Properties({ shape, onApply }: { shape: Shape; onApply: (props: ShapePatch) => void }) {
+function Properties({ shape, error, onApply }: { shape: Shape; error: string | null; onApply: (props: ShapePatch) => void }) {
+  // only the fields that differ from the object: an edit of one field is an edit of one field
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const props: ShapePatch = {};
-    for (const key of ['x', 'y', 'width', 'height', 'strokeWidth'] as const) {
+    for (const key of NUMBER_FIELDS) {
       const raw = String(data.get(key) ?? '').trim();
-      props[key] = raw ? Number(raw) : NaN;
+      const value = raw ? Number(raw) : NaN;
+      if (value !== shape[key] && value !== shown(shape[key])) props[key] = value;
     }
-    if (shape.type === 'text') { props.text = String(data.get('text') ?? ''); props.fontSize = Number(data.get('fontSize')); }
-    onApply(props);
+    if (shape.type === 'text') {
+      const text = String(data.get('text') ?? '');
+      const fontSize = Number(data.get('fontSize'));
+      if (text !== shape.text) props.text = text;
+      if (fontSize !== shape.fontSize) props.fontSize = fontSize;
+    }
+    if (Object.keys(props).length > 0) onApply(props);
   }
   return (
     <form onSubmit={submit} className={styles.properties}>
@@ -101,6 +119,7 @@ function Properties({ shape, onApply }: { shape: Shape; onApply: (props: ShapePa
       </div>
       {shape.type === 'text' && <label>Text<textarea name="text" aria-label="Object text" defaultValue={shape.text} maxLength={300} rows={3} required /></label>}
       <button className={styles.command} type="submit" aria-label="Apply properties"><Check size={16} aria-hidden="true" />Apply</button>
+      {error && <p role="alert" className={controls.error}>Not applied: {error} The fields show the object as it is.</p>}
     </form>
   );
 }
@@ -115,7 +134,14 @@ export function WhiteboardEditor() {
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const [zoom, setZoom] = useState(1);
   const [confirmReset, setConfirmReset] = useState(false);
+  // a refusal belongs to the object it was about; another selection does not show it
+  const [propertyError, setPropertyError] = useState<{ shapeId: string; message: string } | null>(null);
+  // bumps after a refused edit, so the fields show the object as it is again
+  const [propertiesVersion, setPropertiesVersion] = useState(0);
   const gestureRef = useRef<Gesture | null>(null);
+  // a touch drag on empty board pans it: the board, when zoomed, or else the page
+  const panRef = useRef<{ pointerId: number; x: number; y: number; left: number; top: number; pageY: number } | null>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
   const selected = board.shapes.find((shape) => shape.id === selectedId) ?? null;
@@ -138,6 +164,8 @@ export function WhiteboardEditor() {
   }, [viewShapes, selectedId, store, zoom]);
 
   function setActiveGesture(next: Gesture | null) { gestureRef.current = next; setGesture(next); }
+  // focus without scrolling: a board partly below the fold must not move under a press
+  function focusBoard() { canvasRef.current?.focus({ preventScroll: true }); }
   // a pointer lands in whole board units, so a drag commits whole coordinates
   function point(event: PointerEvent<HTMLCanvasElement>): Point {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -155,13 +183,20 @@ export function WhiteboardEditor() {
   function pointerDown(event: PointerEvent<HTMLCanvasElement>) {
     if (event.button !== 0 || event.isPrimary === false || gestureRef.current) return;
     event.preventDefault();
-    event.currentTarget.focus();
+    focusBoard();
     const start = point(event);
     if (tool === 'select') {
       const corner = selected ? hitHandle(selected, start) : null;
       const target = corner ? selected : hitTest(board.shapes, start.x, start.y, selectedId);
       setSelectedId(target?.id ?? null);
-      if (!target) return;
+      if (!target) {
+        const viewport = viewportRef.current;
+        if (event.pointerType === 'touch' && viewport) {
+          panRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: viewport.scrollLeft, top: viewport.scrollTop, pageY: window.scrollY };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }
+        return;
+      }
       setActiveGesture({ kind: corner ? 'resize' : 'move', start, shape: target, original: target, pointerId: event.pointerId, ...(corner ? { corner } : {}) });
     } else {
       const shape = makeShape(tool, start, start, crypto.randomUUID(), tool === 'text' ? '#25343c' : fill);
@@ -171,21 +206,62 @@ export function WhiteboardEditor() {
     event.currentTarget.setPointerCapture(event.pointerId);
   }
   function pointerMove(event: PointerEvent<HTMLCanvasElement>) {
+    const pan = panRef.current;
+    const viewport = viewportRef.current;
+    if (pan && viewport && event.pointerId === pan.pointerId) {
+      const dx = event.clientX - pan.x;
+      const dy = event.clientY - pan.y;
+      viewport.scrollLeft = pan.left - dx;
+      if (viewport.scrollHeight > viewport.clientHeight) viewport.scrollTop = pan.top - dy;
+      else window.scrollTo(window.scrollX, pan.pageY - dy);
+      return;
+    }
     const active = gestureRef.current;
     if (active && event.pointerId === active.pointerId) setActiveGesture(progress(active, point(event)));
   }
   function pointerUp(event: PointerEvent<HTMLCanvasElement>) {
+    const pan = panRef.current;
+    if (pan && pan.pointerId === event.pointerId) {
+      panRef.current = null;
+      event.currentTarget.releasePointerCapture(event.pointerId);
+      return;
+    }
     const active = gestureRef.current;
     if (!active || event.pointerId !== active.pointerId) return;
     const { shape } = progress(active, point(event));
     setActiveGesture(null);
     event.currentTarget.releasePointerCapture(event.pointerId);
-    const committed = store.dispatch((state) => commit(state, active.kind === 'draw' ? [{ kind: 'add', shape }] : [{ kind: 'update', shapeId: shape.id, props: { x: shape.x, y: shape.y, width: shape.width, height: shape.height } }]));
-    if (committed) { setSelectedId(shape.id); setTool('select'); }
+    if (active.kind !== 'draw') {
+      const props = changedGeometry(active.original!, shape);
+      if (Object.keys(props).length > 0) store.dispatch((state) => commit(state, [{ kind: 'update', shapeId: shape.id, props }]));
+      return;
+    }
+    if (store.dispatch((state) => commit(state, [{ kind: 'add', shape }]))) { setSelectedId(shape.id); setTool('select'); }
   }
-  function cancelGesture() { setActiveGesture(null); }
+  function cancelGesture() { panRef.current = null; setActiveGesture(null); }
   function update(props: ShapePatch) {
     if (selected) store.dispatch((state) => commit(state, [{ kind: 'update', shapeId: selected.id, props }]));
+  }
+  // a refused edit is answered beside the fields, which go back to the object as it is
+  function applyProperties(props: ShapePatch) {
+    if (!selected) return;
+    const operations: Operation[] = [{ kind: 'update', shapeId: selected.id, props }];
+    try {
+      commit(store.getSnapshot().board, operations);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The edit was refused.';
+      console.warn('[collaborative-whiteboard] property edit refused', message);
+      setPropertyError({ shapeId: selected.id, message });
+      setPropertiesVersion((version) => version + 1);
+      return;
+    }
+    if (store.dispatch((state) => commit(state, operations))) setPropertyError(null);
+  }
+  function pickTool(id: Tool) {
+    cancelGesture();
+    setTool(id);
+    // a colour picked with a drawing tool is for the next shape, not the last one
+    if (id !== 'select') setSelectedId(null);
   }
   function addObject() {
     if (tool === 'select') return;
@@ -193,8 +269,12 @@ export function WhiteboardEditor() {
     const shape = makeShape(tool, { x: 300 + offset, y: 340 + offset }, { x: 470 + offset, y: 430 + offset }, crypto.randomUUID(), tool === 'text' ? '#25343c' : fill);
     if (store.dispatch((state) => commit(state, [{ kind: 'add', shape }]))) { setSelectedId(shape.id); setTool('select'); }
   }
+  // the deleted object's list row and the toolbar button both leave focus behind; the board takes it
   function deleteSelected() {
-    if (selected && store.dispatch((state) => commit(state, [{ kind: 'delete', shapeId: selected.id }]))) setSelectedId(null);
+    if (selected && store.dispatch((state) => commit(state, [{ kind: 'delete', shapeId: selected.id }]))) { setSelectedId(null); focusBoard(); }
+  }
+  function clearAll() {
+    if (store.dispatch(clearBoard)) { setSelectedId(null); focusBoard(); }
   }
   // the editing keys work wherever focus is in the editor: on the board, an
   // object picked in the list, a colour just chosen
@@ -203,7 +283,7 @@ export function WhiteboardEditor() {
     const modifier = event.ctrlKey || event.metaKey;
     if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); cancelGesture(); store.dispatch(event.shiftKey ? redo : undo); return; }
     if (modifier && event.key.toLowerCase() === 'y') { event.preventDefault(); cancelGesture(); store.dispatch(redo); return; }
-    if (event.key === 'Escape') { cancelGesture(); setSelectedId(null); setTool('select'); return; }
+    if (event.key === 'Escape') { cancelGesture(); setSelectedId(null); setTool('select'); setConfirmReset(false); return; }
     if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); deleteSelected(); return; }
     if (!selected || !ARROWS.includes(event.key)) return;
     event.preventDefault();
@@ -221,7 +301,9 @@ export function WhiteboardEditor() {
     if (!active || active.pointerId !== NUDGE_POINTER) return;
     setActiveGesture(null);
     const { shape, original } = active;
-    if (original && (shape.x !== original.x || shape.y !== original.y)) update({ x: shape.x, y: shape.y });
+    if (!original) return;
+    const props = changedGeometry(original, shape);
+    if (Object.keys(props).length > 0) update(props);
   }
   function keyUp(event: KeyboardEvent<HTMLElement>) {
     if (ARROWS.includes(event.key)) commitNudge();
@@ -257,6 +339,9 @@ export function WhiteboardEditor() {
     setSelectedId(null); cancelGesture(); setTool('select');
   }
   const known = [...board.shapes, ...board.initialShapes];
+  // the swatches fill what is selected, or else the shape the drawing tool will make
+  const fillable = selected ? FILLED.has(selected.type) : FILLED.has(tool);
+  const swatchHint = selected && !fillable ? 'Lines draw in ink and text keeps its own colour' : !selected && tool !== 'select' && !fillable ? 'This tool draws in ink' : undefined;
   return (
     <section className={styles.editor} aria-labelledby="whiteboard-editor-title">
       <h3 id="whiteboard-editor-title" className={styles.editorTitle}>Try the editor</h3>
@@ -275,16 +360,16 @@ export function WhiteboardEditor() {
       </div>
       <div className={styles.toolbar}>
         <div className={styles.tools} role="group" aria-label="Drawing tools">
-          {TOOLS.map(({ id, name, icon: Icon }) => <IconButton key={id} label={name} pressed={tool === id} onClick={() => { cancelGesture(); setTool(id); }}><Icon size={19} aria-hidden="true" /></IconButton>)}
+          {TOOLS.map(({ id, name, icon: Icon }) => <IconButton key={id} label={name} pressed={tool === id} onClick={() => pickTool(id)}><Icon size={19} aria-hidden="true" /></IconButton>)}
         </div>
-        <div className={styles.tools} role="group" aria-label="Fill colors">
-          {PALETTE.map((swatch) => <button key={swatch.name} type="button" className={styles.swatch} style={{ backgroundColor: swatch.color }} title={`${swatch.name} fill`} aria-label={`${swatch.name} fill`} aria-pressed={(selected?.fill ?? fill) === swatch.color} onClick={() => { setFill(swatch.color); update({ fill: swatch.color }); }} />)}
+        <div className={styles.tools} role="group" aria-label="Fill colors" title={swatchHint}>
+          {PALETTE.map((swatch) => <button key={swatch.name} type="button" className={styles.swatch} style={{ backgroundColor: swatch.color }} title={swatchHint ?? `${swatch.name} fill`} aria-label={`${swatch.name} fill`} disabled={!fillable && (!!selected || tool !== 'select')} aria-pressed={fillable && (selected?.fill ?? fill) === swatch.color} onClick={() => { setFill(swatch.color); update({ fill: swatch.color }); }} />)}
         </div>
         <div className={styles.tools} role="group" aria-label="History and document commands">
           <IconButton label="Undo" disabled={!board.undo.length || !!gesture} onClick={() => store.dispatch(undo)}><Undo2 size={19} aria-hidden="true" /></IconButton>
           <IconButton label="Redo" disabled={!board.redo.length || !!gesture} onClick={() => store.dispatch(redo)}><Redo2 size={19} aria-hidden="true" /></IconButton>
           <IconButton label="Delete selected object" disabled={!selected || !!gesture} onClick={deleteSelected}><Trash2 size={18} aria-hidden="true" /></IconButton>
-          <IconButton label="Clear board" disabled={!board.shapes.length || !!gesture} onClick={() => { store.dispatch(clearBoard); setSelectedId(null); }}><Eraser size={19} aria-hidden="true" /></IconButton>
+          <IconButton label="Clear board" disabled={!board.shapes.length || !!gesture} onClick={clearAll}><Eraser size={19} aria-hidden="true" /></IconButton>
           <button type="button" className={confirmReset ? styles.command : styles.iconButton} aria-label={confirmReset ? 'Confirm reset: replace the board and its history' : 'Reset board'} title={confirmReset ? 'Press again to replace the board and its history' : 'Reset board'} onClick={reset} data-armed={confirmReset || undefined}>
             <RotateCcw size={18} aria-hidden="true" />{confirmReset ? 'Replace the board?' : <span className={controls.iconLabel}>Reset board</span>}
           </button>
@@ -294,7 +379,7 @@ export function WhiteboardEditor() {
       {snapshot.error && <p className={styles.error} role="alert">{snapshot.error}</p>}
       <div className={styles.workspace}>
         <div className={styles.boardColumn}>
-          <div className={styles.canvasViewport}>
+          <div className={styles.canvasViewport} ref={viewportRef}>
             <div className={styles.canvasSize} style={{ width: `${zoom * 100}%` }}>
               <canvas ref={canvasRef} className={styles.canvas} width={BOARD_WIDTH} height={BOARD_HEIGHT} tabIndex={0} aria-label="Editable whiteboard" aria-describedby="whiteboard-keys whiteboard-selection" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={cancelGesture} onLostPointerCapture={cancelGesture} style={{ cursor: tool === 'select' ? 'default' : 'crosshair' }}>
                 The editable object list and properties are available below.
@@ -312,7 +397,7 @@ export function WhiteboardEditor() {
           <h4>Objects</h4>
           <ul className={styles.objectList}>{board.shapes.map((shape, index) => <li key={shape.id}><button type="button" aria-label={`Select ${shapeName(shape)}`} aria-pressed={selectedId === shape.id} onClick={() => { cancelGesture(); setSelectedId(shape.id); setTool('select'); }}><span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><span>{shapeName(shape)}</span></button></li>)}</ul>
           <h4>Properties</h4>
-          {selected ? <Properties key={`${selected.id}:${board.log.length}`} shape={selected} onApply={update} /> : <p className={styles.empty}>No object selected</p>}
+          {selected ? <Properties key={`${selected.id}:${board.log.length}:${propertiesVersion}`} shape={selected} error={propertyError?.shapeId === selected.id ? propertyError.message : null} onApply={applyProperties} /> : <p className={styles.empty}>No object selected</p>}
         </aside>
       </div>
       </div>

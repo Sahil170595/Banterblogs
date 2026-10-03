@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { intervalCandidates, uniqueCandidates } from './candidates';
+import { CANDIDATE_SOURCES, intervalCandidates, uniqueCandidates } from './candidates';
 
 export const SCHEMA_VERSION = 1;
 export const FIXTURE_VERSION = 'neutral-v1';
@@ -169,7 +169,8 @@ export function evaluate(rawConfig: unknown): Report {
   const allPass = rows.length > 0 && rows.every(r => r.after.passed);
   const resolved = patchPresent && allPass && (config.mode === 'repair' || counts.repaired > 0);
   const reason = !patchPresent ? config.mode === 'repair' ? 'No implementation change was selected.' : 'No candidate assertions were supplied.' :
-    config.mode === 'synthesis' && counts.repaired === 0 ? 'No assertion fails on buggy code and passes on fixed code.' :
+    config.mode === 'synthesis' && !allPass ? 'At least one assertion fails on the fixed code too, so its expected value is wrong.' :
+    config.mode === 'synthesis' && counts.repaired === 0 ? 'No assertion reproduces the bug: none fails on the buggy code and passes on the fixed code.' :
     !allPass ? 'At least one required assertion still fails or regresses.' :
     config.mode === 'synthesis' ? 'At least one assertion reproduces the bug; all pass on fixed code.' :
     config.scope === 'smoke' ? 'The two-test smoke suite is satisfied. This is not full verification.' :
@@ -182,11 +183,9 @@ export function replay(raw: unknown): Report {
   return evaluate(envelope.config);
 }
 
+/** the implementation as written; candidates.ts keeps it beside the function, tested against it */
 export function implementationSource(taskId: TaskId, candidateId: CandidateId): string {
-  taskSchema.parse(taskId);
-  candidateSchema.parse(candidateId);
-  const implementation = taskId === 'intervals' ? intervalCandidates[candidateId] : uniqueCandidates[candidateId];
-  return implementation.toString();
+  return CANDIDATE_SOURCES[taskSchema.parse(taskId)][candidateSchema.parse(candidateId)];
 }
 
 // Validate public fixtures on import, including the independent oracle and baseline polarity.

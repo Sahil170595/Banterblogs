@@ -210,4 +210,28 @@ describe('state-grounded, branch-coherent reward', () => {
     expect(() => replayTrace({ ...trace, version: 'unsupported' })).toThrow();
     expect(() => replayTrace({ ...trace, final: { ...trace.final, refunds: [] , intercepts: ['fake'] } })).toThrow();
   });
+
+  // live QA: an edited reward or event list replayed as if it were the receipt
+  it('refuses a trace whose reward or events were edited', () => {
+    const s = run('duplicate', [tool('order'), tool('payments'), choice('refund', { paymentId: 'PAY-B', amountCents: 4800 }),
+      tool('refund', { orderId: 'S-410', paymentId: 'PAY-B', amountCents: 4800 }), report('refunded')]);
+    const trace = JSON.parse(JSON.stringify(exportTrace(s)));
+    const edited = (change: (t: typeof trace) => void) => {
+      const copy = JSON.parse(JSON.stringify(trace));
+      change(copy);
+      return copy;
+    };
+    expect(() => replayTrace(edited((t) => { t.reward.total = 0.5; }))).toThrow(/reward/);
+    expect(() => replayTrace(edited((t) => { t.reward.components[0].value = 0; }))).toThrow(/reward/);
+    expect(() => replayTrace(edited((t) => { t.events[3].result.code = 'policy_denied'; }))).toThrow(/events/);
+    expect(() => replayTrace(edited((t) => { t.events[0].result.message = 'edited'; }))).toThrow(/events/);
+    expect(() => replayTrace(edited((t) => { t.events.pop(); }))).toThrow(/events/);
+    expect(replayTrace(trace)).toEqual(s);
+  });
+
+  // live QA: an odd total was refused for every case, though only the equal split halves it
+  it('needs an even total only for the two equal half-payments', () => {
+    expect(createSession({ scenario: 'damage', stock: 2, totalCents: 4801 }).config.totalCents).toBe(4801);
+    expect(() => createSession({ scenario: 'split', stock: 2, totalCents: 4801 })).toThrow(/even/);
+  });
 });

@@ -252,6 +252,10 @@
   box-shadow: inset 0 0 0 1px hsl(var(--status-amber));
 }
 
+.key li[data-label="invalid"]::before {
+  box-shadow: inset 0 0 0 1px hsl(var(--status-red));
+}
+
 .key li[data-flag]::before {
   border-radius: 3px;
   box-shadow: 0 0 0 2px hsl(var(--status-red));
@@ -277,10 +281,32 @@
   min-width: 13rem;
 }
 
+/* on a touch screen the icons carry their names; the row wraps rather than
+   widening the page */
 .icons {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-left: auto;
+}
+
+/* the file buttons, with what the last file action did right under them */
+.fileTools {
+  display: grid;
+  justify-items: end;
+  gap: 0.375rem;
+  margin-left: auto;
+}
+
+.fileTools p {
+  max-width: 28rem;
+  text-align: right;
+}
+
+.edited {
+  margin-left: 0.375rem;
+  font-size: 0.6875rem;
+  color: hsl(var(--status-amber));
 }
 
 .labBody {
@@ -532,13 +558,6 @@
 .ballots span[data-vote="final"] {
   box-shadow: inset 0 0 0 1px hsl(var(--primary));
   color: hsl(var(--primary));
-}
-
-.notice {
-  min-height: 1.25rem;
-  margin-top: 0.5rem;
-  font-size: 0.8125rem;
-  color: hsl(var(--muted-foreground));
 }
 
 @media (min-width: 640px) {

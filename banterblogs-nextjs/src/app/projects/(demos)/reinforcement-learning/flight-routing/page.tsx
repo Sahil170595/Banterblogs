@@ -179,6 +179,11 @@ export default function FlightRoutingPage() {
           connection&apos;s are {pct(slackViaDenver)} and {pct(tightViaDenver)}. These are probabilities under this fixture, not forecasts. More
           lookahead is not a general win; it is a different trade, and the reward decides when the trade is worth taking.
         </p>
+        <p>
+          Like Gatebound&apos;s planner, it maximizes only the chance of making the deadline and breaks a tie by the earliest scheduled arrival,
+          then the first listed flight. So when no flight can make the deadline, every choice ties at zero and it books the earliest arrival,
+          which can be a dead end: set an unreachable deadline under the hood and lookahead strands the passenger as greedy does.
+        </p>
 
         <h3 id="environment">{ENGINEERS.environment}</h3>
         <p>

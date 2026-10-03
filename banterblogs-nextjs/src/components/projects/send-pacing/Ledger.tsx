@@ -57,10 +57,13 @@ export function Ledger({ result }: { result: ReplayResult }) {
                     {clockPrecise(row.preparedFrom)}
                   </td>
                   <td role="cell" data-label={LEDGER_COLUMNS.typing}>
-                    {row.typingDuration.toFixed(1)} s
-                    <span>
-                      {row.wpm.toFixed(0)} wpm{row.pause > 0 ? ` + ${row.pause.toFixed(1)} s pause` : ''}
-                    </span>
+                    {/* one value of two lines, so a phone card aligns it like the single-line ones */}
+                    <div className={styles.cellValue}>
+                      {row.typingDuration.toFixed(1)} s
+                      <span>
+                        {row.wpm.toFixed(0)} wpm{row.pause > 0 ? ` + ${row.pause.toFixed(1)} s pause` : ''}
+                      </span>
+                    </div>
                   </td>
                   <td role="cell" data-label={LEDGER_COLUMNS.ready}>
                     {clockPrecise(ready)}

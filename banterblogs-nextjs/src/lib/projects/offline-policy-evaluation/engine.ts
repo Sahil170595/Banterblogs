@@ -11,9 +11,12 @@ const distribution = z.tuple([probability, probability, probability]).refine(
   values => Math.abs(values.reduce((a, b) => a + b, 0) - 1) < PROBABILITY_TOLERANCE,
   'Action probabilities must sum to one.',
 );
-const configSchema = z.object({
-  seed: z.number().int().min(0).max(0xffffffff),
-  size: z.number().int().min(8).max(320),
+/** the typed-in settings' ranges, which the settings form states */
+export const CONFIG_LIMITS = { seed: [0, 0xffffffff], size: [8, 320] } as const;
+/** the configuration's schema, for a caller that reports its issues field by field */
+export const configSchema = z.object({
+  seed: z.number().int().min(CONFIG_LIMITS.seed[0]).max(CONFIG_LIMITS.seed[1]),
+  size: z.number().int().min(CONFIG_LIMITS.size[0]).max(CONFIG_LIMITS.size[1]),
   scenario: z.enum(['balanced', 'rare', 'gap']),
   intensity: probability,
   responsiveness: z.number().finite().min(-0.4).max(0.4),
@@ -41,8 +44,9 @@ const episodeSchema = z.object({
 export type Episode = z.infer<typeof episodeSchema>;
 export type Method = 'pdis' | 'clipped' | 'normalized';
 export const METHODS: { key: Method; label: string }[] = [
-  { key: 'pdis', label: 'Raw per-decision IS' },
-  { key: 'clipped', label: 'Capped per-decision IS' },
+  // the names the page uses everywhere: the estimator radios, the audit table and the formulas
+  { key: 'pdis', label: 'Raw IS' },
+  { key: 'clipped', label: 'Capped IS' },
   { key: 'normalized', label: 'Capped self-normalized IS' },
 ];
 export type Interval = [number, number] | null;

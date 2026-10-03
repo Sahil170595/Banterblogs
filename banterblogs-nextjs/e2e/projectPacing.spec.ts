@@ -54,6 +54,23 @@ test('seeds step, a sweep row charts its setup, an export replays', async ({ pag
   expect(errors).toEqual([]);
 });
 
+// live QA: an invalid seed sat in the box with no word, and Next seed wrapped alone on a phone
+test('a seed out of range is answered, and the seed controls keep to one line', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE);
+  const seed = page.getByLabel('Seed', { exact: true });
+  await seed.fill('99999999999');
+  await expect(page.getByText(/Seed must be a whole number from 0 to 4,294,967,295/)).toBeVisible();
+  await seed.press('Enter');
+  await expect(seed).toHaveValue('7');
+  await expect(page.getByText(/kept seed 7/)).toBeVisible();
+  // both read in one frame, so a scroll between two reads cannot fake a wrap
+  const [previous, next] = await page.evaluate(() =>
+    ['Previous seed', 'Next seed'].map((name) => document.querySelector(`button[aria-label="${name}"]`)!.getBoundingClientRect().top),
+  );
+  expect(Math.abs(previous - next)).toBeLessThan(2);
+});
+
 // a phone shows each setup as a card: the counts that carry the finding are
 // on screen, not scrolled out of a wide table
 test('on a phone the sweep’s findings sit inside the screen', async ({ page }) => {

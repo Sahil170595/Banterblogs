@@ -26,31 +26,55 @@ export const LADDER_COLUMNS = {
   within: 'Match the request',
 } as const;
 
+/** what a run returned, against the request: "4 notes, two of which do not match the request" */
+function returned(count: number, breaking: number): string {
+  if (count === 0) return 'no notes';
+  if (breaking === 0) return count === 1 ? '1 note, which matches the request' : `${plural(count, 'note')}, all matching the request`;
+  if (count === 1) return '1 note, which does not match the request';
+  return `${plural(count, 'note')}, ${say(breaking)} of which ${breaking === 1 ? 'does' : 'do'} not match the request`;
+}
+
+/** what the strict rung returned, every note matching or not */
+function strictly(count: number, allMatch: boolean): string {
+  if (count === 0) return 'no notes.';
+  if (!allMatch) return `${plural(count, 'note')}.`;
+  return count === 1 ? '1 note, which matches.' : `${plural(count, 'note')}, ${count === 2 ? 'both' : 'all'} matching.`;
+}
+
 function Headline({ rungs, query, limit }: { rungs: Rung[]; query: Query; limit: number }) {
   const atDefault = rungs.find((r) => holds(r, DEFAULT_SETTINGS.relax_threshold));
   const first = rungs[0];
   if (!atDefault?.report) return <p className={styles.headline}>At its default setting this search finds too few candidates to run.</p>;
   const { report, broken } = atDefault;
-  const all = report.dropped.length === query.filters.length && query.filters.length > 0;
+  const filtered = query.filters.length > 0;
+  const all = report.dropped.length === query.filters.length && filtered;
   const breaking = broken.filter((b) => b.length).length;
   const dropped = all
     ? 'drops every filter'
     : report.dropped.length
       ? `drops ${say(report.dropped.length)} of its filters`
       : 'drops none of its filters';
+  const hard = query.hard_criteria.length > 0 ? ` and containing ${quoted(query.hard_criteria)}` : '';
   const strict = first !== atDefault && first.report && first.report.dropped.length === 0 ? first.report : null;
   const allMatch = strict !== null && first.broken.every((b) => !b.length);
   return (
     <p className={styles.headline}>
-      Asked for {plural(limit, 'note')} matching {plural(query.filters.length, 'filter')}
-      {query.hard_criteria.length > 0 && ` and containing ${quoted(query.hard_criteria)}`}, the search drops filters while it has fewer than{' '}
-      {DEFAULT_SETTINGS.relax_threshold} candidates, its default threshold. Here it {dropped}, reports {reports(report.status)} and returns{' '}
-      {plural(report.selected.length, 'note')}, {say(breaking)} of which {breaking === 1 ? 'does' : 'do'} not match the request.
+      {filtered ? (
+        <>
+          Asked for {plural(limit, 'note')} matching {plural(query.filters.length, 'filter')}
+          {hard}, the search drops filters while it has fewer than {DEFAULT_SETTINGS.relax_threshold} candidates, its default threshold. Here it{' '}
+          {dropped}, reports {reports(report.status)} and returns {returned(report.selected.length, breaking)}.
+        </>
+      ) : (
+        <>
+          Asked for {plural(limit, 'note')} with no filters{hard}, the search has none to drop. It reports {reports(report.status)} and returns{' '}
+          {returned(report.selected.length, breaking)}.
+        </>
+      )}
       {strict && (
         <>
           {' '}
-          At {atThresholds(first.from, first.to)} it drops nothing and reports {reports(strict.status)}: {plural(strict.selected.length, 'note')}
-          {allMatch ? `, ${strict.selected.length === 2 ? 'both' : 'all'} matching.` : '.'}
+          At {atThresholds(first.from, first.to)} it drops nothing and reports {reports(strict.status)}: {strictly(strict.selected.length, allMatch)}
         </>
       )}
     </p>
@@ -68,13 +92,15 @@ export function LadderTable({
   settings: Settings;
   onPick: (threshold: number) => void;
 }) {
+  // a second row to try, when the lowest thresholds give a different outcome from the default
+  const other = rungs.length > 1 && !holds(rungs[0], DEFAULT_SETTINGS.relax_threshold) ? rungs[0] : null;
   return (
     <div className={styles.hero}>
       <Headline rungs={rungs} query={query} limit={settings.limit} />
       <p className={controls.lead}>
         StrataSearch relaxes a query that comes back thin: when its first search finds fewer candidates than a threshold, it drops a filter and
-        searches again. Each row runs the same request at a different threshold. Pick a row to see its results underneath: try the default, then{' '}
-        {rungs[0] ? thresholdRange(rungs[0].from, rungs[0].to) : 'the lowest'}.
+        searches again. Each row runs the same request at a different threshold. Pick a row to see its results underneath
+        {other ? `: try the default, then ${thresholdRange(other.from, other.to)}.` : '.'}
       </p>
       <p className={styles.request}>
         <span>The request</span>
@@ -168,8 +194,8 @@ export function LadderTable({
         </div>
       </ProjectFigureTransition>
       <p className={styles.caption}>
-        Filters go in a fixed order, year first, then kind or title, then topic or tags, then collection, until the first search finds as many
-        candidates as wanted.
+        Filters go in a fixed order, year first, then kind or title, then topic or tags, then collection, until the first search finds at least
+        as many candidates as the threshold.
       </p>
     </div>
   );

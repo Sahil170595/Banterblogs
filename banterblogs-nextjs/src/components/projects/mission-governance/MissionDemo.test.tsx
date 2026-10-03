@@ -26,6 +26,48 @@ afterEach(() => {
 const matrix = () => screen.getByRole('region', { name: 'Each fault and how the flight ends' });
 const checks = () => screen.getByRole('region', { name: 'Pre-flight checks' });
 const log = () => screen.getByRole('region', { name: 'Event log' });
+const group = (legend: string) => screen.getByRole('group', { name: legend });
+const radio = (legend: string, name: RegExp) => within(group(legend)).getByRole('radio', { name });
+
+describe('mission demo, after live QA', () => {
+  // the notched route has two waypoints: a fault after waypoint 2, or after a
+  // pause, never happened, and the choices stayed lit as if they had
+  it('offers only the pre-flight timing on the two-waypoint notched route', () => {
+    render(<MissionDemo />);
+    fireEvent.click(radio('When', /After waypoint 2/));
+    fireEvent.click(radio('Route', /Notched fence/));
+    expect(within(group('When')).getAllByRole('radio')).toHaveLength(1);
+    expect(radio('When', /At the pre-flight check/)).toHaveProperty('checked', true);
+    expect(screen.getByText(/two waypoints, so a fault can only be present at the pre-flight check/)).toBeTruthy();
+  });
+
+  it('explains the notch only for a flight that flew the leg across it', () => {
+    render(<MissionDemo />);
+    fireEvent.click(radio('Fault', /Battery below the floor/));
+    fireEvent.click(radio('Route', /Notched fence/));
+    expect(screen.queryByText(/the straight leg between them crosses the notch/)).toBeNull();
+    expect(screen.getByText(/never flies the leg across the notch/)).toBeTruthy();
+    fireEvent.click(radio('Fault', /Healthy telemetry/));
+    expect(screen.getByText(/the straight leg between them crosses the notch/)).toBeTruthy();
+  });
+
+  it('says a fault after a pause and resume begins with nothing left to see it', () => {
+    render(<MissionDemo />);
+    fireEvent.click(radio('Fault', /Battery below the floor/));
+    fireEvent.click(radio('When', /After a pause and resume/));
+    expect(screen.getByText(/the battery drops below the floor after the resume, and nothing sees it/)).toBeTruthy();
+  });
+
+  it('lists the event log in time order', () => {
+    render(<MissionDemo />);
+    fireEvent.click(radio('Fault', /Stale telemetry/));
+    fireEvent.click(radio('When', /After waypoint 2/));
+    const times = within(log())
+      .getAllByRole('listitem')
+      .map((item) => Number(item.querySelector('span')!.textContent!.replace(' s', '')));
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+  });
+});
 
 describe('mission demo', () => {
   it('opens on no telemetry: two warnings, every waypoint flown, the guard only logging', () => {

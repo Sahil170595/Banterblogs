@@ -337,6 +337,8 @@
   align-items: baseline;
   gap: 0.25rem 0.75rem;
   min-height: 2rem;
+  /* brought into view below the sticky site header, not under it */
+  scroll-margin-top: 6rem;
 }
 
 .summary strong {

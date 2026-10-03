@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { InfluenceReport } from '@/lib/projects/intake-triage/influence';
 import type { Signals } from '@/lib/projects/intake-triage/signals';
 import { revealResult } from '../reveal';
@@ -20,7 +20,15 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
   const [focus, setFocus] = useState<string | null>(null);
   // where signals the visitor did not pick from the examples came from: a table row, or their own changes
   const [origin, setOrigin] = useState<string | null>(null);
+  // bumps on each table example, so the signal it marks is brought into view once it is drawn
+  const [revealed, setRevealed] = useState(0);
   const labRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!revealed) return;
+    const lab = labRef.current;
+    revealResult(lab?.querySelector<HTMLElement>('[data-focus]') ?? lab);
+  }, [revealed]);
 
   return (
     <div className={styles.demo}>
@@ -33,7 +41,7 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
           setFixtureId(null);
           setFocus(signal.id);
           setOrigin(`From the table: ${signal.label}`);
-          revealResult(labRef.current);
+          setRevealed((n) => n + 1);
         }}
       />
       <div ref={labRef} className={styles.labAnchor}>
@@ -46,7 +54,8 @@ export function TriageDemo({ report }: { report: InfluenceReport }) {
             setSignals(next);
             setFixtureId(id);
             setOrigin(null);
-            if (id !== null) setFocus(null);
+            // any change lets go of the table example: its row is no longer what the scorer shows
+            setFocus(null);
           }}
         />
       </div>

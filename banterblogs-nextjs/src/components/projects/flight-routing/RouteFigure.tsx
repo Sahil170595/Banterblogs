@@ -4,9 +4,9 @@ import { along } from '../geometry';
 import styles from './demo.module.css';
 
 // The network as a schematic: airports placed for legibility, not distance.
-// Flown legs are solid, a failed attempt red, the legal next flights dashed
-// and the chosen one ember. Labels are HTML over the drawing, so they keep
-// their size when the drawing scales down on a phone.
+// Flown legs are solid, a failed attempt red and dotted, only the flights
+// bookable now dashed, and the chosen one ember. Labels are HTML over the
+// drawing, so they keep their size when the drawing scales down on a phone.
 
 const VIEW = { width: 600, height: 280 };
 // a layout for reading, west to east with the hub below and the dead end above
@@ -26,6 +26,13 @@ const AIRPORT_CODES = AIRPORTS.map((n) => n.code);
 const CITIES: Record<Airport, string> = { SFO: 'San Francisco', DEN: 'Denver', ORD: 'Chicago', JFK: 'New York' };
 
 const at = (x: number, y: number) => ({ left: along(x, 0, VIEW.width), top: along(y, 0, VIEW.height) });
+// the key names only the kinds of line on the drawing now
+const KEY: { kind: string; label: string }[] = [
+  { kind: 'flown', label: 'Flown' },
+  { kind: 'failed', label: 'Failed' },
+  { kind: 'chosen', label: 'Next choice' },
+  { kind: 'legal', label: 'Bookable' },
+];
 
 export function RouteFigure({ state, chosenId }: { state: Episode; chosenId?: string }) {
   const scenario = getScenario(state.config.scenario);
@@ -42,6 +49,7 @@ export function RouteFigure({ state, chosenId }: { state: Episode; chosenId?: st
     // a quadratic curve's midpoint sits half the bend from the chord
     return { id: flight.id, kind, d: `M ${a.x} ${a.y} Q ${mx} ${my + bend} ${b.x} ${b.y}`, label: at(mx, my + bend / 2) };
   });
+  const drawn = new Set(edges.map((edge) => edge.kind));
   return (
     <figure className={styles.routeFigure}>
       <div className={styles.routeCanvas}>
@@ -72,10 +80,11 @@ export function RouteFigure({ state, chosenId }: { state: Episode; chosenId?: st
         ))}
       </div>
       <figcaption className={styles.edgeKey}>
-        <span data-kind="flown">Flown</span>
-        <span data-kind="failed">Failed</span>
-        <span data-kind="chosen">Next choice</span>
-        <span data-kind="legal">Bookable</span>
+        {KEY.filter(({ kind }) => drawn.has(kind)).map(({ kind, label }) => (
+          <span key={kind} data-kind={kind}>
+            {label}
+          </span>
+        ))}
         <span>Ring: where the passenger is</span>
         <span className={styles.cityKey}>{AIRPORT_CODES.map((code) => `${code} ${CITIES[code]}`).join(' · ')}</span>
       </figcaption>

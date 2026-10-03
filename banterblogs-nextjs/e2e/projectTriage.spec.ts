@@ -73,6 +73,31 @@ test('the write-up says why an urgent read scores below a same-day one', async (
   await context.close();
 });
 
+// live QA: on a phone the decision sat above the form, 400 to 1,500 px off screen after a change
+test('on a phone the decision stays in view while the signals change', async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  await page.goto(PAGE);
+  const spam = page.getByRole('group', { name: 'Spam wording' });
+  await spam.scrollIntoViewIfNeeded();
+  // the option's text carries its priority note too ("Yes P2")
+  await spam.getByText('Yes').click();
+  // the opening message is P1; spam wording on takes it to P2, as its option says
+  const line = page.getByTestId('live-decision');
+  await expect(line).toBeInViewport();
+  await expect(line).toContainText('P2');
+  await expect(page.getByLabel('Priority', { exact: true })).toHaveText('P2');
+});
+
+// live QA: an import's answer was drawn at the top of the scorer, 1,300 px away
+test('an import is answered beside its button', async ({ page }) => {
+  await page.goto(PAGE);
+  await page.getByText('Export or import the signals and the decision').click();
+  await page.getByLabel('Signals file', { exact: true }).setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('[1,2,3]') });
+  const alert = page.getByRole('alert').filter({ hasText: 'File refused' });
+  await expect(alert).toHaveText('File refused: The file should hold an object, not an array.');
+  await expect(alert).toBeInViewport();
+});
+
 // on a touch screen the file buttons show their names, so their row has to wrap
 test('on a phone the open file panel keeps the page to the screen', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'phone', 'touch screens show the icon labels');

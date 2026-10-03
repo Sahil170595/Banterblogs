@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { revealResult } from '../reveal';
+import { revealWhenRendered } from '../reveal';
 import { ControlBoard } from './ControlBoard';
 import { ServiceLab } from './ServiceLab';
 import { useServiceDemo } from './useServiceDemo';
@@ -23,7 +23,7 @@ export function ServiceDemo() {
         onSelect={(control) => {
           demo.select(control);
           // the replay is below the board, off screen on a phone
-          requestAnimationFrame(() => revealResult(lab.current));
+          revealWhenRendered(() => lab.current);
         }}
       />
       <ServiceLab demo={demo} labRef={lab} />

@@ -16,10 +16,12 @@ import styles from './demo.module.css';
 export function FlightRoutingDemo({ initialWorlds }: { initialWorlds: PolicyWorlds[] }) {
   const demo = useFlightDemo(initialWorlds);
   const replayRef = useRef<HTMLElement>(null);
-  // the replay sits below the grid; a square's click brings it into view
-  const select = (selection: Selection) => {
+  // the replay sits below the grid; a square's click brings it into view, and
+  // from the keyboard focus follows it there, so the focus ring stays on screen
+  const select = (selection: Selection, fromKeyboard: boolean) => {
     demo.select(selection);
     revealResult(replayRef.current);
+    if (fromKeyboard) replayRef.current?.querySelector<HTMLElement>('h3[tabindex="-1"]')?.focus({ preventScroll: true });
   };
   return (
     <div className={styles.demo}>

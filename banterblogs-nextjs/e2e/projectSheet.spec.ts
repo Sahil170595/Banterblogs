@@ -41,6 +41,22 @@ test('on a phone every cell of the graph, labels included, sits inside the scree
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+// live QA: the open editor widened a phone to 500px, and tapping a cell left its evidence off screen
+test('on a phone a tapped cell brings its evidence on screen, and the open editor stays inside the screen', async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  await page.goto(PAGE);
+  await page.getByRole('region', { name: 'Workbook dependency graph' }).getByRole('button', { name: /^Calc!B4,/ }).click();
+  await expect(page.getByRole('region', { name: 'Selected cell evidence' })).toBeInViewport();
+
+  await page.getByText(HOOD).click();
+  await page.getByRole('button', { name: 'Inspect Inputs!B2', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Value or formula', exact: true }).fill('');
+  await expect(page.getByText('Inputs!B2: enter a value or a formula.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Recalculate', exact: true })).toBeDisabled();
+  // a phone widens its layout viewport to fit overflowing content, so the width itself is the check
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(PHONE.width);
+});
+
 test('controls move the score; edits recompute; a replay recomputes', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(PAGE);
@@ -58,6 +74,7 @@ test('controls move the score; edits recompute; a replay recomputes', async ({ p
 
   await page.getByRole('button', { name: 'Reset workbook', exact: true }).click();
   await page.getByLabel('JSON replay file', { exact: true }).setInputFiles(changed.file);
+  await expect(page.getByText(/^Replayed:/)).toBeVisible();
   expect((await exportWorkbook(page)).data).toEqual(changed.data);
   expect(changed.data).not.toEqual(initial.data);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

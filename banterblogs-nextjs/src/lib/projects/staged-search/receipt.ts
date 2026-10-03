@@ -1,14 +1,24 @@
 import { z } from 'zod';
 import { runSearch } from './engine';
 import { EXAMPLE_CORPUS } from './example';
-import { querySchema, settingsSchema, type Query, type Settings } from './schema';
+import { DEFAULT_SETTINGS, querySchema, settingsSchema, type Query, type Settings } from './schema';
 
 // A run as a file: the query, the settings and what came back. Import reruns
 // the query over the example notes and refuses a file whose results do not
-// follow.
+// follow, or whose settings the lab's menus cannot show.
 
 export const RECEIPT_VERSION = 'staged-search.v1';
 export const MAX_RECEIPT_BYTES = 50_000;
+
+// the lab's menus: thresholds 1 to 12, results wanted 1 to 10, and no control
+// for the minimum candidate count, which stays the source's default
+export const LAB_MAX_THRESHOLD = 12;
+export const LAB_MAX_LIMIT = 10;
+const labSettingsSchema = settingsSchema.extend({
+  relax_threshold: z.number().int().min(1).max(LAB_MAX_THRESHOLD),
+  minimum_candidates: z.literal(DEFAULT_SETTINGS.minimum_candidates),
+  limit: z.number().int().min(1).max(LAB_MAX_LIMIT),
+});
 
 const resultSchema = z
   .object({
@@ -18,7 +28,7 @@ const resultSchema = z
     rejected: z.array(z.string()),
   })
   .strict();
-const receiptSchema = z.object({ version: z.literal(RECEIPT_VERSION), query: querySchema, settings: settingsSchema, result: resultSchema }).strict();
+const receiptSchema = z.object({ version: z.literal(RECEIPT_VERSION), query: querySchema, settings: labSettingsSchema, result: resultSchema }).strict();
 export type Receipt = z.infer<typeof receiptSchema>;
 
 export function makeReceipt(query: Query, settings: Settings): Receipt {

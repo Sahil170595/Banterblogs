@@ -4,21 +4,31 @@ import { Fragment, useMemo, useRef, useState, type ChangeEvent, type ReactNode, 
 import { Check, Download, Minus, Plus, RotateCcw, Upload, X } from 'lucide-react';
 import { brokenFilters, PipelineError, RRF_K, runSearch } from '@/lib/projects/staged-search/engine';
 import { EXAMPLE_CORPUS, EXAMPLE_QUERY } from '@/lib/projects/staged-search/example';
-import { makeReceipt, MAX_RECEIPT_BYTES, replayReceipt } from '@/lib/projects/staged-search/receipt';
-import { DEFAULT_SETTINGS, FIELDS, OPS_FOR, type Query, type Settings } from '@/lib/projects/staged-search/schema';
+import { LAB_MAX_LIMIT, LAB_MAX_THRESHOLD, makeReceipt, MAX_RECEIPT_BYTES, replayReceipt } from '@/lib/projects/staged-search/receipt';
+import { DEFAULT_SETTINGS, FIELDS, OPS_FOR, type Field, type Query, type SearchDocument, type Settings } from '@/lib/projects/staged-search/schema';
 import { controls, Segmented, UnderTheHood } from '../controls';
+import { describeRefusal } from '../refusal';
 import { opFor, type Draft } from './draft';
 import { formatFilter } from './format';
 import styles from './search.module.css';
 
 const DOCS = new Map(EXAMPLE_CORPUS.map((d) => [d.id, d]));
-const THRESHOLDS = Array.from({ length: 12 }, (_, i) => i + 1);
-const LIMITS = Array.from({ length: 10 }, (_, i) => i + 1);
+const THRESHOLDS = Array.from({ length: LAB_MAX_THRESHOLD }, (_, i) => i + 1);
+const LIMITS = Array.from({ length: LAB_MAX_LIMIT }, (_, i) => i + 1);
 const OP_LABELS = { Eq: 'is', NotEq: 'is not', Gte: 'from', Lte: 'up to', Contains: 'has', In: 'is one of', NotIn: 'is none of' } as const;
-const NOTE_FIELDS = ['kind', 'collection', 'year'] as const;
+const NOTE_FIELDS: readonly Field[] = ['kind', 'collection', 'year'];
+// a struck value from a long field shows this many characters
+const SHOWN_CHARS = 40;
 const fixed = (n: number, places: number) => n.toFixed(places);
 
-export const RESULT_COLUMNS = { note: 'Note', fields: 'Kind · collection · year', required: 'Hard criteria', within: 'Matches the request' } as const;
+export const RESULT_COLUMNS = { note: 'Note', fields: 'Fields', required: 'Hard criteria', within: 'Matches the request' } as const;
+
+/** a field's value as the results row shows it, cut short when it is a body */
+function shown(doc: SearchDocument, field: Field): string {
+  const value = doc[field];
+  const text = Array.isArray(value) ? value.join(', ') : String(value);
+  return text.length > SHOWN_CHARS ? `${text.slice(0, SHOWN_CHARS)}…` : text;
+}
 
 function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
   return (
@@ -99,7 +109,8 @@ export function SearchLab({
     } catch (cause) {
       if (mine !== revision.current) return;
       console.warn('Staged search file refused', cause);
-      setFileError(`File refused: ${cause instanceof Error ? cause.message : 'it could not be read.'}`);
+      setStatus('');
+      setFileError(`File refused: ${describeRefusal(cause)}`);
     } finally {
       input.value = '';
     }
@@ -108,6 +119,9 @@ export function SearchLab({
   const report = run.report;
   const primaryRank = new Map(report?.channels.primary.map((h, i) => [h.id, i + 1]));
   const secondaryRank = new Map(report?.channels.secondary.map((h, i) => [h.id, i + 1]));
+  const verdict = report
+    ? `${report.status === 'ready' ? 'Ready' : 'Shortfall'} · ${report.selected.length} of ${settings.limit} results at ${thresholds}`
+    : `No results: ${run.error}`;
 
   return (
     <div className={styles.lab}>
@@ -125,7 +139,8 @@ export function SearchLab({
             <p className={styles.droppedLine}>
               {report.dropped.length ? (
                 <>
-                  Dropped to reach {settings.relax_threshold} candidate{settings.relax_threshold === 1 ? '' : 's'}:{' '}
+                  Filters dropped because the first search found fewer than {settings.relax_threshold} candidate
+                  {settings.relax_threshold === 1 ? '' : 's'}:{' '}
                   {report.dropped.map((f, i) => (
                     <s key={i}>{formatFilter(f)}</s>
                   ))}
@@ -162,6 +177,15 @@ export function SearchLab({
                               <span data-broken={broken.has(field) || undefined}>{doc[field]}</span>
                             </Fragment>
                           ))}
+                          {/* a broken field the row does not show by default, named so the strike has something to mark */}
+                          {FIELDS.filter((field) => broken.has(field) && !NOTE_FIELDS.includes(field)).map((field) => (
+                            <Fragment key={field}>
+                              {' · '}
+                              <span data-broken="true">
+                                {field}: {shown(doc, field)}
+                              </span>
+                            </Fragment>
+                          ))}
                         </td>
                         <td role="cell" data-label={RESULT_COLUMNS.required} className={styles.criteria}>
                           {judged.hardPass.length === 0
@@ -193,6 +217,7 @@ export function SearchLab({
       </section>
 
       <UnderTheHood summary="Edit the query, see the scores, export a run">
+        <div className={styles.tools}>
         <div className={styles.toolbar}>
           <p className={styles.labTitle}>The pipeline, on StrataSearch’s eighteen example notes</p>
           <div className={styles.commands}>
@@ -294,6 +319,10 @@ export function SearchLab({
                 StrataSearch would refuse this query ({draftError}); the results show the last query it accepts.
               </p>
             )}
+            {/* the run's verdict beside the form, where an edit can be seen to land */}
+            <p className={styles.formVerdict} data-testid="query-verdict" role="status">
+              {verdict}
+            </p>
             <div className={styles.pair}>
               <label className={controls.field}>
                 Relaxation threshold
@@ -330,6 +359,11 @@ export function SearchLab({
             />
           </form>
 
+          {!report && (
+            <section className={styles.results} aria-label="Scores">
+              <p className={controls.hint}>No notes to score: {run.error}</p>
+            </section>
+          )}
           {report && (
             <section className={styles.results} aria-label="Scores">
               <div className={styles.tableScroll}>
@@ -363,9 +397,18 @@ export function SearchLab({
                 </table>
               </div>
               <p className={styles.key}>
-                The two channels are two searches, one over a note’s body and one over its title and tags; a rank is a note’s place in one of them.
-                The fused score is reciprocal rank fusion, 1/({RRF_K} + rank) added over both channels. Soft criteria: how much of each one a note
-                covers, 0 to 3.
+                {settings.hybrid ? (
+                  <>
+                    The two channels are two searches, one over a note’s body and one over its title and tags; a rank is a note’s place in one of
+                    them. The fused score is reciprocal rank fusion, 1/({RRF_K} + rank) added over both channels.
+                  </>
+                ) : (
+                  <>
+                    With the body only, a note’s score is the body search’s own: each query word’s rarity across the notes, damped by how often the
+                    word appears and scaled by the note’s length. The title and tags search is off.
+                  </>
+                )}{' '}
+                Soft criteria: how much of each one a note covers, 0 to 3.
               </p>
               <h3>Attempts</h3>
               <ol className={styles.attempts}>
@@ -411,6 +454,7 @@ export function SearchLab({
             </table>
           </div>
         </details>
+        </div>
       </UnderTheHood>
     </div>
   );

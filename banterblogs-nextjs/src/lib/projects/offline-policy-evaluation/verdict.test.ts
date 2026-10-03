@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CONFIG, evaluate } from './engine';
-import { constantShare, verdict } from './verdict';
+import { constantShare, signed, verdict } from './verdict';
 
 // The page's headline is computed, never written: what the paired interval
 // says about the target against the logger, and how much of any gain a
 // control that ignores the state also gets.
+
+describe('signed', () => {
+  // live QA: Broad under Raw IS showed "−0.00"
+  it('never writes a minus sign on a value that rounds to zero', () => {
+    expect(signed(-0.004)).toBe('0.00');
+    expect(signed(-0)).toBe('0.00');
+    expect(signed(-0.006)).toBe('−0.01');
+    expect(signed(0.27)).toBe('0.27');
+  });
+});
 
 describe('evaluation verdict', () => {
   const base = evaluate(DEFAULT_CONFIG);

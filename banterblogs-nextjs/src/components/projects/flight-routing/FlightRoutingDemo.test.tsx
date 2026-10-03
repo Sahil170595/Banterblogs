@@ -15,7 +15,12 @@ vi.mock('react', async (importOriginal) => {
 const { revealResult } = vi.hoisted(() => ({ revealResult: vi.fn() }));
 vi.mock('../reveal', () => ({ revealResult }));
 
-afterEach(cleanup);
+// a failed export test must not leave its spies on the next one
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 const initialWorlds = evaluateWorlds(TIGHT_CONFIG);
 const renderDemo = () => render(<FlightRoutingDemo initialWorlds={initialWorlds} />);
@@ -133,7 +138,7 @@ describe('flight routing demo', () => {
     expect(panel(/^Deadline lookahead: 40 of 64/)).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Flight attempts'), { target: { value: 'two' } });
     fireEvent.click(screen.getByText('Apply to all worlds'));
-    expect(screen.getByRole('alert').textContent).toBe('Flight attempts must be a whole number.');
+    expect(screen.getByRole('alert').textContent).toBe('Flight attempts should be a whole number.');
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
   });
@@ -149,6 +154,120 @@ describe('flight routing demo', () => {
     expect(document.activeElement?.getAttribute('aria-label')).toMatch(/^World 64,/);
   });
 
+  // live QA: settings errors named internal fields ("maxAttempts: Number must be…"),
+  // the seed range was unstated, and a top seed would push the 64th world past it
+  it('refuses settings in the form’s own words and states every limit', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    renderDemo();
+    openUnderTheHood();
+    expect(screen.getByText(/First world seed 0–2,147,483,584/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Flight attempts'), { target: { value: '9' } });
+    fireEvent.click(screen.getByText('Apply to all worlds'));
+    expect(screen.getByRole('alert').textContent).toBe('Flight attempts should be at most 6.');
+    fireEvent.change(screen.getByLabelText('Flight attempts'), { target: { value: '4' } });
+    fireEvent.change(screen.getByLabelText('First world seed'), { target: { value: '2147483647' } });
+    fireEvent.click(screen.getByText('Apply to all worlds'));
+    expect(screen.getByRole('alert').textContent).toBe('First world seed should be at most 2,147,483,584, so all 64 worlds’ seeds stay in range.');
+    expect(panel(/^Deadline lookahead: 40 of 64/)).toBeTruthy();
+    vi.restoreAllMocks();
+  });
+
+  // live QA: Enter on a square scrolled the replay into view and left focus on the square, off screen
+  it('moves keyboard focus to the replay a square opens; a pointer click leaves focus alone', () => {
+    renderDemo();
+    const square = within(panel(/^Nonstop first/)).getByRole('button', { name: /World 2,/ });
+    square.focus();
+    fireEvent.click(square, { detail: 0 });
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: /^World 2/ }));
+    const pointed = within(panel(/^Nonstop first/)).getByRole('button', { name: /World 3,/ });
+    pointed.focus();
+    fireEvent.click(pointed, { detail: 1 });
+    expect(document.activeElement).toBe(pointed);
+  });
+
+  // live QA: only the flight's name selected a bookable row
+  it('selects a bookable flight from anywhere on its row', () => {
+    renderDemo();
+    fireEvent.click(screen.getByLabelText('Restart this world'));
+    const region = screen.getByRole('region', { name: 'Bookable flights' });
+    const f3 = within(region).getByLabelText('Choose F3 to JFK').closest('tr')!;
+    fireEvent.click(within(f3).getAllByRole('cell')[2]);
+    expect(screen.getByText('Take F3')).toBeTruthy();
+  });
+
+  // live QA: the policy menu ran in a different order from the panels
+  it('lists the policies in the panels’ order', () => {
+    renderDemo();
+    const options = [...(screen.getByRole('combobox', { name: 'Policy' }) as HTMLSelectElement).options].map((o) => o.textContent);
+    expect(options).toEqual(['Nonstop first', 'Deadline lookahead', 'Greedy next arrival', 'Seeded random']);
+  });
+
+  // live QA: unapplied settings vanished without a word when a control above changed the scenario
+  it('keeps an unapplied setting when the scenario changes, and says it is not applied', () => {
+    renderDemo();
+    openUnderTheHood();
+    fireEvent.change(screen.getByLabelText('Connection buffer (minutes)'), { target: { value: '45' } });
+    expect(screen.getByText(/Not applied yet/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: /Stress/ }));
+    expect((screen.getByLabelText('Connection buffer (minutes)') as HTMLInputElement).value).toBe('45');
+    expect(screen.getByText(/Not applied yet/)).toBeTruthy();
+  });
+
+  // live QA: dashed "bookable" lines stayed on every unflown route after the trip ended
+  it('dashes only the flights bookable now, and keys them only while some are', () => {
+    renderDemo();
+    const key = () => screen.getByRole('img', { name: /^Route network/ }).closest('figure')!.querySelector('figcaption')!.textContent;
+    expect(key()).not.toMatch(/Bookable/);
+    fireEvent.click(screen.getByLabelText('Restart this world'));
+    expect(key()).toMatch(/Bookable/);
+  });
+
+  it('says why nothing is bookable, instead of an empty table', () => {
+    renderDemo();
+    openUnderTheHood();
+    // the last flight out of SFO leaves at minute 300
+    fireEvent.change(screen.getByLabelText('Connection buffer (minutes)'), { target: { value: '301' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply to all worlds' }));
+    fireEvent.click(screen.getByLabelText('Restart this world'));
+    expect(screen.queryByRole('region', { name: 'Bookable flights' })).toBeNull();
+    expect(screen.getByText(/^No flight can be booked from SFO/)).toBeTruthy();
+    // the reason is above, so the button stays short enough to share its row
+    expect(screen.getByRole('button', { name: 'End the trip' })).toBeTruthy();
+  });
+
+  it('exports the trip with the policy, any choice of yours, and the screen’s labels', async () => {
+    let blob: Blob | undefined;
+    vi.stubGlobal('URL', { createObjectURL: (b: Blob) => ((blob = b), 'blob:trace'), revokeObjectURL: vi.fn() });
+    let name = '';
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      name = this.download;
+    });
+    renderDemo();
+    fireEvent.click(screen.getByLabelText('Restart this world'));
+    fireEvent.click(screen.getByLabelText('Choose F1 to ORD'));
+    fireEvent.click(screen.getByText('Take F1'));
+    openUnderTheHood();
+    fireEvent.click(screen.getByRole('button', { name: 'Export JSON trace' }));
+    expect(name).toBe('flight-routing-sfo-to-jfk-mixed-seed-42-deadline-lookahead-with-your-choices.json');
+    // jsdom's Blob has no text(); its FileReader reads one
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(blob!);
+    });
+    const trace = JSON.parse(text);
+    expect(trace.replay).toEqual({
+      policy: 'Deadline lookahead',
+      labels: { route: 'SFO to JFK', disruptions: 'Mixed', deadline: '07:55' },
+      decisions: [{ flight: 'F1', by: 'your choice' }],
+    });
+    // the notice is about that export, and goes with the next change
+    expect(screen.getByRole('status', { name: 'Export' }).textContent).toBe('Trace exported.');
+    fireEvent.click(screen.getByLabelText('Rewind one decision'));
+    expect(screen.getByRole('status', { name: 'Export' }).textContent).toBe('');
+  });
+
   it('exports the trip as versioned JSON', () => {
     const create = vi.fn(() => 'blob:trace');
     const revoke = vi.fn();
@@ -160,8 +279,12 @@ describe('flight routing demo', () => {
     expect(create).toHaveBeenCalledOnce();
     expect(click).toHaveBeenCalledOnce();
     expect(revoke).toHaveBeenCalledOnce();
-    expect(screen.getByRole('status').textContent).toBe('Trace exported.');
-    click.mockRestore();
-    vi.unstubAllGlobals();
+    expect(screen.getByRole('status', { name: 'Export' }).textContent).toBe('Trace exported.');
+    // live QA: the export line sat on under a later settings refusal
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    fireEvent.change(screen.getByLabelText('Flight attempts'), { target: { value: '9' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply to all worlds' }));
+    expect(screen.getByRole('alert').textContent).toBe('Flight attempts should be at most 6.');
+    expect(screen.getByRole('status', { name: 'Export' }).textContent).toBe('');
   });
 });

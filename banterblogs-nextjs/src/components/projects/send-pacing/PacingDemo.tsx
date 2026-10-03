@@ -7,6 +7,7 @@ import { runReplay, SOURCE_REPLAY, SOURCE_SETTINGS, type Replay } from '@/lib/pr
 import type { SweepRow } from '@/lib/projects/send-pacing/sweep';
 import { controls, UnderTheHood } from '../controls';
 import { ProjectFigureTransition } from '../ProjectTransitions';
+import { describeRefusal } from '../refusal';
 import { revealResult } from '../reveal';
 import { clock, spell } from './format';
 import { Ledger } from './Ledger';
@@ -19,6 +20,13 @@ const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const MAX_SEED = 0xffffffff;
 const count = (n: number) => n.toLocaleString('en-US');
 const same = (a: Omit<Replay, 'seed'>, b: Replay) => a.count === b.count && a.durationHours === b.durationHours && a.startHour === b.startHour;
+const SEED_RULE = `Seed must be a whole number from 0 to ${count(MAX_SEED)}`;
+/** the seed a field holds, or null when it holds no seed */
+function readSeed(text: string): number | null {
+  if (!/^\d+$/.test(text.trim())) return null;
+  const seed = Number(text);
+  return seed <= MAX_SEED ? seed : null;
+}
 
 export const SWEEP_COLUMNS = {
   setup: 'Setup',
@@ -54,10 +62,27 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
   const late = result.violations.filter((v) => v.code === 'before_preparation').length;
   const atEnd = result.schedule.filter((r) => r.sendTime === result.end).length;
   const [seedText, setSeedText] = useState(String(SOURCE_REPLAY.seed));
+  const [seedError, setSeedError] = useState<string | null>(null);
   const load = (next: Replay) => {
     setReplay(next);
     setSeedText(String(next.seed));
+    setSeedError(null);
   };
+  // a field left holding no seed goes back to the run it shows, and says so
+  const settleSeed = () => {
+    if (readSeed(seedText) !== null) return;
+    setSeedText(String(replay.seed));
+    setSeedError(`${SEED_RULE}; kept seed ${replay.seed}.`);
+  };
+  // the run in a line above the chart
+  const [from, to] = [clock(result.start).slice(0, 5), clock(result.end).slice(0, 5)];
+  const summary = `${replay.count} messages, ${from} to ${to} UTC · ${
+    late ? `${spell(late)} sent before ${late === 1 ? 'it was' : 'they were'} typed` : 'every message typed before it went'
+  }${atEnd > 1 ? ` · ${spell(atEnd)} at the campaign's final instant` : ''}`;
+  // and read back beside the campaign settings, far below the chart they change
+  const charted = `Charted above: seed ${replay.seed}, ${replay.count} messages between ${from} and ${to} UTC, ${
+    late ? `${spell(late)} of them sent before ${late === 1 ? 'it' : 'they'} could be typed` : 'every one typed before it went'
+  }${atEnd > 1 ? `, ${spell(atEnd)} at the final instant` : ''}.`;
   const set = (next: Partial<Replay>) => {
     revision.current++;
     setError(null);
@@ -90,7 +115,8 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
     } catch (cause) {
       if (mine !== revision.current) return;
       console.warn('Send pacing file refused', cause);
-      setError(`File refused: ${cause instanceof Error ? cause.message : 'it could not be read.'}`);
+      setStatus('');
+      setError(`File refused: ${describeRefusal(cause)}`);
     } finally {
       input.value = '';
     }
@@ -112,9 +138,7 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
           through them below, or pick a setup in the table to chart it.
         </p>
         <p className={styles.runLine}>
-          <span>Seed {replay.seed}</span> {replay.count} messages, {clock(result.start).slice(0, 5)} to {clock(result.end).slice(0, 5)} UTC ·{' '}
-          {late ? `${spell(late)} sent before ${late === 1 ? 'it was' : 'they were'} typed` : 'every message typed before it went'}
-          {atEnd > 1 && ` · ${spell(atEnd)} at the campaign's final instant`}
+          <span>Seed {replay.seed}</span> {summary}
         </p>
         <div ref={chartRef} className={styles.chartAnchor}>
           <ProjectFigureTransition slug="send-pacing">
@@ -130,18 +154,28 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
             <input
               inputMode="numeric"
               value={seedText}
+              aria-describedby="pacing-seed-note"
               onChange={(e) => {
-                setSeedText(e.target.value);
-                const seed = Number(e.target.value);
-                if (e.target.value.trim() !== '' && Number.isInteger(seed) && seed >= 0 && seed <= MAX_SEED) set({ seed });
+                const text = e.target.value;
+                setSeedText(text);
+                const seed = readSeed(text);
+                if (seed !== null) set({ seed });
+                // mid-typing, an empty field is no mistake yet
+                else setSeedError(text.trim() === '' ? null : `${SEED_RULE}; the chart still shows seed ${replay.seed}.`);
               }}
-              onBlur={() => setSeedText(String(replay.seed))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') settleSeed();
+              }}
+              onBlur={settleSeed}
             />
           </label>
           <IconButton label="Next seed" disabled={replay.seed === MAX_SEED} onClick={() => set({ seed: replay.seed + 1 })}>
             <ChevronRight aria-hidden="true" />
           </IconButton>
         </div>
+        <p id="pacing-seed-note" role="status" className={seedError ? controls.error : controls.hint}>
+          {seedError ?? `Any whole number from 0 to ${count(MAX_SEED)}.`}
+        </p>
       </div>
 
       <section className={styles.sweepBlock} aria-labelledby="pacing-sweep-title">
@@ -264,6 +298,10 @@ export function PacingDemo({ sweep, seeds }: { sweep: SweepRow[]; seeds: number 
           )}
           <p role="status" className={controls.hint}>
             {status}
+          </p>
+          {/* the chart and its line sit far above; the run they show is read back here */}
+          <p className={styles.panelRunLine} data-testid="campaign-verdict">
+            {charted}
           </p>
           <Ledger result={result} />
         </div>

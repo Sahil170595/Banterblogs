@@ -8,6 +8,8 @@ type Expr =
   | { kind: 'sum'; args: Expr[] };
 
 const SUPPORTED = 'Supported formulas: numbers, A1 or Sheet!A1 references, + - * /, parentheses, and SUM with bounded ranges.';
+// how much of an unreadable stretch an error quotes
+const UNREAD_PREVIEW = 12;
 const columnNumber = (letters: string) => [...letters].reduce((n, char) => n * 26 + char.charCodeAt(0) - 64, 0);
 const columnName = (n: number): string => n <= 26 ? String.fromCharCode(64 + n) : columnName(Math.floor((n - 1) / 26)) + String.fromCharCode(65 + (n - 1) % 26);
 
@@ -73,7 +75,15 @@ export function parseFormula(input: string, sheet: string): { expression: Expr; 
     if (ref) return { kind: 'ref', id: ref };
     const number = source.slice(position).match(/^(?:\d+(?:\.\d*)?|\.\d+)/);
     if (number) { position += number[0].length; return { kind: 'number', value: Number(number[0]) }; }
-    throw new Error(SUPPORTED);
+    throw new Error(unreadable());
+  }
+  // what stopped the parser, in words a person can act on
+  function unreadable(): string {
+    const rest = source.slice(position);
+    if (!rest.trim()) return `The formula ends after an operator: add a number or a cell reference after it. ${SUPPORTED}`;
+    const call = rest.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
+    if (call) return `${call[1].toUpperCase()} is not a supported function: only SUM is. ${SUPPORTED}`;
+    return `Cannot read "${rest.slice(0, UNREAD_PREVIEW)}" at character ${position + 1}. ${SUPPORTED}`;
   }
   function product(): Expr {
     let left = atom();
@@ -99,7 +109,15 @@ export function parseFormula(input: string, sheet: string): { expression: Expr; 
   }
   const parsed = expression();
   spaces();
-  if (position !== source.length) throw new Error(`Unexpected token at character ${position + 1}. ${SUPPORTED}`);
+  if (position !== source.length) {
+    const rest = source.slice(position);
+    const exponent = /^[eE][+-]?\d/.test(rest) && /\d$/.test(source.slice(0, position));
+    throw new Error(
+      exponent
+        ? `Unexpected "${rest[0]}" at character ${position + 1}: exponent notation like 1e3 is not supported; write the number in full.`
+        : `Unexpected "${rest.slice(0, UNREAD_PREVIEW)}" at character ${position + 1}: an operator (+ - * /) is missing between two values. ${SUPPORTED}`,
+    );
+  }
   function collect(expr: Expr) {
     if (expr.kind === 'ref') refs.add(expr.id);
     if (expr.kind === 'binary') { collect(expr.left); collect(expr.right); }

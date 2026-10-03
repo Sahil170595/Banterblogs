@@ -1,5 +1,6 @@
 'use client';
 
+import { Check, X } from 'lucide-react';
 import { TASKS, type CandidateId, type Report, type RunConfig, type TaskId } from '@/lib/projects/code-verification/engine';
 import { reportsFor } from '@/lib/projects/code-verification/matrix';
 import { controls, Segmented, type Choice } from '../controls';
@@ -128,6 +129,12 @@ export function SuiteMatrix({ selection, onSelect }: { selection: MatrixSelectio
                         className={styles.verdictCell}
                         data-resolved={reports[column.scope].resolved || undefined}
                       >
+                        {/* a shape as well as a colour: Passes and Fails must not rest on hue */}
+                        {reports[column.scope].resolved ? (
+                          <Check aria-hidden="true" data-verdict="passes" className={styles.verdictIcon} />
+                        ) : (
+                          <X aria-hidden="true" data-verdict="fails" className={styles.verdictIcon} />
+                        )}
                         {verdictOf(reports[column.scope])}
                       </td>
                     ))}

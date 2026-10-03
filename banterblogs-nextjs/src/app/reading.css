@@ -514,6 +514,9 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
 }
 
 .report-toc-mobile > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   cursor: pointer;
   list-style: none;
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -526,6 +529,22 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
 
 .report-toc-mobile > summary::-webkit-details-marker {
   display: none;
+}
+
+/* the chevron that says the closed box opens: down when closed, up when open */
+.report-toc-mobile > summary::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.25rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-25%) rotate(45deg);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.report-toc-mobile[open] > summary::after {
+  transform: translateY(25%) rotate(-135deg);
 }
 
 .report-toc-mobile .report-toc-list {
@@ -766,6 +785,13 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
 
 .report-prose .project-engineers-lede {
   color: hsl(var(--muted-foreground));
+}
+
+/* a project's commands and formulas wrap rather than hide their tail in a box
+   a keyboard cannot scroll */
+.project-frame .report-prose :is(pre, pre code) {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .project-pager-all {

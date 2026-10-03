@@ -7,6 +7,8 @@ import { collectErrors } from './consoleErrors';
 // export real engine state, and the projects' first URL still lands here.
 
 const PAGE = '/projects/reinforcement-learning/flight-routing';
+// WCAG 2.5.8's minimum target size, in CSS pixels
+const MIN_TAP_TARGET = 24;
 
 async function exportedTrace(page: Page) {
   const hood = page.locator('details', { hasText: 'Under the hood' });
@@ -69,6 +71,81 @@ test('a square below the fold brings its replay into view', async ({ page }) => 
     .click();
   await expect(replay).toHaveAccessibleName('Replay: world 5 of 64');
   await expect(replay.getByRole('heading', { level: 3 })).toBeInViewport();
+});
+
+// live QA: Enter on a square scrolled the replay into view and left the focus ring off screen
+test('a square chosen from the keyboard takes focus to its replay', async ({ page }) => {
+  await page.goto(PAGE);
+  await page
+    .getByRole('group', { name: /^Greedy next arrival/ })
+    .getByRole('button', { name: /^World 1,/ })
+    .focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Enter');
+  const heading = page.getByRole('region', { name: /^Replay: world/ }).getByRole('heading', { level: 3 });
+  await expect(heading).toHaveText(/^World 2/);
+  await expect(heading).toBeFocused();
+  await expect(heading).toBeInViewport();
+});
+
+test('the exported file is named for the trip, and records who made each decision', async ({ page }) => {
+  await page.goto(PAGE);
+  await page.getByRole('button', { name: 'Restart this world', exact: true }).click();
+  // the row's third cell, not its radio: the whole row chooses
+  await page.getByRole('region', { name: 'Bookable flights' }).getByRole('row', { name: /F1/ }).getByRole('cell').nth(2).click();
+  await page.getByRole('button', { name: 'Take F1', exact: true }).click();
+  const hood = page.locator('details', { hasText: 'Under the hood' });
+  await hood.locator('summary').click();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export JSON trace', exact: true }).click();
+  const download = await pending;
+  expect(download.suggestedFilename()).toBe('flight-routing-sfo-to-jfk-mixed-seed-42-deadline-lookahead-with-your-choices.json');
+  const trace = JSON.parse(await readFile((await download.path())!, 'utf8'));
+  expect(trace.replay.decisions).toEqual([{ flight: 'F1', by: 'your choice' }]);
+  await expect(page.getByRole('status', { name: 'Export' })).toHaveText('Trace exported.');
+});
+
+// live QA: with nothing bookable, the table was a bare header and Restart wrapped onto a line of its own
+test('with nothing bookable, the replay says why and its buttons keep one row', async ({ page, isMobile }) => {
+  await page.goto(PAGE);
+  await page.locator('details', { hasText: 'Under the hood' }).locator('summary').click();
+  await page.getByLabel('Connection buffer (minutes)').fill('1440');
+  await page.getByRole('button', { name: 'Apply to all worlds', exact: true }).click();
+  await page.getByRole('button', { name: 'Restart this world', exact: true }).click();
+  await expect(page.getByText(/^No flight can be booked from SFO/)).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Bookable flights' })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // a phone is too narrow for four labelled buttons, and stacks them
+  if (isMobile) return;
+  // the row aligns its buttons at the bottom
+  const bottoms = await Promise.all(
+    ['End the trip', 'Let the policy finish', 'Rewind one decision', 'Restart this world'].map(async (name) => {
+      const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+      return Math.round(box.y + box.height);
+    }),
+  );
+  expect(new Set(bottoms).size).toBe(1);
+});
+
+// live QA: on desktop the two clock fields sat 22 px above the other three
+test('the settings inputs share one line on a wide screen', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'a phone stacks the settings in two columns');
+  await page.goto(PAGE);
+  await page.locator('details', { hasText: 'Under the hood' }).locator('summary').click();
+  const tops = await page
+    .getByRole('form', { name: 'World settings' })
+    .locator('input')
+    .evaluateAll((inputs) => inputs.map((input) => Math.round(input.getBoundingClientRect().top)));
+  expect(tops).toHaveLength(5);
+  expect(new Set(tops).size).toBe(1);
+});
+
+test('on a phone, a world square is big enough to tap', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE);
+  const square = (await page.getByRole('group', { name: /^Nonstop first/ }).getByRole('button', { name: /^World 1,/ }).boundingBox())!;
+  expect(square.width).toBeGreaterThanOrEqual(MIN_TAP_TARGET);
+  expect(square.height).toBeGreaterThanOrEqual(MIN_TAP_TARGET);
 });
 
 test('on a phone, every bookable flight shows its chance of making the deadline without a sideways scroll', async ({ page }) => {

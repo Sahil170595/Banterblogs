@@ -41,7 +41,8 @@ interface WorldGridProps {
   config: Config;
   worlds: PolicyWorlds[];
   selection: Selection;
-  onSelect: (selection: Selection) => void;
+  /** fromKeyboard: the square was chosen with Enter or Space, not a pointer */
+  onSelect: (selection: Selection, fromKeyboard: boolean) => void;
   /** returns why a configuration was refused, if it was */
   onConfigure: (config: Config) => string | null;
 }
@@ -158,7 +159,8 @@ export function WorldGrid({ config, worlds, selection, onSelect, onConfigure }: 
                         className={styles.cell}
                         onPointerEnter={() => setPaired(index)}
                         onFocus={() => setPaired(index)}
-                        onClick={() => onSelect({ policy: row.policy, index })}
+                        // a click from Enter or Space has no pointer press behind it, so its detail is 0
+                        onClick={(event) => onSelect({ policy: row.policy, index }, event.detail === 0)}
                       />
                     );
                   })}

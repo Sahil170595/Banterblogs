@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { candidates, comparePolicies, createEpisode, DEFAULT_CONFIG, exportTrace, mask, runPolicy, sampleOutcome, step, validateConfig } from './engine';
+import { bestAction, candidates, comparePolicies, createEpisode, DEFAULT_CONFIG, exportTrace, mask, runPolicy, sampleOutcome, step, validateConfig } from './engine';
 import { getScenario, outcomePool } from './fixtures';
 
 describe('flight routing transition contract', () => {
@@ -43,6 +43,15 @@ describe('flight routing transition contract', () => {
     expect(step(createEpisode({ ...DEFAULT_CONFIG, horizon: 500, deadline: 490 }), 2, 1).reason).toBe('horizon');
     expect(() => step(createEpisode(DEFAULT_CONFIG), -1)).toThrow(/action/i);
     expect(() => step(step(createEpisode(DEFAULT_CONFIG), 2, 2), 0)).toThrow(/terminated/i);
+  });
+  // live QA found lookahead taking the first listed flight when every value tied;
+  // Gatebound's DeadlinePlannerPolicy.act breaks ties by earliest scheduled
+  // arrival, then lowest index (planning.py, max key (value, -arrival, -index))
+  it('breaks a lookahead tie as Gatebound does: earliest scheduled arrival, then lowest index', () => {
+    const flight = (id: string, arrive: number) => ({ ...getScenario('west-east').flights[0], id, arrive });
+    expect(bestAction([0, 0, 0], [flight('A', 600), flight('B', 500), flight('C', 500)])).toBe(1);
+    expect(bestAction([0.2, 0.5, 0.5], [flight('A', 300), flight('B', 700), flight('C', 650)])).toBe(2);
+    expect(bestAction([0.9, 0.5], [flight('A', 900), flight('B', 100)])).toBe(0);
   });
   it('fails greedily at a dead end even when a valid direct route exists', () => {
     expect(runPolicy(DEFAULT_CONFIG, 'greedy').reason).toBe('no_candidates');
