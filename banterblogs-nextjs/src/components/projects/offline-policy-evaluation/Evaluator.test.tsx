@@ -6,6 +6,18 @@ import { DEFAULT_CONFIG } from '@/lib/projects/offline-policy-evaluation/engine'
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('evaluation controls', () => {
+  it('exposes a compact settings disclosure without resetting configuration', () => {
+    render(<Evaluator />);
+    const toggle = screen.getByRole('button', { name: 'Evaluation settings' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '42' } });
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect((screen.getByLabelText('Seed') as HTMLInputElement).value).toBe('42');
+  });
   it('renders SVG coordinates at stable presentation precision for hydration', () => {
     const { container } = render(<Evaluator />);
     const attributes = ['x1', 'x2', 'cx', 'y', 'height'];
