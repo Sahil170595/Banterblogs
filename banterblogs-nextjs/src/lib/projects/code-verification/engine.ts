@@ -6,7 +6,6 @@ export const FIXTURE_VERSION = 'neutral-v1';
 export const MAX_ITEMS = 64;
 export const MAX_STRING_LENGTH = 128;
 export const MAX_ASSERTIONS = 16;
-export const SOURCE_URL = 'https://github.com/Sahil170595/Banterblogs/tree/codex/demo-code-verification/banterblogs-nextjs/src/lib/projects/code-verification';
 const MAX_COORDINATE = 1_000_000;
 const MAX_JSON_CHARACTERS = 20_000;
 

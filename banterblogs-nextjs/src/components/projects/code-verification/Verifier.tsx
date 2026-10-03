@@ -8,6 +8,8 @@ import {
   parseJson, replay, resetSession, runSession, sourceDiff,
   type Assertion, type CandidateId, type ResultRow, type RunConfig, type TaskId, type Value,
 } from '@/lib/projects/code-verification/engine';
+import { controls } from '../controls';
+import { span } from '../geometry';
 import styles from './verifier.module.css';
 
 // Upper bound comfortably contains all 16 maximum-sized assertion observations.
@@ -48,14 +50,14 @@ function DomainFigure({ row, taskId }: { row: ResultRow; taskId: TaskId }) {
   const values = lanes.flatMap(lane => (lane.value as [number, number][]).flat());
   const min = values.length ? Math.min(...values) : 0;
   const max = values.length ? Math.max(...values) : 1;
-  const span = Math.max(max - min, 1);
-  const coordinate = (value: number) => 5 + ((value - min) / span) * 90;
+  // a point interval still draws as a dot's width
+  const extent = Math.max(max - min, 1);
   return <figure className={styles.figure} aria-label="Interval endpoint evidence">
     {lanes.map(lane => <div className={styles.intervalLane} key={lane.label}>
       <span className={styles.laneLabel}>{lane.label}</span>
       <div className={styles.rangeStack}>
         {(lane.value as [number, number][]).map(([start, end], index) => <div className={styles.rangeTrack} key={index}>
-          <div className={styles.range} style={{ left: `${coordinate(start)}%`, width: `${Math.max(coordinate(end) - coordinate(start), 0.6)}%` }}>
+          <div className={styles.range} style={span(start, end, min, min + extent)}>
             <i /><i />
           </div>
           <span className={styles.rangeValue}>{start} … {end}</span>
@@ -68,14 +70,19 @@ function DomainFigure({ row, taskId }: { row: ResultRow; taskId: TaskId }) {
   </figure>;
 }
 
-export function Verifier() {
-  const [session, setSession] = useState(() => resetSession());
-  const [selectedIndex, setSelectedIndex] = useState(0);
+/** the verifier opened on a selection from the matrix, already run */
+const opened = (initial: RunConfig) => runSession({ config: initial, report: null });
+
+export function Verifier({ initial }: { initial: RunConfig }) {
+  const [session, setSession] = useState(() => opened(initial));
+  // the first failing row, else the first: the evidence worth reading first
+  const firstFailing = (rows: ResultRow[] = []) => Math.max(0, rows.findIndex((r) => !r.after.passed));
+  const [selectedIndex, setSelectedIndex] = useState(() => firstFailing(session.report?.rows));
   const [error, setError] = useState<string | null>(null);
   const [codeView, setCodeView] = useState<'diff' | 'code'>('diff');
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [draftInput, setDraftInput] = useState('[[1,3],[3,5]]');
-  const [draftExpected, setDraftExpected] = useState('[[1,5]]');
+  const [draftInput, setDraftInput] = useState(() => json(getTask(initial.taskId).tests[0].input));
+  const [draftExpected, setDraftExpected] = useState(() => json(getTask(initial.taskId).tests[0].expected));
   const importRef = useRef<HTMLInputElement>(null);
   const { config, report } = session;
   const task = getTask(config.taskId);
@@ -128,8 +135,9 @@ export function Verifier() {
   }
 
   function reset() {
-    setSession(resetSession()); setSelectedIndex(0); setError(null); setCodeView('diff'); setInspectorOpen(false);
-    setDraftInput('[[1,3],[3,5]]'); setDraftExpected('[[1,5]]');
+    const next = opened(initial);
+    setSession(next); setSelectedIndex(firstFailing(next.report?.rows)); setError(null); setCodeView('diff'); setInspectorOpen(false);
+    setDraftInput(json(getTask(initial.taskId).tests[0].input)); setDraftExpected(json(getTask(initial.taskId).tests[0].expected));
   }
 
   function exportReport() {
@@ -163,15 +171,15 @@ export function Verifier() {
         <button type="button" aria-pressed={config.mode === 'synthesis'} onClick={() => changeMode('synthesis')}><FlaskConical size={16} />Test synthesis</button>
       </div>
       <div className={styles.actions}>
-        <button className={styles.iconButton} onClick={() => importRef.current?.click()} aria-label="Replay JSON report" title="Replay JSON report"><Upload size={18} /></button>
+        <button className={controls.iconButton} onClick={() => importRef.current?.click()} aria-label="Replay JSON report" title="Replay JSON report"><Upload size={18} /></button>
         <input ref={importRef} type="file" accept="application/json,.json" hidden aria-label="Import report file" onChange={importReport} />
-        <button className={styles.iconButton} onClick={exportReport} disabled={!report} aria-label="Export JSON report" title="Export JSON report"><Download size={18} /></button>
-        <button className={styles.iconButton} onClick={reset} aria-label="Reset verifier" title="Reset verifier"><RotateCcw size={18} /></button>
+        <button className={controls.iconButton} onClick={exportReport} disabled={!report} aria-label="Export JSON report" title="Export JSON report"><Download size={18} /></button>
+        <button className={controls.iconButton} onClick={reset} aria-label="Reset verifier" title="Reset verifier"><RotateCcw size={18} /></button>
       </div>
     </div>
     <div className={styles.workspace}>
       <div className={styles.configuration}>
-        <label className={styles.label}>Task
+        <label className={controls.field}>Task
           <select value={config.taskId} onChange={event => changeTask(event.target.value as TaskId)}>
             {TASKS.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
           </select>
@@ -179,22 +187,22 @@ export function Verifier() {
         <p className={styles.requirement}>{task.requirement}</p>
         <p className={styles.fault}><span>Baseline fault</span>{task.fault}</p>
         {config.mode === 'repair' ? <>
-          <label className={styles.label}>Implementation
+          <label className={controls.field}>Implementation
             <select value={config.candidateId} onChange={event => updateConfig({ candidateId: event.target.value as CandidateId })}>
               {CANDIDATES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
           </label>
           <p className={styles.muted}>{candidate.description}</p>
-          <label className={styles.label}>Verification suite
+          <label className={controls.field}>Verification suite
             <select value={config.scope} onChange={event => updateConfig({ scope: event.target.value as RunConfig['scope'] })}>
               <option value="full">Full · 3 repair + 3 preserve</option>
               <option value="smoke">Smoke · 1 repair + 1 preserve</option>
             </select>
           </label>
         </> : <>
-          <div className={styles.synthesisHeader}><h3>Candidate assertions</h3><button className={styles.iconButton} aria-label="Clear assertions" title="Clear assertions" onClick={() => updateConfig({ assertions: [] })}><Trash2 size={16} /></button></div>
+          <div className={styles.synthesisHeader}><h3>Candidate assertions</h3><button className={controls.iconButton} aria-label="Clear assertions" title="Clear assertions" onClick={() => updateConfig({ assertions: [] })}><Trash2 size={16} /></button></div>
           <ul className={styles.assertions}>
-            {config.assertions.map(assertion => <li key={assertion.id}><span>{assertion.label}</span><button className={styles.iconButton} aria-label={`Remove ${assertion.label}`} title={`Remove ${assertion.label}`} onClick={() => updateConfig({ assertions: config.assertions.filter(item => item.id !== assertion.id) })}><X size={14} /></button></li>)}
+            {config.assertions.map(assertion => <li key={assertion.id}><span>{assertion.label}</span><button className={controls.iconButton} aria-label={`Remove ${assertion.label}`} title={`Remove ${assertion.label}`} onClick={() => updateConfig({ assertions: config.assertions.filter(item => item.id !== assertion.id) })}><X size={14} /></button></li>)}
           </ul>
           <div className={styles.presets}>
             <button disabled={config.assertions.length >= MAX_ASSERTIONS} onClick={() => addAssertion(task.tests[0].input, task.tests[0].expected, 'Bug reproducer')}><Plus size={14} />Reproducer</button>
@@ -202,7 +210,7 @@ export function Verifier() {
             <button disabled={config.assertions.length >= MAX_ASSERTIONS} onClick={() => addAssertion(task.tests[0].input, [], 'Wrong expectation')}><Plus size={14} />Broken assertion</button>
           </div>
         </>}
-        <button className={styles.runButton} onClick={run}><Play size={16} />{config.mode === 'repair' ? 'Run verification' : 'Run synthesis'}</button>
+        <button className={controls.button} onClick={run}><Play size={16} />{config.mode === 'repair' ? 'Run verification' : 'Run synthesis'}</button>
         <p className={styles.runtime}>Browser evaluation · deterministic, synthetic fixtures.<br />{config.mode === 'synthesis' ? 'Assertions run on baseline and general repair.' : 'Curated functions only; no arbitrary code execution.'}</p>
       </div>
       <div className={styles.results}>
@@ -218,7 +226,7 @@ export function Verifier() {
             <span>{transition.label}</span><strong>{report ? report.counts[transition.field] : '—'}</strong><small>{transition.name}</small>
           </div>)}
         </figure>
-        {error && <p className={styles.error} role="alert">{error}</p>}
+        {error && <p className={controls.error} role="alert">{error}</p>}
         {!report ? <div className={styles.pending}>
           <h3>{config.mode === 'repair' ? 'Selected test suite' : 'Buggy → fixed comparison'}</h3>
           <ol>{(config.mode === 'synthesis' ? config.assertions : config.scope === 'full' ? task.tests : [task.tests[0], task.tests[3]]).map(item => <li key={item.id}>{item.label}</li>)}</ol>
@@ -243,10 +251,10 @@ export function Verifier() {
     {config.mode === 'synthesis' && <section className={styles.authoring} aria-labelledby="assertion-heading">
       <div><h3 id="assertion-heading">Author an assertion</h3><span className={styles.muted}>{config.assertions.length}/{MAX_ASSERTIONS} candidates</span></div>
       <div className={styles.editorGrid}>
-        <label className={styles.label}>Assertion input (JSON)<textarea rows={3} value={draftInput} spellCheck={false} onChange={event => setDraftInput(event.target.value)} /></label>
-        <label className={styles.label}>Expected output (JSON)<textarea rows={3} value={draftExpected} spellCheck={false} onChange={event => setDraftExpected(event.target.value)} /></label>
+        <label className={controls.field}>Assertion input (JSON)<textarea rows={3} value={draftInput} spellCheck={false} onChange={event => setDraftInput(event.target.value)} /></label>
+        <label className={controls.field}>Expected output (JSON)<textarea rows={3} value={draftExpected} spellCheck={false} onChange={event => setDraftExpected(event.target.value)} /></label>
       </div>
-      <button className={styles.secondaryButton} disabled={config.assertions.length >= MAX_ASSERTIONS} onClick={addDraft}><Plus size={16} />Add assertion</button>
+      <button className={controls.button} disabled={config.assertions.length >= MAX_ASSERTIONS} onClick={addDraft}><Plus size={16} />Add assertion</button>
     </section>}
     <details className={styles.codePanel} open={inspectorOpen} onToggle={event => setInspectorOpen(event.currentTarget.open)}>
       <summary><Code2 size={17} />Implementation &amp; replacement diff</summary>

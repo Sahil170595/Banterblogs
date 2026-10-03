@@ -6,6 +6,14 @@ import { collectErrors } from './consoleErrors';
 // on every CI build; the fold screenshot runs only with VISUAL_SCREENSHOTS=on,
 // because its baselines must be rendered by the CI container image.
 
+// every project page: each is a route here and counts its demo's own sheet
+const PROJECT_PAGES = [
+  '/projects/reinforcement-learning/flight-routing',
+  '/projects/reinforcement-learning/offline-policy-evaluation',
+  '/projects/reinforcement-learning/customer-service',
+  '/projects/reinforcement-learning/code-verification',
+] as const;
+
 const ROUTES = [
   '/',
   '/reports',
@@ -19,9 +27,7 @@ const ROUTES = [
   '/show',
   '/episodes',
   '/projects',
-  '/projects/reinforcement-learning/flight-routing',
-  '/projects/reinforcement-learning/offline-policy-evaluation',
-  '/projects/reinforcement-learning/customer-service',
+  ...PROJECT_PAGES,
 ] as const;
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const HTTP_OK = 200;
@@ -49,11 +55,7 @@ const REFLOW_ROUTES = [
 // routes add their own sheet; a project page adds its demo's sheet too,
 // split out by graph CSS chunking (next.config.ts) so no report downloads it.
 const READING_ROUTES = new Set<string>(['/reports/technical-report-138']);
-const PROJECT_ROUTES = new Set<string>([
-  '/projects/reinforcement-learning/flight-routing',
-  '/projects/reinforcement-learning/offline-policy-evaluation',
-  '/projects/reinforcement-learning/customer-service',
-]);
+const PROJECT_ROUTES = new Set<string>(PROJECT_PAGES);
 const GLOBAL_SHEETS = 1;
 const READING_SHEETS = 2;
 const PROJECT_SHEETS = 3;
