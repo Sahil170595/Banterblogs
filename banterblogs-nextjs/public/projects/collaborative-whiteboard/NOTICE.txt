@@ -15,5 +15,5 @@ Modifications for this browser adaptation:
 - Gesture previews, bounded geometry and device-pixel-ratio rendering.
 - Fresh synthetic workflow fixture and a new project-local interface/article.
 
-No original account, board, employer-supplied brief or server fixture is included.
+No original account, board or server fixture is included.
 This adaptation does not include the original network collaboration service.
