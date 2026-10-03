@@ -1,0 +1,14 @@
+{
+  "slug": "customer-service",
+  "title": "Customer Service Environment",
+  "dek": "An agent environment whose reward comes from what the tools actually changed, not what the agent said, scored one coherent outcome at a time. Rebuilt from my Turncraft environment.",
+  "summary": "Identity-bound tools on synthetic orders, scored by the world they leave behind.",
+  "collection": "reinforcement-learning",
+  "alsoIn": [],
+  "order": 3,
+  "evidence": "synthetic-fixture",
+  "links": [
+    { "label": "Demo source", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/customer-service" },
+    { "label": "Turncraft", "url": "https://github.com/Sahil170595/turncraft-env" }
+  ]
+}
