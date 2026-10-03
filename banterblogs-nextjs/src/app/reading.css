@@ -1153,9 +1153,12 @@ html[data-motion="on"] .report-toc-marker[data-placed] {
     font-weight: 600;
   }
 
-  /* every column's name in one register, whatever its cell's own face */
+  /* every column's name in one register, whatever its cell's own face; the
+     empty alternative keeps it out of the cell's accessible name, which the
+     column header already gives (the first line is for browsers without it) */
   .demo-stack tbody [data-label]::before {
     content: attr(data-label);
+    content: attr(data-label) / '';
     flex-shrink: 0;
     max-width: 50%;
     text-align: left;

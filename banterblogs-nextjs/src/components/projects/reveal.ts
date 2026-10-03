@@ -11,8 +11,9 @@ export function revealResult(element: HTMLElement | null): void {
   if (!element) return;
   const box = element.getBoundingClientRect();
   const visible = box.top >= 0 && box.top < window.innerHeight && box.bottom > 0;
-  if (!visible) {
-    const still = window.matchMedia(REDUCED_MOTION).matches;
+  // jsdom, which the unit tests run on, has neither media queries nor scrolling
+  if (!visible && typeof element.scrollIntoView === 'function') {
+    const still = typeof window.matchMedia === 'function' && window.matchMedia(REDUCED_MOTION).matches;
     element.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
   }
   // restart the mark when the same result is revealed twice in a row
