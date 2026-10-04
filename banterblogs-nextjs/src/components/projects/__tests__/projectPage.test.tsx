@@ -22,6 +22,7 @@ const MANIFEST: ProjectManifest = {
   alsoIn: [],
   order: 2,
   evidence: 'synthetic-fixture',
+  published: '2026-10-03',
   links: [{ label: 'Code for this page', url: 'https://github.com/Sahil170595/Banterblogs' }],
   builtWith: ['Python', 'NumPy'],
 };

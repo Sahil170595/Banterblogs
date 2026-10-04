@@ -7,6 +7,8 @@
   "alsoIn": [],
   "order": 3,
   "evidence": "synthetic-fixture",
+
+  "published": "2026-10-03",
   "links": [
     { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/intake-triage" },
     { "label": "Intakegate on GitHub", "url": "https://github.com/Sahil170595/intakegate/tree/750480a6ed3f7e8744bec79650687a7ec3df3878" }

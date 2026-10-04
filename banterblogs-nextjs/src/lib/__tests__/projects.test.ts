@@ -33,6 +33,7 @@ const manifest: ProjectManifest = {
   alsoIn: [],
   order: 1,
   evidence: 'synthetic-fixture',
+  published: '2026-10-03',
   links: [{ label: 'Source', url: 'https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs' }],
 };
 

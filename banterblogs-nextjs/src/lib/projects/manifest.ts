@@ -48,6 +48,8 @@ export const ProjectManifestSchema = z
     /** its place in its own collection, from 1 */
     order: z.number().int().min(1),
     evidence: z.enum(Object.keys(PROJECT_EVIDENCE) as [keyof typeof PROJECT_EVIDENCE, ...(keyof typeof PROJECT_EVIDENCE)[]]),
+    /** the day the page went live, yyyy-mm-dd: its date in the RSS feed */
+    published: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     /** source first; the original system, a paper or a package after it */
     links: z.array(link).min(1).max(3),
     /** what the original system is built with, as its own write-up names it */

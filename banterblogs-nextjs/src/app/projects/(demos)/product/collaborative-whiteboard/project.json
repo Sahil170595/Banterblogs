@@ -7,6 +7,8 @@
   "alsoIn": [],
   "order": 1,
   "evidence": "synthetic-fixture",
+
+  "published": "2026-10-03",
   "links": [
     { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/collaborative-whiteboard" },
     { "label": "Sceneledger on GitHub", "url": "https://github.com/Sahil170595/sceneledger/tree/a0ab66e6d6101bcb768d44802289b33b6bb69456" }

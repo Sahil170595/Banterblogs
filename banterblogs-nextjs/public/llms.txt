@@ -204,14 +204,16 @@ Interactive builds, each running live on its own page, filed in collections (the
 - GitHub (profile / canonical README): https://github.com/Sahil170595
 - GitHub (this site's source): https://github.com/Sahil170595/Banterblogs
 - GitHub (Chimeraforge tools): https://github.com/Sahil170595/Chimeraforge
-- Research Archive: https://chimeraforge.vercel.app/reports
-- Projects: https://chimeraforge.vercel.app/projects
-- Papers: https://chimeraforge.vercel.app/papers
 - Platform Architecture: https://chimeraforge.vercel.app/platform
+- Research Archive: https://chimeraforge.vercel.app/reports
+- Papers: https://chimeraforge.vercel.app/papers
+- Projects: https://chimeraforge.vercel.app/projects
+- Tools: https://chimeraforge.vercel.app/tools
+- Show (interactive scenes of the platform's cryptographic, consensus and verifier internals): https://chimeraforge.vercel.app/show
 - Work / CV: https://chimeraforge.vercel.app/work
 - About: https://chimeraforge.vercel.app/about
-- Episodes: https://chimeraforge.vercel.app/episodes
-- RSS: https://chimeraforge.vercel.app/rss.xml
+- Episodes (archived development log): https://chimeraforge.vercel.app/episodes
+- RSS (new reports and projects, newest first): https://chimeraforge.vercel.app/rss.xml
 - Substack: https://substack.com/@sahilkadadekar
 - LinkedIn: https://linkedin.com/in/sahilkadadekar
 - Twitter: https://twitter.com/sahilkadadekar
