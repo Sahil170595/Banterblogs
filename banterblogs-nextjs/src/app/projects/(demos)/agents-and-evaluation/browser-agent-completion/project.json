@@ -7,6 +7,8 @@
   "alsoIn": [],
   "order": 2,
   "evidence": "synthetic-fixture",
+
+  "published": "2026-10-03",
   "links": [
     { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/workflow-observatory" },
     { "label": "Parallax on GitHub", "url": "https://github.com/Sahil170595/Parallax/tree/cfb0bdf8fb5a5dc8c4f82b7b44a93157b06dd44e" }

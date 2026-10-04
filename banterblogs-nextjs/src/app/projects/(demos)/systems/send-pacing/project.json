@@ -7,6 +7,8 @@
   "alsoIn": [],
   "order": 2,
   "evidence": "synthetic-fixture",
+
+  "published": "2026-10-03",
   "links": [
     { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/send-pacing" },
     { "label": "tempoledger on GitHub", "url": "https://github.com/Sahil170595/tempoledger/tree/8bd2c0f9b1c64c18a6c72ed42bf19c8950e4ae01" }

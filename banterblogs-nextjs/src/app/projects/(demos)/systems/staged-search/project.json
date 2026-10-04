@@ -7,6 +7,8 @@
   "alsoIn": [],
   "order": 1,
   "evidence": "synthetic-fixture",
+
+  "published": "2026-10-03",
   "links": [
     { "label": "Code for this page", "url": "https://github.com/Sahil170595/Banterblogs/tree/main/banterblogs-nextjs/src/lib/projects/staged-search" },
     { "label": "StrataSearch on GitHub", "url": "https://github.com/Sahil170595/stratasearch/tree/a3c8840e32e941fa418d8d881ff52a7c311781ba" }

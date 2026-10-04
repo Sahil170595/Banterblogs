@@ -8,7 +8,33 @@ export interface ReportMeta {
   description?: string;
   tags?: string[];
   source?: string;
+  /** yyyy-mm-dd the report reached this site, for a report whose title block states no date */
+  published?: string;
 }
+
+/**
+ * The reports whose title block states no date the page can read, each dated
+ * by the day its file was first committed to PublishReady/reports/ (git log
+ * --diff-filter=A). The RSS feed dates every report; a stated date wins where
+ * there is one. A new report with no stated date needs an entry here.
+ */
+const REPORT_PUBLISHED: Record<string, string> = {
+  'technical-report-152': '2026-05-24',
+  'technical-report-163': '2026-06-06',
+  'technical-report-164': '2026-06-06',
+  'technical-report-164-v3': '2026-06-15',
+  'technical-report-164-v4': '2026-06-17',
+  'technical-report-164-v5': '2026-06-25',
+  'technical-report-165': '2026-06-15',
+  'technical-report-167': '2026-06-15',
+  'technical-report-conclusive-phase1-extended-appendices': '2026-05-28',
+  'technical-report-conclusive-phase2-extended-appendices': '2026-05-28',
+  'technical-report-conclusive-phase3-extended-appendices': '2026-05-28',
+  'technical-report-conclusive-phase4-extended-appendices': '2026-05-28',
+  'technical-report-conclusive-phase5-extended-appendices': '2026-05-28',
+  'technical-report-conclusive-phase6': '2026-05-28',
+  'technical-report-conclusive-phase6-extended-appendices': '2026-05-28',
+};
 
 /**
  * Static catalog — authoritative titles and one-line descriptions for every
@@ -407,6 +433,7 @@ export function readReportMeta(rawId: string): ReportMeta | null {
       title: catalogEntry.title,
       description: catalogEntry.description,
       source: locations[0]?.source,
+      ...(REPORT_PUBLISHED[id] ? { published: REPORT_PUBLISHED[id] } : {}),
     };
   }
 

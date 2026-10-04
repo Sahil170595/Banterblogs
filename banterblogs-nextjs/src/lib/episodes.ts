@@ -27,6 +27,8 @@ export interface Episode {
   title: string;
   subtitle: string;
   date: string;
+  /** the episode states no date; `date` is the time it was read, not when it happened */
+  undated?: boolean;
   commit: string;
   preview: string;
   content: string;
@@ -577,6 +579,7 @@ async function processEpisodeFile(
     title: metadata.title ?? `Episode ${metadata.displayId}`,
     subtitle: metadata.subtitle ?? "Development Update",
     date: metadata.date ?? new Date().toISOString(),
+    ...(metadata.date ? {} : { undated: true }),
     commit: metadata.commit ?? "",
     preview,
     content: htmlContent,
