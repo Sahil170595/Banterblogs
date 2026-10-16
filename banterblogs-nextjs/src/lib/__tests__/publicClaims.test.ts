@@ -35,7 +35,7 @@ const VENUES: RegExp[] = [
 // An accepted paper's venue is named, as the ICML workshop's is, and so is the
 // owner's reviewing role, which carries no paper of theirs. Each is cut from a
 // surface before the venue scan, so every other mention still fails.
-const ACCEPTED_VENUES = ['NeurIPS 2026 Workshop on Foundation and Large Model Security', 'NeurIPS 2026 reviewer'];
+const ACCEPTED_VENUES = ['NeurIPS 2026 Workshop on Foundations of Language Model Security', 'NeurIPS 2026 reviewer'];
 const withoutAccepted = (source: string) => ACCEPTED_VENUES.reduce((rest, venue) => rest.split(venue).join(''), source);
 
 // ICML is named only for the presented workshop paper and the public
@@ -69,8 +69,9 @@ const WITHDRAWN = [
 ];
 
 // The three named papers that were under review were decided on 2026-09-24,
-// the five workshop submissions on 2026-09-30 (one accepted, four rejected).
-// No surface may carry a decided paper's review status again.
+// the five workshop submissions on 2026-09-30 (one accepted, four rejected),
+// and the one resubmission still out by 2026-10-13 (rejected). No surface may
+// carry a decided paper's review status again.
 const DECIDED_STATUS = [
   'Top ML venue (under review)',
   'target: top ML venue',
@@ -78,6 +79,11 @@ const DECIDED_STATUS = [
   'Five workshop submissions',
   '5 workshop submissions',
   '5 under double-blind review',
+  '1 more under double-blind review',
+  '1 under review',
+  'under peer review',
+  'is under double-blind review',
+  'paper under double-blind',
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -112,7 +118,10 @@ describe('public claims about the papers', () => {
     for (const named of ['the Workshop on Example Topics', 'the Example Workshop', 'a main-track paper', 'IEEE SaTML 2027', 'the NeurIPS 2026 main conference']) {
       expect(VENUES.some((venue) => venue.test(withoutAccepted(named))), named).toBe(true);
     }
-    for (const allowed of ['the ICML 2026 Workshop on Hypothesis Testing', 'three ML workshops', '1 under double-blind review', 'accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security']) {
+    // the name the site carried until 2026-10-16 was not the workshop's own,
+    // so it is no longer cut as an accepted venue
+    expect(VENUES.some((venue) => venue.test(withoutAccepted('the NeurIPS 2026 Workshop on Foundation and Large Model Security')))).toBe(true);
+    for (const allowed of ['the ICML 2026 Workshop on Hypothesis Testing', 'three ML workshops', '1 under double-blind review', 'accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security']) {
       expect(VENUES.some((venue) => venue.test(withoutAccepted(allowed))), allowed).toBe(false);
     }
     const offenders = surfaces().flatMap((file) => {

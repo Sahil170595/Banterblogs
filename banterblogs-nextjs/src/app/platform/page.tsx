@@ -14,7 +14,7 @@ import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
-import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
+import { CHIMERAFORGE_GPU_PROFILES, CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 
 const METADATA_DESCRIPTION =
   'Constitutional AI architecture · debate engine, BFT consensus, ZK proofs, fast-path router. 9 repos, 4 languages.';
@@ -130,7 +130,7 @@ const SUPPORTING_SYSTEMS: Repository[] = [
   {
     name: 'Chimeraforge',
     visual: ['fan', 0],
-    description: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — any registry / Ollama / HuggingFace model across 22 GPU profiles, plus an MCP server that serves the same numbers to AI assistants.`,
+    description: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — any registry / Ollama / HuggingFace model across ${CHIMERAFORGE_GPU_PROFILES} GPU profiles, plus an MCP server that serves the same numbers to AI assistants.`,
     link: { href: '/tools/chimeraforge', label: 'pip install chimeraforge' },
   },
   {
@@ -143,8 +143,9 @@ const SUPPORTING_SYSTEMS: Repository[] = [
   {
     name: 'Echo',
     visual: ['wave', 1],
-    meta: 'Python · Slack Bolt · discord.py',
-    description: 'Messaging channel adapters — Slack and Discord bridges to JARVIS with session tracking and device key auth.',
+    meta: 'Python · Slack Bolt · discord.py · python-telegram-bot · aiohttp',
+    description:
+      'Messaging channel adapters — Slack, Discord, Telegram, WhatsApp, and email bridges to JARVIS with session tracking and device key auth.',
   },
   {
     name: 'JARVIS Console',

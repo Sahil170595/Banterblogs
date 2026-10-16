@@ -106,7 +106,7 @@ export const STAR_SYSTEMS: StarSystemDef[] = [
   {
     // Thin channel adapters — the red dwarf of the system.
     name: 'Echo',
-    blurb: 'Messaging adapters — Slack and Discord bridges to JARVIS',
+    blurb: 'Messaging adapters — Slack, Discord, Telegram, WhatsApp, and email bridges to JARVIS',
     href: GITHUB_URLS.ECHO,
     ctaLabel: 'Open Echo on GitHub',
     a: 21.5, e: 0.08, inc: 0.42, node: 4.4, phase: 4.2, period: period(21.5),

@@ -31,7 +31,7 @@ describe('404 page', () => {
       'Error 404 · Page not found',
       'Nothing lives at this address.',
       'The link may be out of date or the URL mistyped; everything published here is reachable from these three places.',
-      'The workshop paper presented at ICML 2026, the papers under peer review and the ones in preparation.',
+      'The ICML 2026 workshop paper, a second workshop paper, the public preprints and the papers in preparation.',
       'Looking for a particular report, tool or episode? Use the search in the site header (inside the menu on small screens).',
     ]) {
       expect(text, sentence).toContain(sentence);

@@ -14,15 +14,13 @@ import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 // Every sentence of main's /papers prose, verbatim.
 const OWNER_PROSE = [
   'Independent research on inference optimization, constitutional AI architectures, and empirical safety evaluation.',
-  'The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, a second was accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security, and 2 more studies are public on arXiv; 1 is under double-blind review, with 11 in preparation.',
+  'The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, a second was accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security, and 2 more studies are public on arXiv, with 12 in preparation.',
   `Each is backed by reproducible technical reports and artifact-level provenance from a ${MEASUREMENTS.DISPLAY} measurement program.`,
   'The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program.',
-  'The first paper on Chimera’s own thesis, from Banterpacks, was accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security.',
+  'The first paper on Chimera’s own thesis, from Banterpacks, was accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security.',
   'The speculative-decoding screen and the quantization safety-proxy study are public arXiv preprints.',
-  'Double-blind, so titles stay off this page until decisions land.',
-  '1 submission, with its PDF, artifact manifest, and venue checklist complete.',
   'Synthesis papers and methodology work derived from the published technical report archive, plus papers out of review and being revised for resubmission.',
-  '3 workshop papers revising after decisions; titles withheld.',
+  '4 workshop papers revising after decisions; titles withheld.',
   `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements — the evidence layer behind these papers.`,
   'Experience, education, and the engineering that surrounds the research.',
   'The constitutional AI ecosystem these findings are built into.',
@@ -39,9 +37,8 @@ const PUBLISHED = 3;
 // no picture, so a row (R4: cards only where there is a picture)
 const ACCEPTED_ROWS = 1;
 const FLMSEC_TITLE = 'A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings';
-const FLMSEC_VENUE = 'NeurIPS 2026 Workshop on Foundation and Large Model Security';
-// the one paper still out is counted, never listed
-const UNDER_REVIEW_ROWS = 0;
+// the workshop's own name, as arXiv and the camera-ready print it
+const FLMSEC_VENUE = 'NeurIPS 2026 Workshop on Foundations of Language Model Security';
 const IN_PREP_ROWS = 8;
 const BORDER_WIDTH = /^(?:[\w-]+:)*border(?:-[trblxy])?(?:-\d+)?$/;
 
@@ -66,7 +63,6 @@ describe('papers head', () => {
     expect([...stats.querySelectorAll('li')].map(text)).toEqual([
       '2 accepted',
       '2 public preprints',
-      '1 under peer review',
       '16 papers total',
       `${MEASUREMENTS.SHORT} measurements`,
     ]);
@@ -103,8 +99,7 @@ describe('papers', () => {
     const badges = articles.map((article) => article.querySelector('.text-label-12-mono.rounded-full'));
     expect(badges.every(Boolean)).toBe(true);
     const tones = Object.fromEntries(badges.map((badge) => [text(badge!), badge!.className.match(/text-(status-\w+|foreground\/80)/)?.[1]]));
-    // no named paper carries Submitted any more: the only papers still out are
-    // the withheld workshop submissions, badged in the section, not on a row
+    // no paper carries Submitted: none is out for review
     expect(tones).toEqual({
       Presented: 'status-green',
       Accepted: 'status-green',
@@ -140,8 +135,8 @@ describe('papers', () => {
     expect(surfaces.every((surface) => surface.querySelector('svg.rv'))).toBe(true);
   });
 
-  it('sets the accepted paper without a picture and the papers in preparation as numbered hairline rows, and lists no row under review', () => {
-    for (const [section, count] of [['#published', ACCEPTED_ROWS], ['#under-review', UNDER_REVIEW_ROWS], ['#in-preparation', IN_PREP_ROWS]] as const) {
+  it('sets the accepted paper without a picture and the papers in preparation as numbered hairline rows', () => {
+    for (const [section, count] of [['#published', ACCEPTED_ROWS], ['#in-preparation', IN_PREP_ROWS]] as const) {
       const rows = [...page.querySelectorAll(`${section} article.list-row`)];
       expect(rows, section).toHaveLength(count);
       expect(rows.map((row) => text(row.querySelector('.font-mono')!)), section).toEqual(Array.from({ length: count }, (_, i) => String(i + 1).padStart(2, '0')));
@@ -174,18 +169,16 @@ describe('papers', () => {
     for (const stale of ['9 hidden-danger rows', 'routes all 10', 'refusal falls 12-68pp']) expect(thesis, stale).not.toContain(stale);
   });
 
-  it('counts the withheld submission under one Submitted badge, never as a card or a title', () => {
-    const section = page.querySelector('#under-review')!;
-    const badge = section.querySelector('.text-label-12-mono.rounded-full')!;
-    expect(text(badge)).toBe('Submitted');
-    expect(badge.className).toContain('text-status-amber');
-    expect(text(badge.nextElementSibling!)).toBe('1 submission, with its PDF, artifact manifest, and venue checklist complete.');
-    expect([...page.querySelectorAll('.card-surface, article')].filter((el) => /\bsubmission\b/.test(text(el)))).toEqual([]);
+  // the last paper out came back rejected (résumé, 2026-10-13): no paper is
+  // under review, so the page claims none and draws no section for one
+  it('claims no paper under review while none is out', () => {
+    expect(page.querySelector('#under-review')).toBeNull();
+    expect(text(page)).not.toMatch(/under (?:peer|double-blind) review/);
+    expect(page.querySelector('.text-status-amber')).toBeNull();
   });
 
   // the workshop decisions landed 2026-09-30: FLMSec accepted the first paper
-  // on Chimera's own thesis; the other four were rejected, one of them now out
-  // again under double-blind review and three being revised
+  // on Chimera's own thesis; the other four were rejected and are revising
   it('lists the FLMSec paper as accepted, by its title and venue', () => {
     const row = [...page.querySelectorAll('#published article.list-row')].find((el) => text(el.querySelector('h3')!) === FLMSEC_TITLE);
     expect(row).toBeDefined();
@@ -196,9 +189,9 @@ describe('papers', () => {
     expect(row!.querySelector('h3 a.row-link')?.getAttribute('href')).toBe('https://arxiv.org/abs/2610.01801');
   });
 
-  it('counts the three papers revising after the workshop decisions, never by title', () => {
+  it('counts the four papers revising after the workshop decisions, never by title', () => {
     const section = page.querySelector('#in-preparation')!;
-    const line = [...section.querySelectorAll('p')].find((p) => text(p) === '3 workshop papers revising after decisions; titles withheld.');
+    const line = [...section.querySelectorAll('p')].find((p) => text(p) === '4 workshop papers revising after decisions; titles withheld.');
     expect(line).toBeDefined();
     expect(line!.closest('article')).toBeNull();
   });
@@ -236,7 +229,7 @@ describe('papers', () => {
     expect(grids.length).toBeGreaterThanOrEqual(2);
     for (const grid of grids) expect(grid.className.split(/\s+/)).toContain('grid-cols-1');
     const rows = [...page.querySelectorAll('article.list-row')];
-    expect(rows).toHaveLength(ACCEPTED_ROWS + UNDER_REVIEW_ROWS + IN_PREP_ROWS);
+    expect(rows).toHaveLength(ACCEPTED_ROWS + IN_PREP_ROWS);
     for (const row of rows) expect(row.className).toContain('grid-cols-[auto_minmax(0,1fr)]');
   });
 
