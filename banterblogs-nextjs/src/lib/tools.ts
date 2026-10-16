@@ -80,13 +80,17 @@ export interface ToolDef {
   limits: string[];
 }
 
+// entries in planner/data/hardware.json at the version below; four surfaces
+// had each hand-copied a count and drifted to 22 while the registry reached 50
+export const CHIMERAFORGE_GPU_PROFILES = 50;
+
 export const CHIMERAFORGE_TOOL: ToolDef = {
   slug: 'chimeraforge',
   name: 'Chimeraforge',
   tagline: 'LLM deployment planner',
   summary:
     'Turns "which model, quantization, GPU, and backend — how many, will it fit, will it hit my SLO, what will it cost" into a fast, measured answer from your shell, your Python, or your AI assistant.',
-  version: '0.34.0',
+  version: '0.61.0',
   license: 'MIT',
   python: '3.10 – 3.14',
   install: 'pip install chimeraforge',
@@ -95,7 +99,8 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/Chimeraforge',
   changelog: 'https://github.com/Sahil170595/Chimeraforge/blob/main/CHANGELOG.md',
   ecosystem: true,
-  downloads: '34,000+',
+  // PePy total, 2026-10-16: 44,027
+  downloads: '44,000+',
   principle: {
     title: 'The trust principle',
     body: 'Every number is labeled measured, extrapolated, derived, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are derived: exact arithmetic over the model’s real architecture, not a measurement. Throughput is a measured lookup only on the rig the corpus was measured on; on any other GPU it is scaled by memory bandwidth and labeled extrapolated, otherwise an explicit roofline estimate, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
@@ -115,20 +120,31 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
       { label: 'Plan', detail: 'the cheapest config that meets your SLO', kind: 'result' },
     ],
   },
+  // `chimeraforge --help` at 0.61.0, in the README's order
   commands: [
     { name: 'plan', summary: 'predictive capacity planner' },
+    { name: 'check', summary: 'recheck a saved plan, offline unless asked' },
+    { name: 'bundle', summary: 'hand off a plan’s bound inputs offline' },
+    { name: 'study', summary: 'compare explicit scenarios offline' },
+    { name: 'deploy', summary: 'write serving configs from a saved plan; installs nothing' },
     { name: 'suggest', summary: 'discover and rank models that fit' },
     { name: 'measure', summary: 'benchmark live, plan on real numbers' },
     { name: 'workload', summary: 'derive plan inputs from real traffic' },
+    { name: 'monitor', summary: 'bounded SLO windows against a live server' },
     { name: 'validate', summary: 'audit predictions against measurements' },
+    { name: 'doctor', summary: 'this machine’s GPUs, what the planner can model, local engines' },
+    { name: 'contribute', summary: 'share bench results as fingerprinted, quarantined contributions' },
     { name: 'catalog', summary: 'local model catalog' },
     { name: 'safety', summary: 'live refusal screen' },
     { name: 'bench', summary: 'live inference benchmarking' },
+    { name: 'trace', summary: 'replay real requests against a server' },
+    { name: 'gate', summary: 'CI regression gate: pass, regression, malformed or inconclusive' },
     { name: 'eval', summary: 'quality evaluation' },
     { name: 'compare', summary: 'diff benchmark runs' },
     { name: 'refit', summary: 'update planner coefficients' },
     { name: 'report', summary: 'generate reports' },
     { name: 'mcp', summary: 'serve the planner to AI assistants' },
+    { name: 'serve', summary: 'the planner over local HTTP, offline by default' },
   ],
   highlights: [
     {
@@ -137,11 +153,11 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
     },
     {
       title: 'An MCP server',
-      body: 'chimeraforge mcp exposes the same planner to Claude, Cursor, and other MCP clients, so an assistant answers capacity questions from measured numbers instead of guessing.',
+      body: 'chimeraforge mcp exposes the same planner to Claude, Cursor, and other MCP clients over stdio or loopback Streamable HTTP, so an assistant answers capacity questions from measured numbers instead of guessing.',
     },
     {
-      title: '22 GPU profiles',
-      body: 'Consumer Ampere, Ada, and Blackwell (RTX 30/40/50-series), datacenter (A100 40/80GB, H100, H200, B200, L4, T4), and AMD MI300X — each with VRAM, bandwidth, FP16 TFLOPS, TDP, and interconnect.',
+      title: `${CHIMERAFORGE_GPU_PROFILES} GPU profiles`,
+      body: 'Consumer RTX 30/40/50-series and AMD RDNA4; workstation RTX PRO 6000 Blackwell, Radeon AI PRO R9700, and Intel Arc Pro B60/B65; datacenter A100 40/80GB, H100, H200, B200, L4, T4, and AMD MI300X through MI455X; and unified-memory Apple Silicon, Ryzen AI Max+ 395, and DGX Spark — each with VRAM, bandwidth, FP16 TFLOPS, TDP, interconnect, and the source it was read from.',
     },
   ],
   evidence: [
@@ -185,7 +201,7 @@ export const QUANTFIT_TOOL: ToolDef = {
   tagline: 'Quantization + safety-drift CLI',
   summary:
     'Quantize an LLM — and check it still refuses what it should. Quantization makes a model cheaper to serve and can quietly strip safety behavior; a 4-bit model that answers what the full-precision model refused is a regression no perplexity number will show you.',
-  version: '0.12.16',
+  version: '0.26.0',
   license: 'Apache-2.0',
   python: '3.10 – 3.14',
   install: 'pip install quantfit',
@@ -194,7 +210,8 @@ export const QUANTFIT_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/quantfit',
   changelog: 'https://github.com/Sahil170595/quantfit/blob/main/CHANGELOG.md',
   ecosystem: false,
-  downloads: '17,000+',
+  // PePy total, 2026-10-16: 23,938
+  downloads: '23,000+',
   principle: {
     title: 'Safety drift is a vector, not a number',
     body: 'verify-safety generates from both the unquantized baseline and the quantized model over a curated probe set, judges each response with a local classifier, and reports two axes: refusal-robustness drift (did the quant start complying with what should be refused — the dangerous direction) and over-refusal drift (did it start refusing what should be answered — the usability direction). A scalar refusal-delta can read zero while both axes move in opposite directions. Verdicts are bounded, never absolute: a no-detection result bounds the drift, it does not certify safety.',
@@ -212,15 +229,25 @@ export const QUANTFIT_TOOL: ToolDef = {
       { label: 'Verdict', detail: 'bounded by a Wilson 95% CI, never absolute', kind: 'result' },
     ],
   },
+  // `quantfit --help` at 0.26.0
   commands: [
     { name: 'verify-safety', summary: 'did quantization break refusals? two-axis drift' },
     { name: 'check', summary: 'will it fit? read from HF metadata, no download' },
     { name: 'plan', summary: 'what config a heuristic would pick, and why' },
     { name: 'quantize', summary: 'run the quantization across the method matrix' },
+    { name: 'verify', summary: 'smoke-load a quantized artifact; bounded GGUF structure checks' },
     { name: 'probe', summary: 'per-bit-width quantization sensitivity' },
+    { name: 'inspect-run', summary: 'a paired baseline-versus-quant run through Inspect' },
+    { name: 'cold-run', summary: 'three fresh, uncached native GGUF replicates' },
     { name: 'gate', summary: 'pre-release CI check that refuses to pass on thin evidence' },
     { name: 'screen', summary: 'run a target set to QSR spec' },
+    { name: 'resolution', summary: 'what a report can resolve, given the judge’s calibration' },
+    { name: 'repeatability', summary: 'does a full report agree with its replicates' },
+    { name: 't0', summary: 'do three same-environment replicates agree' },
     { name: 'reproduce', summary: 'decide whether one report reproduces another' },
+    { name: 'references', summary: 'verify reference artifacts byte for byte' },
+    { name: 'bundle', summary: 'portable aggregate evidence, offline' },
+    { name: 'evidence', summary: 'fetch approved, immutable public aggregates' },
     { name: 'audit', summary: 'hold the docs to the code — exit 3 on drift' },
     { name: 'emit', summary: 'render any drift report as a model card' },
     { name: 'list', summary: 'the supported method × scheme matrix' },

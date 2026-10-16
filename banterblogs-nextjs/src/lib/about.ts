@@ -1,5 +1,5 @@
 import { MEASUREMENTS, REPORTS } from './constants';
-import { CHIMERAFORGE_TOOL } from './tools';
+import { CHIMERAFORGE_GPU_PROFILES, CHIMERAFORGE_TOOL } from './tools';
 
 // The /about page's ecosystem list and onward links (owner copy), kept apart
 // from its layout (app/about/page.tsx), so the page test can hold every line
@@ -25,7 +25,7 @@ export const ECOSYSTEM: EcosystemRepo[] = [
   {
     name: 'Chimeraforge',
     lang: 'Python, Rust',
-    what: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — plans any registry / Ollama / HuggingFace model across 22 GPU profiles, and serves the same numbers to AI assistants over MCP.`,
+    what: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — plans any registry / Ollama / HuggingFace model across ${CHIMERAFORGE_GPU_PROFILES} GPU profiles, and serves the same numbers to AI assistants over MCP.`,
   },
   {
     name: 'Chimera Multi-Agent',
@@ -40,7 +40,7 @@ export const ECOSYSTEM: EcosystemRepo[] = [
   {
     name: 'Echo',
     lang: 'Python',
-    what: 'Messaging channel adapters — Slack and Discord bridges to JARVIS. Session tracking, device key auth.',
+    what: 'Messaging channel adapters — Slack, Discord, Telegram, WhatsApp, and email bridges to JARVIS. Session tracking, device key auth.',
   },
   {
     name: 'JARVIS Console',

@@ -11,15 +11,14 @@
 
 ## What This Is
 
-Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar. It is NOT a chatbot, NOT a streaming tool, and NOT a portfolio site. The platform runs on consumer hardware and handles calendar, inbox, smart home, memory, proactive intelligence, and tool execution through a JARVIS gateway with 7 modules (calendar, inbox, memory, smart home, proactive, tools, store).
+Chimera is a constitutional AI enforcement architecture built by Sahil Kadadekar. It is NOT a chatbot, NOT a streaming tool, and NOT a portfolio site. The platform runs on consumer hardware and handles calendar, inbox, smart home, memory, proactive intelligence, and tool execution through a JARVIS gateway with 7 modules (calendar, inbox, memory, smart home, proactive, tools, voice).
 
 ## Scale
 
 - 9 repositories across Python, Rust, TypeScript, and C#
 - 1,463,000+ research measurements across 55 technical reports
 - 1 paper presented at the ICML 2026 Workshop on Hypothesis Testing (workshop, not the main conference)
-- 1 paper accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security (workshop, not the main conference)
-- 1 paper under double-blind peer review
+- 1 paper accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security (workshop, not the main conference)
 - 2 public preprints: Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion (arXiv:2606.25097) and Quality Is Not a Safety Proxy Under Quantization (arXiv:2606.10154)
 - 268 development episodes (194 Banterpacks + 74 Chimera) — per-commit episode stream now archived; the final episode in each stream is a full retrospective, and ongoing work is documented in the research reports
 - PyPI package: `pip install chimeraforge`
@@ -34,16 +33,16 @@ Core monorepo. Six interconnected subsystems handling constitutional AI enforcem
 ML research platform. Inference API (FastAPI), benchmarking infrastructure, AutoOpt agent (Thompson sampling, multi-armed bandit, SLA enforcement), 37-file evaluation framework. 4 compilation backends (PyTorch Compile, ONNX, JIT, FX), 5 quantization formats. Source of the 1.46M+ measurements across 55 reports.
 
 ### 3. Chimeraforge (Python, Rust)
-LLM deployment optimizer published on PyPI (v0.34.0). `chimeraforge plan` CLI — model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 22 GPU profiles. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 2,066 tests. Every number is labeled measured / extrapolated / derived / estimated / unknown; an MCP server (`chimeraforge mcp`) serves the planner to AI assistants.
+LLM deployment optimizer published on PyPI (v0.61.0). A 23-command CLI around `chimeraforge plan`, a model-agnostic 5-gate capacity planner (VRAM, Quality, Safety [opt-in], Latency, Cost) that plans any registry / Ollama / HuggingFace model across 50 GPU profiles, including unified-memory devices. 6 validated predictive models (VRAM R²=0.968, throughput R²=0.859) plus an opt-in safety lookup (TR134 refusal + TR142 RTSI), dual-language harnesses, 3,828 tests. Every number is labeled measured / extrapolated / derived / estimated / unknown; an MCP server (`chimeraforge mcp`) serves the planner to AI assistants.
 
 ### 4. Chimera Multi-Agent (Python)
-Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the ecosystem observability layer (OpenTelemetry, Datadog, dead-letter queue with 102 tests).
+Muse Protocol — 6-agent content pipeline with ClickHouse analytics. Also the ecosystem observability layer (OpenTelemetry, Datadog, dead-letter queue).
 
 ### 5. Chimeradroid (C# / Unity)
 Android companion for JARVIS — voice, chat, session handoff, tool approval, mesh networking, offline-first.
 
 ### 6. Echo (Python)
-Messaging channel adapters — Slack and Discord bridges to JARVIS with session tracking and device key auth.
+Messaging channel adapters — Slack, Discord, Telegram, WhatsApp, and email bridges to JARVIS with session tracking and device key auth.
 
 ### 7. JARVIS Console (TypeScript / Next.js)
 Web console for JARVIS — chat with streaming, control room dashboard, cognitive agent ELO, tool catalog, workflow management, memory browser.
@@ -92,20 +91,17 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - **Single-judge safety labels are insufficient** — cross-LLM κ = 0.69 lands in the "triangulate" bucket; safety-specialist judges measure a different axis than general LLMs (TR148, 68K judge rows).
 - **Speculative decoding × safety: no detectable divergence** at 16,783 samples (TR144).
 
-## Papers — 16 Total: 2 Accepted, 2 Public Preprints, 1 Under Peer Review, 11 In Preparation
+## Papers — 16 Total: 2 Accepted, 2 Public Preprints, 12 In Preparation
 
 ### Presented — ICML 2026 Workshop on Hypothesis Testing
 - A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving (TR138; working title "Batch Inference Safety Under Non-Determinism") — accepted 2026-05-22 and presented at the ICML 2026 Workshop on Hypothesis Testing. arXiv: https://arxiv.org/abs/2605.27763 (cs.LG). This is a workshop paper, not the ICML 2026 main conference.
 
-### Accepted — NeurIPS 2026 Workshop on Foundation and Large Model Security
+### Accepted — NeurIPS 2026 Workshop on Foundations of Language Model Security
 - A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings — the first paper on Chimera's own thesis, from Banterpacks. In tested prompt-controlled settings, raw safe centroids discriminate weakly or inversely; safe-minus-unsafe directions reach ROC-AUC 0.588–0.793. arXiv: https://arxiv.org/abs/2610.01801 (cs.LG). This is a workshop paper, not the main conference.
 
 ### Public preprints
 - Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion (TR144) — arXiv:2606.25097. Examines output differences and refusal behavior under temperature-zero speculative decoding.
 - Quality Is Not a Safety Proxy Under Quantization (TR125, TR134, TR142) — arXiv:2606.10154 · live demo: QuantSafe Certifier (https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier)
-
-### Under peer review
-- One submission — title and venue withheld during double-blind review.
 
 ### Reviewing
 - NeurIPS 2026 reviewer: 10 workshop reviews (FLMSec 2, JUDGe 3, RTCA 5) and 2 ethics reviews (main conference, Evaluations & Datasets track); all 12 completed.
@@ -121,7 +117,7 @@ Each completed phase (1–6) has a conclusive synthesis (dissertation-style), ex
 - Compile-Stack Attribution (TR126, TR147) — withdrawn from venue review; revising for resubmission
 - Many-Shot Jailbreak Under Quantization (TR140) — out of review; revising for resubmission
 - Multi-Turn Jailbreak × Quantization (TR139) — out of review; revising for resubmission
-- Three workshop papers revising after decisions — titles withheld.
+- Four workshop papers revising after decisions — titles withheld.
 
 ## JARVIS Gateway
 
@@ -140,11 +136,13 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 ## PyPI Package
 
 - Package: chimeraforge
-- Version: 0.34.0
+- Version: 0.61.0
 - Install: `pip install chimeraforge`
 - Python: >=3.10
 - License: MIT
-- CLI (13 commands): `chimeraforge plan` — model-agnostic 5-gate capacity planner (VRAM, quality, safety [opt-in], latency, cost) for any registry / Ollama / HuggingFace model; plus `suggest` / `catalog` / `measure` / `workload` / `validate` / `safety` / `bench` / `eval` / `compare` / `refit` / `report` / `mcp`
+- CLI (23 commands): `chimeraforge plan` — model-agnostic 5-gate capacity planner (VRAM, quality, safety [opt-in], latency, cost) for any registry / Ollama / HuggingFace model; plus `check` / `bundle` / `study` / `deploy` / `suggest` / `measure` / `workload` / `monitor` / `validate` / `doctor` / `contribute` / `catalog` / `safety` / `bench` / `trace` / `gate` / `eval` / `compare` / `refit` / `report` / `mcp` / `serve`
+- Hardware: 50 GPU profiles across consumer, workstation, datacenter and unified-memory devices (Apple Silicon, Ryzen AI Max+ 395, DGX Spark); `chimeraforge doctor` checks the local machine
+- `deploy` writes serving configs (commands, Compose files, Ollama Modelfiles, service units) from a saved plan and refuses configurations it cannot represent; it installs and starts nothing
 - Trust principle: every number is labeled `measured`, `extrapolated`, `derived`, `estimated`, or `unknown`; a zero-result plan names the gate that rejected every candidate
 - Page: https://chimeraforge.vercel.app/tools/chimeraforge
 - URL: https://pypi.org/project/chimeraforge/
@@ -152,7 +150,7 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 ## Companion CLI: quantfit (standalone — NOT part of the Chimera ecosystem)
 
 - Package: quantfit
-- Version: 0.12.16
+- Version: 0.26.0
 - Install: `pip install quantfit`
 - Python: >=3.10
 - License: Apache-2.0
@@ -161,7 +159,7 @@ An embedding fast-path router handles routine queries and escalates uncertain on
 - `--report drift.json` writes an auditable schema-v1 artifact: judge + probe-set revision pins, decode params, resolved per-arm dtypes, environment fingerprint, and the full drift vector with CIs.
 - NOT auto-quantization: you pass `--method`. Learned routing (AMQ, KL-Lens) is explicitly out of scope; `plan`/`probe` stay transparent diagnostics.
 - Terminology: the project deliberately says "safety drift", not "safety tax" — in the alignment literature a safety/alignment *tax* is capability paid FOR safety, nearly the inverse of what this measures.
-- Also: `quantfit gate` (pre-release CI check) · `quantfit screen` (run a target set to QSR spec) · `quantfit reproduce` (does one report reproduce another?) · `quantfit audit` (holds the docs to the code, exit 3 on drift)
+- Also: `quantfit gate` (pre-release CI check) · `quantfit screen` (run a target set to QSR spec) · `quantfit reproduce` (does one report reproduce another?) · `quantfit audit` (holds the docs to the code, exit 3 on drift) · `quantfit verify` (smoke-load a quantized artifact) · `quantfit t0` / `repeatability` / `cold-run` (replicate agreement) · `quantfit bundle` / `evidence` / `references` (portable, byte-verified evidence) — 21 commands in all
 - Page: https://chimeraforge.vercel.app/tools/quantfit
 - URL: https://pypi.org/project/quantfit/
 - GitHub: https://github.com/Sahil170595/quantfit
@@ -217,7 +215,7 @@ Interactive builds, each running live on its own page, filed in collections (the
 - Substack: https://substack.com/@sahilkadadekar
 - LinkedIn: https://linkedin.com/in/sahilkadadekar
 - Twitter: https://twitter.com/sahilkadadekar
-- HuggingFace (23 model releases): https://huggingface.co/Crusadersk
+- HuggingFace (30 model releases): https://huggingface.co/Crusadersk
 - QuantSafe Certifier (HuggingFace Space): https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier
 - QuantSafe launch article (HuggingFace blog): https://huggingface.co/blog/build-small-hackathon/quantsafe
 
