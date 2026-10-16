@@ -76,7 +76,7 @@ Reports can be standalone markdown files or directories containing `meta.json`, 
 | `/reports/[id]` | Individual report with prev/next navigation |
 | `/reports/compendium` | Full research compendium reader |
 | `/reports.json` | Machine-readable manifest of every report (build-time generated) |
-| `/papers` | Independent research papers — published, under review, in preparation |
+| `/papers` | Independent research papers — workshop papers, public preprints, papers in preparation |
 | `/work` | CV-style page — experience, education, skills, open-source |
 | `/tools` | Both shipped PyPI CLIs — chimeraforge and quantfit |
 | `/tools/[slug]` | Individual tool page — install, commands, evidence, limits |

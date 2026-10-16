@@ -38,7 +38,7 @@ const ACCEPTED: Paper[] = [
     title: 'A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings',
     thesis:
       'The first paper on Chimera’s own thesis, from Banterpacks. In tested prompt-controlled settings, raw safe centroids discriminate weakly or inversely; safe-minus-unsafe directions reach ROC-AUC 0.588–0.793.',
-    venue: 'NeurIPS 2026 Workshop on Foundation and Large Model Security',
+    venue: 'NeurIPS 2026 Workshop on Foundations of Language Model Security',
     status: 'Accepted',
     trs: [],
     arxiv: 'https://arxiv.org/abs/2610.01801',
@@ -158,19 +158,17 @@ const IN_PREP: Paper[] = [
 ];
 
 // Counts are derived so the stat row and the metadata cannot drift from the
-// arrays the page actually renders.
-// The one paper still out is in double-blind review; its title and venue stay
-// off public pages until the decision lands.
-const UNDER_REVIEW_COUNT = 1;
-// workshop papers rejected on 2026-09-30 and being revised; never titled here,
+// arrays the page actually renders. No paper is under review; one that goes
+// out is counted, never titled, until its decision lands.
+// workshop papers rejected after review and being revised; never titled here,
 // so a later double-blind resubmission stays anonymous
-const REVISING_WITHHELD = 3;
+const REVISING_WITHHELD = 4;
 const IN_PREP_COUNT = IN_PREP.length + REVISING_WITHHELD;
-const TOTAL_PAPERS = ACCEPTED.length + PUBLIC_PREPRINTS.length + UNDER_REVIEW_COUNT + IN_PREP_COUNT;
+const TOTAL_PAPERS = ACCEPTED.length + PUBLIC_PREPRINTS.length + IN_PREP_COUNT;
 
 const PREPRINT_LABEL = PUBLIC_PREPRINTS.length === 1 ? 'public preprint' : 'public preprints';
 
-const METADATA_DESCRIPTION = `${ACCEPTED.length} workshop papers accepted · ${PUBLIC_PREPRINTS.length} ${PREPRINT_LABEL} · ${UNDER_REVIEW_COUNT} under peer review · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
+const METADATA_DESCRIPTION = `${ACCEPTED.length} workshop papers accepted · ${PUBLIC_PREPRINTS.length} ${PREPRINT_LABEL} · ${IN_PREP_COUNT} in preparation · Independent research on inference optimization, constitutional AI, and safety evaluation.`;
 
 // the public papers with an evidence report have its picture, so a card; the
 // rest are rows (R4: cards only where there is a picture)
@@ -342,7 +340,6 @@ export default function PapersPage() {
               items={[
                 { value: ACCEPTED.length, label: 'accepted' },
                 { value: PUBLIC_PREPRINTS.length, label: PREPRINT_LABEL },
-                { value: UNDER_REVIEW_COUNT, label: 'under peer review' },
                 { value: TOTAL_PAPERS, label: 'papers total' },
                 { value: MEASUREMENTS.SHORT, label: 'measurements' },
               ]}
@@ -358,7 +355,7 @@ export default function PapersPage() {
         <Section
           id="published"
           title="Accepted & public"
-          description="The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program. The first paper on Chimera’s own thesis, from Banterpacks, was accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security. The speculative-decoding screen and the quantization safety-proxy study are public arXiv preprints."
+          description="The ICML 2026 workshop paper was accepted 2026-05-22 and presented at the workshop — the first peer-reviewed paper from the program. The first paper on Chimera’s own thesis, from Banterpacks, was accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security. The speculative-decoding screen and the quantization safety-proxy study are public arXiv preprints."
           aside
         >
           <ul className={PAPER_GRID}>
@@ -375,21 +372,6 @@ export default function PapersPage() {
               </Reveal>
             ))}
           </ol>
-        </Section>
-
-        <Section
-          id="under-review"
-          title="Under peer review"
-          description="Double-blind, so titles stay off this page until decisions land."
-          aside
-        >
-          {/* the withheld submission is counted here, never titled */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <Badge tone={PAPER_STATUS_TONE.Submitted}>Submitted</Badge>
-            <p className="text-copy-16 text-muted-foreground">
-              {UNDER_REVIEW_COUNT} submission, with its PDF, artifact manifest, and venue checklist complete.
-            </p>
-          </div>
         </Section>
 
         <Section
@@ -415,8 +397,8 @@ export default function PapersPage() {
         <div className="page-section">
           <p className="max-w-[60ch] text-copy-17 text-prose">
             The first paper was presented at the ICML 2026 Workshop on Hypothesis Testing, a second was accepted at the{' '}
-            NeurIPS 2026 Workshop on Foundation and Large Model Security, and {PUBLIC_PREPRINTS.length} more studies are public on
-            arXiv; {UNDER_REVIEW_COUNT} is under double-blind review, with {IN_PREP_COUNT} in preparation. Each is backed by reproducible technical reports and artifact-level provenance from a {MEASUREMENTS.DISPLAY}{' '}
+            NeurIPS 2026 Workshop on Foundations of Language Model Security, and {PUBLIC_PREPRINTS.length} more studies are public on
+            arXiv, with {IN_PREP_COUNT} in preparation. Each is backed by reproducible technical reports and artifact-level provenance from a {MEASUREMENTS.DISPLAY}{' '}
             measurement program.
           </p>
           <OnwardLinks links={CROSS_LINKS} className="mt-10" />

@@ -22,7 +22,7 @@ const SURFACES = [
 // paper's status when its full venue follows within the window, or as a
 // status or count that names no venue
 const UNDATED_ACCEPTED = /\b[Aa]ccepted\b(?! \d{4}-\d{2}-\d{2})/g;
-const FLMSEC_VENUE = 'Workshop on Foundation and Large Model Security';
+const FLMSEC_VENUE = 'Workshop on Foundations of Language Model Security';
 const VENUE_WINDOW = 160;
 const STATUS_FORMS = /\d+ accepted\b|workshop(?:-| papers )accepted\b|['"]accepted['"]|\baccepted: '|\baccepted & public/gi;
 const CONTEXT_CHARS = 40;
@@ -57,9 +57,9 @@ describe('workshop paper framing', () => {
   it('knows which uses of "accepted" name the accepted workshop paper', () => {
     for (const fine of [
       'accepted 2026-05-22 and presented',
-      'a second was accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security',
+      'a second was accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security',
       "status: 'Accepted',",
-      '2 accepted + 1 under review',
+      '2 accepted + 2 preprints',
       '2 workshop-accepted papers',
     ]) {
       expect(undatedAccepted(fine), fine).toEqual([]);

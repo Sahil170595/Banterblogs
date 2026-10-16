@@ -19,7 +19,7 @@ const DESTINATIONS = [
   {
     href: '/papers',
     title: 'Papers',
-    blurb: 'The workshop paper presented at ICML 2026, the papers under peer review and the ones in preparation.',
+    blurb: 'The ICML 2026 workshop paper, a second workshop paper, the public preprints and the papers in preparation.',
   },
   {
     href: '/tools',

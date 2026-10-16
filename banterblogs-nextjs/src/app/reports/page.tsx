@@ -10,7 +10,7 @@ import { IntentLink } from '@/components/ui/IntentLink';
 import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
-const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · papers under peer review and a paper presented at the ICML 2026 Workshop on Hypothesis Testing.`;
+const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · the research behind a paper presented at the ICML 2026 Workshop on Hypothesis Testing.`;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/reports' },
