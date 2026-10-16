@@ -2,9 +2,9 @@ import { MEASUREMENTS, REPORTS } from './constants';
 import { formatMonth, monthIndex, parseSpan } from './timeline';
 import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from './tools';
 
-// The /work page's content (owner copy from résumé v8, with the PhD CV v4 of
-// 2026-09-21 winning where the two disagree), kept apart from its layout
-// (app/work/page.tsx), so the page test can hold every sentence to it.
+// The /work page's content (owner copy from résumé v9 of 2026-10-13, with the
+// PhD CV v4 of 2026-09-21 winning where the two disagree), kept apart from its
+// layout (app/work/page.tsx), so the page test can hold every sentence to it.
 
 /** the page title: the name /about already builds under ("Built by …") */
 export const WORK_TITLE = 'Sahil Kadadekar';
@@ -13,8 +13,8 @@ export const WORK_TITLE = 'Sahil Kadadekar';
 export const HERO_HEADLINE =
   'Founding ML engineer building production agentic and inference systems for clinical AI, cybersecurity, and model deployment.';
 
-// public model repositories on huggingface.co/Crusadersk (HF API, 2026-09-22)
-const HUGGING_FACE_MODELS = 23;
+// public model repositories on huggingface.co/Crusadersk (HF API, 2026-10-16)
+const HUGGING_FACE_MODELS = 30;
 
 // a download count as tools.ts states it, a floor: "28,000+"
 const DOWNLOAD_FLOOR = /^(\d{1,3}(?:,\d{3})*)\+$/;
@@ -31,7 +31,7 @@ export const COMBINED_PYPI_DOWNLOADS = `${Math.floor(
   [CHIMERAFORGE_TOOL, QUANTFIT_TOOL].reduce((sum, tool) => sum + downloadFloor(tool.downloads ?? ''), 0) / THOUSAND,
 )}K+`;
 
-export const HERO_SUMMARY = `Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped Beacon to 5 enterprise pilots, cutting conversation LLM costs 30–80%. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints, six merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
+export const HERO_SUMMARY = `Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped Beacon to 8 pilots (5 enterprise), cutting LLM costs 30–80%. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundations of Language Model Security), 2 public arXiv preprints, 4 public RL/evaluation projects, six merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
 
 export interface ResearchItem {
   label: string;
@@ -55,12 +55,34 @@ export const RESEARCH: ResearchItem[] = [
     ],
   },
   {
+    label: 'RL Environments & Agent Evaluation',
+    href: '/projects/reinforcement-learning',
+    meta: '4 projects · public source + interactive demos',
+    bullets: [
+      'Turncraft: customer-service agent environment with 9 identity-bound tools, a state-grounded 4-part reward, and 34 gating controls (oracle 0.978–1.000, do-nothing ≤0.177, forbidden ≤−0.380); a null control exposed a no-op reward loophole; caught a replay bug scoring hijacked runs clean.',
+      "Patchglass: containerized code-repair/test-synthesis harness with hidden-test restoration and per-test verdicts; graded real SWE-bench Pro (Python/JS/Go), SEC-bench, and QF-Bench tasks and failed GPT-4o's clean-but-wrong patch (0/4 fail-to-pass despite 52/52 pass-to-pass). A pre-build audit found 1 of 32 harnesses digest-pinned its base image, which set the design brief.",
+      'Gatebound: Gymnasium flight-routing environment with masked REINFORCE, deadline-aware planning, and source-backed scoring on 2.65M US flight records (2025 held out). The planner traded eventual arrival for deadline arrival (EWR–SLC 0 → 10/100), learned policies stayed below nonstop-first, and a local-LLM policy picked one action in all 20 trials: negative results I kept.',
+      "Counterledger: offline policy evaluation (fitted Q, sequential doubly robust, paired bootstrap, support gates); in the original synthetic ICU-style study, a state-independent control matched an LLM policy's estimated gain (difference −0.001, 95% CI [−0.006, 0.004]) and 97.4% of the reward gap traced to one blood-pressure term, so I reported no robust improvement.",
+      "Turncraft's control scores are in its public README; the other figures come from the original evaluation runs, and the public repos are cleaned releases without those run artifacts. Each demo here runs its own seeded fixture in the browser.",
+    ],
+    evidence: [
+      { label: 'Turncraft demo', href: '/projects/reinforcement-learning/customer-service' },
+      { label: 'turncraft-env', href: 'https://github.com/Sahil170595/turncraft-env' },
+      { label: 'Patchglass demo', href: '/projects/reinforcement-learning/code-verification' },
+      { label: 'patchglass', href: 'https://github.com/Sahil170595/patchglass' },
+      { label: 'Gatebound demo', href: '/projects/reinforcement-learning/flight-routing' },
+      { label: 'gatebound-rl', href: 'https://github.com/Sahil170595/gatebound-rl' },
+      { label: 'Counterledger demo', href: '/projects/reinforcement-learning/offline-policy-evaluation' },
+      { label: 'counterledger-ope', href: 'https://github.com/Sahil170595/counterledger-ope' },
+    ],
+  },
+  {
     label: 'LLM Safety Research & Evaluation Infrastructure',
     href: '/reports',
-    meta: `${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements · 2 accepted + 1 under review + 2 preprints`,
+    meta: `${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements · 2 accepted + 2 preprints`,
     bullets: [
       'Built the Banterhearts execution substrate: shared multi-backend evaluation and serving harnesses (Transformers, Ollama, ONNX, vLLM, SGLang, TGI), per-sample JSONL provenance, seed/config/git manifests, checkpointed OpenAI/Anthropic batch judges, disagreement-aware triangulation, fail-closed analyzers, and frozen-byte paper packages under dependency-locked CI.',
-      'Led the independent program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Presented at the ICML 2026 Workshop on Hypothesis Testing; accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security (safety-embedding directions, the first paper on Chimera’s own thesis); 1 more paper under double-blind review; two studies public on arXiv, on quantization safety and temperature-zero speculative decoding. Every paper is first-author.',
+      'Led the independent program across training, deployment, and inference: consumer-GPU discovery with bounded A100 confirmation; pre-registered paired designs, bootstrap CIs, TOST, and Holm-Bonferroni. Presented at the ICML 2026 Workshop on Hypothesis Testing; accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security (safety-embedding directions, the first paper on Chimera’s own thesis); two studies public on arXiv, on quantization safety and temperature-zero speculative decoding. Every paper is first-author.',
       'Tested three serving-performance assumptions: an M/D/1 model with linear parallel-service scaling underestimated queue wait by up to 20.4×; Ollama NUM_PARALLEL changes showed no significant effect in 30 contrasts; direct PyTorch lost more per-agent throughput than Ollama as concurrency rose from one to eight (86.4% versus 82.1%). A separate N=8 comparison found up to 2.25× vLLM throughput over Ollama.',
       'Isolated deployment effects with a 78,183-row, four-stack ablation; separate safety experiments found chat-template divergence could exceed numerical-precision effects. Designed controls for backend, template, and concurrency identity so changes in the serving environment were not misattributed to model weights; deployment rules include Q4_K_M and compile-prefill-only on Linux.',
       'The TAIS preprint examines output differences and refusal behavior under temperature-zero speculative decoding.',
@@ -71,7 +93,7 @@ export const RESEARCH: ResearchItem[] = [
     evidence: [
       { label: 'arXiv:2605.27763 — ICML 2026 workshop paper, presented', href: 'https://arxiv.org/abs/2605.27763' },
       {
-        label: 'arXiv:2610.01801 — accepted at the NeurIPS 2026 Workshop on Foundation and Large Model Security',
+        label: 'arXiv:2610.01801 — accepted at the NeurIPS 2026 Workshop on Foundations of Language Model Security',
         href: 'https://arxiv.org/abs/2610.01801',
       },
       { label: 'arXiv:2606.10154', href: 'https://arxiv.org/abs/2606.10154' },
@@ -81,9 +103,10 @@ export const RESEARCH: ResearchItem[] = [
   {
     label: 'Chimeraforge — LLM deployment planner',
     href: 'https://pypi.org/project/chimeraforge/',
-    meta: `v${CHIMERAFORGE_TOOL.version} · ${CHIMERAFORGE_TOOL.downloads} downloads · 2,066 tests`,
+    // tests: the README's collected count (pytest --collect-only, v0.61.0)
+    meta: `v${CHIMERAFORGE_TOOL.version} · ${CHIMERAFORGE_TOOL.downloads} downloads · 3,828 tests`,
     bullets: [
-      'A 13-command CLI/Python/MCP planner (five MCP tools) that ingests JSONL or live vLLM/SGLang telemetry; searches model × quantization × backend × GPU/TP/PP plans across heterogeneous fleets; propagates weakest-source evidence; predicts VRAM, TTFT/TPOT, throughput, KV-cache/offload, prefix caching, multi-LoRA, cost, and energy; and emits vLLM/TGI/SGLang/Ollama launch commands, API break-even, and provenance briefs.',
+      `A ${CHIMERAFORGE_TOOL.commands.length}-command CLI/Python/MCP planner (five MCP tools) with GPU discovery and platform-aware unified-memory budgets; it ingests JSONL or live vLLM/SGLang telemetry; searches model × quantization × backend × GPU/TP/PP plans across heterogeneous fleets; propagates weakest-source evidence; predicts VRAM, TTFT/TPOT, throughput, KV-cache/offload, prefix caching, multi-LoRA, cost, and energy; and emits vLLM/TGI/SGLang/Ollama launch commands, API break-even, and provenance briefs.`,
       'Made its evidence hierarchy executable: every estimate is labeled measured, extrapolated, derived, estimated, or unknown; validation separates in-corpus lookup from out-of-sample estimates, and --expect-fingerprint aborts if the pre-registered matrix changes. Validated on within-registry record-level holdouts: VRAM R²=.968, throughput R²=.859, composite quality RMSE=.062 (0–1 scale), latency MAPE=1.05%; stale prices and unsupported estimates fail closed.',
     ],
     evidence: [
@@ -96,7 +119,8 @@ export const RESEARCH: ResearchItem[] = [
   {
     label: 'quantfit — quantization safety measurement CLI',
     href: 'https://pypi.org/project/quantfit/',
-    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 1,369 tests`,
+    // tests: pytest --collect-only on main at 0.26.0 (2,221 run + 6 deselected), 2026-10-16
+    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 2,227 tests`,
     bullets: [
       'Implements QSR spec v0, a versioned quantization-safety measurement protocol, across AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF with capacity preflight; its two-axis release gate (refusal robustness + over-refusal) uses at-risk denominators, Wilson CIs/power and minimum-detectable-effect checks, revision-pinned artifacts, exact-engine provenance, stable JSON/exit codes, and JUnit where unmeasured axes skip rather than pass.',
       'Completed a 15-target screen (14 measured; 0 dangerous-axis regressions across 12 GGUF + 2 compressed-tensor targets) with a passing sensitivity control; calibrated and replaced a judge with 56.2% false positives, then human-adjudicated 11 flags (6 real, 5 judge errors), preventing an approximately 2× overclaim. Cross-hardware T0 replications invalidated an apparent safety breach, so I voided the result rather than publish it.',
@@ -106,7 +130,7 @@ export const RESEARCH: ResearchItem[] = [
     label: `Hugging Face — ${HUGGING_FACE_MODELS} model releases`,
     href: 'https://huggingface.co/Crusadersk',
     bullets: [
-      `Published ${HUGGING_FACE_MODELS} Hugging Face models: 11 AWQ/GPTQ 4-bit + 6 FP8-Dynamic releases across Llama 3.2, Qwen 2.5, Mistral, Gemma 2, and Phi-2; 4 GPT-2 scaling variants; the MedMCQA Dr.GRPO LoRA adapter; and a ModernBERT refusal classifier (0.9773 macro F1 on 441 unambiguous XSTest GPT-4 responses, trained on WildGuardMix).`,
+      `Published ${HUGGING_FACE_MODELS} Hugging Face models: 11 AWQ/GPTQ 4-bit + 6 FP8-Dynamic releases across Llama 3.2, Qwen 2.5, Mistral, Gemma 2, and Phi-2; 4 GPT-2 scaling variants; the MedMCQA Dr.GRPO LoRA adapter; 7 Qwen RL-study checkpoints; and a ModernBERT refusal classifier (0.9773 macro F1 on 441 unambiguous XSTest GPT-4 responses, trained on WildGuardMix).`,
     ],
     evidence: [
       {
@@ -176,7 +200,7 @@ export const RESEARCH: ResearchItem[] = [
     label: 'Ollama PR #16669 — merged',
     href: 'https://github.com/ollama/ollama/pull/16669',
     bullets: [
-      "Merged Ollama PR #16669 (dhiltgen-approved, commit fc58544): root-caused two enumeration bugs in Ollama's Go discovery path causing inverted iGPU/dGPU Vulkan classification on Windows hybrid graphics; about 9× faster inference on the affected system, with regression tests for both failure modes.",
+      "Merged Ollama PR #16669 (dhiltgen-approved, commit fc58544): root-caused two enumeration bugs in Ollama's Go discovery path causing inverted iGPU/dGPU Vulkan classification on Windows hybrid graphics; short requests took 3.8s on the iGPU versus 0.42–0.8s on the RTX 4080 across runs (about 5–9× faster), with regression tests for both failure modes.",
     ],
   },
   {
@@ -223,12 +247,12 @@ export const EXPERIENCE: Experience[] = [
     location: 'New York, USA',
     dates: 'Dec 2025 – Mar 2026',
     bullets: [
-      "Built Beacon, GhostEye's multi-agent JIT security training, in 90 days across web, Slack/Teams, SMS/RCS, WhatsApp, Telegram, voice, and email; 5 enterprise pilots (a top-10 global asset manager, a Fortune-100 cloud platform, Eight Sleep, Fella Health, ZeroPath). The asset manager pilot cut phishing click rate 58% and tripled reporting within one quarter; a shared JIT agent personalized remediation from vectorized phishing/vishing/smishing/deepfake failure histories.",
-      'Fine-tuned self-hosted Llama-3-70B for phishing simulation (domain adaptation) via LoRA/QLoRA + DeepSpeed on 1M+ NIST-grounded emails (vendor impersonation, typosquat logins). Built Go orchestration for credential-harvest pages/session-cookie capture, traced scoring/adversarial logs, Azure tenant auth, country-code routing, STT/TTS fallback, and SCORM/Vanta reporting aligned to SOC 2/NIST/ISO 27001/GDPR.',
+      "Built Beacon, GhostEye's multi-agent JIT security training, in 90 days across web, Slack/Teams, SMS/RCS, WhatsApp, Telegram, voice, and email; 8 pilots (5 enterprise): a top-10 global asset manager, a Fortune-100 cloud platform and 3 of its subsidiaries, Eight Sleep, Fella Health, ZeroPath. The asset manager pilot cut phishing click rate 58% and tripled reporting within one quarter; a shared JIT agent personalized remediation from vectorized phishing/vishing/smishing/deepfake failure histories.",
+      'Fine-tuned self-hosted Llama-3-70B for phishing simulation (domain adaptation) via LoRA/QLoRA + DeepSpeed on 1M+ NIST-grounded emails (vendor impersonation, typosquat logins). Built Go orchestration for credential-harvest pages/session-cookie capture, traced scoring/adversarial logs, Azure tenant auth, country-code routing, STT/TTS fallback, and SCORM reporting aligned to SOC 2/NIST/ISO 27001/GDPR.',
       // v8 adds a speedup multiplier here that the 2026-09-21 CV withdrew
       // (publicClaims.test.ts WITHDRAWN); the qualified latency stays
       'Cut deepfake phishing simulation streaming response latency from about 40s in early benchmarks to 100–450 ms by rebuilding the pipeline as a multi-agent WebRTC system spanning synchronized video rendering, voice generation, human-like scheduling, and retry-aware delivery.',
-      'Built analytics/evals for Vapi voice, self-hosted SMS simulation, and the training pipeline (TTFT, tokens/query, tokens/sec; in-house LangGraph evals, Kafka/ClickHouse scheduling and logging); cut per-turn latency from 5–7s to 0.5–1.5s with barge-in, streaming, caching, and summarization; caching and summarization cut conversation LLM costs 30–80%, with larger savings on longer conversations.',
+      'Built analytics/evals for Vapi voice, self-hosted SMS simulation, and the training pipeline (TTFT, tokens/query, tokens/sec; in-house LangGraph evals, Kafka/ClickHouse scheduling and logging); cut per-turn latency from 5–7s to 0.5–1.5s with barge-in, streaming, caching, and summarization; shared caching and summarization libraries cut LLM costs 30–80% across all agents.',
       'Built C-suite OSINT knowledge graphs for enterprise clients incl. Fortune-100 (Firecrawl into Amazon Neptune, TinkerPop/Gremlin; 5K+ nodes per graph); fixed Neptune overload by restructuring around cross-executive overlap and per-executive connectivity; cut amortized render from ~360 to ~60 ms per node (83% lower) via caching and engagement-ranked level-of-detail loading.',
     ],
   },
@@ -241,7 +265,7 @@ export const EXPERIENCE: Experience[] = [
     bullets: [
       "Architected and solo-built Attunica's multimodal psychotherapy-training and evaluation platform: real-time LiveKit + Gemini + Anam sessions, durable transcripts/debriefs, and academic workflows (instructor assessments, verified recording playback); now lead a PM + 2 engineers; shipped to 2 pilots (NYU Silver MSW program; a 120-therapist clinic); HIPAA BAAs with Anthropic + AWS.",
       'Built a consent-gated, clinician-graded LLM-persona environment for measuring simulated humanity and attachment without patient data: persona text is character data, never instructions; tenant RBAC and signed BFF capabilities fence roles; immutable eval IDs, revocable consent, private versioned media, and two-channel Deepgram bind evidence to provider identity.',
-      'Rebuilt session scoring as three-sample median judging over alias-verified therapist evidence (wrong-speaker citations fail closed; input 32k → 15–18k tokens); a 40-fixture judge-validity benchmark with held-out scenarios and bias probes showed debiasing moved leniency from +0.81 to within 0.13 anchors of zero (held-out weighted kappa 0.66 vs 0.05 null; model-written key) and that sample disagreement alone misses large errors; eval records distinguish no evidence from scored zero; persisted provider-attempt state separates pre-call failures from ambiguous outcomes, preventing replay of billable side effects.',
+      'Rebuilt session scoring as three-sample median judging over alias-verified therapist evidence (wrong-speaker citations fail closed; input 32k → 15–18k tokens); a 40-fixture judge-validity benchmark with held-out scenarios and bias probes showed debiasing moved leniency from +0.81 to within 0.13 anchors of zero (held-out weighted kappa 0.66 vs 0.05 null; model-written key) and that sample disagreement alone misses large errors; eval records distinguish no evidence from scored zero; persisted provider-attempt state separates pre-call failures from ambiguous outcomes, preventing replay of billable side effects. AI-suggested rubric criteria take effect only after instructor review; scoring inputs are pinned per prompt-policy version, so historical scores replay exactly.',
       'Led the AWS-funded production cutover with Avahi to ECS, Aurora PostgreSQL 18, and Bedrock (retired Fly/Neon/Vercel) through a 141-row production-readiness matrix in which a PR cannot weaken the checks that approve it; qualified the release candidate with PostgreSQL 18 migration rehearsals and commit-bound artifacts under IAM-scoped credentials, zero SDK retries, bounded timeouts, and no cross-provider fallback or replay.',
       // v8 also names the row-level-security gap this rollout closed; that
       // stays on the résumé, off a public page about a PHI system

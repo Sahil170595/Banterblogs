@@ -146,6 +146,15 @@ const RETIRED_CLAIMS = [
   'five merged upstream fixes',
   'nine paper reviews',
   '22 Hugging Face',
+  '23 Hugging Face',
+  // the last paper under review was rejected (résumé v9, 2026-10-13), and the
+  // FLMSec venue goes by the name its own camera-ready prints
+  'under double-blind review',
+  '1 under review',
+  'Foundation and Large Model Security',
+  // GhostEye ran 8 pilots, 5 of them enterprise (résumé v9, 2026-10-05)
+  'to 5 enterprise pilots',
+  'SCORM/Vanta',
   // the owner confirmed a cumulative score
   'SGPA',
 ];
@@ -162,10 +171,12 @@ describe('work page résumé currency', () => {
   it('states the current record: the paper ledger, the models, the fixes, the degree scores', () => {
     const all = text(page);
     for (const fact of [
-      '2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundation and Large Model Security), 1 more under double-blind review, 2 public arXiv preprints',
+      '2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundations of Language Model Security), 2 public arXiv preprints',
+      '4 public RL/evaluation projects',
       'six merged upstream fixes',
-      '23 Hugging Face models',
-      'Hugging Face — 23 model releases',
+      '30 Hugging Face models',
+      'Hugging Face — 30 model releases',
+      '7 Qwen RL-study checkpoints',
       'from about 40s in early benchmarks to 100–450 ms',
       'CGPA: 9.1/10.0',
     ]) {
@@ -201,25 +212,42 @@ describe('work page résumé currency', () => {
     expect(RESEARCH.filter((item) => / — merged$/.test(item.label))).toHaveLength(6);
   });
 
-  // résumé v8 (2026-10-02). Its latency bullet adds "(80–400×)", which the
+  // résumé v9 (2026-10-13). Its latency bullet adds "(80–400×)", which the
   // 2026-09-21 CV withdrew (the 40s was an early benchmark, not a like-for-like
   // endpoint), so the site keeps the qualified wording and no multiplier.
-  it('carries the GhostEye role as résumé v8 states it, without the withdrawn multiplier', () => {
+  it('carries the GhostEye role as résumé v9 states it, without the withdrawn multiplier', () => {
     const ghosteye = EXPERIENCE.find((job) => job.company === 'GhostEye Inc. (YC S25)')!;
     expect(ghosteye.bullets).toHaveLength(5);
     const all = ghosteye.bullets.join(' ');
     for (const fact of [
       'Built Beacon',
-      '5 enterprise pilots (a top-10 global asset manager, a Fortune-100 cloud platform, Eight Sleep, Fella Health, ZeroPath)',
+      '8 pilots (5 enterprise): a top-10 global asset manager, a Fortune-100 cloud platform and 3 of its subsidiaries, Eight Sleep, Fella Health, ZeroPath',
       'cut phishing click rate 58% and tripled reporting within one quarter',
       'from about 40s in early benchmarks to 100–450 ms',
-      'conversation LLM costs 30–80%',
+      'shared caching and summarization libraries cut LLM costs 30–80% across all agents',
       '~360 to ~60 ms per node (83% lower)',
     ]) {
       expect(all, fact).toContain(fact);
     }
     expect(all).not.toMatch(/80–400|80-400/);
-    expect(HERO_SUMMARY).toContain('at GhostEye (YC S25), shipped Beacon to 5 enterprise pilots, cutting conversation LLM costs 30–80%');
+    expect(HERO_SUMMARY).toContain('at GhostEye (YC S25), shipped Beacon to 8 pilots (5 enterprise), cutting LLM costs 30–80%');
+  });
+
+  // résumé v9 (2026-10-08 approved): two RL environments and two evaluation
+  // systems, each with public source and a demo on this site
+  it('lists the four RL and evaluation projects with their source and their demos', () => {
+    const entry = RESEARCH.find((item) => item.label === 'RL Environments & Agent Evaluation')!;
+    expect(entry.href).toBe('/projects/reinforcement-learning');
+    expect(entry.bullets.map((bullet) => bullet.split(':')[0]).slice(0, 4)).toEqual(['Turncraft', 'Patchglass', 'Gatebound', 'Counterledger']);
+    const links = (entry.evidence ?? []).map((link) => link.href);
+    for (const slug of ['customer-service', 'code-verification', 'flight-routing', 'offline-policy-evaluation']) {
+      expect(links, slug).toContain(`/projects/reinforcement-learning/${slug}`);
+    }
+    for (const repo of ['turncraft-env', 'patchglass', 'gatebound-rl', 'counterledger-ope']) {
+      expect(links, repo).toContain(`https://github.com/Sahil170595/${repo}`);
+    }
+    // numbers from the original runs say so, as the demo pages do
+    expect(entry.bullets.join(' ')).toContain('the public repos are cleaned releases without those run artifacts');
   });
 
   // PhD v4: NeurIPS 2026 workshops FLMSec (2), JUDGe (3), RTCA (5); ethics
@@ -253,6 +281,7 @@ describe('work page résumé currency', () => {
       '40-fixture judge-validity benchmark',
       'held-out weighted kappa 0.66 vs 0.05 null',
       'fail-safe restricted-role FORCE-RLS rollout',
+      'AI-suggested rubric criteria take effect only after instructor review',
     ]) {
       expect(all, fact).toContain(fact);
     }
