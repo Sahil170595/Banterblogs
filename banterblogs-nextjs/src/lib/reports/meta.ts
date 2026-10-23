@@ -472,8 +472,9 @@ export function readReportMeta(rawId: string): ReportMeta | null {
     }
 
     for (const candidateName of markdownCandidates) {
-      const candidatePath = path.join(location.path, candidateName);
-      if (!fs.existsSync(candidatePath)) continue;
+      // traced through next.config's REPORT_FILES; a name-built join traces the whole project
+      const candidatePath = path.join(/*turbopackIgnore: true*/ location.path, candidateName);
+      if (!fs.existsSync(/*turbopackIgnore: true*/ candidatePath)) continue;
       const summary = summarizeFile(candidatePath, toHumanTitle(location.label));
       const candidate: ReportMeta = {
         title: summary.title,

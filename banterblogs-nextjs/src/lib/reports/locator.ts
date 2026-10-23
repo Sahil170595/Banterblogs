@@ -71,7 +71,8 @@ function scanReports(): ReportLocation[] {
       const isGenericName = ['summary', 'index'].includes(baseSlug);
       const slug = isGenericName ? normalizeSlug(`${candidate.label}-${label}`) : baseSlug;
       if (!slug) continue;
-      const entryPath = path.join(candidate.root, entry.name);
+      // traced through next.config's REPORT_FILES; a name-built join traces the whole project
+      const entryPath = path.join(/*turbopackIgnore: true*/ candidate.root, entry.name);
       results.push({
         slug,
         path: entryPath,
