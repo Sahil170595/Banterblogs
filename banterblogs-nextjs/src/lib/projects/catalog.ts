@@ -32,7 +32,10 @@ export function readProjectCatalog(root = PROJECTS_ROOT): ProjectManifest[] {
   const projects: ProjectManifest[] = [];
   for (const folder of subfolders(root)) {
     if (!isCollectionKey(folder)) throw new Error(`Unknown project collection folder: ${folder}`);
-    const own = subfolders(path.join(root, folder)).map((slug) => readManifest(path.join(root, folder, slug), folder, slug));
+    // traced through next.config's PROJECT_FILES; a name-built join traces the whole project
+    const own = subfolders(path.join(/*turbopackIgnore: true*/ root, folder)).map((slug) =>
+      readManifest(path.join(/*turbopackIgnore: true*/ root, folder, slug), folder, slug),
+    );
     const seen = new Map<number, string>();
     for (const project of own) {
       const clash = seen.get(project.order);

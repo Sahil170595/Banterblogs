@@ -41,9 +41,27 @@ const RETIRED_ROUTE_REDIRECTS = [
   },
 ];
 
-// The project catalog reads every project.json under this folder at request
-// time in the sitemap route; the files ship with the function.
+// The project catalog (lib/projects/catalog.ts) and the report locator
+// (lib/reports/locator.ts, meta.ts) walk these folders by name, which
+// Turbopack cannot trace; their joins are marked turbopackIgnore so a route
+// no longer ships the whole project (e2e snapshots, sources, posts), and the
+// files they read are declared here for every route that reaches them.
 const PROJECT_FILES = ['./src/app/projects/(demos)/*/*/project.json', './src/app/projects/(demos)/*/*/page.tsx'];
+const REPORT_FILES = ['./PublishReady/reports/**/*'];
+const CATALOG_ROUTES = [
+  '/projects',
+  '/projects/*',
+  '/projects/*/*',
+  '/reports',
+  '/reports/*',
+  '/reports.json',
+  '/rss.xml',
+  '/search.json',
+  '/sitemap.xml',
+  // escaped as the docs show: '/tools/*' also matched the /tools index
+  '/tools/\\[slug\\]',
+  '/work',
+];
 
 // The landing poster and loop files carry a content hash in their names
 // (scripts/render-scene-poster.mjs, render-scene-video.mjs), so a new render
@@ -57,9 +75,7 @@ const LANDING_ART_DIRS = ['poster', 'video'];
 const CSS_REQUEST_COST_BYTES = 4000;
 
 const nextConfig: NextConfig = {
-  outputFileTracingIncludes: {
-    '/sitemap.xml': PROJECT_FILES,
-  },
+  outputFileTracingIncludes: Object.fromEntries(CATALOG_ROUTES.map((route) => [route, [...PROJECT_FILES, ...REPORT_FILES]])),
   experimental: {
     optimizePackageImports: ['lucide-react'],
     // inlineCss stays off (measured in R4): it sends the global sheet twice
