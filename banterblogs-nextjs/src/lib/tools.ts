@@ -90,7 +90,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   tagline: 'LLM deployment planner',
   summary:
     'Turns "which model, quantization, GPU, and backend — how many, will it fit, will it hit my SLO, what will it cost" into a fast, measured answer from your shell, your Python, or your AI assistant.',
-  version: '0.61.0',
+  version: '0.71.0',
   license: 'MIT',
   python: '3.10 – 3.14',
   install: 'pip install chimeraforge',
@@ -99,8 +99,8 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/Chimeraforge',
   changelog: 'https://github.com/Sahil170595/Chimeraforge/blob/main/CHANGELOG.md',
   ecosystem: true,
-  // PePy total, 2026-10-16: 44,027
-  downloads: '44,000+',
+  // PePy total, 2026-10-22: 46,897
+  downloads: '46,000+',
   principle: {
     title: 'The trust principle',
     body: 'Every number is labeled measured, extrapolated, derived, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are derived: exact arithmetic over the model’s real architecture, not a measurement. Throughput is a measured lookup only on the rig the corpus was measured on; on any other GPU it is scaled by memory bandwidth and labeled extrapolated, otherwise an explicit roofline estimate, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
@@ -120,7 +120,7 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
       { label: 'Plan', detail: 'the cheapest config that meets your SLO', kind: 'result' },
     ],
   },
-  // `chimeraforge --help` at 0.61.0, in the README's order
+  // `chimeraforge --help` at 0.71.0, in the README's order
   commands: [
     { name: 'plan', summary: 'predictive capacity planner' },
     { name: 'check', summary: 'recheck a saved plan, offline unless asked' },
@@ -133,11 +133,14 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
     { name: 'monitor', summary: 'bounded SLO windows against a live server' },
     { name: 'validate', summary: 'audit predictions against measurements' },
     { name: 'doctor', summary: 'this machine’s GPUs, what the planner can model, local engines' },
-    { name: 'contribute', summary: 'share bench results as fingerprinted, quarantined contributions' },
+    { name: 'contribute', summary: 'share bench results as fingerprinted contributions, optionally Ed25519-signed' },
     { name: 'catalog', summary: 'local model catalog' },
     { name: 'safety', summary: 'live refusal screen' },
     { name: 'bench', summary: 'live inference benchmarking' },
     { name: 'trace', summary: 'replay real requests against a server' },
+    { name: 'trace-campaign', summary: 'serial trace replicas of one frozen workload' },
+    { name: 'trace-envelope', summary: 'the highest declared rate a saved campaign passed' },
+    { name: 'score', summary: 'score saved predictions against measured receipts' },
     { name: 'gate', summary: 'CI regression gate: pass, regression, malformed or inconclusive' },
     { name: 'eval', summary: 'quality evaluation' },
     { name: 'compare', summary: 'diff benchmark runs' },
@@ -154,6 +157,11 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
     {
       title: 'An MCP server',
       body: 'chimeraforge mcp exposes the same planner to Claude, Cursor, and other MCP clients over stdio or loopback Streamable HTTP, so an assistant answers capacity questions from measured numbers instead of guessing.',
+    },
+    // CHANGELOG 0.62.0–0.71.0
+    {
+      title: 'Plans held to measurements',
+      body: 'trace replays real requests and keeps vLLM, SGLang, and TGI’s own token counts and first-output times; trace-campaign repeats one frozen workload in serial replicas. Offline, gate compares two campaigns for regressions, trace-envelope names the highest request rate a campaign passed (an observed point, not a capacity estimate), and score checks a saved plan’s decode predictions against measured benchmark receipts. Contributions can carry an Ed25519 signature, which proves who sent the bytes, not that the measurement is true.',
     },
     {
       title: `${CHIMERAFORGE_GPU_PROFILES} GPU profiles`,
@@ -201,7 +209,7 @@ export const QUANTFIT_TOOL: ToolDef = {
   tagline: 'Quantization + safety-drift CLI',
   summary:
     'Quantize an LLM — and check it still refuses what it should. Quantization makes a model cheaper to serve and can quietly strip safety behavior; a 4-bit model that answers what the full-precision model refused is a regression no perplexity number will show you.',
-  version: '0.26.0',
+  version: '0.36.0',
   license: 'Apache-2.0',
   python: '3.10 – 3.14',
   install: 'pip install quantfit',
@@ -210,8 +218,8 @@ export const QUANTFIT_TOOL: ToolDef = {
   repo: 'https://github.com/Sahil170595/quantfit',
   changelog: 'https://github.com/Sahil170595/quantfit/blob/main/CHANGELOG.md',
   ecosystem: false,
-  // PePy total, 2026-10-16: 23,938
-  downloads: '23,000+',
+  // PePy total, 2026-10-22: 27,182
+  downloads: '27,000+',
   principle: {
     title: 'Safety drift is a vector, not a number',
     body: 'verify-safety generates from both the unquantized baseline and the quantized model over a curated probe set, judges each response with a local classifier, and reports two axes: refusal-robustness drift (did the quant start complying with what should be refused — the dangerous direction) and over-refusal drift (did it start refusing what should be answered — the usability direction). A scalar refusal-delta can read zero while both axes move in opposite directions. Verdicts are bounded, never absolute: a no-detection result bounds the drift, it does not certify safety.',
@@ -229,7 +237,7 @@ export const QUANTFIT_TOOL: ToolDef = {
       { label: 'Verdict', detail: 'bounded by a Wilson 95% CI, never absolute', kind: 'result' },
     ],
   },
-  // `quantfit --help` at 0.26.0
+  // `quantfit --help` at 0.36.0
   commands: [
     { name: 'verify-safety', summary: 'did quantization break refusals? two-axis drift' },
     { name: 'check', summary: 'will it fit? read from HF metadata, no download' },
@@ -241,6 +249,8 @@ export const QUANTFIT_TOOL: ToolDef = {
     { name: 'cold-run', summary: 'three fresh, uncached native GGUF replicates' },
     { name: 'gate', summary: 'pre-release CI check that refuses to pass on thin evidence' },
     { name: 'screen', summary: 'run a target set to QSR spec' },
+    { name: 'screen-summary', summary: 'per-stratum, per-axis bounds from a saved screen, offline' },
+    { name: 'screen-compare', summary: 'compare two saved screens over the same targets, offline' },
     { name: 'resolution', summary: 'what a report can resolve, given the judge’s calibration' },
     { name: 'repeatability', summary: 'does a full report agree with its replicates' },
     { name: 't0', summary: 'do three same-environment replicates agree' },
@@ -251,7 +261,7 @@ export const QUANTFIT_TOOL: ToolDef = {
     { name: 'audit', summary: 'hold the docs to the code — exit 3 on drift' },
     { name: 'emit', summary: 'render any drift report as a model card' },
     { name: 'list', summary: 'the supported method × scheme matrix' },
-    { name: 'calibrate', summary: 'build and ingest calibration sheets' },
+    { name: 'calibrate', summary: 'build, ingest and reconcile calibration sheets' },
   ],
   highlights: [
     {

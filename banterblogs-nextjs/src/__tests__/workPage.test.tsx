@@ -155,6 +155,8 @@ const RETIRED_CLAIMS = [
   // GhostEye ran 8 pilots, 5 of them enterprise (résumé v9, 2026-10-05)
   'to 5 enterprise pilots',
   'SCORM/Vanta',
+  // Triton #12350 (2026-10-20) and #12462 (2026-10-22) merged
+  'six merged upstream fixes',
   // the owner confirmed a cumulative score
   'SGPA',
 ];
@@ -173,7 +175,7 @@ describe('work page résumé currency', () => {
     for (const fact of [
       '2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundations of Language Model Security), 2 public arXiv preprints',
       '4 public RL/evaluation projects',
-      'six merged upstream fixes',
+      'eight merged upstream fixes',
       '30 Hugging Face models',
       'Hugging Face — 30 model releases',
       '7 Qwen RL-study checkpoints',
@@ -196,7 +198,8 @@ describe('work page résumé currency', () => {
     expect(lanes).toContain('New York University');
   });
 
-  // résumé v8 lists five merged fixes; #199075 landed on 2026-10-02 (0055968)
+  // résumé v8 lists five merged fixes; #199075 landed on 2026-10-02 (0055968),
+  // Triton #12350 on 2026-10-20 (29ef3c3) and #12462 on 2026-10-22 (389dd29)
   it('lists every upstream fix with its true state', () => {
     const entries = Object.fromEntries(RESEARCH.map((item) => [item.label, item.href]));
     for (const [label, href] of [
@@ -206,10 +209,12 @@ describe('work page résumé currency', () => {
       ['Ollama PR #16669 — merged', 'https://github.com/ollama/ollama/pull/16669'],
       ['Triton PR #10819 — merged', 'https://github.com/triton-lang/triton/pull/10819'],
       ['PyTorch PR #199075 — merged', 'https://github.com/pytorch/pytorch/pull/199075'],
+      ['Triton PR #12350 — merged', 'https://github.com/triton-lang/triton/pull/12350'],
+      ['Triton PR #12462 — merged', 'https://github.com/triton-lang/triton/pull/12462'],
     ]) {
       expect(entries[label], label).toBe(href);
     }
-    expect(RESEARCH.filter((item) => / — merged$/.test(item.label))).toHaveLength(6);
+    expect(RESEARCH.filter((item) => / — merged$/.test(item.label))).toHaveLength(8);
   });
 
   // résumé v9 (2026-10-13). Its latency bullet adds "(80–400×)", which the
