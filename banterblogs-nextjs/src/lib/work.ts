@@ -13,7 +13,7 @@ export const WORK_TITLE = 'Sahil Kadadekar';
 export const HERO_HEADLINE =
   'Founding ML engineer building production agentic and inference systems for clinical AI, cybersecurity, and model deployment.';
 
-// public model repositories on huggingface.co/Crusadersk (HF API, 2026-10-16)
+// public model repositories on huggingface.co/Crusadersk (HF API, 2026-10-22)
 const HUGGING_FACE_MODELS = 30;
 
 // a download count as tools.ts states it, a floor: "28,000+"
@@ -31,7 +31,7 @@ export const COMBINED_PYPI_DOWNLOADS = `${Math.floor(
   [CHIMERAFORGE_TOOL, QUANTFIT_TOOL].reduce((sum, tool) => sum + downloadFloor(tool.downloads ?? ''), 0) / THOUSAND,
 )}K+`;
 
-export const HERO_SUMMARY = `Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped Beacon to 8 pilots (5 enterprise), cutting LLM costs 30–80%. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundations of Language Model Security), 2 public arXiv preprints, 4 public RL/evaluation projects, six merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
+export const HERO_SUMMARY = `Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped Beacon to 8 pilots (5 enterprise), cutting LLM costs 30–80%. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundations of Language Model Security), 2 public arXiv preprints, 4 public RL/evaluation projects, eight merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
 
 export interface ResearchItem {
   label: string;
@@ -103,8 +103,9 @@ export const RESEARCH: ResearchItem[] = [
   {
     label: 'Chimeraforge — LLM deployment planner',
     href: 'https://pypi.org/project/chimeraforge/',
-    // tests: the README's collected count (pytest --collect-only, v0.61.0)
-    meta: `v${CHIMERAFORGE_TOOL.version} · ${CHIMERAFORGE_TOOL.downloads} downloads · 3,828 tests`,
+    // tests: pytest --collect-only tests/ at v0.71.0 collected 4,620 with one
+    // module unimported, so a floor; the README still says 3,828
+    meta: `v${CHIMERAFORGE_TOOL.version} · ${CHIMERAFORGE_TOOL.downloads} downloads · 4,600+ tests`,
     bullets: [
       `A ${CHIMERAFORGE_TOOL.commands.length}-command CLI/Python/MCP planner (five MCP tools) with GPU discovery and platform-aware unified-memory budgets; it ingests JSONL or live vLLM/SGLang telemetry; searches model × quantization × backend × GPU/TP/PP plans across heterogeneous fleets; propagates weakest-source evidence; predicts VRAM, TTFT/TPOT, throughput, KV-cache/offload, prefix caching, multi-LoRA, cost, and energy; and emits vLLM/TGI/SGLang/Ollama launch commands, API break-even, and provenance briefs.`,
       'Made its evidence hierarchy executable: every estimate is labeled measured, extrapolated, derived, estimated, or unknown; validation separates in-corpus lookup from out-of-sample estimates, and --expect-fingerprint aborts if the pre-registered matrix changes. Validated on within-registry record-level holdouts: VRAM R²=.968, throughput R²=.859, composite quality RMSE=.062 (0–1 scale), latency MAPE=1.05%; stale prices and unsupported estimates fail closed.',
@@ -119,8 +120,9 @@ export const RESEARCH: ResearchItem[] = [
   {
     label: 'quantfit — quantization safety measurement CLI',
     href: 'https://pypi.org/project/quantfit/',
-    // tests: pytest --collect-only on main at 0.26.0 (2,221 run + 6 deselected), 2026-10-16
-    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 2,227 tests`,
+    // tests: pytest --collect-only at v0.36.0 collected 2,897 (6 deselected) with
+    // one module unimported, so a floor, 2026-10-22
+    meta: `v${QUANTFIT_TOOL.version} · ${QUANTFIT_TOOL.downloads} downloads · 2,800+ tests`,
     bullets: [
       'Implements QSR spec v0, a versioned quantization-safety measurement protocol, across AWQ/GPTQ/SmoothQuant/FP8/RTN/GGUF with capacity preflight; its two-axis release gate (refusal robustness + over-refusal) uses at-risk denominators, Wilson CIs/power and minimum-detectable-effect checks, revision-pinned artifacts, exact-engine provenance, stable JSON/exit codes, and JUnit where unmeasured axes skip rather than pass.',
       'Completed a 15-target screen (14 measured; 0 dangerous-axis regressions across 12 GGUF + 2 compressed-tensor targets) with a passing sensitivity control; calibrated and replaced a judge with 56.2% false positives, then human-adjudicated 11 flags (6 real, 5 judge errors), preventing an approximately 2× overclaim. Cross-hardware T0 replications invalidated an apparent safety breach, so I voided the result rather than publish it.',
@@ -216,6 +218,22 @@ export const RESEARCH: ResearchItem[] = [
         href: 'https://github.com/triton-lang/triton/pull/10822',
       },
     ],
+  },
+  {
+    label: 'Triton PR #12350 — merged',
+    href: 'https://github.com/triton-lang/triton/pull/12350',
+    bullets: [
+      'Merged Triton PR #12350 (Jokeren-approved, 29ef3c3; frontend): loop-bound casts now follow each operand’s source signedness, so a uint8 bound of 200 no longer sign-extends to -56 and silently runs zero iterations; runtime regressions on A100 and H100 (fixes #12347).',
+    ],
+    evidence: [{ label: 'Fixes Triton #12347', href: 'https://github.com/triton-lang/triton/issues/12347' }],
+  },
+  {
+    label: 'Triton PR #12462 — merged',
+    href: 'https://github.com/triton-lang/triton/pull/12462',
+    bullets: [
+      'Merged Triton PR #12462 (ThomasRaoux-approved, 389dd29; NVIDIA): Ada (SM89) FP8 dots now get Hopper’s nonzero imprecise-accumulation default, so a separate FP32 add is no longer folded into lower-precision FP8 accumulation (an all-ones loop returned 16,384 instead of 20,000); validated on L40S (fixes #12392).',
+    ],
+    evidence: [{ label: 'Fixes Triton #12392', href: 'https://github.com/triton-lang/triton/issues/12392' }],
   },
   {
     label: 'Earlier publications',

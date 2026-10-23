@@ -33,7 +33,7 @@ Chimeraforge documents work across nine repositories:
 |---|---|
 | **Banterpacks** | Core monorepo — JARVIS gateway, constitutional router (TDD002), debate engine (Chimera), Rust runtime (TDD005) with ZK proofs + BFT, RLAIF alignment loop, authoring. |
 | **Banterhearts** | ML research platform — inference API, benchmarking, AutoOpt agent, safety evaluation. Current counts: https://chimeraforge.vercel.app/reports.json |
-| **Chimeraforge (PyPI)** | LLM deployment optimizer on PyPI (v0.61.0). Model-agnostic 5-gate capacity planner (VRAM, quality, safety opt-in, latency, cost) — plans any registry / Ollama / HuggingFace model across 50 GPU profiles, and serves the same numbers to AI assistants over MCP. Every number labeled `measured` / `extrapolated` / `derived` / `estimated` / `unknown`. |
+| **Chimeraforge (PyPI)** | LLM deployment optimizer on PyPI (v0.71.0). Model-agnostic 5-gate capacity planner (VRAM, quality, safety opt-in, latency, cost) — plans any registry / Ollama / HuggingFace model across 50 GPU profiles, and serves the same numbers to AI assistants over MCP. Every number labeled `measured` / `extrapolated` / `derived` / `estimated` / `unknown`. |
 | **Chimera Multi-Agent** | Muse Protocol — 6-agent content pipeline + observability control plane (OTel, ClickHouse, Datadog). |
 | **Chimeradroid** | Unity/C# Android companion — voice, chat, tool approval, session handoff, mesh networking. |
 | **Echo** | Messaging channel adapters — Slack, Discord, Telegram, WhatsApp, and email bridges to JARVIS. |
@@ -47,7 +47,7 @@ Not part of the nine — independent CLIs that productize the research line:
 
 | Tool | Purpose |
 |---|---|
-| **quantfit** (PyPI) | Quantize an LLM and check it still refuses what it should (v0.26.0, Apache-2.0). AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF, honest 3-tier capacity refusal, and a two-axis safety-drift check (refusal-robustness + over-refusal) against an unquantized baseline. |
+| **quantfit** (PyPI) | Quantize an LLM and check it still refuses what it should (v0.36.0, Apache-2.0). AWQ / GPTQ / SmoothQuant / FP8 / RTN + GGUF, honest 3-tier capacity refusal, and a two-axis safety-drift check (refusal-robustness + over-refusal) against an unquantized baseline. |
 
 Both shipped CLIs have pages at [/tools](https://chimeraforge.vercel.app/tools).
 
