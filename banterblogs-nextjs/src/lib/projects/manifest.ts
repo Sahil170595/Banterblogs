@@ -20,21 +20,18 @@ const STACK_ITEM_MAX = 32;
 // feature branch link breaks the day the branch is deleted.
 const GITHUB_LINK = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+(?:\/(?:tree|blob)\/(?:main|[0-9a-f]{40})(?:\/\S*)?)?\/?$/;
 
-const link = z
-  .object({
-    label: z.string().min(1).max(40),
-    url: z
-      .string()
-      .url()
-      .refine((url) => new URL(url).protocol === 'https:', 'Links must use https')
-      .refine((url) => new URL(url).hostname !== 'github.com' || GITHUB_LINK.test(url), 'GitHub links point at a repo, main or a pinned commit'),
-  })
-  .strict();
+const link = z.strictObject({
+  label: z.string().min(1).max(40),
+  url: z
+    .url()
+    .refine((url) => new URL(url).protocol === 'https:', 'Links must use https')
+    .refine((url) => new URL(url).hostname !== 'github.com' || GITHUB_LINK.test(url), 'GitHub links point at a repo, main or a pinned commit'),
+});
 
 const collection = z.enum(COLLECTION_KEYS);
 
 export const ProjectManifestSchema = z
-  .object({
+  .strictObject({
     slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
     title: z.string().min(1).max(60),
     /** what the system is and what it is for, in plain words: the page's dek and its meta description */
@@ -55,7 +52,6 @@ export const ProjectManifestSchema = z
     /** what the original system is built with, as its own write-up names it */
     builtWith: z.array(z.string().min(1).max(STACK_ITEM_MAX)).max(STACK_ITEMS_MAX).optional(),
   })
-  .strict()
-  .refine((m) => !m.alsoIn.includes(m.collection), { message: 'A project is not cross-listed into its own collection', path: ['alsoIn'] });
+  .refine((m) => !m.alsoIn.includes(m.collection), { error: 'A project is not cross-listed into its own collection', path: ['alsoIn'] });
 
 export type ProjectManifest = z.infer<typeof ProjectManifestSchema>;

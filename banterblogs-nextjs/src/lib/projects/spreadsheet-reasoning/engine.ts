@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VISITOR_INPUT } from '../visitorInput';
 import { ballotRecord, fixtures } from './fixtures';
 import { evaluateFormula, parseFormula } from './formula';
 import { cellId, sessionSchema, type Analysis, type Session, type Vote } from './types';
@@ -12,7 +13,7 @@ export function freshSession(fixture: Session['fixture'] = 'baseline'): Session 
 }
 
 export function analyze(input: Session): Analysis {
-  const session = sessionSchema.parse(input);
+  const session = sessionSchema.parse(input, VISITOR_INPUT);
   const { workbook } = session;
   const sheetNames = workbook.sheets.map(s => s.name);
   if (new Set(sheetNames).size !== sheetNames.length) throw new Error('Duplicate sheet names.');
@@ -132,7 +133,7 @@ export function exportTrace(input: Session) {
 
 export function replayTrace(input: unknown): Session {
   // Legacy expanded traces remain readable; derived evidence is never trusted or retained.
-  const { session } = traceSchema.parse(input);
+  const { session } = traceSchema.parse(input, VISITOR_INPUT);
   analyze(session);
   return session;
 }

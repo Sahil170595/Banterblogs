@@ -1,4 +1,4 @@
-import type { ZodIssue } from 'zod';
+import type { core } from 'zod';
 import { EXAMPLE_QUERY } from '@/lib/projects/staged-search/example';
 import { OPS_FOR, querySchema, type Field, type Op, type Query } from '@/lib/projects/staged-search/schema';
 
@@ -13,7 +13,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 /** a query the source refuses, in the form's own words: "Filter 1 should be a year from 2000 to 2100" */
-function describeIssue(issue: ZodIssue, draft: Draft): string {
+function describeIssue(issue: core.$ZodIssue, draft: Draft): string {
   const [head, index] = issue.path;
   if (head === 'filters' && typeof index === 'number') {
     const filter = `Filter ${index + 1}`;

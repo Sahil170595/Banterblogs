@@ -47,14 +47,12 @@ const REPEAT_TOLERANCE_SECONDS = 5;
 const REPEAT_STD_SECONDS = 20;
 const BURST_DELAY: [number, number] = [30, 60];
 
-export const replaySchema = z
-  .object({
-    seed: z.number().int().min(0).max(0xffffffff),
-    count: z.number().int().min(1).max(48),
-    durationHours: z.number().positive().max(24),
-    startHour: z.number().int().min(0).max(23),
-  })
-  .strict();
+export const replaySchema = z.strictObject({
+  seed: z.number().int().min(0).max(0xffffffff),
+  count: z.number().int().min(1).max(48),
+  durationHours: z.number().positive().max(24),
+  startHour: z.number().int().min(0).max(23),
+});
 export type Replay = z.infer<typeof replaySchema>;
 /** the replay CLI's defaults: seed 7, twelve messages over two hours from 09:00 */
 export const SOURCE_REPLAY: Replay = { seed: 7, count: 12, durationHours: 2, startHour: 9 };

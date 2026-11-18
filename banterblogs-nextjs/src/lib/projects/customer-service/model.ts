@@ -11,39 +11,39 @@ export const TOTAL_CENTS_MAX = 100000;
 export const cents = z.number().int().min(1).max(TOTAL_CENTS_MAX);
 const id = z.string().trim().min(1).max(80);
 
-export const configSchema = z.object({
+export const configSchema = z.strictObject({
   scenario: z.enum(['warehouse', 'transit', 'damage', 'duplicate', 'split']).default('damage'),
   stock: z.number().int().min(0).max(STOCK_MAX).default(2),
   totalCents: cents.default(DEFAULT_TOTAL_CENTS),
-}).strict().superRefine((c, ctx) => {
+}).superRefine((c, ctx) => {
   // only the equal split halves the total; Turncraft's own split need only sum to it
   if (c.scenario === 'split' && c.totalCents % 2 !== 0)
     ctx.addIssue({ code: 'custom', path: ['totalCents'], message: 'Two equal half-payments need an even number of cents.' });
 });
 export type Config = z.infer<typeof configSchema>;
 
-export const worldSchema = z.object({
-  orders: z.array(z.object({ id, owner: id, product: id, status: z.enum(['processing', 'shipped', 'delivered', 'cancelled']), totalCents: cents }).strict()),
-  payments: z.array(z.object({ id, orderId: id, capturedCents: cents, processorRef: id }).strict()),
-  inventory: z.array(z.object({ sku: id, name: id, quantity: z.number().int().min(0).max(STOCK_MAX) }).strict()),
+export const worldSchema = z.strictObject({
+  orders: z.array(z.strictObject({ id, owner: id, product: id, status: z.enum(['processing', 'shipped', 'delivered', 'cancelled']), totalCents: cents })),
+  payments: z.array(z.strictObject({ id, orderId: id, capturedCents: cents, processorRef: id })),
+  inventory: z.array(z.strictObject({ sku: id, name: id, quantity: z.number().int().min(0).max(STOCK_MAX) })),
   returns: z.array(id),
-  refunds: z.array(z.object({ orderId: id, paymentId: id, amountCents: cents, key: id }).strict()),
-  replacements: z.array(z.object({ orderId: id, sku: id }).strict()),
+  refunds: z.array(z.strictObject({ orderId: id, paymentId: id, amountCents: cents, key: id })),
+  replacements: z.array(z.strictObject({ orderId: id, sku: id })),
   intercepts: z.array(id),
-  notifications: z.array(z.object({ orderId: id, sku: id }).strict()),
-}).strict();
+  notifications: z.array(z.strictObject({ orderId: id, sku: id })),
+});
 export type World = z.infer<typeof worldSchema>;
 
 export const toolSchemas = {
-  order: z.object({ orderId: id }).strict(),
-  payments: z.object({ orderId: id }).strict(),
-  inventory: z.object({}).strict(),
-  cancel: z.object({ orderId: id }).strict(),
-  intercept: z.object({ orderId: id }).strict(),
-  return: z.object({ orderId: id }).strict(),
-  refund: z.object({ orderId: id, paymentId: id, amountCents: cents }).strict(),
-  replace: z.object({ orderId: id, sku: id }).strict(),
-  notify: z.object({ orderId: id, sku: id }).strict(),
+  order: z.strictObject({ orderId: id }),
+  payments: z.strictObject({ orderId: id }),
+  inventory: z.strictObject({}),
+  cancel: z.strictObject({ orderId: id }),
+  intercept: z.strictObject({ orderId: id }),
+  return: z.strictObject({ orderId: id }),
+  refund: z.strictObject({ orderId: id, paymentId: id, amountCents: cents }),
+  replace: z.strictObject({ orderId: id, sku: id }),
+  notify: z.strictObject({ orderId: id, sku: id }),
 };
 export type ToolName = keyof typeof toolSchemas;
 export const TOOL_LABELS: Record<ToolName, string> = {
@@ -51,10 +51,10 @@ export const TOOL_LABELS: Record<ToolName, string> = {
   cancel: 'Cancel order', intercept: 'Request intercept', return: 'Authorize return',
   refund: 'Issue refund', replace: 'Create replacement', notify: 'Register stock alert',
 };
-export const choiceSchema = z.object({
+export const choiceSchema = z.strictObject({
   kind: z.literal('choice'), resolution: z.enum(['cancel', 'intercept', 'refund', 'replace', 'notify']),
   orderId: id, paymentId: id.optional(), amountCents: cents.optional(), sku: id.optional(),
-}).strict().superRefine((c, ctx) => {
+}).superRefine((c, ctx) => {
   if (c.resolution === 'refund' && (!c.paymentId || !c.amountCents))
     ctx.addIssue({ code: 'custom', message: 'Refund choice requires paymentId and amountCents.' });
   if (['replace', 'notify'].includes(c.resolution) && !c.sku)
@@ -64,10 +64,10 @@ export type Choice = z.infer<typeof choiceSchema>;
 export const CLAIMS = ['cancelled-and-refunded', 'cancelled', 'intercept-requested', 'refunded', 'replacement-created', 'notification-registered', 'split-tender', 'unavailable', 'no-action'] as const;
 export type Claim = typeof CLAIMS[number];
 export const actionSchema = z.union([
-  z.object({ kind: z.literal('tool'), name: z.string().min(1).max(80), args: z.record(z.unknown()) }).strict(),
+  z.strictObject({ kind: z.literal('tool'), name: z.string().min(1).max(80), args: z.record(z.string(), z.unknown()) }),
   choiceSchema,
-  z.object({ kind: z.literal('report'), claim: z.enum(CLAIMS), orderId: id }).strict(),
-  z.object({ kind: z.literal('finish') }).strict(),
+  z.strictObject({ kind: z.literal('report'), claim: z.enum(CLAIMS), orderId: id }),
+  z.strictObject({ kind: z.literal('finish') }),
 ]);
 export type Action = z.infer<typeof actionSchema>;
 
