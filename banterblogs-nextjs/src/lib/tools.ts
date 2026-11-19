@@ -90,17 +90,17 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
   tagline: 'LLM deployment planner',
   summary:
     'Turns "which model, quantization, GPU, and backend — how many, will it fit, will it hit my SLO, what will it cost" into a fast, measured answer from your shell, your Python, or your AI assistant.',
-  version: '0.71.0',
+  version: '0.101.0',
   license: 'MIT',
-  python: '3.10 – 3.14',
+  python: '3.11 – 3.14',
   install: 'pip install chimeraforge',
   quickstart: 'uvx chimeraforge plan --model-size 8b --hardware "RTX 4090 24GB"',
   pypi: 'https://pypi.org/project/chimeraforge/',
   repo: 'https://github.com/Sahil170595/Chimeraforge',
   changelog: 'https://github.com/Sahil170595/Chimeraforge/blob/main/CHANGELOG.md',
   ecosystem: true,
-  // PePy total, 2026-10-22: 46,897
-  downloads: '46,000+',
+  // PePy total, 2026-11-18: 69,877
+  downloads: '69,000+',
   principle: {
     title: 'The trust principle',
     body: 'Every number is labeled measured, extrapolated, derived, estimated, or unknown — and the tool refuses to fake the ones it cannot stand behind. VRAM and KV-cache are derived: exact arithmetic over the model’s real architecture, not a measurement. Throughput is a measured lookup only on the rig the corpus was measured on; on any other GPU it is scaled by memory bandwidth and labeled extrapolated, otherwise an explicit roofline estimate, never dressed up as data. Quality below the bundled corpus reports unknown rather than an invented score, and a zero-result plan names the exact gate that rejected every candidate.',
@@ -120,34 +120,42 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
       { label: 'Plan', detail: 'the cheapest config that meets your SLO', kind: 'result' },
     ],
   },
-  // `chimeraforge --help` at 0.71.0, in the README's order
+  // `chimeraforge --help` at 0.101.0, in its order
   commands: [
     { name: 'plan', summary: 'predictive capacity planner' },
     { name: 'check', summary: 'recheck a saved plan, offline unless asked' },
-    { name: 'bundle', summary: 'hand off a plan’s bound inputs offline' },
     { name: 'study', summary: 'compare explicit scenarios offline' },
-    { name: 'deploy', summary: 'write serving configs from a saved plan; installs nothing' },
+    { name: 'deploy', summary: 'write Compose or Kubernetes serving configs from a saved plan; starts nothing' },
+    { name: 'deploy-verify', summary: 'offline drift check of written configs; no Docker or GPU calls' },
+    { name: 'deploy-inspect', summary: 'read-only look at the deployed Kubernetes objects; no GPU proof' },
+    { name: 'inventory-check', summary: 'reported GPU memory against the plan’s resident memory' },
     { name: 'suggest', summary: 'discover and rank models that fit' },
     { name: 'measure', summary: 'benchmark live, plan on real numbers' },
-    { name: 'workload', summary: 'derive plan inputs from real traffic' },
-    { name: 'monitor', summary: 'bounded SLO windows against a live server' },
     { name: 'validate', summary: 'audit predictions against measurements' },
-    { name: 'doctor', summary: 'this machine’s GPUs, what the planner can model, local engines' },
-    { name: 'contribute', summary: 'share bench results as fingerprinted contributions, optionally Ed25519-signed' },
     { name: 'catalog', summary: 'local model catalog' },
     { name: 'safety', summary: 'live refusal screen' },
     { name: 'bench', summary: 'live inference benchmarking' },
     { name: 'trace', summary: 'replay real requests against a server' },
     { name: 'trace-campaign', summary: 'serial trace replicas of one frozen workload' },
     { name: 'trace-envelope', summary: 'the highest declared rate a saved campaign passed' },
-    { name: 'score', summary: 'score saved predictions against measured receipts' },
     { name: 'gate', summary: 'CI regression gate: pass, regression, malformed or inconclusive' },
-    { name: 'eval', summary: 'quality evaluation' },
-    { name: 'compare', summary: 'diff benchmark runs' },
+    { name: 'score', summary: 'score saved predictions against measured receipts' },
     { name: 'refit', summary: 'update planner coefficients' },
-    { name: 'report', summary: 'generate reports' },
+    { name: 'compare', summary: 'diff benchmark runs' },
+    { name: 'eval', summary: 'quality evaluation' },
+    { name: 'report', summary: 'reports, including static HTML for trace runs' },
+    { name: 'workload', summary: 'derive plan inputs from real traffic' },
+    { name: 'monitor', summary: 'bounded SLO windows against a live server' },
+    { name: 'monitor-fleet', summary: 'passive SLO windows across every replica of a fleet' },
+    { name: 'monitor-fleet-exporter', summary: 'cached fleet gauges for a scraper; serving them qualifies nothing' },
+    { name: 'trace-fleet', summary: 'one global replay across a whole fleet' },
+    { name: 'trace-fleet-campaign', summary: 'serial replicas of a whole-fleet trace' },
+    { name: 'doctor', summary: 'this machine’s GPUs, what the planner can model, local engines' },
     { name: 'mcp', summary: 'serve the planner to AI assistants' },
     { name: 'serve', summary: 'the planner over local HTTP, offline by default' },
+    { name: 'bundle', summary: 'hand off a plan’s bound inputs offline' },
+    { name: 'contribute', summary: 'share bench results as fingerprinted contributions, optionally Ed25519-signed' },
+    { name: 'serving', summary: 'declare serving intent, with no optimizer or capacity claim' },
   ],
   highlights: [
     {
@@ -158,10 +166,15 @@ export const CHIMERAFORGE_TOOL: ToolDef = {
       title: 'An MCP server',
       body: 'chimeraforge mcp exposes the same planner to Claude, Cursor, and other MCP clients over stdio or loopback Streamable HTTP, so an assistant answers capacity questions from measured numbers instead of guessing.',
     },
-    // CHANGELOG 0.62.0–0.71.0
+    // CHANGELOG 0.62.0–0.101.0
     {
       title: 'Plans held to measurements',
-      body: 'trace replays real requests and keeps vLLM, SGLang, and TGI’s own token counts and first-output times; trace-campaign repeats one frozen workload in serial replicas. Offline, gate compares two campaigns for regressions, trace-envelope names the highest request rate a campaign passed (an observed point, not a capacity estimate), and score checks a saved plan’s decode predictions against measured benchmark receipts. Contributions can carry an Ed25519 signature, which proves who sent the bytes, not that the measurement is true.',
+      body: 'trace replays real requests and keeps vLLM, SGLang, and TGI’s own token counts and first-output times; trace-campaign repeats one frozen workload in serial replicas, and trace-fleet replays a whole multi-replica fleet at once. Offline, gate compares two campaigns for regressions, trace-envelope names the highest request rate a campaign passed (an observed point, not a capacity estimate), and score checks a saved plan’s decode predictions against measured benchmark receipts. Contributions can carry an Ed25519 signature, which proves who sent the bytes, not that the measurement is true.',
+    },
+    // CHANGELOG 0.73.0–0.100.0
+    {
+      title: 'From plan to fleet, without claiming it runs',
+      body: 'deploy writes multi-replica Compose or Kubernetes configs pinned to explicit GPUs; deploy-verify checks them for drift offline and deploy-inspect reads what is deployed with GET requests only. inventory-check compares each GPU’s reported free memory with the plan’s modeled per-GPU memory, monitor-fleet watches every replica’s SLO windows over verified HTTPS or mTLS, and serving records an operator’s own declarations. None of them starts an engine or certifies capacity: a match means the configs agree, not that the GPUs, weights or throughput are proven.',
     },
     {
       title: `${CHIMERAFORGE_GPU_PROFILES} GPU profiles`,
@@ -209,17 +222,17 @@ export const QUANTFIT_TOOL: ToolDef = {
   tagline: 'Quantization + safety-drift CLI',
   summary:
     'Quantize an LLM — and check it still refuses what it should. Quantization makes a model cheaper to serve and can quietly strip safety behavior; a 4-bit model that answers what the full-precision model refused is a regression no perplexity number will show you.',
-  version: '0.36.0',
+  version: '0.61.0',
   license: 'Apache-2.0',
-  python: '3.10 – 3.14',
+  python: '3.11.5 – 3.14',
   install: 'pip install quantfit',
   quickstart: 'quantfit verify-safety --demo',
   pypi: 'https://pypi.org/project/quantfit/',
   repo: 'https://github.com/Sahil170595/quantfit',
   changelog: 'https://github.com/Sahil170595/quantfit/blob/main/CHANGELOG.md',
   ecosystem: false,
-  // PePy total, 2026-10-22: 27,182
-  downloads: '27,000+',
+  // PePy total, 2026-11-18: 42,875
+  downloads: '42,000+',
   principle: {
     title: 'Safety drift is a vector, not a number',
     body: 'verify-safety generates from both the unquantized baseline and the quantized model over a curated probe set, judges each response with a local classifier, and reports two axes: refusal-robustness drift (did the quant start complying with what should be refused — the dangerous direction) and over-refusal drift (did it start refusing what should be answered — the usability direction). A scalar refusal-delta can read zero while both axes move in opposite directions. Verdicts are bounded, never absolute: a no-detection result bounds the drift, it does not certify safety.',
@@ -237,7 +250,7 @@ export const QUANTFIT_TOOL: ToolDef = {
       { label: 'Verdict', detail: 'bounded by a Wilson 95% CI, never absolute', kind: 'result' },
     ],
   },
-  // `quantfit --help` at 0.36.0
+  // `quantfit --help` at 0.61.0
   commands: [
     { name: 'verify-safety', summary: 'did quantization break refusals? two-axis drift' },
     { name: 'check', summary: 'will it fit? read from HF metadata, no download' },
@@ -246,8 +259,10 @@ export const QUANTFIT_TOOL: ToolDef = {
     { name: 'verify', summary: 'smoke-load a quantized artifact; bounded GGUF structure checks' },
     { name: 'probe', summary: 'per-bit-width quantization sensitivity' },
     { name: 'inspect-run', summary: 'a paired baseline-versus-quant run through Inspect' },
+    { name: 'inspect-recover', summary: 'restore a completed Inspect run’s aggregate offline' },
+    { name: 'probes', summary: 'bundle a private probe population, offline' },
     { name: 'cold-run', summary: 'three fresh, uncached native GGUF replicates' },
-    { name: 'gate', summary: 'pre-release CI check that refuses to pass on thin evidence' },
+    { name: 'gate', summary: 'pre-release CI check, per axis, that refuses to pass on thin evidence' },
     { name: 'screen', summary: 'run a target set to QSR spec' },
     { name: 'screen-summary', summary: 'per-stratum, per-axis bounds from a saved screen, offline' },
     { name: 'screen-compare', summary: 'compare two saved screens over the same targets, offline' },
@@ -256,12 +271,13 @@ export const QUANTFIT_TOOL: ToolDef = {
     { name: 't0', summary: 'do three same-environment replicates agree' },
     { name: 'reproduce', summary: 'decide whether one report reproduces another' },
     { name: 'references', summary: 'verify reference artifacts byte for byte' },
-    { name: 'bundle', summary: 'portable aggregate evidence, offline' },
+    { name: 'bundle', summary: 'portable aggregate evidence, packed into one verifiable file' },
     { name: 'evidence', summary: 'fetch approved, immutable public aggregates' },
     { name: 'audit', summary: 'hold the docs to the code — exit 3 on drift' },
     { name: 'emit', summary: 'render any drift report as a model card' },
     { name: 'list', summary: 'the supported method × scheme matrix' },
-    { name: 'calibrate', summary: 'build, ingest and reconcile calibration sheets' },
+    { name: 'calibrate', summary: 'judge calibration: blinded sheets, labels, judge comparisons' },
+    { name: 'adjudicate', summary: 'a person’s explicit flip-by-flip rulings; nothing confirmed automatically' },
   ],
   highlights: [
     {
@@ -275,6 +291,11 @@ export const QUANTFIT_TOOL: ToolDef = {
     {
       title: 'Built to be checked',
       body: 'Reports follow a written spec (QSR), reproduce decides whether one run reproduces another, and audit holds the documentation to the code — exit code 3 when they drift apart.',
+    },
+    // CHANGELOG 0.51.0 and 0.52.0 (released in 0.55.0)
+    {
+      title: 'Gate either axis, on your own probes',
+      body: 'gate takes a threshold per axis, so over-refusal can block a release as well as lost refusals; a threshold sets the drift the run must be able to detect, not a ceiling on the observed rate. verify-safety can also run a pinned Hugging Face dataset of up to 4,096 prompts in place of the default 40, and reports label it noncanonical rather than borrowing the default set’s detectability.',
     },
   ],
   evidence: [
@@ -295,7 +316,7 @@ export const QUANTFIT_TOOL: ToolDef = {
     'It ships transparent config help, not auto-quantization: you pass --method. Learned routing exists as published research but is explicitly out of scope.',
     'At over-VRAM sizes use gptq — AWQ’s grid search is transfer-bound under sequential onloading.',
     'FP4 schemes need Blackwell to serve, though quantfit can produce them anywhere.',
-    'The probe set is 40 curated prompts; a no-detection result bounds drift rather than certifying safety.',
+    'The default probe set is 40 curated prompts; a no-detection result bounds drift rather than certifying safety.',
   ],
 };
 
