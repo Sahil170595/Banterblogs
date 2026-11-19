@@ -15,6 +15,7 @@ import {
 } from '@/lib/projects/flight-routing/engine';
 import { EXPERIMENT_WORLDS, TIGHT_CONFIG } from '@/lib/projects/flight-routing/experiment';
 import { evaluateWorlds, worldSeed, type PolicyWorlds } from '@/lib/projects/flight-routing/worlds';
+import { VISITOR_INPUT } from '@/lib/projects/visitorInput';
 import { describeRefusal } from '../refusal';
 
 /** the highest first seed whose 64 worlds' seeds all stay in the engine's range */
@@ -30,7 +31,7 @@ const FIELD_NAMES: Record<string, string> = {
 
 /** the configuration, or why the form's values cannot make one */
 function checkConfig(next: Config): { config: Config } | { message: string } {
-  const result = CONFIG_SCHEMA.safeParse(next);
+  const result = CONFIG_SCHEMA.safeParse(next, VISITOR_INPUT);
   if (!result.success) {
     const named = new ZodError(
       result.error.issues.map((issue) => ({ ...issue, path: issue.path.map((part) => (typeof part === 'string' ? (FIELD_NAMES[part] ?? part) : part)) })),

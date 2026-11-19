@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ZodError } from 'zod';
 import { configSchema, DEFAULT_CONFIG, evaluate, type Config, type Method } from '@/lib/projects/offline-policy-evaluation/engine';
+import { VISITOR_INPUT } from '@/lib/projects/visitorInput';
 import { describeRefusal } from '../refusal';
 import { FIELD_LABELS } from './copy';
 
@@ -15,9 +16,9 @@ export const DEFAULT_METHOD: Method = 'normalized';
 
 /** why a configuration cannot be evaluated, naming each field as the form does */
 function refusal(next: Config): string | null {
-  const result = configSchema.safeParse(next);
+  const result = configSchema.safeParse(next, VISITOR_INPUT);
   if (result.success) return null;
-  const label = (part: string | number) => (typeof part === 'string' ? (FIELD_LABELS[part as keyof Config] ?? part) : part);
+  const label = (part: PropertyKey) => (typeof part === 'string' ? (FIELD_LABELS[part as keyof Config] ?? part) : part);
   return describeRefusal(new ZodError(result.error.issues.map((issue) => ({ ...issue, path: issue.path.map(label) }))));
 }
 

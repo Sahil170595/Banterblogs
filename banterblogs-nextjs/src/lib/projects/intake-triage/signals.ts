@@ -25,44 +25,38 @@ export const TIME_SENSITIVITIES = ['none', 'same_day', 'urgent'] as const;
 export const URGENCIES = ['P0', 'P1', 'P2', 'P3'] as const;
 export type Urgency = (typeof URGENCIES)[number];
 
-const lexical = z
-  .object({
-    safeguarding_hit: z.boolean(),
-    same_day_hit: z.boolean(),
-    urgent_words: z.boolean(),
-    spam_hit: z.boolean(),
-    has_member_id: z.boolean(),
-    has_dob: z.boolean(),
-    has_payer: z.boolean(),
-    fyi_only: z.boolean(),
-  })
-  .strict();
+const lexical = z.strictObject({
+  safeguarding_hit: z.boolean(),
+  same_day_hit: z.boolean(),
+  urgent_words: z.boolean(),
+  spam_hit: z.boolean(),
+  has_member_id: z.boolean(),
+  has_dob: z.boolean(),
+  has_payer: z.boolean(),
+  fyi_only: z.boolean(),
+});
 
-const perception = z
-  .object({
-    classification: z.enum(CLASSIFICATIONS),
-    safety_severity: z.enum(SEVERITIES),
-    safety_is_caregiving: z.boolean(),
-    time_sensitivity: z.enum(TIME_SENSITIVITIES),
-    requires_action: z.boolean(),
-  })
-  .strict();
+const perception = z.strictObject({
+  classification: z.enum(CLASSIFICATIONS),
+  safety_severity: z.enum(SEVERITIES),
+  safety_is_caregiving: z.boolean(),
+  time_sensitivity: z.enum(TIME_SENSITIVITIES),
+  requires_action: z.boolean(),
+});
 
 // Which extracted intake fields are filled. known_patient stands in for the
 // source's literal match of a name and date of birth against two fixture
 // patients, which needs the text this page never has.
-const intake = z
-  .object({
-    child_name: z.boolean(),
-    dob_or_age: z.boolean(),
-    parent_contact: z.boolean(),
-    payer: z.boolean(),
-    member_id: z.boolean(),
-    known_patient: z.boolean(),
-  })
-  .strict();
+const intake = z.strictObject({
+  child_name: z.boolean(),
+  dob_or_age: z.boolean(),
+  parent_contact: z.boolean(),
+  payer: z.boolean(),
+  member_id: z.boolean(),
+  known_patient: z.boolean(),
+});
 
-export const signalsSchema = z.object({ regex: lexical, llm: perception, intake }).strict();
+export const signalsSchema = z.strictObject({ regex: lexical, llm: perception, intake });
 export type Signals = z.infer<typeof signalsSchema>;
 
 /** an ordinary complete referral: nothing fires */

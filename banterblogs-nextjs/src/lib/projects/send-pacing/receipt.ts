@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VISITOR_INPUT } from '../visitorInput';
 import { isoMicros, replaySchema, runReplay, type Replay } from './scheduler';
 
 // A replay as a file: its parameters and the send times it produced. Import
@@ -7,14 +8,12 @@ import { isoMicros, replaySchema, runReplay, type Replay } from './scheduler';
 export const RECEIPT_VERSION = 'send-pacing.v1';
 export const MAX_RECEIPT_BYTES = 50_000;
 
-const receiptSchema = z
-  .object({
-    version: z.literal(RECEIPT_VERSION),
-    replay: replaySchema,
-    sendTimes: z.array(z.string()).max(48),
-    violations: z.array(z.tuple([z.number().int(), z.string()])),
-  })
-  .strict();
+const receiptSchema = z.strictObject({
+  version: z.literal(RECEIPT_VERSION),
+  replay: replaySchema,
+  sendTimes: z.array(z.string()).max(48),
+  violations: z.array(z.tuple([z.number().int(), z.string()])),
+});
 export type Receipt = z.infer<typeof receiptSchema>;
 
 export function makeReceipt(replay: Replay): Receipt {
@@ -28,7 +27,7 @@ export function makeReceipt(replay: Replay): Receipt {
 }
 
 export function replayReceipt(raw: unknown): Replay {
-  const receipt = receiptSchema.parse(raw);
+  const receipt = receiptSchema.parse(raw, VISITOR_INPUT);
   if (JSON.stringify(makeReceipt(receipt.replay)) !== JSON.stringify(receipt)) throw new Error('The file’s send times do not follow from its parameters.');
   return receipt.replay;
 }

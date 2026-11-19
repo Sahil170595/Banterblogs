@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VISITOR_INPUT } from '../visitorInput';
 
 export const FIXTURE_VERSION = 'reservation-v1';
 export const SCHEMA_VERSION = 1;
@@ -7,14 +8,14 @@ export const FIXED_WAIT_MS = 200;
 export const MAX_EVENTS = 64;
 
 const roomSchema = z.enum(['north', 'south']);
-export const configSchema = z.object({
+export const configSchema = z.strictObject({
   title: z.string().max(60), room: roomSchema,
   failure: z.enum(['none', 'label-drift', 'reject-save', 'false-toast']),
   selectorPolicy: z.enum(['strict', 'fallback']), waitPolicy: z.enum(['condition', 'fixed']),
   latencyMs: z.number().int().min(100).max(2000),
   timeoutMs: z.number().int().min(100).max(3000),
   budget: z.number().int().min(1).max(8),
-}).strict();
+});
 export type Config = z.infer<typeof configSchema>;
 export const DEFAULT_CONFIG: Config = {
   title: 'Spectral scan', room: 'north', failure: 'none', selectorPolicy: 'fallback',
@@ -22,12 +23,12 @@ export const DEFAULT_CONFIG: Config = {
 };
 
 const eventSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('open') }).strict(),
-  z.object({ type: z.literal('fill'), value: z.string().max(60) }).strict(),
-  z.object({ type: z.literal('select'), value: roomSchema }).strict(),
-  z.object({ type: z.literal('submit') }).strict(),
-  z.object({ type: z.literal('settle') }).strict(),
-  z.object({ type: z.literal('cancel') }).strict(),
+  z.strictObject({ type: z.literal('open') }),
+  z.strictObject({ type: z.literal('fill'), value: z.string().max(60) }),
+  z.strictObject({ type: z.literal('select'), value: roomSchema }),
+  z.strictObject({ type: z.literal('submit') }),
+  z.strictObject({ type: z.literal('settle') }),
+  z.strictObject({ type: z.literal('cancel') }),
 ]);
 export type Event = z.infer<typeof eventSchema>;
 export type Phase = 'idle' | 'editing' | 'saving' | 'saved' | 'rejected' | 'cancelled';
@@ -69,13 +70,13 @@ export function transition(state: SiteState, raw: unknown, rawConfig: unknown): 
   }
 }
 
-export const snapshotSchema = z.object({
+export const snapshotSchema = z.strictObject({
   phase: z.enum(['idle', 'editing', 'saving', 'saved', 'rejected', 'cancelled']),
   dialogOpen: z.boolean(), formValid: z.boolean().nullable(),
   inputTitle: z.string().max(60), inputRoom: roomSchema,
   recordId: z.string().max(40).nullable(), recordTitle: z.string().max(60).nullable(), recordRoom: roomSchema.nullable(),
   toast: z.enum(['none', 'success', 'error']), roles: z.array(z.string().max(160)).max(24),
-}).strict();
+});
 export type Snapshot = z.infer<typeof snapshotSchema>;
 
 export function observeModel(state: SiteState): Snapshot {
@@ -235,10 +236,10 @@ export async function runWorkflow(trace: Trace, port: FixturePort, signal?: Abor
 }
 
 export function replayExport(raw: unknown) {
-  const envelope = z.object({
+  const envelope = z.looseObject({
     schemaVersion: z.literal(SCHEMA_VERSION), fixtureVersion: z.literal(FIXTURE_VERSION),
     config: configSchema, events: z.array(eventSchema).max(MAX_EVENTS),
-  }).passthrough().parse(raw);
+  }).parse(raw, VISITOR_INPUT);
   const frames: SiteState[] = [initialSite()];
   for (const event of envelope.events) frames.push(transition(frames[frames.length - 1], event, envelope.config));
   return { config: envelope.config, frames, completion: completion(observeModel(frames[frames.length - 1]), envelope.config) };

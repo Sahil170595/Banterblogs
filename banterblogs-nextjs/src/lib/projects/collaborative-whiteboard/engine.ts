@@ -11,47 +11,47 @@ export const MAX_TRACE_BYTES = 1_000_000;
 export const TRACE_VERSION = 'whiteboard.trace.v1';
 export const CONFIGURATION = { width: BOARD_WIDTH, height: BOARD_HEIGHT, fixtureRevision: 'synthetic-workflow-v1' } as const;
 
-const coordinate = z.number().finite();
+const coordinate = z.number();
 const color = z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a six-digit hex color.');
 const properties = {
   x: coordinate, y: coordinate, width: coordinate, height: coordinate,
-  fill: color, stroke: color, strokeWidth: z.number().finite().min(1).max(8),
-  text: z.string().max(300).optional(), fontSize: z.number().finite().min(12).max(48).optional(),
+  fill: color, stroke: color, strokeWidth: z.number().min(1).max(8),
+  text: z.string().max(300).optional(), fontSize: z.number().min(12).max(48).optional(),
 };
-const shapeSchema = z.object({
+const shapeSchema = z.strictObject({
   id: z.string().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/),
   type: z.enum(['rectangle', 'ellipse', 'line', 'text']), ...properties,
-}).strict().superRefine((shape, ctx) => {
+}).superRefine((shape, ctx) => {
   const line = shape.type === 'line';
   const left = Math.min(shape.x, shape.x + shape.width);
   const top = Math.min(shape.y, shape.y + shape.height);
   const right = Math.max(shape.x, shape.x + shape.width);
   const bottom = Math.max(shape.y, shape.y + shape.height);
   if (left < 0 || top < 0 || right > BOARD_WIDTH || bottom > BOARD_HEIGHT) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Keep the entire shape inside the 960 by 600 board.' });
+    ctx.addIssue({ code: 'custom', message: 'Keep the entire shape inside the 960 by 600 board.' });
   }
   if (line ? Math.hypot(shape.width, shape.height) < MIN_SIZE : shape.width < MIN_SIZE || shape.height < MIN_SIZE) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Shapes must be at least 12 board units; lines need length 12.' });
+    ctx.addIssue({ code: 'custom', message: 'Shapes must be at least 12 board units; lines need length 12.' });
   }
   if (shape.type === 'text' && (!shape.text?.trim() || shape.fontSize === undefined)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Text objects need nonempty text and a font size.' });
+    ctx.addIssue({ code: 'custom', message: 'Text objects need nonempty text and a font size.' });
   }
 });
 export type Shape = z.infer<typeof shapeSchema>;
 export type ShapeType = Shape['type'];
-const patchSchema = z.object(properties).partial().strict();
+const patchSchema = z.strictObject(properties).partial();
 export type ShapePatch = z.infer<typeof patchSchema>;
 const operationSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('add'), shape: shapeSchema, index: z.number().int().nonnegative().optional() }).strict(),
-  z.object({ kind: z.literal('update'), shapeId: z.string(), props: patchSchema }).strict(),
-  z.object({ kind: z.literal('delete'), shapeId: z.string() }).strict(),
+  z.strictObject({ kind: z.literal('add'), shape: shapeSchema, index: z.number().int().nonnegative().optional() }),
+  z.strictObject({ kind: z.literal('update'), shapeId: z.string(), props: patchSchema }),
+  z.strictObject({ kind: z.literal('delete'), shapeId: z.string() }),
 ]);
 export type Operation = z.infer<typeof operationSchema>;
 type HistoryEntry = { forward: Operation[]; reverse: Operation[] };
-const entrySchema = z.object({
+const entrySchema = z.strictObject({
   seq: z.number().int().positive(), action: z.enum(['edit', 'clear', 'undo', 'redo']),
   operations: z.array(operationSchema).min(1).max(MAX_SHAPES),
-}).strict();
+});
 export type LogEntry = z.infer<typeof entrySchema>;
 export interface BoardState {
   initialShapes: Shape[];
@@ -60,12 +60,12 @@ export interface BoardState {
   redo: HistoryEntry[];
   log: LogEntry[];
 }
-const traceSchema = z.object({
+const traceSchema = z.strictObject({
   schemaVersion: z.literal(TRACE_VERSION), runtime: z.literal('browser-application'), mode: z.literal('local-single-tab'),
-  configuration: z.object({ width: z.literal(BOARD_WIDTH), height: z.literal(BOARD_HEIGHT), fixtureRevision: z.literal('synthetic-workflow-v1') }).strict(),
+  configuration: z.strictObject({ width: z.literal(BOARD_WIDTH), height: z.literal(BOARD_HEIGHT), fixtureRevision: z.literal('synthetic-workflow-v1') }),
   initialShapes: z.array(shapeSchema).max(MAX_SHAPES), entries: z.array(entrySchema).max(MAX_ENTRIES),
   shapes: z.array(shapeSchema).max(MAX_SHAPES),
-}).strict();
+});
 export type BoardTrace = z.infer<typeof traceSchema>;
 
 function parse<T>(schema: z.ZodType<T>, input: unknown): T {

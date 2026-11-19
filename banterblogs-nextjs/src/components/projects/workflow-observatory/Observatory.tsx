@@ -9,6 +9,7 @@ import {
   type Config, type Event as DomainEvent, type SiteState, type Trace,
 } from '@/lib/projects/workflow-observatory/engine';
 import { createFixturePort } from '@/lib/projects/workflow-observatory/dom';
+import { VISITOR_INPUT } from '@/lib/projects/visitorInput';
 import { controls, UnderTheHood } from '../controls';
 import { describeRefusal } from '../refusal';
 import { revealResult, revealWhenRendered } from '../reveal';
@@ -141,7 +142,7 @@ export function Observatory({ initial = DEFAULT_CONFIG, autoRun = false, byHand 
   function changeConfig(change: Partial<Config>) {
     importRevision.current++;
     touched.current = true;
-    try { resetTo(configSchema.parse({ ...config, ...change })); }
+    try { resetTo(configSchema.parse({ ...config, ...change }, VISITOR_INPUT)); }
     catch (cause) { setError(describeRefusal(cause)); }
   }
   function manual(event: DomainEvent) {

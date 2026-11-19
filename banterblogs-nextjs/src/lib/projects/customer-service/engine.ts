@@ -6,6 +6,7 @@ import {
   type Action, type Event, type Result, type Session, type ToolName, type World,
 } from './model';
 import { score } from './reward';
+import { VISITOR_INPUT } from '../visitorInput';
 export { score } from './reward';
 
 const copy = <T,>(value: T): T => structuredClone(value);
@@ -134,16 +135,16 @@ export function exportTrace(session: Session) {
     termination: session.termination, reward: score(session) };
 }
 
-const traceSchema = z.object({
+const traceSchema = z.strictObject({
   version: z.literal(VERSION), weightsVersion: z.literal(WEIGHTS_VERSION), config: configSchema,
   identity: z.literal('account-demo'), seed: z.null(), data: z.literal('synthetic'),
   initial: worldSchema, actions: z.array(z.unknown()).max(MAX_EVENTS),
   events: z.array(z.unknown()).max(MAX_EVENTS), final: worldSchema,
   termination: z.enum(['open', 'finished', 'no_progress', 'budget']), reward: z.unknown(),
-}).strict();
+});
 
 export function replayTrace(input: unknown): Session {
-  const trace = traceSchema.parse(input);
+  const trace = traceSchema.parse(input, VISITOR_INPUT);
   const session = trace.actions.reduce<Session>((s, a) => step(s, a), createSession(trace.config));
   if (JSON.stringify(session.initial) !== JSON.stringify(trace.initial))
     throw new Error('Replay mismatch: the initial-state receipt does not match the configuration.');

@@ -35,7 +35,7 @@ const ScenarioRecordSchema = z.object({
       copy: z.string(),
     }),
   ),
-  action: z.record(z.unknown()),
+  action: z.record(z.string(), z.unknown()),
   action_hash_hex: z.string(),
   view: z.number(),
   view_after: z.number(),
@@ -46,7 +46,7 @@ const ScenarioRecordSchema = z.object({
   replica_count: z.number(),
   f_value: z.number(),
   phases: z.array(PhaseEventSchema),
-  matrix: z.record(z.record(PhaseEventSchema.nullable())),
+  matrix: z.record(z.string(), z.record(z.string(), PhaseEventSchema.nullable())),
   counts: z.object({
     prepares_total: z.number(),
     commits_total: z.number(),
@@ -78,7 +78,7 @@ const SceneDataSchema = z.object({
     f: z.number(),
     quorum: z.number(),
     view_timeout_ms: z.number(),
-    pubkeys_hex: z.record(z.string()),
+    pubkeys_hex: z.record(z.string(), z.string()),
   }),
   phases: z.array(
     z.object({ id: z.string(), name: z.string(), plain: z.string() }),

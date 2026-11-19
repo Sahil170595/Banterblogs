@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VISITOR_INPUT } from '../visitorInput';
 import { runSearch } from './engine';
 import { EXAMPLE_CORPUS } from './example';
 import { DEFAULT_SETTINGS, querySchema, settingsSchema, type Query, type Settings } from './schema';
@@ -20,15 +21,13 @@ const labSettingsSchema = settingsSchema.extend({
   limit: z.number().int().min(1).max(LAB_MAX_LIMIT),
 });
 
-const resultSchema = z
-  .object({
-    status: z.enum(['ready', 'shortfall']),
-    dropped: z.array(z.string()),
-    selected: z.array(z.object({ id: z.string(), score: z.number() }).strict()),
-    rejected: z.array(z.string()),
-  })
-  .strict();
-const receiptSchema = z.object({ version: z.literal(RECEIPT_VERSION), query: querySchema, settings: labSettingsSchema, result: resultSchema }).strict();
+const resultSchema = z.strictObject({
+  status: z.enum(['ready', 'shortfall']),
+  dropped: z.array(z.string()),
+  selected: z.array(z.strictObject({ id: z.string(), score: z.number() })),
+  rejected: z.array(z.string()),
+});
+const receiptSchema = z.strictObject({ version: z.literal(RECEIPT_VERSION), query: querySchema, settings: labSettingsSchema, result: resultSchema });
 export type Receipt = z.infer<typeof receiptSchema>;
 
 export function makeReceipt(query: Query, settings: Settings): Receipt {
@@ -48,7 +47,7 @@ export function makeReceipt(query: Query, settings: Settings): Receipt {
 
 /** the query and settings of a file whose results the pipeline reproduces */
 export function replayReceipt(raw: unknown): { query: Query; settings: Settings } {
-  const receipt = receiptSchema.parse(raw);
+  const receipt = receiptSchema.parse(raw, VISITOR_INPUT);
   const again = makeReceipt(receipt.query, receipt.settings).result;
   if (JSON.stringify(again) !== JSON.stringify(receipt.result)) throw new Error('The file’s results do not follow from its query and settings.');
   return { query: receipt.query, settings: receipt.settings };

@@ -1,7 +1,8 @@
+import { VISITOR_INPUT } from '../visitorInput';
 import { configSchema, worldSchema, type Config, type World } from './model';
 
 export function fixture(input: unknown): { config: Config; world: World } {
-  const config = configSchema.parse(input);
+  const config = configSchema.parse(input, VISITOR_INPUT);
   const { scenario, totalCents, stock } = config;
   const secondPayment = scenario === 'duplicate' || scenario === 'split';
   const capturedCents = scenario === 'split' ? totalCents / 2 : totalCents;

@@ -9,18 +9,16 @@ const ID = /^[a-z][a-z0-9-]{0,63}$/;
 const YEAR = z.number().int().min(2000).max(2100);
 const text = (maximum: number) => z.string().trim().min(1).max(maximum);
 
-export const documentSchema = z
-  .object({
-    id: z.string().regex(ID),
-    title: text(160),
-    body: text(4000),
-    tags: z.array(text(40)).max(20),
-    kind: text(40),
-    topic: text(40),
-    collection: text(40),
-    year: YEAR,
-  })
-  .strict();
+export const documentSchema = z.strictObject({
+  id: z.string().regex(ID),
+  title: text(160),
+  body: text(4000),
+  tags: z.array(text(40)).max(20),
+  kind: text(40),
+  topic: text(40),
+  collection: text(40),
+  year: YEAR,
+});
 export type SearchDocument = z.infer<typeof documentSchema>;
 
 export const corpusSchema = z
@@ -47,8 +45,7 @@ export const OPS_FOR: Record<Field, readonly Op[]> = {
 
 const filterValue = z.union([YEAR, text(160)]);
 export const filterSchema = z
-  .object({ field: z.enum(FIELDS), op: z.enum(OPS), value: z.union([filterValue, z.array(filterValue).min(1).max(20)]) })
-  .strict()
+  .strictObject({ field: z.enum(FIELDS), op: z.enum(OPS), value: z.union([filterValue, z.array(filterValue).min(1).max(20)]) })
   .superRefine((f, ctx) => {
     if (!OPS_FOR[f.field].includes(f.op)) ctx.addIssue({ code: 'custom', message: `${f.field} does not take ${f.op}` });
     const list = f.op === 'In' || f.op === 'NotIn';
@@ -59,25 +56,21 @@ export const filterSchema = z
   });
 export type Filter = z.infer<typeof filterSchema>;
 
-export const querySchema = z
-  .object({
-    query_id: z.string().regex(ID),
-    description: text(2000),
-    hard_criteria: z.array(text(240)).max(20),
-    soft_criteria: z.array(text(240)).max(20),
-    filters: z.array(filterSchema).max(20),
-  })
-  .strict();
+export const querySchema = z.strictObject({
+  query_id: z.string().regex(ID),
+  description: text(2000),
+  hard_criteria: z.array(text(240)).max(20),
+  soft_criteria: z.array(text(240)).max(20),
+  filters: z.array(filterSchema).max(20),
+});
 export type Query = z.infer<typeof querySchema>;
 
-export const settingsSchema = z
-  .object({
-    hybrid: z.boolean(),
-    relax_threshold: z.number().int().min(1).max(MAX_DOCUMENTS),
-    minimum_candidates: z.number().int().min(1).max(MAX_DOCUMENTS),
-    limit: z.number().int().min(1).max(100),
-  })
-  .strict();
+export const settingsSchema = z.strictObject({
+  hybrid: z.boolean(),
+  relax_threshold: z.number().int().min(1).max(MAX_DOCUMENTS),
+  minimum_candidates: z.number().int().min(1).max(MAX_DOCUMENTS),
+  limit: z.number().int().min(1).max(100),
+});
 export type Settings = z.infer<typeof settingsSchema>;
 
 /** the CLI's defaults: both channels, relax below 6, at least 1 candidate, 4 results */

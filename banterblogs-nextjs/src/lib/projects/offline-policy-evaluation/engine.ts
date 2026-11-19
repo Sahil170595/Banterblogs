@@ -6,7 +6,7 @@ export const HORIZON = 4;
 export const RESAMPLES = 256;
 export const LOW_SUPPORT = 0.05;
 const PROBABILITY_TOLERANCE = 1e-8;
-const probability = z.number().finite().min(0).max(1);
+const probability = z.number().min(0).max(1);
 const distribution = z.tuple([probability, probability, probability]).refine(
   values => Math.abs(values.reduce((a, b) => a + b, 0) - 1) < PROBABILITY_TOLERANCE,
   'Action probabilities must sum to one.',
@@ -14,33 +14,33 @@ const distribution = z.tuple([probability, probability, probability]).refine(
 /** the typed-in settings' ranges, which the settings form states */
 export const CONFIG_LIMITS = { seed: [0, 0xffffffff], size: [8, 320] } as const;
 /** the configuration's schema, for a caller that reports its issues field by field */
-export const configSchema = z.object({
+export const configSchema = z.strictObject({
   seed: z.number().int().min(CONFIG_LIMITS.seed[0]).max(CONFIG_LIMITS.seed[1]),
   size: z.number().int().min(CONFIG_LIMITS.size[0]).max(CONFIG_LIMITS.size[1]),
   scenario: z.enum(['balanced', 'rare', 'gap']),
   intensity: probability,
-  responsiveness: z.number().finite().min(-0.4).max(0.4),
+  responsiveness: z.number().min(-0.4).max(0.4),
   anchor: probability,
-  gainWeight: z.number().finite().min(0).max(2),
-  harmWeight: z.number().finite().min(0).max(3),
+  gainWeight: z.number().min(0).max(2),
+  harmWeight: z.number().min(0).max(3),
   gamma: probability,
-  cap: z.number().finite().min(0.1).max(100),
-}).strict();
+  cap: z.number().min(0.1).max(100),
+});
 export type Config = z.infer<typeof configSchema>;
 export const DEFAULT_CONFIG: Config = {
   seed: 2026, size: 160, scenario: 'rare', intensity: 0.55,
   responsiveness: 0.2, anchor: 0.25, gainWeight: 1, harmWeight: 1.5, gamma: 0.95, cap: 5,
 };
-const stepSchema = z.object({
+const stepSchema = z.strictObject({
   context: z.number().int().min(0).max(2),
   action: z.number().int().min(0).max(2),
   behavior: distribution,
-  gain: z.number().finite().min(-1).max(2),
+  gain: z.number().min(-1).max(2),
   harm: z.number().int().min(0).max(1),
-}).strict().refine(step => step.behavior[step.action] > 0, 'A logged action must have positive logging probability.');
-const episodeSchema = z.object({
+}).refine(step => step.behavior[step.action] > 0, 'A logged action must have positive logging probability.');
+const episodeSchema = z.strictObject({
   id: z.string().min(1), steps: z.array(stepSchema).min(1).max(HORIZON),
-}).strict();
+});
 export type Episode = z.infer<typeof episodeSchema>;
 export type Method = 'pdis' | 'clipped' | 'normalized';
 export const METHODS: { key: Method; label: string }[] = [

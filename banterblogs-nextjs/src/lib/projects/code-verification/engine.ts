@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VISITOR_INPUT } from '../visitorInput';
 import { CANDIDATE_SOURCES, intervalCandidates, uniqueCandidates } from './candidates';
 
 export const SCHEMA_VERSION = 1;
@@ -12,23 +13,23 @@ const MAX_JSON_CHARACTERS = 20_000;
 const taskSchema = z.enum(['intervals', 'unique']);
 const candidateSchema = z.enum(['empty', 'fixed', 'overfit', 'regression']);
 const intervalSchema = z.tuple([
-  z.number().finite().min(-MAX_COORDINATE).max(MAX_COORDINATE),
-  z.number().finite().min(-MAX_COORDINATE).max(MAX_COORDINATE),
+  z.number().min(-MAX_COORDINATE).max(MAX_COORDINATE),
+  z.number().min(-MAX_COORDINATE).max(MAX_COORDINATE),
 ]).refine(([start, end]) => start <= end, 'Interval start must be at most its end.');
 const intervalsSchema = z.array(intervalSchema).max(MAX_ITEMS);
 const stringsSchema = z.array(z.string().max(MAX_STRING_LENGTH)).max(MAX_ITEMS);
-const assertionSchema = z.object({
+const assertionSchema = z.looseObject({
   id: z.string().min(1).max(80),
   label: z.string().min(1).max(120),
   input: z.unknown(), expected: z.unknown(),
-}).passthrough();
-const configSchema = z.object({
+});
+const configSchema = z.strictObject({
   taskId: taskSchema,
   candidateId: candidateSchema,
   mode: z.enum(['repair', 'synthesis']),
   scope: z.enum(['full', 'smoke']),
   assertions: z.array(assertionSchema).max(MAX_ASSERTIONS),
-}).strict();
+});
 
 export type TaskId = z.infer<typeof taskSchema>;
 export type CandidateId = z.infer<typeof candidateSchema>;
@@ -115,15 +116,15 @@ export function parseJson(text: string): unknown {
 }
 
 function validatedValue(taskId: TaskId, value: unknown): Value {
-  if (taskId === 'intervals') return intervalsSchema.parse(value);
-  return stringsSchema.parse(value);
+  if (taskId === 'intervals') return intervalsSchema.parse(value, VISITOR_INPUT);
+  return stringsSchema.parse(value, VISITOR_INPUT);
 }
 
 export function execute(taskId: TaskId, candidateId: CandidateId, input: unknown): Value {
   taskSchema.parse(taskId);
   candidateSchema.parse(candidateId);
-  if (taskId === 'intervals') return intervalCandidates[candidateId](intervalsSchema.parse(input));
-  return uniqueCandidates[candidateId](stringsSchema.parse(input));
+  if (taskId === 'intervals') return intervalCandidates[candidateId](intervalsSchema.parse(input, VISITOR_INPUT));
+  return uniqueCandidates[candidateId](stringsSchema.parse(input, VISITOR_INPUT));
 }
 
 export function probe(taskId: TaskId, candidateId: CandidateId, input: unknown, expected: unknown): Observation {
@@ -133,7 +134,7 @@ export function probe(taskId: TaskId, candidateId: CandidateId, input: unknown, 
 }
 
 export function evaluate(rawConfig: unknown): Report {
-  const parsed = configSchema.parse(rawConfig);
+  const parsed = configSchema.parse(rawConfig, VISITOR_INPUT);
   const config: RunConfig = {
     ...parsed, assertions: parsed.assertions.map(assertion => ({
       id: assertion.id, label: assertion.label,
@@ -179,7 +180,7 @@ export function evaluate(rawConfig: unknown): Report {
 }
 
 export function replay(raw: unknown): Report {
-  const envelope = z.object({ schemaVersion: z.literal(SCHEMA_VERSION), fixtureVersion: z.literal(FIXTURE_VERSION), runtime: z.literal('browser-evaluation'), config: configSchema }).parse(raw);
+  const envelope = z.object({ schemaVersion: z.literal(SCHEMA_VERSION), fixtureVersion: z.literal(FIXTURE_VERSION), runtime: z.literal('browser-evaluation'), config: configSchema }).parse(raw, VISITOR_INPUT);
   return evaluate(envelope.config);
 }
 
