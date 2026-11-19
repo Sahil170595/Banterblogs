@@ -41,7 +41,7 @@ const EventRecordSchema = z.object({
     payload_hash_hex: z.string(),
     prev_event_hash_hex: z.string().nullable(),
     timestamp_ms: z.number(),
-    metadata: z.record(z.string()),
+    metadata: z.record(z.string(), z.string()),
   }),
   crypto: z.object({
     canonical_bytes_len: z.number(),

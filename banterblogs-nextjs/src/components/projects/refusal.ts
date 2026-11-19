@@ -1,4 +1,4 @@
-import { ZodError, type ZodIssue } from 'zod';
+import { ZodError, type core } from 'zod';
 
 // A refused file or input in one plain sentence a visitor can act on: the
 // field by name, items counted from one, and what it should be. Never a raw
@@ -8,34 +8,44 @@ import { ZodError, type ZodIssue } from 'zod';
 const NOT_JSON = 'The file is not valid JSON.';
 const FALLBACK = 'The input was refused.';
 
+// zod names a tuple and a record by their schemas; a file holds an array and an object
+const EXPECTED_AS: Record<string, string> = { tuple: 'array', record: 'object' };
+
 const article = (noun: string) => (/^[aeiou]/.test(noun) ? `an ${noun}` : `a ${noun}`);
 const value = (expected: unknown) => (typeof expected === 'string' ? `"${expected}"` : String(expected));
-const fieldPath = (path: (string | number)[]) => path.map((part) => (typeof part === 'number' ? `item ${part + 1}` : part)).join(' › ');
+const kindOf = (input: unknown) => (input === null ? 'null' : Array.isArray(input) ? 'array' : typeof input);
+const fieldPath = (path: PropertyKey[]) => path.map((part) => (typeof part === 'number' ? `item ${part + 1}` : String(part))).join(' › ');
 
-function sentence(issue: ZodIssue): string {
+function sentence(issue: core.$ZodIssue): string {
   const where = fieldPath(issue.path);
+  // an issue holds the value it was raised on only when its parse was given VISITOR_INPUT
+  const kept = 'input' in issue;
+  const missing = Boolean(where) && kept && issue.input === undefined;
   switch (issue.code) {
-    case 'invalid_type':
-      if (!where) return `The file should hold ${article(issue.expected)}, not ${article(issue.received)}.`;
-      if (issue.received === 'undefined') return `${where} is missing.`;
-      if (issue.expected === 'integer') return `${where} should be a whole number.`;
-      return `${where} should be ${article(issue.expected)}, not ${article(issue.received)}.`;
-    case 'invalid_literal':
-      if (where && issue.received === undefined) return `${where} is missing.`;
-      return `${where || 'The file'} should be ${value(issue.expected)}.`;
-    case 'invalid_enum_value':
-      return `${where} should be one of ${issue.options.join(', ')}.`;
+    case 'invalid_type': {
+      const expected = EXPECTED_AS[issue.expected] ?? issue.expected;
+      const received = kept ? kindOf(issue.input) : expected;
+      const instead = received === expected ? '' : `, not ${article(received)}`;
+      if (!where) return `The file should hold ${article(expected)}${instead}.`;
+      if (missing || issue.expected === 'nonoptional') return `${where} is missing.`;
+      if (issue.expected === 'int') return `${where} should be a whole number.`;
+      return `${where} should be ${article(expected)}${instead}.`;
+    }
+    case 'invalid_value':
+      if (missing) return `${where} is missing.`;
+      if (issue.values.length === 1) return `${where || 'The file'} should be ${value(issue.values[0])}.`;
+      return `${where || 'The file'} should be one of ${issue.values.map(String).join(', ')}.`;
     case 'unrecognized_keys': {
       const fields = issue.keys.length === 1 ? 'a field' : 'fields';
       return `${where ? `${where} has` : 'The file has'} ${fields} this page does not know: ${issue.keys.join(', ')}.`;
     }
     case 'too_small':
-      if (issue.type === 'string') return issue.minimum === 1 ? `${where} cannot be empty.` : `${where} should be at least ${issue.minimum} characters.`;
-      if (issue.type === 'array') return `${where} should hold at least ${issue.minimum}.`;
+      if (issue.origin === 'string') return issue.minimum === 1 ? `${where} cannot be empty.` : `${where} should be at least ${issue.minimum} characters.`;
+      if (issue.origin === 'array') return `${where} should hold at least ${issue.minimum}.`;
       return `${where} should be at least ${issue.minimum}.`;
     case 'too_big':
-      if (issue.type === 'string') return `${where} can be at most ${issue.maximum} characters.`;
-      if (issue.type === 'array') return `${where} can hold at most ${issue.maximum}.`;
+      if (issue.origin === 'string') return `${where} can be at most ${issue.maximum} characters.`;
+      if (issue.origin === 'array') return `${where} can hold at most ${issue.maximum}.`;
       return `${where} should be at most ${issue.maximum}.`;
     default:
       return where ? `${where}: ${issue.message}` : issue.message;

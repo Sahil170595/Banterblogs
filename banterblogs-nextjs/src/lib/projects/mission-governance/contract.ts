@@ -4,34 +4,28 @@ import { z } from 'zod';
 // linked commit) that its validator, safety guard and executor read, and its
 // own sample mission (tests/fixtures/sample_mission.json).
 
-const waypoint = z.object({ seq: z.number().int().min(1), lat: z.number().finite(), lon: z.number().finite(), alt_m: z.number().finite() }).strict();
+const waypoint = z.strictObject({ seq: z.number().int().min(1), lat: z.number(), lon: z.number(), alt_m: z.number() });
 
-export const missionSchema = z
-  .object({
-    mission_id: z.string().min(1).max(64),
-    geofence: z.array(z.tuple([z.number().finite(), z.number().finite()])).min(3).max(32),
-    waypoints: z.array(waypoint).min(1).max(32),
-    constraints: z
-      .object({
-        max_altitude_m: z.number().finite(),
-        min_battery_percent: z.number().min(0).max(100),
-        telemetry_freshness_ms: z.number().int().min(1),
-        mission_timeout_s: z.number().int().min(1),
-        /** declared, and required, by the contract; no service reads it */
-        link_loss_policy: z.enum(['hold', 'rtl', 'land']),
-        rtl_policy: z.string(),
-      })
-      .strict(),
-    regulatory: z
-      .object({
-        operation_type: z.string(),
-        remote_id_required: z.boolean(),
-        remote_id_status: z.enum(['active', 'inactive', 'unknown']),
-        airspace_authorization_ref: z.string().nullable(),
-      })
-      .strict(),
-  })
-  .strict();
+export const missionSchema = z.strictObject({
+  mission_id: z.string().min(1).max(64),
+  geofence: z.array(z.tuple([z.number(), z.number()])).min(3).max(32),
+  waypoints: z.array(waypoint).min(1).max(32),
+  constraints: z.strictObject({
+    max_altitude_m: z.number(),
+    min_battery_percent: z.number().min(0).max(100),
+    telemetry_freshness_ms: z.number().int().min(1),
+    mission_timeout_s: z.number().int().min(1),
+    /** declared, and required, by the contract; no service reads it */
+    link_loss_policy: z.enum(['hold', 'rtl', 'land']),
+    rtl_policy: z.string(),
+  }),
+  regulatory: z.strictObject({
+    operation_type: z.string(),
+    remote_id_required: z.boolean(),
+    remote_id_status: z.enum(['active', 'inactive', 'unknown']),
+    airspace_authorization_ref: z.string().nullable(),
+  }),
+});
 export type Mission = z.infer<typeof missionSchema>;
 export type Waypoint = Mission['waypoints'][number];
 

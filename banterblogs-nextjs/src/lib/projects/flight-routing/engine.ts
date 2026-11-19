@@ -25,7 +25,7 @@ export const CONFIG_LIMITS = {
 } as const;
 const bounded = ([min, max]: readonly [number, number]) => z.number().int().min(min).max(max);
 /** the configuration's schema, for a caller that reports its issues field by field */
-export const CONFIG_SCHEMA = z.object({
+export const CONFIG_SCHEMA = z.strictObject({
   scenario: z.enum(['west-east', 'east-west']),
   profile: z.enum(['clear', 'balanced', 'storm']),
   seed: bounded(CONFIG_LIMITS.seed),
@@ -33,7 +33,7 @@ export const CONFIG_SCHEMA = z.object({
   deadline: bounded(CONFIG_LIMITS.deadline),
   buffer: bounded(CONFIG_LIMITS.buffer),
   maxAttempts: bounded(CONFIG_LIMITS.maxAttempts),
-}).strict().refine(config => config.deadline <= config.horizon, { message: 'Deadline must not exceed the simulation horizon.' });
+}).refine(config => config.deadline <= config.horizon, { error: 'Deadline must not exceed the simulation horizon.' });
 
 export function validateConfig(input: unknown): Config {
   const result = CONFIG_SCHEMA.safeParse(input);
