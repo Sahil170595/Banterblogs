@@ -217,6 +217,21 @@ describe('work page résumé currency', () => {
     expect(RESEARCH.filter((item) => / — merged$/.test(item.label))).toHaveLength(8);
   });
 
+  // GitHub profile and résumé v9 (2026-10-28): the current role. The owner chose
+  // role-only on 2026-11-18, so the résumé's deal, partner and score figures
+  // stay off this public page.
+  it('leads with the SimpleClosure role, role only, and names it in the lede', () => {
+    expect(EXPERIENCE[0]).toMatchObject({
+      role: 'Founding Reinforcement Learning Researcher',
+      company: 'SimpleClosure',
+      href: 'https://simpleclosure.com',
+      dates: 'Oct 2026 – Present',
+    });
+    expect(EXPERIENCE[0].bullets).toHaveLength(1);
+    expect(text(page)).not.toMatch(/eight-figure|30TB|5K\+ codebases|0\.86 F1|1,563/);
+    expect(HERO_SUMMARY.startsWith('Founding RL Researcher at SimpleClosure since October 2026.')).toBe(true);
+  });
+
   // résumé v9 (2026-10-13). Its latency bullet adds "(80–400×)", which the
   // 2026-09-21 CV withdrew (the 40s was an early benchmark, not a like-for-like
   // endpoint), so the site keeps the qualified wording and no multiplier.
@@ -299,8 +314,9 @@ describe('work page résumé currency', () => {
     for (const arxiv of ['https://arxiv.org/abs/2605.27763', 'https://arxiv.org/abs/2610.01801']) expect(evidence, arxiv).toContain(arxiv);
   });
 
-  it('links the two companies to their sites, in a new tab', () => {
+  it('links the three companies to their sites, in a new tab', () => {
     for (const [company, href] of [
+      ['SimpleClosure', 'https://simpleclosure.com'],
       ['GhostEye Inc. (YC S25)', 'https://ghosteye.ai'],
       ['Attunica, LLC', 'https://attunica.ai'],
     ]) {
