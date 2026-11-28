@@ -33,14 +33,33 @@ export const COMBINED_PYPI_DOWNLOADS = `${Math.floor(
 
 export const HERO_SUMMARY = `Founding RL Researcher at SimpleClosure since October 2026. Architected Attunica's AWS clinical platform, live in 2 pilots including a 120-therapist clinic; at GhostEye (YC S25), shipped Beacon to 8 pilots (5 enterprise), cutting LLM costs 30–80%. Built Chimera, a six-subsystem constitutional AI platform backed by ${REPORTS.DISPLAY} reports / ${MEASUREMENTS.SHORT} measurements, 2 workshop-accepted papers (the ICML 2026 Workshop on Hypothesis Testing and the NeurIPS 2026 Workshop on Foundations of Language Model Security), 2 public arXiv preprints, 4 public RL/evaluation projects, eight merged upstream fixes, ${HUGGING_FACE_MODELS} Hugging Face models, and two PyPI tools with ${COMBINED_PYPI_DOWNLOADS} downloads.`;
 
+/** a screenshot of a page this site hosts, captured from a production build by scripts/capture-work-visuals.mjs */
+export interface WorkVisual {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
+export interface EvidenceLink {
+  label: string;
+  href: string;
+  /** the linked page itself, as the link's thumbnail; only for a demo this site hosts */
+  visual?: WorkVisual;
+}
+
 export interface ResearchItem {
   label: string;
   href: string;
   /** the résumé's right-hand annotation for the entry */
   meta?: string;
   bullets: string[];
-  evidence?: { label: string; href: string }[];
+  evidence?: EvidenceLink[];
 }
+
+// the size the capture script writes (its OUTPUT; workVisuals.test.tsx reads each file against it)
+const DEMO_VISUAL_SIZE = { width: 480, height: 270 };
+const demoVisual = (file: string, alt: string): WorkVisual => ({ src: `/work/${file}`, ...DEMO_VISUAL_SIZE, alt });
 
 // Externally checkable evidence first: every entry here resolves to a public
 // artifact (repo, PR, preprint, package, model).
@@ -65,14 +84,43 @@ export const RESEARCH: ResearchItem[] = [
       "Counterledger: offline policy evaluation (fitted Q, sequential doubly robust, paired bootstrap, support gates); in the original synthetic ICU-style study, a state-independent control matched an LLM policy's estimated gain (difference −0.001, 95% CI [−0.006, 0.004]) and 97.4% of the reward gap traced to one blood-pressure term, so I reported no robust improvement.",
       "Turncraft's control scores are in its public README; the other figures come from the original evaluation runs, and the public repos are cleaned releases without those run artifacts. Each demo here runs its own seeded fixture in the browser.",
     ],
+    // each alt describes its capture (public/work/); re-read it when a demo is recaptured
     evidence: [
-      { label: 'Turncraft demo', href: '/projects/reinforcement-learning/customer-service' },
+      {
+        label: 'Turncraft demo',
+        href: '/projects/reinforcement-learning/customer-service',
+        visual: demoVisual(
+          'customer-service-demo.avif',
+          'The customer-service demo’s board of scripted support trajectories: each row a reward bar from −1.00 to 1.00, marked resolved, partial remedy or not resolved.',
+        ),
+      },
       { label: 'turncraft-env', href: 'https://github.com/Sahil170595/turncraft-env' },
-      { label: 'Patchglass demo', href: '/projects/reinforcement-learning/code-verification' },
+      {
+        label: 'Patchglass demo',
+        href: '/projects/reinforcement-learning/code-verification',
+        visual: demoVisual(
+          'code-verification-demo.avif',
+          'The code-verification demo’s table of four candidate patches against fail-to-pass and pass-to-pass tests, with a smoke-suite and a full-suite verdict for each.',
+        ),
+      },
       { label: 'patchglass', href: 'https://github.com/Sahil170595/patchglass' },
-      { label: 'Gatebound demo', href: '/projects/reinforcement-learning/flight-routing' },
+      {
+        label: 'Gatebound demo',
+        href: '/projects/reinforcement-learning/flight-routing',
+        visual: demoVisual(
+          'flight-routing-demo.avif',
+          'The flight-routing demo: four booking policies in panels over the same 64 seeded worlds, each world a square marked on time, late or never arrived.',
+        ),
+      },
       { label: 'gatebound-rl', href: 'https://github.com/Sahil170595/gatebound-rl' },
-      { label: 'Counterledger demo', href: '/projects/reinforcement-learning/offline-policy-evaluation' },
+      {
+        label: 'Counterledger demo',
+        href: '/projects/reinforcement-learning/offline-policy-evaluation',
+        visual: demoVisual(
+          'offline-policy-evaluation-demo.avif',
+          'The offline-policy-evaluation demo: reward, logging-policy and estimator controls above its verdict on a target policy against the logger and a state-blind control.',
+        ),
+      },
       { label: 'counterledger-ope', href: 'https://github.com/Sahil170595/counterledger-ope' },
     ],
   },
