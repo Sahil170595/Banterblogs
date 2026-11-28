@@ -1,6 +1,8 @@
 import { ChevronRight } from 'lucide-react';
 import type { ReportFrontMatter } from '@/lib/reports/content';
 import type { ResolvedFigure } from '@/lib/reports/figures/types';
+import { toExplorable } from './exploreView';
+import { ReportExploreLazy } from './ReportExploreLazy';
 import { ReportFigure } from './ReportFigure';
 import { ReportFigureTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
@@ -80,7 +82,8 @@ export function ReportDetails({ frontMatter }: { frontMatter: ReportFrontMatter 
  * The report's figure on a plate at banner proportions, captioned with the
  * report's own sentence and the heading of the table it was drawn from; a
  * report without one shows its seeded card visual, ember accent lit. Either
- * plate is the far end of the card-to-report figure morph.
+ * plate is the far end of the card-to-report figure morph. A figure whose
+ * spec offers choices puts them over the plate (ReportExplore).
  */
 export function ReportHero({ slug, figure = null }: { slug: string; figure?: ResolvedFigure | null }) {
   const plate = (
@@ -89,9 +92,11 @@ export function ReportHero({ slug, figure = null }: { slug: string; figure?: Res
     </ReportFigureTransition>
   );
   if (!figure) return plate;
+  const explorable = toExplorable(figure);
   return (
     <figure className="report-figure">
-      {plate}
+      {/* keyed by report, so a choice never carries over to another report's figure */}
+      {explorable ? <ReportExploreLazy key={slug} figure={explorable} /> : plate}
       <figcaption>
         <p>{figure.claim}</p>
         <p className="report-figure-source">

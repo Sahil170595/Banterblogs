@@ -1,4 +1,4 @@
-import type { FigureChart, FigureRow, FigureSpec, FigureValue, ResolvedFigure } from './types';
+import type { ExploreOption, ExploreRow, FigureChart, FigureRow, FigureSpec, FigureValue, ResolvedExplore, ResolvedFigure } from './types';
 
 // Spec + the report's markdown -> the figure's data. Pure string work with no
 // imports at run time, so the same code checks a spec in a test, in the build
@@ -20,6 +20,12 @@ export const MIN_ROWS = 2;
 /** the claim is a caption: a sentence, not a paragraph */
 export const MAX_CLAIM_CHARS = 280;
 export const LABEL_JOIN = ' · ';
+/** one choice is the figure as it is, not something to explore */
+export const MIN_OPTIONS = 2;
+/** the choices one line of the control holds on a phone's report column */
+export const MAX_OPTIONS = 6;
+// what a table writes in a cell it has no value for; only a choice may draw one, as missing
+const MISSING_CELL = /^(?:--|—|–|-|n\/a)$/i;
 
 export interface MarkdownTable {
   /** the nearest heading above the table, as plain text */
@@ -247,6 +253,53 @@ export function resolveFigure(spec: FigureSpec, markdown: string): ResolvedFigur
   if (!states) fail(`the claim does not state the highlighted value ${stated[0].text}`);
   const caption = excerpt(spec.claim, markdown);
 
+  // A figure the reader redraws: each choice is another column of this same
+  // table, over the same rows, on the report figure's own scale.
+  let explore: ResolvedExplore | undefined;
+  if ((spec.chart === 'bar' || spec.chart === 'slope') && spec.explore) {
+    const { legend, columns } = spec.explore;
+    const own = spec.chart === 'bar' ? spec.value : spec.to;
+    if (columns.length < MIN_OPTIONS || columns.length > MAX_OPTIONS) {
+      fail(`the explorable offers ${plural(columns.length, 'choice')}, not ${MIN_OPTIONS} to ${MAX_OPTIONS} choices`);
+    }
+    const twice = columns.find((name, index) => columns.indexOf(name) !== index);
+    if (twice !== undefined) fail(`the explorable lists the column "${twice}" twice`);
+    const initial = columns.indexOf(own);
+    if (initial < 0) fail(`the explorable's columns (${columns.join(', ')}) leave out the figure's own "${own}"`);
+    if (spec.chart === 'slope' && columns.includes(spec.from)) fail(`a choice cannot run the slope from "${spec.from}" to itself`);
+
+    const cellAt = (row: number, at: number): FigureValue | null => {
+      const text = table.rows[row][at] ?? '';
+      const parsed = parseNumber(text);
+      if (parsed) return { value: parsed.value, text: parsed.text };
+      if (MISSING_CELL.test(text)) return null;
+      return fail(`no number in "${text}" (row "${labels[row]}", column "${table.columns[at]}"), and no mark of a missing value`);
+    };
+    const options = columns.map((name): ExploreOption => {
+      const at = column(name);
+      const optionRows: ExploreRow[] = drawn.map((row) => ({
+        label: labels[row],
+        values: spec.chart === 'slope' ? [cellAt(row, column(spec.from)), cellAt(row, at)] : [cellAt(row, at)],
+      }));
+      const numbers = optionRows.filter((row) => row.values[row.values.length - 1] !== null).length;
+      if (numbers < MIN_ROWS) fail(`the column "${name}" has ${plural(numbers, 'number')} in the rows drawn; a choice draws at least ${MIN_ROWS}`);
+      return spec.chart === 'slope'
+        ? { column: name, measure: `${spec.from} → ${name}`, series: [spec.from, name], rows: optionRows }
+        : { column: name, measure: name, rows: optionRows };
+    });
+    // Every choice stays inside the report figure's own range (a bar's from
+    // zero), so the page draws them all on that figure's scale
+    // (lib/reports/figures/scale.ts) and no switch rescales the chart.
+    const extent = rows.flatMap((row) => row.values.map((value) => value.value));
+    if (spec.chart === 'bar') extent.push(0);
+    const [lo, hi] = [Math.min(...extent), Math.max(...extent)];
+    for (const option of options) {
+      const outside = option.rows.flatMap((row) => row.values).find((cell) => cell !== null && (cell.value < lo || cell.value > hi));
+      if (outside) fail(`the column "${option.column}" reaches outside the range of the report's figure (${outside.text}, not ${lo} to ${hi}); choosing it would rescale the chart`);
+    }
+    explore = { legend, options, initial };
+  }
+
   return {
     slug: spec.slug,
     chart: spec.chart,
@@ -258,6 +311,7 @@ export function resolveFigure(spec: FigureSpec, markdown: string): ResolvedFigur
     highlight,
     ...(lit === undefined ? {} : { lit }),
     claim: caption,
+    ...(explore ? { explore } : {}),
   };
 }
 

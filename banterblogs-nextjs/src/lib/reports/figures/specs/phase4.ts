@@ -10,6 +10,9 @@ export const PHASE4_FIGURES: FigureSpec[] = [
     to: 'GPTQ',
     highlight: 'llama3.2-1b',
     claim: 'Refusal drops from 93.6% (FP16) to 25.5% (GPTQ), a -68.2pp collapse.',
+    // the 4-bit formats: GGUF Q4_K_M keeps refusal within a few points of
+    // FP16 where AWQ and GPTQ, at about the same bits, collapse it
+    explore: { legend: 'Compare FP16 with', columns: ['Q4_K_M', 'AWQ', 'GPTQ'] },
   },
   {
     slug: 'technical-report-135',

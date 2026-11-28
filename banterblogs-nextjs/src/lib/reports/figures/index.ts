@@ -11,8 +11,8 @@ import type { FigureSpec, ResolvedFigure } from './types';
 // the build stops instead of shipping a stale or empty chart.
 
 export type { FigureSpec, ResolvedFigure } from './types';
-/** What an archive card draws: the figure without its caption sentence or anchor. */
-export type FigureThumbnail = Omit<ResolvedFigure, 'claim' | 'anchor'>;
+/** What an archive card draws: the figure without its caption sentence, anchor or a reader's choices. */
+export type FigureThumbnail = Omit<ResolvedFigure, 'claim' | 'anchor' | 'explore'>;
 
 const SPEC_BY_SLUG = new Map<string, FigureSpec>(FIGURE_SPECS.map((spec) => [spec.slug, spec]));
 const resolved = new Map<string, ResolvedFigure>();
@@ -60,6 +60,7 @@ export function toThumbnail(figure: ResolvedFigure): FigureThumbnail {
   const thumbnail: Partial<ResolvedFigure> = { ...figure };
   delete thumbnail.claim;
   delete thumbnail.anchor;
+  delete thumbnail.explore;
   return thumbnail as FigureThumbnail;
 }
 
