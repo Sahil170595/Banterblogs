@@ -18,7 +18,7 @@ export const ACCEPTED: Paper[] = [
   {
     title: 'A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving',
     thesis:
-      'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
+      'Phase 1 safety flips at 0.51% vs capability 0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
     venue: 'ICML 2026 Workshop on Hypothesis Testing',
     status: 'Presented',
     trs: [{ label: 'TR138', slug: 'technical-report-138' }],

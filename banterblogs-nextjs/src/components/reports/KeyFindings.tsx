@@ -47,8 +47,11 @@ export const KEY_FINDINGS: KeyFinding[] = [
   },
   {
     number: '2.25×',
-    finding: 'Continuous batching delivers 2.25× throughput at N=8 via 77-80% kernel reduction.',
-    source: [{ label: 'TR132', slug: 'technical-report-132' }],
+    finding: 'vLLM delivers 2.25× Ollama’s total throughput at N=8 on llama3.2-1b. Continuous batching explains it: 77-80% fewer kernels per token.',
+    source: [
+      { label: 'TR130', slug: 'technical-report-130' },
+      { label: 'TR132', slug: 'technical-report-132' },
+    ],
   },
   {
     number: 'Q4_K_M',

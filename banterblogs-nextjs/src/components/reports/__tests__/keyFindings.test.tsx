@@ -1,7 +1,7 @@
 import type { ReactNode, ViewTransitionProps } from 'react';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { reportFigure } from '@/lib/reports/figures';
+import { readReportMarkdown, reportFigure } from '@/lib/reports/figures';
 import { KEY_FINDINGS, KeyFindings } from '../KeyFindings';
 
 // The archive's key findings are the owner's own tiles. The figure work adds
@@ -50,11 +50,24 @@ describe('key findings', () => {
       ['13.9×', 'TR142'],
       ['99.4%', 'TR114'],
       ['+74%', 'TR131'],
-      ['2.25×', 'TR132'],
+      ['2.25×', 'TR130 TR132'],
       ['Q4_K_M', 'TR125'],
       ['NULL', 'TR145'],
       ['κ = 0.69', 'TR148'],
     ]);
+  });
+
+  // 2.25× sat on TR132 alone, which never states it: it is TR130's number
+  it('cites, first, a report that states the decimal a tile leads with', () => {
+    const decimals = KEY_FINDINGS.flatMap((f) => {
+      const decimal = /\d+\.\d+/.exec(f.number)?.[0];
+      return decimal ? [{ decimal, slug: f.source[0].slug }] : [];
+    });
+    expect(decimals.map((d) => d.decimal)).toEqual(['0.942', '13.9', '99.4', '2.25', '0.69']);
+    for (const { decimal, slug } of decimals) {
+      // a boolean, so a miss does not print the whole report
+      expect(readReportMarkdown(slug)?.includes(decimal), `${slug} states ${decimal}`).toBe(true);
+    }
   });
 
   it('prints each tile exactly as written', () => {
