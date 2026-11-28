@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, Minus } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ChevronRight, Minus } from 'lucide-react';
 import { Reveal } from './motion/Reveal';
 import { entranceGroup } from './motion/entrance';
 import { Badge } from './ui/Badge';
@@ -11,6 +11,17 @@ import { PageHeader } from './ui/PageHeader';
 import { Section } from './ui/Section';
 import { cn } from '@/lib/cn';
 import { readReportMeta } from '@/lib/reports/meta';
+import {
+  TOOL_RELEASES,
+  compareVersions,
+  formatReleaseDate,
+  formatReleaseMonth,
+  groupByMonth,
+  releaseHistory,
+  type ReleaseMonth,
+  type ToolRelease,
+  type ToolReleaseHistory,
+} from '@/lib/toolReleases';
 import type { ToolDef } from '@/lib/tools';
 
 // Shared body for every /tools/<slug> page. Both CLIs render through this, so
@@ -30,6 +41,127 @@ const ordinal = (index: number) => String(index + 1).padStart(2, '0');
 // largest text in the fold, paints at once); the quickstart closes it
 const QUICKSTART_GROUP = 2;
 const quickstartEntrance = entranceGroup(QUICKSTART_GROUP);
+const TEXT_LINK = 'text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary';
+/** releases shown as rows before the rest fold away by month (both CLIs have passed a hundred) */
+export const RECENT_RELEASES = 5;
+
+/**
+ * One release: its UTC date, its version, and the line from its own notes
+ * when it has one. `described` marks the release the page's facts were
+ * checked against (tools.ts), which may trail the newest.
+ */
+function ReleaseRow({ release, described }: { release: ToolRelease; described: boolean }) {
+  return (
+    <>
+      <time dateTime={release.uploadedAt} className="pt-1 text-label-13 tabular-nums text-muted-foreground">
+        {formatReleaseDate(release.uploadedAt)}
+      </time>
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-copy-14 font-semibold text-foreground">{`v${release.version}`}</span>
+          {described && (
+            <span data-release-described="">
+              <Badge tone="ember">This page describes</Badge>
+            </span>
+          )}
+          {release.yanked && <Badge tone="amber">Yanked</Badge>}
+        </p>
+        {release.summary && <p className="mt-1 text-copy-14 text-muted-foreground [overflow-wrap:anywhere]">{release.summary}</p>}
+      </div>
+    </>
+  );
+}
+
+const RELEASE_ROW = 'list-row grid gap-x-8 gap-y-1 py-4 md:grid-cols-[9.5rem_minmax(0,1fr)]';
+
+/** a month of earlier releases behind one line: its count and its span of versions */
+function ReleaseFold({ group, continued, described }: { group: ReleaseMonth; continued: boolean; described: string }) {
+  const single = group.releases.length === 1;
+  const span = single ? `v${group.newest.version}` : `v${group.oldest.version} – v${group.newest.version}`;
+  const noun = single ? 'release' : 'releases';
+  return (
+    <details className="more-details">
+      <summary>
+        <ChevronRight aria-hidden="true" className="more-chevron h-3.5 w-3.5" />
+        <span className="text-foreground">{formatReleaseMonth(group.month)}</span>
+        <span className="tabular-nums">{`· ${group.releases.length} ${continued ? 'more ' : ''}${noun} · ${span}`}</span>
+      </summary>
+      <ul className="mt-3">
+        {group.releases.map((release) => (
+          <li key={release.version} className={RELEASE_ROW}>
+            <ReleaseRow release={release} described={release.version === described} />
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+export interface ReleaseHistoryProps {
+  history: ToolReleaseHistory;
+  /** the package's PyPI page */
+  pypi: string;
+  /** when the snapshot was read */
+  fetchedAt: string;
+  /** the version the page's facts were checked against (tools.ts) */
+  described: string;
+}
+
+/**
+ * A tool's releases from the committed PyPI snapshot (lib/toolReleases.ts):
+ * the newest as hairline rows, the rest folded by UTC month, so a hundred
+ * releases stay a short list and every one of them is in the page. The
+ * snapshot may run ahead of tools.ts, so the release the page describes is
+ * marked and the newer ones are counted.
+ */
+export function ReleaseHistory({ history, pypi, fetchedAt, described }: ReleaseHistoryProps) {
+  const recent = history.releases.slice(0, RECENT_RELEASES);
+  const earlier = groupByMonth(history.releases.slice(RECENT_RELEASES));
+  // the month the recent rows end in carries on into the first fold
+  const lastRecentMonth = groupByMonth(recent).at(-1)?.month;
+  const first = history.releases.at(-1);
+  const newer = history.releases.filter((release) => compareVersions(release.version, described) > 0).length;
+  return (
+    <Section
+      id="releases"
+      title="Release history"
+      description={
+        <>
+          {history.releases.length} {history.releases.length === 1 ? 'release' : 'releases'} on{' '}
+          <a href={`${pypi}#history`} target="_blank" rel="noopener noreferrer" className={TEXT_LINK}>
+            PyPI
+          </a>
+          {first && <> since {formatReleaseDate(first.uploadedAt)}</>}, each with a line from its own{' '}
+          <a href={history.notesSource} target="_blank" rel="noopener noreferrer" className={TEXT_LINK}>
+            release notes
+          </a>
+          . PyPI snapshot of <time dateTime={fetchedAt}>{formatReleaseDate(fetchedAt)}</time>; dates are UTC.
+        </>
+      }
+    >
+      <p data-releases="described" className="mb-6 text-copy-14 text-muted-foreground">
+        This page describes <span className="font-mono font-semibold text-foreground">{`v${described}`}</span>
+        {newer === 0 ? ', the latest release.' : `; ${newer} newer ${newer === 1 ? 'release is' : 'releases are'} listed above it.`}
+      </p>
+      <ul data-releases="recent">
+        {recent.map((release) => (
+          <Reveal as="li" key={release.version} className={RELEASE_ROW}>
+            <ReleaseRow release={release} described={release.version === described} />
+          </Reveal>
+        ))}
+      </ul>
+      {earlier.length > 0 && (
+        <ul data-releases="earlier">
+          {earlier.map((group) => (
+            <Reveal as="li" key={group.month} className="list-row pb-3">
+              <ReleaseFold group={group} continued={group.month === lastRecentMonth} described={described} />
+            </Reveal>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
 
 /**
  * The product template: the head with the install chip and the links, the
@@ -37,6 +169,7 @@ const quickstartEntrance = entranceGroup(QUICKSTART_GROUP);
  * evidence as a table and the limits it states about itself.
  */
 export function ToolPage({ tool }: { tool: ToolDef }) {
+  const history = releaseHistory(tool.slug);
   return (
     <div className="container pb-24">
       {/* the head, and beside it from lg how the tool decides */}
@@ -120,7 +253,7 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
                 href={tool.repo}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground underline decoration-foreground/35 underline-offset-4 transition-colors duration-fast ease-standard hover:decoration-primary"
+                className={TEXT_LINK}
               >
                 README
               </a>
@@ -195,6 +328,8 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
             ))}
           </ul>
         </Section>
+
+        {history && <ReleaseHistory history={history} pypi={tool.pypi} fetchedAt={TOOL_RELEASES.fetchedAt} described={tool.version} />}
 
         <div className="page-section flex flex-wrap gap-3">
           <ButtonLink href="/tools" iconEnd={<ArrowRight className="h-4 w-4" />}>
