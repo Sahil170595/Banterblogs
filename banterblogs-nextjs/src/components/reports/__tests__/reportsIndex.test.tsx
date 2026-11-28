@@ -3,7 +3,11 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import ReportsIndex from '@/app/reports/page';
 import { Reveal } from '@/components/motion/Reveal';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { FIGURE_SPECS } from '@/lib/reports/figures/specs';
 import { PHASE_DEFINITIONS, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
+import { KeyFindings } from '../KeyFindings';
+import { fitsCard, type FigureData } from '../ReportFigure';
+import { ReportFigureProvider } from '../ReportFigureContext';
 import { ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabEntry, type ReportTabGroup } from '../ReportTabs';
 
 // Next's App Router bundles the React canary that exports ViewTransition; the
@@ -42,10 +46,13 @@ const INTRO_MAX_CHARS = 120;
 
 let page: AnyElement[];
 let tabs: AnyElement;
+// the page's own tree with the key findings section (KeyFindings) expanded in place
+let withFindings: AnyElement[];
 
 beforeAll(async () => {
   page = elementsIn(await ReportsIndex());
   tabs = page.find((el) => el.type === ReportTabs)!;
+  withFindings = [...page, ...elementsIn(KeyFindings())];
 });
 
 describe('archive head', () => {
@@ -116,14 +123,27 @@ describe('archive grid inputs', () => {
   });
 
   it('reveals the findings and the conclusive list as they scroll in', () => {
-    const revealed = page.filter((el) => el.type === Reveal);
+    expect(page.filter((el) => el.type === KeyFindings)).toHaveLength(1);
+    const revealed = withFindings.filter((el) => el.type === Reveal);
     expect(revealed.filter((el) => el.props.as === 'article').length).toBeGreaterThan(0);
     expect(revealed.filter((el) => el.props.as === 'li').length).toBeGreaterThan(0);
   });
 
+  it('hands the archive cards the report figures that read at card size, as plain data', () => {
+    const provider = page.find((el) => el.type === ReportFigureProvider)!;
+    const figures = provider.props.figures as Record<string, FigureData>;
+    expect(elementsIn(provider.props.children)).toContain(tabs);
+    expect(Object.keys(figures).length).toBeGreaterThan(FIGURE_SPECS.length / 2);
+    for (const [slug, figure] of Object.entries(figures)) {
+      expect(fitsCard(figure), slug).toBe(true);
+      // the caption sentence stays on the report page
+      expect(figure, slug).not.toHaveProperty('claim');
+    }
+  });
+
   // Phase R4 (archiveMotion.test.ts, archive rendering)
   it('skips rendering the findings and the conclusive list until they near the viewport', () => {
-    const sections = page.filter((el) => el.type === 'section' && /^(findings|conclusive)-heading$/.test(String(el.props['aria-labelledby'])));
+    const sections = withFindings.filter((el) => el.type === 'section' && /^(findings|conclusive)-heading$/.test(String(el.props['aria-labelledby'])));
     expect(sections).toHaveLength(2);
     for (const section of sections) expect(classes(section), String(section.props['aria-labelledby'])).toContain('archive-section');
   });

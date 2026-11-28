@@ -343,6 +343,8 @@ describe('list and card links prefetch on intent', () => {
     'components/ui/Card.tsx',
     'components/EpisodeRow.tsx',
     'app/reports/page.tsx',
+    // the archive's key findings tiles, moved out of the page
+    'components/reports/KeyFindings.tsx',
     'app/show/page.tsx',
     'app/platform/page.tsx',
     // the onward links that close /papers and /platform (R4 layout)
