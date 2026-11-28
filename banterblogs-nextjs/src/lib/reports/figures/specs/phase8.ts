@@ -44,6 +44,8 @@ export const PHASE8_FIGURES: FigureSpec[] = [
     table: { heading: '16.2 Two-axis triangulation: backend axis and interpreter axis' },
     label: 'Experiment',
     value: 'Mean Delta parallel efficiency vs V1',
+    // the table's third row, the same-session control, measures against GIL-on in the same build, not V1
+    rows: ['TR164 V2', 'TR165'],
     highlight: 'TR165',
     claim: 'The substrate observed +17.91 pp mean recovery, 79.2% of combinations clearing threshold, and 2/6 hangs resolved.',
   },

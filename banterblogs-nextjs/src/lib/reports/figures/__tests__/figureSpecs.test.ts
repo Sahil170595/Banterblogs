@@ -17,10 +17,10 @@ const TECHNICAL = discoverReportsUnique()
 /** technical reports on disk; the archive's own count */
 const TECHNICAL_REPORTS = 55;
 /** reports drawn with a real figure; raise it as specs are added */
-const FIGURES = 48;
+const FIGURES = 47;
 
 describe('figure specs', () => {
-  it('covers 48 of the 55 technical reports, and accounts for every one it leaves out', () => {
+  it('covers 47 of the 55 technical reports, and accounts for every one it leaves out', () => {
     expect(TECHNICAL).toHaveLength(TECHNICAL_REPORTS);
     expect(FIGURE_SPECS).toHaveLength(FIGURES);
     const covered = new Set(FIGURE_SPECS.map((spec) => spec.slug));

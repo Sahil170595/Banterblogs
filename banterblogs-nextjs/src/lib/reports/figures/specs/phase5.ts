@@ -55,13 +55,4 @@ export const PHASE5_FIGURES: FigureSpec[] = [
     highlight: 'llama3.2-1b · GPTQ',
     claim: 'llama3.2-1b GPTQ: +8.49pp BERTScore, -68.18pp refusal.',
   },
-  {
-    slug: 'technical-report-143',
-    chart: 'bar',
-    table: { heading: 'SS9. Phase 1 Flip Direction Analysis' },
-    label: 'Condition vs. Solo',
-    value: 'Unsafe ratio',
-    highlight: 'mixed-4/3',
-    claim: 'Mixed-4/3 vs. solo: 11 unsafe, 1 safe, ratio = 0.917, p = 0.006.',
-  },
 ];

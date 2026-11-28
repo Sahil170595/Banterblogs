@@ -33,6 +33,8 @@ export const REPORTS_WITHOUT_FIGURE: Record<string, string> = {
   'technical-report-111': 'its headline range spans a 19-row table; no smaller table the report itself draws holds it',
   'technical-report-121': 'a superseded pipeline draft with no measured result',
   'technical-report-122': 'its headline baseline sits only in tables that mix watts, degrees and percent',
+  'technical-report-143':
+    'its primary finding is a null; charting the secondary flip-direction table alone would lead with what the report ranks second, and its odds-ratio table needs a line at 1.0 the renderer does not draw',
   'technical-report-146': 'its lead is a null no table row carries; the next finding quotes values the table does not hold',
   'technical-report-149': 'its pooled estimate is only in the metadata table; the per-cell deltas alone would overstate a null',
   'technical-report-164-v4': 'its headline correlation sits only in a named-value reference table, beside unlike statistics',
