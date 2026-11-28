@@ -31,10 +31,13 @@ export function exploreView(figure: ExplorableFigure, choice: number): FigureDat
 
 const spoken = (cell: FigureValue | null) => cell?.text ?? MISSING_WORDS;
 
-/** What a choice now shows, in words: the column, and the highlighted row's value. */
-export function exploreSummary(figure: ExplorableFigure, choice: number): string {
+/** What a choice now shows, in two parts: the column, then the highlighted row's value. */
+export function exploreShown(figure: ExplorableFigure, choice: number): [column: string, datum: string] {
   const option = figure.explore.options[choice];
   const row = option.rows[figure.highlight];
-  if (option.series) return `Showing ${option.series[0]} to ${option.series[1]}: ${row.label}, ${spoken(row.values[0])} to ${spoken(row.values[1])}.`;
-  return `Showing ${option.measure}: ${row.label}, ${spoken(row.values[0])}.`;
+  if (option.series) return [`Showing ${option.series[0]} to ${option.series[1]}:`, `${row.label}, ${spoken(row.values[0])} to ${spoken(row.values[1])}.`];
+  return [`Showing ${option.measure}:`, `${row.label}, ${spoken(row.values[0])}.`];
 }
+
+/** What a choice now shows, as one sentence. */
+export const exploreSummary = (figure: ExplorableFigure, choice: number): string => exploreShown(figure, choice).join(' ');

@@ -54,7 +54,8 @@ for (const report of EXPLORABLES) {
     test('works from the keyboard: Tab enters on the choice, an arrow key moves it, the live region says what is shown', async ({ page }) => {
       await page.goto(report.path, { waitUntil: 'networkidle' });
       const live = page.locator('.report-figure [aria-live="polite"]');
-      await expect(live).toHaveText('');
+      await expect(live).toBeVisible();
+      await expect(live).toHaveText(new RegExp(`^Showing .*${report.initial}: .+\\.$`));
 
       // the disclosure just above the figure, then one Tab
       await page.locator('details.report-details > summary').focus();
@@ -93,6 +94,7 @@ test.describe('without script', () => {
     test(`${report.path} shows the report figure alone, with no control`, async ({ page }) => {
       await page.goto(report.path);
       await expect(page.locator('fieldset.report-explore')).toBeHidden();
+      await expect(page.locator('.report-explore-now')).toBeHidden();
       await expect(page.locator('.report-figure .report-hero svg')).toBeVisible();
       await expect(header(page)).toContainText(report.initial);
     });

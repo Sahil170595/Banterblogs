@@ -536,19 +536,49 @@
    script runs, so that page is the report's figure alone; shown from the
    first paint where script runs, so nothing moves when it hydrates. The
    chosen column takes the foreground, never the ember the highlighted datum
-   keeps. ── */
-.report-explore {
+   keeps. The line under the plate names the column drawn, since the caption
+   stays the report's sentence about the column the page opens on. ── */
+.report-explore,
+.report-explore-now {
   display: none;
+}
+
+@media (scripting: enabled) {
+  .report-explore,
+  .report-explore-now {
+    display: block;
+  }
+
+  /* the line and the caption read as one block under the plate */
+  .report-explore-now + figcaption {
+    margin-top: 0.25rem;
+  }
+}
+
+.report-explore {
   min-width: 0;
   margin: 0 0 0.75rem;
   padding: 0;
   border: 0;
 }
 
-@media (scripting: enabled) {
-  .report-explore {
-    display: block;
-  }
+.report-explore-now {
+  margin-top: 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+
+/* as one sentence it wraps for some choices and not others on a phone, and
+   on one line the datum slides as the column's name changes length; stacked,
+   both parts start at the same place for every choice and nothing moves */
+.report-explore-now span {
+  display: block;
+}
+
+.report-explore-now span:first-child {
+  color: hsl(var(--muted-foreground));
 }
 
 .report-explore legend {
@@ -645,7 +675,8 @@ html[data-motion="on"] .report-explore ~ .report-hero .rv path {
 
 /* a printed page has nothing to choose with */
 @media print {
-  .report-explore {
+  .report-explore,
+  .report-explore-now {
     display: none;
   }
 }

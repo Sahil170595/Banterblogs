@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { reportFigure } from '@/lib/reports/figures';
 import type { ResolvedFigure } from '@/lib/reports/figures/types';
-import { exploreSummary, exploreView, toExplorable } from '../exploreView';
+import { exploreShown, exploreSummary, exploreView, toExplorable } from '../exploreView';
 import { describeFigure, ReportFigure } from '../ReportFigure';
 import { ReportHero } from '../ReportHead';
 
@@ -51,20 +51,20 @@ describe('without script', () => {
     expect(figure.explore).toBeDefined();
     const enhanced = renderToStaticMarkup(<ReportHero slug={slug} figure={figure} />);
     const plain = renderToStaticMarkup(<ReportHero slug={slug} figure={withoutChoices(figure)} />);
-    // the control and the empty live region are all the enhanced markup adds
+    // the control and the line saying what is shown are all the enhanced markup adds
     const control = /<fieldset class="report-explore"[\s\S]*?<\/fieldset>/.exec(enhanced)?.[0] ?? '';
-    const live = '<p class="sr-only" aria-live="polite"></p>';
+    const live = /<p class="report-explore-now" aria-live="polite">[\s\S]*?<\/p>/.exec(enhanced)?.[0] ?? '';
     expect(control).not.toBe('');
-    expect(enhanced).toContain(live);
+    expect(live).not.toBe('');
     expect(enhanced.replace(control, '').replace(live, '')).toBe(plain);
     // and the plate holds exactly the static drawing
     expect(enhanced).toContain(renderToStaticMarkup(<ReportFigure figure={withoutChoices(figure)} />));
   });
 
-  it('hides the control until script runs, from the reading stylesheet', () => {
+  it('hides the control and its line until script runs, from the reading stylesheet', () => {
     const css = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'reading.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-    expect(css).toMatch(/\.report-explore \{[^}]*display: none;/);
-    expect(css).toMatch(/@media \(scripting: enabled\) \{\s*\.report-explore \{[^}]*display: block;/);
+    expect(css).toMatch(/\.report-explore,\s*\.report-explore-now \{[^}]*display: none;/);
+    expect(css).toMatch(/@media \(scripting: enabled\) \{\s*\.report-explore,\s*\.report-explore-now \{[^}]*display: block;/);
   });
 });
 
@@ -91,12 +91,29 @@ describe('the control', () => {
     }
   });
 
-  it('announces nothing on load, only what a choice changes', () => {
-    render(<ReportHero slug={SHOTS} figure={figureOf(SHOTS)} />);
+  // the caption under the plate is the report's sentence about its own column,
+  // so the plate says which column it is drawing, in sight and to a live region
+  it('says under the plate what it shows, from the first paint and after a choice', () => {
+    const figure = figureOf(SHOTS);
+    const explorable = toExplorable(figure)!;
+    render(<ReportHero slug={SHOTS} figure={figure} />);
     const live = document.querySelector('[aria-live="polite"]')!;
-    expect(live.textContent).toBe('');
+    expect(live.classList.contains('sr-only')).toBe(false);
+    expect(live.textContent).toBe(exploreSummary(explorable, figure.explore!.initial));
     fireEvent.click(screen.getByRole('radio', { name: 'N=16' }));
-    expect(live.textContent).not.toBe('');
+    expect(live.textContent).toBe(exploreSummary(explorable, 2));
+  });
+
+  // one sentence wraps for some choices and not others on a phone, and on one
+  // line the datum slides with the column's name; stacked, nothing moves
+  it('writes that line in two stacked parts, the column and the datum', () => {
+    const figure = figureOf(FORMATS);
+    render(<ReportHero slug={FORMATS} figure={figure} />);
+    const parts = [...document.querySelectorAll('[aria-live="polite"] > span')].map((span) => span.textContent);
+    expect(parts).toEqual(exploreShown(toExplorable(figure)!, figure.explore!.initial));
+    expect(parts.join(' ')).toBe(exploreSummary(toExplorable(figure)!, figure.explore!.initial));
+    const css = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'reading.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/\n\.report-explore-now span \{[^}]*display: block;/);
   });
 });
 
@@ -143,7 +160,7 @@ describe('a choice', () => {
     const formats = figureOf(FORMATS);
     rerender(<ReportHero slug={FORMATS} figure={formats} />);
     expect((screen.getByRole('radio', { name: formats.explore!.options[formats.explore!.initial].column }) as HTMLInputElement).checked).toBe(true);
-    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe('');
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe(exploreSummary(toExplorable(formats)!, formats.explore!.initial));
   });
 
   it('draws a cell the table leaves empty as missing, never as a zero', () => {

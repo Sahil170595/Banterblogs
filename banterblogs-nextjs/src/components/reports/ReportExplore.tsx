@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { exploreSummary, exploreView, type ExplorableFigure } from './exploreView';
+import { exploreShown, exploreView, type ExplorableFigure } from './exploreView';
 import { ReportFigure } from './ReportFigure';
 import { ReportFigureTransition } from './ReportTransitions';
 
@@ -9,17 +9,14 @@ import { ReportFigureTransition } from './ReportTransitions';
 // columns as one radio group over the hero plate. The server renders it on
 // the report figure's column, so the page before it hydrates, and without
 // script, is that figure; reading.css shows the group only where script
-// runs. A choice redraws the same plate on the same scale.
+// runs. A choice redraws the same plate on the same scale, and the line under
+// it says which column is drawn: the caption below stays the report's own
+// sentence about the column the page opens on.
 
 export function ReportExplore({ figure }: { figure: ExplorableFigure }) {
   const { explore } = figure;
   const [choice, setChoice] = useState(explore.initial);
-  // a live region speaks what changes, so it stays empty until the reader chooses
-  const [summary, setSummary] = useState('');
-  const choose = (index: number) => {
-    setChoice(index);
-    setSummary(exploreSummary(figure, index));
-  };
+  const [column, datum] = exploreShown(figure, choice);
 
   return (
     <>
@@ -28,7 +25,7 @@ export function ReportExplore({ figure }: { figure: ExplorableFigure }) {
         <div className="report-explore-options">
           {explore.options.map((option, index) => (
             <label key={option.column}>
-              <input type="radio" name={`figure-${figure.slug}`} value={option.column} checked={index === choice} onChange={() => choose(index)} />
+              <input type="radio" name={`figure-${figure.slug}`} value={option.column} checked={index === choice} onChange={() => setChoice(index)} />
               <span>{option.column}</span>
             </label>
           ))}
@@ -39,8 +36,9 @@ export function ReportExplore({ figure }: { figure: ExplorableFigure }) {
           <ReportFigure figure={exploreView(figure, choice)} />
         </div>
       </ReportFigureTransition>
-      <p className="sr-only" aria-live="polite">
-        {summary}
+      {/* a live region speaks only what changes, so the opening line is read in place, not announced */}
+      <p className="report-explore-now" aria-live="polite">
+        <span>{column}</span> <span>{datum}</span>
       </p>
     </>
   );
