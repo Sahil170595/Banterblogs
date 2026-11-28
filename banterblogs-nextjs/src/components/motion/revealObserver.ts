@@ -9,6 +9,10 @@ export const REVEAL_ATTRIBUTE = 'data-reveal';
 export const REVEAL_TARGET = { dataReveal: '' } as const;
 export const REVEAL_PENDING = 'pending';
 export const REVEAL_SHOWN = 'shown';
+/** a target held below the fold until it scrolls in */
+export const REVEAL_HELD = `[${REVEAL_ATTRIBUTE}="${REVEAL_PENDING}"]`;
+/** a target revealed, or never held (at rest as rendered): where a stylesheet plays its own entrance */
+export const REVEAL_UNHELD = `:is([${REVEAL_ATTRIBUTE}=""], [${REVEAL_ATTRIBUTE}="${REVEAL_SHOWN}"])`;
 /** a batch entering together staggers over at most six steps (index 0-5) */
 export const REVEAL_STAGGER_CAP = 5;
 /** reveal once an element is this far inside the bottom edge, so the rise is seen */
@@ -40,14 +44,13 @@ const motionArmed = () =>
 // Held content with focus inside is at rest (globals.css, :focus-within).
 // Once focus moves on, it stays shown: marked now, from the at-rest style it
 // was drawn in, it has nothing to animate. No layout is read.
-const HELD = `[${REVEAL_ATTRIBUTE}="${REVEAL_PENDING}"]`;
 function keepShownAfterFocus(event: FocusEvent) {
   if (!(event.target instanceof Element)) return;
-  let held = event.target.closest(HELD);
+  let held = event.target.closest(REVEAL_HELD);
   while (held) {
     held.setAttribute(REVEAL_ATTRIBUTE, REVEAL_SHOWN);
     shared?.unobserve(held);
-    held = held.parentElement?.closest(HELD) ?? null;
+    held = held.parentElement?.closest(REVEAL_HELD) ?? null;
   }
 }
 

@@ -1,9 +1,8 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ECOSYSTEM_NODES, nodeById, type NodeId } from '@/lib/ecosystem';
 import { ECOSYSTEM_EDGES, edgeKey } from '../connections';
 import { MAP_LAYOUTS, arrowHead, labelLines, pillBox, pointAt, routePath, type MapLayout, type Route } from '../mapLayout';
+import { MAP_STYLESHEET } from '../mapStylesheet';
 import { textWidth } from './manropeAdvances';
 
 // The map is laid out by hand, three times: across for a wide figure, in
@@ -13,17 +12,17 @@ import { textWidth } from './manropeAdvances';
 // and keeps clear of every other, a node's text fits its pill, and a label
 // sits by its own line, clear of the rest.
 
-const CSS = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'platform', 'map.module.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+const CSS = MAP_STYLESHEET.replace(/\/\*[\s\S]*?\*\//g, '');
 /** a font size the stylesheet sets, in px */
 function cssPx(selector: string): number {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = CSS.match(new RegExp(`(?:^|\\})\\s*${escaped}\\s*\\{[^}]*font-size:\\s*([\\d.]+)px`));
-  if (!match) throw new Error(`no font-size for ${selector} in map.module.css`);
+  if (!match) throw new Error(`no font-size for ${selector} in mapStylesheet.ts`);
   return Number(match[1]);
 }
-const LABEL_PX = cssPx('.label');
-const STACK_PX = cssPx('.stack');
-const namePx = (layout: MapLayout) => (CSS.includes(`.${layout.id} .name`) ? cssPx(`.${layout.id} .name`) : cssPx('.name'));
+const LABEL_PX = cssPx('.emap-label');
+const STACK_PX = cssPx('.emap-stack');
+const namePx = (layout: MapLayout) => (CSS.includes(`.emap-${layout.id} .emap-name`) ? cssPx(`.emap-${layout.id} .emap-name`) : cssPx('.emap-name'));
 const LABEL_LINE_PX = 14;
 /** a 12px line's ink, from its baseline: capitals and ascenders above, descenders below */
 const ASCENT_PX = 10;
