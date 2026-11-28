@@ -12,6 +12,7 @@ import { NAV_BACK, NAV_FORWARD } from '@/components/reports/ReportTransitions';
 import { IntentLink } from '@/components/ui/IntentLink';
 import { reportIdentity } from '@/components/reports/reportIdentity';
 import { computeContentStats } from '@/lib/episodes';
+import { reportFigure } from '@/lib/reports/figures';
 import { loadReportData } from '@/lib/reports/loadPublishReady';
 import { readReportMeta } from '@/lib/reports/meta';
 import { discoverReportsUnique, findReportFolder, toHumanTitle } from '@/lib/reports/locator';
@@ -126,7 +127,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
         {/* ── The column (hero, phone contents, body) beside the contents rail ── */}
         <div className="report-layout">
           <div className="min-w-0">
-            <ReportHero slug={id} />
+            <ReportHero slug={id} figure={reportFigure(id)} />
             <ReportTocMobile headings={headings} />
             <ReportMarkdown sections={report.sections} />
           </div>

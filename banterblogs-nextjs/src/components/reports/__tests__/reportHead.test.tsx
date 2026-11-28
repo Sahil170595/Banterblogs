@@ -4,7 +4,9 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import ReportDetail from '@/app/reports/[id]/page';
 import { computeContentStats } from '@/lib/episodes';
 import { readReportSections } from '@/lib/reports/content';
+import { reportFigure } from '@/lib/reports/figures';
 import { readReportMeta } from '@/lib/reports/meta';
+import { describeFigure } from '../ReportFigure';
 import { formatStatedDate } from '../ReportHead';
 import { reportIdentity } from '../reportIdentity';
 import { NAV_BACK } from '../ReportTransitions';
@@ -99,13 +101,35 @@ describe('report page head', () => {
     expect(beforeBody.map((h) => h.tagName)).toEqual(['H1']);
   });
 
-  it('shows the hero figure: the card visual with its ember accent lit', async () => {
+  it("shows the report's own figure as the hero, captioned with its sentence and linked to its table", async () => {
     const root = await page('technical-report-138');
+    const figure = reportFigure('technical-report-138')!;
+    const svgs = root.querySelectorAll('.report-hero svg');
+
+    expect(svgs).toHaveLength(1);
+    expect(svgs[0].getAttribute('data-figure')).toBe('bar');
+    expect(svgs[0].getAttribute('role')).toBe('img');
+    expect(svgs[0].getAttribute('data-accent')).toBe('on');
+    // the page carries every number the chart draws
+    expect(svgs[0].querySelector('desc')?.textContent).toBe(describeFigure(figure));
+
+    const caption = root.querySelector('figure.report-figure > figcaption')!;
+    expect(textOf(caption)).toContain(figure.claim);
+    const link = caption.querySelector('a')!;
+    expect(textOf(link)).toBe(figure.title);
+    expect(link.getAttribute('href')).toBe(`#${figure.anchor}`);
+    // the link lands on the heading the table sits under, in the page's own body
+    expect(root.querySelector(`.report-prose [id="${figure.anchor}"]`)?.textContent).toContain(figure.title);
+  });
+
+  it('keeps the seeded visual, uncaptioned, for a report without a figure', async () => {
+    const root = await page('technical-report-109');
     const visuals = root.querySelectorAll('.report-hero svg[data-family]');
 
     expect(visuals).toHaveLength(1);
     expect(visuals[0].getAttribute('data-accent')).toBe('on');
     expect(visuals[0].getAttribute('aria-hidden')).toBe('true');
+    expect(root.querySelector('figcaption')).toBeNull();
   });
 
   it.each([
@@ -151,7 +175,9 @@ describe('report page layout', () => {
   it('opens the article column on the hero, then the phone contents, then the body', async () => {
     const root = await page('technical-report-138');
     const [hero, mobileToc, body] = ['.report-hero', '.report-toc-mobile', '.report-prose'].map((selector) => column(root).querySelector(selector)!);
-    expect(column(root).firstElementChild).toBe(hero);
+    // a report with a figure opens on it, the hero plate first inside its <figure>
+    expect(column(root).firstElementChild?.matches('figure.report-figure')).toBe(true);
+    expect(column(root).firstElementChild?.firstElementChild).toBe(hero);
     expect(hero.compareDocumentPosition(mobileToc) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(mobileToc.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // one hero, still the far end of the figure morph (ReportFigureTransition wraps it)

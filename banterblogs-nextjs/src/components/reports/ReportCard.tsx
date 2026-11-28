@@ -2,8 +2,8 @@ import { ArrowRight } from 'lucide-react';
 import { LivePulse } from '@/components/motion/LivePulse';
 import { IntentLink } from '@/components/ui/IntentLink';
 import { describeReport } from './reportIdentity';
+import { ReportCardVisual } from './ReportFigureContext';
 import { NAV_FORWARD, ReportFigureTransition } from './ReportTransitions';
-import { ReportVisual } from './ReportVisual';
 
 export { describeReport };
 
@@ -20,8 +20,9 @@ export interface ReportCardProps {
 }
 
 /**
- * An archive card: the report's visual in a fixed 16:9 frame, its title,
- * a two-line description and a 13px meta line. No border. The link takes the
+ * An archive card: the report's figure (its seeded visual where it has none)
+ * in a fixed 16:9 frame, its title, a two-line description and a 13px meta
+ * line. No border. The link takes the
  * pointer and its .card-lift child moves (the .card-depth rules in
  * globals.css), so a lifted card never slips out from under the cursor.
  */
@@ -32,7 +33,7 @@ export function ReportCard({ slug, title, description, synthesis = false, latest
       <div className="card-lift">
         <ReportFigureTransition slug={slug}>
           <div className="card-visual aspect-video">
-            <ReportVisual slug={slug} accent={accent} />
+            <ReportCardVisual slug={slug} accent={accent} />
           </div>
         </ReportFigureTransition>
         <h3 className="mt-4 text-heading-20 text-foreground">{heading}</h3>

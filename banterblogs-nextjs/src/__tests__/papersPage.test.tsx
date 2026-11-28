@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import PapersPage from '@/app/papers/page';
 import { ENTRANCE_GROUP_CLASS, ENTRANCE_ITEM_ATTRIBUTE, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { reportFigure } from '@/lib/reports/figures';
 
 // /papers is the proof page for the R3 primitives (A5): an unboxed PageHeader
 // with the tally in its stat row, each paper a Card with its status Badge,
@@ -133,6 +134,22 @@ describe('papers', () => {
     const surfaces = [...page.querySelectorAll('.card-surface')];
     expect(surfaces).toHaveLength(PUBLISHED);
     expect(surfaces.every((surface) => surface.querySelector('svg.rv'))).toBe(true);
+  });
+
+  it("draws the marks of the first evidence report's own figure on its card, or its seeded picture where it has none", () => {
+    const cards = [...page.querySelectorAll('article.card-depth')];
+    const firstEvidence = cards.map((card) => card.querySelector('a[href^="/reports/"]')!.getAttribute('href')!.replace('/reports/', ''));
+    expect(firstEvidence).toEqual(['technical-report-138', 'technical-report-144', 'technical-report-125']);
+    cards.forEach((card, index) => {
+      const svg = card.querySelector('svg.rv')!;
+      if (reportFigure(firstEvidence[index])) {
+        expect(svg.getAttribute('data-figure'), firstEvidence[index]).not.toBeNull();
+        expect(svg.getAttribute('viewBox')).toBe('0 0 320 90');
+        expect(svg.querySelector('text')).toBeNull();
+      } else {
+        expect(svg.hasAttribute('data-family'), firstEvidence[index]).toBe(true);
+      }
+    });
   });
 
   it('sets the accepted paper without a picture and the papers in preparation as numbered hairline rows', () => {

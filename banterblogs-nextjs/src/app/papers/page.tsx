@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { CiteBlock } from '@/components/CiteBlock';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
+import { ReportFigure } from '@/components/reports/ReportFigure';
 import { ReportVisual } from '@/components/reports/ReportVisual';
 import { Badge, PAPER_STATUS_TONE } from '@/components/ui/Badge';
 import { ButtonLink } from '@/components/ui/Button';
@@ -16,6 +17,7 @@ import { paperCitation } from '@/lib/citation';
 import { cn } from '@/lib/cn';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 import { ACCEPTED, PUBLIC_PREPRINTS, type Paper } from '@/lib/papers';
+import { reportFigure } from '@/lib/reports/figures';
 
 const IN_PREP: Paper[] = [
   {
@@ -232,6 +234,16 @@ function PaperCite({ paper }: { paper: Paper }) {
 }
 
 /**
+ * An evidence report's picture: the marks of its own figure (lib/reports/
+ * figures), or its seeded archive visual where it has none. The numbers are
+ * read on the report page.
+ */
+function EvidencePicture({ slug }: { slug: string }) {
+  const figure = reportFigure(slug);
+  return figure ? <ReportFigure figure={figure} variant="mini" describe={false} /> : <ReportVisual slug={slug} />;
+}
+
+/**
  * A public paper: its evidence report's picture, status and venue, the title
  * leading to the preprint, the thesis, then its links. The only papers set as
  * cards, because they have a picture.
@@ -239,11 +251,11 @@ function PaperCite({ paper }: { paper: Paper }) {
 function PaperCard({ paper }: { paper: Paper }) {
   return (
     <Card as="article" variant="interactive" className="flex h-full flex-col">
-      {/* the evidence report's archive picture, inset on the card without a
-          frame of its own */}
+      {/* the evidence report's picture, inset on the card without a frame of
+          its own */}
       {paper.trs[0] && (
         <div className="mb-5 h-28 overflow-hidden rounded-lg bg-background/60 md:h-32">
-          <ReportVisual slug={paper.trs[0].slug} />
+          <EvidencePicture slug={paper.trs[0].slug} />
         </div>
       )}
       <StatusLine paper={paper} />
