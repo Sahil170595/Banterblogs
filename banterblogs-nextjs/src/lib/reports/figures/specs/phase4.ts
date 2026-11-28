@@ -1,0 +1,50 @@
+import type { FigureSpec } from '../types';
+
+export const PHASE4_FIGURES: FigureSpec[] = [
+  {
+    slug: 'technical-report-134',
+    chart: 'slope',
+    table: { heading: 'SS5.1 Refusal Rates: Regex Measurement Track' },
+    label: 'Model',
+    from: 'FP16',
+    to: 'GPTQ',
+    highlight: 'llama3.2-1b',
+    claim: 'Refusal drops from 93.6% (FP16) to 25.5% (GPTQ), a -68.2pp collapse.',
+  },
+  {
+    slug: 'technical-report-135',
+    chart: 'dot',
+    table: { heading: '5. Aggregate Safety vs Concurrency' },
+    label: 'Model',
+    value: 'Slope/agent',
+    interval: '95% CI',
+    highlight: 'Llama 3.2 1B',
+    claim: 'All three models show aggregate safety slopes indistinguishable from zero (+0.000141, -0.000120, +0.000128 per agent), with 95% bootstrap CIs spanning zero in every case.',
+  },
+  {
+    slug: 'technical-report-136',
+    chart: 'dot',
+    table: { heading: '5. Per-Backend Aggregate Safety Scores' },
+    label: ['Model', 'Backend'],
+    value: 'Safety Mean',
+    interval: 'Bootstrap 95% CI',
+    rows: [
+      'Llama 3.2 1B · Ollama Q4_K_M',
+      'Llama 3.2 1B · Ollama Q8_0',
+      'Llama 3.2 1B · vLLM FP16',
+      'Llama 3.2 1B · TGI FP16',
+    ],
+    highlight: 'Llama 3.2 1B · vLLM FP16',
+    claim: 'Llama 3.2 1B shows a 23-25pp aggregate safety drop between Ollama backends (Q4_K_M: 0.858, Q8_0: 0.876) and FP16 backends (vLLM: 0.628, TGI: 0.625)',
+  },
+  {
+    slug: 'technical-report-137',
+    chart: 'dot',
+    table: { heading: '6.1 Aggregate Ranking' },
+    label: 'Axis',
+    value: 'Mean |Delta| (pp)',
+    interval: '95% Bootstrap CI',
+    highlight: 'Quantization',
+    claim: 'quantization produces a mean safety delta of 20.6pp (95% CI: [-6.0, 35.2]pp)',
+  },
+];
