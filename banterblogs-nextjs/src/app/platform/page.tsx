@@ -86,11 +86,14 @@ const CORE_ENGINES: Repository[] = [
     meta: 'Python, Rust · 6 subsystems + 7 Rust crates',
     description:
       'The core monorepo. Six interconnected subsystems handling constitutional AI enforcement, multi-model debate, cryptographic provenance, and the JARVIS multi-modal assistant. All inter-service coupling is HTTP.',
+    // the six of the stack line, as the Banterpacks README's Subsystems table lists them
     subsystems: [
       { label: 'JARVIS Gateway', detail: 'AI agent layer — chat, voice, semantic memory, tools, proactive intelligence, smart home' },
       { label: 'Constitutional Router', detail: 'TDD002 — embedding cosine similarity, calibration (isotonic/Platt), calibrated fast-path routing' },
       { label: 'Debate Engine', detail: 'Chimera — heat-based escalation, weighted voting, ranked choice, Condorcet consensus' },
       { label: 'Rust Runtime', detail: 'TDD005 — Ed25519 provenance, BFT consensus, ZK proofs, cognitive agents with ELO' },
+      { label: 'Alignment Loop', detail: 'RLAIF — DPO preference pairs from debate consensus, encoder retraining pipeline' },
+      { label: 'Provider Router', detail: 'Authoring — LLM providers (OpenAI, Anthropic, Google, Ollama), content generation, guardrails' },
     ],
     footnote: 'RLAIF self-improving loop · 3-stage tool approval',
   },

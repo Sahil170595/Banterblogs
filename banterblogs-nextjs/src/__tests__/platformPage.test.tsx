@@ -87,10 +87,19 @@ const OWNER_PROSE = [
   `${REPORTS.DISPLAY} technical reports with ${MEASUREMENTS.DISPLAY} measurements across inference, optimization, and safety.`,
   "Who built this, why, and where it's headed.",
 ];
+// The head says "6 subsystems": the Banterpacks README's Subsystems table
+// lists JARVIS, TDD002, Chimera, TDD005, RLAIF and Authoring. The page showed
+// four; the last two are set from that table, in the list's own shape.
+const SOURCED_SUBSYSTEM_COPY = [
+  'RLAIF — DPO preference pairs from debate consensus, encoder retraining pipeline',
+  'Authoring — LLM providers (OpenAI, Anthropic, Google, Ollama), content generation, guardrails',
+];
 const SUBSYSTEMS: Record<string, string[]> = {
-  Banterpacks: ['JARVIS Gateway', 'Constitutional Router', 'Debate Engine', 'Rust Runtime'],
+  Banterpacks: ['JARVIS Gateway', 'Constitutional Router', 'Debate Engine', 'Rust Runtime', 'Alignment Loop', 'Provider Router'],
   Banterhearts: ['Inference API', 'Safety Research', 'Benchmarking', 'AutoOpt Agent'],
 };
+// what "6 subsystems + 7 Rust crates" promises of the list under it
+const BANTERPACKS_SUBSYSTEM_COUNT = 6;
 const FOOTNOTES: Record<string, string> = {
   Banterpacks: 'RLAIF self-improving loop · 3-stage tool approval',
   Banterhearts: '37-file evaluation framework · 20 monitoring modules · 12 security modules',
@@ -164,6 +173,7 @@ describe('platform head', () => {
   it('keeps every sentence of the owner copy, and every subsystem, module and step name', () => {
     const all = text(page);
     for (const sentence of OWNER_PROSE) expect(all, sentence).toContain(sentence);
+    for (const sentence of SOURCED_SUBSYSTEM_COPY) expect(all, sentence).toContain(sentence);
     for (const label of [...Object.values(SUBSYSTEMS).flat(), ...GATEWAY_MODULES, ...DATA_FLOW]) expect(all, label).toContain(label);
     expect(all).toContain(`${ARCHIVED_EPISODES} archived episodes documenting commits, decisions, and telemetry data points.`);
   });
@@ -211,6 +221,12 @@ describe('system map', () => {
 });
 
 describe('core engines', () => {
+  it('lists as many Banterpacks subsystems as its stack line counts', () => {
+    expect(text(articleFor('Banterpacks')!)).toContain(`${BANTERPACKS_SUBSYSTEM_COUNT} subsystems`);
+    expect(SUBSYSTEMS.Banterpacks).toHaveLength(BANTERPACKS_SUBSYSTEM_COUNT);
+    expect(articleFor('Banterpacks')!.querySelectorAll('dl > div')).toHaveLength(BANTERPACKS_SUBSYSTEM_COUNT);
+  });
+
   it('gives each engine one large drawing and no card: the plate, then its name, stack, story and subsystems', () => {
     const engines = [...page.querySelectorAll('#core-engines article')];
     expect(engines.map((a) => text(a.querySelector('h3')!))).toEqual(CORE);
