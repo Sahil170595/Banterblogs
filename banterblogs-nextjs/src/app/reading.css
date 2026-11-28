@@ -180,6 +180,69 @@
   text-decoration-color: hsl(var(--primary));
 }
 
+/* Heading anchors (lib/reports/headingAnchors.ts): each h2 and h3 ends in a
+   link to itself. Its "#" is drawn here, so a heading's text stays its own.
+   Where a pointer hovers, the anchor waits for the heading's hover or for
+   keyboard focus; a touch screen always shows it. HeadingAnchorCopy sets
+   data-copy on it while a copied link is confirmed. */
+.report-prose .heading-anchor {
+  display: inline-block;
+  min-width: 1.5rem;
+  margin-left: 0.25rem;
+  border-radius: 0.25rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 400;
+  letter-spacing: 0;
+  text-align: center;
+  text-decoration-line: none;
+  white-space: nowrap;
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.report-prose .heading-anchor::before {
+  content: "#";
+}
+
+.report-prose .heading-anchor:hover {
+  color: hsl(var(--primary));
+}
+
+.report-prose .heading-anchor[data-copy]::after {
+  content: "Copied";
+  margin-left: 0.375rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  color: hsl(var(--status-green));
+}
+
+.report-prose .heading-anchor[data-copy="failed"]::after {
+  content: "Copy failed";
+  color: hsl(var(--muted-foreground));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .report-prose .heading-anchor {
+    opacity: 0;
+  }
+
+  .report-prose :is(h2, h3):hover > .heading-anchor,
+  .report-prose .heading-anchor:is(:focus-visible, [data-copy]) {
+    opacity: 1;
+  }
+}
+
+@media print {
+  .report-prose .heading-anchor {
+    display: none;
+  }
+}
+
 /* inline code at 16px; code in a heading, a table or a block takes its surroundings' size */
 .report-prose :not(pre) > code {
   padding: 0.1em 0.35em;
@@ -424,6 +487,198 @@
 .report-hero .rv {
   width: 100%;
   height: 100%;
+}
+
+/* A report with a figure: the chart from its own table on a plain plate,
+   then the report's sentence and the heading it was drawn from. The chart is
+   capped at 28rem so its labels read at 13px beside 17px prose rather than
+   growing to 18px with the column; on a phone it fills the plate. */
+.report-figure {
+  max-width: var(--reading-measure);
+  margin: 0 0 2.5rem;
+}
+
+.report-figure .report-hero {
+  margin-bottom: 0;
+  background-image: none;
+}
+
+.report-figure .report-hero .rv {
+  max-width: 28rem;
+  margin-inline: auto;
+}
+
+.report-figure figcaption {
+  margin-top: 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: hsl(var(--muted-foreground));
+}
+
+.report-figure-source {
+  margin-top: 0.375rem;
+}
+
+.report-figure-source a {
+  color: hsl(var(--foreground));
+  text-decoration-line: underline;
+  text-decoration-color: hsl(var(--foreground) / 0.35);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--duration-fast) var(--ease-standard);
+}
+
+.report-figure-source a:hover {
+  text-decoration-color: hsl(var(--primary));
+}
+
+/* ── a figure the reader redraws (components/reports/ReportExplore.tsx): the
+   table's own columns as one radio group over the plate. Hidden where no
+   script runs, so that page is the report's figure alone; shown from the
+   first paint where script runs, so nothing moves when it hydrates. The
+   chosen column takes the foreground, never the ember the highlighted datum
+   keeps. The line under the plate names the column drawn, since the caption
+   stays the report's sentence about the column the page opens on. ── */
+.report-explore,
+.report-explore-now {
+  display: none;
+}
+
+@media (scripting: enabled) {
+  .report-explore,
+  .report-explore-now {
+    display: block;
+  }
+
+  /* the line and the caption read as one block under the plate */
+  .report-explore-now + figcaption {
+    margin-top: 0.25rem;
+  }
+}
+
+.report-explore {
+  min-width: 0;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 0;
+}
+
+.report-explore-now {
+  margin-top: 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+
+/* as one sentence it wraps for some choices and not others on a phone, and
+   on one line the datum slides as the column's name changes length; stacked,
+   both parts start at the same place for every choice and nothing moves */
+.report-explore-now span {
+  display: block;
+}
+
+.report-explore-now span:first-child {
+  color: hsl(var(--muted-foreground));
+}
+
+.report-explore legend {
+  padding: 0;
+  margin-bottom: 0.375rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.report-explore-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.report-explore label {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+}
+
+/* the radio stays in the tab order and the accessibility tree, over its label */
+.report-explore input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* 36px tall, past WCAG 2.5.8's 24px target; five shot counts keep one line
+   on a 390px phone and wrap, without a sideways scroll, at 320px */
+.report-explore span {
+  display: flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.08);
+}
+
+.report-explore label:hover span {
+  color: hsl(var(--foreground));
+}
+
+.report-explore input:checked + span {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--foreground) / 0.08);
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.28);
+}
+
+/* the site's focus ring, drawn on the label its hidden radio covers */
+.report-explore input:focus-visible + span {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* where the column fits beside the choices, the legend leads their line */
+@media (min-width: 640px) {
+  .report-explore legend {
+    float: left;
+    margin: 0 0.75rem 0 0;
+    line-height: 2.25rem;
+  }
+}
+
+/* Only while motion is armed: the choice's colours fade, and the marks move
+   to their new values (bars by x and width, dots by cx, a slope's line by
+   its path) while the scale, the labels and the plate stay put. */
+html[data-motion="on"] .report-explore span {
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+html[data-motion="on"] .report-explore ~ .report-hero .rv :is(rect, circle) {
+  transition:
+    x var(--duration-base) var(--ease-strong-out),
+    width var(--duration-base) var(--ease-strong-out),
+    cx var(--duration-base) var(--ease-strong-out);
+}
+
+html[data-motion="on"] .report-explore ~ .report-hero .rv path {
+  transition: d var(--duration-base) var(--ease-strong-out);
+}
+
+/* a printed page has nothing to choose with */
+@media print {
+  .report-explore,
+  .report-explore-now {
+    display: none;
+  }
 }
 
 /* ── contents ── */

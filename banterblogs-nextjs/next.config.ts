@@ -61,6 +61,8 @@ const CATALOG_ROUTES = [
   // escaped as the docs show: '/tools/*' also matched the /tools index
   '/tools/\\[slug\\]',
   '/work',
+  // the public papers' cards draw their evidence reports' figures
+  '/papers',
 ];
 
 // The landing poster and loop files carry a content hash in their names

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { ArrowUpRight } from 'lucide-react';
+import { CiteBlock } from '@/components/CiteBlock';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
+import { ReportFigure } from '@/components/reports/ReportFigure';
 import { ReportVisual } from '@/components/reports/ReportVisual';
 import { Badge, PAPER_STATUS_TONE } from '@/components/ui/Badge';
 import { ButtonLink } from '@/components/ui/Button';
@@ -11,64 +13,11 @@ import { OnwardLinks, type OnwardLink } from '@/components/ui/OnwardLinks';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
+import { paperCitation } from '@/lib/citation';
 import { cn } from '@/lib/cn';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
-
-interface Paper {
-  title: string;
-  thesis: string;
-  venue: string;
-  status: keyof typeof PAPER_STATUS_TONE;
-  trs: { label: string; slug: string }[];
-  arxiv?: string;
-  demo?: { label: string; href: string };
-}
-
-const ACCEPTED: Paper[] = [
-  {
-    title: 'A Paired Testing Protocol for Batch-Conditioned Refusal Robustness in LLM Serving',
-    thesis:
-      'Phase 1 safety flips at ~0.58% vs capability ~0.14% under controlled batching. Refusal-to-compliance dominant direction. Reduced true-batching validation reaches ~99.4% agreement with synchronized dispatch.',
-    venue: 'ICML 2026 Workshop on Hypothesis Testing',
-    status: 'Presented',
-    trs: [{ label: 'TR138', slug: 'technical-report-138' }],
-    arxiv: 'https://arxiv.org/abs/2605.27763',
-  },
-  {
-    title: 'A Safe Prototype Is Not a Safety Direction: Reference Dependence and Prompt Confounds in Response-Safety Embeddings',
-    thesis:
-      'The first paper on Chimera’s own thesis, from Banterpacks. In tested prompt-controlled settings, raw safe centroids discriminate weakly or inversely; safe-minus-unsafe directions reach ROC-AUC 0.588–0.793.',
-    venue: 'NeurIPS 2026 Workshop on Foundations of Language Model Security',
-    status: 'Accepted',
-    trs: [],
-    arxiv: 'https://arxiv.org/abs/2610.01801',
-  },
-];
-
-const PUBLIC_PREPRINTS: Paper[] = [
-  {
-    title: 'Speculative Decoding at Temperature Zero: A Scoped Safety-Invariance Screen with a 48,072-Sample Expansion',
-    thesis: 'Examines output differences and refusal behavior under temperature-zero speculative decoding.',
-    venue: 'Public preprint',
-    status: 'Preprint',
-    trs: [{ label: 'TR144', slug: 'technical-report-144' }],
-    arxiv: 'https://arxiv.org/abs/2606.25097',
-  },
-  {
-    title: 'Quality Is Not a Safety Proxy Under Quantization',
-    thesis:
-      'Across a 51-row matrix (6 models, 4 families, a 7-level GGUF ladder + AWQ/GPTQ INT4), retained quality does not waive direct safety testing: 10 hidden-danger rows (plus 1 near-hidden) hold quality steady or better while refusal falls 10-68pp. A calibrated refusal-template-drift screen (RTSI) routes 10 of the 11 under blocked validation; Claude Sonnet 4 relabels 11,470 items and agrees with the gemma3:12b judge on 89.9% of rows (κ = 0.873).',
-    venue: 'Public preprint',
-    status: 'Preprint',
-    trs: [
-      { label: 'TR125', slug: 'technical-report-125' },
-      { label: 'TR134', slug: 'technical-report-134' },
-      { label: 'TR142', slug: 'technical-report-142' },
-    ],
-    arxiv: 'https://arxiv.org/abs/2606.10154',
-    demo: { label: 'QuantSafe Certifier (HF Space)', href: 'https://huggingface.co/spaces/build-small-hackathon/quantsafe-certifier' },
-  },
-];
+import { ACCEPTED, PUBLIC_PREPRINTS, type Paper } from '@/lib/papers';
+import { reportFigure } from '@/lib/reports/figures';
 
 const IN_PREP: Paper[] = [
   {
@@ -274,6 +223,27 @@ function Evidence({ paper, stacked = false, className }: { paper: Paper; stacked
 }
 
 /**
+ * A public paper's citation, behind a closed disclosure. Only a workshop
+ * paper or a public preprint has one (paperCitation refuses every other
+ * status); a paper in preparation is never offered for citation.
+ */
+function PaperCite({ paper }: { paper: Paper }) {
+  const citation = paperCitation(paper);
+  if (!citation) return null;
+  return <CiteBlock citation={citation} subject={paper.title} />;
+}
+
+/**
+ * An evidence report's picture: the marks of its own figure (lib/reports/
+ * figures), or its seeded archive visual where it has none. The numbers are
+ * read on the report page.
+ */
+function EvidencePicture({ slug }: { slug: string }) {
+  const figure = reportFigure(slug);
+  return figure ? <ReportFigure figure={figure} variant="mini" describe={false} /> : <ReportVisual slug={slug} />;
+}
+
+/**
  * A public paper: its evidence report's picture, status and venue, the title
  * leading to the preprint, the thesis, then its links. The only papers set as
  * cards, because they have a picture.
@@ -281,11 +251,11 @@ function Evidence({ paper, stacked = false, className }: { paper: Paper; stacked
 function PaperCard({ paper }: { paper: Paper }) {
   return (
     <Card as="article" variant="interactive" className="flex h-full flex-col">
-      {/* the evidence report's archive picture, inset on the card without a
-          frame of its own */}
+      {/* the evidence report's picture, inset on the card without a frame of
+          its own */}
       {paper.trs[0] && (
         <div className="mb-5 h-28 overflow-hidden rounded-lg bg-background/60 md:h-32">
-          <ReportVisual slug={paper.trs[0].slug} />
+          <EvidencePicture slug={paper.trs[0].slug} />
         </div>
       )}
       <StatusLine paper={paper} />
@@ -296,6 +266,7 @@ function PaperCard({ paper }: { paper: Paper }) {
       <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{paper.thesis}</p>
       <PaperLinks paper={paper} className="mt-5" />
       <Evidence paper={paper} className={paper.arxiv || paper.demo ? 'mt-3' : 'mt-5'} />
+      <PaperCite paper={paper} />
     </Card>
   );
 }
@@ -305,7 +276,7 @@ function PaperCard({ paper }: { paper: Paper }) {
  * the preprint where there is one, the thesis and its links in the body, and
  * status, venue and evidence in the meta column.
  */
-function PaperRow({ paper, index }: { paper: Paper; index: number }) {
+function PaperRow({ paper, index, cite = false }: { paper: Paper; index: number; cite?: boolean }) {
   return (
     <ListRow
       as="article"
@@ -321,6 +292,7 @@ function PaperRow({ paper, index }: { paper: Paper; index: number }) {
       }
     >
       <PaperLinks paper={paper} className="pt-2" />
+      {cite && <PaperCite paper={paper} />}
     </ListRow>
   );
 }
@@ -368,7 +340,7 @@ export default function PapersPage() {
           <ol className="mt-6">
             {PUBLIC_ROWS.map((paper, index) => (
               <Reveal as="li" key={paper.title}>
-                <PaperRow paper={paper} index={index} />
+                <PaperRow paper={paper} index={index} cite />
               </Reveal>
             ))}
           </ol>

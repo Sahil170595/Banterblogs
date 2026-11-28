@@ -1,0 +1,1464 @@
+{
+  "fetchedAt": "2026-11-28T01:18:26Z",
+  "tools": [
+    {
+      "slug": "chimeraforge",
+      "package": "chimeraforge",
+      "source": "https://pypi.org/pypi/chimeraforge/json",
+      "notesSource": "https://github.com/Sahil170595/Chimeraforge/releases",
+      "releases": [
+        {
+          "version": "0.116.0",
+          "uploadedAt": "2026-11-27T06:42:07Z",
+          "yanked": false,
+          "summary": "Minimum audit coverage"
+        },
+        {
+          "version": "0.115.0",
+          "uploadedAt": "2026-11-27T06:01:23Z",
+          "yanked": false,
+          "summary": "Planning request preflight"
+        },
+        {
+          "version": "0.114.0",
+          "uploadedAt": "2026-11-27T05:19:36Z",
+          "yanked": false,
+          "summary": "Saved deployment verification receipts"
+        },
+        {
+          "version": "0.113.0",
+          "uploadedAt": "2026-11-27T04:41:29Z",
+          "yanked": false,
+          "summary": "Benchmark throughput regression gate"
+        },
+        {
+          "version": "0.112.0",
+          "uploadedAt": "2026-11-27T03:58:27Z",
+          "yanked": false,
+          "summary": "Complete catalog refresh policy"
+        },
+        {
+          "version": "0.111.0",
+          "uploadedAt": "2026-11-25T07:40:53Z",
+          "yanked": false,
+          "summary": "Planner request validation"
+        },
+        {
+          "version": "0.110.0",
+          "uploadedAt": "2026-11-25T07:04:02Z",
+          "yanked": false,
+          "summary": "Transactional catalog refresh"
+        },
+        {
+          "version": "0.108.0",
+          "uploadedAt": "2026-11-25T06:31:43Z",
+          "yanked": false,
+          "summary": "Prediction audit evidence"
+        },
+        {
+          "version": "0.107.0",
+          "uploadedAt": "2026-11-25T05:26:33Z",
+          "yanked": false,
+          "summary": "Independent benchmark comparisons"
+        },
+        {
+          "version": "0.106.2",
+          "uploadedAt": "2026-11-22T21:47:21Z",
+          "yanked": false,
+          "summary": "Chimeraforge 0.106.2 ships the fixes reviewed in #187. The 0.106.1 GitHub tag remains available."
+        },
+        {
+          "version": "0.106.0",
+          "uploadedAt": "2026-11-21T04:55:10Z",
+          "yanked": false,
+          "summary": "Finite exporter final-observation requirement"
+        },
+        {
+          "version": "0.105.0",
+          "uploadedAt": "2026-11-21T03:51:54Z",
+          "yanked": false,
+          "summary": "Optional study feasibility requirement"
+        },
+        {
+          "version": "0.104.0",
+          "uploadedAt": "2026-11-21T03:25:01Z",
+          "yanked": false,
+          "summary": "Operator-declared systemd units"
+        },
+        {
+          "version": "0.103.0",
+          "uploadedAt": "2026-11-21T02:52:44Z",
+          "yanked": false,
+          "summary": "Inventory check JSON/JUnit outputs"
+        },
+        {
+          "version": "0.102.0",
+          "uploadedAt": "2026-11-21T02:25:18Z",
+          "yanked": false,
+          "summary": "Trace-envelope JUnit"
+        },
+        {
+          "version": "0.101.0",
+          "uploadedAt": "2026-11-14T00:46:11Z",
+          "yanked": false,
+          "summary": "Whole-fleet campaign load points"
+        },
+        {
+          "version": "0.100.0",
+          "uploadedAt": "2026-11-14T00:01:19Z",
+          "yanked": false,
+          "summary": "Offline systemd deployment verification"
+        },
+        {
+          "version": "0.99.0",
+          "uploadedAt": "2026-11-13T23:25:49Z",
+          "yanked": false,
+          "summary": "Cached fleet exporter readiness"
+        },
+        {
+          "version": "0.98.0",
+          "uploadedAt": "2026-11-13T22:43:00Z",
+          "yanked": false,
+          "summary": "JUnit reports for saved checks"
+        },
+        {
+          "version": "0.97.0",
+          "uploadedAt": "2026-11-13T22:06:32Z",
+          "yanked": false,
+          "summary": "Trace receipt destinations"
+        },
+        {
+          "version": "0.96.0",
+          "uploadedAt": "2026-11-07T02:59:25Z",
+          "yanked": false,
+          "summary": "Budget checks for dated serving quotes"
+        },
+        {
+          "version": "0.95.0",
+          "uploadedAt": "2026-11-07T02:25:24Z",
+          "yanked": false,
+          "summary": "Offline passive fleet reports"
+        },
+        {
+          "version": "0.94.0",
+          "uploadedAt": "2026-11-07T01:52:11Z",
+          "yanked": false,
+          "summary": "Kubernetes inspection for serving declarations"
+        },
+        {
+          "version": "0.93.0",
+          "uploadedAt": "2026-11-07T01:16:45Z",
+          "yanked": false,
+          "summary": "Offline inventory arithmetic"
+        },
+        {
+          "version": "0.92.0",
+          "uploadedAt": "2026-11-07T00:41:11Z",
+          "yanked": false,
+          "summary": "This release is the first public package to include the merged 0.87–0.91 source features below."
+        },
+        {
+          "version": "0.86.0",
+          "uploadedAt": "2026-11-01T08:10:27Z",
+          "yanked": false,
+          "summary": "Whole native trace diagnostics"
+        },
+        {
+          "version": "0.85.0",
+          "uploadedAt": "2026-11-01T07:24:23Z",
+          "yanked": false,
+          "summary": "Read-only original Kubernetes inspection"
+        },
+        {
+          "version": "0.84.0",
+          "uploadedAt": "2026-11-01T06:28:51Z",
+          "yanked": false,
+          "summary": "Serial whole-original-fleet trace campaigns"
+        },
+        {
+          "version": "0.83.0",
+          "uploadedAt": "2026-11-01T05:42:36Z",
+          "yanked": false,
+          "summary": "Whole-original-fleet passive SLO acceptance"
+        },
+        {
+          "version": "0.82.0",
+          "uploadedAt": "2026-11-01T04:20:38Z",
+          "yanked": false,
+          "summary": "Authenticated active measurements"
+        },
+        {
+          "version": "0.81.0",
+          "uploadedAt": "2026-10-29T07:11:30Z",
+          "yanked": false,
+          "summary": "Kubernetes declarations and independent intent"
+        },
+        {
+          "version": "0.80.0",
+          "uploadedAt": "2026-10-29T06:18:33Z",
+          "yanked": false,
+          "summary": "Original-fleet regression decisions"
+        },
+        {
+          "version": "0.79.0",
+          "uploadedAt": "2026-10-29T05:44:37Z",
+          "yanked": false,
+          "summary": "Original-fleet scheduled trace"
+        },
+        {
+          "version": "0.78.0",
+          "uploadedAt": "2026-10-29T04:56:17Z",
+          "yanked": false,
+          "summary": "Runtime HTTPS and authenticated monitoring"
+        },
+        {
+          "version": "0.77.0",
+          "uploadedAt": "2026-10-29T03:43:34Z",
+          "yanked": false,
+          "summary": "Queried inventory and saved memory arithmetic"
+        },
+        {
+          "version": "0.76.0",
+          "uploadedAt": "2026-10-25T04:06:30Z",
+          "yanked": false,
+          "summary": "Passive declared-fleet monitoring"
+        },
+        {
+          "version": "0.75.0",
+          "uploadedAt": "2026-10-25T02:51:35Z",
+          "yanked": false,
+          "summary": "Offline deployment drift verification"
+        },
+        {
+          "version": "0.74.0",
+          "uploadedAt": "2026-10-25T02:05:12Z",
+          "yanked": false,
+          "summary": "Homogeneous multi-replica Compose export"
+        },
+        {
+          "version": "0.73.0",
+          "uploadedAt": "2026-10-25T01:16:37Z",
+          "yanked": false,
+          "summary": "Explicit deployment devices and Compose host ports"
+        },
+        {
+          "version": "0.72.0",
+          "uploadedAt": "2026-10-25T00:35:49Z",
+          "yanked": false,
+          "summary": "Hardware alternatives in frozen-model studies"
+        },
+        {
+          "version": "0.71.0",
+          "uploadedAt": "2026-10-22T21:26:10Z",
+          "yanked": false,
+          "summary": "Trusted signed native comparisons"
+        },
+        {
+          "version": "0.70.0",
+          "uploadedAt": "2026-10-22T20:22:52Z",
+          "yanked": false,
+          "summary": "Private prediction evidence bundles"
+        },
+        {
+          "version": "0.69.0",
+          "uploadedAt": "2026-10-22T19:39:03Z",
+          "yanked": false,
+          "summary": "Observed finite load points"
+        },
+        {
+          "version": "0.68.0",
+          "uploadedAt": "2026-10-22T18:55:57Z",
+          "yanked": false,
+          "summary": "Plan-bound native traces"
+        },
+        {
+          "version": "0.67.0",
+          "uploadedAt": "2026-10-22T16:23:08Z",
+          "yanked": false,
+          "summary": "Whole-campaign regression gates"
+        },
+        {
+          "version": "0.66.0",
+          "uploadedAt": "2026-10-18T01:11:40Z",
+          "yanked": false,
+          "summary": "Frozen prediction scorecards"
+        },
+        {
+          "version": "0.65.0",
+          "uploadedAt": "2026-10-18T00:44:33Z",
+          "yanked": false,
+          "summary": "Signed contributions and private replay"
+        },
+        {
+          "version": "0.64.0",
+          "uploadedAt": "2026-10-18T00:23:23Z",
+          "yanked": false,
+          "summary": "Serial trace campaigns"
+        },
+        {
+          "version": "0.63.0",
+          "uploadedAt": "2026-10-17T23:58:01Z",
+          "yanked": false,
+          "summary": "Queue-inclusive trace regression gates"
+        },
+        {
+          "version": "0.62.0",
+          "uploadedAt": "2026-10-17T23:31:28Z",
+          "yanked": false,
+          "summary": "Native streaming trace observations"
+        },
+        {
+          "version": "0.61.0",
+          "uploadedAt": "2026-10-12T13:10:42Z",
+          "yanked": false,
+          "summary": "gate and typed api.gate_benchmarks apply declared regression policies to complete ordered benchmark pairs using recalculated native sample…"
+        },
+        {
+          "version": "0.60.0",
+          "uploadedAt": "2026-10-12T12:15:41Z",
+          "yanked": false,
+          "summary": "trace and typed api.replay_trace execute bounded prompt/output-cap/arrival schedules with concurrency and deadline controls through the…"
+        },
+        {
+          "version": "0.59.0",
+          "uploadedAt": "2026-10-12T11:45:20Z",
+          "yanked": false,
+          "summary": "study and typed api.study_plan compare explicit workload, SLO, budget and cost treatments through the shared planner against one frozen set…"
+        },
+        {
+          "version": "0.58.0",
+          "uploadedAt": "2026-10-12T11:16:13Z",
+          "yanked": false,
+          "summary": "bundle and typed plan-bundle APIs hand off original plan bytes with bounded, verified corpus/quality inputs while retaining producer paths,…"
+        },
+        {
+          "version": "0.57.0",
+          "uploadedAt": "2026-10-12T10:51:26Z",
+          "yanked": false,
+          "summary": "Planning resolves requested Hugging Face refs to immutable commits and binds consumed config bytes and declared weight metadata."
+        },
+        {
+          "version": "0.56.1",
+          "uploadedAt": "2026-10-12T10:03:11Z",
+          "yanked": false,
+          "summary": "The CLI README documents the individually released saved-plan check/benchmark/monitor, Streamable HTTP MCP and contribution review/replay…"
+        },
+        {
+          "version": "0.56.0",
+          "uploadedAt": "2026-10-12T06:43:10Z",
+          "yanked": false,
+          "summary": "contribute review and contribute replay plus typed APIs produce fingerprinted receipts for explicit dispositions and bounded new executions…"
+        },
+        {
+          "version": "0.55.0",
+          "uploadedAt": "2026-10-12T05:56:13Z",
+          "yanked": false,
+          "summary": "mcp --transport streamable-http exposes the native MCP transport on loopback with server-owned network policy, bounded sessions/body sizes…"
+        },
+        {
+          "version": "0.54.0",
+          "uploadedAt": "2026-10-12T04:57:57Z",
+          "yanked": false,
+          "summary": "Plan-bound monitor and typed api.monitor_plan carry saved TTFT/TPOT targets into bounded passive monitoring and bracket completed windows…"
+        },
+        {
+          "version": "0.53.0",
+          "uploadedAt": "2026-10-12T04:34:04Z",
+          "yanked": false,
+          "summary": "Plan-bound bench and typed api.benchmark_plan compare one saved candidate with observed serving configuration and native request…"
+        },
+        {
+          "version": "0.52.0",
+          "uploadedAt": "2026-10-12T04:12:18Z",
+          "yanked": false,
+          "summary": "Saved deployment plans can be rechecked against current offline facts with chimeraforge check plan.json --json and typed api.check_plan."
+        },
+        {
+          "version": "0.51.0",
+          "uploadedAt": "2026-10-08T22:34:56Z",
+          "yanked": false,
+          "summary": "Chimeraforge 0.51.0 integrates the five reviewed feature PRs #99–#103."
+        },
+        {
+          "version": "0.50.0",
+          "uploadedAt": "2026-10-04T14:27:46Z",
+          "yanked": false,
+          "summary": "chimeraforge contribute export|verify|import|list and plan --contributions: the first step toward a shared measured corpus."
+        },
+        {
+          "version": "0.49.0",
+          "uploadedAt": "2026-10-04T14:08:29Z",
+          "yanked": false,
+          "summary": "A prefill/decode disaggregation advisory on candidates that sit where the published sources say it is worth considering."
+        },
+        {
+          "version": "0.48.0",
+          "uploadedAt": "2026-10-04T13:54:27Z",
+          "yanked": false,
+          "summary": "plan --cloud aws|azure prices the fleet at hyperscaler on-demand list prices, and so does the MCP plan tool."
+        },
+        {
+          "version": "0.47.0",
+          "uploadedAt": "2026-10-04T13:32:44Z",
+          "yanked": false,
+          "summary": "Multi-turn session residency: plan --think-time SECONDS --session-turns T, and on the MCP plan tool."
+        },
+        {
+          "version": "0.46.1",
+          "uploadedAt": "2026-10-04T13:18:01Z",
+          "yanked": false,
+          "summary": "The README now states what the planner itself reads, next to the \"~204,000 measurements\" claim. That figure counts the research program."
+        },
+        {
+          "version": "0.46.0",
+          "uploadedAt": "2026-10-01T16:24:39Z",
+          "yanked": false,
+          "summary": "workload reads a window, KV-cache pressure and GPU utilisation (#82), and the vLLM prefix-cache hit rate is finally read from real…"
+        },
+        {
+          "version": "0.45.0",
+          "uploadedAt": "2026-10-01T16:14:01Z",
+          "yanked": false,
+          "summary": "Operational carbon per token (#81): gCO2e per 1M tokens and kg per month on a named grid, from Ember lifecycle intensity via Our World in…"
+        },
+        {
+          "version": "0.44.0",
+          "uploadedAt": "2026-10-01T16:03:02Z",
+          "yanked": false,
+          "summary": "plan --mode batch for offline backlog jobs (#80): no latency gate, each GPU at its max-throughput batch, ranked by $/1M tokens."
+        },
+        {
+          "version": "0.43.2",
+          "uploadedAt": "2026-10-01T15:52:03Z",
+          "yanked": false,
+          "summary": "Bench adapters refuse a server that does not identify as the engine (#79): a port that answers /health but does not name itself is refused…"
+        },
+        {
+          "version": "0.43.1",
+          "uploadedAt": "2026-10-01T15:40:49Z",
+          "yanked": false,
+          "summary": "vLLM and TGI bench adapters measure decode, not wall clock (#78)."
+        },
+        {
+          "version": "0.43.0",
+          "uploadedAt": "2026-09-26T06:24:11Z",
+          "yanked": false,
+          "summary": "Unified-memory devices (#77): Apple Silicon, AMD Ryzen AI Max+ 395 and NVIDIA DGX Spark, planned on the share of the pool you state with…"
+        },
+        {
+          "version": "0.42.0",
+          "uploadedAt": "2026-09-26T06:18:25Z",
+          "yanked": false,
+          "summary": "--hardware auto detects any vendor (#76), and the CLI no longer refuses --hardware auto or unlisted cards described with --gpu-* figures,…"
+        },
+        {
+          "version": "0.41.0",
+          "uploadedAt": "2026-09-26T05:16:48Z",
+          "yanked": false,
+          "summary": "Per-platform enforcement (#75): plan offers an engine only where its own docs say it runs."
+        },
+        {
+          "version": "0.40.0",
+          "uploadedAt": "2026-09-26T04:59:44Z",
+          "yanked": false,
+          "summary": "Per-platform engine support (#74): where each serving engine runs, according to its own docs at a pinned release."
+        },
+        {
+          "version": "0.39.0",
+          "uploadedAt": "2026-09-26T04:35:58Z",
+          "yanked": false,
+          "summary": "chimeraforge doctor (#73): a read-only check of the local GPU platform, per vendor."
+        },
+        {
+          "version": "0.38.1",
+          "uploadedAt": "2026-09-26T03:10:54Z",
+          "yanked": false,
+          "summary": "Fix (#72): unlisted-card planning, added in 0.34.0, had been returning the reference laptop's numbers labelled measured, and --gpu-*…"
+        },
+        {
+          "version": "0.38.0",
+          "uploadedAt": "2026-09-26T03:04:43Z",
+          "yanked": false,
+          "summary": "The 2026 GPU parts, and unknown is not zero (#71)."
+        },
+        {
+          "version": "0.37.0",
+          "uploadedAt": "2026-09-26T02:53:22Z",
+          "yanked": false,
+          "summary": "P8.5 part two (#70): the validation audit has been run against published third-party benchmarks, and the results are published."
+        },
+        {
+          "version": "0.36.0",
+          "uploadedAt": "2026-09-26T02:21:34Z",
+          "yanked": false,
+          "summary": "P8.5 part one (#69): the validation audit now takes sourced measurements only."
+        },
+        {
+          "version": "0.35.0",
+          "uploadedAt": "2026-09-26T02:15:48Z",
+          "yanked": false,
+          "summary": "SGLang bench adapter (#68)."
+        },
+        {
+          "version": "0.34.0",
+          "uploadedAt": "2026-09-15T21:59:26Z",
+          "yanked": false,
+          "summary": "Phase 8 item P8.6, sub-items 1-3 and 5 (#66)."
+        },
+        {
+          "version": "0.33.0",
+          "uploadedAt": "2026-09-15T21:42:38Z",
+          "yanked": false,
+          "summary": "Phase 8 item P8.4 (#65)."
+        },
+        {
+          "version": "0.32.0",
+          "uploadedAt": "2026-09-15T21:28:50Z",
+          "yanked": false,
+          "summary": "Phase 8 item P8.3 (#64). Two corrections to time-to-first-token, both derivations rather than fits."
+        },
+        {
+          "version": "0.31.1",
+          "uploadedAt": "2026-09-15T21:18:45Z",
+          "yanked": false,
+          "summary": "Phase 8 item P8.2 (#63). VRAM and KV-cache are the numbers the README calls exact, and for a whole class of 2026 models they were not."
+        },
+        {
+          "version": "0.31.0",
+          "uploadedAt": "2026-09-15T21:09:51Z",
+          "yanked": false,
+          "summary": "Phase 8 item P8.1 (#62). Two provenance classes were missing from what the engine emits, and neither absence was cosmetic."
+        },
+        {
+          "version": "0.30.10",
+          "uploadedAt": "2026-09-05T02:54:10Z",
+          "yanked": false,
+          "summary": "Closes the defects an independent blind review found in 0.30.9."
+        },
+        {
+          "version": "0.30.9",
+          "uploadedAt": "2026-08-29T02:26:26Z",
+          "yanked": false,
+          "summary": "The last of the review. With this, all 44 findings are addressed."
+        },
+        {
+          "version": "0.30.8",
+          "uploadedAt": "2026-08-29T02:18:53Z",
+          "yanked": false,
+          "summary": "Tests that could not fail. No production behaviour changes."
+        },
+        {
+          "version": "0.30.7",
+          "uploadedAt": "2026-08-29T02:11:50Z",
+          "yanked": false,
+          "summary": "Eight fixes downstream of a benchmark, everywhere results are rendered or aggregated."
+        },
+        {
+          "version": "0.30.6",
+          "uploadedAt": "2026-08-29T02:06:12Z",
+          "yanked": false,
+          "summary": "Three modelling errors, each of which changes a number."
+        },
+        {
+          "version": "0.30.5",
+          "uploadedAt": "2026-08-29T02:01:12Z",
+          "yanked": false,
+          "summary": "Eight fixes to the CLI and MCP contract — the surfaces another program parses."
+        },
+        {
+          "version": "0.30.4",
+          "uploadedAt": "2026-08-29T01:56:01Z",
+          "yanked": false,
+          "summary": "This release changes predicted numbers on every GPU except the reference card. Read before upgrading if you have recorded plans."
+        },
+        {
+          "version": "0.30.3",
+          "uploadedAt": "2026-08-29T01:50:25Z",
+          "yanked": false,
+          "summary": "Four fixes on the path where measurement becomes the corpus that plan later reports as measured."
+        },
+        {
+          "version": "0.30.2",
+          "uploadedAt": "2026-08-29T01:38:28Z",
+          "yanked": false,
+          "summary": "Test-suite hygiene. No shipped code changed — this release exists to keep one PR to one version."
+        },
+        {
+          "version": "0.30.1",
+          "uploadedAt": "2026-08-26T00:00:38Z",
+          "yanked": false,
+          "summary": "Bug-fix release. Four defects where the resolver reported one model's facts under another model's name."
+        },
+        {
+          "version": "0.30.0",
+          "uploadedAt": "2026-08-22T04:38:09Z",
+          "yanked": false,
+          "summary": "A measured-on-a-different-GPU number was being labelled measured. Batch A of an adversarial code review."
+        },
+        {
+          "version": "0.29.0",
+          "uploadedAt": "2026-08-22T04:02:47Z",
+          "yanked": false,
+          "summary": "Heterogeneous GPU fleets: plan --fleet \"H100 80GB,A100 80GB,L4 24GB\"."
+        },
+        {
+          "version": "0.28.0",
+          "uploadedAt": "2026-08-22T02:59:39Z",
+          "yanked": false,
+          "summary": "chimeraforge workload: plan with your traffic, not your guesses."
+        },
+        {
+          "version": "0.27.0",
+          "uploadedAt": "2026-08-22T02:37:50Z",
+          "yanked": false,
+          "summary": "Multi-LoRA serving: --lora-adapters N --lora-rank R."
+        },
+        {
+          "version": "0.26.0",
+          "uploadedAt": "2026-08-22T02:21:40Z",
+          "yanked": false,
+          "summary": "plan --report brief.md: the plan as a document a team can argue with."
+        },
+        {
+          "version": "0.25.0",
+          "uploadedAt": "2026-08-22T02:08:53Z",
+          "yanked": false,
+          "summary": "Two new MCP tools, and plan-tool parity with the CLI."
+        },
+        {
+          "version": "0.24.0",
+          "uploadedAt": "2026-08-22T01:52:18Z",
+          "yanked": false,
+          "summary": "AWQ and GPTQ (W4A16) for vLLM, SGLang and TGI."
+        },
+        {
+          "version": "0.23.0",
+          "uploadedAt": "2026-08-22T01:42:42Z",
+          "yanked": false,
+          "summary": "Three additions, each of which had an easy dishonest version that was deliberately not taken."
+        },
+        {
+          "version": "0.22.1",
+          "uploadedAt": "2026-08-21T01:09:25Z",
+          "yanked": false,
+          "summary": "Fixed: the MCP server reported the SDK's version as its own."
+        },
+        {
+          "version": "0.22.0",
+          "uploadedAt": "2026-08-20T23:37:44Z",
+          "yanked": false,
+          "summary": "chimeraforge validate -- the trust principle is now falsifiable."
+        },
+        {
+          "version": "0.21.0",
+          "uploadedAt": "2026-08-19T14:18:56Z",
+          "yanked": false,
+          "summary": "The deployment plan now shows up in code review."
+        },
+        {
+          "version": "0.20.0",
+          "uploadedAt": "2026-08-19T14:11:17Z",
+          "yanked": false,
+          "summary": "The headline $/1M-tok prices a saturated fleet. Now you also see what you actually pay."
+        },
+        {
+          "version": "0.19.0",
+          "uploadedAt": "2026-08-18T20:58:30Z",
+          "yanked": false,
+          "summary": "Prefill is now charged only for the uncached part of the prompt."
+        },
+        {
+          "version": "0.18.0",
+          "uploadedAt": "2026-08-18T18:52:38Z",
+          "yanked": false,
+          "summary": "Roadmap item C2."
+        },
+        {
+          "version": "0.17.0",
+          "uploadedAt": "2026-08-18T14:33:19Z",
+          "yanked": false,
+          "summary": "Roadmap item S2 — Tier S, the most-quotable unmet need after \"will it fit\". This closes the last major roadmap item."
+        },
+        {
+          "version": "0.16.0",
+          "uploadedAt": "2026-08-18T14:19:01Z",
+          "yanked": false,
+          "summary": "Hidden reasoning-token accounting (plan --reasoning-tokens N)."
+        },
+        {
+          "version": "0.15.0",
+          "uploadedAt": "2026-08-18T13:39:50Z",
+          "yanked": false,
+          "summary": "Each backend is now offered only the weight formats it can actually serve — and FP8 fills the gap that leaves."
+        },
+        {
+          "version": "0.14.0",
+          "uploadedAt": "2026-08-15T01:03:19Z",
+          "yanked": false,
+          "summary": "Mixture-of-Experts models are no longer planned as if they were dense."
+        },
+        {
+          "version": "0.13.0",
+          "uploadedAt": "2026-08-14T04:49:23Z",
+          "yanked": false,
+          "summary": "The plan now tells you how to run it."
+        },
+        {
+          "version": "0.12.3",
+          "uploadedAt": "2026-08-09T17:47:27Z",
+          "yanked": false,
+          "summary": "Four correctness defects, found by probing the published package the way an outside user meets it rather than by reading the source."
+        },
+        {
+          "version": "0.12.2",
+          "uploadedAt": "2026-08-08T14:41:48Z",
+          "yanked": false,
+          "summary": "Docs/config fix release. No planner behavior change."
+        },
+        {
+          "version": "0.12.1",
+          "uploadedAt": "2026-08-08T14:28:24Z",
+          "yanked": false,
+          "summary": "Shopfront + MCP-registry release. No planner behavior change from 0.12.0."
+        },
+        {
+          "version": "0.12.0",
+          "uploadedAt": "2026-08-08T14:07:30Z",
+          "yanked": false,
+          "summary": "MCP server: chimeraforge mcp lets Claude/GPT/Cursor call the planner from measured data."
+        },
+        {
+          "version": "0.11.0",
+          "uploadedAt": "2026-08-08T14:06:37Z",
+          "yanked": false,
+          "summary": "Pipeline parallelism: plan --pipeline-parallel {N|auto} — PCIe-friendly complement to TP (tiny comms, but needs batching for the pipeline…"
+        },
+        {
+          "version": "0.10.0",
+          "uploadedAt": "2026-08-08T14:03:31Z",
+          "yanked": false,
+          "summary": "Multi-GPU tensor parallelism: plan --tensor-parallel {N|auto} sizes a model too big for one GPU (70B FP16 on 4x H100)."
+        },
+        {
+          "version": "0.9.0",
+          "uploadedAt": "2026-08-08T13:59:09Z",
+          "yanked": false,
+          "summary": "KV-cache quantization: plan --kv-quant {fp16,q8,q4} lowers VRAM + raises concurrency (quality impact unscreened, warns)."
+        },
+        {
+          "version": "0.8.0",
+          "uploadedAt": "2026-08-08T13:53:39Z",
+          "yanked": false,
+          "summary": "Energy & power cost modeling."
+        },
+        {
+          "version": "0.7.0",
+          "uploadedAt": "2026-08-08T13:42:14Z",
+          "yanked": false,
+          "summary": "First of the sequential 0.7→0.12 release train (PyPI was at 0.6.2)."
+        },
+        {
+          "version": "0.6.2",
+          "uploadedAt": "2026-08-05T15:50:33Z",
+          "yanked": false,
+          "summary": "Patch release: completes the fix for #4 (quality/tier consistency)."
+        },
+        {
+          "version": "0.6.1",
+          "uploadedAt": "2026-07-25T20:36:19Z",
+          "yanked": false,
+          "summary": "Clean errors for missing extras."
+        },
+        {
+          "version": "0.6.0",
+          "uploadedAt": "2026-07-02T16:31:21Z",
+          "yanked": false,
+          "summary": "State-of-the-art serving model: the planner now reflects how LLM inference actually behaves (per the literature - PagedAttention,…"
+        },
+        {
+          "version": "0.5.0",
+          "uploadedAt": "2026-06-25T14:36:30Z",
+          "yanked": false,
+          "summary": "Plan any model — not just the bundled registry."
+        },
+        {
+          "version": "0.4.1",
+          "uploadedAt": "2026-06-22T05:15:10Z",
+          "yanked": false,
+          "summary": "Patch release — CI fix + wider Python coverage."
+        },
+        {
+          "version": "0.4.0",
+          "uploadedAt": "2026-06-22T03:24:31Z",
+          "yanked": false,
+          "summary": "chimeraforge safety — live refusal screen."
+        },
+        {
+          "version": "0.3.0",
+          "uploadedAt": "2026-06-17T05:54:48Z",
+          "yanked": false,
+          "summary": "Safety gate for chimeraforge plan — an opt-in 5th gate that screens every (model × quant) configuration against measured refusal-rate data…"
+        },
+        {
+          "version": "0.2.2",
+          "uploadedAt": "2026-04-16T23:40:02Z",
+          "yanked": false
+        },
+        {
+          "version": "0.2.1",
+          "uploadedAt": "2026-03-09T01:06:25Z",
+          "yanked": false
+        },
+        {
+          "version": "0.2.0",
+          "uploadedAt": "2026-03-09T00:51:52Z",
+          "yanked": false
+        }
+      ]
+    },
+    {
+      "slug": "quantfit",
+      "package": "quantfit",
+      "source": "https://pypi.org/pypi/quantfit/json",
+      "notesSource": "https://github.com/Sahil170595/quantfit/releases",
+      "releases": [
+        {
+          "version": "0.75.0",
+          "uploadedAt": "2026-11-27T06:03:32Z",
+          "yanked": false,
+          "summary": "Compare two replay handoffs directly from pinned canonical ZIPs or directories while retaining native T0, report bindings, and outcomes."
+        },
+        {
+          "version": "0.74.0",
+          "uploadedAt": "2026-11-27T05:26:24Z",
+          "yanked": false,
+          "summary": "Require selected original annotation parts in staged returns and distinguish them from other absent parts in JSON and JUnit."
+        },
+        {
+          "version": "0.73.0",
+          "uploadedAt": "2026-11-27T04:48:44Z",
+          "yanked": false,
+          "summary": "Require complete compatible declared identities for both arms of every target when a CI comparison needs that stricter condition."
+        },
+        {
+          "version": "0.72.0",
+          "uploadedAt": "2026-11-27T04:10:27Z",
+          "yanked": false,
+          "summary": "Save the native integrity result of an exact pinned aggregate, replay, or screen ZIP to a new CI artifact without extraction."
+        },
+        {
+          "version": "0.71.0",
+          "uploadedAt": "2026-11-27T03:47:47Z",
+          "yanked": false,
+          "summary": "Validate closed receiving declarations and optionally pin their exact bytes before assembling a reference bundle."
+        },
+        {
+          "version": "0.70.0",
+          "uploadedAt": "2026-11-25T07:55:03Z",
+          "yanked": false,
+          "summary": "Assess a digest-pinned replay ZIP directly and preserve original receiving criteria and JUnit."
+        },
+        {
+          "version": "0.69.0",
+          "uploadedAt": "2026-11-25T07:19:55Z",
+          "yanked": false,
+          "summary": "Collect all explicitly indexed annotation returns in any order while preserving the native sheet and receipt."
+        },
+        {
+          "version": "0.68.0",
+          "uploadedAt": "2026-11-25T06:05:00Z",
+          "yanked": false,
+          "summary": "Accept independently SHA-256-pinned canonical screen ZIPs on either side of screen-compare."
+        },
+        {
+          "version": "0.67.0",
+          "uploadedAt": "2026-11-25T05:42:12Z",
+          "yanked": false,
+          "summary": "Accept selected-axis screen-summary requirements with a complete supplied-control triplet and a single calibration directory."
+        },
+        {
+          "version": "0.66.1",
+          "uploadedAt": "2026-11-22T19:59:38Z",
+          "yanked": false,
+          "summary": "Preserve files belonging to another writer during aggregate and replay bundle rollback."
+        },
+        {
+          "version": "0.66.0",
+          "uploadedAt": "2026-11-21T03:54:28Z",
+          "yanked": false,
+          "summary": "Add optional reference-assessment JUnit and a pure closed renderer over the original 107 native criteria plus overall, with canonical…"
+        },
+        {
+          "version": "0.65.0",
+          "uploadedAt": "2026-11-21T03:28:57Z",
+          "yanked": false,
+          "summary": "Add opt-in complete original annotation-return coverage and requested bounded aggregate JUnit to the existing native validator/CLI."
+        },
+        {
+          "version": "0.64.0",
+          "uploadedAt": "2026-11-21T03:06:46Z",
+          "yanked": false,
+          "summary": "Extend existing archive commands with an explicit aggregate/replay/screen kind."
+        },
+        {
+          "version": "0.63.0",
+          "uploadedAt": "2026-11-21T02:40:32Z",
+          "yanked": false,
+          "summary": "Compose the existing complete supplied-control triplet with single saved-screen calibration and optional scalar resolution requirement."
+        },
+        {
+          "version": "0.62.0",
+          "uploadedAt": "2026-11-21T02:05:18Z",
+          "yanked": false,
+          "summary": "Add required_conditional_resolution_by_axis_pp and repeatable --require-axis-conditional-resolution AXIS=PP to saved screen-summary."
+        },
+        {
+          "version": "0.61.0",
+          "uploadedAt": "2026-11-14T20:57:47Z",
+          "yanked": false,
+          "summary": "Add optional all-or-none supplied control report/capture/adjudication roles to saved-screen intake."
+        },
+        {
+          "version": "0.60.0",
+          "uploadedAt": "2026-11-14T20:29:35Z",
+          "yanked": false,
+          "summary": "Add opt-in inspect-run --recovery-out and QsrRun.write_report(recovery_out=...): checkpoint the completed corrected native observed-HF/GGUF…"
+        },
+        {
+          "version": "0.59.0",
+          "uploadedAt": "2026-11-14T19:58:44Z",
+          "yanked": false,
+          "summary": "Add deterministic bounded single-file transport for existing schema-1 aggregate bundles: bundle pack, expected-SHA256 bundle archive-verify…"
+        },
+        {
+          "version": "0.58.0",
+          "uploadedAt": "2026-11-14T02:03:44Z",
+          "yanked": false,
+          "summary": "Add validate_annotation_returns and calibrate chunks validate for explicit index-to-returned-CSV roles."
+        },
+        {
+          "version": "0.57.0",
+          "uploadedAt": "2026-11-14T01:21:06Z",
+          "yanked": false,
+          "summary": "Add optional axis-thresholds to the reference GitHub Action."
+        },
+        {
+          "version": "0.56.0",
+          "uploadedAt": "2026-11-07T01:29:54Z",
+          "yanked": false,
+          "summary": "Add a pinned judge rerun over a held native capture and an offline comparison against the original flags and one supplied ternary label set."
+        },
+        {
+          "version": "0.55.0",
+          "uploadedAt": "2026-11-07T00:53:36Z",
+          "yanked": false,
+          "summary": "This release includes the previously unpublished selected-axis gates (0.52.0), pinned-corpus gates and screens (0.53.0), and blinded…"
+        },
+        {
+          "version": "0.51.0",
+          "uploadedAt": "2026-11-01T13:33:11Z",
+          "yanked": false,
+          "summary": "Add frozen ProbeCorpus and all-or-none --probe-dataset, --probe-revision, --probe-split on verify-safety/inspect-run."
+        },
+        {
+          "version": "0.50.0",
+          "uploadedAt": "2026-11-01T12:37:43Z",
+          "yanked": false,
+          "summary": "Add render_adjudication_review and adjudicate review-page: held native blank nine-column queue/preparation consistency, complete selected…"
+        },
+        {
+          "version": "0.49.0",
+          "uploadedAt": "2026-11-01T11:55:32Z",
+          "yanked": false,
+          "summary": "Add analyze_calibration_judges and calibrate compare-judges: independently hold two complete capture/key/full-or-retained suites, require…"
+        },
+        {
+          "version": "0.48.0",
+          "uploadedAt": "2026-11-01T11:04:53Z",
+          "yanked": false,
+          "summary": "2026-10-31 inherited security baseline: carry accepted 0.47 Python 3.11 minimum and universal-lock advisory audit into this candidate…"
+        },
+        {
+          "version": "0.47.0",
+          "uploadedAt": "2026-11-01T10:00:50Z",
+          "yanked": false,
+          "summary": "2026-10-31 security compatibility correction: withdraw Python 3.10 installation/source/CI support from this unreleased candidate."
+        },
+        {
+          "version": "0.46.0",
+          "uploadedAt": "2026-10-30T18:54:36Z",
+          "yanked": false,
+          "summary": "Add complete source-bound adjudicate prepare → explicit private labels/classes → adjudicate apply, plus strict optional emit model-card…"
+        },
+        {
+          "version": "0.45.0",
+          "uploadedAt": "2026-10-30T17:58:21Z",
+          "yanked": false,
+          "summary": "Add named calibration-choice sensitivity to native screen-summary: one held original population and native summary, complete all-choice…"
+        },
+        {
+          "version": "0.44.0",
+          "uploadedAt": "2026-10-30T17:13:57Z",
+          "yanked": false,
+          "summary": "Add opt-in finite unit-grid budgeting to the existing resolution CLI/API."
+        },
+        {
+          "version": "0.43.0",
+          "uploadedAt": "2026-10-30T16:45:23Z",
+          "yanked": false,
+          "summary": "Add explicit capture-backed retained mode to both calibrate review prepare and calibrate review apply, with complete CLI/API workflows…"
+        },
+        {
+          "version": "0.42.0",
+          "uploadedAt": "2026-10-30T15:56:56Z",
+          "yanked": false,
+          "summary": "Add complete calibrate chunks prepare and calibrate chunks collect: bounded private partitions of a complete blank native template, exact…"
+        },
+        {
+          "version": "0.41.0",
+          "uploadedAt": "2026-10-25T08:11:46Z",
+          "yanked": false,
+          "summary": "Add opt-in screen-summary --require-conditional-resolution PP: all declared targets and both native axes must have matched calibration,…"
+        },
+        {
+          "version": "0.40.0",
+          "uploadedAt": "2026-10-25T07:15:50Z",
+          "yanked": false,
+          "summary": "Add complete calibrate review prepare and calibrate review apply: private disagreement subsets, explicit operator labels, exact…"
+        },
+        {
+          "version": "0.39.0",
+          "uploadedAt": "2026-10-25T06:34:30Z",
+          "yanked": false,
+          "summary": "Add calibrate paired fixed judge/label pair-state, paired-error and axis-flip diagnostics from held native capture/key and full or retained…"
+        },
+        {
+          "version": "0.38.0",
+          "uploadedAt": "2026-10-25T05:57:00Z",
+          "yanked": false,
+          "summary": "calibrate strata and analyze_calibration_strata compute descriptive per-zone/per-arm native Wilson diagnostics for all rows and the two…"
+        },
+        {
+          "version": "0.37.0",
+          "uploadedAt": "2026-10-25T05:10:29Z",
+          "yanked": false,
+          "summary": "Complete retained-label workflow: calibrate extract validates an original filled sheet/key and writes a deterministic private…"
+        },
+        {
+          "version": "0.36.0",
+          "uploadedAt": "2026-10-23T00:31:07Z",
+          "yanked": false,
+          "summary": "Add calibrate reconcile and quantfit.safety.reconcile.reconcile_labels for aggregate comparison of two private filled labeling sheets under…"
+        },
+        {
+          "version": "0.35.0",
+          "uploadedAt": "2026-10-23T00:00:21Z",
+          "yanked": false,
+          "summary": "screen-summary --calibrations-dir and the matching optional summarize_screen keyword append per-target conditional resolution using…"
+        },
+        {
+          "version": "0.34.0",
+          "uploadedAt": "2026-10-22T23:26:28Z",
+          "yanked": false,
+          "summary": "screen-compare and quantfit.screen_compare.compare_screen_bundles compare original screen observations offline over exact matching…"
+        },
+        {
+          "version": "0.33.0",
+          "uploadedAt": "2026-10-22T22:52:53Z",
+          "yanked": false,
+          "summary": "bundle screen-create / bundle screen-verify and quantfit.screen_bundle preserve original target/native-report bytes, explicit missing…"
+        },
+        {
+          "version": "0.32.0",
+          "uploadedAt": "2026-10-22T22:15:29Z",
+          "yanked": false,
+          "summary": "screen --resume preflights held present native reports against the complete target manifest before model contact or output mutation."
+        },
+        {
+          "version": "0.31.0",
+          "uploadedAt": "2026-10-18T02:42:13Z",
+          "yanked": false,
+          "summary": "quantfit/saved_screen.py:summarize_screen and screen-summary add bounded offline receiving summaries of a held target manifest and its…"
+        },
+        {
+          "version": "0.30.0",
+          "uploadedAt": "2026-10-18T02:20:36Z",
+          "yanked": false,
+          "summary": "quantfit/reference_replay.py:rerun_candidate and evidence rerun bind three fresh native GGUF children to a held original handoff/target."
+        },
+        {
+          "version": "0.29.0",
+          "uploadedAt": "2026-10-18T02:00:27Z",
+          "yanked": false,
+          "summary": "quantfit/reference_assessment.py:assess_candidate and references assess check a verified three-report handoff against an explicit bounded…"
+        },
+        {
+          "version": "0.28.0",
+          "uploadedAt": "2026-10-18T01:46:19Z",
+          "yanked": false,
+          "summary": "quantfit/reproduce_junit.py:reproduction_to_junit and reproduce --junit PATH render ten stable cases from the existing native decision."
+        },
+        {
+          "version": "0.27.0",
+          "uploadedAt": "2026-10-18T01:32:32Z",
+          "yanked": false,
+          "summary": "quantfit/reproduce.py:compare_bundles and existing reproduce bundle flags compare fixed first replicates from two verified three-report…"
+        },
+        {
+          "version": "0.26.0",
+          "uploadedAt": "2026-10-12T16:00:29Z",
+          "yanked": false,
+          "summary": "bounded GGUF structure and native usability."
+        },
+        {
+          "version": "0.25.0",
+          "uploadedAt": "2026-10-12T15:46:31Z",
+          "yanked": false,
+          "summary": "pinned anonymous public evidence retrieval."
+        },
+        {
+          "version": "0.24.0",
+          "uploadedAt": "2026-10-12T15:31:58Z",
+          "yanked": false,
+          "summary": "full-report repeatability and JUnit."
+        },
+        {
+          "version": "0.23.0",
+          "uploadedAt": "2026-10-12T15:17:43Z",
+          "yanked": false,
+          "summary": "portable three-report T0 bundles."
+        },
+        {
+          "version": "0.22.0",
+          "uploadedAt": "2026-10-12T15:03:12Z",
+          "yanked": false,
+          "summary": "saved-report native gate replay."
+        },
+        {
+          "version": "0.21.1",
+          "uploadedAt": "2026-10-12T14:48:57Z",
+          "yanked": false,
+          "summary": "CLI README workflows and evidence limits."
+        },
+        {
+          "version": "0.21.0",
+          "uploadedAt": "2026-10-12T14:34:18Z",
+          "yanked": false,
+          "summary": "public Phi4 CPU aggregate candidate."
+        },
+        {
+          "version": "0.20.0",
+          "uploadedAt": "2026-10-12T14:20:00Z",
+          "yanked": false,
+          "summary": "observed Inspect GGUF provider."
+        },
+        {
+          "version": "0.19.0",
+          "uploadedAt": "2026-10-12T14:05:47Z",
+          "yanked": false,
+          "summary": "three fresh native GGUF replicates."
+        },
+        {
+          "version": "0.18.0",
+          "uploadedAt": "2026-10-12T13:51:59Z",
+          "yanked": false,
+          "summary": "portable aggregate evidence bundles."
+        },
+        {
+          "version": "0.17.0",
+          "uploadedAt": "2026-10-12T13:36:26Z",
+          "yanked": false,
+          "summary": "calibration-aware cards and gate action."
+        },
+        {
+          "version": "0.16.0",
+          "uploadedAt": "2026-10-08T22:42:37Z",
+          "yanked": false,
+          "summary": "quantfit 0.16.0 adds bound measurement evidence and observed Inspect execution from #114–#118:"
+        },
+        {
+          "version": "0.15.1",
+          "uploadedAt": "2026-10-04T13:08:24Z",
+          "yanked": false,
+          "summary": "quantfit 0.15.1 releases the hosted CI and security compatibility changes in #112."
+        },
+        {
+          "version": "0.15.0",
+          "uploadedAt": "2026-10-02T00:52:46Z",
+          "yanked": false,
+          "summary": "A minor, because the meaning of a published number changes: probe now measures the quantize path's packed blocks, not rows. (#110)"
+        },
+        {
+          "version": "0.14.3",
+          "uploadedAt": "2026-10-02T00:12:40Z",
+          "yanked": false,
+          "summary": "A patch: probe now records which model weights each number came from. (#108)"
+        },
+        {
+          "version": "0.14.2",
+          "uploadedAt": "2026-10-02T00:03:58Z",
+          "yanked": false,
+          "summary": "A patch pinning the calibration set. (#106)"
+        },
+        {
+          "version": "0.14.1",
+          "uploadedAt": "2026-10-01T23:52:50Z",
+          "yanked": false,
+          "summary": "A patch: a cache hit now shows in the report, plus the probe's first run at a larger n. (#103, #104)"
+        },
+        {
+          "version": "0.14.0",
+          "uploadedAt": "2026-10-01T17:34:36Z",
+          "yanked": false,
+          "summary": "A minor: probe takes a new flag, and the baseline cache's first real-hardware record ships with it. (#101, #100)"
+        },
+        {
+          "version": "0.13.8",
+          "uploadedAt": "2026-10-01T17:12:31Z",
+          "yanked": false,
+          "summary": "A patch re-staking the Inspect runner's verification. No behaviour change. (#98)"
+        },
+        {
+          "version": "0.13.7",
+          "uploadedAt": "2026-10-01T16:18:56Z",
+          "yanked": false,
+          "summary": "A patch to quantfit audit. (#96)"
+        },
+        {
+          "version": "0.13.6",
+          "uploadedAt": "2026-10-01T16:00:02Z",
+          "yanked": false,
+          "summary": "CI and documentation. No package code changes."
+        },
+        {
+          "version": "0.13.5",
+          "uploadedAt": "2026-10-01T15:58:50Z",
+          "yanked": false,
+          "summary": "A patch: probe reports its spread, not only a mean. (#92)"
+        },
+        {
+          "version": "0.13.4",
+          "uploadedAt": "2026-10-01T15:57:48Z",
+          "yanked": false,
+          "summary": "A patch to quantfit audit: two ways a moved line citation passed silently. (#91)"
+        },
+        {
+          "version": "0.13.3",
+          "uploadedAt": "2026-10-01T15:56:41Z",
+          "yanked": false,
+          "summary": "A patch to a printed unit. (#90)"
+        },
+        {
+          "version": "0.13.2",
+          "uploadedAt": "2026-09-26T03:28:26Z",
+          "yanked": false,
+          "summary": "Evidence, and one defect recorded rather than fixed. No code changes. (#88)"
+        },
+        {
+          "version": "0.13.1",
+          "uploadedAt": "2026-09-26T03:27:38Z",
+          "yanked": false,
+          "summary": "Evidence. No code changes. (#87)"
+        },
+        {
+          "version": "0.13.0",
+          "uploadedAt": "2026-09-26T03:26:51Z",
+          "yanked": false,
+          "summary": "A minor release: verify-safety and gate gain --baseline-cache DIR. (#86)"
+        },
+        {
+          "version": "0.12.18",
+          "uploadedAt": "2026-09-26T03:25:59Z",
+          "yanked": false,
+          "summary": "A patch to the spec, with two documentation corrections folded in. No code changes."
+        },
+        {
+          "version": "0.12.17",
+          "uploadedAt": "2026-09-26T03:25:09Z",
+          "yanked": false,
+          "summary": "Restores CI after two upstream releases in the same week, each tripping a guard written for exactly this. (#83)"
+        },
+        {
+          "version": "0.12.16",
+          "uploadedAt": "2026-09-06T02:28:04Z",
+          "yanked": false,
+          "summary": "Evidence, plus one docs correction folded in. No code changes."
+        },
+        {
+          "version": "0.12.15",
+          "uploadedAt": "2026-09-06T02:26:43Z",
+          "yanked": false,
+          "summary": "A patch to the spec, writing into it the one thing a reader of a QSR report most needs and the spec had never said as a rule."
+        },
+        {
+          "version": "0.12.14",
+          "uploadedAt": "2026-09-06T02:25:25Z",
+          "yanked": false,
+          "summary": "A patch to the pre-registration, and the last thing that can land before outreach starts the 8-week clock."
+        },
+        {
+          "version": "0.12.13",
+          "uploadedAt": "2026-09-06T02:24:24Z",
+          "yanked": false,
+          "summary": "Five sub-patches to the public record and the spec, and a pattern worth naming: three of the five were claims marked [V] — verified-from —…"
+        },
+        {
+          "version": "0.12.12",
+          "uploadedAt": "2026-09-06T02:22:53Z",
+          "yanked": false,
+          "summary": "A patch to keep the tripwire honest."
+        },
+        {
+          "version": "0.12.11",
+          "uploadedAt": "2026-08-29T03:30:42Z",
+          "yanked": false,
+          "summary": "A sub-patch to the public record. No code changes."
+        },
+        {
+          "version": "0.12.10",
+          "uploadedAt": "2026-08-29T03:20:34Z",
+          "yanked": false,
+          "summary": "A sub-patch to the spec, closing a parity gap that let a published field ship undocumented for three releases."
+        },
+        {
+          "version": "0.12.9",
+          "uploadedAt": "2026-08-29T03:08:14Z",
+          "yanked": false,
+          "summary": "A sub-patch to a published number. Every schema-v2 report and every model card carried:"
+        },
+        {
+          "version": "0.12.8",
+          "uploadedAt": "2026-08-29T02:53:43Z",
+          "yanked": false,
+          "summary": "A sub-patch, and a QSR v0 §5.6 dated amendment. 0.12.4 deleted \"The bound is the CI and MDE printed above\" from the model card."
+        },
+        {
+          "version": "0.12.7",
+          "uploadedAt": "2026-08-29T02:34:00Z",
+          "yanked": false,
+          "summary": "A sub-patch."
+        },
+        {
+          "version": "0.12.6",
+          "uploadedAt": "2026-08-29T02:19:22Z",
+          "yanked": false,
+          "summary": "A sub-patch correcting a false premise the repo had been publishing since 2026-08-18, and a softened negative result shipped in 0.12.3 and…"
+        },
+        {
+          "version": "0.12.5",
+          "uploadedAt": "2026-08-29T02:01:06Z",
+          "yanked": false,
+          "summary": "A sub-patch. The screen's terminal output now carries the caveat 0.12.3 added to its JSON."
+        },
+        {
+          "version": "0.12.4",
+          "uploadedAt": "2026-08-29T01:50:33Z",
+          "yanked": false,
+          "summary": "A sub-patch to the model card — the one surface whose output gets pasted into a public Hugging Face card and quoted back."
+        },
+        {
+          "version": "0.12.3",
+          "uploadedAt": "2026-08-29T01:44:11Z",
+          "yanked": false,
+          "summary": "A sub-patch. One field added to the screen's axis blocks; no behaviour changes elsewhere."
+        },
+        {
+          "version": "0.12.2",
+          "uploadedAt": "2026-08-25T23:52:15Z",
+          "yanked": false,
+          "summary": "A sub-patch to the spec."
+        },
+        {
+          "version": "0.12.1",
+          "uploadedAt": "2026-08-22T14:55:22Z",
+          "yanked": false,
+          "summary": "A sub-patch: no behaviour change to any command, one addition to the test surface, and a pyproject.toml change that ships in the sdist."
+        },
+        {
+          "version": "0.12.0",
+          "uploadedAt": "2026-08-22T04:06:39Z",
+          "yanked": false,
+          "summary": "A one-defect release, deliberately."
+        },
+        {
+          "version": "0.11.0",
+          "uploadedAt": "2026-08-22T01:39:56Z",
+          "yanked": false,
+          "summary": "One behaviour change to shipped surface, and two findings that came out of running the instrument rather than writing it."
+        },
+        {
+          "version": "0.10.0",
+          "uploadedAt": "2026-08-21T14:35:36Z",
+          "yanked": false,
+          "summary": "Three flags on quantfit screen, all of them gaps that a real 15-target run exposed rather than features anyone designed up front."
+        },
+        {
+          "version": "0.9.0",
+          "uploadedAt": "2026-08-21T00:18:16Z",
+          "yanked": false,
+          "summary": "Upgrade if you are on 0.8.0 or earlier."
+        },
+        {
+          "version": "0.8.0",
+          "uploadedAt": "2026-08-15T01:58:26Z",
+          "yanked": false,
+          "summary": "A minor for the same reason 0.7.0 was: --junit on two more commands is new surface."
+        },
+        {
+          "version": "0.7.0",
+          "uploadedAt": "2026-08-14T04:55:31Z",
+          "yanked": false,
+          "summary": "A minor rather than a patch, because --junit is new surface."
+        },
+        {
+          "version": "0.6.1",
+          "uploadedAt": "2026-08-08T14:18:38Z",
+          "yanked": false,
+          "summary": "The README is the package's long_description, so it is the PyPI page — and as a package front page it had gaps that only show up once…"
+        },
+        {
+          "version": "0.6.0",
+          "uploadedAt": "2026-08-08T13:52:34Z",
+          "yanked": false,
+          "summary": "Publishing accounting, stated because it is the point of this release. The last version on PyPI was 0.5.1."
+        },
+        {
+          "version": "0.5.1",
+          "uploadedAt": "2026-08-06T23:51:33Z",
+          "yanked": false,
+          "summary": "quantfit 0.5.1 — judge-calibration machinery for ROADMAP 0.6, with GO-gated activation."
+        },
+        {
+          "version": "0.5.0",
+          "uploadedAt": "2026-07-30T01:57:48Z",
+          "yanked": false,
+          "summary": "quantfit 0.5.0 — the CI-verifiable half of ROADMAP milestone 0.5: the measurement protocol becomes a versioned spec, and the tooling to run…"
+        },
+        {
+          "version": "0.4.1",
+          "uploadedAt": "2026-07-25T00:57:30Z",
+          "yanked": false,
+          "summary": "quantfit 0.4.1 — ROADMAP milestone 0.4b: the hardware-gated half of 0.4."
+        },
+        {
+          "version": "0.4.0",
+          "uploadedAt": "2026-07-17T01:42:45Z",
+          "yanked": false,
+          "summary": "Reports become auditable artifacts (ROADMAP milestone 0.4a — the CI-gated half of 0.4; GGUF judging and over-VRAM validation are 0.4b and…"
+        },
+        {
+          "version": "0.3.0",
+          "uploadedAt": "2026-07-11T21:06:34Z",
+          "yanked": false,
+          "summary": "Reconcile and make the verdict honest (ROADMAP milestone 0.3). Supersedes PyPI 0.1.0 and the never-published 0.2.0."
+        },
+        {
+          "version": "0.1.0",
+          "uploadedAt": "2026-06-27T01:06:49Z",
+          "yanked": false,
+          "summary": "GPU-aware quantization CLI with a built-in safety-tax check."
+        }
+      ]
+    }
+  ]
+}

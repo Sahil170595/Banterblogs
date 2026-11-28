@@ -1,6 +1,7 @@
 import 'highlight.js/styles/github-dark.css';
 import { RevealScope } from '@/components/motion/RevealScope';
 import type { ReportSection } from '@/lib/reports/content';
+import { HeadingAnchorCopy } from './HeadingAnchorCopy';
 
 // Each section's body is the pipeline's HTML, set as one string, so React
 // hydrates its container and nothing inside it. RevealScope arms the tables,
@@ -16,6 +17,7 @@ export function ReportMarkdown({ sections }: { sections: ReportSection[] }) {
           <RevealScope className="report-prose prose prose-invert" html={section.html} />
         </article>
       ))}
+      <HeadingAnchorCopy />
     </div>
   );
 }

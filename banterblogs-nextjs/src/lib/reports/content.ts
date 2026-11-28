@@ -13,6 +13,7 @@ import {
   textOf,
   type TocEntry,
 } from '@/lib/episodes';
+import { addHeadingAnchors } from './headingAnchors';
 import { findReportFolder, normalizeSlug, toHumanTitle, type ReportLocation } from './locator';
 
 /** A piece of a report's title block, as rendered HTML and as plain text. */
@@ -61,6 +62,8 @@ export interface ReportRenderOptions {
   markRevealTargets?: boolean;
   /** A later document on a page of several: its table and code regions are named after it, so no name repeats. */
   scrollRegionName?: string;
+  /** End every h2 and h3 in a link to itself (the report body; HeadingAnchorCopy copies its URL). */
+  headingAnchors?: boolean;
 }
 
 export interface RenderedReport {
@@ -345,7 +348,10 @@ export async function renderReportDocument(markdown: string, options: ReportRend
   const frontMatter = options.foldTitleBlock ? foldTitleBlock(tree) : null;
   // numbered again once the fold has taken its table
   labelScrollRegions(tree, options.scrollRegionName);
-  return { html: hastToHtml(tree), headings: extractTreeHeadings(tree), frontMatter };
+  // read before the anchors go in, so the contents never carry one
+  const headings = extractTreeHeadings(tree);
+  if (options.headingAnchors) addHeadingAnchors(tree);
+  return { html: hastToHtml(tree), headings, frontMatter };
 }
 
 async function buildSection(filePath: string, sourceLabel: string, originKey: string, primary: boolean): Promise<ReportSection> {
@@ -360,6 +366,7 @@ async function buildSection(filePath: string, sourceLabel: string, originKey: st
     dropInlineToc: extractHeadings(raw).length >= MIN_TOC_HEADINGS,
     markRevealTargets: true,
     scrollRegionName: primary ? undefined : title,
+    headingAnchors: true,
   });
   return {
     id: sanitizeId(title) || sanitizeId(fallback),

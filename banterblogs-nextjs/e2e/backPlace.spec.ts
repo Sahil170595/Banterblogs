@@ -16,6 +16,7 @@ const WHEEL_STEP_PX = 500;
 const WHEEL_PAUSE_MS = 50;
 const WHEEL_STEPS_MAX = 200;
 const ARCHIVE_BLOCKS = '.archive-card-slot, main h2';
+const PICKED_ATTR = 'data-e2e-picked';
 
 // scrolls as a reader does, so the blocks passed render on the way
 async function wheelTo(page: Page, depth: number) {
@@ -33,15 +34,18 @@ test('Back puts the archive card that topped the view back where it was', async 
   const archive = (await page.locator('main h1').textContent()) ?? '';
   await wheelTo(page, ARCHIVE_DEPTH_PX);
   const before = await topBlock(page, ARCHIVE_BLOCKS);
-  const card = await page.evaluate(() => {
+  const card = await page.evaluate((pickedAttr) => {
     const inView = [...document.querySelectorAll('main a[href^="/reports/"]')].find((link) => {
       const box = link.getBoundingClientRect();
       return box.top > 120 && box.bottom < window.innerHeight - 40;
     });
+    // the same report can be linked higher up (start-here strip, key findings),
+    // so mark the link found in view instead of looking it up again by href
+    inView?.setAttribute(pickedAttr, '');
     return inView?.getAttribute('href') ?? null;
-  });
+  }, PICKED_ATTR);
   expect(card, 'a report card in view').not.toBeNull();
-  await clickInPlace(page, page.locator(`main a[href="${card}"]`).first());
+  await clickInPlace(page, page.locator(`main a[${PICKED_ATTR}]`));
   await page.waitForURL(`**${card}`);
   await page.goBack();
   await page.waitForURL('**/reports');
