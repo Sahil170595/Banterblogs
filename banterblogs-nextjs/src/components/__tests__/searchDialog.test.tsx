@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SearchEntry } from '@/lib/search';
 import { contrast, over, token } from '@/test/contrast';
@@ -66,6 +67,38 @@ describe('site search dialog', () => {
     // 16px on phones so iOS does not zoom the page on focus
     expect(input.className.split(/\s+/)).toEqual(expect.arrayContaining(['text-base', 'md:text-sm']));
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // The results panel stays mounted while closed (it fades on the overlay
+  // tokens), and it used to render its "Loading…" state there: hidden by
+  // visibility, but in every page's HTML for anything that reads the markup.
+  it('adds no text to the page until a query is typed: the server HTML carries an empty panel', async () => {
+    const { SearchDialog } = await import('../SearchDialog');
+    const markup = renderToStaticMarkup(<SearchDialog />);
+    const panel = /<div[^>]*role="listbox"[^>]*>([\s\S]*?)<\/div>/.exec(markup)?.[1];
+
+    expect(panel).toBe('');
+    expect(markup).not.toMatch(/Loading/);
+    expect(/<p role="status"[^>]*>([^<]*)<\/p>/.exec(markup)?.[1]).toBe('');
+
+    await renderDialog();
+    expect(screen.getByRole('listbox', { hidden: true }).parentElement?.textContent).toBe('');
+  });
+
+  it('says the index is loading only while an open panel waits for it', async () => {
+    let deliver: (response: unknown) => void = () => undefined;
+    fetchMock.mockImplementationOnce(() => new Promise((resolve) => (deliver = resolve)));
+    const input = await renderDialog();
+    expect(screen.queryByText('Loading…')).toBeNull();
+
+    await open(input, 'TR138');
+    expect(screen.getByText('Loading…')).toBeTruthy();
+
+    await act(async () => {
+      deliver({ ok: true, status: 200, json: async () => INDEX });
+    });
+    expect((await screen.findAllByRole('option')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Loading…')).toBeNull();
   });
 
   it('loads the index on first open, groups results by type and routes to the right page', async () => {

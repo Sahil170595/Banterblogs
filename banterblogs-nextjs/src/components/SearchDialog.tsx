@@ -236,19 +236,23 @@ export function SearchDialog() {
             );
           })}
 
-          {loadFailed ? (
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-              Search is unavailable right now. Close it and try again.
-            </div>
-          ) : !site ? (
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">Loading…</div>
-          ) : (
-            options.length === 0 && (
+          {/* Nothing until a query is typed: the closed panel is in every
+              page's HTML, and a state rendered there is read by anything that
+              takes the markup without its CSS. */}
+          {panelQuery.length > 0 &&
+            (loadFailed ? (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                No results for &ldquo;{panelQuery}&rdquo;
+                Search is unavailable right now. Close it and try again.
               </div>
-            )
-          )}
+            ) : !site ? (
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">Loading…</div>
+            ) : (
+              options.length === 0 && (
+                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                  No results for &ldquo;{panelQuery}&rdquo;
+                </div>
+              )
+            ))}
         </div>
         <p role="status" className="sr-only">
           {site ? `${options.length} results` : ''}
