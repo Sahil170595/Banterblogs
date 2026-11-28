@@ -27,15 +27,22 @@ const PLOT = {
   full: { top: 36, bottom: 144, inset: 10, ticks: 159, axis: 173 },
   mini: { top: 10, bottom: 80, inset: 4, ticks: 0, axis: 0 },
 } as const;
-const FONT_SIZE = 8.5;
+// 9.5 units is 11px on a 376px archive card (1280 wide) and 10.6px on a phone's 358px card
+const FONT_SIZE = 9.5;
 /** average glyph advance at FONT_SIZE, in viewBox units: what a line of labels can hold */
-const CHAR_WIDTH = 4.9;
+const CHAR_WIDTH = 5.5;
 const MIN_LABEL_CHARS = 8;
 const MAX_MEASURE_CHARS = 34;
 const MAX_TICK_CHARS = 12;
+/** characters a full-width line of labels holds, less a gap between its two ends */
+const LINE_CHARS = Math.floor((FRAME.full.right - FRAME.full.left) / CHAR_WIDTH) - 2;
+// a long header line may set down to 85% (9.4px on a phone's card) before it is cut
+const MIN_HEADER_SCALE = 0.85;
 /** a sweep of up to this many points labels every tick; a longer one its ends and the highlight */
 const MAX_TICKS = 5;
 const BAR_HEIGHT = 3.5;
+// a mini's bars thicken with fewer rows only this far: thicker, two bars read as a loading placeholder
+const MINI_BAR_MAX_HEIGHT = 5;
 const DOT_RADIUS = 2.6;
 const POINT_RADIUS = 1.5;
 const LIT_POINT_RADIUS = 3;
@@ -90,6 +97,17 @@ interface Drawing {
   dashed: string[];
   marks: ReactNode[];
   text: ReactNode[];
+  /** a label was cut to fit its line */
+  clipped: boolean;
+}
+
+// clip, and note on the drawing that something had to be cut
+function fitter(drawing: Drawing) {
+  return (text: string, max: number) => {
+    const out = clip(text, max);
+    if (out !== text) drawing.clipped = true;
+    return out;
+  };
 }
 
 const label = (key: string, x: number, y: number, text: string, lit = false, anchor?: 'middle' | 'end') => (
@@ -105,7 +123,8 @@ function drawRows(figure: FigureData, variant: FigureVariant): Drawing {
   const count = figure.rows.length;
   const pitch = Math.min((frame.bottom - frame.top) / count, frame.maxPitch);
   const first = frame.top + (frame.bottom - frame.top - count * pitch) / 2;
-  const drawing: Drawing = { guides: [], dashed: [], marks: [], text: [] };
+  const drawing: Drawing = { guides: [], dashed: [], marks: [], text: [], clipped: false };
+  const fit = fitter(drawing);
 
   let x: (value: number) => number;
   if (figure.chart === 'bar') {
@@ -118,14 +137,20 @@ function drawRows(figure: FigureData, variant: FigureVariant): Drawing {
     // where the scale crosses zero, the line an interval either clears or straddles
     if (lo < 0 && hi > 0) drawing.dashed.push(`M${x(0)} ${n1(first)}V${n1(first + count * pitch)}`);
   }
-  if (figure.chart === 'bar' && x(0) > frame.left) drawing.guides.push(`M${x(0)} ${n1(first)}V${n1(first + count * pitch)}`);
+  // the zero line where bars meet it; marks without labels always keep it, so they read as a chart
+  if (figure.chart === 'bar' && (x(0) > frame.left || !full)) drawing.guides.push(`M${x(0)} ${n1(first)}V${n1(first + count * pitch)}`);
 
   if (full) {
-    const measure = clip(figure.measure, MAX_MEASURE_CHARS);
-    const room = Math.floor((frame.right - frame.left) / CHAR_WIDTH) - 2;
+    // what the numbers measure keeps the header line, set a little smaller
+    // before it is cut; what the rows are shows whole or not at all, since
+    // every row label names its row anyway
+    const scale = Math.max(MIN_HEADER_SCALE, Math.min(1, LINE_CHARS / figure.measure.length));
+    const measure = fit(figure.measure, Math.floor(LINE_CHARS / scale));
+    if (figure.dimension.length + measure.length * scale <= LINE_CHARS) drawing.text.push(label('dimension', frame.left, frame.header, figure.dimension));
     drawing.text.push(
-      label('dimension', frame.left, frame.header, clip(figure.dimension, Math.max(MIN_LABEL_CHARS, room - measure.length))),
-      label('measure', frame.right, frame.header, measure, false, 'end'),
+      <text key="measure" x={frame.right} y={frame.header} textAnchor="end" fontSize={scale < 1 ? n1(FONT_SIZE * scale) : undefined}>
+        {measure}
+      </text>,
     );
   }
 
@@ -140,7 +165,7 @@ function drawRows(figure: FigureData, variant: FigureVariant): Drawing {
     if (figure.chart === 'bar') {
       const value = row.values[0].value;
       const [from, to] = value < 0 ? [x(value), x(0)] : [x(0), x(value)];
-      const height = full ? BAR_HEIGHT : n1(Math.max(BAR_HEIGHT, pitch * 0.5));
+      const height = full ? BAR_HEIGHT : n1(Math.min(MINI_BAR_MAX_HEIGHT, Math.max(BAR_HEIGHT, pitch * 0.5)));
       mark = <rect key={index} x={from} y={n1(y - height / 2)} width={n1(to - from)} height={height} rx={1} fillOpacity={rest} />;
     } else if (figure.chart === 'dot') {
       mark = [
@@ -168,9 +193,8 @@ function drawRows(figure: FigureData, variant: FigureVariant): Drawing {
     );
     if (full) {
       const value = valueText(figure, row);
-      const room = Math.floor((frame.right - frame.left) / CHAR_WIDTH) - 2;
       drawing.text.push(
-        label(`l${index}`, frame.left, textY, clip(row.label, Math.max(MIN_LABEL_CHARS, room - value.length)), lit),
+        label(`l${index}`, frame.left, textY, fit(row.label, Math.max(MIN_LABEL_CHARS, LINE_CHARS - value.length)), lit),
         label(`v${index}`, frame.right, textY, value, lit, 'end'),
       );
     }
@@ -212,20 +236,34 @@ function drawLine(figure: FigureData, variant: FigureVariant): Drawing {
       </g>,
     ],
     text: [],
+    clipped: false,
   };
   if (!full) return drawing;
 
+  const fit = fitter(drawing);
   const last = count - 1;
   const ticked = count <= MAX_TICKS ? figure.rows.map((_, index) => index) : [...new Set([0, figure.highlight, last])];
   const anchorAt = (index: number) => (index === 0 ? undefined : index === last ? 'end' : 'middle');
   const tickX = (index: number) => (index === 0 ? frame.left : index === last ? frame.right : xAt(index));
   drawing.text.push(
-    label('measure', frame.left, frame.header, clip(figure.measure, MAX_MEASURE_CHARS)),
-    ...ticked.map((index) => label(`t${index}`, tickX(index), plot.ticks, clip(figure.rows[index].label, MAX_TICK_CHARS), index === figure.highlight, anchorAt(index))),
-    label('dimension', W / 2, plot.axis, clip(figure.dimension, MAX_MEASURE_CHARS), false, 'middle'),
+    label('measure', frame.left, frame.header, fit(figure.measure, MAX_MEASURE_CHARS)),
+    ...ticked.map((index) => label(`t${index}`, tickX(index), plot.ticks, fit(figure.rows[index].label, MAX_TICK_CHARS), index === figure.highlight, anchorAt(index))),
+    label('dimension', W / 2, plot.axis, fit(figure.dimension, MAX_MEASURE_CHARS), false, 'middle'),
     label('value', tickX(figure.highlight), cy - 8, valueText(figure, figure.rows[figure.highlight]), true, anchorAt(figure.highlight)),
   );
   return drawing;
+}
+
+const draw = (figure: FigureData, variant: FigureVariant) => (figure.chart === 'line' ? drawLine(figure, variant) : drawRows(figure, variant));
+
+/**
+ * Whether the figure reads at archive-card size: every label whole on its
+ * line (the resolver already caps the rows a chart holds). A figure that does
+ * not keeps the seeded visual on its card and is drawn only on its report
+ * page, beside its caption and its table's name.
+ */
+export function fitsCard(figure: FigureData): boolean {
+  return !draw(figure, 'full').clipped;
 }
 
 export interface ReportFigureProps {
@@ -236,7 +274,7 @@ export interface ReportFigureProps {
 }
 
 export function ReportFigure({ figure, variant = 'full', describe = true }: ReportFigureProps) {
-  const { guides, dashed, marks, text } = figure.chart === 'line' ? drawLine(figure, variant) : drawRows(figure, variant);
+  const { guides, dashed, marks, text } = draw(figure, variant);
   return (
     <svg className="rv" role="img" viewBox={`0 0 ${W} ${HEIGHT[variant]}`} focusable="false" data-figure={figure.chart} data-accent="on">
       <title>{`${figure.title}: ${figure.measure}, by ${figure.dimension}`}</title>

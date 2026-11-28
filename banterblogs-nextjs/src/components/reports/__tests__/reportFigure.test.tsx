@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { reportFigure, toThumbnail } from '@/lib/reports/figures';
 import { FIGURE_SPECS } from '@/lib/reports/figures/specs';
 import type { ResolvedFigure } from '@/lib/reports/figures/types';
-import { describeFigure, figureHeadline, MAX_FIGURE_BYTES, ReportFigure } from '../ReportFigure';
+import { describeFigure, figureHeadline, fitsCard, MAX_FIGURE_BYTES, ReportFigure } from '../ReportFigure';
 
 // The chart vocabulary: bar, dot with interval, line, and a before/after pair
 // laid flat. Server-rendered SVG, monochrome, with one ember datum. What is
@@ -153,6 +153,39 @@ describe('report figure', () => {
     expect(svg).toContain('viewBox="0 0 320 90"');
     expect(svg).not.toMatch(/<text\b/);
     expect(marks(svg)).toHaveLength(3);
+  });
+
+  it('keeps a mini a chart, not a placeholder: bars on their zero line, thin even when there are only two', () => {
+    // signed bars meet at a zero inside the frame; all-positive ones at its left edge
+    for (const svg of [draw(SIGNED, { variant: 'mini' }), draw(BAR, { variant: 'mini' })]) {
+      const zero = Math.max(...marks(svg).map((bar) => attr(bar, 'x')));
+      expect(svg).toMatch(new RegExp(`<path class="l" d="M${zero} [\\d.]+V[\\d.]+"`));
+      for (const bar of marks(svg)) expect(attr(bar, 'height')).toBeLessThanOrEqual(5);
+    }
+  });
+
+  it('fits a card only when every label it prints stays whole', () => {
+    expect(fitsCard(BAR)).toBe(true);
+    const long = 'a-label-long-enough-that-no-card-line-could-ever-hold-it-whole';
+    const cut = { ...BAR, rows: [{ ...BAR.rows[0], label: long }, ...BAR.rows.slice(1)] };
+    expect(fitsCard(cut)).toBe(false);
+    expect(draw(cut)).toContain('…');
+    expect(fitsCard({ ...BAR, measure: long })).toBe(false);
+    // a header a little too long for the line is set smaller, not cut
+    const header = 'Mean (ms) → Mean excluding first sample per run-file (ms)';
+    expect(fitsCard({ ...BAR, measure: header })).toBe(true);
+    expect(draw({ ...BAR, measure: header })).toMatch(new RegExp(`font-size="[\\d.]+"[^>]*>${header.replace(/[()]/g, '\\$&')}<`));
+    expect(fitsCard({ ...LINE, rows: LINE.rows.map((row) => ({ ...row, label: `${row.label} agents in flight` })) })).toBe(false);
+  });
+
+  it('drops the header naming the rows, rather than cutting it, when the measure needs the line', () => {
+    const measure = 'Mean parallel efficiency at N=32, both backends';
+    const svg = draw({ ...BAR, dimension: 'Model · Quant · Strategy', measure });
+    expect(svg).toContain(`>${measure}<`);
+    expect(svg).not.toContain('>Model');
+    expect(fitsCard({ ...BAR, dimension: 'Model · Quant · Strategy', measure })).toBe(true);
+    // with room, both stand
+    expect(draw(BAR)).toContain('>Model<');
   });
 
   it('is an image with a name and a text alternative that carries every number', () => {
