@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { extractTables, FigureSpecError, numbersIn, parseInterval, parseNumber, plainText, resolveFigure } from '../resolve';
+import { excerpt, extractTables, FigureSpecError, numbersIn, parseInterval, parseNumber, plainText, resolveFigure } from '../resolve';
 import type { FigureSpec } from '../types';
 
 // The figure pipeline's core: a spec points at a table in a report's own
@@ -127,6 +127,32 @@ describe('numbers in cells', () => {
 
   it('lists the numbers a sentence states', () => {
     expect(numbersIn('falls 10-68pp at `Q2_K` (p = 0.942), 1,463,977 rows').map((n) => n.value)).toEqual([10, 68, 0.942, 1463977]);
+  });
+});
+
+describe('the caption', () => {
+  const LINES = [
+    'Key result: the worst cell reaches **100% ASR** on `small-model`, while the largest holds.',
+    '- **Peak:** 99.0% on `small-model`',
+    'Safety moved from 91.2% to 66.0% between backends.',
+  ].join('\n');
+
+  it('keeps a whole sentence, a labelled bullet or a clause after a colon as it is', () => {
+    expect(excerpt('Safety moved from 91.2% to 66.0% between backends.', LINES)).toBe('Safety moved from 91.2% to 66.0% between backends.');
+    expect(excerpt('**Peak:** 99.0% on `small-model`', LINES)).toBe('Peak: 99.0% on small-model');
+    expect(excerpt('the worst cell reaches **100% ASR** on `small-model`, while the largest holds.', LINES)).toBe(
+      'the worst cell reaches 100% ASR on small-model, while the largest holds.',
+    );
+  });
+
+  it('marks where a claim was lifted out of a longer sentence', () => {
+    expect(excerpt('reaches **100% ASR** on `small-model`', LINES)).toBe('…reaches 100% ASR on small-model…');
+    expect(excerpt('Safety moved from 91.2% to 66.0%', LINES)).toBe('Safety moved from 91.2% to 66.0%…');
+    expect(excerpt('moved from 91.2% to 66.0% between backends.', LINES)).toBe('…moved from 91.2% to 66.0% between backends.');
+  });
+
+  it('is what a resolved figure carries', () => {
+    expect(resolveFigure({ ...BAR, claim: 'reaches **100% ASR** on `small-model`' }, REPORT).claim).toBe('…reaches 100% ASR on small-model…');
   });
 });
 

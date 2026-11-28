@@ -245,6 +245,7 @@ export function resolveFigure(spec: FigureSpec, markdown: string): ResolvedFigur
     quoted.some((token) => Math.abs(Math.abs(token.value) - Math.abs(mark.value)) <= 0.5 * 10 ** -Math.min(token.decimals, mark.decimals) + Number.EPSILON),
   );
   if (!states) fail(`the claim does not state the highlighted value ${stated[0].text}`);
+  const caption = excerpt(spec.claim, markdown);
 
   return {
     slug: spec.slug,
@@ -256,6 +257,31 @@ export function resolveFigure(spec: FigureSpec, markdown: string): ResolvedFigur
     rows,
     highlight,
     ...(lit === undefined ? {} : { lit }),
-    claim,
+    claim: caption,
   };
+}
+
+// the report's text runs on past the claim: a word, a number or a joining mark
+const RUNS_INTO = /[\p{L}\p{N},;)\]'"’”]$/u;
+const RUNS_ON = /^[\p{L}\p{N},;(['"‘“—–-]/u;
+const TERMINAL = /[.!?]$/;
+const ELLIPSIS = '…';
+
+/**
+ * The claim as a caption: plain text, with an ellipsis where it was lifted
+ * from inside a longer sentence on its line, so a clause never reads as the
+ * whole of what the report says.
+ */
+export function excerpt(claim: string, markdown: string): string {
+  const text = plainText(claim);
+  const quoted = squash(claim);
+  const line = markdown.split(/\r?\n/).map((source) => source.replace(/[ \t]+/g, ' ')).find((source) => source.includes(quoted));
+  // a claim that spans lines keeps no marks: its line cannot be read whole
+  if (line === undefined) return text;
+  const at = line.indexOf(quoted);
+  const before = plainText(line.slice(0, at));
+  const after = plainText(line.slice(at + quoted.length));
+  const opensInside = RUNS_INTO.test(before);
+  const closesInside = !TERMINAL.test(text) && RUNS_ON.test(after);
+  return `${opensInside ? ELLIPSIS : ''}${text}${closesInside ? ELLIPSIS : ''}`;
 }
