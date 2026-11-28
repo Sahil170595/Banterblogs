@@ -2,8 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import { discoverReportsUnique } from '@/lib/reports/locator';
 import { classifyReportSlug } from '@/lib/reports/phases';
+import { readReportSections } from '@/lib/reports/content';
 import { readReportMarkdown, reportFigure, reportFigureThumbnails, resolveSpec } from '../index';
-import { extractTables, FigureSpecError, resolveFigure } from '../resolve';
+import { extractTables, FigureSpecError, plainText, resolveFigure } from '../resolve';
 import { FIGURE_SPECS, REPORTS_WITHOUT_FIGURE } from '../specs';
 
 // Every figure on the site is a spec resolved against the report it belongs
@@ -18,6 +19,8 @@ const TECHNICAL = discoverReportsUnique()
 const TECHNICAL_REPORTS = 55;
 /** reports drawn with a real figure; raise it as specs are added */
 const FIGURES = 47;
+// renders every anchored report through the full markdown pipeline
+const ANCHOR_CHECK_TIMEOUT_MS = 120_000;
 
 describe('figure specs', () => {
   it('covers 47 of the 55 technical reports, and accounts for every one it leaves out', () => {
@@ -71,6 +74,18 @@ describe('figure specs', () => {
     // most tables sit under a heading the page's contents rail can link
     expect(anchored.length).toBeGreaterThan(FIGURE_SPECS.length / 2);
     for (const figure of anchored) expect(figure.anchor).toMatch(/^[a-z0-9][\w-]*$/);
+  });
+
+  // the hero caption links #anchor: it must land on the heading the reader sees
+  it('points every anchor at a heading the rendered report page carries, worded as the figure title', { timeout: ANCHOR_CHECK_TIMEOUT_MS }, async () => {
+    for (const spec of FIGURE_SPECS) {
+      const figure = reportFigure(spec.slug)!;
+      if (!figure.anchor) continue;
+      const html = (await readReportSections(spec.slug)).map((section) => section.html).join('\n');
+      const heading = new RegExp(`<h[1-6][^>]*\\sid="${figure.anchor}"[^>]*>([\\s\\S]*?)</h[1-6]>`).exec(html);
+      expect(heading, `${spec.slug}: #${figure.anchor}`).not.toBeNull();
+      expect(plainText(heading![1].replace(/<[^>]+>/g, '')), spec.slug).toBe(figure.title);
+    }
   });
 
   it('gives the archive a thumbnail per figure, without the caption sentence', () => {

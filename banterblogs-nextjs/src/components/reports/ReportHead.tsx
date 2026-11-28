@@ -1,5 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import type { ReportFrontMatter } from '@/lib/reports/content';
+import type { ResolvedFigure } from '@/lib/reports/figures/types';
+import { ReportFigure } from './ReportFigure';
 import { ReportFigureTransition } from './ReportTransitions';
 import { ReportVisual } from './ReportVisual';
 
@@ -75,15 +77,27 @@ export function ReportDetails({ frontMatter }: { frontMatter: ReportFrontMatter 
 }
 
 /**
- * The report's archive-card visual on a plate at banner proportions, with its
- * ember accent lit. It is the far end of the card-to-report figure morph.
+ * The report's figure on a plate at banner proportions, captioned with the
+ * report's own sentence and the heading of the table it was drawn from; a
+ * report without one shows its seeded card visual, ember accent lit. Either
+ * plate is the far end of the card-to-report figure morph.
  */
-export function ReportHero({ slug }: { slug: string }) {
-  return (
+export function ReportHero({ slug, figure = null }: { slug: string; figure?: ResolvedFigure | null }) {
+  const plate = (
     <ReportFigureTransition slug={slug}>
-      <div className="report-hero">
-        <ReportVisual slug={slug} accent />
-      </div>
+      <div className="report-hero">{figure ? <ReportFigure figure={figure} /> : <ReportVisual slug={slug} accent />}</div>
     </ReportFigureTransition>
+  );
+  if (!figure) return plate;
+  return (
+    <figure className="report-figure">
+      {plate}
+      <figcaption>
+        <p>{figure.claim}</p>
+        <p className="report-figure-source">
+          Drawn from {figure.anchor ? <a href={`#${figure.anchor}`}>{figure.title}</a> : figure.title}
+        </p>
+      </figcaption>
+    </figure>
   );
 }
