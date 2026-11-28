@@ -1,12 +1,12 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { compactCss } from '@/lib/compactCss';
 import { CORE_ID, ECOSYSTEM_NODES, nodeById } from '@/lib/ecosystem';
 import { ECOSYSTEM_EDGES, describeEdge, edgeKey, edgeLine, neighboursOf } from '../connections';
-import { EcosystemMap, MAP_IDLE_READOUT, systemAnchor } from '../EcosystemMap';
+import { EcosystemMap, MAP_IDLE_READOUT, MAP_STYLE_HREF, MAP_STYLE_PRECEDENCE, systemAnchor } from '../EcosystemMap';
 import { MAP_LAYOUTS, type MapLayout } from '../mapLayout';
+import { MAP_STYLESHEET } from '../mapStylesheet';
 
 // The /platform map: the core and the nine repositories as nodes, who calls
 // whom as arrows. It is a server-rendered SVG, complete without JavaScript:
@@ -14,13 +14,17 @@ import { MAP_LAYOUTS, type MapLayout } from '../mapLayout';
 // list. Hovering or focusing a node (the one client island) lights its edges
 // and dims the rest.
 
-const COMPONENT_DIR = path.join(process.cwd(), 'src', 'components', 'platform');
-const CSS = fs.readFileSync(path.join(COMPONENT_DIR, 'map.module.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+const SOURCE_CSS = MAP_STYLESHEET;
+const CSS = SOURCE_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
 const text = (el: Element | null) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 const LAYOUTS = Object.values(MAP_LAYOUTS);
+// the map's own sheet, as React hoists it: first in the markup, into <head> in a page
+const STYLE_ELEMENT = /^<style data-precedence="([^"]*)" data-href="([^"]*)">([^<]*)<\/style>/;
+const PREFIX = 'emap-';
 
 describe('ecosystem map, as served', () => {
   const html = renderToStaticMarkup(<EcosystemMap />);
+  const markup = html.replace(STYLE_ELEMENT, '');
 
   it('names every node in the server HTML, with its languages', () => {
     for (const node of ECOSYSTEM_NODES) {
@@ -35,8 +39,33 @@ describe('ecosystem map, as served', () => {
   });
 
   it('needs no script to be read: nothing is hidden, and every node link works on its own', () => {
-    expect(html).not.toMatch(/opacity:\s*0|visibility:\s*hidden|hidden=""/);
+    // the sheet's one hold waits on armed motion (see "ecosystem map styles")
+    expect(markup).not.toContain('<style');
+    expect(markup).not.toMatch(/opacity:\s*0|visibility:\s*hidden|hidden=""/);
     expect(html).toContain(`href="#${systemAnchor('banterpacks')}"`);
+  });
+
+  it('carries its stylesheet in the HTML, not as a stylesheet request: one <style>, keyed once, ranked after the app’s sheets', () => {
+    const style = STYLE_ELEMENT.exec(html);
+    expect(style, 'a hoisted <style> leads the markup').not.toBeNull();
+    const [, precedence, href, served] = style!;
+    expect(precedence).toBe(MAP_STYLE_PRECEDENCE);
+    // Next ranks its own linked sheets "next"; a rank of their own puts the map's rules after them
+    expect(precedence).not.toBe('next');
+    expect(href).toBe(MAP_STYLE_HREF);
+    // the whole sheet, less what only a reviewer reads
+    expect(served).toBe(compactCss(SOURCE_CSS));
+    expect(served).not.toContain('/*');
+    expect(served.length).toBeLessThan(SOURCE_CSS.length);
+    // two maps on one page still send it once
+    expect(renderToStaticMarkup(<><EcosystemMap /><EcosystemMap /></>).match(/<style/g)).toHaveLength(1);
+  });
+
+  it('hoists the sheet into the document head when React renders it in the browser', () => {
+    render(<EcosystemMap />);
+    const sheets = document.head.querySelectorAll(`style[data-href="${MAP_STYLE_HREF}"]`);
+    expect(sheets).toHaveLength(1);
+    expect(sheets[0].textContent).toBe(compactCss(SOURCE_CSS));
   });
 });
 
@@ -172,19 +201,19 @@ describe('ecosystem map styles', () => {
     const REM_PX = 16;
     // a drawing may grow this far past its own width before it outsizes the page's text
     const MAX_GROWTH = 1.15;
-    expect(CSS).toMatch(/\.map\s*\{[^}]*container-type:\s*inline-size/);
+    expect(CSS).toMatch(/\.emap-map\s*\{[^}]*container-type:\s*inline-size[^}]*container-name:\s*emap-map\b/);
     // outside any query: the phone drawing shows, the others wait
     const base = CSS.replace(/@container[^{]*\{(?:[^{}]*\{[^}]*\})*\s*\}/g, '');
-    expect(base).toMatch(/\.medium\s*\{[^}]*display:\s*none/);
-    expect(base).toMatch(/\.wide\s*\{[^}]*display:\s*none/);
-    expect(base).not.toMatch(/\.narrow\s*\{[^}]*display:\s*none/);
+    expect(base).toMatch(/\.emap-medium\s*\{[^}]*display:\s*none/);
+    expect(base).toMatch(/\.emap-wide\s*\{[^}]*display:\s*none/);
+    expect(base).not.toMatch(/\.emap-narrow\s*\{[^}]*display:\s*none/);
     const queries = [...CSS.matchAll(/@container ([\w-]+) \(min-width: ([\d.]+)rem\)\s*\{((?:[^{}]*\{[^}]*\})*)\s*\}/g)].map(([, name, rem, body]) => ({
       name,
       px: Number(rem) * REM_PX,
       body,
     }));
     expect(queries).toHaveLength(2);
-    const shownBy = (layout: MapLayout) => queries.find((q) => new RegExp(`\\.${layout.id}\\s*\\{[^}]*display:\\s*block`).test(q.body));
+    const shownBy = (layout: MapLayout) => queries.find((q) => new RegExp(`\\.emap-${layout.id}\\s*\\{[^}]*display:\\s*block`).test(q.body));
     // each wider drawing, and the one it replaces
     for (const [layout, before] of [
       [MAP_LAYOUTS.medium, MAP_LAYOUTS.narrow],
@@ -192,13 +221,13 @@ describe('ecosystem map styles', () => {
     ] as const) {
       const query = shownBy(layout)!;
       expect(query, `${layout.id} has a query`).toBeDefined();
-      expect(query.name).toBe('ecosystem-map');
+      expect(query.name).toBe('emap-map');
       // shown only once there is room for it at its own size, and the one before it steps aside
       expect(query.px, layout.id).toBeGreaterThanOrEqual(layout.width);
-      expect(query.body).toMatch(new RegExp(`\\.${before.id}\\s*\\{[^}]*display:\\s*none`));
+      expect(query.body).toMatch(new RegExp(`\\.emap-${before.id}\\s*\\{[^}]*display:\\s*none`));
     }
     for (const layout of LAYOUTS) {
-      const cap = new RegExp(`\\.${layout.id}\\s*\\{[^}]*max-width:\\s*([\\d.]+)rem`).exec(base);
+      const cap = new RegExp(`\\.emap-${layout.id}\\s*\\{[^}]*max-width:\\s*([\\d.]+)rem`).exec(base);
       expect(cap, `${layout.id} is capped`).not.toBeNull();
       const capPx = Number(cap![1]) * REM_PX;
       expect(capPx, layout.id).toBeGreaterThanOrEqual(layout.width);
@@ -207,9 +236,34 @@ describe('ecosystem map styles', () => {
   });
 
   it('draws the site’s focus ring on the pill’s own shape, in place of the square outline', () => {
-    expect(CSS).toMatch(/:root a\.node:focus-visible\s*\{[^}]*outline:\s*none[^}]*box-shadow:\s*none/);
-    expect(CSS).toMatch(/\.node:focus-visible \.ring\s*\{[^}]*stroke:\s*hsl\(var\(--primary\)\)[^}]*stroke-width:\s*2/);
-    expect(CSS).toMatch(/\.ring\s*\{[^}]*stroke:\s*none/);
+    expect(CSS).toMatch(/:root a\.emap-node:focus-visible\s*\{[^}]*outline:\s*none[^}]*box-shadow:\s*none/);
+    expect(CSS).toMatch(/\.emap-node:focus-visible \.emap-ring\s*\{[^}]*stroke:\s*hsl\(var\(--primary\)\)[^}]*stroke-width:\s*2/);
+    expect(CSS).toMatch(/\.emap-ring\s*\{[^}]*stroke:\s*none/);
+  });
+
+  it('names everything it declares with its own prefix, since no build step scopes it', () => {
+    // a class selector; a decimal (0.375rem) starts with a digit and is passed over
+    const classes = new Set([...CSS.matchAll(/\.([_a-zA-Z][\w-]*)/g)].map(([, name]) => name));
+    expect(classes.size).toBeGreaterThan(10);
+    for (const name of classes) expect(name, `.${name}`).toMatch(new RegExp(`^${PREFIX}`));
+    const declared = [...CSS.matchAll(/@keyframes ([\w-]+)|container-name:\s*([\w-]+)|@container ([\w-]+)|animation:\s*([\w-]+)/g)].map((m) => m.slice(1).find(Boolean)!);
+    expect(declared.length).toBeGreaterThanOrEqual(7);
+    for (const name of declared) expect(name).toMatch(new RegExp(`^${PREFIX}`));
+    // and nothing a CSS module, a nesting transform or a prefixer would have handled
+    expect(CSS).not.toMatch(/:global|:local|composes:|@apply|theme\(|&|-webkit-|-moz-/);
+  });
+
+  it('draws only with classes the sheet defines, and the sheet defines none it does not draw', () => {
+    const page = render(<EcosystemMap />).container;
+    const drawn = new Set([...page.querySelectorAll('[class]')].flatMap((el) => (el.getAttribute('class') ?? '').split(/\s+/)).filter((name) => name.startsWith(PREFIX)));
+    const styled = new Set([...CSS.matchAll(/\.(emap-[\w-]+)/g)].map(([, name]) => name));
+    expect([...drawn].sort()).toEqual([...styled].sort());
+  });
+
+  it('hides nothing until motion is armed and the reveal is pending', () => {
+    const hiding = rules.filter((rule) => /opacity:\s*0\s*(;|$)|visibility:\s*hidden/m.test(rule.body) && !/^(from|to|\d+%)$/.test(rule.selector));
+    expect(hiding.length).toBeGreaterThan(0);
+    for (const rule of hiding) expect(rule.selector).toMatch(/^html\[data-motion="on"\] \[data-reveal="pending"\]/);
   });
 
   it('moves only while motion is armed: the edges draw in once, on the reveal token', () => {

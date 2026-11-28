@@ -1,15 +1,22 @@
 import type { CSSProperties } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { compactCss } from '@/lib/compactCss';
 import { CORE_ID, nodeById, type NodeId } from '@/lib/ecosystem';
 import { ECOSYSTEM_EDGES, describeEdge, edgeKey, edgeLine, neighboursOf, type EdgeLine } from './connections';
 import { MAP_LAYOUTS, arrowHead, labelLines, pillBox, routePath, type MapLayout } from './mapLayout';
 import { LINKS_ATTRIBUTE, NODE_ATTRIBUTE, READOUT_ATTRIBUTE } from './mapAttributes';
 import { MapTrace } from './MapTrace';
-import styles from './map.module.css';
+import { MAP_STYLESHEET } from './mapStylesheet';
 
 /** what the readout says while no node is traced; true without JavaScript too */
 export const MAP_IDLE_READOUT = 'Select a system to jump to its section on this page.';
+
+/** React's key for the map's <style>: it is hoisted into <head> and sent once however many maps render */
+export const MAP_STYLE_HREF = 'ecosystem-map';
+/** a rank of its own, after Next's linked sheets ("next"), so the map's rules come later in the cascade */
+export const MAP_STYLE_PRECEDENCE = 'component';
+const MAP_CSS = compactCss(MAP_STYLESHEET);
 
 /** The id of a node's section on /platform: the core's is the engines that host it. */
 export function systemAnchor(id: NodeId): string {
@@ -38,7 +45,7 @@ function Drawing({ layout }: { layout: MapLayout }) {
   const wipeId = (key: string) => `map-wipe-${layout.id}-${key.replace('>', '-to-')}`;
   return (
     <svg
-      className={cn(styles.drawing, styles[layout.id])}
+      className={`emap-drawing emap-${layout.id}`}
       data-layout={layout.id}
       viewBox={`0 0 ${layout.width} ${layout.height}`}
       role="group"
@@ -55,24 +62,24 @@ function Drawing({ layout }: { layout: MapLayout }) {
           return (
             <g
               key={key}
-              className={styles.edge}
+              className="emap-edge"
               data-edge={key}
               data-line={line}
               {...{ [LINKS_ATTRIBUTE]: `${edge.from} ${edge.to}` }}
               style={{ '--edge-i': Math.min(index, EDGE_STAGGER_CAP) } as CSSProperties}
             >
               {line === 'call' ? (
-                <path className={cn(styles.line, styles.draw)} d={d} pathLength={1} />
+                <path className="emap-line emap-draw" d={d} pathLength={1} />
               ) : (
                 <>
                   <mask id={wipeId(key)} maskUnits="userSpaceOnUse" x={0} y={0} width={layout.width} height={layout.height}>
-                    <path className={cn(styles.wipe, styles.draw)} d={d} pathLength={1} />
+                    <path className="emap-wipe emap-draw" d={d} pathLength={1} />
                   </mask>
-                  <path className={styles.line} d={d} mask={`url(#${wipeId(key)})`} />
+                  <path className="emap-line" d={d} mask={`url(#${wipeId(key)})`} />
                 </>
               )}
-              <polygon className={cn(styles.head, styles.arrive)} points={arrowHead(route)} />
-              <text className={cn(styles.label, styles.arrive)} x={route.label.x} y={route.label.y} textAnchor={route.label.anchor}>
+              <polygon className="emap-head emap-arrive" points={arrowHead(route)} />
+              <text className="emap-label emap-arrive" x={route.label.x} y={route.label.y} textAnchor={route.label.anchor}>
                 {lines.length === 1
                   ? lines[0]
                   : lines.map((text, i) => (
@@ -93,24 +100,24 @@ function Drawing({ layout }: { layout: MapLayout }) {
           <a
             key={id}
             href={`#${systemAnchor(id)}`}
-            className={styles.node}
+            className="emap-node"
             aria-label={`${node.name}: ${node.blurb}`}
             {...{ [NODE_ATTRIBUTE]: id, [LINKS_ATTRIBUTE]: [id, ...neighboursOf(id)].join(' ') }}
             {...(id === CORE_ID ? { 'data-core': '' } : {})}
           >
-            <rect className={styles.pill} x={box.x0} y={box.y0} width={box.x1 - box.x0} height={box.y1 - box.y0} rx={PILL_RADIUS} />
+            <rect className="emap-pill" x={box.x0} y={box.y0} width={box.x1 - box.x0} height={box.y1 - box.y0} rx={PILL_RADIUS} />
             <rect
-              className={styles.ring}
+              className="emap-ring"
               x={box.x0 - RING_OFFSET}
               y={box.y0 - RING_OFFSET}
               width={box.x1 - box.x0 + 2 * RING_OFFSET}
               height={box.y1 - box.y0 + 2 * RING_OFFSET}
               rx={PILL_RADIUS + RING_OFFSET}
             />
-            <text className={styles.name} x={cx} y={cy + NAME_BASELINE} textAnchor="middle">
+            <text className="emap-name" x={cx} y={cy + NAME_BASELINE} textAnchor="middle">
               {node.name}
             </text>
-            <text className={styles.stack} x={cx} y={cy + STACK_BASELINE} textAnchor="middle">
+            <text className="emap-stack" x={cx} y={cy + STACK_BASELINE} textAnchor="middle">
               {node.stack}
             </text>
           </a>
@@ -130,6 +137,9 @@ function Drawing({ layout }: { layout: MapLayout }) {
 export function EcosystemMap({ className }: { className?: string }) {
   return (
     <figure className={cn('flow', className)}>
+      <style href={MAP_STYLE_HREF} precedence={MAP_STYLE_PRECEDENCE}>
+        {MAP_CSS}
+      </style>
       <figcaption className="flow-caption">
         <span className="block text-copy-14 font-medium text-foreground">The core and the nine repositories</span>
         <span className="mt-1 block max-w-[60ch] text-label-13 text-muted-foreground">
@@ -137,19 +147,19 @@ export function EcosystemMap({ className }: { className?: string }) {
           repository: its router, debate engine and runtime live inside Banterpacks, behind the JARVIS gateway.
         </span>
       </figcaption>
-      <MapTrace className={styles.map} idle={MAP_IDLE_READOUT}>
+      <MapTrace className="emap-map" idle={MAP_IDLE_READOUT}>
         {Object.values(MAP_LAYOUTS).map((layout) => (
           <Drawing key={layout.id} layout={layout} />
         ))}
-        <p className={cn(styles.readout, 'text-label-13 text-muted-foreground')} {...{ [READOUT_ATTRIBUTE]: '' }}>
+        <p className="emap-readout text-label-13 text-muted-foreground" {...{ [READOUT_ATTRIBUTE]: '' }}>
           {MAP_IDLE_READOUT}
         </p>
       </MapTrace>
-      <ul aria-label="Line styles" className={cn(styles.legend, 'text-label-13 text-muted-foreground')}>
+      <ul aria-label="Line styles" className="emap-legend text-label-13 text-muted-foreground">
         {LINE_KEY.map(({ line, text }) => (
-          <li key={line} className={styles.edge} data-line={line}>
-            <svg aria-hidden="true" className={styles.sample} viewBox="0 0 28 8">
-              <path className={styles.line} d="M1 4L27 4" />
+          <li key={line} className="emap-edge" data-line={line}>
+            <svg aria-hidden="true" className="emap-sample" viewBox="0 0 28 8">
+              <path className="emap-line" d="M1 4L27 4" />
             </svg>
             {text}
           </li>
@@ -160,7 +170,7 @@ export function EcosystemMap({ className }: { className?: string }) {
           <ChevronRight aria-hidden="true" className="more-chevron h-3.5 w-3.5" />
           Read the {ECOSYSTEM_EDGES.length} connections as a list
         </summary>
-        <ul className={cn(styles.connections, 'text-copy-14 text-muted-foreground')}>
+        <ul className="emap-connections text-copy-14 text-muted-foreground">
           {ECOSYSTEM_EDGES.map((edge) => (
             <li key={edgeKey(edge)}>{describeEdge(edge)}</li>
           ))}

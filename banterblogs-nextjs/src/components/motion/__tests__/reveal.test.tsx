@@ -7,7 +7,16 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import RootLayout from '@/app/layout';
 import { Reveal } from '../Reveal';
 import { RevealScope } from '../RevealScope';
-import { armReveal, REVEAL_ATTRIBUTE, REVEAL_PENDING, REVEAL_SHOWN, REVEAL_STAGGER_CAP, REVEAL_TARGET } from '../revealObserver';
+import {
+  armReveal,
+  REVEAL_ATTRIBUTE,
+  REVEAL_HELD,
+  REVEAL_PENDING,
+  REVEAL_SHOWN,
+  REVEAL_STAGGER_CAP,
+  REVEAL_TARGET,
+  REVEAL_UNHELD,
+} from '../revealObserver';
 import { ENTRANCE_ATTRIBUTE, MOTION_ATTRIBUTE, MOTION_GATE_SCRIPT, MOTION_GATE_SCRIPT_ID } from '../prePaint';
 
 vi.mock('next/font/google', () => ({
@@ -140,6 +149,27 @@ describe('<Reveal> markup', () => {
 
     expect(markup).toContain('data-entrance-item=""');
     expect(markup).toContain('style="--entrance-i:2"');
+  });
+});
+
+// A stylesheet outside the primitives (the /platform map's) keys its own
+// entrance on the reveal state through these, so the state's names stay here.
+describe('reveal state selectors', () => {
+  it('names a held target, and one revealed or never held, exactly', () => {
+    expect(REVEAL_HELD).toBe('[data-reveal="pending"]');
+    expect(REVEAL_UNHELD).toBe(':is([data-reveal=""], [data-reveal="shown"])');
+  });
+
+  it('matches each target by its state: at rest and shown are unheld, pending is held', () => {
+    const { container } = render(
+      <>
+        <p data-reveal="">rest</p>
+        <p data-reveal={REVEAL_SHOWN}>shown</p>
+        <p data-reveal={REVEAL_PENDING}>pending</p>
+      </>,
+    );
+    expect([...container.querySelectorAll(REVEAL_UNHELD)].map((el) => el.textContent)).toEqual(['rest', 'shown']);
+    expect([...container.querySelectorAll(REVEAL_HELD)].map((el) => el.textContent)).toEqual(['pending']);
   });
 });
 
