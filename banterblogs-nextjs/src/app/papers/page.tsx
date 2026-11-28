@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ArrowUpRight } from 'lucide-react';
+import { CiteBlock } from '@/components/CiteBlock';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
 import { ReportVisual } from '@/components/reports/ReportVisual';
@@ -11,6 +12,7 @@ import { OnwardLinks, type OnwardLink } from '@/components/ui/OnwardLinks';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
+import { paperCitation } from '@/lib/citation';
 import { cn } from '@/lib/cn';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
@@ -274,6 +276,17 @@ function Evidence({ paper, stacked = false, className }: { paper: Paper; stacked
 }
 
 /**
+ * A public paper's citation, behind a closed disclosure. Only a workshop
+ * paper or a public preprint has one (paperCitation refuses every other
+ * status); a paper in preparation is never offered for citation.
+ */
+function PaperCite({ paper }: { paper: Paper }) {
+  const citation = paperCitation(paper);
+  if (!citation) return null;
+  return <CiteBlock citation={citation} subject={paper.title} />;
+}
+
+/**
  * A public paper: its evidence report's picture, status and venue, the title
  * leading to the preprint, the thesis, then its links. The only papers set as
  * cards, because they have a picture.
@@ -296,6 +309,7 @@ function PaperCard({ paper }: { paper: Paper }) {
       <p className="mt-2 flex-1 text-copy-14 text-muted-foreground">{paper.thesis}</p>
       <PaperLinks paper={paper} className="mt-5" />
       <Evidence paper={paper} className={paper.arxiv || paper.demo ? 'mt-3' : 'mt-5'} />
+      <PaperCite paper={paper} />
     </Card>
   );
 }
@@ -305,7 +319,7 @@ function PaperCard({ paper }: { paper: Paper }) {
  * the preprint where there is one, the thesis and its links in the body, and
  * status, venue and evidence in the meta column.
  */
-function PaperRow({ paper, index }: { paper: Paper; index: number }) {
+function PaperRow({ paper, index, cite = false }: { paper: Paper; index: number; cite?: boolean }) {
   return (
     <ListRow
       as="article"
@@ -321,6 +335,7 @@ function PaperRow({ paper, index }: { paper: Paper; index: number }) {
       }
     >
       <PaperLinks paper={paper} className="pt-2" />
+      {cite && <PaperCite paper={paper} />}
     </ListRow>
   );
 }
@@ -368,7 +383,7 @@ export default function PapersPage() {
           <ol className="mt-6">
             {PUBLIC_ROWS.map((paper, index) => (
               <Reveal as="li" key={paper.title}>
-                <PaperRow paper={paper} index={index} />
+                <PaperRow paper={paper} index={index} cite />
               </Reveal>
             ))}
           </ol>

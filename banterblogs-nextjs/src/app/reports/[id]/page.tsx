@@ -2,6 +2,7 @@ import '@/app/reading.css';
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ReportCite } from '@/components/reports/ReportCite';
 import { ReportDetails, ReportHero, ReportMeta } from '@/components/reports/ReportHead';
 import { ReportMarkdown } from '@/components/reports/ReportMarkdown';
 import { ReportProgress } from '@/components/reports/ReportProgress';
@@ -132,6 +133,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           <ReportTocSidebar headings={headings} />
         </div>
         <ReportEnd />
+        <ReportCite slug={id} title={title} date={frontMatter?.date ?? meta.published} />
 
         {/* ── Navigation ── */}
         {(prevSlug || nextSlug) && (
