@@ -25,8 +25,10 @@ import {
   RESEARCH,
   SKILLS,
   WORK_TITLE,
+  type EvidenceLink,
   type Experience,
   type ResearchItem,
+  type WorkVisual,
 } from '@/lib/work';
 
 const METADATA_DESCRIPTION =
@@ -133,7 +135,36 @@ function Bullets({ items, visible, entry }: { items: string[]; visible: number; 
   );
 }
 
+/**
+ * A demo this site hosts, as a small picture of itself (a capture of the live
+ * page, scripts/capture-work-visuals.mjs) that opens it: the archive card's
+ * hover depth, the link's own label under the frame. The frame holds the
+ * picture's 16:9 before the file arrives, so nothing shifts.
+ */
+function DemoThumbnail({ link, visual }: { link: EvidenceLink; visual: WorkVisual }) {
+  return (
+    <IntentLink href={link.href} className="card-depth group block rounded-xl">
+      <div className="card-lift">
+        <div className="card-visual aspect-video">
+          {/* a plain picture: the file is already sized and encoded, and the site runs no image optimizer */}
+          <picture>
+            <img src={visual.src} width={visual.width} height={visual.height} alt={visual.alt} loading="lazy" decoding="async" className="block h-full w-full" />
+          </picture>
+        </div>
+        <p className="mt-2 flex items-center gap-1.5 text-label-13 text-muted-foreground transition-colors duration-fast ease-standard group-hover:text-primary">
+          {link.label}
+          <ArrowRight aria-hidden="true" className="card-arrow h-3.5 w-3.5" />
+        </p>
+      </div>
+    </IntentLink>
+  );
+}
+
 function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
+  const evidence = item.evidence ?? [];
+  // a link with a picture of its page is drawn as that picture; the rest stay text
+  const pictured = evidence.filter((link) => link.visual);
+  const plain = evidence.filter((link) => !link.visual);
   return (
     <Reveal
       as="li"
@@ -149,19 +180,27 @@ function ResearchRow({ item, index }: { item: ResearchItem; index: number }) {
         </h3>
         {item.meta && <p className="mt-1.5 text-label-13 text-muted-foreground">{item.meta}</p>}
         <Bullets items={item.bullets} visible={RESEARCH_VISIBLE_BULLETS} entry={item.label} />
-        {item.evidence && item.evidence.length > 0 && (
+        {pictured.length > 0 && (
+          // not a list: the row's lists are its bullets
+          <div className="mt-5 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+            {pictured.map((link) => (
+              <DemoThumbnail key={link.href} link={link} visual={link.visual!} />
+            ))}
+          </div>
+        )}
+        {plain.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-1">
             <span className="mr-2 text-label-12-mono text-muted-foreground/80">Evidence</span>
-            {item.evidence.map((evidence) => (
+            {plain.map((link) => (
               <ButtonLink
-                key={evidence.href}
-                href={evidence.href}
+                key={link.href}
+                href={link.href}
                 variant="ghost"
                 size="sm"
                 iconEnd={<ArrowUpRight className="h-3.5 w-3.5" />}
                 className="px-2 py-1 text-left"
               >
-                {evidence.label}
+                {link.label}
               </ButtonLink>
             ))}
           </div>
