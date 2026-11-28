@@ -39,6 +39,7 @@ describe('report body', () => {
     const unmarked = await renderReportDocument(prepareReportMarkdown(section.markdown), {
       foldTitleBlock: true,
       dropInlineToc: extractHeadings(section.markdown).length >= MIN_TOC_HEADINGS,
+      headingAnchors: true,
     });
 
     // take the markers out and the pipeline's own HTML is left
