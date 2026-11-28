@@ -68,16 +68,18 @@ describe.each(TOOLS.map((tool) => [tool.slug, tool] as const))('/tools/%s releas
     const markup = renderToStaticMarkup(<ToolPage tool={tool} />);
     const html = markup.slice(markup.indexOf('id="releases"'));
     const stamps = [...html.matchAll(/<time[^>]*\sdatetime="([^"]+)"/gi)].map((match) => match[1]);
-    // the snapshot's own date leads, then one stamp per release
-    expect(stamps.slice(1)).toEqual(history.releases.map((release) => release.uploadedAt));
+    const index = history.releases.findIndex((release) => release.version === tool.version);
+    const pinned = index >= RECENT_RELEASES ? [history.releases[index].uploadedAt] : [];
+    // the snapshot's own date leads, then the pinned release when there is one, then one stamp per release
+    expect(stamps).toEqual([TOOL_RELEASES.fetchedAt, ...pinned, ...history.releases.map((release) => release.uploadedAt)]);
     for (const release of history.releases) expect(html, release.version).toContain(`v${release.version}<`);
   });
 
   // tools.ts may trail PyPI: the facts on the page were checked against one
   // release, and the history says which, so the newer ones read as newer
-  it('marks the one release the page describes, and says how many are newer', () => {
+  it('marks the one release the page describes in the list, and says how many are newer', () => {
     const el = section();
-    const marked = [...el.querySelectorAll('li')].filter((li) => li.querySelector(':scope > div [data-release-described]'));
+    const marked = [...el.querySelectorAll('[data-releases="recent"] li, [data-releases="earlier"] li')].filter((li) => li.querySelector(':scope > div [data-release-described]'));
     expect(marked).toHaveLength(1);
     expect(text(marked[0])).toContain(`v${tool.version}`);
     expect(text(marked[0].querySelector('[data-release-described]')!)).toBe('This page describes');
@@ -86,6 +88,30 @@ describe.each(TOOLS.map((tool) => [tool.slug, tool] as const))('/tools/%s releas
     expect(note).toContain(`v${tool.version}`);
     if (newer > 0) expect(note).toContain(`${newer} newer ${newer === 1 ? 'release is' : 'releases are'} listed`);
     else expect(note).toContain('the latest release');
+  });
+
+  // a closed month would hide the release the page describes, so it is
+  // pinned under the note as well; among the recent rows it needs no pin
+  it('shows the release the page describes without opening a fold', () => {
+    const el = section();
+    const index = history.releases.findIndex((release) => release.version === tool.version);
+    const pinned = el.querySelector('[data-releases="pinned"]');
+    if (index < RECENT_RELEASES) {
+      expect(pinned).toBeNull();
+      return;
+    }
+    const release = history.releases[index];
+    expect(el.querySelector('[data-releases="described"]')!.nextElementSibling).toBe(pinned);
+    expect(pinned!.closest('details')).toBeNull();
+    expect(pinned!.querySelector('time')!.getAttribute('datetime')).toBe(release.uploadedAt);
+    expect(text(pinned!.querySelector('[data-release-described]')!)).toBe('This page describes');
+    expect(text(pinned!)).toContain(`v${release.version}`);
+    if (release.summary) expect(text(pinned!)).toContain(release.summary);
+  });
+
+  it('gives no element of the page an id twice', () => {
+    const ids = [...render(<ToolPage tool={tool} />).container.querySelectorAll('[id]')].map((node) => node.id);
+    expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([]);
   });
 
   it('keeps the page’s outline short: no heading per release', () => {
@@ -125,5 +151,54 @@ describe('a release list’s edges', () => {
   it('draws no empty fold when every release fits the recent rows', () => {
     expect(el().querySelector('[data-releases="earlier"]')).toBeNull();
     expect(text(el())).toContain('2 releases on PyPI since Oct 31, 2026');
+  });
+
+  it('pins nothing when the release the page describes is already a visible row', () => {
+    expect(el('0.3.0').querySelector('[data-releases="pinned"]')).toBeNull();
+    expect(el('0.2.0').querySelector('[data-releases="pinned"]')).toBeNull();
+  });
+});
+
+describe('the release the page describes, behind a closed month', () => {
+  // two more releases than the recent rows hold: the oldest two fold into October
+  const COUNT = RECENT_RELEASES + 2;
+  const releases = Array.from({ length: COUNT }, (_, i) => ({
+    version: `0.${COUNT - i}.0`,
+    uploadedAt: i < RECENT_RELEASES ? `2026-11-${String(20 - i).padStart(2, '0')}T12:00:00Z` : `2026-10-${String(20 - i).padStart(2, '0')}T12:00:00Z`,
+    yanked: false,
+    summary: `Notes for 0.${COUNT - i}.0`,
+  }));
+  const HISTORY: ToolReleaseHistory = {
+    slug: 'demo',
+    package: 'demo',
+    source: 'https://pypi.org/pypi/demo/json',
+    notesSource: 'https://github.com/example/demo/releases',
+    releases,
+  };
+  const oldest = releases.at(-1)!;
+  const el = () =>
+    render(<ReleaseHistory history={HISTORY} pypi="https://pypi.org/project/demo/" fetchedAt="2026-11-21T00:00:00Z" described={oldest.version} />).container;
+
+  it('pins it as one visible row directly under the note', () => {
+    const page = el();
+    const note = page.querySelector('[data-releases="described"]')!;
+    const pinned = page.querySelector('[data-releases="pinned"]')!;
+    expect(text(note)).toBe(`This page describes v${oldest.version}; ${COUNT - 1} newer releases are listed above it.`);
+    expect(note.nextElementSibling).toBe(pinned);
+    expect(page.querySelectorAll('[data-releases="pinned"]')).toHaveLength(1);
+    expect(pinned.closest('details')).toBeNull();
+    expect(pinned.querySelector('time')!.getAttribute('datetime')).toBe(oldest.uploadedAt);
+    expect(text(pinned)).toContain(`v${oldest.version}`);
+    expect(text(pinned)).toContain('This page describes');
+    expect(text(pinned)).toContain(`Notes for ${oldest.version}`);
+  });
+
+  it('keeps it marked in its own closed month as well, so the list stays whole', () => {
+    const folds = [...el().querySelectorAll<HTMLDetailsElement>('[data-releases="earlier"] details')];
+    expect(folds).toHaveLength(1);
+    expect(folds[0].open).toBe(false);
+    const rows = [...folds[0].querySelectorAll('li')];
+    expect(rows.map((row) => row.querySelector('time')!.getAttribute('datetime'))).toEqual(releases.slice(RECENT_RELEASES).map((release) => release.uploadedAt));
+    expect(rows.filter((row) => row.querySelector('[data-release-described]')).map((row) => text(row).includes(`v${oldest.version}`))).toEqual([true]);
   });
 });

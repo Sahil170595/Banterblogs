@@ -112,7 +112,8 @@ export interface ReleaseHistoryProps {
  * the newest as hairline rows, the rest folded by UTC month, so a hundred
  * releases stay a short list and every one of them is in the page. The
  * snapshot may run ahead of tools.ts, so the release the page describes is
- * marked and the newer ones are counted.
+ * marked, shown under the note when a closed month holds it, and the newer
+ * ones are counted.
  */
 export function ReleaseHistory({ history, pypi, fetchedAt, described }: ReleaseHistoryProps) {
   const recent = history.releases.slice(0, RECENT_RELEASES);
@@ -121,6 +122,8 @@ export function ReleaseHistory({ history, pypi, fetchedAt, described }: ReleaseH
   const lastRecentMonth = groupByMonth(recent).at(-1)?.month;
   const first = history.releases.at(-1);
   const newer = history.releases.filter((release) => compareVersions(release.version, described) > 0).length;
+  // a closed month would hide the described release, so it shows under the note too
+  const pinned = history.releases.slice(RECENT_RELEASES).find((release) => release.version === described);
   return (
     <Section
       id="releases"
@@ -139,10 +142,17 @@ export function ReleaseHistory({ history, pypi, fetchedAt, described }: ReleaseH
         </>
       }
     >
-      <p data-releases="described" className="mb-6 text-copy-14 text-muted-foreground">
-        This page describes <span className="font-mono font-semibold text-foreground">{`v${described}`}</span>
-        {newer === 0 ? ', the latest release.' : `; ${newer} newer ${newer === 1 ? 'release is' : 'releases are'} listed above it.`}
-      </p>
+      <div className="mb-6">
+        <p data-releases="described" className="text-copy-14 text-muted-foreground">
+          This page describes <span className="font-mono font-semibold text-foreground">{`v${described}`}</span>
+          {newer === 0 ? ', the latest release.' : `; ${newer} newer ${newer === 1 ? 'release is' : 'releases are'} listed above it.`}
+        </p>
+        {pinned && (
+          <div data-releases="pinned" className={cn(RELEASE_ROW, 'mt-3')}>
+            <ReleaseRow release={pinned} described />
+          </div>
+        )}
+      </div>
       <ul data-releases="recent">
         {recent.map((release) => (
           <Reveal as="li" key={release.version} className={RELEASE_ROW}>
