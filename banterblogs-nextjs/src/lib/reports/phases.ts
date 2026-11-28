@@ -201,6 +201,41 @@ export function classifyReportSlug(slug: string): ReportCategory {
   return 'other';
 }
 
+// a label's trailing TR range: "Phase 5 — Attack Surface (TR138–TR143)"
+const LABEL_RANGE_SUFFIX = /\s*\([^)]*\)$/;
+
+/** TR numbers as runs of consecutive numbers, each number once: "TR144–TR149+TR152". */
+export function formatTRRuns(numbers: readonly number[]): string {
+  const sorted = [...new Set(numbers)].sort((a, b) => a - b);
+  const runs: string[] = [];
+  for (let start = 0; start < sorted.length; ) {
+    let end = start;
+    while (end + 1 < sorted.length && sorted[end + 1] === sorted[end] + 1) end += 1;
+    runs.push(start === end ? `TR${sorted[start]}` : `TR${sorted[start]}–TR${sorted[end]}`);
+    start = end + 1;
+  }
+  return runs.join('+');
+}
+
+/**
+ * A phase's tab label, naming the TR numbers its published reports carry in
+ * place of the range the phase reserves. An in-flight phase reserves more
+ * numbers than it has published, and a tab that names a nine-number range
+ * beside a count of one reads as a broken archive. Membership is untouched:
+ * `slugs` are filtered through classifyReportSlug. Null for a key that is no
+ * phase; a phase with no TR-numbered report keeps its label without a range.
+ */
+export function phasePublishedLabel(key: string, slugs: readonly string[]): string | null {
+  const definition = PHASE_DEFINITIONS.find((p) => p.key === key);
+  if (!definition) return null;
+  const numbers = slugs
+    .filter((slug) => classifyReportSlug(slug) === definition.key)
+    .map(extractTRNumber)
+    .filter((tr): tr is number => tr !== null);
+  const name = definition.label.replace(LABEL_RANGE_SUFFIX, '');
+  return numbers.length > 0 ? `${name} (${formatTRRuns(numbers)})` : name;
+}
+
 /**
  * Sort rank for prev/next navigation and manifest ordering. Lower rank = earlier
  * in the reading order. Phase 0 baselines (Sep-Oct 2025) sort BEFORE TR108

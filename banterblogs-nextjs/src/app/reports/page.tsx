@@ -6,8 +6,9 @@ import { readReportMeta } from '@/lib/reports/meta';
 import { Reveal } from '@/components/motion/Reveal';
 import { ReportTabs, TABS_ENTRANCE_GROUP, type ReportTabEntry, type ReportTabGroup } from '@/components/reports/ReportTabs';
 import { NAV_FORWARD } from '@/components/reports/ReportTransitions';
+import { StartHere } from '@/components/reports/StartHere';
 import { IntentLink } from '@/components/ui/IntentLink';
-import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phaseWhitepaperSlug } from '@/lib/reports/phases';
+import { PHASE_DEFINITIONS, classifyReportSlug, extractTRNumber, phasePublishedLabel, phaseWhitepaperSlug } from '@/lib/reports/phases';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
 
 const METADATA_DESCRIPTION = `Independent LLM safety research · ${REPORTS.DISPLAY} technical reports · ${MEASUREMENTS.DISPLAY} empirical measurements · the research behind a paper presented at the ICML 2026 Workshop on Hypothesis Testing.`;
@@ -179,7 +180,8 @@ export default async function ReportsIndex() {
   const technicalGroups: ReportTabGroup[] = Array.from(technicalByPhase.entries())
     .map(([key, items]) => ({
       key,
-      label: PHASE_META[key]?.label ?? key,
+      // the TR numbers on disk, not the range the phase reserves
+      label: phasePublishedLabel(key, items.map((r) => r.slug)) ?? PHASE_META[key]?.label ?? key,
       description: PHASE_META[key]?.description ?? '',
       reports: items.map((r) => ({ slug: r.slug, title: r.title, description: r.description })),
       _order: PHASE_META[key]?.order ?? 99,
@@ -249,6 +251,8 @@ export default async function ReportsIndex() {
           <li className="hidden text-muted-foreground/70 md:block">47 TR numbers · 3 baselines · versions counted</li>
         </ul>
       </div>
+
+      <StartHere group={HEAD_ENTRANCE_GROUP.stats} />
 
       {/* ── Synthesis and technical reports, tabbed by phase ── */}
       <section aria-labelledby="archive-heading" className="mt-6 md:mt-8">
