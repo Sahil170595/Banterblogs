@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import { STAR_SYSTEMS } from '@/components/galactic/systems';
 import { Reveal } from '@/components/motion/Reveal';
 import { entranceItem, HEAD_ENTRANCE_GROUPS } from '@/components/motion/entrance';
+import { EcosystemMap, systemAnchor } from '@/components/platform/EcosystemMap';
 import { ReportVisual, type Variant, type VisualFamily } from '@/components/reports/ReportVisual';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { FlowFigure, type FlowStep } from '@/components/ui/FlowFigure';
@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Section } from '@/components/ui/Section';
 import { StatRow } from '@/components/ui/StatRow';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { ECOSYSTEM_SYSTEMS, type SystemId } from '@/lib/ecosystem';
 import { getAllEpisodes, getEpisodeStats } from '@/lib/episodes';
 import { CHIMERAFORGE_GPU_PROFILES, CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 
@@ -48,6 +49,8 @@ interface Subsystem {
 
 interface Repository {
   name: string;
+  /** its node on the ecosystem map, which lands here; a tool outside the nine has none */
+  system?: SystemId;
   /** the drawing: the archive generator, seeded by the name, in the family chosen for the repository */
   visual: readonly [VisualFamily, Variant];
   /** languages and stack, one line */
@@ -60,13 +63,16 @@ interface Repository {
 }
 
 // Private repositories lead to their on-site pages and public ones to GitHub,
-// exactly as the landing's star systems do (components/galactic/systems.ts).
+// exactly as the landing's star systems do (both read lib/ecosystem.ts).
 function destination(repository: Repository): { href: string; label: string } {
   if (repository.link) return repository.link;
-  const system = STAR_SYSTEMS.find((s) => s.name === repository.name);
-  if (!system) throw new Error(`[platform] no destination for ${repository.name}: add it to STAR_SYSTEMS or give it a link`);
+  const system = ECOSYSTEM_SYSTEMS.find((s) => s.id === repository.system);
+  if (!system) throw new Error(`[platform] no destination for ${repository.name}: name its system or give it a link`);
   return { href: system.href, label: system.ctaLabel };
 }
+
+// where the map's node for a repository lands
+const anchorOf = (repository: Repository) => (repository.system ? { id: systemAnchor(repository.system) } : {});
 
 // Each family says something about the repository it draws: concentric rings
 // for the enforcement core, measured bars for the research platform, a
@@ -75,6 +81,7 @@ function destination(repository: Repository): { href: string; label: string } {
 const CORE_ENGINES: Repository[] = [
   {
     name: 'Banterpacks',
+    system: 'banterpacks',
     visual: ['arcs', 0],
     meta: 'Python, Rust · 6 subsystems + 7 Rust crates',
     description:
@@ -89,6 +96,7 @@ const CORE_ENGINES: Repository[] = [
   },
   {
     name: 'Banterhearts',
+    system: 'banterhearts',
     visual: ['bars', 0],
     meta: `Python · ${MEASUREMENTS.SHORT} measurements`,
     description: `ML research platform and production inference backbone. ${MEASUREMENTS.DISPLAY} measurements across ${REPORTS.DISPLAY} technical reports, targeting consumer GPUs with sub-100ms inference.`,
@@ -122,6 +130,7 @@ const GATEWAY_PATH: { title: string; caption: string; steps: FlowStep[] } = {
 const SUPPORTING_SYSTEMS: Repository[] = [
   {
     name: 'Chimera Multi-Agent',
+    system: 'chimera-multi-agent',
     visual: ['dots', 1],
     meta: 'Python · ClickHouse · OTel',
     description:
@@ -129,12 +138,14 @@ const SUPPORTING_SYSTEMS: Repository[] = [
   },
   {
     name: 'Chimeraforge',
+    system: 'chimeraforge',
     visual: ['fan', 0],
     description: `LLM deployment optimizer on PyPI (v${CHIMERAFORGE_TOOL.version}). Model-agnostic 5-gate capacity planner (VRAM, Quality, Safety, Latency, Cost) — any registry / Ollama / HuggingFace model across ${CHIMERAFORGE_GPU_PROFILES} GPU profiles, plus an MCP server that serves the same numbers to AI assistants.`,
     link: { href: '/tools/chimeraforge', label: 'pip install chimeraforge' },
   },
   {
     name: 'Chimeradroid',
+    system: 'chimeradroid',
     visual: ['wave', 0],
     meta: 'C# / Unity · WebSocket streaming',
     description:
@@ -142,6 +153,7 @@ const SUPPORTING_SYSTEMS: Repository[] = [
   },
   {
     name: 'Echo',
+    system: 'echo',
     visual: ['wave', 1],
     meta: 'Python · Slack Bolt · discord.py · python-telegram-bot · aiohttp',
     description:
@@ -149,6 +161,7 @@ const SUPPORTING_SYSTEMS: Repository[] = [
   },
   {
     name: 'JARVIS Console',
+    system: 'jarvis-console',
     visual: ['bars', 1],
     meta: 'TypeScript / Next.js · WebSocket',
     description:
@@ -156,6 +169,7 @@ const SUPPORTING_SYSTEMS: Repository[] = [
   },
   {
     name: 'This Site',
+    system: 'this-site',
     visual: ['dots', 0],
     meta: 'TypeScript · Vercel',
     description: `268 auto-generated episodes from git commits (stream archived 2026-06-26). Research archive with ${REPORTS.DISPLAY} technical reports. Next.js 16 with SSG + ISR.`,
@@ -166,6 +180,7 @@ const SUPPORTING_SYSTEMS: Repository[] = [
 const IN_DEVELOPMENT: Repository[] = [
   {
     name: 'Project Wyvern',
+    system: 'project-wyvern',
     visual: ['fan', 1],
     meta: 'Python, Rust · ROS 2 · PX4 + Gazebo',
     description:
@@ -246,6 +261,7 @@ function RepositoryRow({ repository }: { repository: Repository }) {
   const Arrow = isExternal(href) ? ArrowUpRight : ArrowRight;
   return (
     <IntentLink
+      {...anchorOf(repository)}
       href={href}
       className="card-depth group list-row grid grid-cols-[6rem_minmax(0,1fr)] items-start gap-x-6 py-6 sm:grid-cols-[10rem_minmax(0,1fr)] md:py-8"
       {...outside(href)}
@@ -278,8 +294,9 @@ function RepositoryRows({ repositories }: { repositories: Repository[] }) {
   );
 }
 
-// The two core engines join the head's entrance, after its three groups.
-const CORE_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
+// The map, then the two core engines, join the head's entrance after its three groups.
+const CONTENT_ENTRANCE_AFTER = HEAD_ENTRANCE_GROUPS;
+const MAP_ENTRANCE_ITEMS = 1;
 
 export default async function PlatformPage() {
   const episodes = await getAllEpisodes();
@@ -318,12 +335,22 @@ export default async function PlatformPage() {
       />
 
       <div className="mt-8 md:mt-14">
+        <Section id="system-map" title="How the systems connect" aside>
+          <Reveal {...entranceItem(0, CONTENT_ENTRANCE_AFTER)}>
+            <EcosystemMap />
+          </Reveal>
+        </Section>
+
         <Section id="core-engines" title="Core engines" aside>
           <ul className="grid grid-cols-1 gap-12 xl:grid-cols-2">
+            {/* the map's anchor sits on the item, outside the rise: a jump measured
+                against a still-transformed reveal lands short once it settles */}
             {CORE_ENGINES.map((repository, index) => (
-              <Reveal as="li" key={repository.name} {...entranceItem(index, CORE_ENTRANCE_AFTER)}>
-                <Engine repository={repository} />
-              </Reveal>
+              <li key={repository.name} {...anchorOf(repository)}>
+                <Reveal {...entranceItem(MAP_ENTRANCE_ITEMS + index, CONTENT_ENTRANCE_AFTER)}>
+                  <Engine repository={repository} />
+                </Reveal>
+              </li>
             ))}
           </ul>
         </Section>

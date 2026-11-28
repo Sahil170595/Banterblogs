@@ -4,7 +4,10 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import PlatformPage from '@/app/platform/page';
 import { STAR_SYSTEMS } from '@/components/galactic/systems';
 import { ENTRANCE_GROUP_CLASS, ENTRANCE_ITEM_ATTRIBUTE } from '@/components/motion/entrance';
+import { systemAnchor } from '@/components/platform/EcosystemMap';
+import { MAP_LAYOUTS } from '@/components/platform/mapLayout';
 import { MEASUREMENTS, REPORTS } from '@/lib/constants';
+import { CORE_ID, ECOSYSTEM_NODES, nodeById, type NodeId } from '@/lib/ecosystem';
 import { CHIMERAFORGE_TOOL, QUANTFIT_TOOL } from '@/lib/tools';
 
 // /platform as an architecture page (R5 design re-judge P1-B: it was the
@@ -145,13 +148,16 @@ describe('platform head', () => {
     expect([...stats.querySelectorAll('li')].map(text)).toEqual(['9 repositories', '4 languages', `${MEASUREMENTS.SHORT} research measurements`]);
   });
 
-  it('rises in the three head groups, the lede second, then the two core engines join the sequence', () => {
+  it('rises in the three head groups, the lede second, then the map and the two core engines join the sequence', () => {
     const groups = [...page.querySelectorAll<HTMLElement>(`.${ENTRANCE_GROUP_CLASS}`)];
     expect(groups.map((g) => g.style.getPropertyValue('--group'))).toEqual(['0', '1', '2']);
     expect(text(groups[1])).toMatch(/^Nine repositories/);
     expect(groups[2].querySelector('ul[aria-label="The platform in numbers"]')).not.toBeNull();
     const items = [...page.querySelectorAll<HTMLElement>(`[${ENTRANCE_ITEM_ATTRIBUTE}]`)];
-    expect(items.map((item) => text(item.querySelector('h3')!))).toEqual(CORE);
+    expect(items).toHaveLength(1 + CORE.length);
+    expect(items[0].querySelector('svg[data-layout]'), 'the map rises first').not.toBeNull();
+    expect(items.slice(1).map((item) => text(item.querySelector('h3')!))).toEqual(CORE);
+    expect(items.map((item) => item.style.getPropertyValue('--entrance-i'))).toEqual(['0', '1', '2']);
     for (const item of items) expect(item.style.getPropertyValue('--entrance-items-after')).toBe('3');
   });
 
@@ -160,6 +166,47 @@ describe('platform head', () => {
     for (const sentence of OWNER_PROSE) expect(all, sentence).toContain(sentence);
     for (const label of [...Object.values(SUBSYSTEMS).flat(), ...GATEWAY_MODULES, ...DATA_FLOW]) expect(all, label).toContain(label);
     expect(all).toContain(`${ARCHIVED_EPISODES} archived episodes documenting commits, decisions, and telemetry data points.`);
+  });
+});
+
+// The page said all coupling is HTTP and named nine repositories, but drew
+// neither: the map is the first thing under the head.
+describe('system map', () => {
+  it('opens the page body: the first section, its figure the map of the core and the nine', () => {
+    const sections = [...page.querySelectorAll('section[id]')].map((section) => section.id);
+    expect(sections[0]).toBe('system-map');
+    expect(sections[1]).toBe('core-engines');
+    const map = page.querySelector('#system-map')!;
+    expect(text(map.querySelector('h2')!)).toBe('How the systems connect');
+    expect(map.querySelectorAll('figure.flow')).toHaveLength(1);
+    expect(map.querySelectorAll('svg[data-layout]')).toHaveLength(Object.keys(MAP_LAYOUTS).length);
+  });
+
+  it('lands every node on a section of this page that is about it', () => {
+    const links = [...page.querySelectorAll('#system-map svg[data-layout="wide"] a[data-node]')];
+    expect(links).toHaveLength(ECOSYSTEM_NODES.length);
+    for (const link of links) {
+      const id = link.getAttribute('data-node') as NodeId;
+      expect(link.getAttribute('href'), id).toBe(`#${systemAnchor(id)}`);
+      const target = page.querySelector(`[id="${systemAnchor(id)}"]`);
+      expect(target, `${id} has nowhere to land`).not.toBeNull();
+      // the core lands on the engines that host it; a repository on its own row, under its own name
+      if (id === CORE_ID) expect(text(target!.querySelector('h2')!)).toBe('Core engines');
+      else expect(text(target!.querySelector('h3')!), id).toBe(nodeById(id).name);
+    }
+    // an engine's anchor is its list item, outside the reveal that rises: a jump
+    // measured against a still-transformed reveal landed 28px short, under the header
+    for (const id of ['banterpacks', 'banterhearts'] as const) {
+      const engine = page.querySelector(`[id="${systemAnchor(id)}"]`)!;
+      expect(engine.tagName, id).toBe('LI');
+      expect(engine.hasAttribute('data-reveal'), id).toBe(false);
+      expect(engine.querySelector(':scope > [data-reveal] > article'), id).not.toBeNull();
+    }
+    expect(page.querySelector(`[id="${systemAnchor('echo')}"]`)!.tagName).toBe('A');
+  });
+
+  it('gives no id to what is not on the map', () => {
+    expect(articleFor('quantfit')!.id).toBe('');
   });
 });
 
@@ -306,10 +353,10 @@ describe('systems', () => {
 });
 
 describe('platform page', () => {
-  it('draws no card surfaces: the only plates are the drawings and the one figure', () => {
+  it('draws no card surfaces: the only plates are the drawings and the two figures, the map and the gateway path', () => {
     expect(page.querySelectorAll('.card-surface')).toHaveLength(0);
     expect(page.querySelectorAll('.repo-plate')).toHaveLength(REPOSITORIES.length);
-    expect(page.querySelectorAll('figure')).toHaveLength(1);
+    expect([...page.querySelectorAll('figure')].map((figure) => figure.closest('section')!.id)).toEqual(['system-map', 'jarvis-gateway']);
   });
 
   it('draws no boxed panels and no borders', () => {
