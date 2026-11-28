@@ -19,10 +19,24 @@ interface FigureSpecBase {
   claim: string;
 }
 
+/**
+ * A figure the reader redraws from the same table: a control offers some of
+ * its columns for the one the figure draws (a bar's value, a slope's far end).
+ * The figure's own column is one of them, and the page opens on it.
+ */
+export interface FigureExplore {
+  /** the control's name, as the reader sees it */
+  legend: string;
+  /** the columns offered, by their headers, in the order the control lists them */
+  columns: string[];
+}
+
 /** ranked categories: one horizontal bar per row */
 export interface BarFigureSpec extends FigureSpecBase {
   chart: 'bar';
   value: string;
+  /** the reader picks the column the bars measure */
+  explore?: FigureExplore;
 }
 
 /** estimates with their intervals: one dot and whisker per row */
@@ -46,6 +60,8 @@ export interface SlopeFigureSpec extends FigureSpecBase {
   chart: 'slope';
   from: string;
   to: string;
+  /** the reader picks the column the lines run to */
+  explore?: FigureExplore;
 }
 
 export type FigureSpec = BarFigureSpec | DotFigureSpec | LineFigureSpec | SlopeFigureSpec;
@@ -64,6 +80,34 @@ export interface FigureRow {
   /** dot: the interval's ends */
   low?: number;
   high?: number;
+}
+
+/** a row as one choice draws it: a cell the table leaves without a number is null, drawn as missing */
+export interface ExploreRow {
+  label: string;
+  values: Array<FigureValue | null>;
+}
+
+export interface ExploreOption {
+  /** the column chosen, as the table heads it: the option's label */
+  column: string;
+  /** what the figure's header names: the column, or a slope's two ends */
+  measure: string;
+  /** slope: the two columns compared */
+  series?: string[];
+  rows: ExploreRow[];
+}
+
+/**
+ * The choices a figure offers, each resolved from the same table. Every
+ * choice's values lie inside the report figure's own range, so all of them
+ * are drawn on its scale and a switch never rescales the chart.
+ */
+export interface ResolvedExplore {
+  legend: string;
+  options: ExploreOption[];
+  /** the option the report's own figure draws: the one the page opens on */
+  initial: number;
 }
 
 /** A spec resolved against its report: plain data, safe to hand to a client component. */
@@ -87,4 +131,6 @@ export interface ResolvedFigure {
   claim: string;
   /** the id of the table's heading on the report page, where the page has one */
   anchor?: string;
+  /** the columns a reader may redraw it by, where the spec offers them */
+  explore?: ResolvedExplore;
 }

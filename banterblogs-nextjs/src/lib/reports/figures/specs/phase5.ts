@@ -36,6 +36,9 @@ export const PHASE5_FIGURES: FigureSpec[] = [
     value: 'N=128',
     highlight: 'Q2_K',
     claim: '**Peak ASR reaches 99.0% on qwen2.5-1.5b Q2_K at N=128 (v1, n=100)',
+    // the shot counts: Q8_0 holds near zero at one shot and climbs to 40% at
+    // 128, while Q2_K is broken from the first
+    explore: { legend: 'Shot count', columns: ['N=1', 'N=4', 'N=16', 'N=64', 'N=128'] },
   },
   {
     slug: 'technical-report-141',
